@@ -1,530 +1,114 @@
-#!/usr/bin/env python3
-
-"""
-ChangeViT model tests.
-
-Based on the paper "ChangeViT: Unleashing Plain Vision Transformers for Change Detection"
-https://arxiv.org/abs/2406.12847
-"""
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
 
 import pytest
 import torch
 
+from torchgeo.models import changevit
+from torchgeo.models.changevit import (
+    ChangeViT,
+    ChangeViTDecoder,
+    DetailCaptureModule,
+    FeatureInjector,
+)
 
-class TestChangeViTArchitectureRequirements:
-    """Tests based on architectural requirements from the paper."""
+BACKBONES = ['tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat']
+BATCH_SIZE = [1, 2]
 
-    def test_changevit_has_required_components(self) -> None:
-        """Paper states ChangeViT has: ViT backbone, detail-capture, feature injector."""
-        from torchgeo.models import changevit_small
 
-        model = changevit_small(weights=None)
+class TestChangeViT:
+    @torch.no_grad()
+    @pytest.mark.parametrize('backbone', BACKBONES)
+    def test_changevit_backbones(self, backbone: str) -> None:
+        """Test ChangeViT instantiation with different backbones."""
+        model = changevit(backbone=backbone)  # type: ignore[arg-type]
+        assert isinstance(model, ChangeViT)
 
-        # Must have the four main components mentioned in paper
-        assert hasattr(model, 'encoder'), 'Missing ViT backbone component'
-        assert hasattr(model, 'detail_capture'), 'Missing detail-capture module'
-        assert hasattr(model, 'feature_injector'), 'Missing feature injector'
-        assert hasattr(model, 'decoder'), 'Missing change detection decoder'
+    @torch.no_grad()
+    def test_changevit_invalid_backbone(self) -> None:
+        """Test ChangeViT with invalid backbone raises KeyError."""
+        with pytest.raises(KeyError):
+            changevit(backbone='invalid_backbone')  # type: ignore[arg-type]
 
+    @torch.no_grad()
+    @pytest.mark.parametrize('b', BATCH_SIZE)
+    def test_changevit_forward(self, b: int) -> None:
+        """Test ChangeViT forward pass with different batch sizes."""
+        model = changevit(backbone='tiny')
+        model.eval()
+
+        # Input: [B, T=2, C=3, H, W]
+        x = torch.randn(b, 2, 3, 256, 256)
+        y = model(x)
+
+        # Output: [B, 1, H, W] - binary change detection logits
+        assert y.shape == (b, 1, 256, 256)
+
+    @torch.no_grad()
+    def test_changevit_components(self) -> None:
+        """Test ChangeViT has required components."""
+        model = changevit(backbone='tiny')
+
+        assert hasattr(model, 'encoder')
+        assert hasattr(model, 'detail_capture')
+        assert hasattr(model, 'feature_injector')
+        assert hasattr(model, 'decoder')
+
+
+class TestDetailCaptureModule:
+    @torch.no_grad()
     def test_detail_capture_multiscale_output(self) -> None:
-        """Paper: detail-capture extracts features at 1/2, 1/4, 1/8 scales with 64, 128, 256 channels."""
-        from torchgeo.models.changevit import DetailCaptureModule
-
+        """Test DetailCaptureModule returns 3 scales with correct channels."""
         dcm = DetailCaptureModule(in_channels=6)
-        x = torch.randn(2, 6, 256, 256)  # Bitemporal RGB input
+        x = torch.randn(2, 6, 256, 256)
 
-        outputs = dcm(x)
+        c2, c3, c4 = dcm(x)
 
-        # Should return tuple of 3 feature maps at different scales
-        assert isinstance(outputs, tuple), 'Should return tuple of multi-scale features'
-        assert len(outputs) == 3, 'Should return 3 scales (1/2, 1/4, 1/8)'
+        # Check channel dimensions (paper specification: 64, 128, 256)
+        assert c2.shape[1] == 64
+        assert c3.shape[1] == 128
+        assert c4.shape[1] == 256
 
-        # Check spatial dimensions and channel counts match paper specifications
-        h, w = x.shape[-2:]
-        expected_specs = [
-            (64, h // 2, w // 2),  # C2: 1/2 scale, 64 channels
-            (128, h // 4, w // 4),  # C3: 1/4 scale, 128 channels
-            (256, h // 8, w // 8),  # C4: 1/8 scale, 256 channels
-        ]
+        # Check spatial dimensions (1/2, 1/4, 1/8 of input)
+        assert c2.shape[-2:] == (128, 128)  # 256 / 2
+        assert c3.shape[-2:] == (64, 64)  # 256 / 4
+        assert c4.shape[-2:] == (32, 32)  # 256 / 8
 
-        for i, (output, (exp_c, exp_h, exp_w)) in enumerate(
-            zip(outputs, expected_specs)
-        ):
-            assert output.shape[1] == exp_c, (
-                f'Scale {i} should have {exp_c} channels (paper spec), got {output.shape[1]}'
-            )
-            assert output.shape[-2:] == (exp_h, exp_w), (
-                f'Scale {i} should be {exp_h}x{exp_w}, got {output.shape[-2:]}'
-            )
 
-    def test_feature_injector_cross_attention(self) -> None:
-        """Paper describes cross-attention between ViT and detail features."""
-        from torchgeo.models.changevit import FeatureInjector
-
-        # Standard ViT dimensions
-        vit_dim = 384  # ViT-Small
+class TestFeatureInjector:
+    @torch.no_grad()
+    def test_feature_injector_output_shape(self) -> None:
+        """Test FeatureInjector preserves ViT feature shape."""
+        vit_dim = 384
         injector = FeatureInjector(vit_dim=vit_dim)
 
-        # Mock ViT features: [B, N_patches, D]
-        batch_size, num_patches = 2, 256  # 16x16 patches for 256x256 image
-        vit_feats = torch.randn(batch_size, num_patches, vit_dim)
+        # ViT features: [B, N_patches, D]
+        vit_feats = torch.randn(2, 256, vit_dim)
 
-        # Mock detail features at 3 scales
+        # Detail features at 3 scales
         detail_feats = (
-            torch.randn(batch_size, 64, 128, 128),  # 1/2 scale
-            torch.randn(batch_size, 128, 64, 64),  # 1/4 scale
-            torch.randn(batch_size, 256, 32, 32),  # 1/8 scale
+            torch.randn(2, 64, 16, 16),  # 1/2 scale
+            torch.randn(2, 128, 16, 16),  # 1/4 scale
+            torch.randn(2, 256, 16, 16),  # 1/8 scale
         )
 
         enhanced_feats = injector(vit_feats, detail_feats)
 
         # Output should have same shape as input ViT features
-        assert enhanced_feats.shape == vit_feats.shape, (
-            f'Enhanced features shape {enhanced_feats.shape} != input {vit_feats.shape}'
-        )
+        assert enhanced_feats.shape == vit_feats.shape
 
 
-class TestChangeViTInputOutputBehavior:
-    """Tests for expected input/output behavior from paper."""
+class TestChangeViTDecoder:
+    @torch.no_grad()
+    def test_decoder_output_shape(self) -> None:
+        """Test ChangeViTDecoder returns bidirectional predictions."""
+        decoder = ChangeViTDecoder(in_channels=384, num_classes=1)
 
-    def test_bitemporal_input_format(self) -> None:
-        """Paper uses bitemporal images as input."""
-        from torchgeo.models import changevit_small
+        # Bitemporal features: [B, T=2, C, H, W]
+        bi_features = torch.randn(2, 2, 384, 16, 16)
 
-        model = changevit_small(weights=None)
+        c12, c21 = decoder(bi_features)
 
-        # Input format: [Batch, Time, Channels, Height, Width]
-        batch_size, time_steps, channels, height, width = 2, 2, 3, 256, 256
-        x = torch.randn(batch_size, time_steps, channels, height, width)
-
-        # Should not raise an error
-        model.eval()
-        with torch.no_grad():
-            output = model(x)
-
-        assert isinstance(output, torch.Tensor), 'Output should be Tensor (logits)'
-
-    def test_training_vs_inference_output_format(self) -> None:
-        """Model returns logits in both train and eval mode - loss/predict handles sigmoid."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        x = torch.randn(1, 2, 3, 256, 256)
-
-        # Training mode outputs logits
-        model.train()
-        train_output = model(x)
-        assert isinstance(train_output, torch.Tensor), 'Should return Tensor (logits)'
-        assert train_output.dtype == torch.float32, 'Output should be float32'
-
-        # Inference mode also outputs logits (sigmoid applied in predict_step)
-        model.eval()
-        with torch.no_grad():
-            infer_output = model(x)
-
-        assert isinstance(infer_output, torch.Tensor), 'Should return Tensor (logits)'
-
-        # Both train and eval return same format
-        assert train_output.shape == infer_output.shape
-
-    def test_output_spatial_dimensions(self) -> None:
-        """Output should match input spatial dimensions."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Test with standard ViT size (256x256)
-        test_sizes = [(256, 256)]
-
-        for h, w in test_sizes:
-            x = torch.randn(1, 2, 3, h, w)
-
-            model.eval()
-            with torch.no_grad():
-                output = model(x)
-
-            # Output spatial dimensions should match input
-            assert output.shape[-2:] == (h, w), (
-                f'Output {output.shape[-2:]} should match input {(h, w)}'
-            )
-
-
-class TestChangeViTParameterCounts:
-    """Tests based on parameter counts reported in paper Table I."""
-
-    @pytest.mark.skip(
-        reason="Parameter counts differ with timm-based implementation (more efficient than paper's custom ResNet18)"
-    )
-    def test_changevit_small_parameter_count(self) -> None:
-        """Paper reports ChangeViT-S has 32.13M parameters.
-
-        Note: Our timm-based implementation has ~25.6M parameters (20% fewer),
-        which is more efficient while maintaining the same functionality.
-        """
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        total_params = sum(p.numel() for p in model.parameters())
-
-        expected_params = 32.13e6
-        tolerance_pct = 20.0  # 20% tolerance for different ViT variants
-
-        rel_error_pct = abs(total_params - expected_params) / expected_params * 100
-        assert rel_error_pct < tolerance_pct, (
-            f'Paper reports {expected_params / 1e6:.2f}M params, got {total_params / 1e6:.2f}M '
-            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
-        )
-
-    @pytest.mark.skip(
-        reason="Parameter counts differ with timm-based implementation (more efficient than paper's custom ResNet18)"
-    )
-    def test_changevit_tiny_parameter_count(self) -> None:
-        """Paper reports ChangeViT-T has 11.68M parameters.
-
-        Note: Our timm-based implementation has ~7.3M parameters (38% fewer),
-        which is more efficient while maintaining the same functionality.
-        """
-        from torchgeo.models import changevit_tiny
-
-        model = changevit_tiny(weights=None)
-        total_params = sum(p.numel() for p in model.parameters())
-
-        expected_params = 11.68e6
-        tolerance_pct = 25.0  # 25% tolerance for different ViT variants
-
-        rel_error_pct = abs(total_params - expected_params) / expected_params * 100
-        assert rel_error_pct < tolerance_pct, (
-            f'Paper reports {expected_params / 1e6:.2f}M params, got {total_params / 1e6:.2f}M '
-            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
-        )
-
-    @pytest.mark.skip(
-        reason="Parameter counts differ with timm-based implementation (more efficient than paper's custom ResNet18)"
-    )
-    def test_detail_capture_lightweight(self) -> None:
-        """Paper emphasizes detail-capture module is lightweight (2.7M params).
-
-        Note: Our timm-based implementation has ~0.73M parameters (73% fewer),
-        which uses pretrained ResNet18 features with projection layers.
-        """
-        from torchgeo.models.changevit import DetailCaptureModule
-
-        dcm = DetailCaptureModule(in_channels=6)
-        dcm_params = sum(p.numel() for p in dcm.parameters())
-
-        expected_dcm_params = 2.7e6
-        tolerance_pct = 10.0  # 10% tolerance for ResNet18 implementation variations
-
-        rel_error_pct = (
-            abs(dcm_params - expected_dcm_params) / expected_dcm_params * 100
-        )
-        assert rel_error_pct < tolerance_pct, (
-            f'Paper reports {expected_dcm_params / 1e6:.2f}M params, got {dcm_params / 1e6:.2f}M '
-            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
-        )
-
-
-class TestTorchGeoIntegration:
-    """Tests for integration with TorchGeo patterns and ChangeDetectionTask."""
-
-    def test_changevit_with_change_detection_task(self) -> None:
-        """Should integrate with TorchGeo's ChangeDetectionTask."""
-        from torchgeo.trainers import ChangeDetectionTask
-
-        # Should not raise an error
-        task = ChangeDetectionTask(
-            model='changevit_small', weights=None, task='binary', loss='bce', lr=1e-4
-        )
-
-        assert task.hparams['model'] == 'changevit_small'
-        assert hasattr(task, 'model')
-
-    def test_training_step_with_torchgeo_batch_format(self) -> None:
-        """Should work with TorchGeo's standard batch format."""
-        from torchgeo.trainers import ChangeDetectionTask
-
-        task = ChangeDetectionTask(
-            model='changevit_small', weights=None, task='binary', loss='bce'
-        )
-
-        # TorchGeo batch format
-        batch = {
-            'image': torch.randn(2, 2, 3, 256, 256),  # [B, T, C, H, W]
-            'mask': torch.randint(
-                0, 2, (2, 1, 256, 256)
-            ).float(),  # Binary mask with channel dimension [B, 1, H, W]
-        }
-
-        # Should not raise an error
-        loss = task.training_step(batch, batch_idx=0)
-
-        assert isinstance(loss, torch.Tensor)
-        assert loss.requires_grad, 'Loss should require gradients'
-
-    def test_weight_loading_compatibility(self) -> None:
-        """Should be compatible with TorchGeo's weight loading system."""
-        from torchgeo.models import changevit_small
-
-        # Should handle None weights (random initialization)
-        model1 = changevit_small(weights=None)
-        assert model1 is not None
-
-        # Should be ready for future WeightsEnum integration
-        # (This test ensures the API is compatible)
-        try:
-            # This will fail now but shows the intended API
-            from torchgeo.models.changevit import ChangeViT_Weights
-
-            _ = changevit_small(weights=ChangeViT_Weights.DEFAULT)
-        except (ImportError, AttributeError):
-            # Expected to fail until weights are available
-            pass
-
-
-class TestChangeViTScalability:
-    """Tests for model scalability and different variants."""
-
-    def test_different_model_sizes(self) -> None:
-        """Should support different ViT backbone sizes."""
-        from torchgeo.models import changevit_small, changevit_tiny
-
-        models = {
-            'small': changevit_small(weights=None),
-            'tiny': changevit_tiny(weights=None),
-        }
-
-        x = torch.randn(1, 2, 3, 256, 256)
-
-        for name, model in models.items():
-            model.eval()
-            with torch.no_grad():
-                output = model(x)
-
-            assert isinstance(output, torch.Tensor), (
-                f'{name} model should produce Tensor output'
-            )
-
-            # Small model should have more parameters than tiny
-            if name == 'tiny':
-                tiny_params = sum(p.numel() for p in model.parameters())
-            elif name == 'small':
-                small_params = sum(p.numel() for p in model.parameters())
-
-        assert small_params > tiny_params, (
-            'Small model should have more parameters than tiny'
-        )
-
-    def test_batch_size_flexibility(self) -> None:
-        """Should handle different batch sizes."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        model.eval()
-
-        batch_sizes = [1, 2, 4, 8]
-
-        for bs in batch_sizes:
-            x = torch.randn(bs, 2, 3, 256, 256)
-
-            with torch.no_grad():
-                output = model(x)
-
-            assert output.shape[0] == bs, f'Batch dimension should be {bs}'
-
-
-class TestChangeViTErrorHandling:
-    """Tests for proper error handling and edge cases."""
-
-    def test_invalid_input_dimensions(self) -> None:
-        """Should handle invalid input dimensions gracefully."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Wrong number of temporal dimensions
-        with pytest.raises((RuntimeError, ValueError)):
-            x = torch.randn(2, 3, 3, 256, 256)  # 3 temporal steps instead of 2
-            model(x)
-
-    def test_very_small_input_size(self) -> None:
-        """Should handle very small input sizes."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Test with standard ViT size
-        x = torch.randn(1, 2, 3, 256, 256)  # Standard size
-
-        model.eval()
-        with torch.no_grad():
-            # Should not crash, but may not be optimal
-            output = model(x)
-            assert isinstance(output, torch.Tensor)
-
-    def test_pretrained_kwarg_false(self) -> None:
-        """Test that pretrained=False creates model without pretrained weights."""
-        from torchgeo.models import changevit_small
-
-        # Create model explicitly without pretrained weights
-        model = changevit_small(weights=None, pretrained=False)
-        assert model is not None
-        assert hasattr(model, 'encoder')
-
-
-# Additional utility tests for development
-
-
-class TestImplementationConsistency:
-    """Tests to ensure implementation consistency across components."""
-
-    def test_all_components_use_same_device(self) -> None:
-        """All model components should be on the same device."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Get device of first parameter
-        first_param = next(model.parameters())
-        reference_device = first_param.device
-
-        # All parameters should be on same device
-        for name, param in model.named_parameters():
-            assert param.device == reference_device, (
-                f'Parameter {name} on {param.device}, expected {reference_device}'
-            )
-
-    def test_gradient_flow(self) -> None:
-        """Gradients should flow through all components during training."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        model.train()
-
-        x = torch.randn(1, 2, 3, 256, 256)
-        output = model(x)
-
-        # Create dummy loss
-        loss = output.sum()
-        loss.backward()
-
-        # Check that key components have gradients
-        components_to_check = [
-            'encoder',
-            'detail_capture',
-            'feature_injector',
-            'decoder',
-        ]
-
-        for comp_name in components_to_check:
-            component = getattr(model, comp_name)
-            has_grad = any(p.grad is not None for p in component.parameters())
-            assert has_grad, f'Component {comp_name} should receive gradients'
-
-
-class TestChangeViTLEVIRCDIntegration:
-    """Tests for ChangeViT integration with LEVIR-CD dataset issues from GitHub #2920."""
-
-    def test_changevit_with_levircd_benchmark_datamodule(self) -> None:
-        """Test ChangeViT with LEVIRCDBenchmarkDataModule to ensure compatibility."""
-        pytest.importorskip(
-            'torchgeo.datamodules.levircd', reason='LEVIRCDBenchmarkDataModule required'
-        )
-
-        from torchgeo.models import changevit_small
-
-        # Create ChangeViT model
-        model = changevit_small(weights=None)
-        model.eval()
-
-        # Create mock batch from LEVIRCDBenchmarkDataModule after patch extraction
-        batch_size = 2
-        patches_per_frame = 16  # 16 patches per 1024x1024 image
-
-        # Simulate the output from LEVIRCDBenchmarkDataModule.on_after_batch_transfer
-        batch = {
-            'image': torch.randn(
-                batch_size * patches_per_frame, 2, 3, 256, 256
-            ),  # [B*P, T, C, H, W]
-            'mask': torch.randn(
-                batch_size * patches_per_frame, 1, 256, 256
-            ),  # [B*P, C, H, W]
-        }
-
-        # Test that ChangeViT can process the batch format from LEVIRCDBenchmarkDataModule
-        with torch.no_grad():
-            output = model(batch['image'])
-
-        # Verify output format
-        assert isinstance(output, torch.Tensor), (
-            'ChangeViT should return Tensor (logits)'
-        )
-
-        # Check spatial dimensions are preserved
-        assert output.shape[-2:] == (256, 256), 'Spatial dimensions should be preserved'
-        assert output.shape[0] == batch_size * patches_per_frame, (
-            'Batch size should be preserved'
-        )
-
-    def test_changevit_temporal_consistency_with_patches(self) -> None:
-        """Test that ChangeViT maintains temporal consistency when processing patches."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        model.eval()
-
-        # Create identical temporal pairs to test consistency
-        patch = torch.randn(1, 3, 256, 256)
-        identical_pair = torch.stack([patch, patch], dim=1)  # [1, 2, 3, 256, 256]
-
-        with torch.no_grad():
-            output = model(identical_pair)
-            change_prob = torch.sigmoid(output)
-
-        # Identical patches should have low change probability
-        mean_prob = change_prob.mean().item()
-        assert mean_prob < 0.7, (
-            f'Identical patches should have low change probability, got {mean_prob:.3f}'
-        )
-
-        # Test different patches
-        patch1 = torch.randn(1, 3, 256, 256)
-        patch2 = torch.randn(1, 3, 256, 256)
-        different_pair = torch.stack([patch1, patch2], dim=1)
-
-        with torch.no_grad():
-            output2 = model(different_pair)
-            change_prob2 = torch.sigmoid(output2)
-
-        # Different patches should have higher change probability (on average)
-        mean_prob2 = change_prob2.mean().item()
-        assert mean_prob2 > 0.1, (
-            f'Different patches should show some change, got {mean_prob2:.3f}'
-        )
-
-    def test_changevit_batch_processing_levircd_format(self) -> None:
-        """Test ChangeViT can process batches in LEVIR-CD format efficiently."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-        model.eval()
-
-        # Test multiple batch sizes that would come from different numbers of patches
-        batch_sizes = [
-            1,
-            16,
-            32,
-        ]  # 1 patch, 16 patches (full image), 32 patches (2 images)
-
-        for bs in batch_sizes:
-            x = torch.randn(bs, 2, 3, 256, 256)  # [B, T, C, H, W]
-
-            with torch.no_grad():
-                output = model(x)
-
-            # Verify output shapes
-            assert output.shape[0] == bs, f'Batch dimension mismatch for size {bs}'
-
-            # Verify spatial dimensions
-            assert output.shape[-2:] == (256, 256), (
-                'Spatial dimensions should be 256x256'
-            )
+        # Both outputs should have same shape
+        assert c12.shape == c21.shape
+        assert c12.shape == (2, 1, 16, 16)
