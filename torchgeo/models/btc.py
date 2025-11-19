@@ -13,9 +13,15 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
 from torchvision.models.feature_extraction import create_feature_extractor
-from torchvision.models.swin_transformer import SwinTransformer, swin_s, swin_t
 
-from torchgeo.models.swin import SwinBackbone_Weights
+from torchgeo.models.swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
+)
 
 
 class BTC(Module):
@@ -98,41 +104,18 @@ class SwinBackbone(Module):
         super().__init__()
         match model_size:
             case 'swin_tiny':
-                model = swin_t()
-                weights = SwinBackbone_Weights.CITYSCAPES_SEMSEG_TINY
+                weights = Swin_T_Weights.CITYSCAPES_SEMSEG
+                model = swin_t(weights)
             case 'swin_small':
-                model = swin_s()
-                weights = SwinBackbone_Weights.CITYSCAPES_SEMSEG_SMALL
+                weights = Swin_S_Weights.CITYSCAPES_SEMSEG
+                model = swin_s(weights)
             case 'swin_base':
-                model = SwinTransformer(
-                    patch_size=[4, 4],
-                    embed_dim=128,
-                    depths=[2, 2, 18, 2],
-                    num_heads=[4, 8, 16, 32],
-                    window_size=[12, 12],
-                    stochastic_depth_prob=0.3,
-                )
-                weights = SwinBackbone_Weights.CITYSCAPES_SEMSEG_BASE
+                weights = Swin_B_Weights.CITYSCAPES_SEMSEG
+                model = swin_b(weights)
             case _:
                 raise ValueError(
                     f'Invalid swin size: {model_size}. Possible options: swin_[tiny | small | base]'
                 )
-
-        # load weights before passing to feature extractor
-        state_dict = weights.get_state_dict(include_norms=True, progress=True)
-        missing, unexpected = model.load_state_dict(
-            state_dict['state_dict'], strict=False
-        )
-        if len(unexpected) > 0:
-            msg = f'Failed to load pretrained weights for backbone: unexpected keys: {unexpected}'
-            raise RuntimeError(msg)
-        if any(
-            key not in ['norm.weight', 'norm.bias', 'head.weight', 'head.bias']
-            for key in missing
-        ):
-            # final norm and head can be missing
-            msg = f'Missing keys in pretrained weights: {missing}'
-            raise RuntimeError(msg)
 
         # we select layers before reduction!
         return_layers = ['features.1', 'features.3', 'features.5', 'features.7']
@@ -146,7 +129,9 @@ class SwinBackbone(Module):
         for ch in self.channels:
             norms.append(nn.LayerNorm(ch))
         self.norms = nn.ModuleList(norms)
+
         # load pretrained feature norm weights
+        state_dict = weights.get_state_dict(include_norms=True, progress=True)
         self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
     def forward(self, x: Tensor) -> list[Tensor]:

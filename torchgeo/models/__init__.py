@@ -36,9 +36,14 @@ from .resnet import (
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
-    SwinBackbone_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
     swin_v2_b,
     swin_v2_t,
 )
@@ -89,7 +94,9 @@ __all__ = (
     'ResNet152_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
-    'SwinBackbone_Weights',
+    'Swin_B_Weights',
+    'Swin_S_Weights',
+    'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'Unet_Weights',
@@ -117,6 +124,9 @@ __all__ = (
     'resnet50',
     'resnet152',
     'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
     'swin_v2_b',
     'swin_v2_t',
     'unet',
