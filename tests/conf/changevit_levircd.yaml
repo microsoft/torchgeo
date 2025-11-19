@@ -15,7 +15,7 @@ model:
     model: 'changevit'
     backbone: 'large_dinov3_sat' # Options: tiny, small, small_dinov3, large, large_dinov3_sat
     task: 'binary'
-    loss: 'bce' # Paper uses bce+dice but combined loss not yet available
+    loss: 'dice' # Original paper uses bce+dice for better performance-> not yet implemented
     lr: 1e-4
     num_classes: 2
 
