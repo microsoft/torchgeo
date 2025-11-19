@@ -288,7 +288,7 @@ class Swin_T_Weights(SwinBackbone_Weights):
     """
 
     CITYSCAPES_SEMSEG = Weights(
-        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
+        url='https://hf.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
         transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -296,7 +296,6 @@ class Swin_T_Weights(SwinBackbone_Weights):
             'model': 'SwinTransformer Tiny',
             'publication': 'https://arxiv.org/abs/2112.01527',
             'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
             'window_size': 7,
         },
     )
@@ -312,7 +311,7 @@ class Swin_S_Weights(SwinBackbone_Weights):
     """
 
     CITYSCAPES_SEMSEG = Weights(
-        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
+        url='https://hf.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
         transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -320,7 +319,6 @@ class Swin_S_Weights(SwinBackbone_Weights):
             'model': 'SwinTransformer Small',
             'publication': 'https://arxiv.org/abs/2112.01527',
             'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
             'window_size': 7,
         },
     )
@@ -336,7 +334,7 @@ class Swin_B_Weights(SwinBackbone_Weights):
     """
 
     CITYSCAPES_SEMSEG = Weights(
-        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
+        url='https://hf.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
         transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -344,7 +342,6 @@ class Swin_B_Weights(SwinBackbone_Weights):
             'model': 'SwinTransformer Base',
             'publication': 'https://arxiv.org/abs/2112.01527',
             'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
             'window_size': 12,
         },
     )
