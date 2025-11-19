@@ -36,6 +36,25 @@ trainer:
   devices: 1
   check_val_every_n_epoch: 20
   log_every_n_steps: 10
+  enable_progress_bar: true
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      name: 'changevit_large_dinov3_sat'
+      project: 'torchgeo-changevit'
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.RichModelSummary
+      init_args:
+        max_depth: 2
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: 'val_BinaryF1Score'
+        mode: 'max'
+        save_top_k: 3
+        save_last: true
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: 'step'
 
 optimizer:
   class_path: torch.optim.AdamW
