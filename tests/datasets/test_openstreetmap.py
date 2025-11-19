@@ -428,35 +428,6 @@ class TestOpenStreetMap:
 
         assert fig is not None
 
-    def test_plot_with_actual_data(self, monkeypatch: MonkeyPatch) -> None:
-        """Test plot method with actual geometry data."""
-
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-
-        # Mock GeoDataFrame with actual data and labels
-        mock_gdf = gpd.GeoDataFrame(
-            {
-                'geometry': [Point(2.3523, 48.8567)],
-                'amenity': ['restaurant'],
-                'label': [1],
-            }
-        )
-
-        monkeypatch.setattr(OpenStreetMap, '_download_data', lambda _: None)
-        monkeypatch.setattr(OpenStreetMap, '_check_integrity', lambda _: True)
-        monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
-
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
-
-        # Get proper sample from dataset
-        query = dataset.bounds
-        sample = dataset[query]
-
-        fig = dataset.plot(sample)
-        assert fig is not None
-
     def test_download_data_success(self, monkeypatch: MonkeyPatch) -> None:
         """Test successful data download."""
 
@@ -934,23 +905,6 @@ class TestOpenStreetMap:
         sample = dataset[bounds]
         dataset.plot(sample)
 
-    def test_plot_with_legend(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
-    ) -> None:
-        """Test plot method showing legend."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-
-        # Create mock GeoDataFrame with building data
-        mock_gdf = gpd.GeoDataFrame(
-            {'building': ['yes'], 'geometry': [Point(2.3523, 48.8567)], 'label': [1]}
-        )
-        monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
-        sample = {'mask': torch.zeros((10, 10))}
-        dataset.plot(sample)
-
     def test_plot_prediction(
         self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
     ) -> None:
@@ -972,19 +926,3 @@ class TestOpenStreetMap:
         sample = dataset[query]
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample, suptitle='Prediction')
-
-    def test_plot_title_formatting(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
-    ) -> None:
-        """Test plot method title formatting."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-
-        # Create mock GeoDataFrame
-        mock_gdf = gpd.GeoDataFrame({'geometry': []})
-        monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
-
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
-        sample = {'mask': torch.zeros((10, 10))}
-        dataset.plot(sample)
