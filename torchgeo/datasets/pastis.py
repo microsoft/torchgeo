@@ -292,7 +292,7 @@ class PASTIS(NonGeoDataset):
         """
         metadata_fn = os.path.join(self.root, self.directory, 'metadata.geojson')
         gdf = gpd.read_file(metadata_fn)
-        gdf['Fold'] = gdf['Fold'].astype(int, copy=False)
+        gdf['Fold'] = gdf['Fold'].astype(int)
         gdf = gdf[gdf['Fold'].isin(self.folds)]
         self.idxs = gdf['ID_PATCH'].tolist()
 
