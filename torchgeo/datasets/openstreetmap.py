@@ -10,8 +10,8 @@ import pathlib
 import re
 import time
 import warnings
-from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from collections.abc import Callable
+from typing import Any, ClassVar
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -86,7 +86,7 @@ class OpenStreetMap(VectorDataset):
         self,
         bbox: tuple[float, float, float, float],
         classes: list[dict[str, Any]],
-        paths: Path | Iterable[Path] = 'data',
+        paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -115,13 +115,7 @@ class OpenStreetMap(VectorDataset):
 
         self.bbox = bbox
         self.classes = classes
-
-        if isinstance(paths, str | pathlib.Path):
-            self.root = pathlib.Path(paths)
-        else:
-            paths_iterable = cast(Iterable[Path], paths)
-            self.root = pathlib.Path(next(iter(paths_iterable)))
-
+        self.root = pathlib.Path(paths)
         self.root.mkdir(parents=True, exist_ok=True)
 
         if download:

@@ -164,7 +164,6 @@ class TestOpenStreetMap:
         'paths_input,expected_root_name',
         [
             ('tests/data/openstreetmap', 'openstreetmap'),  # string path
-            (['tests/data/openstreetmap'], 'openstreetmap'),  # list path
             (pathlib.Path('tests/data/openstreetmap'), 'openstreetmap'),  # Path object
         ],
     )
