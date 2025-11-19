@@ -245,7 +245,7 @@ class OpenBuildings(VectorDataset):
 
         filename = os.path.join(self.paths, 'tiles.geojson')
         gdf = gpd.read_file(filename)
-        gdf.to_crs(self._source_crs, inplace=True)
+        gdf.set_crs(self._source_crs, inplace=True)
 
         # Filter to only include desired polygon files
         gdf['filepath'] = gdf['tile_url'].str.split('/').str[-1]
@@ -269,7 +269,7 @@ class OpenBuildings(VectorDataset):
             geometry=list(geometries),
             crs=self._source_crs,
         )
-        if crs is not None:
+        if crs is not None and crs != self._source_crs:
             self.index.to_crs(crs, inplace=True)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
