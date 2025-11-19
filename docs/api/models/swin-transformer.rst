@@ -12,3 +12,4 @@ Swin Transformer
 .. autoclass:: Swin_B_Weights
 .. autoclass:: Swin_S_Weights
 .. autoclass:: Swin_T_Weights
+.. autoclass:: SwinBackbone_Weights
