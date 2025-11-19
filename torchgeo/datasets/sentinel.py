@@ -280,7 +280,7 @@ class Sentinel2(Sentinel):
         ^T(?P<tile>\d{{2}}[A-Z]{{3}})
         _(?P<date>\d{{8}}T\d{{6}})
         _(?P<band>B[018][\dA])
-        (?:_(?P<resolution>{}m))?
+        (?:_(?P<resolution>{}))?
         \..*$
     """
     date_format = '%Y%m%dT%H%M%S'
@@ -384,7 +384,7 @@ class Sentinel2(Sentinel):
         if isinstance(res, int | float):
             res = (res, res)
 
-        self.filename_regex = self.filename_regex.format(self.resolutions[bands[0]][:2])
+        self.filename_regex = self.filename_regex.format(self.resolutions[bands[0]])
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def _update_filepath(self, band: str, filepath: str) -> str:
