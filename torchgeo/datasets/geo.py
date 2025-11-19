@@ -561,10 +561,9 @@ class RasterDataset(GeoDataset):
         Returns:
             updated filepath for `band`.
         """
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
-        match = re.match(filename_regex, filename)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
         if match:
             if 'band' in match.groupdict():
                 start = match.start('band')
