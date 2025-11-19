@@ -21,6 +21,7 @@ import pandas as pd
 import requests
 import shapely
 from geopandas import GeoDataFrame
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -493,6 +494,7 @@ class OpenStreetMap(VectorDataset):
             ncols = 2
 
         colors = [
+            '#000000',  # Background (label=0)
             '#FF6B6B',
             '#4ECDC4',
             '#45B7D1',
@@ -507,28 +509,8 @@ class OpenStreetMap(VectorDataset):
             '#7bed9f',
         ]
 
-        def apply_cmap(
-            arr: 'np.typing.NDArray[Any]',
-        ) -> 'np.typing.NDArray[np.float64]':
-            """Apply colormap to label array."""
-            if hasattr(arr, 'numpy'):
-                arr = arr.numpy()
-
-            h, w = arr.shape
-            rgb = np.zeros((h, w, 3), dtype=np.float64)
-
-            for label in np.unique(arr):
-                if label == 0:
-                    continue
-                class_idx = int(label - 1)
-                if class_idx < len(colors):
-                    hex_color = colors[class_idx % len(colors)]
-                    r = int(hex_color[1:3], 16) / 255.0
-                    g = int(hex_color[3:5], 16) / 255.0
-                    b = int(hex_color[5:7], 16) / 255.0
-                    rgb[arr == label] = [r, g, b]
-
-            return rgb
+        # Create colormap from hex colors
+        cmap = ListedColormap(colors)
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 5))
 
@@ -540,15 +522,19 @@ class OpenStreetMap(VectorDataset):
             class_idx = int(label - 1)
             if class_idx < len(self.classes):
                 class_name = self.classes[class_idx]['name']
-                color = colors[class_idx % len(colors)]
+                color = colors[int(label) % len(colors)]
                 legend_handles.append(
                     mpatches.Patch(color=color, label=class_name.title())
                 )
 
         if showing_prediction:
-            axs[0].imshow(apply_cmap(mask))
+            axs[0].imshow(
+                mask, cmap=cmap, vmin=0, vmax=len(colors) - 1, interpolation='none'
+            )
             axs[0].axis('off')
-            axs[1].imshow(apply_cmap(pred))
+            axs[1].imshow(
+                pred, cmap=cmap, vmin=0, vmax=len(colors) - 1, interpolation='none'
+            )
             axs[1].axis('off')
             if show_titles:
                 axs[0].set_title('Mask')
@@ -556,7 +542,9 @@ class OpenStreetMap(VectorDataset):
             if legend_handles:
                 axs[0].legend(handles=legend_handles, loc='upper right')
         else:
-            axs.imshow(apply_cmap(mask))
+            axs.imshow(
+                mask, cmap=cmap, vmin=0, vmax=len(colors) - 1, interpolation='none'
+            )
             axs.axis('off')
             if show_titles:
                 axs.set_title('Mask')
