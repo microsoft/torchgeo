@@ -30,6 +30,8 @@ class BTC(Module):
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2507.03367
+
+    .. versionadded:: 0.8
     """
 
     def __init__(self, backbone: str, classes: int = 1) -> None:

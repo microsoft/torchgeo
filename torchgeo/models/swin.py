@@ -250,8 +250,11 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
 class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     """SwinBackbone weights parent class.
 
-    These weights contain the encoder weights and optionally the backbone layernorm weights.
-    To select whether layernorm weights are returned pass `include_norms` to get_state_dict (default is false).
+    These weights contain the encoder weights and optionally the backbone layernorm
+    weights. To select whether layernorm weights are returned pass `include_norms`
+    to get_state_dict (default is false).
+
+    .. versionadded:: 0.8
     """
 
     def get_state_dict(
