@@ -301,7 +301,7 @@ class EnviroAtlas(GeoDataset):
         gdf = gpd.read_file(
             os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson')
         )
-        gdf.to_crs(CRS.from_epsg(3857), inplace=True)
+        gdf.set_crs(CRS.from_epsg(3857), inplace=True)
         gdf = gdf[gdf['split'].isin(splits)]
         gdf['prior_no_osm_no_buildings'] = gdf['naip'].replace(
             'a_naip', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'
