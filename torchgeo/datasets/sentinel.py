@@ -283,7 +283,6 @@ class Sentinel2(Sentinel):
         (?:_(?P<resolution>{}m))?
         \..*$
     """
-
     date_format = '%Y%m%dT%H%M%S'
 
     # https://sentiwiki.copernicus.eu/web/s2-mission
@@ -381,11 +380,11 @@ class Sentinel2(Sentinel):
             *root* was renamed to *paths*
         """
         bands = bands or self.all_bands
-        self.filename_glob = self.filename_glob.format(self.rgb_bands[0])
+        self.filename_glob = self.filename_glob.format(bands[0])
         if isinstance(res, int | float):
             res = (res, res)
 
-        self.filename_regex = self.filename_regex.format(int(res[0]))
+        self.filename_regex = self.filename_regex.format(self.resolutions[bands[0]][:2])
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def _update_filepath(self, band: str, filepath: str) -> str:
