@@ -37,8 +37,6 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # fiona 1.8.22+ required for Python 3.11 wheels
-    "fiona>=1.8.22",
     # geopandas 0.12.1+ required for Shapely 2+ support
     "geopandas>=0.12.1",
     # jsonargparse 4.25+ required for proper LightningCLI YAML parsing

@@ -110,3 +110,8 @@ class TestOpenBuildings:
 
     def test_float_res(self, dataset: OpenBuildings) -> None:
         OpenBuildings(dataset.paths, res=0.0001)
+
+    def test_crs_not_none(self, dataset: OpenBuildings) -> None:
+        OpenBuildings(
+            dataset.paths, transforms=dataset.transforms, crs=CRS.from_epsg(3857)
+        )

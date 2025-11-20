@@ -4,19 +4,19 @@
 """SpaceNet abstract base class."""
 
 import glob
+import json
 import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from json.decoder import JSONDecodeError
 from typing import Any, ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from fiona.errors import FionaError, FionaValueError
-from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from pyproj import CRS
 from rasterio.enums import Resampling
@@ -188,20 +188,25 @@ class SpaceNet(NonGeoDataset, ABC):
             Tensor: label tensor
         """
         try:
-            with fiona.open(path) as src:
-                vector_crs = CRS(src.crs)
-                labels = [
-                    transform_geom(
-                        vector_crs.to_string(),
-                        raster_crs.to_string(),
-                        feature['geometry'],
-                    )
-                    for feature in src
-                    if feature['geometry']
-                ]
-        except (FionaError, FionaValueError):
-            # Empty geojson files, geometries that cannot be transformed (SN7)
+            # Raises a JSONDecodeError for empty files
+            with open(path) as f:
+                json.load(f)
+
+            gdf = gpd.GeoDataFrame.from_file(path, driver='GeoJSON')
+
+        except JSONDecodeError:
+            # Handle empty files
+            gdf = gpd.GeoDataFrame(
+                {'geometry': []}, geometry='geometry', crs='EPSG:4326'
+            )
+
+        if gdf.empty:
             labels = []
+        else:
+            # Convert to CRS and filter out invalid geometries
+            gdf.to_crs(raster_crs, inplace=True)
+            gdf.dropna(subset=['geometry'], inplace=True)
+            labels = gdf.geometry.tolist()
 
         if labels:
             mask = rasterize(

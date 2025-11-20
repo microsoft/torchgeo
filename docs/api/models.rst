@@ -12,6 +12,7 @@ Model Architectures
    :maxdepth: 1
 
    models/aurora
+   models/btc
    models/change-star
    models/conv-lstm
    models/copernicus-fm
@@ -97,6 +98,16 @@ Sentinel-2
    :header-rows: 1
    :align: center
    :file: weights/sentinel2.csv
+
+
+Aerial
+^^^^^^
+
+.. csv-table::
+   :widths: 45 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/aerial.csv
 
 
 Atmospheric

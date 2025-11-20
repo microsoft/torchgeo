@@ -8,7 +8,7 @@ import os
 from collections.abc import Callable
 from typing import Any, ClassVar, cast, overload
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -292,7 +292,7 @@ class IDTReeS(NonGeoDataset):
         if self.split == 'train':
             indices = self.labels['rsFile'] == base_path
             ids = self.labels[indices]['id'].tolist()
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
         # The test set has no mapping csv. The mapping is inside of the geometry
         # properties i.e. geom["property"]["plotID"] contains the RGB image filename
         # Return all geometries with the matching RGB image filename of the sample
@@ -302,17 +302,15 @@ class IDTReeS(NonGeoDataset):
                 for k, v in geometries.items()
                 if v['properties']['plotID'] == base_path
             ]
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
 
         # Convert to pixel coords
         boxes = []
         with rasterio.open(path) as f:
             for geom in geoms:
-                coords = [f.index(x, y) for x, y in geom]
-                xmin = min(coord[1] for coord in coords)
-                xmax = max(coord[1] for coord in coords)
-                ymin = min(coord[0] for coord in coords)
-                ymax = max(coord[0] for coord in coords)
+                xmin, ymin, xmax, ymax = geom.bounds
+                ymin, xmin = f.index(xmin, ymin)
+                ymax, xmax = f.index(xmax, ymax)
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
@@ -399,15 +397,21 @@ class IDTReeS(NonGeoDataset):
         i = 0
         features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
-            with fiona.open(path) as src:
-                for feature in src:
-                    # The train set has a unique id for each geometry in the properties
-                    if self.split == 'train':
-                        features[feature['properties']['id']] = feature
-                    # The test set has no unique id so create a dummy id
-                    else:
-                        features[i] = feature
-                        i += 1
+            gdf = gpd.read_file(path)
+            for _, row in gdf.iterrows():
+                # The train set has a unique id for each geometry in the properties
+                if self.split == 'train':
+                    features[row['id']] = {
+                        'geometry': row.geometry,
+                        'properties': row.drop('geometry').to_dict(),
+                    }
+                # The test set has no unique id so create a dummy id
+                else:
+                    features[i] = {
+                        'geometry': row.geometry,
+                        'properties': row.drop('geometry').to_dict(),
+                    }
+                    i += 1
         return features
 
     @overload

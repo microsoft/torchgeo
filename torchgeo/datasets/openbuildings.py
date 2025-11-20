@@ -4,18 +4,16 @@
 """Open Buildings datasets."""
 
 import glob
-import json
 import os
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
 
-import fiona
-import fiona.transform
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import pyproj
 import rasterio
 import shapely
-import shapely.wkt as wkt
 import torch
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
@@ -203,6 +201,7 @@ class OpenBuildings(VectorDataset):
 
     meta_data_url = 'https://sites.research.google/open-buildings/tiles.geojson'
     meta_data_filename = 'tiles.geojson'
+    _source_crs = CRS.from_epsg(4326)
 
     def __init__(
         self,
@@ -240,60 +239,36 @@ class OpenBuildings(VectorDataset):
         self._verify()
 
         assert isinstance(self.paths, str | os.PathLike)
-        with open(os.path.join(self.paths, 'tiles.geojson')) as f:
-            data = json.load(f)
-
-        features = data['features']
-        features_filenames = [
-            feature['properties']['tile_url'].split('/')[-1] for feature in features
-        ]  # get csv filename
 
         polygon_files = glob.glob(os.path.join(self.paths, self.zipfile_glob))
         polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
-        matched_features = [
-            feature
-            for filename, feature in zip(features_filenames, features)
-            if filename in polygon_filenames
-        ]
+        filename = os.path.join(self.paths, 'tiles.geojson')
+        gdf = gpd.read_file(filename)
+        gdf.set_crs(self._source_crs, inplace=True)
 
-        filepaths = []
-        datetimes = []
-        geometries = []
-        source_crs = CRS.from_epsg(4326)
-        for feature in matched_features:
-            if crs is None:
-                crs = source_crs
+        # Filter to only include desired polygon files
+        gdf['filepath'] = gdf['tile_url'].str.split('/').str[-1]
+        gdf = gdf[gdf['filepath'].isin(polygon_filenames)]
 
-            filepath = os.path.join(
-                self.paths, feature['properties']['tile_url'].split('/')[-1]
-            )
-
-            mint = pd.Timestamp.min
-            maxt = pd.Timestamp.max
-
-            c = feature['geometry']['coordinates'][0]
-            xs = [x[0] for x in c]
-            ys = [x[1] for x in c]
-
-            minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
-
-            (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                source_crs.to_wkt(), crs.to_wkt(), [minx, maxx], [miny, maxy]
-            )
-
-            filepaths.append(filepath)
-            datetimes.append((mint, maxt))
-            geometries.append(shapely.box(minx, miny, maxx, maxy))
+        # Convert geometries to bounding boxes
+        geometries = gdf.bounds.apply(
+            lambda row: shapely.box(row['minx'], row['miny'], row['maxx'], row['maxy']),
+            axis=1,
+        )
+        filepaths = [os.path.join(self.paths, filepath) for filepath in gdf['filepath']]
+        datetimes = [(pd.Timestamp.min, pd.Timestamp.max)] * len(filepaths)
 
         if not len(filepaths):
             raise DatasetNotFoundError(self)
 
         data = {'filepath': filepaths}
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
-
-        self._source_crs = source_crs
+        self.index = GeoDataFrame(
+            data, index=index, geometry=list(geometries), crs=self._source_crs
+        )
+        if crs is not None and crs != self._source_crs:
+            self.index.to_crs(crs, inplace=True)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -357,51 +332,23 @@ class OpenBuildings(VectorDataset):
         x, y, _ = self._disambiguate_slice(query)
 
         # We need to know the bounding box of the query in the source CRS
-        (minx, maxx), (miny, maxy) = fiona.transform.transform(
-            self.crs.to_wkt(),
-            self._source_crs.to_wkt(),
-            [x.start, x.stop],
-            [y.start, y.stop],
+        transformer = pyproj.Transformer.from_crs(
+            self.crs, self._source_crs, always_xy=True
         )
-        df_query = (
-            f'longitude >= {minx} & longitude <= {maxx} & '
-            f'latitude >= {miny} & latitude <= {maxy}'
-        )
+        (minx, miny) = transformer.transform(x.start, y.start)
+        (maxx, maxy) = transformer.transform(x.stop, y.stop)
+
         shapes = []
         for f in filepaths:
             csv_chunks = pd.read_csv(f, chunksize=200000, compression='gzip')
             for chunk in csv_chunks:
-                df = chunk.query(df_query)
-                # Warp geometries to requested CRS
-                polygon_series = df['geometry'].map(self._wkt_fiona_geom_transform)
-                shapes.extend(polygon_series.values.tolist())
+                chunk['geometry'] = gpd.GeoSeries.from_wkt(chunk['geometry'])
+                gdf = gpd.GeoDataFrame(chunk, geometry='geometry', crs=self._source_crs)
+                gdf = gdf.cx[minx:maxx, miny:maxy]
+                gdf.to_crs(self.crs, inplace=True)
+                shapes.extend(gdf.geometry.tolist())
 
         return shapes
-
-    def _wkt_fiona_geom_transform(self, x: str) -> dict[str, Any]:
-        """Function to transform a geometry string into new crs.
-
-        Args:
-            x: Polygon string
-
-        Returns:
-            transformed geometry in geojson format
-
-        """
-        x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
-        x = json.loads(x.replace("'", '"'))
-        import fiona
-
-        if hasattr(fiona, 'model'):
-            import fiona.model
-
-            geom = fiona.model.Geometry(**x)
-        else:
-            geom = x
-        transformed: dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_wkt(), self.crs.to_wkt(), geom
-        )
-        return transformed
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""

@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,7 +17,6 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
-from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -299,41 +298,19 @@ class EnviroAtlas(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint = pd.Timestamp.min
         maxt = pd.Timestamp.max
-        data = []
-        datetimes = []
-        geometries = []
-        with fiona.open(
-            os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson'), 'r'
-        ) as f:
-            for row in f:
-                if row['properties']['split'] in splits:
-                    geometries.append(shapely.geometry.shape(row['geometry']))
-                    datetimes.append((mint, maxt))
-                    data.append(
-                        {
-                            'naip': row['properties']['naip'],
-                            'nlcd': row['properties']['nlcd'],
-                            'roads': row['properties']['roads'],
-                            'water': row['properties']['water'],
-                            'waterways': row['properties']['waterways'],
-                            'waterbodies': row['properties']['waterbodies'],
-                            'buildings': row['properties']['buildings'],
-                            'lc': row['properties']['lc'],
-                            'prior_no_osm_no_buildings': row['properties'][
-                                'naip'
-                            ].replace(
-                                'a_naip',
-                                'prior_from_cooccurrences_101_31_no_osm_no_buildings',
-                            ),
-                            'prior': row['properties']['naip'].replace(
-                                'a_naip', 'prior_from_cooccurrences_101_31'
-                            ),
-                        }
-                    )
-
+        gdf = gpd.read_file(
+            os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson')
+        )
+        gdf.set_crs(CRS.from_epsg(3857), inplace=True)
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_no_osm_no_buildings'] = gdf['naip'].replace(
+            'a_naip', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'
+        )
+        gdf['prior'] = gdf['naip'].replace('a_naip', 'prior_from_cooccurrences_101_31')
+        datetimes = [(mint, maxt)] * len(gdf)
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(3857)
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

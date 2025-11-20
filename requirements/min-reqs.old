@@ -1,6 +1,6 @@
 # required
 einops==0.3.0
-fiona==1.8.22
+fiona==1.9.6  # Remove when we upgrade min version of geopandas to 0.14.4+
 geopandas==0.12.1
 jsonargparse[signatures]==4.25.0
 kornia==0.8.2

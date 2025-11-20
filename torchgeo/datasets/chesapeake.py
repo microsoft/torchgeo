@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,7 +19,6 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
-from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -485,34 +484,18 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint = pd.Timestamp.min
         maxt = pd.Timestamp.max
-        data = []
-        datetimes = []
-        geometries = []
-        with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
-            for row in f:
-                if row['properties']['split'] in splits:
-                    prior_fn = row['properties']['lc'].replace(
-                        'lc.tif',
-                        'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-                    )
-                    geometries.append(shapely.geometry.shape(row['geometry']))
-                    datetimes.append((mint, maxt))
-                    data.append(
-                        {
-                            'naip-new': row['properties']['naip-new'],
-                            'naip-old': row['properties']['naip-old'],
-                            'landsat-leaf-on': row['properties']['landsat-leaf-on'],
-                            'landsat-leaf-off': row['properties']['landsat-leaf-off'],
-                            'lc': row['properties']['lc'],
-                            'nlcd': row['properties']['nlcd'],
-                            'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
-                        }
-                    )
-
+        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
+            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
+        )
+        datetimes = [(mint, maxt)] * len(gdf)
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(3857)
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+        gdf.set_crs('EPSG:3857', inplace=True)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
