@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 import shapely
 import torch
+from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from shapely.geometry import Point
 
@@ -161,6 +162,7 @@ class TestOpenStreetMap:
         fig = dataset.plot(sample, **plot_kwargs)
 
         assert fig is not None
+        plt.close()
 
     @pytest.mark.parametrize(
         'paths_input,expected_root_name',
@@ -407,6 +409,7 @@ class TestOpenStreetMap:
         fig = dataset.plot(sample)
 
         assert fig is not None
+        plt.close()
 
     def test_download_data_success(self, monkeypatch: MonkeyPatch) -> None:
         """Test successful data download."""
@@ -822,6 +825,7 @@ class TestOpenStreetMap:
         sample = {'mask': torch.zeros((10, 10))}  # Typical sample format
         fig = dataset.plot(sample)
         assert fig is not None
+        plt.close()
 
     def test_multichannel_dataset_functionality(
         self, multi_channel_params: dict[str, Any]
@@ -886,6 +890,7 @@ class TestOpenStreetMap:
         bounds = (slice(2.3522, 2.3524), slice(48.8566, 48.8568), slice(None))
         sample = dataset[bounds]
         dataset.plot(sample)
+        plt.close()
 
     def test_plot_prediction(
         self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
@@ -909,3 +914,4 @@ class TestOpenStreetMap:
         sample = dataset[query]
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample, suptitle='Prediction')
+        plt.close()
