@@ -55,6 +55,33 @@ class TestChangeViT:
         assert hasattr(model, 'feature_injector')
         assert hasattr(model, 'decoder')
 
+    @torch.no_grad()
+    def test_changevit_direct_instantiation(self) -> None:
+        """Test ChangeViT direct instantiation with backbone string."""
+        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=256)
+        assert isinstance(model, ChangeViT)
+
+        x = torch.randn(1, 2, 3, 256, 256)
+        y = model(x)
+        assert y.shape == (1, 1, 256, 256)
+
+    @torch.no_grad()
+    def test_changevit_different_img_sizes(self) -> None:
+        """Test ChangeViT with different image sizes."""
+        for img_size in [128, 256, 512]:
+            model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=img_size)
+            x = torch.randn(1, 2, 3, img_size, img_size)
+            y = model(x)
+            assert y.shape == (1, 1, img_size, img_size)
+
+    @torch.no_grad()
+    def test_changevit_pretrained_false(self) -> None:
+        """Test ChangeViT with pretrained=False explicitly."""
+        model = ChangeViT(
+            backbone='vit_tiny_patch16_224', img_size=256, pretrained=False
+        )
+        assert isinstance(model, ChangeViT)
+
 
 class TestDetailCaptureModule:
     @torch.no_grad()

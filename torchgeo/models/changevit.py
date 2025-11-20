@@ -255,25 +255,47 @@ class ChangeViT(Module):
 
     def __init__(
         self,
-        vit_backbone: Any,
-        detail_capture: DetailCaptureModule,
-        feature_injector: FeatureInjector,
-        decoder: ChangeViTDecoder,
+        backbone: str,
+        img_size: int = 256,
+        in_channels: int = 3,
+        num_classes: int = 1,
+        pretrained: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Initialize ChangeViT model.
 
         Args:
-            vit_backbone: Vision Transformer backbone (without classification head)
-            detail_capture: Detail capture module for fine-grained features
-            feature_injector: Feature injector for cross-attention fusion
-            decoder: Change detection decoder for final prediction
+            backbone: Name of the timm ViT model to use as backbone
+            img_size: Input image size (default: 256)
+            in_channels: Number of input channels per temporal frame (default: 3)
+            num_classes: Number of output classes (default: 1)
+            pretrained: Whether to load pretrained weights from timm (default: False)
+            **kwargs: Additional keyword arguments passed to timm backbone
         """
         super().__init__()
 
-        self.encoder = vit_backbone
-        self.detail_capture = detail_capture
-        self.feature_injector = feature_injector
-        self.decoder = decoder
+        # Create ViT backbone from timm
+        self.encoder: Any = timm.create_model(
+            backbone,
+            pretrained=pretrained,
+            num_classes=0,  # Remove classification head
+            img_size=img_size,
+            **kwargs,
+        )
+
+        # Get embed_dim from backbone
+        embed_dim = getattr(self.encoder, 'embed_dim', None)
+        if embed_dim is None:
+            raise AttributeError('ViT backbone must have embed_dim attribute')
+
+        # Create components
+        self.detail_capture = DetailCaptureModule(
+            in_channels=in_channels * 2, pretrained=pretrained
+        )
+        self.feature_injector = FeatureInjector(
+            vit_dim=embed_dim, detail_dims=(64, 128, 256)
+        )
+        self.decoder = ChangeViTDecoder(in_channels=embed_dim, num_classes=num_classes)
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of ChangeViT.
@@ -362,48 +384,6 @@ class ChangeViT(Module):
         return change_logits
 
 
-def _create_changevit(model_name: str, img_size: int, **kwargs: Any) -> ChangeViT:
-    """Common factory function for ChangeViT models.
-
-    Args:
-        model_name: Name of the timm model to use as backbone
-        img_size: Input image size
-        **kwargs: Additional keyword arguments passed to timm backbone
-
-    Returns:
-        A ChangeViT model
-    """
-    # Create ViT backbone from timm
-    use_pretrained = kwargs.pop('pretrained', False)
-    vit_backbone = timm.create_model(
-        model_name,
-        pretrained=use_pretrained,
-        num_classes=0,  # Remove classification head
-        img_size=img_size,
-        **kwargs,
-    )
-
-    # Get embed_dim
-    embed_dim = getattr(vit_backbone, 'embed_dim', None)
-    if embed_dim is None:
-        raise AttributeError('ViT backbone must have embed_dim attribute')
-
-    # Create components
-    detail_capture = DetailCaptureModule(in_channels=6)
-    feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
-    decoder = ChangeViTDecoder(in_channels=embed_dim)
-
-    # Create model
-    model = ChangeViT(
-        vit_backbone=vit_backbone,
-        detail_capture=detail_capture,
-        feature_injector=feature_injector,
-        decoder=decoder,
-    )
-
-    return model
-
-
 def changevit(
     backbone: Literal[
         'tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat'
@@ -448,6 +428,4 @@ def changevit(
         'large_dinov3_sat': 'vit_large_patch16_dinov3.sat493m',
     }
 
-    return _create_changevit(
-        model_name=backbone_map[backbone], img_size=img_size, **kwargs
-    )
+    return ChangeViT(backbone=backbone_map[backbone], img_size=img_size, **kwargs)
