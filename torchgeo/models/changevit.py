@@ -29,7 +29,7 @@ class DetailCaptureModule(Module):
     """
 
     def __init__(
-        self, in_channels: int = 6, backbone: str = 'resnet18', pretrained: bool = True
+        self, in_channels: int = 6, backbone: str = 'resnet18', pretrained: bool = False
     ) -> None:
         """Initialize the detail capture module.
 
@@ -374,8 +374,7 @@ def _create_changevit(model_name: str, img_size: int, **kwargs: Any) -> ChangeVi
         A ChangeViT model
     """
     # Create ViT backbone from timm
-    # Use pretrained backbone by default (can be overridden via kwargs)
-    use_pretrained = kwargs.pop('pretrained', True)
+    use_pretrained = kwargs.pop('pretrained', False)
     vit_backbone = timm.create_model(
         model_name,
         pretrained=use_pretrained,

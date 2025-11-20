@@ -5,12 +5,12 @@
 import pytest
 import torch
 
-from torchgeo.models import changevit
 from torchgeo.models.changevit import (
     ChangeViT,
     ChangeViTDecoder,
     DetailCaptureModule,
     FeatureInjector,
+    changevit,
 )
 
 BACKBONES = ['tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat']
