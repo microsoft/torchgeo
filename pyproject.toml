@@ -176,6 +176,7 @@ show_missing = true
 [tool.mypy]
 # Import discovery
 ignore_missing_imports = true
+disable_error_code = "import-untyped"
 exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
 # Disallow dynamic typing (TODO: work in progress)
