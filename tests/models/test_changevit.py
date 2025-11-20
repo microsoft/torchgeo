@@ -21,7 +21,9 @@ class TestChangeViT:
     def test_forward(self, b: int) -> None:
         """Test ChangeViT forward pass with different batch sizes."""
         # Use tiny model with small images for fast testing
-        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=64, pretrained=False)
+        model = ChangeViT(
+            backbone='vit_tiny_patch16_224', img_size=64, pretrained=False
+        )
         model.eval()
 
         # Input: [B, T=2, C=3, H, W]
@@ -45,7 +47,9 @@ class TestChangeViT:
     @torch.no_grad()
     def test_components(self) -> None:
         """Test ChangeViT has required components."""
-        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=64, pretrained=False)
+        model = ChangeViT(
+            backbone='vit_tiny_patch16_224', img_size=64, pretrained=False
+        )
 
         assert hasattr(model, 'encoder')
         assert hasattr(model, 'detail_capture')

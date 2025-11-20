@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import ChangeViT, FCN, FCSiamConc, FCSiamDiff, get_weight
+from ..models import FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 

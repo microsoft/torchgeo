@@ -7,7 +7,7 @@ Based on the paper: https://arxiv.org/pdf/2406.12847
 """
 
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any
 
 import timm
 import torch
@@ -40,20 +40,16 @@ class DetailCaptureModule(Module):
         """
         super().__init__()
 
-        # Create backbone with features_only=True to get intermediate features
         self.backbone = timm.create_model(
             backbone,
             pretrained=pretrained,
             features_only=True,
-            out_indices=[0, 1, 2],  # Get features at 1/2, 1/4, 1/8 scales
-            in_chans=in_channels,  # Support 6-channel input for bitemporal data
+            out_indices=[0, 1, 2],
+            in_chans=in_channels,
         )
 
-        # Get output channels for each scale from backbone's feature_info
         backbone_channels: list[int] = self.backbone.feature_info.channels()  # type: ignore[union-attr, operator]
 
-        # Add projection layers to match paper's channel dimensions (64, 128, 256)
-        # Use 1x1 convs to learn features from backbone extracted feature maps
         self.proj1 = nn.Conv2d(backbone_channels[0], 64, kernel_size=1)
         self.proj2 = nn.Conv2d(backbone_channels[1], 128, kernel_size=1)
         self.proj3 = nn.Conv2d(backbone_channels[2], 256, kernel_size=1)
@@ -67,13 +63,11 @@ class DetailCaptureModule(Module):
         Returns:
             Tuple of features at 1/2, 1/4, and 1/8 scales with 64, 128, 256 channels
         """
-        # Extract features at different scales using timm's ResNet18
         features = self.backbone(x)
 
-        # Apply projections to match paper's channel dimensions
-        c2 = self.proj1(features[0])  # 1/2 scale: 64 channels
-        c3 = self.proj2(features[1])  # 1/4 scale: 64 -> 128 channels
-        c4 = self.proj3(features[2])  # 1/8 scale: 128 -> 256 channels
+        c2 = self.proj1(features[0])
+        c3 = self.proj2(features[1])
+        c4 = self.proj3(features[2])
 
         return c2, c3, c4
 
@@ -100,7 +94,6 @@ class FeatureInjector(Module):
         """
         super().__init__()
 
-        # Cross-attention blocks for each scale
         self.cross_attns = nn.ModuleList(
             [
                 nn.MultiheadAttention(
@@ -110,14 +103,12 @@ class FeatureInjector(Module):
             ]
         )
 
-        # Projection layers to match ViT dimension
         self.detail_projs = nn.ModuleList(
             [nn.Linear(dim, vit_dim) for dim in detail_dims]
         )
 
-        # Final fusion layer
         self.fusion = nn.Sequential(
-            nn.Linear(vit_dim * 4, vit_dim),  # ViT + 3 detail scales
+            nn.Linear(vit_dim * 4, vit_dim),
             nn.ReLU(inplace=True),
             nn.Linear(vit_dim, vit_dim),
         )
@@ -137,31 +128,21 @@ class FeatureInjector(Module):
         _b, n, _d = vit_feats.shape
         enhanced_feats = [vit_feats]
 
-        # Calculate target spatial dimensions from ViT patch count
-        # Assume square patch grid: N = H_patch * W_patch
-        patch_grid_size = int(n**0.5)  # sqrt(N) for square grid
+        patch_grid_size = int(n**0.5)
         target_spatial = (patch_grid_size, patch_grid_size)
 
         for i, (detail_feat, cross_attn, proj) in enumerate(
             zip(detail_feats, self.cross_attns, self.detail_projs)
         ):
-            # Spatially align detail features to match ViT patch resolution
-            # This reduces attention complexity from O(N*H*W) to O(N*N)
             detail_aligned = F.adaptive_avg_pool2d(detail_feat, target_spatial)
-
-            # Flatten spatial dimensions: [B, C, H_patch, W_patch] -> [B, N, C]
             detail_flat = detail_aligned.flatten(2).transpose(1, 2)
-
-            # Project to ViT dimension
             detail_proj = proj(detail_flat)
 
-            # Cross-attention: ViT as query, aligned detail as key/value
             enhanced_feat, _ = cross_attn(
                 query=vit_feats, key=detail_proj, value=detail_proj
             )
             enhanced_feats.append(enhanced_feat)
 
-        # Concatenate and fuse all features
         fused = torch.cat(enhanced_feats, dim=-1)
         result: Tensor = self.fusion(fused)
         return result
@@ -176,7 +157,7 @@ class ChangeViTDecoder(Module):
 
     def __init__(
         self,
-        in_channels: int = 768,  # ViT embedding dimension
+        in_channels: int = 768,
         inner_channels: int = 64,
         num_convs: int = 3,
         num_classes: int = 1,
@@ -191,7 +172,6 @@ class ChangeViTDecoder(Module):
         """
         super().__init__()
 
-        # Feature processing layers
         layers: list[nn.Module] = [
             nn.Sequential(
                 nn.Conv2d(in_channels * 2, inner_channels, 3, 1, 1),
@@ -212,8 +192,6 @@ class ChangeViTDecoder(Module):
         )
 
         self.convs = nn.Sequential(*layers)
-
-        # Classification head
         self.head = nn.Conv2d(inner_channels, num_classes, 3, 1, 1)
 
     def forward(self, bi_feature: Tensor) -> tuple[Tensor, Tensor]:
@@ -227,14 +205,10 @@ class ChangeViTDecoder(Module):
         """
         batch_size = bi_feature.size(0)
 
-        # Concatenate features in both temporal orders
         t1t2 = torch.cat([bi_feature[:, 0], bi_feature[:, 1]], dim=1)
         t2t1 = torch.cat([bi_feature[:, 1], bi_feature[:, 0]], dim=1)
 
-        # Process both orderings together
         features = self.convs(torch.cat([t1t2, t2t1], dim=0))
-
-        # Apply classification head
         logits = self.head(features)
 
         c12, c21 = torch.split(logits, batch_size, dim=0)
@@ -286,21 +260,14 @@ class ChangeViT(Module):
         """
         super().__init__()
 
-        # Create ViT backbone from timm
         self.encoder: Any = timm.create_model(
-            backbone,
-            pretrained=pretrained,
-            num_classes=0,  # Remove classification head
-            img_size=img_size,
-            **kwargs,
+            backbone, pretrained=pretrained, num_classes=0, img_size=img_size, **kwargs
         )
 
-        # Get embed_dim from backbone
         embed_dim = getattr(self.encoder, 'embed_dim', None)
         if embed_dim is None:
             raise AttributeError('ViT backbone must have embed_dim attribute')
 
-        # Create components
         self.detail_capture = DetailCaptureModule(
             in_channels=in_channels * 2, pretrained=pretrained
         )
@@ -320,21 +287,15 @@ class ChangeViT(Module):
         """
         _b, _t, _c, h, w = x.shape
 
-        # Separate temporal frames for parallel processing
-        x_t1 = x[:, 0]  # [B, C, H, W] - first temporal frame
-        x_t2 = x[:, 1]  # [B, C, H, W] - second temporal frame
-        x_concat = rearrange(
-            x, 'b t c h w -> b (t c) h w'
-        )  # [B, 2*C, H, W] for detail capture
+        x_t1 = x[:, 0]
+        x_t2 = x[:, 1]
+        x_concat = rearrange(x, 'b t c h w -> b (t c) h w')
 
-        # Process each temporal frame separately through ViT backbone (parallel processing)
-        vit_features_t1 = self.encoder.forward_features(x_t1)  # [B, N_total, D]
-        vit_features_t2 = self.encoder.forward_features(x_t2)  # [B, N_total, D]
+        vit_features_t1 = self.encoder.forward_features(x_t1)
+        vit_features_t2 = self.encoder.forward_features(x_t2)
 
-        # Extract detail features from concatenated input
         detail_features = self.detail_capture(x_concat)
 
-        # Get patch size to calculate expected number of patch tokens
         patch_embed = getattr(self.encoder, 'patch_embed', None)
         if patch_embed is None:
             raise AttributeError('ViT backbone must have patch_embed attribute')
@@ -348,25 +309,16 @@ class ChangeViT(Module):
         else:
             patch_size = patch_size_attr
 
-        # Calculate expected number of patch tokens based on input size
         h_patch, w_patch = h // patch_size, w // patch_size
         num_patch_tokens = h_patch * w_patch
 
-        # Extract only patch tokens, skipping CLS token and any register tokens
-        # CLS token is first (index 0), patch tokens follow, then register tokens (if any)
-        patch_features_t1 = vit_features_t1[
-            :, 1 : 1 + num_patch_tokens
-        ]  # [B, N_patches, D]
-        patch_features_t2 = vit_features_t2[
-            :, 1 : 1 + num_patch_tokens
-        ]  # [B, N_patches, D]
+        patch_features_t1 = vit_features_t1[:, 1 : 1 + num_patch_tokens]
+        patch_features_t2 = vit_features_t2[:, 1 : 1 + num_patch_tokens]
 
-        # Stack temporal features for feature injection
         vit_features_stacked = torch.stack(
             [patch_features_t1, patch_features_t2], dim=1
-        )  # [B, T=2, N-1, D]
+        )
 
-        # Apply feature injection to each temporal frame
         enhanced_features_list = []
         for t_idx in range(2):
             enhanced_feat = self.feature_injector(
@@ -374,70 +326,17 @@ class ChangeViT(Module):
             )
             enhanced_features_list.append(enhanced_feat)
 
-        enhanced_features_tensor = torch.stack(
-            enhanced_features_list, dim=1
-        )  # [B, T=2, N_patches, D]
+        enhanced_features_tensor = torch.stack(enhanced_features_list, dim=1)
 
-        # Reshape to spatial format for each temporal frame
         enhanced_spatial = rearrange(
             enhanced_features_tensor, 'b t (h w) d -> b t d h w', h=h_patch, w=w_patch
         )
 
-        # Apply change detection decoder
-        c12, _c21 = self.decoder(enhanced_spatial)  # Returns logits
+        c12, _c21 = self.decoder(enhanced_spatial)
 
-        # Upsample to match original input size
-        target_size = (x.shape[-2], x.shape[-1])  # (H, W) from original input
+        target_size = (x.shape[-2], x.shape[-1])
         change_logits: Tensor = F.interpolate(
             c12, size=target_size, mode='bilinear', align_corners=False
         )
 
-        # Return raw logits - sigmoid/softmax handled by loss function
         return change_logits
-
-
-def changevit(
-    backbone: Literal[
-        'tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat'
-    ] = 'small',
-    img_size: int = 256,
-    **kwargs: Any,
-) -> ChangeViT:
-    """ChangeViT model for change detection.
-
-    Uses a Vision Transformer backbone with detail capture module and
-    feature injection mechanism for change detection tasks.
-
-    If you use this model in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/2406.12847
-
-    .. versionadded:: 0.8
-
-    Args:
-        backbone: ViT backbone variant to use. Options are:
-
-            * ``'tiny'``: DeiT-Tiny (deit_tiny_patch16_224)
-            * ``'small'``: DINOv2-Small (vit_small_patch14_dinov2)
-            * ``'small_dinov3'``: DINOv3-Small pretrained on LVD-1.7B
-            * ``'large'``: DINOv3-Large pretrained on LVD-1.7B
-            * ``'large_dinov3_sat'``: DINOv3-Large pretrained on SAT-493M satellite imagery
-
-        img_size: Input image size (default: 256 to match paper methodology).
-        **kwargs: Additional keyword arguments passed to the backbone model.
-
-    Returns:
-        A ChangeViT model instance.
-
-    Raises:
-        KeyError: If an invalid backbone name is provided.
-    """
-    backbone_map = {
-        'tiny': 'deit_tiny_patch16_224',
-        'small': 'vit_small_patch14_dinov2',
-        'small_dinov3': 'vit_small_patch16_dinov3.lvd1689m',
-        'large': 'vit_large_patch16_dinov3.lvd1689m',
-        'large_dinov3_sat': 'vit_large_patch16_dinov3.sat493m',
-    }
-
-    return ChangeViT(backbone=backbone_map[backbone], img_size=img_size, **kwargs)
