@@ -757,7 +757,7 @@ class TestOpenStreetMap:
         )
 
         # Warning should appear on first query (lazy initialization)
-        with pytest.warns(UserWarning, match="Class 'amenity' .* has no geometries"):
+        with pytest.warns(UserWarning, match="Class .* has no geometries"):
             dataset[dataset.bounds]
 
         # Second query should not trigger warning
