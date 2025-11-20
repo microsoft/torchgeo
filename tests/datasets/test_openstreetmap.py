@@ -688,21 +688,6 @@ class TestOpenStreetMap:
         json_props = {'properties': '{"building": "yes", "floors": "3"}'}
         assert dataset._feature_matches_selector(json_props, {'building': '*'})
 
-    def test_get_label_with_precomputed(self) -> None:
-        """Test get_label method with pre-computed labels."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
-
-        # Test with pre-computed label
-        feature_with_label = {'properties': {'building': 'yes', 'label': 5}}
-        assert dataset.get_label(feature_with_label) == 5
-
-        # Test fallback to computation
-        feature_without_label = {'properties': {'building': 'yes'}}
-        assert dataset.get_label(feature_without_label) == 1
-
     def test_parse_overpass_response_with_labels(
         self, mock_download_and_integrity: None, multi_channel_params: dict[str, Any]
     ) -> None:

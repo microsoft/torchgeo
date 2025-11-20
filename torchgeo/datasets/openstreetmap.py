@@ -355,20 +355,6 @@ class OpenStreetMap(VectorDataset):
         self._ensure_empty_classes_checked()
         return super().__getitem__(query)
 
-    def get_label(self, feature: dict[str, Any]) -> int:
-        """Get label value to use for rendering a feature.
-
-        Args:
-            feature: the feature from which to extract the label.
-
-        Returns:
-            the integer label, or 0 if the feature should not be rendered.
-        """
-        if 'properties' in feature and 'label' in feature['properties']:
-            return int(feature['properties']['label'])
-
-        return self._get_class_label(feature)
-
     def _get_class_label(self, feature: dict[str, Any]) -> int:
         """Get label based on class priority (first match wins).
 
