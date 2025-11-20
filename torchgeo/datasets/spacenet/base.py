@@ -192,7 +192,7 @@ class SpaceNet(NonGeoDataset, ABC):
             with open(path) as f:
                 json.load(f)
 
-            gdf = gpd.GeoDataFrame.from_file(path, driver='GeoJSON')
+            gdf = gpd.read_file(path)
 
         except JSONDecodeError:
             # Handle empty files
