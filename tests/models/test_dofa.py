@@ -107,6 +107,14 @@ class TestDOFABase16:
         }
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = 4
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_dofa_download(self, weights: WeightsEnum) -> None:
         dofa_base_patch16_224(weights=weights)
@@ -143,6 +151,14 @@ class TestDOFALarge16:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = 4
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_dofa_download(self, weights: WeightsEnum) -> None:

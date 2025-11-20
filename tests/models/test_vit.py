@@ -72,6 +72,14 @@ class TestViTSmall16:
         }
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=weights)
@@ -120,6 +128,14 @@ class TestViTBase16:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -170,6 +186,14 @@ class TestViTLarge16:
         }
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_large_patch16_224(weights=weights)
@@ -218,6 +242,14 @@ class TestViTHuge14:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -274,6 +306,14 @@ class TestViTSmall14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_small_patch14_dinov2(weights=weights)
@@ -326,6 +366,14 @@ class TestViTBase14_DINOv2:
             h, w = img_size
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:

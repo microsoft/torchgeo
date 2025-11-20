@@ -61,7 +61,7 @@ name_to_github = {
     'geodl': ('maxwell-geospatial', 'geodl'),
     'GeoAI': ('opengeos', 'geoai'),
     'scikit-eo': ('yotarazona', 'scikit-eo'),
-    'TerraTorch': ('IBM', 'terratorch'),
+    'TerraTorch': ('terrastackai', 'terratorch'),
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),

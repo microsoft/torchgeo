@@ -5,9 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 import segmentation_models_pytorch as smp
-import torch
+import torch.nn as nn
+import torchvision.transforms.v2 as T
 from segmentation_models_pytorch import Unet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -17,13 +17,11 @@ _ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8', 'B4', 'B3', 'B2', 'B8']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)
-_ftw_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
-)
+_ftw_transforms = nn.Sequential(T.Normalize(mean=[0.0], std=[3000.0], inplace=True))
 
 # No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
 _tcd_bands = ['R', 'G', 'B']
-_tcd_transforms = K.AugmentationSequential(K.Resize(size=(1024, 1024)), data_keys=None)
+_tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
 
 class Unet_Weights(WeightsEnum):  # type: ignore[misc]
@@ -90,6 +88,51 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'U-Net',
             'encoder': 'efficientnet-b3',
             'publication': 'https://arxiv.org/abs/2409.16252',
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
+    SENTINEL2_FTW_PRUE_EFNETB3 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet3.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b3',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
+    SENTINEL2_FTW_PRUE_EFNETB5 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet5.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b5',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
+    SENTINEL2_FTW_PRUE_EFNETB7 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet7.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b7',
+            'publication': None,
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
             'license': 'non-commercial',

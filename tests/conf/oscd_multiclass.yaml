@@ -10,8 +10,8 @@ model:
 data:
   class_path: OSCDDataModule
   init_args:
-    batch_size: 1
-    patch_size: 16
+    batch_size: 2
+    patch_size: 32
     val_split_pct: 0.5
   dict_kwargs:
     root: 'tests/data/oscd'

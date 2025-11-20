@@ -1,3 +1,6 @@
 Weight,Channels,Source,Citation,License
+Swin_B_Weights.CITYSCAPES_SEMSEG,3,`link <https://github.com/facebookresearch/Mask2Former>`__,`link <https://arxiv.org/abs/2112.01527>`__,"CC-BY-NC-4.0"
+Swin_S_Weights.CITYSCAPES_SEMSEG,3,`link <https://github.com/facebookresearch/Mask2Former>`__,`link <https://arxiv.org/abs/2112.01527>`__,"CC-BY-NC-4.0"
+Swin_T_Weights.CITYSCAPES_SEMSEG,3,`link <https://github.com/facebookresearch/Mask2Former>`__,`link <https://arxiv.org/abs/2112.01527>`__,"CC-BY-NC-4.0"
 Unet_Weights.OAM_RGB_RESNET34_TCD,3,`link <https://github.com/restor-foundation/tcd>`__,`link <https://arxiv.org/abs/2407.11743>`__,"CC-BY-NC-4.0"
 Unet_Weights.OAM_RGB_RESNET50_TCD,3,`link <https://github.com/restor-foundation/tcd>`__,`link <https://arxiv.org/abs/2407.11743>`__,"CC-BY-NC-4.0"
