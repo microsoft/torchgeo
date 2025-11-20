@@ -11,6 +11,7 @@ from typing import Any, NoReturn
 import geopandas as gpd
 import pandas as pd
 import pytest
+import shapely
 import torch
 from pytest import MonkeyPatch
 from shapely.geometry import Point
@@ -117,8 +118,9 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Mock GeoDataFrame with building and label
+        building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
         mock_gdf = gpd.GeoDataFrame(
-            {'geometry': [Point(2.3523, 48.8567)], 'building': ['yes'], 'label': [1]}
+            {'geometry': [building], 'building': ['yes'], 'label': [1]}
         )
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
@@ -409,9 +411,8 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Mock GeoDataFrame with actual data
-        mock_gdf = gpd.GeoDataFrame(
-            {'geometry': [Point(2.3523, 48.8567)], 'label': [1]}
-        )
+        building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
+        mock_gdf = gpd.GeoDataFrame({'geometry': [building], 'label': [1]})
 
         monkeypatch.setattr(OpenStreetMap, '_download_data', lambda _: None)
         monkeypatch.setattr(OpenStreetMap, '_check_integrity', lambda _: True)
@@ -773,8 +774,9 @@ class TestOpenStreetMap:
     ) -> None:
         """Test warning for empty classes."""
         # Create mock GDF with only building features, no amenity or highway
+        building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
         mock_gdf = gpd.GeoDataFrame(
-            {'building': ['yes'], 'label': [1], 'geometry': [Point(2.3523, 48.8567)]}
+            {'building': ['yes'], 'label': [1], 'geometry': [building]}
         )
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
@@ -891,8 +893,9 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Create mock GeoDataFrame with data
+        building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
         mock_gdf = gpd.GeoDataFrame(
-            {'building': ['yes'], 'label': [1], 'geometry': [Point(2.3523, 48.8567)]}
+            {'building': ['yes'], 'label': [1], 'geometry': [building]}
         )
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
@@ -912,8 +915,9 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Create mock GeoDataFrame with data
+        building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
         mock_gdf = gpd.GeoDataFrame(
-            {'building': ['yes'], 'label': [1], 'geometry': [Point(2.3523, 48.8567)]}
+            {'building': ['yes'], 'label': [1], 'geometry': [building]}
         )
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
