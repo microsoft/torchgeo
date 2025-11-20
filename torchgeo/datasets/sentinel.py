@@ -3,6 +3,8 @@
 
 """Sentinel datasets."""
 
+import os
+import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar
 
@@ -278,7 +280,7 @@ class Sentinel2(Sentinel):
         ^T(?P<tile>\d{{2}}[A-Z]{{3}})
         _(?P<date>\d{{8}}T\d{{6}})
         _(?P<band>B[018][\dA])
-        (?:_(?P<resolution>{}m))?
+        (?:_(?P<resolution>{}))?
         \..*$
     """
     date_format = '%Y%m%dT%H%M%S'
@@ -299,6 +301,24 @@ class Sentinel2(Sentinel):
         'B11',
         'B12',
     )
+
+    # Native resolutions of each band
+    resolutions: ClassVar[dict[str, str]] = {
+        'B01': '60m',
+        'B02': '10m',
+        'B03': '10m',
+        'B04': '10m',
+        'B05': '20m',
+        'B06': '20m',
+        'B07': '20m',
+        'B08': '10m',
+        'B8A': '20m',
+        'B09': '60m',
+        'B10': '60m',
+        'B11': '20m',
+        'B12': '20m',
+    }
+
     rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
@@ -365,8 +385,33 @@ class Sentinel2(Sentinel):
         if isinstance(res, int | float):
             res = (res, res)
 
-        self.filename_regex = self.filename_regex.format(int(res[0]))
+        self.filename_regex = self.filename_regex.format(self.resolutions[bands[0]])
         super().__init__(paths, crs, res, bands, transforms, cache)
+
+    def _update_filepath(self, band: str, filepath: str) -> str:
+        """Update `filepath` to point to `band`.
+
+        Args:
+            band: band to search for.
+            filepath: base filepath to use for searching.
+
+        Returns:
+            updated filepath for `band`.
+        """
+        filepath = super()._update_filepath(band, filepath)
+
+        # Sentinel-2 L2A includes resolution in directory and filename
+        directory, filename = os.path.split(filepath)
+        supdir, subdir = os.path.split(directory)
+
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match and match.group('resolution'):
+            start = match.start('resolution')
+            end = match.end('resolution')
+            filename = filename[:start] + self.resolutions[band] + filename[end:]
+            subdir = 'R' + self.resolutions[band]
+
+        return os.path.join(supdir, subdir, filename)
 
     def plot(
         self,
