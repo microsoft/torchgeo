@@ -27,7 +27,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import GeoSlice, Path
+from .utils import Path
 
 
 class OpenStreetMap(VectorDataset):
@@ -134,8 +134,8 @@ class OpenStreetMap(VectorDataset):
             label_name='label',
         )
 
-        # Defer empty class checking to first query (lazy initialization)
-        self._empty_classes_checked = False
+        # Check for empty classes after initialization
+        self._check_empty_classes()
 
     def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
         """Validate classes configuration.
@@ -340,21 +340,6 @@ class OpenStreetMap(VectorDataset):
 
         return None
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
-        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
-
-        Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
-
-        Returns:
-            Sample of input, target, and/or metadata at that index.
-
-        Raises:
-            IndexError: If *query* is not found in the index.
-        """
-        self._ensure_empty_classes_checked()
-        return super().__getitem__(query)
-
     def _get_class_label(self, feature: dict[str, Any]) -> int:
         """Get label based on class priority (first match wins).
 
@@ -419,16 +404,11 @@ class OpenStreetMap(VectorDataset):
 
         return True
 
-    def _ensure_empty_classes_checked(self) -> None:
+    def _check_empty_classes(self) -> None:
         """Check for classes with no geometries and warn the user.
 
-        This method is called lazily on the first query to avoid loading
-        the entire GeoDataFrame into memory during initialization.
         The GeoDataFrame is loaded temporarily for checking, then discarded.
         """
-        if self._empty_classes_checked:
-            return
-
         if self.classes:
             data_file = self._get_data_filename()
             gdf = gpd.read_file(data_file)
@@ -446,8 +426,6 @@ class OpenStreetMap(VectorDataset):
                             UserWarning,
                             stacklevel=3,
                         )
-
-        self._empty_classes_checked = True
 
     def plot(
         self,

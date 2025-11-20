@@ -740,7 +740,7 @@ class TestOpenStreetMap:
         multi_channel_params: dict[str, Any],
         monkeypatch: MonkeyPatch,
     ) -> None:
-        """Test warning for empty classes."""
+        """Test warning for empty classes during initialization."""
         # Create mock GDF with only building features, no amenity or highway
         building = shapely.box(2.3521, 48.8566, 2.3524, 48.8569)
         mock_gdf = gpd.GeoDataFrame(
@@ -749,18 +749,16 @@ class TestOpenStreetMap:
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        dataset = OpenStreetMap(
-            bbox=multi_channel_params['bbox'],
-            paths=multi_channel_params['root'],
-            classes=multi_channel_params['classes'],
-            download=False,
-        )
-
-        # Warning should appear on first query (lazy initialization)
+        # Warning should appear during initialization
         with pytest.warns(UserWarning, match='Class .* has no geometries'):
-            dataset[dataset.bounds]
+            dataset = OpenStreetMap(
+                bbox=multi_channel_params['bbox'],
+                paths=multi_channel_params['root'],
+                classes=multi_channel_params['classes'],
+                download=False,
+            )
 
-        # Second query should not trigger warning
+        # Subsequent queries should not trigger warning
         with warnings.catch_warnings():
             warnings.simplefilter('error')  # Turn warnings into errors
             dataset[dataset.bounds]  # Should not raise (no warning)
