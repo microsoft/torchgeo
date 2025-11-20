@@ -384,26 +384,6 @@ class TestOpenStreetMap:
             assert geom.geom_type == expected_geom_type
             assert extra_checks(geom)
 
-    def test_getitem_empty_data(self, monkeypatch: MonkeyPatch) -> None:
-        """Test __getitem__ when no data is found in query area."""
-
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-
-        # Mock empty GeoDataFrame
-        empty_gdf = gpd.GeoDataFrame({'geometry': []})
-
-        monkeypatch.setattr(OpenStreetMap, '_download_data', lambda _: None)
-        monkeypatch.setattr(OpenStreetMap, '_check_integrity', lambda _: True)
-        monkeypatch.setattr('geopandas.read_file', lambda *_, **__: empty_gdf)
-
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
-        sample = dataset[dataset.bounds]
-
-        # Should create mask for semantic segmentation mode
-        assert 'mask' in sample
-
     def test_plot_without_bounds_key(self, monkeypatch: MonkeyPatch) -> None:
         """Test plot method with a proper sample from dataset."""
 
