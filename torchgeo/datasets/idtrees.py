@@ -309,9 +309,13 @@ class IDTReeS(NonGeoDataset):
         with rasterio.open(path) as f:
             for geom in geoms:
                 xmin, ymin, xmax, ymax = geom.bounds
-                ymin, xmin = f.index(xmin, ymin)
-                ymax, xmax = f.index(xmax, ymax)
-                boxes.append([xmin, ymin, xmax, ymax])
+                row_min, col_min = f.index(xmin, ymin)
+                row_max, col_max = f.index(xmax, ymax)
+                xmin_px = min(col_min, col_max)
+                xmax_px = max(col_min, col_max)
+                ymin_px = min(row_min, row_max)
+                ymax_px = max(row_min, row_max)
+                boxes.append([xmin_px, ymin_px, xmax_px, ymax_px])
 
         tensor = torch.tensor(boxes)
         return tensor
