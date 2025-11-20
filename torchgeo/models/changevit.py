@@ -266,6 +266,7 @@ class ChangeViT(Module):
 
         Args:
             backbone: Name of the timm ViT model to use as backbone
+                (e.g., 'vit_small_patch14_dinov2', 'vit_tiny_patch16_224')
             img_size: Input image size (default: 256)
             in_channels: Number of input channels per temporal frame (default: 3)
             num_classes: Number of output classes (default: 1)

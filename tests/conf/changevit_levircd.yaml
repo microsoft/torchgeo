@@ -13,7 +13,7 @@ model:
   class_path: ChangeDetectionTask
   init_args:
     model: 'changevit'
-    backbone: 'large_dinov3_sat' # Options: tiny, small, small_dinov3, large, large_dinov3_sat
+    backbone: 'vit_small_patch16_dinov3.lvd1689m'
     task: 'binary'
     loss: 'dice' # Original paper uses bce+dice for better performance-> not yet implemented
     lr: 1e-4

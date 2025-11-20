@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCN, FCSiamConc, FCSiamDiff, changevit, get_weight
+from ..models import ChangeViT, FCN, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -234,7 +234,7 @@ class ChangeDetectionTask(BaseTask):
                     encoder_weights='imagenet' if weights is True else None,
                 )
             case 'changevit':
-                self.model = changevit(backbone=backbone)  # type: ignore[arg-type]
+                self.model = ChangeViT(backbone=backbone)
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
