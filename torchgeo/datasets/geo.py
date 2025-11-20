@@ -886,10 +886,12 @@ class VectorDataset(GeoDataset):
             if match is not None:
                 try:
                     src = gpd.read_file(filepath, layer=layer)
-                    if crs is None:
-                        crs = src.crs
+                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    if src.crs is None:
+                        src.set_crs(crs, inplace=True)
+                    elif src.crs != crs:
+                        src.to_crs(crs, inplace=True)
 
-                    src.to_crs(crs, inplace=True)
                     minx, miny, maxx, maxy = src.total_bounds
                     geom = shapely.box(minx, miny, maxx, maxy)
                     geometries.append(geom)
