@@ -1,13 +1,5 @@
 # ChangeViT config for LEVIR-CD dataset
 # Paper: https://arxiv.org/abs/2406.12847
-#
-# This config uses DINOv3-Large-SAT backbone (323M params)
-# Pretrained on 493M satellite images @ 0.6m resolution
-#
-# NOTE: For best results, consider:
-# 1. Combined BCE+Dice loss (paper shows this helps with class imbalance)
-# 2. Random patch sampling for validation (addresses train/val distribution mismatch)
-# These features would require updates to ChangeDetectionTask and LEVIRCDDataModule
 
 model:
   class_path: ChangeDetectionTask
@@ -15,7 +7,7 @@ model:
     model: 'changevit'
     backbone: 'vit_small_patch16_dinov3.lvd1689m'
     task: 'binary'
-    loss: 'dice' # Original paper uses bce+dice for better performance-> not yet implemented
+    loss: 'dice'
     lr: 1e-4
     num_classes: 2
 
@@ -30,31 +22,13 @@ data:
 
 trainer:
   max_steps: 80000
-  accumulate_grad_batches: 4 # Effective batch size: 48
+  accumulate_grad_batches: 4
   gradient_clip_val: 1.0
   accelerator: auto
   devices: 1
   check_val_every_n_epoch: 20
   log_every_n_steps: 10
   enable_progress_bar: true
-  logger:
-    class_path: lightning.pytorch.loggers.WandbLogger
-    init_args:
-      name: 'changevit_large_dinov3_sat'
-      project: 'torchgeo-changevit'
-  callbacks:
-    - class_path: lightning.pytorch.callbacks.RichModelSummary
-      init_args:
-        max_depth: 2
-    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
-      init_args:
-        monitor: 'val_BinaryF1Score'
-        mode: 'max'
-        save_top_k: 3
-        save_last: true
-    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
-      init_args:
-        logging_interval: 'step'
 
 optimizer:
   class_path: torch.optim.AdamW

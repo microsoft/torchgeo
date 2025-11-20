@@ -5,82 +5,52 @@
 import pytest
 import torch
 
+from torchgeo.models import ChangeViT
 from torchgeo.models.changevit import (
-    ChangeViT,
     ChangeViTDecoder,
     DetailCaptureModule,
     FeatureInjector,
-    changevit,
 )
 
-BACKBONES = ['tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat']
 BATCH_SIZE = [1, 2]
 
 
 class TestChangeViT:
     @torch.no_grad()
-    @pytest.mark.parametrize('backbone', BACKBONES)
-    def test_changevit_backbones(self, backbone: str) -> None:
-        """Test ChangeViT instantiation with different backbones."""
-        model = changevit(backbone=backbone)  # type: ignore[arg-type]
-        assert isinstance(model, ChangeViT)
-
-    @torch.no_grad()
-    def test_changevit_invalid_backbone(self) -> None:
-        """Test ChangeViT with invalid backbone raises KeyError."""
-        with pytest.raises(KeyError):
-            changevit(backbone='invalid_backbone')  # type: ignore[arg-type]
-
-    @torch.no_grad()
     @pytest.mark.parametrize('b', BATCH_SIZE)
-    def test_changevit_forward(self, b: int) -> None:
+    def test_forward(self, b: int) -> None:
         """Test ChangeViT forward pass with different batch sizes."""
-        model = changevit(backbone='tiny')
+        # Use tiny model with small images for fast testing
+        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=64, pretrained=False)
         model.eval()
 
         # Input: [B, T=2, C=3, H, W]
-        x = torch.randn(b, 2, 3, 256, 256)
+        x = torch.randn(b, 2, 3, 64, 64)
         y = model(x)
 
         # Output: [B, 1, H, W] - binary change detection logits
-        assert y.shape == (b, 1, 256, 256)
+        assert y.shape == (b, 1, 64, 64)
 
     @torch.no_grad()
-    def test_changevit_components(self) -> None:
-        """Test ChangeViT has required components."""
-        model = changevit(backbone='tiny')
-
-        assert hasattr(model, 'encoder')
-        assert hasattr(model, 'detail_capture')
-        assert hasattr(model, 'feature_injector')
-        assert hasattr(model, 'decoder')
-
-    @torch.no_grad()
-    def test_changevit_direct_instantiation(self) -> None:
-        """Test ChangeViT direct instantiation with backbone string."""
-        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=256)
-        assert isinstance(model, ChangeViT)
-
-        x = torch.randn(1, 2, 3, 256, 256)
-        y = model(x)
-        assert y.shape == (1, 1, 256, 256)
-
-    @torch.no_grad()
-    def test_changevit_different_img_sizes(self) -> None:
+    def test_different_img_sizes(self) -> None:
         """Test ChangeViT with different image sizes."""
-        for img_size in [128, 256, 512]:
-            model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=img_size)
+        for img_size in [64, 128, 224]:
+            model = ChangeViT(
+                backbone='vit_tiny_patch16_224', img_size=img_size, pretrained=False
+            )
             x = torch.randn(1, 2, 3, img_size, img_size)
             y = model(x)
             assert y.shape == (1, 1, img_size, img_size)
 
     @torch.no_grad()
-    def test_changevit_pretrained_false(self) -> None:
-        """Test ChangeViT with pretrained=False explicitly."""
-        model = ChangeViT(
-            backbone='vit_tiny_patch16_224', img_size=256, pretrained=False
-        )
-        assert isinstance(model, ChangeViT)
+    def test_components(self) -> None:
+        """Test ChangeViT has required components."""
+        model = ChangeViT(backbone='vit_tiny_patch16_224', img_size=64, pretrained=False)
+
+        assert hasattr(model, 'encoder')
+        assert hasattr(model, 'detail_capture')
+        assert hasattr(model, 'feature_injector')
+        assert hasattr(model, 'decoder')
 
 
 class TestDetailCaptureModule:
