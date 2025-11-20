@@ -262,9 +262,10 @@ class OpenBuildings(VectorDataset):
         if not len(filepaths):
             raise DatasetNotFoundError(self)
 
+        data = {'filepath': filepaths}
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(
-            dict(filepath=filepaths),
+            data,
             index=index,
             geometry=list(geometries),
             crs=self._source_crs,
@@ -288,8 +289,7 @@ class OpenBuildings(VectorDataset):
         interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[:: t.step]
-        bbox = shapely.box(x.start, y.start, x.stop, y.stop)
-        index = index[index.geometry.intersects(bbox)]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
