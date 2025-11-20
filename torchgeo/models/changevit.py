@@ -251,6 +251,17 @@ class ChangeViT(Module):
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2406.12847
+
+    .. note::
+       For best results on LEVIR-CD as reported in the paper, use:
+
+       * Backbone: ``vit_large_patch16_dinov3.sat493m`` (DINOv3-Large pretrained on
+         satellite imagery)
+       * Loss: Combined BCE+Dice loss (not yet implemented in ChangeDetectionTask)
+       * Training: 80k steps with batch size 48
+       * Image size: 256x256 patches
+
+    .. versionadded:: 0.8
     """
 
     def __init__(

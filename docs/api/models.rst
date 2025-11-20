@@ -16,6 +16,11 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+ChangeViT
+^^^^^^^^^
+
+.. autoclass:: ChangeViT
+
 ConvLSTM
 ^^^^^^^^
 
