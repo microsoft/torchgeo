@@ -62,6 +62,7 @@ class TestIDTReeS:
             if x['bbox_xyxy'].ndim != 1:
                 assert x['bbox_xyxy'].ndim == 2
                 assert x['bbox_xyxy'].shape[-1] == 4
+                assert x['bbox_xyxy'].shape[0] > 0
 
     def test_len(self, dataset: IDTReeS) -> None:
         assert len(dataset) == 3
