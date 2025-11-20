@@ -265,10 +265,7 @@ class OpenBuildings(VectorDataset):
         data = {'filepath': filepaths}
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(
-            data,
-            index=index,
-            geometry=list(geometries),
-            crs=self._source_crs,
+            data, index=index, geometry=list(geometries), crs=self._source_crs
         )
         if crs is not None and crs != self._source_crs:
             self.index.to_crs(crs, inplace=True)
