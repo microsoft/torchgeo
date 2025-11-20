@@ -451,15 +451,10 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
-                        if src.crs == crs:
-                            geometries.append(shapely.box(*src.bounds))
+                        with WarpedVRT(src, crs=crs) as vrt:
+                            geometries.append(shapely.box(*vrt.bounds))
                             if res is None:
-                                res = src.res
-                        else:
-                            with WarpedVRT(src, crs=crs) as vrt:
-                                geometries.append(shapely.box(*vrt.bounds))
-                                if res is None:
-                                    res = vrt.res
+                                res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
