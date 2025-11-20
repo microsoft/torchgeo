@@ -188,6 +188,7 @@ class SpaceNet(NonGeoDataset, ABC):
             Tensor: label tensor
         """
         try:
+            # Raises a JSONDecodeError for empty files
             with open(path) as f:
                 json.load(f)
 
