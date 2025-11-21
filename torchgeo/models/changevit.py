@@ -264,9 +264,7 @@ class ChangeViT(Module):
             backbone, pretrained=pretrained, num_classes=0, img_size=img_size, **kwargs
         )
 
-        embed_dim = getattr(self.encoder, 'embed_dim', None)
-        if embed_dim is None:
-            raise AttributeError('ViT backbone must have embed_dim attribute')
+        embed_dim: int = self.encoder.embed_dim  # type: ignore[assignment]
 
         self.detail_capture = DetailCaptureModule(
             in_channels=in_channels * 2, pretrained=pretrained
@@ -296,18 +294,12 @@ class ChangeViT(Module):
 
         detail_features = self.detail_capture(x_concat)
 
-        patch_embed = getattr(self.encoder, 'patch_embed', None)
-        if patch_embed is None:
-            raise AttributeError('ViT backbone must have patch_embed attribute')
-
-        patch_size_attr = getattr(patch_embed, 'patch_size', None)
-        if patch_size_attr is None:
-            raise AttributeError('patch_embed must have patch_size attribute')
-
-        if isinstance(patch_size_attr, list | tuple):
-            patch_size = patch_size_attr[0]
-        else:
-            patch_size = patch_size_attr
+        patch_size_attr = self.encoder.patch_embed.patch_size
+        patch_size = (
+            patch_size_attr[0]
+            if isinstance(patch_size_attr, tuple)
+            else patch_size_attr
+        )
 
         h_patch, w_patch = h // patch_size, w // patch_size
         num_patch_tokens = h_patch * w_patch

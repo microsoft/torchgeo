@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
+from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -42,6 +42,7 @@ class ChangeDetectionTask(BaseTask):
             'fcsiamdiff',
             'fcsiamconc',
             'changevit',
+            'btc',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -235,6 +236,8 @@ class ChangeDetectionTask(BaseTask):
                 )
             case 'changevit':
                 self.model = ChangeViT(backbone=backbone)
+            case 'btc':
+                self.model = BTC(backbone=backbone, classes=num_classes)
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):

@@ -1,8 +1,8 @@
 model:
   class_path: ChangeDetectionTask
   init_args:
-    model: 'changevit'
-    backbone: 'vit_tiny_patch16_224'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 3
     loss: 'bce'
 data:

@@ -242,6 +242,10 @@ class TestChangeDetectionTask:
         """BTC uses only swin backbones. Need separate test for full test coverage."""
         ChangeDetectionTask(model='btc', backbone='swin_tiny')
 
+    def test_changevit_model(self) -> None:
+        """ChangeViT uses ViT backbones. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='changevit', backbone='vit_tiny_patch16_224')
+
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetectionTask(loss=loss_fn)
