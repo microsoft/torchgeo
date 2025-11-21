@@ -246,6 +246,34 @@ class TestChangeDetectionTask:
         """ChangeViT uses ViT backbones. Need separate test for full test coverage."""
         ChangeDetectionTask(model='changevit', backbone='vit_tiny_patch16_224')
 
+    def test_changevit_in_channels(self) -> None:
+        """Test ChangeViT with custom in_channels."""
+        model = ChangeDetectionTask(
+            model='changevit', backbone='vit_tiny_patch16_224', in_channels=4
+        )
+        x = torch.randn(1, 2, 4, 256, 256)
+        y = model(x)
+        assert y.shape == (1, 1, 256, 256)
+
+    def test_changevit_num_classes(self) -> None:
+        """Test ChangeViT with multiclass segmentation."""
+        model = ChangeDetectionTask(
+            model='changevit',
+            backbone='vit_tiny_patch16_224',
+            task='multiclass',
+            num_classes=5,
+        )
+        x = torch.randn(1, 2, 3, 256, 256)
+        y = model(x)
+        assert y.shape == (1, 5, 256, 256)
+
+    def test_changevit_predict(self) -> None:
+        """Test ChangeViT predict_step to ensure input is not rearranged."""
+        model = ChangeDetectionTask(model='changevit', backbone='vit_tiny_patch16_224')
+        batch = {'image': torch.randn(1, 2, 3, 256, 256)}
+        y = model.predict_step(batch, batch_idx=0)
+        assert y.shape == (1, 1, 256, 256)
+
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetectionTask(loss=loss_fn)

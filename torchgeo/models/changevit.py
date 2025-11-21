@@ -261,7 +261,12 @@ class ChangeViT(Module):
         super().__init__()
 
         self.encoder: Any = timm.create_model(
-            backbone, pretrained=pretrained, num_classes=0, img_size=img_size, **kwargs
+            backbone,
+            pretrained=pretrained,
+            num_classes=0,
+            img_size=img_size,
+            in_chans=in_channels,
+            **kwargs,
         )
 
         embed_dim: int = self.encoder.embed_dim  # type: ignore[assignment]

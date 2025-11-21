@@ -235,7 +235,9 @@ class ChangeDetectionTask(BaseTask):
                     encoder_weights='imagenet' if weights is True else None,
                 )
             case 'changevit':
-                self.model = ChangeViT(backbone=backbone)
+                self.model = ChangeViT(
+                    backbone=backbone, in_channels=in_channels, num_classes=num_classes
+                )
             case 'btc':
                 self.model = BTC(backbone=backbone, classes=num_classes)
 
