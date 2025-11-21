@@ -71,7 +71,7 @@ if __name__ == '__main__':
         df.loc[name, 'License'] = data['license']['spdx_id']
 
         url = f'https://api.github.com/repos/{owner}/{repo}/commits'
-        params = {'per_page': 1}
+        params: dict[str, int | str] = {'per_page': 1}
         response = requests.get(url, params=params, headers=headers)
         df.loc[name, 'Commits'] = page_count(response)
 

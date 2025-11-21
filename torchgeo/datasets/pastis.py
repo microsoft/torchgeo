@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -290,13 +290,11 @@ class PASTIS(NonGeoDataset):
         Returns:
             list of dicts containing image and semantic/instance target file paths
         """
-        self.idxs = []
         metadata_fn = os.path.join(self.root, self.directory, 'metadata.geojson')
-        with fiona.open(metadata_fn) as f:
-            for row in f:
-                fold = int(row['properties']['Fold'])
-                if fold in self.folds:
-                    self.idxs.append(row['properties']['ID_PATCH'])
+        gdf = gpd.read_file(metadata_fn)
+        gdf['Fold'] = gdf['Fold'].astype(int)
+        gdf = gdf[gdf['Fold'].isin(self.folds)]
+        self.idxs = gdf['ID_PATCH'].tolist()
 
         files = []
         for i in self.idxs:

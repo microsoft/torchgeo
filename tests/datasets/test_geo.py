@@ -650,6 +650,19 @@ class TestVectorDataset:
         ds = CustomVectorDataset(root, res=0.1)
         assert ds.res == (0.1, 0.1)
 
+    def test_skip_unreadable_file(self, tmp_path: Path) -> None:
+        valid_file = tmp_path / 'vector_2024.geojson'
+        invalid_file = tmp_path / 'vector_2025.geojson'
+        valid_file.write_text(
+            '{"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}}, "features": [{"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [[[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]]}}]}'
+        )
+        invalid_file.write_text('invalid geojson content')
+
+        ds = CustomVectorDataset(tmp_path, res=(0.1, 0.1))
+        assert len(ds) == 1
+        assert str(valid_file) in [str(fp) for fp in ds.index['filepath']]
+        assert str(invalid_file) not in [str(fp) for fp in ds.index['filepath']]
+
 
 class TestNonGeoDataset:
     @pytest.fixture(scope='class')

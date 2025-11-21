@@ -8,9 +8,9 @@ import os
 from collections.abc import Callable, Iterable
 from typing import Any
 
-import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -192,11 +192,11 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def get_label(self, feature: 'fiona.model.Feature') -> int:
+    def get_label(self, feature: pd.Series) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`fiona.model.Feature` from which to extract the label.
+            feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
@@ -204,7 +204,7 @@ class EuroCrops(VectorDataset):
         # Convert the HCAT code of this feature to its index per self.class_map.
         # We go up the class hierarchy until there is a match.
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
-        hcat_code = feature['properties'][self.label_name]
+        hcat_code = feature[self.label_name]
         if hcat_code is None:
             return 0
 
