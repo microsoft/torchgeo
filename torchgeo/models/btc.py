@@ -35,14 +35,14 @@ class BTC(Module):
     """
 
     def __init__(
-        self, backbone: str, backbone_pretrained: bool = True, classes: int = 1
+        self, backbone: str, backbone_pretrained: bool = False, classes: int = 1
     ) -> None:
         """Initialise BTC model.
 
         Args:
             backbone: backbone type (either swin_tiny, swin_small or swin_base).
-            classes: number of classes (default is 1).
-            backbone_pretrained: whether the cityscapes pretrained swin is used (default is True).
+            classes: number of classes.
+            backbone_pretrained: whether the cityscapes pretrained swin is used.
         """
         super().__init__()
         self.encoder = SwinBackbone(backbone, backbone_pretrained=backbone_pretrained)
@@ -101,13 +101,13 @@ class SwinBackbone(Module):
     """Swin backbone for multi-resolution feature extraction."""
 
     def __init__(
-        self, model_size: str = 'swin_base', backbone_pretrained: bool = True
+        self, model_size: str = 'swin_base', backbone_pretrained: bool = False
     ) -> None:
         """Initialise swin backbone for multi-resolution feature extraction.
 
         Args:
             model_size: Swin size, one of 'swin_tiny', 'swin_small', or 'swin_base'.
-            backbone_pretrained: whether the cityscapes pretrained swin is used (default is True).
+            backbone_pretrained: whether the cityscapes pretrained swin is used.
         """
         super().__init__()
         match model_size:
