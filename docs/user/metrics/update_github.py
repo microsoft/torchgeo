@@ -49,7 +49,7 @@ if __name__ == '__main__':
     df = pd.DataFrame(columns=columns, index=index, dtype=float)
     df = df.astype({'License': str})
 
-    # GitHub
+    print('\nGitHub')
     headers = {
         'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
@@ -61,6 +61,7 @@ if __name__ == '__main__':
         if name not in index:
             continue
 
+        print(f'* {name}')
         url = f'https://api.github.com/repos/{owner}/{repo}'
         response = requests.get(url, headers=headers)
         data = response.json()
@@ -90,9 +91,10 @@ if __name__ == '__main__':
         response = requests.get(url, params=params, headers=headers)
         df.loc[name, 'Releases'] = page_count(response)
 
-    # Codecov
+    print('\nCodecov')
     headers = {'accept': 'application/json'}
     for name, (service, owner, repo) in name_to_codecov.items():
+        print(f'* {name}')
         url = (
             f'https://api.codecov.io/api/v2/{service}/{owner}/repos/{repo}/report/tree'
         )
