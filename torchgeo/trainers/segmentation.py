@@ -12,14 +12,8 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
-from torchmetrics.classification import (
-    Accuracy,
-    FBetaScore,
-    JaccardIndex,
-    Precision,
-    Recall,
-)
+from torchmetrics import (Accuracy, FBetaScore, JaccardIndex, MetricCollection,
+                          Precision, Recall)
 from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
@@ -85,7 +79,7 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        .. versionadded:: 0.8
+        .. versionadded:: 0.9
             The *labels* parameter.
 
         .. versionadded:: 0.7
@@ -196,11 +190,11 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.classification.MulticlassAccuracy`: Overall accuracy
-        (OA) using 'micro' averaging. The number of true positives divided by the
-        dataset size. Higher values are better.
-        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
-        over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+        * :class:`~torchmetrics.MulticlassAccuracy`: Overall accuracy
+            (OA) using 'micro' averaging. The number of true positives divided by the
+          dataset size. Higher values are better.
+        * :class:`~torchmetrics.MulticlassJaccardIndex`: Intersection
+            over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
         * 'Micro' averaging suits overall performance evaluation but may not reflect
