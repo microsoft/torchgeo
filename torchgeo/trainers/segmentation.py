@@ -230,67 +230,42 @@ class SemanticSegmentationTask(BaseTask):
             'ignore_index': ignore_index,
         }
 
-        # For binary and multilabel tasks, we only need micro averaging
-        if task in ['binary', 'multilabel']:
-            metrics_dict['OverallAccuracy'] = Accuracy(
+        for average in ['micro', 'macro']:
+            # Binary and multilabel tasks only need micro averaging
+            if task in ['binary', 'multilabel'] and average == 'macro':
+                continue
+
+            prefix = 'Overall' if average == 'micro' else 'Average'
+
+            metrics_dict[f'{prefix}Accuracy'] = Accuracy(
                 multidim_average='global',
-                average='micro',
+                average=average,
                 **kwargs
             )
-            metrics_dict['OverallF1Score'] = FBetaScore(
+
+            metrics_dict[f'{prefix}F1Score'] = FBetaScore(
                 multidim_average='global',
-                average='micro',
+                average=average,
                 beta=1.0,
                 **kwargs
             )
-            metrics_dict['OverallJaccardIndex'] = JaccardIndex(
-                average='micro',
+
+            metrics_dict[f'{prefix}JaccardIndex'] = JaccardIndex(
+                average=average,
                 **kwargs
             )
-            metrics_dict['OverallPrecision'] = Precision(
+
+            metrics_dict[f'{prefix}Precision'] = Precision(
                 multidim_average='global',
-                average='micro',
+                average=average,
                 **kwargs
             )
-            metrics_dict['OverallRecall'] = Recall(
+
+            metrics_dict[f'{prefix}Recall'] = Recall(
                 multidim_average='global',
-                average='micro',
+                average=average,
                 **kwargs
             )
-        else:  # multiclass task
-            # Loop through averaging types for multiclass
-            for average in ['micro', 'macro']:
-                prefix = 'Overall' if average == 'micro' else 'Average'
-                
-                metrics_dict[f'{prefix}Accuracy'] = Accuracy(
-                    multidim_average='global',
-                    average=average,
-                    **kwargs
-                )
-                
-                metrics_dict[f'{prefix}F1Score'] = FBetaScore(
-                    multidim_average='global',
-                    average=average,
-                    beta=1.0,
-                    **kwargs
-                )
-                
-                metrics_dict[f'{prefix}JaccardIndex'] = JaccardIndex(
-                    average=average,
-                    **kwargs
-                )
-                
-                metrics_dict[f'{prefix}Precision'] = Precision(
-                    multidim_average='global',
-                    average=average,
-                    **kwargs
-                )
-                
-                metrics_dict[f'{prefix}Recall'] = Recall(
-                    multidim_average='global',
-                    average=average,
-                    **kwargs
-                )
 
         # Add classwise metrics for binary and multiclass (not multilabel)
         if task in ['binary', 'multiclass'] and labels is not None:
