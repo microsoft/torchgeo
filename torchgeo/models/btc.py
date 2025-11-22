@@ -34,15 +34,18 @@ class BTC(Module):
     .. versionadded:: 0.8
     """
 
-    def __init__(self, backbone: str, classes: int = 1) -> None:
+    def __init__(
+        self, backbone: str, backbone_pretrained: bool = False, classes: int = 1
+    ) -> None:
         """Initialise BTC model.
 
         Args:
             backbone: backbone type (either swin_tiny, swin_small or swin_base).
-            classes: number of classes (default is 1).
+            classes: number of classes.
+            backbone_pretrained: whether the cityscapes pretrained swin is used.
         """
         super().__init__()
-        self.encoder = SwinBackbone(backbone)
+        self.encoder = SwinBackbone(backbone, backbone_pretrained=backbone_pretrained)
         self.difference = subtraction_fusion
         # pad at the beginning since smp impl. cuts first two elements off
         self.decoder = smp.decoders.upernet.decoder.UPerNetDecoder(
@@ -97,23 +100,26 @@ class BTC(Module):
 class SwinBackbone(Module):
     """Swin backbone for multi-resolution feature extraction."""
 
-    def __init__(self, model_size: str = 'swin_base') -> None:
+    def __init__(
+        self, model_size: str = 'swin_base', backbone_pretrained: bool = False
+    ) -> None:
         """Initialise swin backbone for multi-resolution feature extraction.
 
         Args:
             model_size: Swin size, one of 'swin_tiny', 'swin_small', or 'swin_base'.
+            backbone_pretrained: whether the cityscapes pretrained swin is used.
         """
         super().__init__()
         match model_size:
             case 'swin_tiny':
                 weights = Swin_T_Weights.CITYSCAPES_SEMSEG
-                model = swin_t(weights)
+                model = swin_t(weights if backbone_pretrained else None)
             case 'swin_small':
                 weights = Swin_S_Weights.CITYSCAPES_SEMSEG
-                model = swin_s(weights)
+                model = swin_s(weights if backbone_pretrained else None)
             case 'swin_base':
                 weights = Swin_B_Weights.CITYSCAPES_SEMSEG
-                model = swin_b(weights)
+                model = swin_b(weights if backbone_pretrained else None)
             case _:
                 raise ValueError(
                     f'Invalid swin size: {model_size}. Possible options: swin_[tiny | small | base]'
@@ -132,9 +138,10 @@ class SwinBackbone(Module):
             norms.append(nn.LayerNorm(ch))
         self.norms = nn.ModuleList(norms)
 
-        # load pretrained feature norm weights
-        state_dict = weights.get_state_dict(include_norms=True, progress=True)
-        self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
+        if backbone_pretrained:
+            # load pretrained feature norm weights
+            state_dict = weights.get_state_dict(include_norms=True, progress=True)
+            self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
     def forward(self, x: Tensor) -> list[Tensor]:
         """Get multi-resolution features and apply layernorm to each level.
