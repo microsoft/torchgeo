@@ -230,88 +230,69 @@ class SemanticSegmentationTask(BaseTask):
             'ignore_index': ignore_index,
         }
 
-        for average in ['micro', 'macro']:
+        averages = ['micro', 'macro']
+        add_classwise_metrics = task in ['binary', 'multiclass'] and labels is not None
+        if add_classwise_metrics:
+            # "global" acts as a sentinel for classwise (average='none') metrics.
+            averages.append('global')
+
+        def metric_name(base: str, avg: str) -> str:
+            if avg == 'micro':
+                return f'Overall{base}'
+            if avg == 'macro':
+                return f'Average{base}'
+            return base
+
+        for average in averages:
             # Binary and multilabel tasks only need micro averaging
-            if task in ['binary', 'multilabel'] and average == 'macro':
+            if average == 'macro' and task in ['binary', 'multilabel']:
                 continue
 
-            prefix = 'Overall' if average == 'micro' else 'Average'
+            metric_average = 'none' if average == 'global' else average
 
-            metrics_dict[f'{prefix}Accuracy'] = Accuracy(
-                multidim_average='global',
-                average=average,
-                **kwargs
-            )
+            def finalize(metric: Any) -> Any:
+                if average == 'global':
+                    return ClasswiseWrapper(metric, labels=labels)
+                return metric
 
-            metrics_dict[f'{prefix}F1Score'] = FBetaScore(
-                multidim_average='global',
-                average=average,
-                beta=1.0,
-                **kwargs
-            )
-
-            metrics_dict[f'{prefix}JaccardIndex'] = JaccardIndex(
-                average=average,
-                **kwargs
-            )
-
-            metrics_dict[f'{prefix}Precision'] = Precision(
-                multidim_average='global',
-                average=average,
-                **kwargs
-            )
-
-            metrics_dict[f'{prefix}Recall'] = Recall(
-                multidim_average='global',
-                average=average,
-                **kwargs
-            )
-
-        # Add classwise metrics for binary and multiclass (not multilabel)
-        if task in ['binary', 'multiclass'] and labels is not None:
-            metrics_dict['Accuracy'] = ClasswiseWrapper(
+            metrics_dict[metric_name('Accuracy', average)] = finalize(
                 Accuracy(
                     multidim_average='global',
-                    average='none',
+                    average=metric_average,
                     **kwargs
-                ),
-                labels=labels,
+                )
             )
-            
-            metrics_dict['F1Score'] = ClasswiseWrapper(
+
+            metrics_dict[metric_name('F1Score', average)] = finalize(
                 FBetaScore(
                     multidim_average='global',
-                    average='none',
+                    average=metric_average,
                     beta=1.0,
                     **kwargs
-                ),
-                labels=labels,
+                )
             )
-            
-            metrics_dict['JaccardIndex'] = ClasswiseWrapper(
+
+            metrics_dict[metric_name('JaccardIndex', average)] = finalize(
                 JaccardIndex(
-                    average='none',
+                    average=metric_average,
                     **kwargs
-                ),
-                labels=labels,
+                )
             )
-            
-            metrics_dict['Precision'] = ClasswiseWrapper(
+
+            metrics_dict[metric_name('Precision', average)] = finalize(
                 Precision(
                     multidim_average='global',
-                    average='none',
+                    average=metric_average,
                     **kwargs
-                ),
-                labels=labels,
+                )
             )
-            
-            metrics_dict['Recall'] = ClasswiseWrapper(
+
+            metrics_dict[metric_name('Recall', average)] = finalize(
                 Recall(
                     multidim_average='global',
-                    average='none',
+                    average=metric_average,
                     **kwargs
-                ),
-                labels=labels,
+                )
             )
 
         # Create metric collections
