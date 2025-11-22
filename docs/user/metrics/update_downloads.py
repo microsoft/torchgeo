@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import argparse
-import re
 import time
 
 import pandas as pd
