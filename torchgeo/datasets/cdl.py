@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CDL dataset."""
@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -50,6 +50,7 @@ class CDL(RasterDataset):
 
     url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
     md5s: ClassVar[dict[int, str]] = {
+        2024: '841cd0cb8d4a9129cb1e4cfa0e40c286',
         2023: '8c7685d6278d50c554f934b16a6076b7',
         2022: '754cf50670cdfee511937554785de3e6',
         2021: '27606eab08fe975aa138baad3e5dfcd8',
@@ -271,17 +272,17 @@ class CDL(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
         sample = super().__getitem__(query)
         sample['mask'] = self.ordinal_map[sample['mask']]

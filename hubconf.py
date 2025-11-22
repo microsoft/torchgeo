@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo pre-trained model repository configuration file.
@@ -8,16 +8,23 @@
 """
 
 from torchgeo.models import (
+    aurora_swin_unet,
+    convlstm,
     copernicusfm_base,
     croma_base,
     croma_large,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
+    earthloc,
+    ltae,
     panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
     scalemae_large_patch16,
+    swin_b,
+    swin_s,
+    swin_t,
     swin_v2_b,
     swin_v2_t,
     unet,
@@ -30,16 +37,23 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'aurora_swin_unet',
+    'convlstm',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
+    'earthloc',
+    'ltae',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',
     'resnet152',
     'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
     'swin_v2_b',
     'swin_v2_t',
     'unet',
@@ -51,4 +65,10 @@ __all__ = (
     'vit_small_patch16_224',
 )
 
-dependencies = ['timm', 'torchvision', 'segmentation_models_pytorch', 'kornia']
+dependencies = [
+    'kornia',
+    'microsoft-aurora',
+    'segmentation_models_pytorch',
+    'timm',
+    'torchvision',
+]

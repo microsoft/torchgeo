@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -30,14 +30,11 @@ class TestBRIGHTDFC2025:
     def test_getitem(self, dataset: BRIGHTDFC2025) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['image_pre'], torch.Tensor)
-        assert x['image_pre'].shape[0] == 3
-        assert isinstance(x['image_post'], torch.Tensor)
-        assert x['image_post'].shape[0] == 3
-        assert x['image_pre'].shape[-2:] == x['image_post'].shape[-2:]
+        assert isinstance(x['image'], torch.Tensor)
+        assert x['image'].shape[1] == 3
         if dataset.split != 'test':
             assert isinstance(x['mask'], torch.Tensor)
-            assert x['image_pre'].shape[-2:] == x['mask'].shape[-2:]
+            assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
     def test_len(self, dataset: BRIGHTDFC2025) -> None:
         if dataset.split == 'train':
@@ -69,7 +66,7 @@ class TestBRIGHTDFC2025:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'dfc25_track2_trainval.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             BRIGHTDFC2025(root=tmp_path, checksum=True)
 
     def test_plot(self, dataset: BRIGHTDFC2025) -> None:

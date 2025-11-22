@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -15,7 +15,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     EUDEM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -57,7 +56,7 @@ class TestEUDEM:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'eu_dem_v11_E30N10.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             EUDEM(tmp_path, checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
@@ -82,8 +81,7 @@ class TestEUDEM:
         plt.close()
 
     def test_invalid_query(self, dataset: EUDEM) -> None:
-        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo datasets."""
@@ -84,6 +84,7 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
@@ -121,6 +122,7 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
+from .openstreetmap import OpenStreetMap
 from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
@@ -139,6 +141,7 @@ from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .soda import SODAA
+from .solar_plants_brazil import SolarPlantsBrazil
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
@@ -309,6 +312,7 @@ __all__ = (
     'NonGeoClassificationDataset',
     'NonGeoDataset',
     'OpenBuildings',
+    'OpenStreetMap',
     'PatternNet',
     'Potsdam2D',
     'QuakeSet',
@@ -325,6 +329,7 @@ __all__ = (
     'Sentinel2',
     'SkyScript',
     'So2Sat',
+    'SolarPlantsBrazil',
     'SouthAfricaCropType',
     'SouthAmericaSoybean',
     'SpaceNet',
@@ -347,6 +352,7 @@ __all__ = (
     'VectorDataset',
     'WesternUSALiveFuelMoisture',
     'XView2',
+    'XarrayDataset',
     'ZueriCrop',
     'concat_samples',
     'merge_samples',

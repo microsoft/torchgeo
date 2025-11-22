@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from typing import Any
@@ -20,7 +20,8 @@ from torchgeo.datamodules import (
     MisconfigurationException,
     NonGeoDataModule,
 )
-from torchgeo.datasets import BoundingBox, GeoDataset, NonGeoDataset
+from torchgeo.datasets import GeoDataset, NonGeoDataset
+from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
 
 MINT = pd.Timestamp(2025, 4, 24)
@@ -37,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
         return {'image': image, 'crs': self.index.crs, 'bounds': query}
 
@@ -200,6 +201,16 @@ class TestGeoDataModule:
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
 
+    def test_drop_last(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset(length=2)
+        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
+
 
 class TestNonGeoDataModule:
     @pytest.fixture
@@ -272,3 +283,12 @@ class TestNonGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last(self) -> None:
+        dm = CustomNonGeoDataModule()
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last

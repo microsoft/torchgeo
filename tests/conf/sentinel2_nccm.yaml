@@ -4,7 +4,7 @@ model:
     loss: 'ce'
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 13
+    in_channels: 12
     num_classes: 5
     num_filters: 1
     ignore_index: 4
@@ -16,3 +16,16 @@ data:
   dict_kwargs:
     nccm_paths: 'tests/data/nccm'
     sentinel2_paths: 'tests/data/sentinel2'
+    sentinel2_bands:
+      - 'B01'
+      - 'B02'
+      - 'B03'
+      - 'B04'
+      - 'B05'
+      - 'B06'
+      - 'B07'
+      - 'B08'
+      - 'B8A'
+      - 'B09'
+      - 'B11'
+      - 'B12'

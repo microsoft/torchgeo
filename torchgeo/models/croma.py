@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Code based on https://github.com/antofuller/CROMA under MIT License
@@ -263,10 +263,10 @@ class Attention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class CrossAttention(nn.Module):
@@ -327,10 +327,10 @@ class CrossAttention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class BaseTransformer(nn.Module):
@@ -380,9 +380,9 @@ class BaseTransformer(nn.Module):
             x: Input tensor.
             relative_position_bias: whether to use relative position bias.
         """
-        for self_attn, ffn in self.layers:
-            x = self_attn(x, relative_position_bias) + x
-            x = ffn(x) + x
+        for self_attn, ffn in self.layers:  # type: ignore[misc]
+            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
+            x = ffn(x) + x  # type: ignore[has-type]
 
         x = self.norm_out(x) if self.final_norm else x
         return x
@@ -440,10 +440,10 @@ class BaseTransformerCrossAttn(nn.Module):
         Returns:
             Output tensor.
         """
-        for self_attn, cross_attn, ffn in self.layers:
-            x = self_attn(x, relative_position_bias) + x
-            x = cross_attn(x, context, relative_position_bias) + x
-            x = ffn(x) + x
+        for self_attn, cross_attn, ffn in self.layers:  # type: ignore[misc]
+            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
+            x = cross_attn(x, context, relative_position_bias) + x  # type: ignore[has-type]
+            x = ffn(x) + x  # type: ignore[has-type]
 
         x = self.norm_out(x)
         return x
@@ -483,17 +483,17 @@ class ViT(nn.Module):
         Returns:
             Output tensor.
         """
-        x = rearrange(
+        imgs = rearrange(
             imgs,
             'b c (h i) (w j) -> b (h w) (c i j)',
             i=self.patch_size,
             j=self.patch_size,
         )
-        # x is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
+        # imgs is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
 
-        x = self.linear_input(x)
-        x = self.transformer(x, relative_position_bias=attn_bias)
-        return x
+        imgs = self.linear_input(imgs)
+        imgs = self.transformer(imgs, relative_position_bias=attn_bias)
+        return imgs
 
 
 class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]

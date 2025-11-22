@@ -1,13 +1,15 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 import timm
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
@@ -46,7 +48,7 @@ class TestViTSmall16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -69,6 +71,14 @@ class TestViTSmall16:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -95,7 +105,7 @@ class TestViTBase16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -118,6 +128,14 @@ class TestViTBase16:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -144,7 +162,7 @@ class TestViTLarge16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -167,6 +185,14 @@ class TestViTLarge16:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -193,7 +219,7 @@ class TestViTHuge14:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -216,6 +242,14 @@ class TestViTHuge14:
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -243,7 +277,7 @@ class TestViTSmall14_DINOv2:
             img_size=weights.meta['img_size'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -272,6 +306,14 @@ class TestViTSmall14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_small_patch14_dinov2(weights=weights)
@@ -298,7 +340,7 @@ class TestViTBase14_DINOv2:
             img_size=weights.meta['img_size'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -324,6 +366,14 @@ class TestViTBase14_DINOv2:
             h, w = img_size
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
+
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
+        torch.compiler.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:

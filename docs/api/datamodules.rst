@@ -62,6 +62,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025DataModule
+
 CaBuAr
 ^^^^^^
 
@@ -170,6 +175,11 @@ OSCD
 
 .. autoclass:: OSCDDataModule
 
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTISDataModule
+
 PatternNet
 ^^^^^^^^^^
 
@@ -214,6 +224,11 @@ So2Sat
 ^^^^^^
 
 .. autoclass:: So2SatDataModule
+
+Solar Plants Brazil
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SolarPlantsBrazilDataModule
 
 SpaceNet
 ^^^^^^^^

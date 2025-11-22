@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """LEVIR-CD+ datamodule."""
@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -45,21 +44,25 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomCrop(self.patch_size, pad_if_needed=True),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomCrop(self.patch_size, pad_if_needed=True),
+            ),
             data_keys=None,
             keepdim=True,
         )
         self.val_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
         )
         self.test_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
@@ -102,21 +105,25 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomCrop(self.patch_size, pad_if_needed=True),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomCrop(self.patch_size, pad_if_needed=True),
+            ),
             data_keys=None,
             keepdim=True,
         )
         self.val_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
         )
         self.test_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,

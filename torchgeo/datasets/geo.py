@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Base classes for all :mod:`torchgeo` datasets."""
@@ -12,13 +12,12 @@ import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
-import fiona
-import fiona.transform
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 import rasterio
 import rasterio.merge
 import shapely
@@ -35,11 +34,13 @@ from torchvision.datasets.folder import default_loader as pil_loader
 
 from .errors import DatasetNotFoundError
 from .utils import (
-    BoundingBox,
+    GeoSlice,
     Path,
     array_to_tensor,
     concat_samples,
+    convert_poly_coords,
     disambiguate_timestamp,
+    lazy_import,
     merge_samples,
     path_is_vsi,
 )
@@ -111,18 +112,46 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: Users should instead use the intersection or union operator.
     __add__ = None  # type: ignore[assignment]
 
-    @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def _disambiguate_slice(self, query: GeoSlice) -> tuple[slice, slice, slice]:
+        """Disambiguate a partial spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            A fully resolved spatiotemporal slice.
+        """
+        out = list(self.bounds)
+
+        if isinstance(query, slice):
+            query = (query,)
+
+        # For each slice (x, y, t)...
+        for i in range(len(query)):
+            # For each component (start, stop, step)...
+            if query[i].start is not None:
+                out[i] = slice(query[i].start, out[i].stop, out[i].step)
+            if query[i].stop is not None:
+                out[i] = slice(out[i].start, query[i].stop, out[i].step)
+            if query[i].step is not None:
+                out[i] = slice(out[i].start, out[i].stop, query[i].step)
+
+        geoslice = tuple(out)
+        assert len(geoslice) == 3
+        return geoslice
+
+    @abc.abstractmethod
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
 
     def __and__(self, other: 'GeoDataset') -> 'IntersectionDataset':
@@ -178,16 +207,18 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     size: {len(self)}"""
 
     @property
-    def bounds(self) -> BoundingBox:
+    def bounds(self) -> tuple[slice, slice, slice]:
         """Bounds of the index.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+            Bounding x, y, and t slices.
         """
-        minx, miny, maxx, maxy = self.index.total_bounds
-        mint = self.index.index.left.min()
-        maxt = self.index.index.right.max()
-        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+        xmin, ymin, xmax, ymax = self.index.total_bounds
+        xres, yres = self.res
+        tmin = self.index.index.left.min()
+        tmax = self.index.index.right.max()
+        tres = 1
+        return slice(xmin, xmax, xres), slice(ymin, ymax, yres), slice(tmin, tmax, tres)
 
     @property
     def crs(self) -> CRS:
@@ -471,21 +502,23 @@ class RasterDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
@@ -494,26 +527,17 @@ class RasterDataset(GeoDataset):
 
         if self.separate_files:
             data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in self.bands:
                 band_filepaths = []
                 for filepath in index.filepath:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
+                    filepath = self._update_filepath(band, filepath)
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
-        sample = {'crs': self.crs, 'bounds': query}
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -526,17 +550,38 @@ class RasterDataset(GeoDataset):
 
         return sample
 
+    def _update_filepath(self, band: str, filepath: str) -> str:
+        """Update `filepath` to point to `band`.
+
+        Args:
+            band: band to search for.
+            filepath: base filepath to use for searching.
+
+        Returns:
+            updated filepath for `band`.
+        """
+        filename = os.path.basename(filepath)
+        directory = os.path.dirname(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'band' in match.groupdict():
+                start = match.start('band')
+                end = match.end('band')
+                filename = filename[:start] + band + filename[end:]
+        filepath = os.path.join(directory, filename)
+        return filepath
+
     def _merge_files(
         self,
         filepaths: Sequence[str],
-        query: BoundingBox,
+        query: GeoSlice,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             band_indexes: indexes of bands to be used
 
         Returns:
@@ -547,9 +592,11 @@ class RasterDataset(GeoDataset):
         else:
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
-        bounds = (query.minx, query.miny, query.maxx, query.maxy)
+        x, y, _ = self._disambiguate_slice(query)
+        bounds = (x.start, y.start, x.stop, y.stop)
+        res = (x.step, y.step)
         dest, _ = rasterio.merge.merge(
-            vrt_fhs, bounds, self.res, indexes=band_indexes, resampling=self.resampling
+            vrt_fhs, bounds, res, indexes=band_indexes, resampling=self.resampling
         )
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
         tensor = array_to_tensor(dest)
@@ -585,6 +632,164 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
+
+
+class XarrayDataset(GeoDataset):
+    """Abstract base class for :class:`GeoDataset` stored as raster files.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(
+        self,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | tuple[float, float] | None = None,
+        data_vars: Sequence[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    ) -> None:
+        """Initialize a new XarrayDataset instance.
+
+        Args:
+            paths: one or more root directories to search or files to load
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            data_vars: list of data variables to load
+                (defaults to all variables of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If rioxarray is not installed.
+        """
+        lazy_import('rioxarray')
+        xr = lazy_import('xarray')
+        self.paths = paths
+        self.transforms = transforms
+
+        # Gather information about the dataset
+        filepaths = []
+        datetimes = []
+        geometries = []
+        for filepath in self.files:
+            try:
+                with xr.open_dataset(filepath, decode_coords='all') as src:
+                    crs = crs or src.rio.crs or CRS.from_epsg(4326)
+                    res = res or src.rio.resolution()
+                    data_vars = data_vars or list(src.data_vars.keys())
+                    tmin = pd.Timestamp(src.time.values.min())
+                    tmax = pd.Timestamp(src.time.values.max())
+
+                    if src.rio.crs is None:
+                        warnings.warn(
+                            f"Unable to decode coordinates of '{filepath}', "
+                            f'defaulting to {crs}. Set `crs` if this is incorrect.',
+                            UserWarning,
+                        )
+                        src = src.rio.write_crs(crs)
+
+                    if src.rio.crs != crs:
+                        src = src.rio.reproject(crs)
+
+                    filepaths.append(filepath)
+                    datetimes.append((tmin, tmax))
+                    geometries.append(shapely.box(*src.rio.bounds()))
+            except (OSError, ValueError):
+                # Skip files that xarray is unable to read
+                continue
+
+        if len(filepaths) == 0:
+            raise DatasetNotFoundError(self)
+
+        if res is not None:
+            if isinstance(res, int | float):
+                res = (res, res)
+
+            self._res = res
+
+        if data_vars is not None:
+            self.data_vars = data_vars
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *query* is not found in the index.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
+
+        if index.empty:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        image = self._merge_files(index.filepath, query)
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'image': image}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _merge_files(self, filepaths: Sequence[str], query: GeoSlice) -> Tensor:
+        """Load and merge one or more files.
+
+        Args:
+            filepaths: one or more files to load and merge
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            image at that index
+        """
+        xr = lazy_import('xarray')
+        rioxr = lazy_import('rioxarray')
+        lazy_import('rioxarray.merge')
+
+        x, y, t = self._disambiguate_slice(query)
+        bounds = (x.start, y.start, x.stop, y.stop)
+        res = (x.step, y.step)
+
+        datasets = []
+        for filepath in filepaths:
+            src = xr.open_dataset(filepath, decode_times=True, decode_coords='all')
+
+            if src.rio.crs is None:
+                src = src.rio.write_crs(self.crs)
+
+            if src.rio.crs != self.crs or res != src.rio.resolution():
+                src = src.rio.reproject(self.crs, resolution=res)
+
+            datasets.append(src)
+
+        dataset = rioxr.merge.merge_datasets(
+            datasets, bounds=bounds, res=res, nodata=0, crs=self.crs
+        )
+        dataset = dataset.sel(time=t)
+
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensors = []
+        for var in self.data_vars:
+            tensors.append(array_to_tensor(dataset[var].values))
+
+        return torch.stack(tensors)
 
 
 class VectorDataset(GeoDataset):
@@ -623,6 +828,10 @@ class VectorDataset(GeoDataset):
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
+        task: Literal[
+            'object_detection', 'semantic_segmentation', 'instance_segmentation'
+        ] = 'semantic_segmentation',
+        layer: str | int | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -635,20 +844,38 @@ class VectorDataset(GeoDataset):
                 entry and returns a transformed version
             label_name: name of the dataset property that has the label to be
                 rasterized into the mask
+            task: computer vision task the dataset is used for. Supported output types
+               `object_detection`, `semantic_segmentation`, `instance_segmentation`
+            layer: if the input is a multilayer vector dataset, such as a geopackage,
+                specify which layer to use. Can be int to specify the index of the layer,
+                str to select the layer with that name or None which opens the first layer
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+            ValueError: If task is not one of allowed tasks
 
         .. versionadded:: 0.4
             The *label_name* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
+
+        .. versionadded:: 0.8
+           The *task* and *layer* parameters
         """
         self.paths = paths
         self.transforms = transforms
         self.label_name = label_name
-
+        # List of allowed tasks
+        allowed_tasks = [
+            'semantic_segmentation',
+            'object_detection',
+            'instance_segmentation',
+        ]
+        if task not in allowed_tasks:
+            raise ValueError(f'Invalid task: {task!r}. Must be one of {allowed_tasks}')
+        self.task = task
+        self.layer = layer
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
@@ -658,18 +885,18 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    with fiona.open(filepath) as src:
-                        if crs is None:
-                            crs = CRS.from_wkt(src.crs_wkt)
+                    src = gpd.read_file(filepath, layer=layer)
+                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    if src.crs is None:
+                        src.set_crs(crs, inplace=True)
+                    elif src.crs != crs:
+                        src.to_crs(crs, inplace=True)
 
-                        minx, miny, maxx, maxy = src.bounds
-                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                            src.crs, crs.to_wkt(), [minx, maxx], [miny, maxy]
-                        )
-                        geometry = shapely.box(minx, miny, maxx, maxy)
-                        geometries.append(geometry)
-                except fiona.errors.FionaValueError:
-                    # Skip files that fiona is unable to read
+                    minx, miny, maxx, maxy = src.total_bounds
+                    geom = shapely.box(minx, miny, maxx, maxy)
+                    geometries.append(geom)
+                except (RuntimeError, ValueError):
+                    # Skip files that geopandas is unable to read
                     continue
                 else:
                     filepaths.append(filepath)
@@ -695,21 +922,23 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
@@ -718,63 +947,142 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            with fiona.open(filepath) as src:
-                # We need to know the bounding box of the query in the source CRS
-                (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_wkt(),
-                    src.crs,
-                    [query.minx, query.maxx],
-                    [query.miny, query.maxy],
-                )
+            src = gpd.read_file(filepath, layer=self.layer)
 
-                # Filter geometries to those that intersect with the bounding box
-                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                    # Warp geometries to requested CRS
-                    shape = fiona.transform.transform_geom(
-                        src.crs, self.crs.to_wkt(), feature['geometry']
-                    )
-                    label = self.get_label(feature)
-                    shapes.append((shape, label))
+            # We need to know the bounding box of the query in the source CRS
+            transformer = pyproj.Transformer.from_crs(self.crs, src.crs, always_xy=True)
+            (minx, miny) = transformer.transform(x.start, y.start)
+            (maxx, maxy) = transformer.transform(x.stop, y.stop)
+
+            src = src.cx[minx:maxx, miny:maxy]
+            src.to_crs(self.crs, inplace=True)
+
+            # Get label values to use for rendering each geometry
+            labels = np.array(
+                [self.get_label(row) for _, row in src.iterrows()]
+            ).astype(np.int32)
+
+            shapes.extend(list(zip(src.geometry, labels)))
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res[0]
-        height = (query.maxy - query.miny) / self.res[1]
+        width = (x.stop - x.start) / x.step
+        height = (y.stop - y.start) / y.step
         transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
+            x.start, y.start, x.stop, y.stop, width, height
         )
         if shapes:
-            masks = rasterio.features.rasterize(
-                shapes, out_shape=(round(height), round(width)), transform=transform
-            )
+            match self.task:
+                case 'semantic_segmentation':
+                    masks = rasterio.features.rasterize(
+                        shapes,
+                        out_shape=(round(height), round(width)),
+                        transform=transform,
+                    )
+
+                case 'object_detection':
+                    # Get boxes for object detection or instance segmentation
+                    px_shapes = [
+                        convert_poly_coords(
+                            shapely.geometry.shape(s[0]), transform, inverse=True
+                        )
+                        for s in shapes
+                    ]
+                    px_shapes = [
+                        (shapely.clip_by_rect(p, 0, 0, width, height))
+                        for p in px_shapes
+                    ]
+
+                    # Get labels
+                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
+
+                    # xmin, ymin, xmax, ymax format
+                    boxes_xyxy = np.array(
+                        [
+                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                            for p in px_shapes
+                        ]
+                    ).astype(np.float32)
+
+                case 'instance_segmentation':
+                    # Get boxes for object detection or instance segmentation
+                    px_shapes = [
+                        convert_poly_coords(
+                            shapely.geometry.shape(s[0]), transform, inverse=True
+                        )
+                        for s in shapes
+                    ]
+                    px_shapes = [
+                        (shapely.clip_by_rect(p, 0, 0, width, height))
+                        for p in px_shapes
+                    ]
+
+                    # Get labels
+                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
+
+                    # xmin, ymin, xmax, ymax format
+                    boxes_xyxy = np.array(
+                        [
+                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                            for p in px_shapes
+                        ]
+                    ).astype(np.float32)
+
+                    masks = rasterio.features.rasterize(
+                        [(s[0], i + 1) for i, s in enumerate(shapes)],
+                        out_shape=(round(height), round(width)),
+                        transform=transform,
+                    )
+
+                    obj_ids = np.unique(masks)
+
+                    # first id is the background, so remove it
+                    obj_ids = obj_ids[1:]
+
+                    # convert (H, W) mask a set of binary masks
+                    masks = (masks == obj_ids[:, None, None]).astype(np.uint8)
         else:
-            # If no features are found in this query, return an empty mask
+            # If no features are found in this key, return an empty mask
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
+            labels = np.empty((0,), dtype=np.int32)
 
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        masks = array_to_tensor(masks)
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
 
-        masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        match self.task:
+            case 'semantic_segmentation':
+                sample['mask'] = array_to_tensor(masks).to(self.dtype)
+
+            case 'object_detection':
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
+
+            case 'instance_segmentation':
+                sample['mask'] = array_to_tensor(masks)
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def get_label(self, feature: 'fiona.model.Feature') -> int:
+    def get_label(self, feature: pd.Series) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`fiona.model.Feature` from which to extract the label.
+            feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
 
         .. versionadded:: 0.6
+        .. versionchanged:: 0.8
+            The *feature* parameter changed to a :class:`pandas.Series`
         """
         if self.label_name:
-            return int(feature['properties'][self.label_name])
+            return int(feature[self.label_name])
         return 1
 
 
@@ -925,6 +1233,7 @@ class IntersectionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
+        spatial_only: bool = False,
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
@@ -940,6 +1249,7 @@ class IntersectionDataset(GeoDataset):
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
+            spatial_only: if True, ignore temporal dimension when computing intersection
             collate_fn: function used to collate samples
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -948,8 +1258,11 @@ class IntersectionDataset(GeoDataset):
             RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
+        .. versionadded:: 0.8
+           The *spatial_only* parameter.
+
         .. versionadded:: 0.4
-            The *transforms* parameter.
+           The *transforms* parameter.
         """
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
@@ -969,39 +1282,40 @@ class IntersectionDataset(GeoDataset):
             index1, index2, how='intersection', keep_geom_type=True
         )
 
-        # Temporal intersection
-        datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
-        datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
-        mint = np.maximum(datetime_1.left, datetime_2.left)
-        maxt = np.minimum(datetime_1.right, datetime_2.right)
-        valid = maxt >= mint
-        mint = mint[valid]
-        maxt = maxt[valid]
-        self.index = self.index[valid]
-        self.index.index = pd.IntervalIndex.from_arrays(
-            mint, maxt, closed='both', name='datetime'
-        )
-
         if self.index.empty:
-            raise RuntimeError('Datasets have no spatiotemporal intersection')
+            raise RuntimeError('Datasets have no spatial intersection')
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of data/labels and metadata at that index
-
-        Raises:
-            IndexError: if query is not within bounds of the index
-        """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+        # Temporal intersection
+        if not spatial_only:
+            datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
+            datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+            mint = np.maximum(datetime_1.left, datetime_2.left)
+            maxt = np.minimum(datetime_1.right, datetime_2.right)
+            valid = maxt >= mint
+            mint = mint[valid]
+            maxt = maxt[valid]
+            self.index = self.index[valid]
+            self.index.index = pd.IntervalIndex.from_arrays(
+                mint, maxt, closed='both', name='datetime'
             )
 
+            if self.index.empty:
+                msg = 'Datasets have no temporal intersection. Use `spatial_only=True`'
+                msg += ' if you want to ignore temporal intersection'
+                raise RuntimeError(msg)
+
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *query* is not found in the index.
+        """
         # All datasets are guaranteed to have a valid query
         samples = [ds[query] for ds in self.datasets]
 
@@ -1060,8 +1374,8 @@ class IntersectionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res  # type: ignore[assignment]
-        self.datasets[1].res = new_res  # type: ignore[assignment]
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
 
 
 class UnionDataset(GeoDataset):
@@ -1126,23 +1440,18 @@ class UnionDataset(GeoDataset):
 
         self.index = pd.concat([dataset1.index, dataset2.index])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of data/labels and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not within bounds of the index
+            IndexError: If *query* is not found in the index.
         """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
         # Not all datasets are guaranteed to have a valid query
         samples = []
         for ds in self.datasets:
@@ -1150,6 +1459,11 @@ class UnionDataset(GeoDataset):
                 samples.append(ds[query])
             except IndexError:
                 pass
+
+        if not samples:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
 
         sample = self.collate_fn(samples)
 
@@ -1206,5 +1520,5 @@ class UnionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res  # type: ignore[assignment]
-        self.datasets[1].res = new_res  # type: ignore[assignment]
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res

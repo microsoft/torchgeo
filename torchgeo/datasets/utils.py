@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Common dataset utilities."""
@@ -12,6 +12,7 @@ import importlib
 import os
 import shutil
 import subprocess
+import warnings
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -20,7 +21,9 @@ from typing import Any, TypeAlias, cast, overload
 import numpy as np
 import pandas as pd
 import rasterio
+import shapely
 import torch
+from rasterio import Affine
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -29,6 +32,7 @@ from torchvision.datasets.utils import (
     extract_archive,
 )
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
 
@@ -41,9 +45,13 @@ __all__ = (
 )
 
 
+GeoSlice: TypeAlias = (
+    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
+)
 Path: TypeAlias = str | os.PathLike[str]
 
 
+@deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
 @dataclass(frozen=True)
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
@@ -414,6 +422,55 @@ def _dict_list_to_list_dict(
     return uncollated
 
 
+def pad_across_batches(
+    batch: list[dict[str, Tensor]], padding_length: int, padding_value: float = 0.0
+) -> dict[str, Any]:
+    """Custom time-series collate fn to handle variable length sequences.
+
+    Args:
+        batch: list of sample dicts returned by dataset
+        padding_length: the length to pad the sequences to
+        padding_value: value for padded elements
+
+    Returns:
+        batch dict output
+
+    .. versionadded:: 0.8
+    """
+    output: dict[str, Any] = {}
+    images = [sample['image'] for sample in batch]
+    feature_shape = images[0].shape[1:]
+
+    padded_images = torch.full(
+        (len(batch), padding_length, *feature_shape),
+        padding_value,
+        dtype=images[0].dtype,
+        device=images[0].device,
+    )
+
+    truncated = 0
+    for i, img in enumerate(images):
+        seq_len = img.size(0)
+        if seq_len > padding_length:
+            padded_images[i, :padding_length] = img[:padding_length]
+            truncated += 1
+        else:
+            padded_images[i, :seq_len] = img
+
+    if truncated > 0:
+        warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
+
+    output['image'] = padded_images
+    if 'mask' in batch[0]:
+        output['mask'] = torch.stack([sample['mask'] for sample in batch])
+    if 'bbox_xyxy' in batch[0]:
+        output['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
+    if 'label' in batch[0]:
+        output['label'] = torch.stack([sample['label'] for sample in batch])
+
+    return output
+
+
 def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
@@ -688,15 +745,15 @@ def lazy_import(name: str) -> Any:
         module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         msg = f"""\
-{name} is not installed and is required to use this dataset. Either run:
+{name} is not installed and is required to use this feature. Either run:
 
 $ pip install {name}
 
 to install just this dependency, or:
 
-$ pip install torchgeo[datasets]
+$ pip install torchgeo[datasets,models]
 
-to install all optional dataset dependencies."""
+to install all optional dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
@@ -719,3 +776,35 @@ def which(name: Path) -> Executable:
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
+
+
+def convert_poly_coords(
+    geom: shapely.geometry.shape, affine_obj: Affine, inverse: bool = False
+) -> shapely.geometry.shape:
+    """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
+
+    Args:
+        geom: shapely.geometry.shape to convert
+        affine_obj: rasterio.Affine object to use for geoconversion
+        inverse: If true, convert geocoordinates to pixel coordinates
+
+    Returns:
+        input shape converted to pixel coordinates
+
+    .. versionadded:: 0.8
+    """
+    if inverse:
+        affine_obj = ~affine_obj
+
+    xformed_shape = shapely.affinity.affine_transform(
+        geom,
+        [
+            affine_obj.a,
+            affine_obj.b,
+            affine_obj.d,
+            affine_obj.e,
+            affine_obj.xoff,
+            affine_obj.yoff,
+        ],
+    )
+    return xformed_shape

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -72,7 +72,7 @@ class TestXView2:
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'), 'w'
         ) as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             XView2(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
@@ -89,6 +89,6 @@ class TestXView2:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction'] = x['mask'][0].clone()
+        x['prediction'] = x['mask']
         dataset.plot(x)
         plt.close()

@@ -1,14 +1,13 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: ChangeDetectionTask
   init_args:
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 24
-    task: 'binary'
+    in_channels: 12
     loss: 'bce'
 data:
   class_path: CaBuArDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
   dict_kwargs:
     root: 'tests/data/cabuar'

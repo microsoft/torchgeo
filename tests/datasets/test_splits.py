@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from collections.abc import Sequence
@@ -15,7 +15,6 @@ from shapely import Geometry, Polygon
 from torch import Generator
 
 from torchgeo.datasets import (
-    BoundingBox,
     GeoDataset,
     random_bbox_assignment,
     random_bbox_splitting,
@@ -23,6 +22,7 @@ from torchgeo.datasets import (
     roi_split,
     time_series_split,
 )
+from torchgeo.datasets.utils import GeoSlice
 
 MINT = datetime(2025, 4, 24)
 MAXT = datetime(2025, 4, 25)
@@ -57,7 +57,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         return {'index': query}
 
 
@@ -104,11 +104,11 @@ def test_random_bbox_assignment(
 def test_random_bbox_assignment_invalid_inputs() -> None:
     with pytest.raises(
         ValueError,
-        match="Sum of input lengths must equal 1 or the length of dataset's index.",
+        match="Sum of input lengths must equal 1 or the length of dataset's index",
     ):
         random_bbox_assignment(CustomGeoDataset(), lengths=[2, 2, 1])
     with pytest.raises(
-        ValueError, match='All items in input lengths must be greater than 0.'
+        ValueError, match='All items in input lengths must be greater than 0'
     ):
         random_bbox_assignment(CustomGeoDataset(), lengths=[1 / 2, 3 / 4, -1 / 4])
 
@@ -150,10 +150,10 @@ def test_random_bbox_splitting() -> None:
     assert isinstance(x, dict)
 
     # Test invalid input fractions
-    with pytest.raises(ValueError, match='Sum of input fractions must equal 1.'):
+    with pytest.raises(ValueError, match='Sum of input fractions must equal 1'):
         random_bbox_splitting(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
     with pytest.raises(
-        ValueError, match='All items in input fractions must be greater than 0.'
+        ValueError, match='All items in input fractions must be greater than 0'
     ):
         random_bbox_splitting(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
 
@@ -185,13 +185,13 @@ def test_random_grid_cell_assignment() -> None:
     assert isinstance(x, dict)
 
     # Test invalid input fractions
-    with pytest.raises(ValueError, match='Sum of input fractions must equal 1.'):
+    with pytest.raises(ValueError, match='Sum of input fractions must equal 1'):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
     with pytest.raises(
-        ValueError, match='All items in input fractions must be greater than 0.'
+        ValueError, match='All items in input fractions must be greater than 0'
     ):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
-    with pytest.raises(ValueError, match='Input grid_size must be greater than 1.'):
+    with pytest.raises(ValueError, match='Input grid_size must be greater than 1'):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=1)
 
 
@@ -207,9 +207,9 @@ def test_roi_split() -> None:
     train_ds, val_ds, test_ds = roi_split(
         ds,
         rois=[
-            BoundingBox(0, 2, 0, 1, MINT, MAXT),
-            BoundingBox(2, 3.5, 0, 1, MINT, MAXT),
-            BoundingBox(3.5, 4, 0, 1, MINT, MAXT),
+            shapely.box(0, 0, 2, 1),
+            shapely.box(2, 0, 3.5, 1),
+            shapely.box(3.5, 0, 4, 1),
         ],
     )
 
@@ -232,14 +232,8 @@ def test_roi_split() -> None:
     assert isinstance(x, dict)
 
     # Test invalid input rois
-    with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
-        roi_split(
-            ds,
-            rois=[
-                BoundingBox(0, 2, 0, 1, MINT, MAXT),
-                BoundingBox(1, 3, 0, 1, MINT, MAXT),
-            ],
-        )
+    with pytest.raises(ValueError, match="ROIs in input rois can't overlap"):
+        roi_split(ds, rois=[shapely.box(0, 0, 2, 1), shapely.box(1, 0, 3, 1)])
 
 
 @pytest.mark.parametrize(
@@ -314,7 +308,7 @@ def test_time_series_split(
 def test_time_series_split_invalid_input() -> None:
     with pytest.raises(
         ValueError,
-        match="Pairs of timestamps in lengths must cover dataset's time bounds.",
+        match="Pairs of timestamps in lengths must cover dataset's time bounds",
     ):
         time_series_split(
             CustomGeoDataset(),
@@ -328,7 +322,7 @@ def test_time_series_split_invalid_input() -> None:
 
     with pytest.raises(
         ValueError,
-        match="Pairs of timestamps in lengths can't be out of dataset's time bounds.",
+        match="Pairs of timestamps in lengths can't be out of dataset's time bounds",
     ):
         time_series_split(
             CustomGeoDataset(),
@@ -339,7 +333,7 @@ def test_time_series_split_invalid_input() -> None:
         )
 
     with pytest.raises(
-        ValueError, match="Pairs of timestamps in lengths can't overlap."
+        ValueError, match="Pairs of timestamps in lengths can't overlap"
     ):
         time_series_split(
             CustomGeoDataset(),
@@ -353,11 +347,11 @@ def test_time_series_split_invalid_input() -> None:
 
     with pytest.raises(
         ValueError,
-        match="Sum of input lengths must equal 1 or the dataset's time length.",
+        match="Sum of input lengths must equal 1 or the dataset's time length",
     ):
         time_series_split(CustomGeoDataset(), lengths=[1 / 2, 1 / 2, 1 / 2])
 
     with pytest.raises(
-        ValueError, match='All items in input lengths must be greater than 0.'
+        ValueError, match='All items in input lengths must be greater than 0'
     ):
         time_series_split(CustomGeoDataset(), lengths=[20, 25, -5])

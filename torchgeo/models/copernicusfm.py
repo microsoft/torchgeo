@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # https://github.com/zhu-xlab/Copernicus-FM
@@ -375,7 +375,7 @@ class CopernicusFM(nn.Module):
         >>> bandwidths = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
         >>> kernel_size = 16 # expected patch size
         >>> input_mode = 'spectral'
-        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidth=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidths=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
 
         **2. Variable Mode (Using language embedding):**

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SEN12MS dataset."""
@@ -347,7 +347,7 @@ class SEN12MS(NonGeoDataset):
             prediction = sample['prediction']
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(np.transpose(image, (1, 2, 0)))
         axs[0].axis('off')

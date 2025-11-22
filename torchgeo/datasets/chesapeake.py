@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Cheasapeake Bay Program Land Use/Land Cover Data Project datasets."""
@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,7 +19,6 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
-from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -28,7 +27,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -352,7 +351,7 @@ class ChesapeakeCVPR(GeoDataset):
         'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
 
-    res = (1, 1)
+    _res = (1, 1)
 
     lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
@@ -485,50 +484,36 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint = pd.Timestamp.min
         maxt = pd.Timestamp.max
-        data = []
-        datetimes = []
-        geometries = []
-        with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
-            for row in f:
-                if row['properties']['split'] in splits:
-                    prior_fn = row['properties']['lc'].replace(
-                        'lc.tif',
-                        'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-                    )
-                    geometries.append(shapely.geometry.shape(row['geometry']))
-                    datetimes.append((mint, maxt))
-                    data.append(
-                        {
-                            'naip-new': row['properties']['naip-new'],
-                            'naip-old': row['properties']['naip-old'],
-                            'landsat-leaf-on': row['properties']['landsat-leaf-on'],
-                            'landsat-leaf-off': row['properties']['landsat-leaf-off'],
-                            'lc': row['properties']['lc'],
-                            'nlcd': row['properties']['nlcd'],
-                            'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
-                        }
-                    )
-
+        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
+            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
+        )
+        datetimes = [(mint, maxt)] * len(gdf)
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(3857)
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+        gdf.set_crs('EPSG:3857', inplace=True)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         sample: dict[str, Any] = {
             'image': [],
@@ -545,8 +530,7 @@ class ChesapeakeCVPR(GeoDataset):
             filenames = index.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
-            minx, maxx, miny, maxy, mint, maxt = query
-            query_box = shapely.geometry.box(minx, miny, maxx, maxy)
+            query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
             for layer in self.layers:
                 fn = filenames[layer]

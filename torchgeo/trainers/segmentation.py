@@ -1,15 +1,18 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Trainers for semantic segmentation."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import (Accuracy, FBetaScore, JaccardIndex, MetricCollection,
@@ -28,7 +31,9 @@ class SemanticSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: Literal['unet', 'deeplabv3+', 'fcn'] = 'unet',
+        model: Literal[
+            'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', 'dpt'
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -38,7 +43,7 @@ class SemanticSegmentationTask(BaseTask):
         labels: list[str] | None = None,
         num_filters: int = 3,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | None = None,
+        class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -81,7 +86,10 @@ class SemanticSegmentationTask(BaseTask):
                 the segmentation head.
 
         .. versionadded:: 0.9
-            The *labels* parameter.
+           The *labels* parameter.
+
+        .. versionadded:: 0.8
+           Time-series support.
 
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
@@ -106,6 +114,20 @@ class SemanticSegmentationTask(BaseTask):
         """
         self.weights = weights
         super().__init__()
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            x: Input tensor of shape (B, C, H, W) or (B, T, C, H, W).
+
+        Returns:
+            Output tensor of shape (B, num_classes, H, W).
+        """
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+        x = self.model(x)
+        return x
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -139,7 +161,27 @@ class SemanticSegmentationTask(BaseTask):
                     classes=num_classes,
                     num_filters=num_filters,
                 )
-
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
         if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
@@ -151,23 +193,27 @@ class SemanticSegmentationTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_backbone'] and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_decoder'] and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
         ignore_index: int | None = self.hparams['ignore_index']
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
+
         match self.hparams['loss']:
             case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
                 self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=self.hparams['class_weights']
+                    ignore_index=ignore_value, weight=class_weights
                 )
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss()
@@ -374,12 +420,26 @@ class SemanticSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = K.AugmentationSequential(
-                K.Denormalize(datamodule.mean, datamodule.std),
-                data_keys=None,
-                keepdim=True,
-            )
-            batch = aug(batch)
+            if batch['image'].ndim == 5:
+                _, T, C, _, _ = batch['image'].shape
+                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
+
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['image'] = rearrange(
+                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
+                )
+            else:
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
                     batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()

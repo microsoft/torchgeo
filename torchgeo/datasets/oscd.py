@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """OSCD dataset."""
@@ -8,6 +8,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -154,7 +155,12 @@ class OSCD(NonGeoDataset):
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
+            # FIXME: VideoSequential only works with a batch dimension
+            sample['image'] = sample['image'].unsqueeze(0)
+            sample['mask'] = sample['mask'].unsqueeze(0)
             sample = self.transforms(sample)
+            sample['image'] = sample['image'].squeeze(0)
+            sample['mask'] = sample['mask'].squeeze(0)
 
         return sample
 
@@ -242,7 +248,8 @@ class OSCD(NonGeoDataset):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -319,7 +326,7 @@ class OSCD(NonGeoDataset):
             )
             array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
-                sample['mask'],
+                sample['mask'][0],
                 alpha=alpha,
                 colors=list(self.colormap),
             )
