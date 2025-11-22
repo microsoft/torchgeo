@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -257,7 +257,7 @@ class SemanticSegmentationTask(BaseTask):
         * When providing class labels, ensure ``len(labels) == num_classes``. If
             labels are not provided, classwise metrics will use default integer names.
         """
-        task: str = self.hparams['task']
+        task: Literal['binary', 'multiclass', 'multilabel'] = self.hparams['task']
         num_classes: int | None = self.hparams['num_classes']
         num_labels: int | None = self.hparams['num_labels']
         ignore_index: int | None = self.hparams['ignore_index']
@@ -286,17 +286,9 @@ class SemanticSegmentationTask(BaseTask):
                     f'set labels=None to use default integer names.'
                 )
 
-        metrics_dict = {}
+        metrics_dict: dict[str, Any] = {}
 
-        # Common parameters for all metrics
-        kwargs = {
-            'task': task,
-            'num_classes': num_classes,
-            'num_labels': num_labels,
-            'ignore_index': ignore_index,
-        }
-
-        averages = ['micro', 'macro']
+        averages: list[Literal['micro', 'macro', 'global']] = ['micro', 'macro']
         add_classwise_metrics = task in ['binary', 'multiclass'] and labels is not None
         if add_classwise_metrics:
             # "global" acts as a sentinel for classwise (average='none') metrics.
@@ -314,7 +306,11 @@ class SemanticSegmentationTask(BaseTask):
             if average == 'macro' and task in ['binary', 'multilabel']:
                 continue
 
-            metric_average = 'none' if average == 'global' else average
+            metric_average: Literal['micro', 'macro', 'none']
+            if average == 'global':
+                metric_average = 'none'
+            else:
+                metric_average = average
 
             def finalize(metric: Any) -> Any:
                 if average == 'global':
@@ -322,28 +318,58 @@ class SemanticSegmentationTask(BaseTask):
                 return metric
 
             metrics_dict[metric_name('Accuracy', average)] = finalize(
-                Accuracy(multidim_average='global', average=metric_average, **kwargs)
+                Accuracy(
+                    task=task,
+                    num_classes=num_classes,
+                    num_labels=num_labels,
+                    ignore_index=ignore_index,
+                    multidim_average='global',
+                    average=metric_average,
+                )
             )
 
             metrics_dict[metric_name('F1Score', average)] = finalize(
                 FBetaScore(
+                    task=task,
+                    num_classes=num_classes,
+                    num_labels=num_labels,
+                    ignore_index=ignore_index,
                     multidim_average='global',
                     average=metric_average,
                     beta=1.0,
-                    **kwargs,
                 )
             )
 
             metrics_dict[metric_name('JaccardIndex', average)] = finalize(
-                JaccardIndex(average=metric_average, **kwargs)
+                JaccardIndex(
+                    task=task,
+                    num_classes=num_classes,
+                    num_labels=num_labels,
+                    ignore_index=ignore_index,
+                    average=metric_average,
+                )
             )
 
             metrics_dict[metric_name('Precision', average)] = finalize(
-                Precision(multidim_average='global', average=metric_average, **kwargs)
+                Precision(
+                    task=task,
+                    num_classes=num_classes,
+                    num_labels=num_labels,
+                    ignore_index=ignore_index,
+                    multidim_average='global',
+                    average=metric_average,
+                )
             )
 
             metrics_dict[metric_name('Recall', average)] = finalize(
-                Recall(multidim_average='global', average=metric_average, **kwargs)
+                Recall(
+                    task=task,
+                    num_classes=num_classes,
+                    num_labels=num_labels,
+                    ignore_index=ignore_index,
+                    multidim_average='global',
+                    average=metric_average,
+                )
             )
 
         # Create metric collections
