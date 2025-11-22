@@ -61,4 +61,4 @@ class TestBTC:
     def test_btc_backbone_download(
         self, backbone: Literal['swin_tiny', 'swin_small', 'swin_base']
     ) -> None:
-        BTC(backbone=backbone)
+        BTC(backbone=backbone, backbone_pretrained=True)
