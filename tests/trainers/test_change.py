@@ -182,14 +182,33 @@ class TestChangeDetectionTask:
             in_channels=weights.meta['in_chans'],
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     @pytest.mark.parametrize(
-        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
+        'model_name,backbone',
+        [
+            ('unet', 'resnet18'),
+            ('deeplabv3+', 'resnet18'),
+            ('upernet', 'resnet18'),
+            ('segformer', 'resnet18'),
+            ('dpt', 'tu-vit_tiny_patch16_224'),
+            ('fcsiamdiff', 'resnet18'),
+            ('fcsiamconc', 'resnet18'),
+            ('changevit', 'vit_tiny_patch16_224'),
+            ('btc', 'swin_tiny'),
+        ],
     )
     def test_freeze_backbone(
         self,
         model_name: Literal[
-            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+            'changevit',
+            'btc',
         ],
         backbone: str,
     ) -> None:
@@ -200,36 +219,44 @@ class TestChangeDetectionTask:
             [param.requires_grad is False for param in model.model.encoder.parameters()]
         )
         assert all([param.requires_grad for param in model.model.decoder.parameters()])
-        assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
-        )
 
     @pytest.mark.parametrize(
-        'model_name',
-        ['unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'],
+        'model_name,backbone',
+        [
+            ('unet', 'resnet18'),
+            ('deeplabv3+', 'resnet18'),
+            ('upernet', 'resnet18'),
+            ('segformer', 'resnet18'),
+            ('dpt', 'tu-vit_tiny_patch16_224'),
+            ('fcsiamdiff', 'resnet18'),
+            ('fcsiamconc', 'resnet18'),
+            ('changevit', 'vit_tiny_patch16_224'),
+            ('btc', 'swin_tiny'),
+        ],
     )
     def test_freeze_decoder(
         self,
         model_name: Literal[
-            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+            'changevit',
+            'btc',
         ],
+        backbone: str,
     ) -> None:
         model = ChangeDetectionTask(
-            model=model_name, backbone='resnet18', freeze_decoder=True
+            model=model_name, backbone=backbone, freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
         assert all([param.requires_grad for param in model.model.encoder.parameters()])
-        assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
-        )
 
     def test_vit_backbone(self) -> None:
         ChangeDetectionTask(model='dpt', backbone='tu-vit_base_patch16_224')

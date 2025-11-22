@@ -258,15 +258,8 @@ class ChangeDetectionTask(BaseTask):
 
         # Freeze decoder
         if self.hparams['freeze_decoder'] and model != 'fcn':
-            if model == 'changevit':
-                # Freeze detail capture and feature injector for ChangeViT models
-                for param in self.model.detail_capture.parameters():
-                    param.requires_grad = False
-                for param in self.model.feature_injector.parameters():
-                    param.requires_grad = False
-            else:
-                for param in self.model.decoder.parameters():
-                    param.requires_grad = False
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         """Compute the loss and additional metrics for the given stage.
@@ -392,9 +385,7 @@ class ChangeDetectionTask(BaseTask):
         """
         model: str = self.hparams['model']
         x = batch['image']
-        if model == 'unet':
-            x = rearrange(x, 'b t c h w -> b (t c) h w')
-        elif not model.startswith('fcsiam') and model != 'changevit':
+        if not model.startswith('fcsiam') and model != 'changevit':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         y_hat: Tensor = self(x)
