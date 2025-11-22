@@ -62,9 +62,10 @@ class SemanticSegmentationTask(BaseTask):
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
             labels: Optional list of class label names. Must have length equal to
-                ``num_classes`` when provided. If None, classwise metrics will use
-                default integer names (e.g., "0", "1", "2"). Only used for
-                ``task='multiclass'``.
+                ``2`` when ``task='binary'`` or ``num_classes`` when ``task='multiclass'``.
+                If None, classwise metrics will use default integer names
+                (e.g., "0", "1", "2"). Only used for ``task`` in ``{'binary',
+                'multiclass'}``.
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'bce', 'jaccard', and 'focal' loss.
@@ -211,8 +212,21 @@ class SemanticSegmentationTask(BaseTask):
         labels: list[str] | None = self.hparams.get('labels', None)
         
         # Validate labels length if provided
-        if labels is not None and task in ['binary', 'multiclass']:
-            expected_classes = 2 if task == 'binary' else num_classes
+        if labels is not None:
+            if task not in ['binary', 'multiclass']:
+                raise ValueError(
+                    "The 'labels' argument is only supported when task is 'binary' "
+                    "or 'multiclass'."
+                )
+            if task == 'binary':
+                expected_classes = 2
+            else:
+                if num_classes is None:
+                    raise ValueError(
+                        "num_classes must be provided when using labels with "
+                        "task='multiclass'."
+                    )
+                expected_classes = num_classes
             if len(labels) != expected_classes:
                 raise ValueError(
                     f"Length of labels ({len(labels)}) must equal number of classes "
