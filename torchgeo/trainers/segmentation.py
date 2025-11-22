@@ -15,8 +15,14 @@ import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import (Accuracy, FBetaScore, JaccardIndex, MetricCollection,
-                          Precision, Recall)
+from torchmetrics import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    MetricCollection,
+    Precision,
+    Recall,
+)
 from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
@@ -256,7 +262,7 @@ class SemanticSegmentationTask(BaseTask):
         num_labels: int | None = self.hparams['num_labels']
         ignore_index: int | None = self.hparams['ignore_index']
         labels: list[str] | None = self.hparams.get('labels', None)
-        
+
         # Validate labels length if provided
         if labels is not None:
             if task not in ['binary', 'multiclass']:
@@ -269,15 +275,15 @@ class SemanticSegmentationTask(BaseTask):
             else:
                 if num_classes is None:
                     raise ValueError(
-                        "num_classes must be provided when using labels with "
+                        'num_classes must be provided when using labels with '
                         "task='multiclass'."
                     )
                 expected_classes = num_classes
             if len(labels) != expected_classes:
                 raise ValueError(
-                    f"Length of labels ({len(labels)}) must equal number of classes "
-                    f"({expected_classes}). Either provide {expected_classes} labels or "
-                    f"set labels=None to use default integer names."
+                    f'Length of labels ({len(labels)}) must equal number of classes '
+                    f'({expected_classes}). Either provide {expected_classes} labels or '
+                    f'set labels=None to use default integer names.'
                 )
 
         metrics_dict = {}
@@ -316,11 +322,7 @@ class SemanticSegmentationTask(BaseTask):
                 return metric
 
             metrics_dict[metric_name('Accuracy', average)] = finalize(
-                Accuracy(
-                    multidim_average='global',
-                    average=metric_average,
-                    **kwargs
-                )
+                Accuracy(multidim_average='global', average=metric_average, **kwargs)
             )
 
             metrics_dict[metric_name('F1Score', average)] = finalize(
@@ -328,31 +330,20 @@ class SemanticSegmentationTask(BaseTask):
                     multidim_average='global',
                     average=metric_average,
                     beta=1.0,
-                    **kwargs
+                    **kwargs,
                 )
             )
 
             metrics_dict[metric_name('JaccardIndex', average)] = finalize(
-                JaccardIndex(
-                    average=metric_average,
-                    **kwargs
-                )
+                JaccardIndex(average=metric_average, **kwargs)
             )
 
             metrics_dict[metric_name('Precision', average)] = finalize(
-                Precision(
-                    multidim_average='global',
-                    average=metric_average,
-                    **kwargs
-                )
+                Precision(multidim_average='global', average=metric_average, **kwargs)
             )
 
             metrics_dict[metric_name('Recall', average)] = finalize(
-                Recall(
-                    multidim_average='global',
-                    average=metric_average,
-                    **kwargs
-                )
+                Recall(multidim_average='global', average=metric_average, **kwargs)
             )
 
         # Create metric collections
