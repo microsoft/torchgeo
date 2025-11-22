@@ -47,7 +47,7 @@ class TestBTC:
     def test_backbone_weight_load(self, mocked_weights: str) -> None:
         """Test to cover backbone and layernorm weight loading."""
         mocked_size = mocked_weights
-        SwinBackbone(mocked_size)
+        SwinBackbone(mocked_size, backbone_pretrained=True)
 
     def test_btc_invalid_size(self) -> None:
         with pytest.raises(
