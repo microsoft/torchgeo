@@ -187,6 +187,28 @@ class TestSemanticSegmentationTask:
             num_classes=10,
         )
 
+    def test_binary_labels_length_mismatch(self) -> None:
+        with pytest.raises(ValueError, match='Length of labels'):
+            SemanticSegmentationTask(
+                model='fcn',
+                backbone='resnet18',
+                in_channels=3,
+                task='binary',
+                num_classes=2,
+                labels=['background'],
+            )
+
+    def test_multiclass_labels_length_mismatch(self) -> None:
+        with pytest.raises(ValueError, match='Length of labels'):
+            SemanticSegmentationTask(
+                model='fcn',
+                backbone='resnet18',
+                in_channels=3,
+                task='multiclass',
+                num_classes=3,
+                labels=['a', 'b'],
+            )
+
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
