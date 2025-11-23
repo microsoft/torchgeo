@@ -15,6 +15,8 @@ from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
+from torchmetrics.wrappers import ClasswiseWrapper
+
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
 from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
 from torchgeo.main import main
@@ -234,6 +236,20 @@ class TestSemanticSegmentationTask:
                 task='multiclass',
                 labels=['a', 'b'],
             )
+
+    def test_labels_enable_classwise_metrics(self) -> None:
+        labels = ['background', 'class1', 'class2']
+        task = SemanticSegmentationTask(
+            model='fcn',
+            backbone='resnet18',
+            in_channels=3,
+            task='multiclass',
+            num_classes=3,
+            labels=labels,
+        )
+
+        assert 'Accuracy' in task.val_metrics
+        assert isinstance(task.val_metrics['Accuracy'], ClasswiseWrapper)
 
     def test_class_weights(self) -> None:
         # Test with list of class weights
