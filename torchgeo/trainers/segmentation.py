@@ -245,9 +245,9 @@ class SemanticSegmentationTask(BaseTask):
 
         * :class:`~torchmetrics.Accuracy`: Overall accuracy
             (OA) using 'micro' averaging. The number of true positives divided by the
-          dataset size. Higher values are better.
+            dataset size. Higher values are better.
         * :class:`~torchmetrics.JaccardIndex`: Intersection
-            over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+            over union (IoU). Uses 'micro' averaging. Higher values are better.
 
         .. note::
 
