@@ -223,6 +223,18 @@ class TestSemanticSegmentationTask:
                 labels=['a', 'b'],
             )
 
+    def test_multiclass_labels_missing_num_classes(self) -> None:
+        with pytest.raises(
+            ValueError, match='num_classes must be provided when using labels'
+        ):
+            SemanticSegmentationTask(
+                model='fcn',
+                backbone='resnet18',
+                in_channels=3,
+                task='multiclass',
+                labels=['a', 'b'],
+            )
+
     def test_class_weights(self) -> None:
         # Test with list of class weights
         class_weights_list = [1.0, 2.0, 0.5]
