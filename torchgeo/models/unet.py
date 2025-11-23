@@ -157,7 +157,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET34_TCD = Weights(
-        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/40c914bbcbe43a6a87c81adb0a22ff2d4a53204d/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/40c914bbcbe43a6a87c81adb0a22ff2d4a53204d/unet_resnet34_oam_rgb_tcd-9472042e.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',

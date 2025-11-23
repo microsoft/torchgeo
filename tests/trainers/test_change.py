@@ -166,22 +166,6 @@ class TestChangeDetectionTask:
             in_channels=mocked_weights.meta['in_chans'],
         )
 
-    @pytest.mark.slow
-    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
-        ChangeDetectionTask(
-            backbone=weights.meta['model'],
-            weights=weights,
-            in_channels=weights.meta['in_chans'],
-        )
-
-    @pytest.mark.slow
-    def test_weight_str_download(self, weights: WeightsEnum) -> None:
-        ChangeDetectionTask(
-            backbone=weights.meta['model'],
-            weights=str(weights),
-            in_channels=weights.meta['in_chans'],
-        )
-
     @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']

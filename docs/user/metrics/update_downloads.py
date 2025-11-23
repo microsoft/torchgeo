@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import argparse
-import re
 import time
 
 import pandas as pd
@@ -116,19 +115,9 @@ def condaforge(package: str) -> int:
     Returns:
         Total number of downloads.
     """
-    # TODO: should really be using one of the following instead:
-    # https://github.com/conda-incubator/condastats
-    # https://github.com/anaconda/anaconda-package-data
-    url = f'https://anaconda.org/conda-forge/{package}'
-    pattern = r'<span>(\d+)</span> total downloads'
+    url = f'https://api.anaconda.org/repocore/channels/conda-forge/artifacts/conda/{package}'
     response = requests.get(url)
-    for line in response.iter_lines():
-        if match := re.search(pattern, str(line)):
-            return int(match.group(1))
-    else:
-        print(response.status_code)
-        print(response.text)
-        raise
+    return response.json()['download_count']
 
 
 if __name__ == '__main__':
