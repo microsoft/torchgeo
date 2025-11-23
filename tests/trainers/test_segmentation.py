@@ -209,6 +209,7 @@ class TestSemanticSegmentationTask:
                 num_classes=3,
                 labels=['a', 'b'],
             )
+
     def test_class_weights(self) -> None:
         # Test with list of class weights
         class_weights_list = [1.0, 2.0, 0.5]
