@@ -249,7 +249,21 @@ class TestSemanticSegmentationTask:
         )
 
         assert 'Accuracy' in task.val_metrics
+        assert 'val_Accuracy' in task.val_metrics.keys()
         assert isinstance(task.val_metrics['Accuracy'], ClasswiseWrapper)
+
+    def test_metric_name_prefixes(self) -> None:
+        task = SemanticSegmentationTask(
+            model='fcn',
+            backbone='resnet18',
+            in_channels=3,
+            task='multiclass',
+            num_classes=3,
+        )
+
+        train_keys = task.train_metrics.keys()
+        assert 'train_OverallAccuracy' in train_keys
+        assert 'train_AverageAccuracy' in train_keys
 
     def test_class_weights(self) -> None:
         # Test with list of class weights
