@@ -13,9 +13,8 @@ import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
-from torchvision.models._api import WeightsEnum
-
 from torchmetrics.wrappers import ClasswiseWrapper
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
 from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
@@ -213,9 +212,7 @@ class TestSemanticSegmentationTask:
             )
 
     def test_labels_invalid_task(self) -> None:
-        with pytest.raises(
-            ValueError, match="The 'labels' argument is only supported"
-        ):
+        with pytest.raises(ValueError, match="The 'labels' argument is only supported"):
             SemanticSegmentationTask(
                 model='fcn',
                 backbone='resnet18',
