@@ -210,6 +210,19 @@ class TestSemanticSegmentationTask:
                 labels=['a', 'b'],
             )
 
+    def test_labels_invalid_task(self) -> None:
+        with pytest.raises(
+            ValueError, match="The 'labels' argument is only supported"
+        ):
+            SemanticSegmentationTask(
+                model='fcn',
+                backbone='resnet18',
+                in_channels=3,
+                task='multilabel',
+                num_labels=2,
+                labels=['a', 'b'],
+            )
+
     def test_class_weights(self) -> None:
         # Test with list of class weights
         class_weights_list = [1.0, 2.0, 0.5]
