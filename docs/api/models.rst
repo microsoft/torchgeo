@@ -14,6 +14,7 @@ Model Architectures
    models/aurora
    models/btc
    models/change-star
+   models/changevit
    models/conv-lstm
    models/copernicus-fm
    models/croma
