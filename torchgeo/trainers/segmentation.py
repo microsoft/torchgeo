@@ -250,12 +250,14 @@ class SemanticSegmentationTask(BaseTask):
             over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
-        * 'Micro' averaging suits overall performance evaluation but may not reflect
-            minority class accuracy.
-        * 'Macro' averaging gives equal weight to each class, useful
-            for balanced performance assessment across imbalanced classes.
-        * When providing class labels, ensure ``len(labels) == num_classes``. If
-            labels are not provided, classwise metrics will use default integer names.
+
+            * 'Micro' averaging suits overall performance evaluation but may not
+              reflect minority class accuracy.
+            * 'Macro' averaging gives equal weight to each class, useful
+              for balanced performance assessment across imbalanced classes.
+            * When providing class labels, ensure ``len(labels) == num_classes``.
+              If labels are not provided, classwise metrics will use default integer
+              names.
         """
         task: Literal['binary', 'multiclass', 'multilabel'] = self.hparams['task']
         num_classes: int | None = self.hparams['num_classes']
