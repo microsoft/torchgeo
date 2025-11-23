@@ -119,6 +119,7 @@ class InstanceSegmentationTask(BaseTask):
           + false negatives. Uses 'macro' averaging. Higher values are better.
 
         .. note::
+
            * 'Micro' averaging suits overall performance evaluation but may not
              reflect minority class accuracy.
            * 'Macro' averaging gives equal weight to each class, and is useful for

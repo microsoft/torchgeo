@@ -139,8 +139,9 @@ class ClassificationTask(BaseTask):
           Higher values are better.
 
         .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
+
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """

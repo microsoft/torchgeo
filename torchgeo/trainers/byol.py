@@ -282,7 +282,7 @@ class BYOL(nn.Module):
 
 
 class BYOLTask(BaseTask):
-    """BYOL: Bootstrap Your Own Latent.
+    """Bootstrap Your Own Latent (BYOL).
 
     Reference implementation:
 

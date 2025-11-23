@@ -144,10 +144,11 @@ class ChangeDetectionTask(BaseTask):
           over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
-             for balanced performance assessment across imbalanced classes.
+
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class,
+             useful for balanced performance assessment across imbalanced classes.
         """
         kwargs = {
             'task': self.hparams['task'],
