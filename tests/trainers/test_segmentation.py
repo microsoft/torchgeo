@@ -251,6 +251,7 @@ class TestSemanticSegmentationTask:
         assert 'Accuracy' in task.val_metrics
         assert 'val_Accuracy' in task.val_metrics.keys()
         assert isinstance(task.val_metrics['Accuracy'], ClasswiseWrapper)
+        assert task.val_metrics['Accuracy'].metric.average == 'none'
 
     def test_metric_name_prefixes(self) -> None:
         task = SemanticSegmentationTask(
