@@ -22,7 +22,7 @@ from .utils import Path, download_url, lazy_import, percentile_normalization
 class ChaBuD(NonGeoDataset):
     """ChaBuD dataset.
 
-    `ChaBuD <https://huggingface.co/datasets/blanchon/ChaBuD>`__
+    `ChaBuD <https://github.com/lccol/chabud-challenge-description>`__
     is a dataset for Change detection for Burned area Delineation and is used
     for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
 
@@ -44,7 +44,7 @@ class ChaBuD(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.1016/j.rse.2021.112603
+    * https://doi.org/10.1109/MGRS.2023.3292467
 
     .. note::
 
