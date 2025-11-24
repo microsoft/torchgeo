@@ -236,10 +236,17 @@ class ChangeDetectionTask(BaseTask):
                 )
             case 'changevit':
                 self.model = ChangeViT(
-                    backbone=backbone, in_channels=in_channels, num_classes=num_classes
+                    backbone=backbone,
+                    in_channels=in_channels,
+                    num_classes=num_classes,
+                    pretrained=weights is True,
                 )
             case 'btc':
-                self.model = BTC(backbone=backbone, classes=num_classes)
+                self.model = BTC(
+                    backbone=backbone,
+                    classes=num_classes,
+                    backbone_pretrained=weights is True,
+                )
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
