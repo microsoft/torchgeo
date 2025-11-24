@@ -564,10 +564,10 @@ Western USA Live Fuel Moisture
 
 .. autoclass:: WesternUSALiveFuelMoisture
 
-xView2
-^^^^^^
+xBD
+^^^
 
-.. autoclass:: XView2
+.. autoclass:: xBD
 
 ZueriCrop
 ^^^^^^^^^
