@@ -289,7 +289,7 @@ VHR-10
 .. autoclass:: VHR10DataModule
 
 xBD
-^^^^^^
+^^^
 
 .. autoclass:: xBDDataModule
 
