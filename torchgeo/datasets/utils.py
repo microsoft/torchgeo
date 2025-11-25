@@ -489,6 +489,23 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
+        elif key == 'bounds' and isinstance(value[0], tuple):
+            bounds_tensors = []
+            for bounds in value:
+                x, y, t = bounds
+                bounds_tensor = torch.tensor(
+                    [
+                        x.start,
+                        y.start,
+                        x.stop,
+                        y.stop,
+                        t.start.timestamp(),
+                        t.stop.timestamp(),
+                    ],
+                    dtype=torch.float32,
+                )
+                bounds_tensors.append(bounds_tensor)
+            collated[key] = torch.stack(bounds_tensors)
     return collated
 
 

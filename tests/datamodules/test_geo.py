@@ -211,6 +211,15 @@ class TestGeoDataModule:
         assert not dm.test_dataloader().drop_last
         assert not dm.predict_dataloader().drop_last
 
+    def test_bounds_preserved_in_batch(self, datamodule: CustomGeoDataModule) -> None:
+        """Test that bounds are preserved through DataLoader as tensors."""
+        datamodule.setup('predict')
+        if datamodule.trainer:
+            datamodule.trainer.predicting = True
+        batch = next(iter(datamodule.predict_dataloader()))
+        assert 'bounds' in batch
+        assert isinstance(batch['bounds'], Tensor)
+
 
 class TestNonGeoDataModule:
     @pytest.fixture

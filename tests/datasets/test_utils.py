@@ -421,6 +421,46 @@ class TestCollateFunctionsMatchingKeys:
             assert torch.allclose(samples[i]['image'], new_samples[i]['image'])
             assert samples[i]['crs'] == new_samples[i]['crs']
 
+    def test_stack_samples_with_bounds(self) -> None:
+        from datetime import datetime
+
+        import pandas as pd
+
+        t1 = pd.Timestamp(datetime(2020, 1, 1))
+        t2 = pd.Timestamp(datetime(2020, 6, 1))
+        samples = [
+            {
+                'image': torch.tensor([1, 2, 3]),
+                'bounds': (
+                    slice(-1.0, 0.0, None),
+                    slice(-1.0, 0.0, None),
+                    slice(t1, t2),
+                ),
+            },
+            {
+                'image': torch.tensor([4, 5, 6]),
+                'bounds': (
+                    slice(0.0, 1.0, None),
+                    slice(-1.0, 0.0, None),
+                    slice(t1, t2),
+                ),
+            },
+        ]
+        sample = stack_samples(samples)
+        assert sample['image'].size() == torch.Size([2, 3])
+        assert torch.allclose(sample['image'], torch.tensor([[1, 2, 3], [4, 5, 6]]))
+        assert isinstance(sample['bounds'], torch.Tensor)
+        assert sample['bounds'].shape == torch.Size([2, 6])
+        assert torch.allclose(
+            sample['bounds'],
+            torch.tensor(
+                [
+                    [-1.0, -1.0, 0.0, 0.0, t1.timestamp(), t2.timestamp()],
+                    [0.0, -1.0, 1.0, 0.0, t1.timestamp(), t2.timestamp()],
+                ]
+            ),
+        )
+
     def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample['image'].size() == torch.Size([6])
