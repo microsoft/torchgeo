@@ -96,8 +96,7 @@ class INaturalist(GeoDataset):
         keypoints = torch.tensor(index.get_coordinates().values, dtype=torch.float32)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'crs': self.crs,
-            'bounds': index,
+            'bounds': self._slice_to_tensor(query),
             'keypoints': keypoints,
             'transform': torch.tensor(transform),
         }

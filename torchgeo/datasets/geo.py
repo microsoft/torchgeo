@@ -141,6 +141,29 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         assert len(geoslice) == 3
         return geoslice
 
+    def _slice_to_tensor(self, query: GeoSlice) -> Tensor:
+        """Tensor representation of a spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            A tensor version of this slice.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        bounds = [
+            x.start,
+            x.stop,
+            x.step,
+            y.start,
+            y.stop,
+            y.step,
+            t.start.timestamp(),
+            t.stop.timestamp(),
+            t.step,
+        ]
+        return torch.tensor(bounds)
+
     @abc.abstractmethod
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -540,8 +563,7 @@ class RasterDataset(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: dict[str, Any] = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }
 
@@ -750,8 +772,7 @@ class XarrayDataset(GeoDataset):
         image = self._merge_files(index.filepath, query)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: dict[str, Any] = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(query),
             'image': image,
             'transform': torch.tensor(transform),
         }
@@ -1058,8 +1079,7 @@ class VectorDataset(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: dict[str, Any] = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }
 

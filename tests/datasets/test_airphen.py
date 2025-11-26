@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 
 from torchgeo.datasets import (
     Airphen,
@@ -34,7 +33,6 @@ class TestAirphen:
     def test_getitem(self, dataset: Airphen) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_and(self, dataset: Airphen) -> None:

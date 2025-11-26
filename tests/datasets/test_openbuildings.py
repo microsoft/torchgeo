@@ -49,7 +49,6 @@ class TestOpenBuildings:
         df.to_csv(path, compression='gzip')
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_not_download(self, tmp_path: Path) -> None:
@@ -77,7 +76,6 @@ class TestOpenBuildings:
     def test_getitem(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: OpenBuildings) -> None:

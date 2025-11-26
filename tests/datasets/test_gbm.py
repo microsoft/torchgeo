@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-from pyproj import CRS
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -27,7 +26,6 @@ class TestGlobalBuildingMap:
     def test_getitem(self, dataset: GlobalBuildingMap) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: GlobalBuildingMap) -> None:

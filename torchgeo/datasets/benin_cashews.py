@@ -217,7 +217,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, transform, crs, and metadata at index.
+            a dict containing image, mask, transform, and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
@@ -232,8 +232,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
             'mask': labels,
             'x': torch.tensor(x),
             'y': torch.tensor(y),
+            'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
-            'crs': crs,
         }
 
         if self.transforms is not None:

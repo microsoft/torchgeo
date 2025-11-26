@@ -10,7 +10,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pyproj import CRS
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -46,7 +45,6 @@ class TestSentinel1:
     def test_getitem(self, dataset: Sentinel1) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Sentinel1) -> None:
@@ -122,7 +120,6 @@ class TestSentinel2:
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Sentinel2) -> None:

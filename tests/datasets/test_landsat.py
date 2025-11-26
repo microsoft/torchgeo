@@ -10,7 +10,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pyproj import CRS
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -37,7 +36,6 @@ class TestLandsat8:
     def test_getitem(self, dataset: Landsat8) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Landsat8) -> None:
