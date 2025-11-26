@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from matplotlib.figure import Figure
+from torch import Tensor
 
 from torchgeo.datasets import (
     GBIF,
@@ -26,6 +27,8 @@ class TestGBIF:
     def test_getitem(self, dataset: GBIF) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
+        assert isinstance(x['keypoints'], Tensor)
+        assert x['keypoints'].shape == (1, 2)
 
     def test_len(self, dataset: GBIF) -> None:
         assert len(dataset) == 5
