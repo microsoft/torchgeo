@@ -9,7 +9,7 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from ..datasets import LEVIRCD, LEVIRCDPlus
+from ..datasets import LEVIRCD, LEVIRCD100, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -143,3 +143,45 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             )
         if stage in ['test']:
             self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)
+
+
+class LEVIRCD100DataModule(LEVIRCDDataModule):
+    """LightningDataModule implementation for the LEVIRCD100 dataset.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+    """
+
+    def __init__(
+        self, batch_size: int = 4, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new LEVIRCD100DataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LEVIRCD100`.
+        """
+        # Skip LEVIRCDDataModule.__init__ and go straight to NonGeoDataModule
+        NonGeoDataModule.__init__(
+            self, LEVIRCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
+        )
+
+        # Images are already 256x256, so just normalize (no cropping)
+        self.train_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.val_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )

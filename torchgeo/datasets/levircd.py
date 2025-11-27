@@ -384,3 +384,36 @@ class LEVIRCDPlus(LEVIRCDBase):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
+
+
+class LEVIRCD100(LEVIRCD):
+    """Subset of LEVIR-CD containing 100 image pairs resampled to 256x256 resolution.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Image pairs are stratified by change percentage, then randomly split into train (60),
+    val (20), and test (20):
+
+    * 30 samples with 0.5-2% change
+    * 40 samples with 2-5% change
+    * 20 samples with 5-10% change
+    * 10 samples with 10-25% change
+    """
+
+    splits: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {
+            'url': 'https://drive.google.com/file/d/1aBnUJm8WD1XHizttsCFxkbTGdPWZkz50',
+            'filename': 'levircd100_train.zip',
+            'md5': '41e4f50ec450917ef4f520a4bddbd985',
+        },
+        'val': {
+            'url': 'https://drive.google.com/file/d/1399_t45jtaFOirMZtnze-x72vVv_Zg4f',
+            'filename': 'levircd100_val.zip',
+            'md5': '1a26ea4b49742bf0801efc9168d3589a',
+        },
+        'test': {
+            'url': 'https://drive.google.com/file/d/1UTvACulO367oPnvX12B8cxDx7OxcNIzC',
+            'filename': 'levircd100_test.zip',
+            'md5': 'b4e6b8d1b5cfa0b85c91707271788dab',
+        },
+    }

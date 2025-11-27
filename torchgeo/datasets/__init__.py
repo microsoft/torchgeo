@@ -110,7 +110,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
-from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
+from .levircd import LEVIRCD, LEVIRCD100, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .mdas import MDAS
@@ -196,6 +196,7 @@ __all__ = (
     'GBIF',
     'GID15',
     'LEVIRCD',
+    'LEVIRCD100',
     'MDAS',
     'NAIP',
     'NCCM',
