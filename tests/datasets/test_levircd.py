@@ -11,7 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import LEVIRCD, DatasetNotFoundError, LEVIRCDPlus
+from torchgeo.datasets import LEVIRCD, LEVIRCD100, DatasetNotFoundError, LEVIRCDPlus
 
 
 class TestLEVIRCD:
@@ -109,3 +109,37 @@ class TestLEVIRCDPlus:
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample, suptitle='Prediction')
         plt.close()
+
+
+class TestLEVIRCD100(TestLEVIRCD):
+    @pytest.fixture(params=['train', 'val'])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> LEVIRCD100:
+        directory = os.path.join('tests', 'data', 'levircd', 'levircd100')
+        splits = {
+            'train': {
+                'url': os.path.join(directory, 'levircd100_train.zip'),
+                'filename': 'levircd100_train.zip',
+            },
+            'val': {
+                'url': os.path.join(directory, 'levircd100_val.zip'),
+                'filename': 'levircd100_val.zip',
+            },
+        }
+        monkeypatch.setattr(LEVIRCD100, 'splits', splits)
+        root = tmp_path
+        split = request.param
+        transforms = nn.Identity()
+        return LEVIRCD100(root, split, transforms, download=True)
+
+    def test_already_downloaded(self, dataset: LEVIRCD) -> None:
+        LEVIRCD100(root=dataset.root, download=True)
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            LEVIRCD100(split='foo')
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            LEVIRCD100(tmp_path)
