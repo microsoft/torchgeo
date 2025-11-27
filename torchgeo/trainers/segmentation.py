@@ -397,7 +397,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -422,7 +421,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -495,7 +493,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -526,3 +523,22 @@ class SemanticSegmentationTask(BaseTask):
                 y_hat = y_hat.softmax(dim=1)
 
         return y_hat
+
+    def _log_metric_collection(self, metrics: MetricCollection) -> None:
+        """Log and reset a MetricCollection to avoid Lightning dict errors."""
+        metric_values = metrics.compute()
+        if metric_values:
+            self.log_dict(metric_values, on_step=False, on_epoch=True, logger=True)
+        metrics.reset()
+
+    def on_train_epoch_end(self) -> None:
+        super().on_train_epoch_end()
+        self._log_metric_collection(self.train_metrics)
+
+    def on_validation_epoch_end(self) -> None:
+        super().on_validation_epoch_end()
+        self._log_metric_collection(self.val_metrics)
+
+    def on_test_epoch_end(self) -> None:
+        super().on_test_epoch_end()
+        self._log_metric_collection(self.test_metrics)
