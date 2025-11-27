@@ -95,7 +95,7 @@ class SemanticSegmentationTask(BaseTask):
            The *labels* parameter.
 
         .. versionadded:: 0.8
-           Time-series support.
+           Time series, DPT, Segformer, and UPerNet support.
 
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.

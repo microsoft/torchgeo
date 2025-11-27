@@ -630,6 +630,8 @@ class MMEarth(NonGeoDataset):
     ) -> Figure:
         """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
 
+        .. versionadded:: 0.8
+
         Args:
             sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.

@@ -451,7 +451,10 @@ class TestOpenStreetMap:
 
         # Create dataset which should trigger download (covers lines 216-239)
         classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=True)
+        with pytest.warns(UserWarning, match='Class .* has no geometries'):
+            dataset = OpenStreetMap(
+                bbox=bbox, paths=root, classes=classes, download=True
+            )
 
         # Check data file was created
         data_file = dataset._get_data_filename()

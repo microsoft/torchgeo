@@ -1,4 +1,4 @@
-Conv-LSTM
+ConvLSTM
 =========
 
 .. currentmodule:: torchgeo.models

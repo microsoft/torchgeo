@@ -71,6 +71,9 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
+
         Args:
             index: index to return
 

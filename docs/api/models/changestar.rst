@@ -1,5 +1,5 @@
-Change-Star
-===========
+ChangeStar
+==========
 
 .. currentmodule:: torchgeo.models
 .. autoclass:: ChangeStar
