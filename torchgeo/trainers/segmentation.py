@@ -532,13 +532,16 @@ class SemanticSegmentationTask(BaseTask):
         metrics.reset()
 
     def on_train_epoch_end(self) -> None:
+        """Log training metrics at the end of the training epoch."""
         super().on_train_epoch_end()
         self._log_metric_collection(self.train_metrics)
 
     def on_validation_epoch_end(self) -> None:
+        """Log validation metrics at the end of the validation epoch."""
         super().on_validation_epoch_end()
         self._log_metric_collection(self.val_metrics)
 
     def on_test_epoch_end(self) -> None:
+        """Log test metrics at the end of the test epoch."""
         super().on_test_epoch_end()
         self._log_metric_collection(self.test_metrics)
