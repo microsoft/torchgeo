@@ -154,11 +154,14 @@ LEVIR-CD
 ^^^^^^^^
 
 .. autoclass:: LEVIRCDDataModule
+.. autoclass:: LEVIRCD100DataModule
+
 
 LEVIR-CD+
 ^^^^^^^^^
 
 .. autoclass:: LEVIRCDPlusDataModule
+
 
 LoveDA
 ^^^^^^

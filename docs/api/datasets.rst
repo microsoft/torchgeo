@@ -386,6 +386,8 @@ LEVIR-CD
 
 .. autoclass:: LEVIRCDBase
 .. autoclass:: LEVIRCD
+.. autoclass:: LEVIRCD100
+
 
 LEVIR-CD+
 ^^^^^^^^^
