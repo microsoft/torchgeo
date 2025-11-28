@@ -95,7 +95,7 @@ class EDDMapS(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        keypoints = torch.tensor(index.get_coordinates().values)
+        keypoints = torch.tensor(index.get_coordinates().values, dtype=torch.float32)
         sample = {'crs': self.crs, 'bounds': query, 'keypoints': keypoints}
 
         return sample
