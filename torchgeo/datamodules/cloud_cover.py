@@ -53,9 +53,7 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
             self.dataset = CloudCoverDetection(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
-                self.dataset,
-                [1 - self.val_split_pct, self.val_split_pct],
-                generator,
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
 
         if stage in ['test']:
