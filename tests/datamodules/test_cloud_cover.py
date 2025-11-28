@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Sized
 from pathlib import Path
 
 import pytest
@@ -44,11 +45,20 @@ class TestCloudCoverDetectionDataModule:
         assert datamodule.dataset is not None
         assert datamodule.train_dataset is not None
         assert datamodule.val_dataset is not None
-        assert len(datamodule.train_dataset) + len(datamodule.val_dataset) == len(
-            datamodule.dataset
-        )
+
+        dataset = datamodule.dataset
+        train_dataset = datamodule.train_dataset
+        val_dataset = datamodule.val_dataset
+
+        assert isinstance(dataset, Sized)
+        assert isinstance(train_dataset, Sized)
+        assert isinstance(val_dataset, Sized)
+
+        assert len(train_dataset) + len(val_dataset) == len(dataset)
 
     def test_setup_test(self, datamodule: CloudCoverDetectionDataModule) -> None:
         datamodule.setup('test')
         assert datamodule.test_dataset is not None
-        assert len(datamodule.test_dataset) == 1
+        test_dataset = datamodule.test_dataset
+        assert isinstance(test_dataset, Sized)
+        assert len(test_dataset) == 1
