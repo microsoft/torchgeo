@@ -145,14 +145,14 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)
 
 
-class LEVIRCD100DataModule(LEVIRCDDataModule):
+class LEVIRCD100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LEVIRCD100 dataset.
 
     Intended for tutorials and demonstrations, not for benchmarking.
     """
 
     def __init__(
-        self, batch_size: int = 4, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 8, num_workers: int = 0, **kwargs: Any
     ) -> None:
         """Initialize a new LEVIRCD100DataModule instance.
 
@@ -162,9 +162,8 @@ class LEVIRCD100DataModule(LEVIRCDDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCD100`.
         """
-        # Skip LEVIRCDDataModule.__init__ and go straight to NonGeoDataModule
-        NonGeoDataModule.__init__(
-            self, LEVIRCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
+        super().__init__(
+            LEVIRCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
         # Images are already 256x256, so just normalize (no cropping)

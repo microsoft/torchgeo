@@ -65,6 +65,7 @@ class TestChangeDetectionTask:
             'cabuar',
             'chabud',
             'levircd',
+            'levircd100',
             'levircdplus',
             'oscd',
             'oscd_multiclass',
