@@ -13,4 +13,4 @@ data:
     batch_size: 1
     val_split_pct: 0.2
   dict_kwargs:
-    root: 'tests/data/ref_cloud_cover_detection_challenge_v1/public'
+    root: 'tests/data/ref_cloud_cover_detection_challenge_v1'
