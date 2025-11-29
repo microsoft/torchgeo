@@ -148,6 +148,8 @@ tests = [
     "pytest>=7.3",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # shapely 2+ required for shapely.Geometry
+    "types-shapely>=2",
 ]
 all = [
     "torchgeo[datasets,docs,models,style,tests]",
