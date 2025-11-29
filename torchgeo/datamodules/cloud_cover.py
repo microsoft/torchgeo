@@ -36,7 +36,6 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CloudCoverDetection`.
         """
-
         self.mean = torch.tensor(0.0)
         self.std = torch.tensor(10000.0)
         super().__init__(CloudCoverDetection, batch_size, num_workers, **kwargs)
