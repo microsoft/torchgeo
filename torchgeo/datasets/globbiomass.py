@@ -11,6 +11,7 @@ from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import rasterio
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -213,7 +214,13 @@ class GlobBiomass(RasterDataset):
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'mask': mask,
+            'crs': self.crs,
+            'bounds': query,
+            'transform': torch.tensor(transform),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)

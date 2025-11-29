@@ -38,8 +38,8 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # geopandas 0.12.1+ required for Shapely 2+ support
-    "geopandas>=0.12.1",
+    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
+    "geopandas>=0.13",
     # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
     "jsonargparse[signatures]>=4.25",
     # kornia 0.8.2+ required for fix to VideoSequential

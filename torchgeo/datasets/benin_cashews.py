@@ -7,6 +7,7 @@ import json
 import os
 from collections.abc import Callable, Sequence
 from functools import lru_cache
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -167,7 +168,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
@@ -209,7 +210,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -231,7 +232,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             'mask': labels,
             'x': torch.tensor(x),
             'y': torch.tensor(y),
-            'transform': transform,
+            'transform': torch.tensor(transform),
             'crs': crs,
         }
 

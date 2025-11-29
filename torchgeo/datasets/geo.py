@@ -537,7 +537,12 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'crs': self.crs,
+            'bounds': query,
+            'transform': torch.tensor(transform),
+        }
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -742,7 +747,13 @@ class XarrayDataset(GeoDataset):
             )
 
         image = self._merge_files(index.filepath, query)
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'image': image}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'crs': self.crs,
+            'bounds': query,
+            'image': image,
+            'transform': torch.tensor(transform),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -1047,9 +1058,14 @@ class VectorDataset(GeoDataset):
             boxes_xyxy = np.empty((0, 4), dtype=np.float32)
             labels = np.empty((0,), dtype=np.int32)
 
-        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'crs': self.crs,
+            'bounds': query,
+            'transform': torch.tensor(transform),
+        }
 
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         match self.task:
             case 'semantic_segmentation':
                 sample['mask'] = array_to_tensor(masks).to(self.dtype)
