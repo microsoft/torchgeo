@@ -134,8 +134,8 @@ models = [
     "microsoft-aurora>=1.6",
 ]
 style = [
-    # mypy 0.900+ required for pyproject.toml support
-    "mypy>=0.900",
+    # mypy 1.16+ required for exclude_gitignore configuration
+    "mypy>=1.16",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
 ]
@@ -174,9 +174,11 @@ show_missing = true
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
+packages = ["torchgeo", "tests"]
+exclude = ["^tests/data"]
+exclude_gitignore = true
 ignore_missing_imports = true
 disable_error_code = "import-untyped"
-exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
 # Disallow dynamic typing (TODO: work in progress)
 disallow_any_unimported = false
