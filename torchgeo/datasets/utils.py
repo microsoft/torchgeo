@@ -24,6 +24,7 @@ import rasterio
 import shapely
 import torch
 from rasterio import Affine
+from shapely import Geometry
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -779,12 +780,12 @@ def which(name: Path) -> Executable:
 
 
 def convert_poly_coords(
-    geom: shapely.geometry.shape, affine_obj: Affine, inverse: bool = False
-) -> shapely.geometry.shape:
+    geom: Geometry, affine_obj: Affine, inverse: bool = False
+) -> Geometry:
     """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
 
     Args:
-        geom: shapely.geometry.shape to convert
+        geom: shape to convert
         affine_obj: rasterio.Affine object to use for geoconversion
         inverse: If true, convert geocoordinates to pixel coordinates
 
