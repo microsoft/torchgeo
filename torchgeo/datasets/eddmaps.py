@@ -10,6 +10,7 @@ from typing import Any
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import rasterio
 import torch
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
@@ -96,7 +97,13 @@ class EDDMapS(GeoDataset):
             )
 
         keypoints = torch.tensor(index.get_coordinates().values, dtype=torch.float32)
-        sample = {'crs': self.crs, 'bounds': query, 'keypoints': keypoints}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'crs': self.crs,
+            'bounds': index,
+            'keypoints': keypoints,
+            'transform': torch.tensor(transform),
+        }
 
         return sample
 

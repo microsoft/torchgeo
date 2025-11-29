@@ -14,6 +14,7 @@ from typing import Any, ClassVar
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import rasterio
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
@@ -270,11 +271,13 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'crs': self.crs,
             'bounds': query,
             'image': img.float(),
             'mask': mask.long(),
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:

@@ -10,6 +10,7 @@ from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import rasterio
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -225,11 +226,13 @@ class AgriFieldNet(RasterDataset):
         mask = self._merge_files(mask_filepaths, query)
         mask = self.ordinal_map[mask.squeeze().long()]
 
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'crs': self.crs,
             'bounds': query,
             'image': image.float(),
             'mask': mask.long(),
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:

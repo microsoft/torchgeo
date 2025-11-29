@@ -231,7 +231,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             'mask': labels,
             'x': torch.tensor(x),
             'y': torch.tensor(y),
-            'transform': transform,
+            'transform': torch.tensor(transform),
             'crs': crs,
         }
 

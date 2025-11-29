@@ -330,11 +330,13 @@ class EnviroAtlas(GeoDataset):
         index = index.iloc[:: t.step]
         index = index.cx[x.start : x.stop, y.start : y.stop]
 
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: dict[str, Any] = {
             'image': [],
             'mask': [],
             'crs': self.crs,
             'bounds': query,
+            'transform': torch.tensor(transform),
         }
 
         if index.empty:
