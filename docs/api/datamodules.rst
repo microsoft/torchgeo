@@ -82,7 +82,7 @@ ChaBuD
 
 .. autoclass:: ChaBuDDataModule
 
-Cloud Cover Detection Challenge
+Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CloudCoverDetectionDataModule
