@@ -36,9 +36,6 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CloudCoverDetection`.
         """
-        if not 0 < val_split_pct < 1:
-            msg = 'val_split_pct must be between 0 and 1.'
-            raise ValueError(msg)
 
         super().__init__(CloudCoverDetection, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
