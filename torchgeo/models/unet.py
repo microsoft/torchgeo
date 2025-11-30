@@ -209,7 +209,7 @@ def unet(
     else:
         kwargs['classes'] = 1 if classes is None else classes
 
-    model = smp.create_model(*args, **kwargs)
+    model: nn.Module = smp.create_model(*args, **kwargs)
 
     if weights:
         state_dict = weights.get_state_dict(progress=True)
