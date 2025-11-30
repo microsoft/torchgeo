@@ -3,6 +3,8 @@
 
 """TorchGeo samplers."""
 
+from __future__ import annotations
+
 import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
