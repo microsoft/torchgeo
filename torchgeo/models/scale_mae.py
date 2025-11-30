@@ -3,7 +3,6 @@
 
 """Pre-trained Scale-MAE models."""
 
-from collections import OrderedDict
 from functools import partial
 from typing import Any
 
@@ -142,8 +141,8 @@ class ScaleMAE(VisionTransformer):
 
 
 def interpolate_pos_embed(
-    model: ScaleMAE, state_dict: OrderedDict[str, Tensor]
-) -> OrderedDict[str, Tensor]:
+    model: ScaleMAE, state_dict: dict[str, Tensor]
+) -> dict[str, Tensor]:
     """Interpolate the positional embeddings if image size is different than pretrained image size.
 
     Args:
