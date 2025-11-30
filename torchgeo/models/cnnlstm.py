@@ -1,4 +1,3 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
 """CNN-LSTM Model Architecture."""
@@ -11,58 +10,35 @@ import torch.nn as nn
 
 
 class CNN(nn.Module):
-    """CNN backbone using a TIMM model.
-
-    Args:
-        model_name (str): Name of the TIMM model architecture to use.
-        pretrained (bool): Whether to load pretrained weights.
-        output_dim (int, optional): Desired output feature dimension. If None, uses
-            the TIMM model's native feature dimension.
-        freeze_backbone (bool): If True, freezes the backbone parameters.
-        in_chans (int): Number of input channels (e.g., 3 for RGB).
-
-    Raises:
-        ImportError: If TIMM library is not available.
-
-    Forward:
-        x (torch.Tensor): Input tensor of shape either
-            - (B, T, C, H, W) for sequences of images, or
-            - (B, C, H, W) for single images.
-
-    Returns:
-        torch.Tensor: Extracted features of shape (B, T, output_dim) or (B, output_dim).
-    """
+    """CNN feature extractor using TIMM backbones."""
 
     def __init__(
         self,
         model_name: str,
-        pretrained: bool = True,
+        weights: Any = None,
         output_dim: int | None = None,
-        freeze_backbone: bool = False,
         in_chans: int = 3,
     ) -> None:
-        """Initialize CNN backbone with TIMM model.
+        """Initialize CNN feature extractor.
 
         Args:
             model_name: Name of the TIMM model architecture to use.
-            pretrained: Whether to load pretrained weights.
-            output_dim: Desired output feature dimension. If None, uses
-                the TIMM model's native feature dimension.
-            freeze_backbone: If True, freezes the backbone parameters.
+            weights: Weights enum value for loading pretrained weights. 
+                If None, no pretrained weights are loaded.
+            output_dim: Desired output feature dimension. If None, uses the 
+                TIMM model's native feature dimension.
             in_chans: Number of input channels (e.g., 3 for RGB).
         """
         super().__init__()
 
         # Create TIMM model without classification head
+        pretrained = weights is not None
         self.backbone = timm.create_model(
             model_name, pretrained=pretrained, num_classes=0, in_chans=in_chans
         )
 
         # Determine feature dimension
-        with torch.no_grad():
-            dummy_input = torch.randn(1, in_chans, 224, 224)
-            features = self.backbone(dummy_input)
-            feature_dim = features.shape[1]
+        feature_dim = self.backbone.num_features
 
         # Set output dimension
         if output_dim is None:
@@ -76,51 +52,33 @@ class CNN(nn.Module):
         else:
             self.projection = nn.Identity()
 
-        # Optionally freeze backbone
-        if freeze_backbone:
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through CNN backbone.
 
         Args:
-            x: Input tensor of shape (B, T, C, H, W) for sequences or (B, C, H, W) for single images.
+            x: Input tensor of shape (B, T, C, H, W) for image sequences.
 
         Returns:
             Extracted features of shape (B, T, output_dim) or (B, output_dim).
+
+        Raises:
+            ValueError: If input is not a 5D tensor (sequence of images).
         """
         if x.dim() == 5:  # (B, T, C, H, W)
             b, t, c, h, w = x.shape
             x = x.view(b * t, c, h, w)
-            features = self.backbone(x)
-            features = self.projection(features)
-            features = features.view(b, t, self.output_dim)
-        else:  # (B, C, H, W)
-            features = self.backbone(x)
-            features = self.projection(features)
-        return features  # type: ignore[no-any-return]
-
-
+            x = self.backbone(x)
+            x = self.projection(x)
+            x = x.view(b, t, self.output_dim)
+        else:  # e.g. (B, C, H, W)
+            raise ValueError(
+                f"Expected input of shape (B, T, C, H, W), but got shape {tuple(x.shape)} "
+                f"with {x.dim()} dimensions. Single images are not supported in this model."
+            )
+        return x
+    
 class LSTM(nn.Module):
-    """LSTM encoder for sequential data.
-
-    Args:
-        input_dim (int): Number of expected features in the input.
-        hidden_dim (int): Number of features in the hidden state.
-        num_layers (int): Number of recurrent layers.
-        bidirectional (bool): If True, becomes a bidirectional LSTM.
-        dropout (float): Dropout probability for LSTM layers (except last).
-        batch_first (bool): If True, input and output tensors are provided
-            as (batch, seq, feature).
-
-    Forward:
-        x (torch.Tensor): Input tensor of shape (B, T, input_dim).
-        lengths (torch.Tensor, optional): Lengths of sequences for packing.
-
-    Returns:
-        torch.Tensor: Output features from the LSTM of shape (B, T, hidden_dim * num_directions).
-    """
+    """LSTM encoder for sequential data."""
 
     def __init__(
         self,
@@ -185,194 +143,109 @@ class LSTM(nn.Module):
             output, _ = self.lstm(x)
         return output
 
-
-class Task(nn.Module):
-    """Unified task head supporting classification and regression.
-
-    Args:
-        input_dim (int): Input feature dimension.
-        task_type (str): Task type, either 'classification' or 'regression'.
-        num_classes (int, optional): Number of classes for classification.
-            Required if task_type='classification'.
-        output_dim (int): Output dimension for regression (default 1).
-        dropout (float): Dropout rate applied before the output layer.
-        pooling (str): Method to pool sequence inputs into a single vector.
-            Options: 'last', 'mean', 'max', 'attention'.
-
-    Forward:
-        x (torch.Tensor): Input tensor, either:
-            - (B, input_dim) for single vector, or
-            - (B, T, input_dim) for sequences.
-
-    Returns:
-        Dict[str, Optional[torch.Tensor]]:
-            For classification:
-                - 'outputs': Raw logits tensor (B, num_classes).
-                - 'probs': Softmax probabilities tensor (B, num_classes).
-            For regression:
-                - 'outputs': Regression predictions (B, output_dim).
-                - 'probs': None.
-    """
+class CNNLSTM(nn.Module):
+    """Combined CNN + LSTM model for sequence classification/regression."""
 
     def __init__(
         self,
-        input_dim: int,
-        task_type: str,
-        num_classes: int | None = None,
-        output_dim: int = 1,
-        dropout: float = 0.0,
+        model_name: str,
+        weights: Any = None,
+        cnn_output_dim: int | None = None,
+        in_chans: int = 3,
+        lstm_hidden_dim: int = 256,
+        lstm_num_layers: int = 1,
+        lstm_bidirectional: bool = False,
+        lstm_dropout: float = 0.0,
+        num_classes: int = 1,
+        head_dropout: float = 0.0,
         pooling: str = 'last',
     ) -> None:
-        """Initialize task head.
-
-        Args:
-            input_dim: Input feature dimension.
-            task_type: Task type, either 'classification' or 'regression'.
-            num_classes: Number of classes for classification.
-                Required if task_type='classification'.
-            output_dim: Output dimension for regression (default 1).
-            dropout: Dropout rate applied before the output layer.
-            pooling: Method to pool sequence inputs into a single vector.
-                Options: 'last', 'mean', 'max', 'attention'.
-        """
-        super().__init__()
-        assert task_type in ('classification', 'regression'), (
-            "task_type must be 'classification' or 'regression'"
-        )
-        self.task_type = task_type
-        self.pooling = pooling
-        self.dropout = nn.Dropout(dropout)
-
-        if self.pooling == 'attention':
-            self.attention = nn.Linear(input_dim, 1)
-
-        if task_type == 'classification':
-            assert num_classes is not None, (
-                'num_classes must be specified for classification'
-            )
-            self.head = nn.Linear(input_dim, num_classes)
-        else:  # regression
-            self.head = nn.Linear(input_dim, output_dim)
-
-    def forward(self, x: torch.Tensor) -> dict[str, torch.Tensor | None]:
-        """Forward pass through task head.
-
-        Args:
-            x: Input tensor, either (B, input_dim) for single vector or
-               (B, T, input_dim) for sequences.
-
-        Returns:
-            Dictionary containing:
-                For classification:
-                    - 'outputs': Raw logits tensor (B, num_classes).
-                    - 'probs': Softmax probabilities tensor (B, num_classes).
-                For regression:
-                    - 'outputs': Regression predictions (B, output_dim).
-                    - 'probs': None.
-        """
-        # Apply pooling if input is sequence (B, T, input_dim)
-        if x.dim() == 3:
-            if self.pooling == 'last':
-                x = x[:, -1, :]
-            elif self.pooling == 'mean':
-                x = x.mean(dim=1)
-            elif self.pooling == 'max':
-                x = x.max(dim=1)[0]
-            elif self.pooling == 'attention':
-                attn_weights = torch.softmax(self.attention(x), dim=1)
-                x = (x * attn_weights).sum(dim=1)
-
-        x = self.dropout(x)
-        outputs = self.head(x)
-
-        if self.task_type == 'classification':
-            probs = torch.softmax(outputs, dim=-1)
-            return {'outputs': outputs, 'probs': probs}
-        else:  # regression
-            return {'outputs': outputs, 'probs': None}
-
-
-class CNNLSTM(nn.Module):
-    """Combined CNN + LSTM model with a unified task head.
-
-    Args:
-        cnn_backbone (CNN): CNN feature extractor module.
-        rnn_encoder (LSTM): LSTM sequence encoder module.
-        task_head (Task): Task head for classification or regression.
-
-    Raises:
-        ValueError: If the output dimension of CNN does not match input dimension of LSTM,
-                    or if the output dimension of LSTM does not match input dimension of task head.
-
-    Forward:
-        x (torch.Tensor): Input tensor, either
-            - (B, T, C, H, W) sequence of images, or
-            - (B, C, H, W) single image.
-        lengths (torch.Tensor, optional): Lengths of sequences for LSTM packing.
-
-    Returns:
-        Dict[str, Optional[torch.Tensor]]: Output dictionary from task head.
-    """
-
-    def __init__(self, cnn_backbone: CNN, rnn_encoder: LSTM, task_head: Task) -> None:
         """Initialize CNN-LSTM model.
 
         Args:
-            cnn_backbone: CNN feature extractor module.
-            rnn_encoder: LSTM sequence encoder module.
-            task_head: Task head for classification or regression.
-
-        Raises:
-            ValueError: If the output dimension of CNN does not match input dimension of LSTM,
-                        or if the output dimension of LSTM does not match input dimension of task head.
+            model_name: Name of the TIMM model architecture to use for CNN backbone.
+            weights: Weights enum value for loading pretrained weights.
+            cnn_output_dim: CNN output feature dimension. If None, uses native dimension.
+            in_chans: Number of input channels (e.g., 3 for RGB).
+            lstm_hidden_dim: Number of features in LSTM hidden state.
+            lstm_num_layers: Number of recurrent layers in LSTM.
+            lstm_bidirectional: If True, use bidirectional LSTM.
+            lstm_dropout: Dropout probability for LSTM layers.
+            num_classes: Number of output classes/dimensions. Default 1 for
+                regression, set to number of classes for classification.
+            head_dropout: Dropout rate applied before final layer.
+            pooling: Method to pool sequence outputs. Options: 'last', 'mean',
+                'max', 'attention'.
         """
         super().__init__()
-        self.cnn_backbone = cnn_backbone
-        self.rnn_encoder = rnn_encoder
-        self.task_head = task_head
+        self.pooling = pooling
 
-        # Validate CNN -> RNN dimensions
-        if cnn_backbone.output_dim != rnn_encoder.input_dim:
-            raise ValueError(
-                f'CNN output dim ({cnn_backbone.output_dim}) must match '
-                f'RNN input dim ({rnn_encoder.input_dim})'
-            )
+        # Build CNN backbone
+        self.cnn_backbone = CNN(
+            model_name=model_name,
+            weights=weights,
+            output_dim=cnn_output_dim,
+            in_chans=in_chans,
+        )
 
-        rnn_output_dim = rnn_encoder.output_dim
-        task_input_dim = task_head.head.in_features
+        # Build LSTM encoder
+        self.rnn_encoder = LSTM(
+            input_dim=self.cnn_backbone.output_dim,
+            hidden_dim=lstm_hidden_dim,
+            num_layers=lstm_num_layers,
+            bidirectional=lstm_bidirectional,
+            dropout=lstm_dropout,
+            batch_first=True,
+        )
 
-        if rnn_output_dim != task_input_dim:
-            raise ValueError(
-                f'RNN output dim ({rnn_output_dim}) must match '
-                f'Task input dim ({task_input_dim})'
-            )
+        # Optional attention for pooling
+        if self.pooling == 'attention':
+            self.attention = nn.Linear(self.rnn_encoder.output_dim, 1)
+
+        # Head layers
+        self.dropout = nn.Dropout(head_dropout)
+        self.head = nn.Linear(self.rnn_encoder.output_dim, num_classes)
 
     def forward(
         self, x: torch.Tensor, lengths: torch.Tensor | None = None, **kwargs: Any
-    ) -> dict[str, torch.Tensor | None]:
+    ) -> torch.Tensor:
         """Forward pass through the complete CNN-LSTM model.
 
         Args:
-            x: Input tensor, either (B, T, C, H, W) sequence of images or
-               (B, C, H, W) single image.
+            x: Input tensor of shape (B, T, C, H, W) - sequence of images.
             lengths: Lengths of sequences for LSTM packing (optional).
             **kwargs: Additional keyword arguments.
 
         Returns:
-            Output dictionary from task head containing predictions and probabilities.
-        """
-        # Handle single image input by adding time dimension
-        if x.dim() == 4:  # (B, C, H, W)
-            x = x.unsqueeze(1)  # (B, 1, C, H, W)
+            Raw logits/predictions of shape (B, num_classes).
 
-        # CNN feature extraction (supports batching all frames)
-        cnn_features = self.cnn_backbone(x)  # (B, T, feature_dim)
+        Raises:
+            ValueError: If input is not a 5D tensor (sequence of images).
+        """
+        # Ensure input is a sequence
+        if x.dim() != 5:
+            raise ValueError(
+                f'Expected 5D input tensor (B, T, C, H, W), got {x.dim()}D tensor'
+            )
+
+        # CNN feature extraction
+        x = self.cnn_backbone(x)  # (B, T, feature_dim)
 
         # Sequence modeling with LSTM
-        rnn_output = self.rnn_encoder(cnn_features, lengths)  # (B, T, hidden_dim)
+        x = self.rnn_encoder(x, lengths)  # (B, T, hidden_dim)
 
-        # Task-specific output
+        # Pooling
+        if self.pooling == 'last':
+            x = x[:, -1, :]
+        elif self.pooling == 'mean':
+            x = x.mean(dim=1)
+        elif self.pooling == 'max':
+            x = x.max(dim=1)[0]
+        elif self.pooling == 'attention':
+            attn_weights = torch.softmax(self.attention(x), dim=1)
+            x = (x * attn_weights).sum(dim=1)
 
-        output = self.task_head(rnn_output)
-
-        return output  # type: ignore[no-any-return]
+        # Final prediction
+        x = self.dropout(x)
+        x = self.head(x)
+        return x
