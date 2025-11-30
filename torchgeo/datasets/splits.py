@@ -11,9 +11,9 @@ from math import floor, isclose
 from typing import cast
 
 import geopandas
-import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
+from pandas import DataFrame, Interval, IntervalIndex, Series, Timedelta, Timestamp
 from shapely import LineString, Polygon
 from torch import Generator, default_generator, randint, randperm
 
@@ -231,11 +231,9 @@ def random_grid_cell_assignment(
                     rows.append(row)
                     geometry.append(geom)
 
-    indexes_sr = pd.IntervalIndex.from_arrays(
-        left, right, closed='both', name='datetime'
-    )
-    rows_df = pd.DataFrame(rows)
-    geometry_sr = pd.Series(geometry)
+    indexes_sr = IntervalIndex.from_arrays(left, right, closed='both', name='datetime')
+    rows_df = DataFrame(rows)
+    geometry_sr = Series(geometry)
 
     # Randomly assign cells to each new index
     indices = randperm(len(rows), generator=generator)
@@ -281,7 +279,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[float | pd.Timedelta | pd.Interval]
+    dataset: GeoDataset, lengths: Sequence[float | Timedelta | Interval[Timestamp]]
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -310,24 +308,22 @@ def time_series_split(
 
         lengths = [totalt * f for f in lengths]
 
-    if all(isinstance(x, pd.Timedelta) for x in lengths):
+    if all(isinstance(x, Timedelta) for x in lengths):
         lengths = [
-            pd.Interval(t.start + offset - length, t.start + offset, closed='neither')
+            Interval(t.start + offset - length, t.start + offset, closed='neither')
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[pd.Interval], lengths)
+    lengths = cast(Sequence[Interval[Timestamp]], lengths)
 
-    _totalt = pd.Timedelta(0)
+    _totalt = Timedelta(0)
     new_datasets = []
     for i, interval in enumerate(lengths):
         start = interval.left
         end = interval.right
 
         # Remove one microsecond from each object's maxt to avoid overlapping
-        offset = (
-            pd.Timedelta(0) if i == len(lengths) - 1 else pd.Timedelta(1, unit='us')
-        )
+        offset = Timedelta(0) if i == len(lengths) - 1 else Timedelta(1, unit='us')
 
         if start < t.start or end > t.stop:
             raise ValueError(
@@ -348,8 +344,8 @@ def time_series_split(
             y = xy.right
             x = max(start, x)
             y = min(end - offset, y - offset)
-            new_index.append(pd.Interval(x, y, closed='neither'))
-        ds.index.index = pd.IntervalIndex(new_index, closed='neither', name='datetime')
+            new_index.append(Interval(x, y, closed='neither'))
+        ds.index.index = IntervalIndex(new_index, closed='neither', name='datetime')
         new_datasets.append(ds)
         _totalt += end - start
 
