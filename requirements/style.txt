@@ -1,3 +1,4 @@
 # style
 mypy==1.18.2
 ruff==0.14.6
+types-shapely==2.1.0.20250917
