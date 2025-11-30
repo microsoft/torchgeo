@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import cast
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -133,7 +134,8 @@ class EverWatch(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.annot_df.index.levels[0])
+        index = cast(pd.MultiIndex, self.annot_df.index)
+        return len(index.levels[0])
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -144,7 +146,7 @@ class EverWatch(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample_df = self.annot_df.loc[index]
+        sample_df = cast(pd.DataFrame, self.annot_df.loc[index])
 
         img_path = os.path.join(self.root, self.dir, sample_df['image_path'].iloc[0])
 

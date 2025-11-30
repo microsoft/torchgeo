@@ -68,9 +68,7 @@ class EDDMapS(GeoDataset):
         # Convert from pandas DataFrame to geopandas GeoDataFrame
         func = functools.partial(disambiguate_timestamp, format='%m-%d-%y')
         data = df['ObsDate'].apply(func).to_list()
-        index = pd.IntervalIndex.from_tuples(
-            data, closed='both', name='datetime'
-        )
+        index = pd.IntervalIndex.from_tuples(data, closed='both', name='datetime')
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
