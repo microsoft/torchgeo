@@ -170,8 +170,8 @@ class MapInWild(NonGeoDataset):
 
         if os.path.exists(os.path.join(self.root, 'split_IDs.csv')):
             split_dataframe = pd.read_csv(os.path.join(self.root, 'split_IDs.csv'))
-            self.ids = split_dataframe[split].dropna().values.tolist()
-            self.ids = list(map(int, self.ids))
+            ids = split_dataframe[split].dropna().values.tolist()
+            self.ids = list(map(int, ids))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
