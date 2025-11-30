@@ -16,6 +16,7 @@ import torch
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from shapely.geometry import Point
+from shapely.geometry.base import BaseGeometry
 
 from torchgeo.datasets import DatasetNotFoundError, OpenStreetMap
 
@@ -383,6 +384,7 @@ class TestOpenStreetMap:
             assert geom is None
         else:
             assert geom is not None
+            assert isinstance(geom, BaseGeometry)
             assert geom.geom_type == expected_geom_type
             assert extra_checks(geom)
 
