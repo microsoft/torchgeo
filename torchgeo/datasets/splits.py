@@ -298,6 +298,7 @@ def time_series_split(
     totalt = t.stop - t.start
 
     if all(isinstance(x, int | float) for x in lengths):
+        lengths = cast(Sequence[float], lengths)
         if any(n <= 0 for n in lengths):
             raise ValueError('All items in input lengths must be greater than 0.')
 
@@ -331,20 +332,20 @@ def time_series_split(
             )
 
         for other in lengths:
-            x = other.left
-            y = other.right
-            if start < x < end or start < y < end:
+            left = other.left
+            right = other.right
+            if start < left < end or start < right < end:
                 raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
         ds = deepcopy(dataset)
         ds.index = dataset.index.iloc[dataset.index.index.overlaps(interval)]
         new_index = []
         for xy in ds.index.index:
-            x = xy.left
-            y = xy.right
-            x = max(start, x)
-            y = min(end - offset, y - offset)
-            new_index.append(Interval(x, y, closed='neither'))
+            left = xy.left
+            right = xy.right
+            left = max(start, left)
+            right = min(end - offset, right - offset)
+            new_index.append(Interval(left, right, closed='neither'))
         ds.index.index = IntervalIndex(new_index, closed='neither', name='datetime')
         new_datasets.append(ds)
         _totalt += end - start
