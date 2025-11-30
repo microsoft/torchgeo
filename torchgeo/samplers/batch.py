@@ -9,9 +9,9 @@ import abc
 from collections.abc import Iterator
 
 import numpy as np
+import pandas as pd
 import shapely
 import torch
-from pandas import Interval, IntervalIndex, Timestamp
 from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
@@ -35,7 +35,7 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
         self,
         dataset: GeoDataset,
         roi: Polygon | None = None,
-        toi: Interval[Timestamp] | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -64,12 +64,12 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
             self.index = self.index.iloc[self.index.index.overlaps(toi)]
             tmin = np.maximum(self.index.index.left, np.datetime64(toi.left))
             tmax = np.minimum(self.index.index.right, np.datetime64(toi.right))
-            self.index.index = IntervalIndex.from_arrays(
+            self.index.index = pd.IntervalIndex.from_arrays(
                 tmin, tmax, closed='both', name='datetime'
             )
         else:
             x, y, t = dataset.bounds
-            self.toi = Interval(t.start, t.stop)
+            self.toi = pd.Interval(t.start, t.stop)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[GeoSlice]]:
@@ -95,7 +95,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int | None = None,
         roi: Polygon | None = None,
-        toi: Interval[Timestamp] | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -158,7 +158,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                 else:
                     self.length += 1
                 self.bounds.append(bounds)
-                self.intervals.append(Interval(tmin, tmax))
+                self.intervals.append(pd.Interval(tmin, tmax))
                 areas.append((xmax - xmin) * (ymax - ymin))
         if length is not None:
             self.length = length
