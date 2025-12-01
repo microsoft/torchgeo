@@ -138,6 +138,8 @@ style = [
     "mypy>=1.16",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
+    # requests 2.23.0+ required for lightly 1.4.5 comaptibility
+    "types-requests>=2.23",
     # shapely 2+ required for shapely.Geometry
     "types-shapely>=2",
 ]
