@@ -265,6 +265,7 @@ class ChangeViT(Module):
             pretrained=pretrained,
             num_classes=0,
             img_size=img_size,
+            dynamic_img_size=True,
             in_chans=in_channels,
             **kwargs,
         )
