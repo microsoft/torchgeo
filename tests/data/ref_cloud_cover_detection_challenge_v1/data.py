@@ -15,7 +15,7 @@ DTYPE = np.uint16
 
 np.random.seed(0)
 
-splits = {'train': 'public', 'test': 'private'}
+split_stage = {'public': 'train', 'private': 'test'}
 chip_ids = ['aaaa']
 all_bands = ['B02', 'B03', 'B04', 'B08']
 profile = {
@@ -29,14 +29,14 @@ profile = {
 }
 Z = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE)
 
-for split, directory in splits.items():
+for directory, stage in split_stage.items():
     for chip_id in chip_ids:
-        path = os.path.join(directory, f'{split}_features', chip_id)
+        path = os.path.join(directory, f'{stage}_features', chip_id)
         os.makedirs(path, exist_ok=True)
         for band in all_bands:
             with rasterio.open(os.path.join(path, f'{band}.tif'), 'w', **profile) as f:
                 f.write(Z, 1)
-        path = os.path.join(directory, f'{split}_labels')
+        path = os.path.join(directory, f'{stage}_labels')
         os.makedirs(path, exist_ok=True)
         with rasterio.open(os.path.join(path, f'{chip_id}.tif'), 'w', **profile) as f:
             f.write(Z, 1)
