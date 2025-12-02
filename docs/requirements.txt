@@ -1,4 +1,0 @@
-# All other documentation dependencies can be found in
-# pyproject.toml and requirements/docs.txt
-
-pydata-sphinx-theme
