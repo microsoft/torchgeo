@@ -1,4 +1,3 @@
-# pydata-sphinx-theme is installed from PyPI and does not require editable mode
 # All other documentation dependencies can be found in
 # pyproject.toml and requirements/docs.txt
 

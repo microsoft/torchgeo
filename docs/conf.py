@@ -48,8 +48,9 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 7.0+ required for modern features and Python 3.13 support
-needs_sphinx = '7.0'
+# Sphinx 6.2+ required for Python 3.13 compatibility (imghdr module removed)
+# https://github.com/python/cpython/issues/104818
+needs_sphinx = '6.2'
 
 nitpicky = True
 nitpick_ignore = [
@@ -98,9 +99,7 @@ html_theme_options = {
             'icon': 'fa-brands fa-slack',
         },
     ],
-    'analytics': {
-        'google_analytics_id': 'UA-209075005-1',
-    },
+    'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
         'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
         'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),

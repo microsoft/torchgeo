@@ -8,7 +8,7 @@ version: 2
 build:
   os: ubuntu-lts-latest
   tools:
-    # Sphinx 8+ and pydata-sphinx-theme support Python 3.13+
+    # Sphinx 6.2+ and pydata-sphinx-theme support Python 3.13+
     python: '3.13'
 
 # Configuration of the Python environment to be used

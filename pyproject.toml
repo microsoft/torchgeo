@@ -123,8 +123,9 @@ docs = [
     "nbsphinx>=0.8.5",
     # pydata-sphinx-theme actively maintained and supports modern Sphinx
     "pydata-sphinx-theme",
-    # sphinx 7+ required for modern features and Python 3.13 support
-    "sphinx>=7",
+    # sphinx 6.2+ required for Python 3.13 compatibility (imghdr module removed)
+    # https://github.com/python/cpython/issues/104818
+    "sphinx>=6.2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
