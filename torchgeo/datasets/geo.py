@@ -8,6 +8,7 @@ import fnmatch
 import functools
 import glob
 import os
+import pathlib
 import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
@@ -896,7 +897,7 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    if filepath.endswith('.parquet'):
+                    if pathlib.Path(filepath).suffix.lower() == '.parquet':
                         src = gpd.read_parquet(filepath)
                     else:
                         src = gpd.read_file(filepath, layer=layer)
@@ -961,7 +962,7 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            if filepath.endswith('.parquet'):
+            if pathlib.Path(filepath).suffix.lower() == '.parquet':
                 src = gpd.read_parquet(filepath)
             else:
                 src = gpd.read_file(filepath, layer=self.layer)
