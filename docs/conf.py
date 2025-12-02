@@ -12,8 +12,6 @@
 import os
 import sys
 
-import pytorch_sphinx_theme
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -50,8 +48,8 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 4.0+ required for autodoc_typehints_description_traget
-needs_sphinx = '4.0'
+# Sphinx 7.0+ required for modern features and Python 3.13 support
+needs_sphinx = '7.0'
 
 nitpicky = True
 nitpick_ignore = [
@@ -76,19 +74,37 @@ nitpick_ignore = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'pytorch_sphinx_theme'
-html_theme_path = [pytorch_sphinx_theme.get_html_theme_path()]
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
-# documentation.
+# documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
     'collapse_navigation': False,
-    'display_version': True,
-    'logo_only': True,
-    'pytorch_project': 'docs',
-    'navigation_with_keys': True,
-    'analytics_id': 'UA-209075005-1',
+    'show_nav_level': 2,
+    'show_toc_level': 2,
+    'navigation_depth': 4,
+    'navbar_align': 'left',
+    'header_links_before_dropdown': 6,
+    'icon_links': [
+        {
+            'name': 'GitHub',
+            'url': 'https://github.com/torchgeo/torchgeo',
+            'icon': 'fa-brands fa-github',
+        },
+        {
+            'name': 'Slack',
+            'url': 'https://torchgeo.slack.com',
+            'icon': 'fa-brands fa-slack',
+        },
+    ],
+    'analytics': {
+        'google_analytics_id': 'UA-209075005-1',
+    },
+    'logo': {
+        'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
+        'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
+    },
 }
 
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
@@ -132,8 +148,3 @@ intersphinx_mapping = {
 nbsphinx_execute = 'never'
 with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
-
-# Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
-# See more information here https://github.com/spatialaudio/nbsphinx/issues/599
-# NOTE: This will likely break nbsphinx widgets
-nbsphinx_requirejs_path = ''
