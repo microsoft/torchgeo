@@ -504,7 +504,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
 
     CROMA_VIT = Weights(
         url='https://hf.co/torchgeo/croma/resolve/387883f08af79d777167519c57cd826eda89a16f/CROMA_base-0238d814.pt',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'SSL4EO',
             'model': 'vit',
@@ -523,7 +523,7 @@ class CROMALarge_Weights(WeightsEnum):  # type: ignore[misc]
 
     CROMA_VIT = Weights(
         url='https://huggingface.co/torchgeo/croma/resolve/92cb1a0f4e34c6c01558baf070197c01255382f6/CROMA_large-921e69ad.pt',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'SSL4EO',
             'model': 'vit',
