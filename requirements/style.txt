@@ -1,5 +1,5 @@
 # style
-mypy==1.18.2
+mypy==1.19.0
 ruff==0.14.7
 types-requests==2.32.4.20250913
 types-shapely==2.1.0.20250917
