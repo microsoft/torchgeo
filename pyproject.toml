@@ -121,8 +121,8 @@ docs = [
     "ipywidgets>=7",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
-    # pydata-sphinx-theme actively maintained and supports modern Sphinx
-    "pydata-sphinx-theme",
+    # pydata-sphinx-theme 0.16.0+ required for sphinx 6.1+ compatibility
+    "pydata-sphinx-theme>=0.16.0",
     # sphinx 6.2+ required for Python 3.13 compatibility (imghdr module removed)
     # https://github.com/python/cpython/issues/104818
     "sphinx>=6.2",
