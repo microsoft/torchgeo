@@ -5,6 +5,8 @@
 
 import json
 
+import geopandas as gpd
+
 # Create an L shape:
 #
 # +--+
@@ -58,3 +60,6 @@ geojson = {
 
 with open('vector_2024.geojson', 'w') as f:
     json.dump(geojson, f)
+
+df = gpd.read_file('vector_2024.geojson')
+df.to_parquet('vector_2024.parquet')
