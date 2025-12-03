@@ -65,7 +65,8 @@ class INaturalist(GeoDataset):
         func = functools.partial(disambiguate_timestamp, format='%Y-%m-%d')
         date = df.observed_on.apply(func)
         time[time.isnull()] = date[time.isnull()]
-        index = pd.IntervalIndex.from_tuples(time, closed='both', name='datetime')
+        times = time.to_list()
+        index = pd.IntervalIndex.from_tuples(times, closed='both', name='datetime')
         geometry = gpd.points_from_xy(df.longitude, df.latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
