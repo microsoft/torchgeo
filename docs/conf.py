@@ -48,9 +48,9 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 6.2+ required for Python 3.13 compatibility (imghdr module removed)
-# https://github.com/python/cpython/issues/104818
-needs_sphinx = '6.2'
+# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+# https://github.com/sphinx-doc/sphinx/pull/10887
+needs_sphinx = '5.3'
 
 nitpicky = True
 nitpick_ignore = [

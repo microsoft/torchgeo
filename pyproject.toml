@@ -121,11 +121,11 @@ docs = [
     "ipywidgets>=7",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
-    # pydata-sphinx-theme 0.16.0+ required for sphinx 6.1+ compatibility
-    "pydata-sphinx-theme>=0.16.0",
-    # sphinx 6.2+ required for Python 3.13 compatibility (imghdr module removed)
-    # https://github.com/python/cpython/issues/104818
-    "sphinx>=6.2",
+    # pydata-sphinx-theme 0.14.0+ required for sphinx 5.0+ compatibility
+    "pydata-sphinx-theme>=0.14.0",
+    # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+    # https://github.com/sphinx-doc/sphinx/pull/10887
+    "sphinx>=5.3",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
