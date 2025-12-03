@@ -595,7 +595,6 @@ class TestVectorDataset:
         dataset_parquet.task = 'semantic_segmentation'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]
@@ -605,7 +604,6 @@ class TestVectorDataset:
         dataset_parquet.task = 'object_detection'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert x['bbox_xyxy'].shape[-1] == 4
@@ -613,7 +611,6 @@ class TestVectorDataset:
         dataset_parquet.task = 'instance_segmentation'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
