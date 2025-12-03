@@ -95,7 +95,7 @@ html_theme_options = {
         },
         {
             'name': 'Slack',
-            'url': 'https://torchgeo.slack.com',
+            'url': 'https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw',
             'icon': 'fa-brands fa-slack',
         },
     ],
