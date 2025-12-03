@@ -701,7 +701,7 @@ class CopernicusFM_Base_Weights(WeightsEnum):  # type: ignore[misc]
 
     CopernicusFM_ViT = Weights(
         url='https://huggingface.co/torchgeo/copernicus-fm/resolve/f395812cc990ba25a451dbb9c9e6d95c8482947e/CopernicusFM_ViT_base_varlang-085350e4.pth',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'Copernicus-Pretrain',
             'model': 'copernicusfm_base',

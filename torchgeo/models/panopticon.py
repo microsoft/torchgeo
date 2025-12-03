@@ -475,7 +475,7 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
 
     VIT_BASE14 = Weights(
         url='https://hf.co/lewaldm/panopticon/resolve/c8c2bb9555819e8b2bcedf5b3b00e3bf531554e7/panopticon_vitb14_teacher.pth',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'model': 'panopticon_vitb14',
             'publication': 'https://arxiv.org/abs/2503.10845',
