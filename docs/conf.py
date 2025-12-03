@@ -68,15 +68,6 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
-    # CRS string representations (not actual classes)
-    (
-        'py:class',
-        'World Geodetic System 1984 ensemble - Ellipsoid: WGS 84 - Prime Meridian: Greenwich',
-    ),
-    (
-        'py:class',
-        '- name: Popular Visualisation Pseudo-Mercator - method: Popular Visualisation Pseudo Mercator Datum: World Geodetic System 1984 ensemble - Ellipsoid: WGS 84 - Prime Meridian: Greenwich',
-    ),
 ]
 
 
