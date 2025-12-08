@@ -48,7 +48,7 @@ class TestCloudCoverDetection:
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CloudCoverDetection) -> None:
-        assert len(dataset) == 1
+        assert len(dataset) == 2
 
     def test_already_downloaded(self, dataset: CloudCoverDetection) -> None:
         CloudCoverDetection(root=dataset.root, split=dataset.split, download=True)
