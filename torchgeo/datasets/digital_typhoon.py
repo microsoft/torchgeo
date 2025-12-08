@@ -184,7 +184,7 @@ class DigitalTyphoon(NonGeoDataset):
             / 3600
         )
 
-        self.aux_df['hour_diff'] = self.aux_df['hour_diff_consecutive'].combine_first(
+        self.aux_df['hour_diff'] = self.aux_df['hour_diff_consecutive'].combine_first(  # type: ignore[unreachable]
             self.aux_df['hour_diff_to_next']
         )
         self.aux_df.drop(

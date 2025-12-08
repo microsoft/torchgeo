@@ -228,11 +228,11 @@ class CropHarvest(NonGeoDataset):
             (self.labels['properties.index'] == index)
             & (self.labels['properties.dataset'] == dataset)
         ]
-        row = row.to_dict(orient='records')[0]
+        properties = row.to_dict(orient='records')[0]
         label = 'None'
-        if row['properties.label']:
-            label = row['properties.label']
-        elif row['properties.is_crop'] == 1:
+        if properties['properties.label']:
+            label = properties['properties.label']
+        elif properties['properties.is_crop'] == 1:
             label = 'Other'
 
         return torch.tensor(np.where(self.classes == label)[0][0])

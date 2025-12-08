@@ -89,6 +89,14 @@ class CustomVectorDataset(VectorDataset):
     """
 
 
+class CustomVectorParquetDataset(VectorDataset):
+    filename_glob = '*.parquet'
+    date_format = '%Y'
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.parquet
+    """
+
+
 class CustomSentinelDataset(Sentinel2):
     all_bands: tuple[str, ...] = ()
     separate_files = False
@@ -538,6 +546,12 @@ class TestVectorDataset:
         return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
+    def dataset_parquet(self) -> CustomVectorParquetDataset:
+        root = os.path.join('tests', 'data', 'vector')
+        transforms = nn.Identity()
+        return CustomVectorParquetDataset(root, res=(0.1, 0.1), transforms=transforms)
+
+    @pytest.fixture(scope='class')
     def multilabel(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
@@ -570,6 +584,39 @@ class TestVectorDataset:
 
         dataset.task = 'instance_segmentation'
         x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert torch.equal(
+            x['mask'].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+        assert x['bbox_xyxy'].shape[-1] == 4
+        assert len(x['label']) == x['mask'].shape[0]
+
+    def test_getitem_parquet(self, dataset_parquet: CustomVectorParquetDataset) -> None:
+        dataset_parquet.task = 'semantic_segmentation'
+        x = dataset_parquet[dataset_parquet.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert torch.equal(
+            x['mask'].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+
+        dataset_parquet.task = 'object_detection'
+        x = dataset_parquet[dataset_parquet.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert x['bbox_xyxy'].shape[-1] == 4
+
+        dataset_parquet.task = 'instance_segmentation'
+        x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)

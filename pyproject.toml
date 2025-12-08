@@ -136,6 +136,8 @@ models = [
 style = [
     # mypy 1.16+ required for exclude_gitignore configuration
     "mypy>=1.16",
+    # pandas 1.5+ required for Python 3.11 wheels
+    "pandas-stubs>=1.5",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
     # requests 2.23.0+ required for lightly 1.4.5 comaptibility

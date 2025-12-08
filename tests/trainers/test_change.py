@@ -70,7 +70,7 @@ class TestChangeDetectionTask:
             'oscd_multiclass',
             'oscd_multiclass_focal',
             'oscd_multiclass_jaccard',
-            'xview2',
+            'xbd',
         ],
     )
     def test_trainer(

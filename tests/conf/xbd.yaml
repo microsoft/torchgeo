@@ -8,9 +8,9 @@ model:
     num_classes: 5
     loss: 'ce'
 data:
-  class_path: XView2DataModule
+  class_path: xBDDataModule
   init_args:
     batch_size: 1
     val_split_pct: 0.5
   dict_kwargs:
-    root: 'tests/data/xview2'
+    root: 'tests/data/xbd'

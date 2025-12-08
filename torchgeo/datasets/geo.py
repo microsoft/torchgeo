@@ -8,6 +8,7 @@ import fnmatch
 import functools
 import glob
 import os
+import pathlib
 import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
@@ -896,7 +897,10 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    src = gpd.read_file(filepath, layer=layer)
+                    if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                        src = gpd.read_parquet(filepath)
+                    else:
+                        src = gpd.read_file(filepath, layer=layer)
                     crs = crs or src.crs or CRS.from_epsg(4326)
                     if src.crs is None:
                         src.set_crs(crs, inplace=True)
@@ -958,7 +962,10 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            src = gpd.read_file(filepath, layer=self.layer)
+            if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                src = gpd.read_parquet(filepath)
+            else:
+                src = gpd.read_file(filepath, layer=self.layer)
 
             # We need to know the bounding box of the query in the source CRS
             transformer = pyproj.Transformer.from_crs(self.crs, src.crs, always_xy=True)
