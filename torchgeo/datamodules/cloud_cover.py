@@ -39,7 +39,6 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CloudCoverDetection`.
         """
-
         super().__init__(CloudCoverDetection, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
 
