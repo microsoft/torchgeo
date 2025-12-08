@@ -11,7 +11,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.0
       - name: Set up python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.13'
       - name: Install pip dependencies

@@ -40,6 +40,11 @@ class TestSolarPlantsBrazil:
 
     def test_plot(self, dataset: SolarPlantsBrazil) -> None:
         sample = dataset[0]
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
+
+    def test_plot_with_prediction(self, dataset: SolarPlantsBrazil) -> None:
+        sample = dataset[0]
         sample['prediction'] = sample['mask']
         dataset.plot(sample, suptitle='Test')
         plt.close()

@@ -11,6 +11,7 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 import rasterio as rio
 import torch
 from matplotlib.colors import ListedColormap
@@ -85,7 +86,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         with open(filepath) as f:
             self.metadata = json.load(f)
-        self.files = sorted(self.metadata.keys())
+        self.files = pd.Series(sorted(self.metadata.keys()))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

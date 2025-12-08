@@ -4,7 +4,7 @@ geopandas==1.1.1
 jsonargparse[signatures]==4.44.0
 kornia==0.8.2
 lightly==1.5.22
-lightning==2.5.4
+lightning==2.6.0
 matplotlib==3.10.7
 numpy==2.2.4
 pandas==2.3.3

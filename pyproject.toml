@@ -38,8 +38,8 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # geopandas 0.12.1+ required for Shapely 2+ support
-    "geopandas>=0.12.1",
+    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
+    "geopandas>=0.13",
     # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
     "jsonargparse[signatures]>=4.25",
     # kornia 0.8.2+ required for fix to VideoSequential
@@ -134,10 +134,16 @@ models = [
     "microsoft-aurora>=1.6",
 ]
 style = [
-    # mypy 0.900+ required for pyproject.toml support
-    "mypy>=0.900",
+    # mypy 1.16+ required for exclude_gitignore configuration
+    "mypy>=1.16",
+    # pandas 1.5+ required for Python 3.11 wheels
+    "pandas-stubs>=1.5",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
+    # requests 2.23.0+ required for lightly 1.4.5 comaptibility
+    "types-requests>=2.23",
+    # shapely 2+ required for shapely.Geometry
+    "types-shapely>=2",
 ]
 tests = [
     # nbmake 1.3.3+ required for variable mocking
@@ -174,9 +180,11 @@ show_missing = true
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
+packages = ["torchgeo", "tests"]
+exclude = ["^tests/data"]
+exclude_gitignore = true
 ignore_missing_imports = true
 disable_error_code = "import-untyped"
-exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
 # Disallow dynamic typing (TODO: work in progress)
 disallow_any_unimported = false

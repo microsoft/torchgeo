@@ -288,10 +288,10 @@ VHR-10
 
 .. autoclass:: VHR10DataModule
 
-xView2
-^^^^^^
+xBD
+^^^
 
-.. autoclass:: XView2DataModule
+.. autoclass:: xBDDataModule
 
 Base Classes
 ------------

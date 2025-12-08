@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""xView2 dataset."""
+"""xBD dataset."""
 
 import glob
 import os
@@ -14,6 +14,7 @@ import torch
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
+from typing_extensions import deprecated
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -25,10 +26,10 @@ from .utils import (
 )
 
 
-class XView2(NonGeoDataset):
-    """xView2 dataset.
+class xBD(NonGeoDataset):
+    """xBD dataset.
 
-    The `xView2 <https://xview2.org/>`__
+    The `xBD <https://xview2.org/dataset>`__
     dataset is a dataset for building disaster change detection. This dataset object
     uses the "Challenge training set (~7.8 GB)" and "Challenge test set (~2.6 GB)" data
     from the xView2 website as the train and test splits. Note, the xView2 website
@@ -77,7 +78,7 @@ class XView2(NonGeoDataset):
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new xView2 dataset instance.
+        """Initialize a new xBD dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -285,3 +286,8 @@ class XView2(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+@deprecated('Use torchgeo.datasets.xBD instead')
+class XView2(xBD):
+    """Deprecated alias for the xBD dataset."""

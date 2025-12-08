@@ -22,21 +22,21 @@ class TestChangeViT:
         """Test ChangeViT forward pass with different batch sizes."""
         # Use tiny model with small images for fast testing
         model = ChangeViT(
-            backbone='vit_tiny_patch16_224', img_size=64, pretrained=False
+            backbone='vit_tiny_patch16_224', img_size=32, pretrained=False
         )
         model.eval()
 
         # Input: [B, T=2, C=3, H, W]
-        x = torch.randn(b, 2, 3, 64, 64)
+        x = torch.randn(b, 2, 3, 32, 32)
         y = model(x)
 
         # Output: [B, 1, H, W] - binary change detection logits
-        assert y.shape == (b, 1, 64, 64)
+        assert y.shape == (b, 1, 32, 32)
 
     @torch.no_grad()
     def test_different_img_sizes(self) -> None:
         """Test ChangeViT with different image sizes."""
-        for img_size in [64, 128, 224]:
+        for img_size in [32, 48, 64]:
             model = ChangeViT(
                 backbone='vit_tiny_patch16_224', img_size=img_size, pretrained=False
             )
@@ -48,7 +48,7 @@ class TestChangeViT:
     def test_components(self) -> None:
         """Test ChangeViT has required components."""
         model = ChangeViT(
-            backbone='vit_tiny_patch16_224', img_size=64, pretrained=False
+            backbone='vit_tiny_patch16_224', img_size=32, pretrained=False
         )
 
         assert hasattr(model, 'encoder')
