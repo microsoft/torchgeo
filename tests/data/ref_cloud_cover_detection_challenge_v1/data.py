@@ -16,7 +16,7 @@ DTYPE = np.uint16
 np.random.seed(0)
 
 splits = {'train': 'public', 'test': 'private'}
-chip_ids = ['aaaa']
+chip_ids = ['aaaa', 'bbbb']
 all_bands = ['B02', 'B03', 'B04', 'B08']
 profile = {
     'driver': 'GTiff',

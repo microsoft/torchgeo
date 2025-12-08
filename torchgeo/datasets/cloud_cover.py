@@ -151,7 +151,9 @@ class CloudCoverDetection(NonGeoDataset):
         """
         path = os.path.join(self.directory, f'{self.split}_labels')
         with rasterio.open(os.path.join(path, f'{chip_id}.tif')) as src:
-            return torch.from_numpy(src.read(1).astype(np.int64))
+            mask = src.read(1).astype(np.int64)
+            mask = (mask > 0).astype(np.int64)
+            return torch.from_numpy(mask)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
