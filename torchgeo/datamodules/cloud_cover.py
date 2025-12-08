@@ -20,6 +20,9 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
     .. versionadded:: 0.9
     """
 
+    mean = torch.tensor(0.0)
+    std = torch.tensor(10000.0)
+
     def __init__(
         self,
         batch_size: int = 64,
@@ -36,8 +39,7 @@ class CloudCoverDetectionDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CloudCoverDetection`.
         """
-        self.mean = torch.tensor(0.0)
-        self.std = torch.tensor(10000.0)
+
         super().__init__(CloudCoverDetection, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
 
