@@ -282,8 +282,8 @@ class SeasoNet(NonGeoDataset):
 
         if self.concat_seasons > 1:
             # Group entries by location
-            self.files = csv.groupby(['Latitude', 'Longitude'])
-            self.files = self.files['Path'].agg('sum')
+            files = csv.groupby(['Latitude', 'Longitude'])
+            self.files = files['Path'].agg('sum')
 
             # Remove entries with less than concat_seasons available seasons
             self.files = self.files[

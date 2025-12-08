@@ -352,7 +352,7 @@ class IDTReeS(NonGeoDataset):
         """
         if self.split == 'train':
             directory = os.path.join(root, self.directories[self.split][0])
-            labels: pd.DataFrame = self._load_labels(directory)
+            labels: pd.DataFrame | None = self._load_labels(directory)
             geoms = self._load_geometries(directory)
         else:
             directory = os.path.join(root, self.task)

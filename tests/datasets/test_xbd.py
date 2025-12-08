@@ -12,14 +12,14 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, XView2
+from torchgeo.datasets import DatasetNotFoundError, xBD
 
 
-class TestXView2:
+class TestxBD:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2:
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> xBD:
         monkeypatch.setattr(
-            XView2,
+            xBD,
             'metadata',
             {
                 'train': {
@@ -34,34 +34,30 @@ class TestXView2:
                 },
             },
         )
-        root = os.path.join('tests', 'data', 'xview2')
+        root = os.path.join('tests', 'data', 'xbd')
         split = request.param
         transforms = nn.Identity()
-        return XView2(root, split, transforms, checksum=True)
+        return xBD(root, split, transforms, checksum=True)
 
-    def test_getitem(self, dataset: XView2) -> None:
+    def test_getitem(self, dataset: xBD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
-    def test_len(self, dataset: XView2) -> None:
+    def test_len(self, dataset: xBD) -> None:
         assert len(dataset) == 2
 
     def test_extract(self, tmp_path: Path) -> None:
         shutil.copyfile(
-            os.path.join(
-                'tests', 'data', 'xview2', 'train_images_labels_targets.tar.gz'
-            ),
+            os.path.join('tests', 'data', 'xbd', 'train_images_labels_targets.tar.gz'),
             os.path.join(tmp_path, 'train_images_labels_targets.tar.gz'),
         )
         shutil.copyfile(
-            os.path.join(
-                'tests', 'data', 'xview2', 'test_images_labels_targets.tar.gz'
-            ),
+            os.path.join('tests', 'data', 'xbd', 'test_images_labels_targets.tar.gz'),
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'),
         )
-        XView2(root=tmp_path)
+        xBD(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(
@@ -73,17 +69,17 @@ class TestXView2:
         ) as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
-            XView2(root=tmp_path, checksum=True)
+            xBD(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            XView2(split='foo')
+            xBD(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            XView2(tmp_path)
+            xBD(tmp_path)
 
-    def test_plot(self, dataset: XView2) -> None:
+    def test_plot(self, dataset: xBD) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()

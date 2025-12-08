@@ -824,7 +824,7 @@ class BigEarthNetV2(NonGeoDataset):
             the Corine Land Cover map
         """
         row = self.metadata_df.loc[index]
-        patch_id = row['patch_id']
+        patch_id = str(row['patch_id'])
         patch_dir = '_'.join(patch_id.split('_')[0:-2])
         path = os.path.join(
             self.root,

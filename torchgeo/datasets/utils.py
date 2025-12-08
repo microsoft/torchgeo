@@ -23,6 +23,7 @@ import pandas as pd
 import rasterio
 import shapely
 import torch
+from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
@@ -299,9 +300,7 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def disambiguate_timestamp(
-    date_str: str | None, format: str
-) -> tuple[datetime, datetime]:
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full
@@ -317,10 +316,7 @@ def disambiguate_timestamp(
     Returns:
         (mint, maxt) tuple for indexing
     """
-    if not isinstance(date_str, str):
-        return pd.NaT, pd.NaT
-
-    mint = datetime.strptime(date_str, format)
+    mint = pd.to_datetime(date_str, format=format)
     format = format.replace('%%', '')
 
     # TODO: May have issues with time zones, UTC vs. local time, and DST
@@ -328,33 +324,33 @@ def disambiguate_timestamp(
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
-        return pd.Timestamp.min, pd.Timestamp.max
+        return Timestamp.min, Timestamp.max
     elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
-        maxt = datetime(mint.year + 1, 1, 1)
+        maxt = Timestamp(year=mint.year + 1, month=1, day=1)
     elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
         # Month resolution
         if mint.month == 12:
-            maxt = datetime(mint.year + 1, 1, 1)
+            maxt = Timestamp(year=mint.year + 1, month=1, day=1)
         else:
-            maxt = datetime(mint.year, mint.month + 1, 1)
+            maxt = Timestamp(year=mint.year, month=mint.month + 1, day=1)
     elif not any([f'%{c}' in format for c in 'HIcX']):
         # Day resolution
-        maxt = mint + timedelta(days=1)
+        maxt = mint + Timedelta(days=1)
     elif not any([f'%{c}' in format for c in 'McX']):
         # Hour resolution
-        maxt = mint + timedelta(hours=1)
+        maxt = mint + Timedelta(hours=1)
     elif not any([f'%{c}' in format for c in 'ScX']):
         # Minute resolution
-        maxt = mint + timedelta(minutes=1)
+        maxt = mint + Timedelta(minutes=1)
     elif not any([f'%{c}' in format for c in 'f']):
         # Second resolution
-        maxt = mint + timedelta(seconds=1)
+        maxt = mint + Timedelta(seconds=1)
     else:
         # Microsecond resolution
-        maxt = mint + timedelta(microseconds=1)
+        maxt = mint + Timedelta(microseconds=1)
 
-    maxt -= timedelta(microseconds=1)
+    maxt -= Timedelta(microseconds=1)
 
     return mint, maxt
 
