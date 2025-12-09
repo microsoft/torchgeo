@@ -53,6 +53,7 @@ class TestSemanticSegmentationTask:
             'agrifieldnet',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
+            'cloud_cover',
             'deepglobelandcover',
             'etci2021',
             'ftw',
