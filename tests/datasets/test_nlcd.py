@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
+import zipfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,13 +24,27 @@ from torchgeo.datasets import (
 class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
+        # Create zip files in test data directory for download_url mock to copy
+        test_data_dir = os.path.join('tests', 'data', 'nlcd')
+        for year in [2011, 2019]:
+            tif_pathname = os.path.join(
+                test_data_dir, f'Annual_NLCD_LndCov_{year}_CU_C1V1.tif'
+            )
+            zip_pathname = os.path.join(
+                test_data_dir, f'Annual_NLCD_LndCov_{year}_CU_C1V1.zip'
+            )
+            if not os.path.exists(zip_pathname):
+                with zipfile.ZipFile(zip_pathname, 'w') as zf:
+                    zf.write(tif_pathname, f'Annual_NLCD_LndCov_{year}_CU_C1V1.tif')
+
+        # Precalculated MD5 checksums of the zip files
         md5s = {
-            2011: '3346297a3cb53c9bd1c7e03b2e6e2d74',
-            2019: 'a307cdaa1add9dae05efe02fec4c33bb',
+            2011: 'dadcb8af5b9eff117b9bb00b648594b4',
+            2019: '6196bf5ae9fdd5858aaf71b76d388806',
         }
         monkeypatch.setattr(NLCD, 'md5s', md5s)
 
-        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif')
+        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -72,12 +86,15 @@ class TestNLCD:
         NLCD(dataset.paths, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join(
-            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_2019_CU_C1V0.tif'
+        # Create a zip file containing the tif file
+        tif_pathname = os.path.join(
+            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_2019_CU_C1V1.tif'
         )
-        root = tmp_path
-        shutil.copy(pathname, root)
-        NLCD(root, years=[2019])
+        zip_pathname = os.path.join(tmp_path, 'Annual_NLCD_LndCov_2019_CU_C1V1.zip')
+        # The zip should contain a file with the C1V1 pattern expected by the code
+        with zipfile.ZipFile(zip_pathname, 'w') as zf:
+            zf.write(tif_pathname, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif')
+        NLCD(tmp_path, years=[2019])
 
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
@@ -115,3 +132,44 @@ class TestNLCD:
             IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_invalid_checksum(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        # Create zip files in test data directory for download_url mock to copy
+        test_data_dir = os.path.join('tests', 'data', 'nlcd')
+        tif_pathname = os.path.join(
+            test_data_dir, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif'
+        )
+        zip_pathname = os.path.join(
+            test_data_dir, 'Annual_NLCD_LndCov_2019_CU_C1V1.zip'
+        )
+        if not os.path.exists(zip_pathname):
+            with zipfile.ZipFile(zip_pathname, 'w') as zf:
+                zf.write(tif_pathname, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif')
+
+        # Set incorrect MD5 checksum
+        md5s = {2019: '00000000000000000000000000000000'}
+        monkeypatch.setattr(NLCD, 'md5s', md5s)
+        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
+        monkeypatch.setattr(NLCD, 'url', url)
+
+        with pytest.raises(RuntimeError, match='MD5 checksum mismatch'):
+            NLCD(tmp_path, download=True, checksum=True, years=[2019])
+
+    def test_invalid_checksum_already_downloaded(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        # Create zip file in tmp_path to simulate already downloaded file
+        test_data_dir = os.path.join('tests', 'data', 'nlcd')
+        tif_pathname = os.path.join(
+            test_data_dir, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif'
+        )
+        zip_pathname = os.path.join(tmp_path, 'Annual_NLCD_LndCov_2019_CU_C1V1.zip')
+        with zipfile.ZipFile(zip_pathname, 'w') as zf:
+            zf.write(tif_pathname, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif')
+
+        # Set incorrect MD5 checksum
+        md5s = {2019: '00000000000000000000000000000000'}
+        monkeypatch.setattr(NLCD, 'md5s', md5s)
+
+        with pytest.raises(RuntimeError, match='MD5 checksum mismatch'):
+            NLCD(tmp_path, download=False, checksum=True, years=[2019])
