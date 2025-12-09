@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, check_integrity, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -235,20 +235,39 @@ class NLCD(RasterDataset):
                 zipfiles_exist.append(False)
 
         if all(zipfiles_exist):
+            if self.checksum:
+                self._validate_checksums()
             self._extract()
             return
 
-        # Check if the user requested to download the dataset
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        # Download the dataset
         self._download()
         self._extract()
 
         # Re-check that files were successfully extracted and are valid
         if not self.files:
             raise DatasetNotFoundError(self)
+
+    def _validate_checksums(self) -> None:
+        """Validate MD5 checksums of downloaded zip files.
+
+        Raises:
+            RuntimeError: If checksum validation fails for any file.
+        """
+        assert isinstance(self.paths, str | os.PathLike)
+        for year in self.years:
+            if year not in self.md5s or not self.md5s[year]:
+                continue
+            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
+            zipfile_path = os.path.join(self.paths, zipfile_name)
+            if os.path.exists(zipfile_path):
+                if not check_integrity(zipfile_path, self.md5s[year]):
+                    raise RuntimeError(
+                        f'MD5 checksum mismatch for {zipfile_name}: '
+                        f'expected {self.md5s[year]}, file may be corrupted'
+                    )
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -264,6 +283,9 @@ class NLCD(RasterDataset):
                 download_url(
                     self.url.format(year), self.paths, filename=zipfile_name, md5=md5
                 )
+
+        if self.checksum:
+            self._validate_checksums()
 
     def _extract(self) -> None:
         """Extract the dataset."""
