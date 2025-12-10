@@ -14,6 +14,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
+from ..datasets.utils import BoundingBox
 from ..samplers import (
     BatchGeoSampler,
     GeoSampler,
@@ -212,7 +213,9 @@ class GeoDataModule(BaseDataModule):
         self.test_batch_sampler: BatchGeoSampler | None = None
         self.predict_batch_sampler: BatchGeoSampler | None = None
 
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+    ) -> None:
         """Set up datasets and samplers.
 
         Called at the beginning of fit, validate, test, or predict. During distributed
@@ -221,6 +224,10 @@ class GeoDataModule(BaseDataModule):
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
+            roi: Optional region of interest for predict stage.
+            stride: Optional stride for GridGeoSampler (predict stage only).
+                Formula: stride = patch_size - 2*overlap. Defaults to patch_size
+                (no overlap).
         """
         if stage in ['fit']:
             self.train_dataset = cast(
@@ -251,6 +258,18 @@ class GeoDataModule(BaseDataModule):
             )
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
+            )
+        if stage in ['predict']:
+            self.predict_dataset = cast(GeoDataset, self.dataset_class(**self.kwargs))
+            # Default stride to patch_size (no overlap)
+            if stride is None:
+                stride = (
+                    self.patch_size
+                    if isinstance(self.patch_size, int)
+                    else self.patch_size[0]
+                )
+            self.predict_sampler = GridGeoSampler(
+                self.predict_dataset, self.patch_size, stride, roi=roi
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:

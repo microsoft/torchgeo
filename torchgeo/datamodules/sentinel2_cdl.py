@@ -11,6 +11,7 @@ from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
 
 from ..datasets import CDL, Sentinel2, random_grid_cell_assignment
+from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -78,11 +79,15 @@ class Sentinel2CDLDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+    ) -> None:
         """Set up datasets and samplers.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
+            roi: Optional region of interest for predict stage.
+            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.cdl = CDL(**self.cdl_kwargs)

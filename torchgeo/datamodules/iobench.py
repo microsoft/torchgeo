@@ -6,6 +6,7 @@
 from typing import Any
 
 from ..datasets import IOBench
+from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomGeoSampler
 from .geo import GeoDataModule
 
@@ -43,11 +44,15 @@ class IOBenchDataModule(GeoDataModule):
             **kwargs,
         )
 
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+    ) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
+            roi: Optional region of interest for predict stage.
+            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         self.dataset = IOBench(**self.kwargs)
 

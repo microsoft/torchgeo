@@ -10,6 +10,7 @@ import torch
 from kornia.constants import DataKey, Resample
 
 from ..datasets import SouthAfricaCropType, random_bbox_assignment
+from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -64,11 +65,15 @@ class SouthAfricaCropTypeDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+    ) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
+            roi: Optional region of interest for predict stage.
+            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         dataset = SouthAfricaCropType(**self.kwargs)
         generator = torch.Generator().manual_seed(0)

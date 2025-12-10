@@ -11,6 +11,7 @@ from kornia.constants import DataKey, Resample
 from torch import Tensor
 
 from ..datasets import MMFlood
+from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -97,11 +98,15 @@ class MMFloodDataModule(GeoDataModule):
             idxs.append(3)
         return self.median[idxs], self.std[idxs]
 
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+    ) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', 'predict'.
+            roi: Optional region of interest for predict stage.
+            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         if stage in ['fit']:
             self.train_dataset = MMFlood(**self.kwargs, split='train')
