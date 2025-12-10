@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """GID-15 dataset."""
@@ -258,7 +258,7 @@ class GID15(NonGeoDataset):
             ncols += 1
             pred = sample['prediction']
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))
 
         if self.split != 'test':
             axs[0].imshow(image.permute(1, 2, 0))

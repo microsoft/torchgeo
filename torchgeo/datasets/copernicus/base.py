@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench abstract base class."""
@@ -120,7 +120,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         self._verify()
 
         filepath = os.path.join(root, self.directory, self.filename.format(split))
-        self.files = pd.read_csv(filepath, header=None)[0]
+        self.files: pd.Series | pd.DataFrame = pd.read_csv(filepath, header=None)[0]
 
     def __len__(self) -> int:
         """Return the length of the dataset.

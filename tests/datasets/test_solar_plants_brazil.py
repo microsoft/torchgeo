@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Unit tests for the SolarPlantsBrazil dataset."""
@@ -39,6 +39,11 @@ class TestSolarPlantsBrazil:
         assert len(dataset) == 1
 
     def test_plot(self, dataset: SolarPlantsBrazil) -> None:
+        sample = dataset[0]
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
+
+    def test_plot_with_prediction(self, dataset: SolarPlantsBrazil) -> None:
         sample = dataset[0]
         sample['prediction'] = sample['mask']
         dataset.plot(sample, suptitle='Test')

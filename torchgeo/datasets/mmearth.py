@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MMEarth Dataset."""
@@ -629,6 +629,8 @@ class MMEarth(NonGeoDataset):
         suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
+
+        .. versionadded:: 0.8
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.

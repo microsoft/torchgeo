@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from typing import Any
@@ -201,6 +201,16 @@ class TestGeoDataModule:
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
 
+    def test_drop_last(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset(length=2)
+        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
+
 
 class TestNonGeoDataModule:
     @pytest.fixture
@@ -273,3 +283,12 @@ class TestNonGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last(self) -> None:
+        dm = CustomNonGeoDataModule()
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo datasets."""
@@ -84,6 +84,7 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
@@ -121,6 +122,7 @@ from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
+from .openstreetmap import OpenStreetMap
 from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
@@ -177,7 +179,7 @@ from .utils import (
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
-from .xview import XView2
+from .xbd import XView2, xBD
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -310,6 +312,7 @@ __all__ = (
     'NonGeoClassificationDataset',
     'NonGeoDataset',
     'OpenBuildings',
+    'OpenStreetMap',
     'PatternNet',
     'Potsdam2D',
     'QuakeSet',
@@ -349,6 +352,7 @@ __all__ = (
     'VectorDataset',
     'WesternUSALiveFuelMoisture',
     'XView2',
+    'XarrayDataset',
     'ZueriCrop',
     'concat_samples',
     'merge_samples',
@@ -359,4 +363,5 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
+    'xBD',
 )

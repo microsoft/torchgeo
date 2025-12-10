@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -113,7 +113,7 @@ class TestMapInWild:
         shutil.copy(splitfile, root)
         with open(os.path.join(tmp_path, 'mask.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             MapInWild(root=tmp_path, download=True, checksum=True)
 
     def test_already_downloaded(self, dataset: MapInWild, tmp_path: Path) -> None:

@@ -1,12 +1,15 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo models."""
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
+from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .cnnlstm import CNNLSTM
+from .changevit import ChangeViT
+from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -34,7 +37,19 @@ from .resnet import (
     resnet152,
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
-from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
+from .swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
+    Swin_V2_B_Weights,
+    Swin_V2_T_Weights,
+    SwinBackbone_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
+    swin_v2_b,
+    swin_v2_t,
+)
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -50,10 +65,10 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 __all__ = (
     'CNNLSTM',
+    'BTC',
     'CROMA',
     'DOFA',
     'FCN',
@@ -66,6 +81,8 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'ChangeViT',
+    'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
@@ -82,6 +99,10 @@ __all__ = (
     'ResNet152_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
+    'SwinBackbone_Weights',
+    'Swin_B_Weights',
+    'Swin_S_Weights',
+    'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'Unet_Weights',
@@ -91,7 +112,6 @@ __all__ = (
     'ViTLarge16_Weights',
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
-    'YOLO_Weights',
     'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
@@ -110,6 +130,9 @@ __all__ = (
     'resnet50',
     'resnet152',
     'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
     'swin_v2_b',
     'swin_v2_t',
     'unet',
@@ -119,5 +142,4 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'yolo',
 )

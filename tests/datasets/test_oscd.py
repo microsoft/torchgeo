@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -78,9 +78,9 @@ class TestOSCD:
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == 'train':
-            assert len(dataset) == 2
+            assert len(dataset) == 4
         else:
-            assert len(dataset) == 1
+            assert len(dataset) == 2
 
     def test_add(self, dataset: OSCD) -> None:
         ds = dataset + dataset

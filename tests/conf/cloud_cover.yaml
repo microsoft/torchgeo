@@ -1,0 +1,16 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 4
+    task: 'binary'
+    loss: 'bce'
+    num_filters: 1
+data:
+  class_path: CloudCoverDetectionDataModule
+  init_args:
+    batch_size: 1
+    val_split_pct: 0.5
+  dict_kwargs:
+    root: 'tests/data/ref_cloud_cover_detection_challenge_v1'

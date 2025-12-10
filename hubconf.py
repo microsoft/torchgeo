@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo pre-trained model repository configuration file.
@@ -10,6 +10,7 @@
 from torchgeo.models import (
     aurora_swin_unet,
     cnnlstm,
+    convlstm,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -22,6 +23,9 @@ from torchgeo.models import (
     resnet50,
     resnet152,
     scalemae_large_patch16,
+    swin_b,
+    swin_s,
+    swin_t,
     swin_v2_b,
     swin_v2_t,
     unet,
@@ -31,12 +35,12 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 )
 
 __all__ = (
     'aurora_swin_unet',
     'cnnlstm',
+    'convlstm',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
@@ -49,6 +53,9 @@ __all__ = (
     'resnet50',
     'resnet152',
     'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
     'swin_v2_b',
     'swin_v2_t',
     'unet',
@@ -58,7 +65,6 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'yolo',
 )
 
 dependencies = [
@@ -67,5 +73,4 @@ dependencies = [
     'segmentation_models_pytorch',
     'timm',
     'torchvision',
-    'ultralytics',
 ]

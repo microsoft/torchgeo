@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """ChaBuD dataset."""
@@ -22,7 +22,7 @@ from .utils import Path, download_url, lazy_import, percentile_normalization
 class ChaBuD(NonGeoDataset):
     """ChaBuD dataset.
 
-    `ChaBuD <https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023>`__
+    `ChaBuD <https://github.com/lccol/chabud-challenge-description>`__
     is a dataset for Change detection for Burned area Delineation and is used
     for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
 
@@ -44,7 +44,7 @@ class ChaBuD(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.1016/j.rse.2021.112603
+    * https://doi.org/10.1109/MGRS.2023.3292467
 
     .. note::
 
@@ -120,6 +120,9 @@ class ChaBuD(NonGeoDataset):
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -262,7 +265,7 @@ class ChaBuD(NonGeoDataset):
             prediction = sample['prediction'][0]
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Configuration file for the Sphinx documentation builder.
@@ -24,7 +24,7 @@ import torchgeo
 # -- Project information -----------------------------------------------------
 
 project = 'torchgeo'
-copyright = '2021, Microsoft Corporation'
+copyright = 'TorchGeo Contributors'
 author = torchgeo.__author__
 version = '.'.join(torchgeo.__version__.split('.')[:2])
 release = torchgeo.__version__
@@ -56,7 +56,6 @@ needs_sphinx = '4.0'
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
-    ('py:class', 'fiona.model.Feature'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
@@ -127,7 +126,6 @@ intersphinx_mapping = {
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
-    'ultralytics': ('https://docs.ultralytics.com/', None),
 }
 
 # nbsphinx

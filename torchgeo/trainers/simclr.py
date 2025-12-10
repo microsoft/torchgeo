@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SimCLR trainer for self-supervised learning (SSL)."""
@@ -254,7 +254,7 @@ class SimCLRTask(BaseTask):
             x2 = self.augmentations(x2)
 
         z1, h1 = self(x1)
-        z2, h2 = self(x2)
+        z2, _ = self(x2)
 
         loss: Tensor = self.criterion(z1, z2)
 

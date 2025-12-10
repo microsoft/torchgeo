@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Trainers for change detection."""
@@ -19,7 +19,7 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCN, FCSiamConc, FCSiamDiff, get_weight
+from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -41,6 +41,8 @@ class ChangeDetectionTask(BaseTask):
             'dpt',
             'fcsiamdiff',
             'fcsiamconc',
+            'changevit',
+            'btc',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -50,7 +52,7 @@ class ChangeDetectionTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -76,7 +78,7 @@ class ChangeDetectionTask(BaseTask):
             num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'bce', 'jaccard', and 'focal' loss.
+                'ce', 'bce', 'jaccard', 'focal', and 'dice' loss.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -127,6 +129,10 @@ class ChangeDetectionTask(BaseTask):
                     mode=self.hparams['task'],
                     ignore_index=ignore_index,
                     normalized=True,
+                )
+            case 'dice':
+                self.criterion = smp.losses.DiceLoss(
+                    mode=self.hparams['task'], ignore_index=ignore_index
                 )
 
     def configure_metrics(self) -> None:
@@ -228,6 +234,19 @@ class ChangeDetectionTask(BaseTask):
                     classes=num_classes,
                     encoder_weights='imagenet' if weights is True else None,
                 )
+            case 'changevit':
+                self.model = ChangeViT(
+                    backbone=backbone,
+                    in_channels=in_channels,
+                    num_classes=num_classes,
+                    pretrained=weights is True,
+                )
+            case 'btc':
+                self.model = BTC(
+                    backbone=backbone,
+                    classes=num_classes,
+                    backbone_pretrained=weights is True,
+                )
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -236,6 +255,7 @@ class ChangeDetectionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
+
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
@@ -263,11 +283,12 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         y = batch['mask']
 
-        if not model.startswith('fcsiam'):
+        if not model.startswith('fcsiam') and model != 'changevit':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
+            y = y.long()
 
         y_hat = self(x)
 
@@ -371,8 +392,9 @@ class ChangeDetectionTask(BaseTask):
         """
         model: str = self.hparams['model']
         x = batch['image']
-        if model == 'unet':
+        if not model.startswith('fcsiam') and model != 'changevit':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
+
         y_hat: Tensor = self(x)
 
         match self.hparams['task']:

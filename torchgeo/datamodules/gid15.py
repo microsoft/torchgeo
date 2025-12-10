@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """GID-15 datamodule."""
@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import GID15
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -57,7 +56,7 @@ class GID15DataModule(NonGeoDataModule):
         )
         self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.CenterCrop(self.patch_size),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,

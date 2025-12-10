@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Digital Typhoon dataset."""
@@ -176,7 +176,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Compute the hour difference between the first and second entry
         self.aux_df['hour_diff_to_next'] = (
-            self.aux_df.groupby('id')['datetime']
+            self.aux_df.groupby('id')['datetime']  # type: ignore[attr-defined]
             .shift(-1)
             .sub(self.aux_df['datetime'])
             .abs()

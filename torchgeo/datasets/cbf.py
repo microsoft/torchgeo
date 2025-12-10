@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Canadian Building Footprints dataset."""
@@ -44,6 +44,8 @@ class CanadianBuildingFootprints(VectorDataset):
         'Saskatchewan',
         'YukonTerritory',
     )
+    filename_glob = '*.geojson'
+
     md5s = (
         '8b4190424e57bb0902bd8ecb95a9235b',
         'fea05d6eb0006710729c675de63db839',

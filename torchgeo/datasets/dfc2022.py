@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """2022 IEEE GRSS Data Fusion Contest (DFC2022) dataset."""
@@ -324,7 +324,7 @@ class DFC2022(NonGeoDataset):
             pred = sample['prediction'].numpy()
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))
 
         axs[0].imshow(image_arr)
         axs[0].axis('off')

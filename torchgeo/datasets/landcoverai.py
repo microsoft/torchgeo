@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """LandCover.ai dataset."""
@@ -14,6 +14,7 @@ from typing import Any, ClassVar
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import rasterio
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
@@ -270,11 +271,13 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'crs': self.crs,
             'bounds': query,
             'image': img.float(),
             'mask': mask.long(),
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:
@@ -425,6 +428,6 @@ class LandCoverAI100(LandCoverAI):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
+    url = 'https://hf.co/datasets/isaaccorley/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'

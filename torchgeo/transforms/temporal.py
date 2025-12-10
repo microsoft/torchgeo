@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo temporal transforms."""
@@ -12,6 +12,8 @@ from torch import Tensor
 
 class Rearrange(GeometricAugmentationBase3D):
     """Rearrange tensor dimensions.
+
+    .. versionadded:: 0.8
 
     Examples:
         To insert a time dimension::

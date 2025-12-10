@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    task: 'multiclass'
+    in_channels: 90 # C * T (10 S2 channels * 9 timesteps)
+    num_classes: 20
+    loss: 'ce'
+data:
+  class_path: PASTISDataModule
+  init_args:
+    batch_size: 3
+    val_split_pct: 0.2
+    test_split_pct: 0.2
+    padding_length: 9
+  dict_kwargs:
+    root: 'tests/data/pastis'
