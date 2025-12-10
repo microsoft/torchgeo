@@ -109,7 +109,6 @@ class NLCD(RasterDataset):
         2021: '63b859744b5b12ffbd13b9896a587428',
         2022: '68514fedcf928b44fc562d166d938f02',
         2023: '2ac10a23e6a1ccef47b2a8e15ec3ba3c',
-        2024: '3e0ded4eb7bb5d355743abe9552b3588',
     }
 
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
@@ -137,7 +136,7 @@ class NLCD(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2024],
+        years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
