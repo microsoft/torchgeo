@@ -52,7 +52,9 @@ class CustomGeoDataModule(GeoDataModule):
 
 
 class SamplerGeoDataModule(CustomGeoDataModule):
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: Any | None = None, stride: int | None = None
+    ) -> None:
         self.dataset = CustomGeoDataset()
         self.train_sampler = RandomGeoSampler(self.dataset, 1, 1)
         self.val_sampler = RandomGeoSampler(self.dataset, 1, 1)
@@ -61,7 +63,9 @@ class SamplerGeoDataModule(CustomGeoDataModule):
 
 
 class BatchSamplerGeoDataModule(CustomGeoDataModule):
-    def setup(self, stage: str) -> None:
+    def setup(
+        self, stage: str, roi: Any | None = None, stride: int | None = None
+    ) -> None:
         self.dataset = CustomGeoDataset()
         self.train_batch_sampler = RandomBatchGeoSampler(self.dataset, 1, 1, 1)
         self.val_batch_sampler = RandomBatchGeoSampler(self.dataset, 1, 1, 1)
@@ -210,6 +214,54 @@ class TestGeoDataModule:
         assert not dm.val_dataloader().drop_last
         assert not dm.test_dataloader().drop_last
         assert not dm.predict_dataloader().drop_last
+
+    def test_setup_predict_with_stride(self) -> None:
+        """Test that setup creates predict_sampler with custom stride."""
+        from torchgeo.samplers import GridGeoSampler
+
+        dm = CustomGeoDataModule()
+        dm.prepare_data()
+        custom_stride = 64
+        dm.setup(stage='predict', stride=custom_stride)
+
+        assert dm.predict_sampler is not None
+        assert isinstance(dm.predict_sampler, GridGeoSampler)
+        assert dm.predict_sampler.stride == (custom_stride, custom_stride)
+
+    def test_setup_predict_with_roi(self) -> None:
+        """Test that setup creates predict_sampler with custom ROI."""
+        dm = CustomGeoDataModule()
+        dm.prepare_data()
+        roi = shapely.box(0, 0, 0.5, 0.5)
+        dm.setup(stage='predict', roi=roi)
+
+        assert dm.predict_sampler is not None
+        assert dm.predict_sampler.roi == roi
+
+    def test_setup_predict_default_stride(self) -> None:
+        """Test that stride defaults to patch_size when not provided."""
+        from torchgeo.samplers import GridGeoSampler
+
+        dm = CustomGeoDataModule()
+        dm.prepare_data()
+        dm.setup(stage='predict')
+
+        assert dm.predict_sampler is not None
+        assert isinstance(dm.predict_sampler, GridGeoSampler)
+        assert dm.predict_sampler.stride == (1, 1)
+
+    def test_predict_dataloader_preserves_bounds(self) -> None:
+        """Test that predict dataloader yields batches with bounds."""
+        dm = CustomGeoDataModule()
+        dm.prepare_data()
+        dm.setup(stage='predict')
+
+        dataloader = dm.predict_dataloader()
+        batch = next(iter(dataloader))
+
+        assert 'image' in batch
+        assert 'bounds' in batch
+        assert batch['bounds'] is not None
 
 
 class TestNonGeoDataModule:
