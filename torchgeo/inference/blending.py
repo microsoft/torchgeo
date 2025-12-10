@@ -189,7 +189,7 @@ def weighted_merge(
     delta: int,
     blend_method: str = 'cosine',
     crs: Any = None,
-    output_path: Path | None = None,
+    output_path: str | Path | None = None,
     chunk_size: int = 4096,
     cog_config: dict[str, Any] | None = None,
 ) -> None:
@@ -223,6 +223,7 @@ def weighted_merge(
     patch_h, patch_w = first_patch['logits'].shape[-2:]
     blend_mask = get_blend_mask((patch_h, patch_w), overlap, delta, blend_method)
 
+    assert output_path is not None
     writer = GeoTIFFWriter(
         output_path=output_path,
         width=output_shape[1],
