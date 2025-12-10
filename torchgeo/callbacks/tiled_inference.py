@@ -166,21 +166,31 @@ class TiledInferenceCallback(Callback):
             trainer: PyTorch Lightning trainer.
             pl_module: PyTorch Lightning module.
         """
+        from torchgeo.inference.blending import weighted_merge
+
         if not self.patch_metadata:
             raise ValueError('No patches to merge')
 
         print(f'Merging {len(self.patch_metadata)} patches...')
 
-        print(f'✅ Collected {len(self.patch_metadata)} patches')
-        print(f'✅ Num classes: {self.num_classes}')
-        print(f'✅ CRS: {self.crs}')
-        print(f'✅ First patch bbox: {self.patch_metadata[0]["bbox"]}')
-        print(
-            f'✅ First patch transform shape: {self.patch_metadata[0]["transform"].shape}'
-        )
+        try:
+            assert self.num_classes is not None
+            weighted_merge(
+                patch_metadata=self.patch_metadata,
+                num_classes=self.num_classes,
+                overlap=self.overlap,
+                delta=self.delta,
+                blend_method=self.blend_method,
+                crs=self.crs,
+                output_path=self.output_path,
+                chunk_size=self.chunk_size,
+                cog_config=self.cog_config,
+            )
 
-        if self.temp_dir and self.temp_dir.exists():
-            import shutil
+            print(f'✅ Inference complete: {self.output_path}')
 
-            shutil.rmtree(self.temp_dir)
-            print('Cleaned up temp directory')
+        finally:
+            if self.temp_dir and self.temp_dir.exists():
+                import shutil
+
+                shutil.rmtree(self.temp_dir)

@@ -123,22 +123,32 @@ class TestTiledInferenceCallback:
         """Test on_predict_epoch_end cleans up temp files."""
         callback.temp_dir = tmp_path / '.tmp_test'
         callback.temp_dir.mkdir()
+        callback.crs = 'EPSG:32631'
+        callback.num_classes = 5
+
+        patch_file = callback.temp_dir / 'patch_000000.pt'
+        torch.save(
+            {
+                'logits': torch.randn(5, 64, 64),
+                'bounds': torch.tensor([0, 64, 1, 0, 64, 1, 0, 1, 1]),
+                'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
+            },
+            patch_file,
+        )
+
         callback.patch_metadata = [
             {
                 'patch_id': 0,
-                'file': callback.temp_dir / 'patch_000000.pt',
+                'file': patch_file,
                 'bbox': (0, 0, 64, 64),
-                'transform': torch.randn(6),
+                'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
             }
         ]
-        callback.num_classes = 5
-
-        test_file = callback.temp_dir / 'test.txt'
-        test_file.write_text('test')
 
         callback.on_predict_epoch_end(None, None)
 
         assert not callback.temp_dir.exists()
+        assert callback.output_path.exists()
 
     def test_on_predict_epoch_end_no_patches_raises(
         self, callback: TiledInferenceCallback
