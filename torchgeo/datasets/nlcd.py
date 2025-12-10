@@ -23,7 +23,7 @@ class NLCD(RasterDataset):
     The `Annual NLCD products
     <https://www.usgs.gov/centers/eros/science/annual-national-land-cover-database>`_
     is an annual land cover product for the conterminous U.S. initially covering the period
-    from 1985 to 2023. The product is a joint effort between the United States Geological Survey
+    from 1985 to 2024. The product is a joint effort between the United States Geological Survey
     (`USGS <https://www.usgs.gov/>`_) and the Multi-Resolution Land Characteristics
     Consortium (`MRLC <https://www.mrlc.gov/>`_).
 
@@ -59,6 +59,9 @@ class NLCD(RasterDataset):
     * https://doi.org/10.5066/P94UXNTS
 
     .. versionadded:: 0.5
+
+    .. versionchanged:: 0.9.0
+        Added support and changed default year to 2024.
     """
 
     filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V1.tif'
@@ -109,6 +112,7 @@ class NLCD(RasterDataset):
         2021: '63b859744b5b12ffbd13b9896a587428',
         2022: '68514fedcf928b44fc562d166d938f02',
         2023: '2ac10a23e6a1ccef47b2a8e15ec3ba3c',
+        2024: '3e0ded4eb7bb5d355743abe9552b3588',
     }
 
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
@@ -136,7 +140,7 @@ class NLCD(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2023],
+        years: list[int] = [2024],
         classes: list[int] = list(cmap.keys()),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
