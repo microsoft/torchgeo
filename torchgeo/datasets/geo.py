@@ -1032,7 +1032,7 @@ class VectorDataset(GeoDataset):
                         box_list.append(p.bounds)
 
                         mask = rasterio.features.rasterize(
-                            (s[0], i + 1),
+                            [(s[0], i + 1)],
                             out_shape=(round(height), round(width)),
                             transform=transform,
                         )
