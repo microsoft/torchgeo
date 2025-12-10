@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import hashlib
 import os
 import zipfile
 from pathlib import Path
@@ -127,6 +128,11 @@ class TestNLCD:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             NLCD(tmp_path)
 
+    def test_not_downloaded_explicit(self, tmp_path: Path) -> None:
+        """Test that DatasetNotFoundError is raised when download=False and files don't exist."""
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            NLCD(tmp_path, download=False, years=[2019])
+
     def test_invalid_query(self, dataset: NLCD) -> None:
         with pytest.raises(
             IndexError, match=r'query: .* not found in index with bounds:'
@@ -173,3 +179,45 @@ class TestNLCD:
 
         with pytest.raises(RuntimeError, match='MD5 checksum mismatch'):
             NLCD(tmp_path, download=False, checksum=True, years=[2019])
+
+    def test_validate_checksums_year_not_in_md5s(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Test that validation skips when year is not in md5s."""
+        test_data_dir = os.path.join('tests', 'data', 'nlcd')
+        tif_pathname = os.path.join(
+            test_data_dir, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif'
+        )
+        zip_pathname = os.path.join(tmp_path, 'Annual_NLCD_LndCov_2019_CU_C1V1.zip')
+        with zipfile.ZipFile(zip_pathname, 'w') as zf:
+            zf.write(tif_pathname, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif')
+
+        dataset = NLCD(tmp_path, download=False, checksum=False, years=[2019])
+
+        monkeypatch.setattr(NLCD, 'md5s', {})
+        # Should not raise an error, validation should skip 2019
+        # this enable user to potentially add future years without having to validate checksums for those years.
+        dataset._validate_checksums()
+
+    def test_validate_checksums_valid_checksum(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Test that validation passes with valid checksum."""
+        test_data_dir = os.path.join('tests', 'data', 'nlcd')
+        # Copy the existing zip file from test data directory to preserve MD5
+        dest_zip = os.path.join(tmp_path, 'Annual_NLCD_LndCov_2019_CU_C1V1.zip')
+
+        tif_pathname = os.path.join(
+            test_data_dir, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif'
+        )
+        with zipfile.ZipFile(dest_zip, 'w') as zf:
+            zf.write(tif_pathname, 'Annual_NLCD_LndCov_2019_CU_C1V1.tif')
+        # Calculate MD5 of created zip file
+        with open(dest_zip, 'rb') as f:
+            actual_md5 = hashlib.md5(f.read()).hexdigest()
+        md5s = {2019: actual_md5}
+
+        monkeypatch.setattr(NLCD, 'md5s', md5s)
+
+        dataset = NLCD(tmp_path, download=False, checksum=True, years=[2019])
+        assert dataset is not None

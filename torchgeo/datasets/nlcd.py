@@ -258,7 +258,7 @@ class NLCD(RasterDataset):
         """
         assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            if year not in self.md5s or not self.md5s[year]:
+            if year not in self.md5s:
                 continue
             zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
             zipfile_path = os.path.join(self.paths, zipfile_name)
