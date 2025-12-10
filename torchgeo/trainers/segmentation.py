@@ -380,7 +380,7 @@ class SemanticSegmentationTask(BaseTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+    ) -> dict[str, Any]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -389,7 +389,10 @@ class SemanticSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Dictionary containing:
+                - logits: Model predictions (B, C, H, W) with softmax/sigmoid applied
+                - bounds: Patch bounds tensor (B, 9) if available
+                - transform: Per-patch affine transform (B, 6) if available
         """
         x = batch['image']
         y_hat: Tensor = self(x)
@@ -400,4 +403,8 @@ class SemanticSegmentationTask(BaseTask):
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
-        return y_hat
+        return {
+            'logits': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
+        }
