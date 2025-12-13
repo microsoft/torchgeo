@@ -27,7 +27,6 @@ from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import MOSAIKS, RCF
-from .tilenet import TileNet
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -50,6 +49,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
+from .tilenet import TileNet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -74,7 +74,6 @@ __all__ = (
     'LTAE',
     'MOSAIKS',
     'RCF',
-    'TileNet', 
     'Aurora_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
@@ -105,6 +104,7 @@ __all__ = (
     'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'TileNet',
     'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
     'ViTBase16_Weights',
