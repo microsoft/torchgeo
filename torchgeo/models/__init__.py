@@ -27,6 +27,7 @@ from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import MOSAIKS, RCF
+from .tilenet import TileNet
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -73,6 +74,7 @@ __all__ = (
     'LTAE',
     'MOSAIKS',
     'RCF',
+    'TileNet', 
     'Aurora_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
