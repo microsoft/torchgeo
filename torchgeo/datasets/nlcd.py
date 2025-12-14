@@ -208,40 +208,31 @@ class NLCD(RasterDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
-        # Check if the TIFF files for the specified years have already been extracted
+        # Check if the extracted files already exist
+        if self.files:
+            return
+
+        # Check if the zip files have already been downloaded
         exists = []
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            filename_year = self.filename_glob.replace('*', str(year), 1)
-            pathname = os.path.join(str(self.paths), filename_year)
+            pathname = os.path.join(
+                self.paths, self.zipfile_glob.replace('*', str(year))
+            )
             if os.path.exists(pathname):
                 exists.append(True)
+                self._extract()
             else:
                 exists.append(False)
 
         if all(exists):
             return
 
-        # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str | os.PathLike)
-        zipfiles_exist = []
-        for year in self.years:
-            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
-            zipfile_path = os.path.join(self.paths, zipfile_name)
-            if os.path.exists(zipfile_path):
-                zipfiles_exist.append(True)
-            else:
-                zipfiles_exist.append(False)
-
-        if all(zipfiles_exist):
-            if self.checksum:
-                self._validate_checksums()
-            self._extract()
-            return
-
+        # Check if the user requested to download the dataset
         if not self.download:
             raise DatasetNotFoundError(self)
 
+        # Download the dataset
         self._download()
         self._extract()
 
@@ -266,31 +257,20 @@ class NLCD(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
-            zipfile_path = os.path.join(self.paths, zipfile_name)
-
-            if not os.path.exists(zipfile_path):
-                md5 = None
-                if self.checksum and year in self.md5s and self.md5s[year]:
-                    md5 = self.md5s[year]
-                download_url(
-                    self.url.format(year), self.paths, filename=zipfile_name, md5=md5
-                )
-
-        if self.checksum:
-            self._validate_checksums()
+            download_url(
+                self.url.format(year),
+                self.paths,
+                md5=self.md5s[year] if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
-            zipfile_path = os.path.join(self.paths, zipfile_name)
-
-            if os.path.exists(zipfile_path):
-                extract_archive(zipfile_path, self.paths)
+            zipfile_name = self.zipfile_glob.replace('*', str(year))
+            pathname = os.path.join(self.paths, zipfile_name)
+            extract_archive(pathname, self.paths)
 
     def plot(
         self,
