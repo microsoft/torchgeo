@@ -110,7 +110,7 @@ class COWC(NonGeoDataset, abc.ABC):
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

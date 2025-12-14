@@ -139,7 +139,7 @@ class SustainBenchCropYield(NonGeoDataset):
         """
         return len(self.images)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

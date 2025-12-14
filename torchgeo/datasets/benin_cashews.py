@@ -209,7 +209,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

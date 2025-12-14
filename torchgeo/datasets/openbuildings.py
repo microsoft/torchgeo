@@ -270,7 +270,7 @@ class OpenBuildings(VectorDataset):
         if crs is not None and crs != self._source_crs:
             self.index.to_crs(crs, inplace=True)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

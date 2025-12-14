@@ -73,7 +73,7 @@ class CopernicusBenchAQNO2S5P(CopernicusBenchBase):
         self.mode = mode
         super().__init__(root, split, bands, transforms, download, checksum)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

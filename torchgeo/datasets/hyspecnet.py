@@ -135,7 +135,7 @@ class HySpecNet11k(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

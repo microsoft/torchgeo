@@ -202,7 +202,7 @@ class DIOR(NonGeoDataset):
         """
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

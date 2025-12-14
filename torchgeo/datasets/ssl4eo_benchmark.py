@@ -257,7 +257,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         extract_archive(mask_pathname)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

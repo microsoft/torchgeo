@@ -122,7 +122,7 @@ class ADVANCE(NonGeoDataset):
         self.classes = tuple(sorted({f['cls'] for f in self.files}))
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

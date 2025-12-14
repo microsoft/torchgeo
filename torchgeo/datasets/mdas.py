@@ -232,7 +232,7 @@ class MDAS(NonGeoDataset):
 
             return torch.from_numpy(img)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return the dataset sample at the given index.
 
         Args:

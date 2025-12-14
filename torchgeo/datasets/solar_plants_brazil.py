@@ -121,7 +121,7 @@ class SolarPlantsBrazil(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the image and mask at the given index.
 
         Args:

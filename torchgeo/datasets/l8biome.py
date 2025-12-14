@@ -63,7 +63,7 @@ class L8BiomeMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

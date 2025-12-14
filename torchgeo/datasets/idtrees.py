@@ -194,7 +194,7 @@ class IDTReeS(NonGeoDataset):
         self._verify()
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

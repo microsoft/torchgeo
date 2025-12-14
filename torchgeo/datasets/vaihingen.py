@@ -155,7 +155,7 @@ class Vaihingen2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

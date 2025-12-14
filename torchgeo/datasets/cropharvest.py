@@ -130,7 +130,7 @@ class CropHarvest(NonGeoDataset):
         classes = classes[classes != np.array(None)]
         self.classes = np.insert(classes, 0, ['None', 'Other'])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

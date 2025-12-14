@@ -112,7 +112,7 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
         """
         return self.length
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

@@ -245,7 +245,7 @@ class SSL4EOL(SSL4EO):
 
         self.scenes = sorted(os.listdir(self.subdir))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -571,7 +571,7 @@ class SSL4EOS12(SSL4EO):
 
         self.bands = self.metadata[self.split]['bands']
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

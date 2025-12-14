@@ -143,7 +143,7 @@ class LoveDA(NonGeoDataset):
 
         self.files = self._load_files(self.scene_paths, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

@@ -224,7 +224,7 @@ class DL4GAMAlps(NonGeoDataset):
         """
         return len(self.fp_patches)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Load the NetCDF file for the given index and return the sample as a dict.
 
         Args:

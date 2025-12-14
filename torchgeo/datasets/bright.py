@@ -120,7 +120,7 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         self.sample_paths = self._get_paths()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         .. versionchanged:: 0.8

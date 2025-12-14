@@ -134,7 +134,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

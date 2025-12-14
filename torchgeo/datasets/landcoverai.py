@@ -121,7 +121,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, query: Any) -> dict[str, Any]:
+    def __getitem__(self, query: Any) -> Sample:
         """Retrieve image, mask and metadata indexed by index.
 
         Args:
@@ -243,7 +243,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -331,7 +331,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         with open(os.path.join(self.root, split + '.txt')) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

@@ -117,7 +117,7 @@ class ETCI2021(NonGeoDataset):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

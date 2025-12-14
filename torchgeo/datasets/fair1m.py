@@ -264,7 +264,7 @@ class FAIR1M(NonGeoDataset):
             glob.glob(os.path.join(self.root, self.filename_glob[split]))
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

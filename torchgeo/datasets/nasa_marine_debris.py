@@ -82,7 +82,7 @@ class NASAMarineDebris(NonGeoDataset):
         self.source = sorted(glob.glob(os.path.join(self.root, 'source', '*.tif')))
         self.labels = sorted(glob.glob(os.path.join(self.root, 'labels', '*.npy')))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

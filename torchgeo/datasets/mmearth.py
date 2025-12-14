@@ -341,7 +341,7 @@ class MMEarth(NonGeoDataset):
                         f"'{val}' is an invalid band name for modality '{key}'."
                     )
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return a sample from the dataset.
 
         Normalization is applied to the data with chosen ``normalization_mode``.

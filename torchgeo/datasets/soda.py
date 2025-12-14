@@ -138,7 +138,7 @@ class SODAA(NonGeoDataset):
         """Return the number of samples in the dataset."""
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return the sample at the given index.
 
         Args:

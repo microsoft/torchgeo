@@ -93,7 +93,7 @@ class Substation(NonGeoDataset):
         self._verify()
         self.image_filenames = pd.Series(sorted(os.listdir(self.image_dir)))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Get an item from the dataset by index.
 
         Args:

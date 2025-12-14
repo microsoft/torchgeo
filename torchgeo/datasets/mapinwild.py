@@ -173,7 +173,7 @@ class MapInWild(NonGeoDataset):
             ids = split_dataframe[split].dropna().values.tolist()
             self.ids = list(map(int, ids))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

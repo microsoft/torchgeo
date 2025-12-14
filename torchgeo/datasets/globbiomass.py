@@ -184,7 +184,7 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

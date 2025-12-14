@@ -87,7 +87,7 @@ class TropicalCyclone(NonGeoDataset):
         self.features = pd.read_csv(os.path.join(root, f'{self.filename}_features.csv'))
         self.labels = pd.read_csv(os.path.join(root, f'{self.filename}_labels.csv'))
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

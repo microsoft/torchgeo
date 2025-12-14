@@ -118,7 +118,7 @@ class ChaBuD(NonGeoDataset):
 
         self.uuids = self._load_uuids()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         .. versionchanged:: 0.8

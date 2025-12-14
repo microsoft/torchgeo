@@ -213,7 +213,7 @@ class SEN12MS(NonGeoDataset):
         with open(os.path.join(self.root, split + '_list.txt')) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

@@ -266,7 +266,7 @@ class So2Sat(NonGeoDataset):
         with h5py.File(self.fn, 'r') as f:
             self.size: int = f['label'].shape[0]
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

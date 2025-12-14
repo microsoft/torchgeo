@@ -104,7 +104,7 @@ class QuakeSet(NonGeoDataset):
         self._verify()
         self.data = self._load_data()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

@@ -105,7 +105,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.metadata)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Returns a sample from dataset.
 
         Args:

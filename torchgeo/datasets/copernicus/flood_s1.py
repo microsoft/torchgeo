@@ -88,7 +88,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
             self.metadata = json.load(f)
         self.files = pd.Series(sorted(self.metadata.keys()))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

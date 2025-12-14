@@ -129,7 +129,7 @@ class NCCM(RasterDataset):
             self.ordinal_map[k] = i
             self.ordinal_cmap[i] = torch.tensor(v)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

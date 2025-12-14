@@ -162,7 +162,7 @@ class EuroSAT(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

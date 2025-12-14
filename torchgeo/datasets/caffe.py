@@ -139,7 +139,7 @@ class CaFFe(NonGeoDataset):
         """Return the number of images in the dataset."""
         return len(self.fpaths)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return the image and mask at the given index.
 
         Args:

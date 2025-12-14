@@ -87,7 +87,7 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

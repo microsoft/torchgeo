@@ -137,7 +137,7 @@ class EverWatch(NonGeoDataset):
         index = cast(pd.MultiIndex, self.annot_df.index)
         return len(index.levels[0])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

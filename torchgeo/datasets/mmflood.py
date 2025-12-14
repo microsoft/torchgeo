@@ -207,7 +207,7 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Tensor]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

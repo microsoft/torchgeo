@@ -309,7 +309,7 @@ class BigEarthNet(NonGeoDataset):
         self._verify()
         self.folders = self._load_folders()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -744,7 +744,7 @@ class BigEarthNetV2(NonGeoDataset):
         """
         return len(self.metadata_df)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

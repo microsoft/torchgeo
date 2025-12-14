@@ -72,7 +72,7 @@ class EDDMapS(GeoDataset):
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

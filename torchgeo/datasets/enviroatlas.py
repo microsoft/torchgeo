@@ -312,7 +312,7 @@ class EnviroAtlas(GeoDataset):
         gdf.set_index(index, inplace=True)
         self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
