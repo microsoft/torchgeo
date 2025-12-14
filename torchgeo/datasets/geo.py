@@ -425,7 +425,7 @@ class RasterDataset(GeoDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new RasterDataset instance.
@@ -675,7 +675,7 @@ class XarrayDataset(GeoDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         data_vars: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new XarrayDataset instance.
 
@@ -860,7 +860,7 @@ class VectorDataset(GeoDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] = (0.0001, 0.0001),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         label_name: str | None = None,
         task: Literal[
             'object_detection', 'semantic_segmentation', 'instance_segmentation'
@@ -1171,7 +1171,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         loader: Callable[[Path], Any] | None = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
@@ -1272,7 +1272,7 @@ class IntersectionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
 
@@ -1440,7 +1440,7 @@ class UnionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = merge_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
 

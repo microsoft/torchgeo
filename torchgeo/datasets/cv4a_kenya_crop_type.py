@@ -108,7 +108,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new CV4A Kenya Crop Type Dataset instance.

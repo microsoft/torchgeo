@@ -60,7 +60,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

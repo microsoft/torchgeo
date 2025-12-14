@@ -15,7 +15,6 @@ import rasterio.features
 import torch
 from einops import rearrange
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
@@ -68,7 +67,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new RwandaFieldBoundary instance.

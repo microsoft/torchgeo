@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -67,7 +66,7 @@ class CanadianBuildingFootprints(VectorDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] = (0.00001, 0.00001),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -14,7 +14,6 @@ from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -541,7 +540,7 @@ class SatlasPretrain(NonGeoDataset):
         image_times: str = 'image_times',
         images: Iterable[str] = ('sentinel1', 'sentinel2', 'landsat'),
         labels: Iterable[str] = ('land_cover',),
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

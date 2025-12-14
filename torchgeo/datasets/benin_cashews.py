@@ -7,7 +7,6 @@ import json
 import os
 from collections.abc import Callable, Sequence
 from functools import lru_cache
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -167,7 +166,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.

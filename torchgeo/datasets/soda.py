@@ -101,7 +101,7 @@ class SODAA(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bbox_orientation: Literal['oriented', 'horizontal'] = 'horizontal',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

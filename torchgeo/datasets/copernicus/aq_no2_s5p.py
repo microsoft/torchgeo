@@ -8,7 +8,6 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 import torch
-from torch import Tensor
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -51,7 +50,7 @@ class CopernicusBenchAQNO2S5P(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['annual', 'seasonal'] = 'annual',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

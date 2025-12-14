@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -147,7 +147,7 @@ class GlobBiomass(RasterDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         measurement: str = 'agb',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:

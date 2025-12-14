@@ -9,7 +9,6 @@ from typing import ClassVar, Literal
 
 import torch
 from einops import rearrange
-from torch import Tensor
 
 from ..errors import DatasetNotFoundError
 from ..utils import Path, Sample, download_url, lazy_import
@@ -70,7 +69,7 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

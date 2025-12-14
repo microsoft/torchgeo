@@ -10,7 +10,6 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import torch
-from torch import Tensor
 
 from ..utils import Path, Sample
 from .base import CopernicusBenchBase
@@ -65,7 +64,7 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

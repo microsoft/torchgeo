@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -154,7 +154,7 @@ class Sentinel1(Sentinel):
         crs: CRS | None = None,
         res: float | tuple[float, float] = (10, 10),
         bands: Sequence[str] = ['VV', 'VH'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -353,7 +353,7 @@ class Sentinel2(Sentinel):
         crs: CRS | None = None,
         res: float | tuple[float, float] = 10,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.

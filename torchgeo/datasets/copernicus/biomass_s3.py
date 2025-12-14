@@ -10,7 +10,6 @@ from typing import Literal
 
 import pandas as pd
 import torch
-from torch import Tensor
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -74,7 +73,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['static', 'time-series'] = 'static',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

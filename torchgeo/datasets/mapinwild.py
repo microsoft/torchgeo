@@ -117,7 +117,7 @@ class MapInWild(NonGeoDataset):
         root: Path = 'data',
         modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

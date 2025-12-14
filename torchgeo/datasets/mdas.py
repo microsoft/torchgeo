@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -141,7 +141,7 @@ class MDAS(NonGeoDataset):
         root: Path = 'data',
         subareas: list[str] = ['sub_area_1'],
         modalities: list[str] = ['3K_RGB', 'HySpex', 'Sentinel_2'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -8,7 +8,6 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
 from ..utils import Path, Sample
 from .base import CopernicusBenchBase
@@ -117,7 +116,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['binary', 'multi'] = 'multi',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

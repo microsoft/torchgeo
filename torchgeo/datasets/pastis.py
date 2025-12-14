@@ -133,7 +133,7 @@ class PASTIS(NonGeoDataset):
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: str = 's2',
         mode: str = 'semantic',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
@@ -149,7 +148,7 @@ class DL4GAMAlps(NonGeoDataset):
         version: str = 'small',
         bands: Sequence[str] = rgb_nir_swir_bands,
         extra_features: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

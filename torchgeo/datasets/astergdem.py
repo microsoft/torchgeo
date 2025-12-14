@@ -4,7 +4,6 @@
 """Aster Global Digital Elevation Model dataset."""
 
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -51,7 +50,7 @@ class AsterGDEM(RasterDataset):
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.

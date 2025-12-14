@@ -256,7 +256,7 @@ class EnviroAtlas(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
         layers: Sequence[str] = ['naip', 'prior'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,

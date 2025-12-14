@@ -5,7 +5,7 @@
 
 import abc
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -68,7 +68,7 @@ class Landsat(RasterDataset, abc.ABC):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.

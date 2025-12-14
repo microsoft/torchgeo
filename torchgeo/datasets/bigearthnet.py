@@ -276,7 +276,7 @@ class BigEarthNet(NonGeoDataset):
         split: str = 'train',
         bands: str = 'all',
         num_classes: int = 19,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -692,7 +692,7 @@ class BigEarthNetV2(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: str = 'all',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

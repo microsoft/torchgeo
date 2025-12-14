@@ -188,7 +188,7 @@ class VHR10(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'positive',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -213,7 +213,7 @@ class CDL(RasterDataset):
         res: float | tuple[float, float] | None = None,
         years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,

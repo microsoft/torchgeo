@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -56,7 +56,7 @@ class IOBench(IntersectionDataset):
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,

@@ -116,7 +116,7 @@ class SouthAfricaCropType(RasterDataset):
         crs: CRS | None = None,
         classes: Sequence[int] = list(cmap.keys()),
         bands: Sequence[str] = s2_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.

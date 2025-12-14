@@ -128,7 +128,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         split: str = 'train',
         target: str = '2-class',
         countries: str | Sequence[str] = ['austria'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

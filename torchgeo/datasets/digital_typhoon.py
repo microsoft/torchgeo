@@ -106,7 +106,7 @@ class DigitalTyphoon(NonGeoDataset):
         sequence_length: int = 3,
         min_feature_value: dict[str, float] | None = None,
         max_feature_value: dict[str, float] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

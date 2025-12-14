@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -64,7 +63,7 @@ class Substation(NonGeoDataset):
         num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
         | None = 'concat',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

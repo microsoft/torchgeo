@@ -10,7 +10,6 @@ from typing import ClassVar, cast
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
@@ -114,7 +113,7 @@ class RESISC45(NonGeoClassificationDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

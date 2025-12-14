@@ -95,7 +95,7 @@ class EuroCrops(VectorDataset):
         crs: CRS = CRS.from_epsg(4326),
         res: float | tuple[float, float] = (0.00001, 0.00001),
         classes: list[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

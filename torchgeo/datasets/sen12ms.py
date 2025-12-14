@@ -169,7 +169,7 @@ class SEN12MS(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.

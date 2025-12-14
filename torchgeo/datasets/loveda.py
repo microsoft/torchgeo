@@ -95,7 +95,7 @@ class LoveDA(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         scene: Sequence[str] = ['urban', 'rural'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

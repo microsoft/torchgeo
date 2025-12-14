@@ -208,7 +208,7 @@ class OpenBuildings(VectorDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.

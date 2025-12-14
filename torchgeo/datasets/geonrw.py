@@ -14,7 +14,6 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 from torchvision import transforms
 
 from .errors import DatasetNotFoundError
@@ -166,7 +165,7 @@ class GeoNRW(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

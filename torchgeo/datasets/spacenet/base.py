@@ -109,7 +109,7 @@ class SpaceNet(NonGeoDataset, ABC):
         aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

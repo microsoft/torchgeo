@@ -75,7 +75,7 @@ class SeasonalContrastS2(NonGeoDataset):
         version: str = '100k',
         seasons: int = 1,
         bands: Sequence[str] = rgb_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

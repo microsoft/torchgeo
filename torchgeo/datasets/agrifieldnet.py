@@ -130,7 +130,7 @@ class AgriFieldNet(RasterDataset):
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
     ) -> None:

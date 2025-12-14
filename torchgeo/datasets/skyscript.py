@@ -14,7 +14,6 @@ from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -70,7 +69,7 @@ class SkyScript(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

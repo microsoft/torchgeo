@@ -15,7 +15,6 @@ import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -204,7 +203,7 @@ class SSL4EOL(SSL4EO):
             'tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'
         ] = 'oli_sr',
         seasons: Literal[1, 2, 3, 4] = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -534,7 +533,7 @@ class SSL4EOS12(SSL4EO):
         root: Path = 'data',
         split: Literal['s1', 's2c', 's2a'] = 's2c',
         seasons: Literal[1, 2, 3, 4] = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -10,7 +10,6 @@ from typing import ClassVar, Literal
 
 import pandas as pd
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -225,7 +224,7 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['static', 'time-series'] = 'static',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

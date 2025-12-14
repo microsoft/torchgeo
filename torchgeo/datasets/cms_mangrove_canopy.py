@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -174,7 +173,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         res: float | tuple[float, float] | None = None,
         measurement: str = 'agb',
         country: str = all_countries[0],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:

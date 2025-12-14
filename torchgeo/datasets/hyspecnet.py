@@ -13,7 +13,6 @@ import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .enmap import EnMAP
 from .errors import DatasetNotFoundError, RGBBandsMissingError
@@ -91,7 +90,7 @@ class HySpecNet11k(NonGeoDataset):
         split: str = 'train',
         strategy: str = 'easy',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

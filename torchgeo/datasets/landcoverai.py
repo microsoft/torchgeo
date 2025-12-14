@@ -206,7 +206,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -301,7 +301,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

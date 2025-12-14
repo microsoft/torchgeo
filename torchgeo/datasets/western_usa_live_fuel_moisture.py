@@ -7,7 +7,6 @@ import glob
 import json
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -201,7 +200,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self,
         root: Path = 'data',
         input_features: Iterable[str] = all_variable_names,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.

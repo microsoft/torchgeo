@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -78,7 +78,7 @@ class EUDEM(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:

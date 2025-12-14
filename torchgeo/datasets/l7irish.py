@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -133,7 +133,7 @@ class L7Irish(IntersectionDataset):
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,

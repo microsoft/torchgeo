@@ -88,7 +88,7 @@ class OpenStreetMap(VectorDataset):
         classes: list[dict[str, Any]],
         paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new OpenStreetMap dataset instance.

@@ -219,7 +219,7 @@ class SeasoNet(NonGeoDataset):
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
         concat_seasons: int = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

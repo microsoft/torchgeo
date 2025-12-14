@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
@@ -32,7 +31,7 @@ class MMFloodComponent(RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = False,
     ) -> None:
         """Initialize MMFloodComponent dataset instance.
@@ -125,7 +124,7 @@ class MMFlood(IntersectionDataset):
         split: str = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
         cache: bool = False,

@@ -190,7 +190,7 @@ class MMEarth(NonGeoDataset):
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         normalization_mode: str = 'z-score',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize the MMEarth dataset.
 
