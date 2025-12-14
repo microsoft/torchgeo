@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.11', '3.12', '3.13', '3.14.2']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
@@ -27,6 +27,7 @@ jobs:
         uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
       - name: Cache dependencies
         uses: actions/cache@v4.3.0
         id: cache
