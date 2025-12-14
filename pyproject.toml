@@ -140,8 +140,8 @@ style = [
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # requests 2.23.0+ required for lightly 1.4.5 comaptibility
-    "types-requests>=2.23",
+    # requests 2.25+ required for urllib3 with Python 3.12 support
+    "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
     "types-shapely>=2.0.2",
 ]

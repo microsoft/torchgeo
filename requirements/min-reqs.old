@@ -12,7 +12,7 @@ pandas[parquet]==2.1.1
 pillow==10.0.0
 pyproj==3.6.1
 rasterio==1.4.3
-requests==2.23.0
+requests==2.25.0
 segmentation-models-pytorch==0.5.0
 shapely==2.0.2
 timm==1.0.3
