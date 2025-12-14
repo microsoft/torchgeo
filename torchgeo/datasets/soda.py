@@ -158,7 +158,7 @@ class SODAA(NonGeoDataset):
         image = self._load_image(os.path.join(self.root, row['image_path']))
         boxes, labels = self._load_labels(os.path.join(self.root, row['label_path']))
 
-        sample: dict[str, Tensor] = {'image': image, 'label': labels}
+        sample: Sample = {'image': image, 'label': labels}
 
         if self.bbox_orientation == 'oriented':
             sample['bbox'] = boxes
@@ -287,7 +287,7 @@ class SODAA(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,

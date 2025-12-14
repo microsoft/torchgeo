@@ -216,7 +216,7 @@ class DIOR(NonGeoDataset):
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
 
-        sample: dict[str, Tensor] = {'image': image}
+        sample: Sample = {'image': image}
 
         if self.split != 'test':
             boxes, labels = self._load_target(
@@ -331,7 +331,7 @@ class DIOR(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,

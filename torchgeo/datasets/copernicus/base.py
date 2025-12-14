@@ -139,7 +139,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             An image sample.
         """
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         with rio.open(path) as f:
             # Image
             image = f.read(self.band_indices).astype(np.float32)
@@ -180,7 +180,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             A target sample.
         """
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         with rio.open(path) as f:
             sample['mask'] = array_to_tensor(f.read(1)).to(self.dtype)
 
@@ -216,7 +216,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

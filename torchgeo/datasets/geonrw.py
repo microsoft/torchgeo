@@ -233,7 +233,7 @@ class GeoNRW(NonGeoDataset):
         utm_coords = os.path.basename(path).split('_')[:2]
         base_dir = os.path.dirname(path)
 
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         for modality in self.modalities:
             modality_path = os.path.join(
                 base_dir, self.modality_filenames[modality](utm_coords)
@@ -280,7 +280,7 @@ class GeoNRW(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

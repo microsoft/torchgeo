@@ -231,7 +231,7 @@ class SEN12MS(NonGeoDataset):
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: dict[str, Tensor] = {'image': image, 'mask': lc[0]}
+        sample: Sample = {'image': image, 'mask': lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -312,7 +312,7 @@ class SEN12MS(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

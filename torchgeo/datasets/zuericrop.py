@@ -247,7 +247,7 @@ class ZueriCrop(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         time_step: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,

@@ -229,7 +229,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,

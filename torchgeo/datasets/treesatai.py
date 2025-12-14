@@ -239,7 +239,7 @@ class TreeSatAI(NonGeoDataset):
 
         extract_archive(os.path.join(self.root, file), to_path)
 
-    def plot(self, sample: dict[str, Tensor], show_titles: bool = True) -> Figure:
+    def plot(self, sample: Sample, show_titles: bool = True) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

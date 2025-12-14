@@ -243,7 +243,7 @@ class EverWatch(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         suptitle: str | None = None,
         box_alpha: float = 0.7,
     ) -> Figure:

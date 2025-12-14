@@ -609,7 +609,7 @@ class SatlasPretrain(NonGeoDataset):
         col, row = self.split.iloc[index]
         directories = self.good_images.get_group((col, row))['directory']
 
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
 
         for image in self.images:
             self._load_image(sample, image, col, row, directories)
@@ -624,7 +624,7 @@ class SatlasPretrain(NonGeoDataset):
 
     def _load_image(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         image: str,
         col: int,
         row: int,
@@ -665,7 +665,7 @@ class SatlasPretrain(NonGeoDataset):
         sample[f'image_{image}'] = raster
 
     def _load_label(
-        self, sample: dict[str, Tensor], label: str, col: int, row: int
+        self, sample: Sample, label: str, col: int, row: int
     ) -> None:
         """Load a single label.
 
@@ -716,7 +716,7 @@ class SatlasPretrain(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

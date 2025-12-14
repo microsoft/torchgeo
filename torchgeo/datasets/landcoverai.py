@@ -148,7 +148,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

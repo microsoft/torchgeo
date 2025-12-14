@@ -150,7 +150,7 @@ class BioMassters(NonGeoDataset):
         )
 
         filepaths = sample_df['filename'].tolist()
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         for sens in self.sensors:
             sens_filepaths = [fp for fp in filepaths if sens in fp]
             sample[f'image_{sens}'] = self._load_input(sens_filepaths)
@@ -223,7 +223,7 @@ class BioMassters(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

@@ -196,7 +196,7 @@ class MapInWild(NonGeoDataset):
 
         image = torch.cat(list_modalities, dim=0)
 
-        sample: dict[str, Tensor] = {'image': image, 'mask': mask}
+        sample: Sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -334,7 +334,7 @@ class MapInWild(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

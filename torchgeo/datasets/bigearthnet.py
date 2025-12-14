@@ -320,7 +320,7 @@ class BigEarthNet(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: dict[str, Tensor] = {'image': image, 'label': label}
+        sample: Sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -531,7 +531,7 @@ class BigEarthNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
@@ -753,7 +753,7 @@ class BigEarthNetV2(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
 
         match self.bands:
             case 's1':
@@ -919,7 +919,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:

@@ -289,7 +289,7 @@ class CropHarvest(NonGeoDataset):
         features_path = os.path.join(self.root, self.file_dict['features']['filename'])
         extract_archive(features_path)
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset using bands for Agriculture RGB composite.
 
         Args:

@@ -402,7 +402,7 @@ class SeasoNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         show_legend: bool = True,
         suptitle: str | None = None,
