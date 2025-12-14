@@ -51,6 +51,7 @@ GeoSlice: TypeAlias = (
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
 Path: TypeAlias = str | os.PathLike[str]
+Sample: TypeAlias = dict[str, Any]
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
