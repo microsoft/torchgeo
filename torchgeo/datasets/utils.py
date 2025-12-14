@@ -16,7 +16,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
 import pandas as pd
@@ -47,8 +47,11 @@ __all__ = (
 )
 
 
-type GeoSlice = slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
-type Path = str | os.PathLike[str]
+# Waiting to upgrade Sphinx before switching to type statement
+GeoSlice: TypeAlias = (  # noqa: UP040
+    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
+)
+Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
