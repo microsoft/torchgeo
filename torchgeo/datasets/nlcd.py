@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, check_integrity, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -235,25 +235,6 @@ class NLCD(RasterDataset):
         # Download the dataset
         self._download()
         self._extract()
-
-    def _validate_checksums(self) -> None:
-        """Validate MD5 checksums of downloaded zip files.
-
-        Raises:
-            RuntimeError: If checksum validation fails for any file.
-        """
-        assert isinstance(self.paths, str | os.PathLike)
-        for year in self.years:
-            if year not in self.md5s:
-                continue
-            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
-            zipfile_path = os.path.join(self.paths, zipfile_name)
-            if os.path.exists(zipfile_path):
-                if not check_integrity(zipfile_path, self.md5s[year]):
-                    raise RuntimeError(
-                        f'MD5 checksum mismatch for {zipfile_name}: '
-                        f'expected {self.md5s[year]}, file may be corrupted'
-                    )
 
     def _download(self) -> None:
         """Download the dataset."""
