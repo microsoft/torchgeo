@@ -78,7 +78,7 @@ class TestChangeDetectionTask:
     ) -> None:
         match name:
             case 'cabuar' | 'chabud':
-                pytest.importorskip('h5py', minversion='3.6')
+                pytest.importorskip('h5py', minversion='3.10')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

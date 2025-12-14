@@ -16,7 +16,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, cast, overload
 
 import numpy as np
 import pandas as pd
@@ -47,10 +47,8 @@ __all__ = (
 )
 
 
-GeoSlice: TypeAlias = (
-    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
-)
-Path: TypeAlias = str | os.PathLike[str]
+type GeoSlice = slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
+type Path = str | os.PathLike[str]
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
