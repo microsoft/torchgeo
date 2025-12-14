@@ -6,7 +6,6 @@
 import functools
 import glob
 import os
-from typing import Any
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -110,10 +109,7 @@ class GBIF(GeoDataset):
         return sample
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

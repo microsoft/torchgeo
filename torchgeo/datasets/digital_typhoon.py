@@ -411,10 +411,7 @@ class DigitalTyphoon(NonGeoDataset):
                 tar.extractall(path=self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

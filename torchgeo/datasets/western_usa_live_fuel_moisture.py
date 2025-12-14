@@ -302,7 +302,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Sample,
         variables_to_plot: list[str] | None = None,
         show_titles: bool = True,
         suptitle: str | None = None,

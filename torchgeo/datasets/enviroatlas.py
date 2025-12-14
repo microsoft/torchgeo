@@ -331,7 +331,7 @@ class EnviroAtlas(GeoDataset):
         index = index.cx[x.start : x.stop, y.start : y.stop]
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': [],
             'mask': [],
             'bounds': self._slice_to_tensor(query),
@@ -431,10 +431,7 @@ class EnviroAtlas(GeoDataset):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

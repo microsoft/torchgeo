@@ -16,7 +16,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class IOBench(IntersectionDataset):
@@ -135,10 +135,7 @@ class IOBench(IntersectionDataset):
         extract_archive(os.path.join(self.root, f'{self.split}.tar.gz'), self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

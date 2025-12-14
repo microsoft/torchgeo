@@ -27,7 +27,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class OpenStreetMap(VectorDataset):
@@ -428,10 +428,7 @@ class OpenStreetMap(VectorDataset):
                         )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

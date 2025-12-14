@@ -63,7 +63,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
+    def __call__(self, sample: Sample) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -242,7 +242,7 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': self._load_image(id_),
             'label': self._load_target(id_),
         }

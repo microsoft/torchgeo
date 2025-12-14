@@ -433,7 +433,7 @@ class MMEarth(NonGeoDataset):
             of the sample
         """
         h5py = lazy_import('h5py')
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         with h5py.File(
             os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',
@@ -621,10 +621,7 @@ class MMEarth(NonGeoDataset):
         return len(self.indices)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
 

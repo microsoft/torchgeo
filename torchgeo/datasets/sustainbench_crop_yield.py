@@ -193,7 +193,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Sample,
         band_idx: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,

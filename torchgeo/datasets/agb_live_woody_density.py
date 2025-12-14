@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, download_url
+from .utils import Path, Sample, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -120,10 +120,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

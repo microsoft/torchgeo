@@ -15,7 +15,7 @@ from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class Sentinel(RasterDataset):
@@ -201,10 +201,7 @@ To create a dataset containing both, use:
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -414,10 +411,7 @@ class Sentinel2(Sentinel):
         return os.path.join(supdir, subdir, filename)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

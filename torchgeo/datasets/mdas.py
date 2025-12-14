@@ -242,7 +242,7 @@ class MDAS(NonGeoDataset):
             a dictionary containing the data of chosen modalities
         """
         sample_files = self.files[idx]
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         for modality, path in sample_files.items():
             if 'osm' in modality:
                 sample[f'{modality}_mask'] = self._load_image(path).long()

@@ -563,7 +563,7 @@ class RasterDataset(GeoDataset):
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }
@@ -772,7 +772,7 @@ class XarrayDataset(GeoDataset):
 
         image = self._merge_files(index.filepath, query)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'image': image,
             'transform': torch.tensor(transform),
@@ -1079,7 +1079,7 @@ class VectorDataset(GeoDataset):
             labels = np.empty((0,), dtype=np.int32)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }

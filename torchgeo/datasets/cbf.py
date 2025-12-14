@@ -13,7 +13,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import Path, check_integrity, download_and_extract_archive
+from .utils import Path, Sample, check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -128,10 +128,7 @@ class CanadianBuildingFootprints(VectorDataset):
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

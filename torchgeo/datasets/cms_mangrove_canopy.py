@@ -13,7 +13,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, check_integrity, extract_archive
+from .utils import Path, Sample, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -246,10 +246,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         extract_archive(pathname)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
