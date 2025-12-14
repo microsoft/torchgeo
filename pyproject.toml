@@ -40,8 +40,8 @@ dependencies = [
     "einops>=0.3",
     # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
     "geopandas>=0.13",
-    # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
-    "jsonargparse[signatures]>=4.25",
+    # jsonargparse 4.35+ required for Python 3.12.8+ support
+    "jsonargparse[signatures]>=4.35",
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
