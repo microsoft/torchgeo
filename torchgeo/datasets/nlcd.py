@@ -245,10 +245,6 @@ class NLCD(RasterDataset):
         self._download()
         self._extract()
 
-        # Re-check that files were successfully extracted and are valid
-        if not self.files:
-            raise DatasetNotFoundError(self)
-
     def _validate_checksums(self) -> None:
         """Validate MD5 checksums of downloaded zip files.
 
