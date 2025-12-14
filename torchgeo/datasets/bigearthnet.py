@@ -530,10 +530,7 @@ class BigEarthNet(NonGeoDataset):
         return labels
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -918,10 +915,7 @@ class BigEarthNetV2(NonGeoDataset):
             extract_archive(concat_path, self.root)
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

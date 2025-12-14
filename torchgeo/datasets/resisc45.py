@@ -14,7 +14,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -194,10 +194,7 @@ class RESISC45(NonGeoClassificationDataset):
         extract_archive(filepath)
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -25,6 +25,7 @@ from torchgeo.datasets.geo import NonGeoDataset
 from ..errors import DatasetNotFoundError, RGBBandsMissingError
 from ..utils import (
     Path,
+    Sample,
     array_to_tensor,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -215,10 +216,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         download_and_extract_archive(self.url, self.root, md5=md5)
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

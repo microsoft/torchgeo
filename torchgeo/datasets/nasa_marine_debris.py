@@ -142,10 +142,7 @@ class NASAMarineDebris(NonGeoDataset):
         azcopy('sync', self.url, self.root, '--recursive=true')
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

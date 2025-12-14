@@ -229,10 +229,7 @@ class EuroSAT(NonGeoClassificationDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -242,10 +242,7 @@ class EverWatch(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: Sample,
-        suptitle: str | None = None,
-        box_alpha: float = 0.7,
+        self, sample: Sample, suptitle: str | None = None, box_alpha: float = 0.7
     ) -> Figure:
         """Plot a sample from the dataset.
 

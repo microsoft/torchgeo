@@ -22,7 +22,6 @@ import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
@@ -623,10 +622,7 @@ class ChesapeakeCVPR(GeoDataset):
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

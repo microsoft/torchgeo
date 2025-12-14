@@ -623,12 +623,7 @@ class SatlasPretrain(NonGeoDataset):
         return sample
 
     def _load_image(
-        self,
-        sample: Sample,
-        image: str,
-        col: int,
-        row: int,
-        directories: pd.Series,
+        self, sample: Sample, image: str, col: int, row: int, directories: pd.Series
     ) -> None:
         """Load a single image.
 
@@ -664,9 +659,7 @@ class SatlasPretrain(NonGeoDataset):
         raster = rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
         sample[f'image_{image}'] = raster
 
-    def _load_label(
-        self, sample: Sample, label: str, col: int, row: int
-    ) -> None:
+    def _load_label(self, sample: Sample, label: str, col: int, row: int) -> None:
         """Load a single label.
 
         Args:
@@ -715,10 +708,7 @@ class SatlasPretrain(NonGeoDataset):
                 extract_archive(path)
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
