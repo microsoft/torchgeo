@@ -6,9 +6,9 @@
 from typing import Any
 
 import kornia.augmentation as K
-from torch import Tensor
 
 from ..datasets import InriaAerialImageLabeling
+from ..datasets.utils import Sample
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -85,9 +85,7 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = InriaAerialImageLabeling(split='test', **self.kwargs)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:
