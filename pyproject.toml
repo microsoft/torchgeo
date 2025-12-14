@@ -84,9 +84,9 @@ dependencies = [
     "torchmetrics>=1.2",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
-    # typing-extensions 4.5+ required for typing_extensions.deprecated
+    # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
-    "typing-extensions>=4.5",
+    "typing-extensions>=4.8",
 ]
 dynamic = ["version"]
 
