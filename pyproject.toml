@@ -104,8 +104,8 @@ datasets = [
     "pandas[parquet]>=2.1.1",
     # pycocotools 2.0.8+ required for Python 3.12 wheels
     "pycocotools>=2.0.8",
-    # requests 2.23.0+ required for lightly 1.4.5 comaptibility
-    "requests>=2.23.0",
+    # requests 2.25+ required for urllib3 with Python 3.12 support
+    "requests>=2.25",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
     # scikit-image 0.22+ required for Python 3.12 wheels
