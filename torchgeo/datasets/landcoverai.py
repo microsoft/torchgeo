@@ -28,7 +28,7 @@ from .geo import NonGeoDataset, RasterDataset
 from .utils import GeoSlice, Path, Sample, download_url, extract_archive, working_dir
 
 
-class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
+class LandCoverAIBase(Dataset[Sample], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from

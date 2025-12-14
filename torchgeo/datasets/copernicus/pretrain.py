@@ -16,7 +16,7 @@ from torch.utils.data import IterableDataset
 from ..utils import Sample, lazy_import, percentile_normalization
 
 
-class CopernicusPretrain(IterableDataset[dict[str, Any]]):
+class CopernicusPretrain(IterableDataset[Sample]):
     """Copernicus-Pretrain dataset.
 
     Copernicus-Pretrain is an extension of the SSL4EO-S12 dataset to all major Sentinel
