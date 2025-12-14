@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-from pyproj import CRS
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
@@ -405,42 +404,32 @@ def test_disambiguate_timestamp(
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[dict[str, Any]]:
-        return [
-            {'image': torch.tensor([1, 2, 0]), 'crs': CRS.from_epsg(2000)},
-            {'image': torch.tensor([0, 0, 3]), 'crs': CRS.from_epsg(2001)},
-        ]
+        return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample['image'].size() == torch.Size([2, 3])
         assert torch.allclose(sample['image'], torch.tensor([[1, 2, 0], [0, 0, 3]]))
-        assert sample['crs'] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
         for i in range(2):
             assert torch.allclose(samples[i]['image'], new_samples[i]['image'])
-            assert samples[i]['crs'] == new_samples[i]['crs']
 
     def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample['image'].size() == torch.Size([6])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0, 0, 0, 3]))
-        assert sample['crs'] == CRS.from_epsg(2000)
 
     def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample['image'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 3]))
-        assert sample['crs'] == CRS.from_epsg(2001)
 
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[dict[str, Any]]:
-        return [
-            {'image': torch.tensor([1, 2, 0]), 'crs1': CRS.from_epsg(2000)},
-            {'mask': torch.tensor([0, 0, 3]), 'crs2': CRS.from_epsg(2001)},
-        ]
+        return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
@@ -448,14 +437,10 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([1, 3])
         assert torch.allclose(sample['image'], torch.tensor([[1, 2, 0]]))
         assert torch.allclose(sample['mask'], torch.tensor([[0, 0, 3]]))
-        assert sample['crs1'] == [CRS.from_epsg(2000)]
-        assert sample['crs2'] == [CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
         assert torch.allclose(samples[0]['image'], new_samples[0]['image'])
-        assert samples[0]['crs1'] == new_samples[0]['crs1']
         assert torch.allclose(samples[1]['mask'], new_samples[0]['mask'])
-        assert samples[1]['crs2'] == new_samples[0]['crs2']
 
     def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
@@ -463,8 +448,6 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0]))
         assert torch.allclose(sample['mask'], torch.tensor([0, 0, 3]))
-        assert sample['crs1'] == CRS.from_epsg(2000)
-        assert sample['crs2'] == CRS.from_epsg(2001)
 
     def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
@@ -472,8 +455,6 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0]))
         assert torch.allclose(sample['mask'], torch.tensor([0, 0, 3]))
-        assert sample['crs1'] == CRS.from_epsg(2000)
-        assert sample['crs2'] == CRS.from_epsg(2001)
 
 
 def test_existing_directory(tmp_path: Path) -> None:

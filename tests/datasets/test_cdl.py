@@ -11,7 +11,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -46,7 +45,6 @@ class TestCDL:
     def test_getitem(self, dataset: CDL) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CDL) -> None:

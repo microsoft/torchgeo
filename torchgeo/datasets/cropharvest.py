@@ -126,9 +126,9 @@ class CropHarvest(NonGeoDataset):
 
         self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
-        self.classes = self.labels['properties.label'].unique()
-        self.classes = self.classes[self.classes != np.array(None)]
-        self.classes = np.insert(self.classes, 0, ['None', 'Other'])
+        classes = self.labels['properties.label'].unique()
+        classes = classes[classes != np.array(None)]
+        self.classes = np.insert(classes, 0, ['None', 'Other'])
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.

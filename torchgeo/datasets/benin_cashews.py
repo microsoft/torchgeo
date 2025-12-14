@@ -15,7 +15,6 @@ import rasterio
 import rasterio.features
 import torch
 from matplotlib.figure import Figure
-from pyproj import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
@@ -217,11 +216,11 @@ class BeninSmallHolderCashews(NonGeoDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, transform, crs, and metadata at index.
+            a dict containing image, mask, transform, and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
-        img, transform, crs = self._load_all_imagery()
+        img, transform = self._load_all_imagery()
         labels = self._load_mask(transform)
 
         img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
@@ -233,7 +232,6 @@ class BeninSmallHolderCashews(NonGeoDataset):
             'x': torch.tensor(x),
             'y': torch.tensor(y),
             'transform': torch.tensor(transform),
-            'crs': crs,
         }
 
         if self.transforms is not None:
@@ -250,14 +248,13 @@ class BeninSmallHolderCashews(NonGeoDataset):
         return len(self.chips_metadata)
 
     @lru_cache(maxsize=128)
-    def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine]:
         """Load all the imagery (across time) for the dataset.
 
         Returns:
             imagery of shape (70, number of bands, 1186, 1122) where 70 is the number
             of points in time, 1186 is the tile height, and 1122 is the tile width
-            rasterio affine transform, mapping pixel coordinates to geo coordinates
-            coordinate reference system of transform
+            rasterio affine transform, mapping pixel coordinates to geo coordinates.
         """
         img = torch.zeros(
             len(self.dates),
@@ -268,13 +265,13 @@ class BeninSmallHolderCashews(NonGeoDataset):
         )
 
         for date_index, date in enumerate(self.dates):
-            single_scene, transform, crs = self._load_single_scene(date)
+            single_scene, transform = self._load_single_scene(date)
             img[date_index] = single_scene
 
-        return img, transform, crs
+        return img, transform
 
     @lru_cache(maxsize=128)
-    def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine]:
         """Load the imagery for a single date.
 
         Args:
@@ -282,8 +279,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         Returns:
             Tensor containing a single image tile, rasterio affine transform,
-            mapping pixel coordinates to geo coordinates, and coordinate
-            reference system of transform.
+            and mapping pixel coordinates to geo coordinates.
         """
         img = torch.zeros(
             len(self.bands), self.tile_height, self.tile_width, dtype=torch.float32
@@ -298,11 +294,10 @@ class BeninSmallHolderCashews(NonGeoDataset):
             )
             with rasterio.open(filepath) as src:
                 transform = src.transform  # same transform for every band
-                crs = src.crs
                 array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)
 
-        return img, transform, crs
+        return img, transform
 
     @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:

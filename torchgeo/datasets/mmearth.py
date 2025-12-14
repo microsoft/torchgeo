@@ -350,7 +350,6 @@ class MMEarth(NonGeoDataset):
         * lat: latitude
         * lon: longitude
         * date: date
-        * crs: coordinate reference system
         * tile_id: tile identifier
 
         Args:
@@ -460,7 +459,6 @@ class MMEarth(NonGeoDataset):
             sample['lat'] = tile_info['lat']
             sample['lon'] = tile_info['lon']
             sample['date'] = tile_info['S2_DATE']
-            sample['crs'] = tile_info['CRS']
             sample['tile_id'] = name
 
         return sample
