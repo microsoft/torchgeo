@@ -1,2 +1,2 @@
 # models
-microsoft-aurora==1.8.0
+microsoft-aurora==1.8.0; python_version<'3.13'
