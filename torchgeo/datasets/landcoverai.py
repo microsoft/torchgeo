@@ -25,7 +25,7 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive, working_dir
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):

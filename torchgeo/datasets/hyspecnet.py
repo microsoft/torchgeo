@@ -20,6 +20,7 @@ from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     disambiguate_timestamp,
     download_url,
     extract_archive,

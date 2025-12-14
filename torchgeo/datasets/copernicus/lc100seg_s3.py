@@ -12,7 +12,7 @@ import pandas as pd
 from matplotlib.colors import ListedColormap
 from torch import Tensor
 
-from ..utils import Path, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 

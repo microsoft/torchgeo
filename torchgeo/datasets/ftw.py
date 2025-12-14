@@ -18,7 +18,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, array_to_tensor, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    array_to_tensor,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class FieldsOfTheWorld(NonGeoDataset):

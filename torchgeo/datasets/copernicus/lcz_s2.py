@@ -12,7 +12,7 @@ from einops import rearrange
 from torch import Tensor
 
 from ..errors import DatasetNotFoundError
-from ..utils import Path, download_url, lazy_import
+from ..utils import Path, Sample, download_url, lazy_import
 from .base import CopernicusBenchBase
 
 

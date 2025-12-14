@@ -28,6 +28,7 @@ from ..errors import DatasetNotFoundError
 from ..geo import NonGeoDataset
 from ..utils import (
     Path,
+    Sample,
     check_integrity,
     extract_archive,
     percentile_normalization,

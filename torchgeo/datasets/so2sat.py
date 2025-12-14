@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, lazy_import, percentile_normalization
+from .utils import Path, Sample, check_integrity, lazy_import, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):

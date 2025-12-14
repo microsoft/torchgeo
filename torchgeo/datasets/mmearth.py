@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import, percentile_normalization
+from .utils import Path, Sample, lazy_import, percentile_normalization
 
 
 class MMEarth(NonGeoDataset):

@@ -21,7 +21,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import GeoSlice, Path, check_integrity
+from .utils import GeoSlice, Path, Sample, check_integrity
 
 
 class OpenBuildings(VectorDataset):

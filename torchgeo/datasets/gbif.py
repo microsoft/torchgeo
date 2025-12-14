@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class GBIF(GeoDataset):

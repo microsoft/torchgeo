@@ -10,7 +10,7 @@ from typing import Literal
 import torch
 from torch import Tensor
 
-from ..utils import Path, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 

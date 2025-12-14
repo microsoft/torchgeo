@@ -18,7 +18,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class InriaAerialImageLabeling(NonGeoDataset):

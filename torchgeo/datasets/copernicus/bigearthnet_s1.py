@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 from torch import Tensor
 
-from ..utils import Path
+from ..utils import Path, Sample
 from .base import CopernicusBenchBase
 
 

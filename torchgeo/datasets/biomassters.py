@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, percentile_normalization
+from .utils import Path, Sample, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):

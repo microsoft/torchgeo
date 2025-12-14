@@ -10,7 +10,7 @@ from typing import Literal
 from matplotlib.colors import ListedColormap
 from torch import Tensor
 
-from ..utils import Path
+from ..utils import Path, Sample
 from .base import CopernicusBenchBase
 
 

@@ -6,8 +6,8 @@
 import os
 
 import torch
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 

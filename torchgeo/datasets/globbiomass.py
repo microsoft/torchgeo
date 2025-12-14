@@ -21,6 +21,7 @@ from .geo import RasterDataset
 from .utils import (
     GeoSlice,
     Path,
+    Sample,
     check_integrity,
     disambiguate_timestamp,
     extract_archive,

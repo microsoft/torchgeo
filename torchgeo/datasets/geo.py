@@ -37,6 +37,7 @@ from .errors import DatasetNotFoundError
 from .utils import (
     GeoSlice,
     Path,
+    Sample,
     array_to_tensor,
     concat_samples,
     convert_poly_coords,

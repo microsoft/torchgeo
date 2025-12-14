@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, percentile_normalization
+from .utils import Path, Sample, check_integrity, percentile_normalization
 
 
 class SEN12MS(NonGeoDataset):

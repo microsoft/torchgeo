@@ -21,7 +21,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .landsat import Landsat, Landsat5TM, Landsat7, Landsat8
 from .sentinel import Sentinel1, Sentinel2
-from .utils import Path, disambiguate_timestamp, download_url, extract_archive
+from .utils import Path, Sample, disambiguate_timestamp, download_url, extract_archive
 
 
 class SSL4EO(NonGeoDataset):

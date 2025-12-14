@@ -23,7 +23,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):

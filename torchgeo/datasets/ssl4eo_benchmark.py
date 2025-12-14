@@ -19,7 +19,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):

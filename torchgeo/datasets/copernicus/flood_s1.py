@@ -18,7 +18,7 @@ from matplotlib.colors import ListedColormap
 from pyproj import Transformer
 from torch import Tensor
 
-from ..utils import Path, disambiguate_timestamp
+from ..utils import Path, Sample, disambiguate_timestamp
 from .base import CopernicusBenchBase
 
 
