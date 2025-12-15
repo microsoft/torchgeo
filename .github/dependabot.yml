@@ -13,6 +13,10 @@ updates:
     directory: '/requirements'
     schedule:
       interval: 'daily'
+    ignore:
+      # sphinx 9+ not yet compatible with myst-parser
+      - dependency-name: 'sphinx'
+        update-types: ['version-update:semver-major']
     groups:
       pandas:
         patterns:

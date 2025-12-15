@@ -127,7 +127,8 @@ docs = [
     "pydata-sphinx-theme>=0.14.0",
     # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
     # https://github.com/sphinx-doc/sphinx/pull/10887
-    "sphinx>=5.3",
+    # sphinx 9+ not yet compatible with latest version of myst-parser
+    "sphinx>=5.3,<9",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
