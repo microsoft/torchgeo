@@ -25,8 +25,8 @@ class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
         md5s = {
-            2011: 'dadcb8af5b9eff117b9bb00b648594b4',
-            2019: '6196bf5ae9fdd5858aaf71b76d388806',
+            2011: '531fcba859a0bee6bfeb362a26f6a07f',
+            2019: '19a64a25e3c36d8d51b40ab59bddc1ec',
         }
         monkeypatch.setattr(NLCD, 'md5s', md5s)
         url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
