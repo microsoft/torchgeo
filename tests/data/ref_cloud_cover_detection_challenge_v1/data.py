@@ -16,7 +16,7 @@ DTYPE = np.uint16
 np.random.seed(0)
 
 splits = {'train': 'public', 'test': 'private'}
-chip_ids = ['aaaa']
+chip_ids = ['aaaa', 'bbbb']
 all_bands = ['B02', 'B03', 'B04', 'B08']
 profile = {
     'driver': 'GTiff',
@@ -27,16 +27,19 @@ profile = {
     'crs': CRS.from_epsg(32753),
     'transform': Affine(10.0, 0.0, 777760.0, 0.0, -10.0, 6735270.0),
 }
-Z = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE)
 
 for split, directory in splits.items():
     for chip_id in chip_ids:
         path = os.path.join(directory, f'{split}_features', chip_id)
         os.makedirs(path, exist_ok=True)
         for band in all_bands:
+            feature_tile = np.random.randint(
+                np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE
+            )
             with rasterio.open(os.path.join(path, f'{band}.tif'), 'w', **profile) as f:
-                f.write(Z, 1)
+                f.write(feature_tile, 1)
         path = os.path.join(directory, f'{split}_labels')
         os.makedirs(path, exist_ok=True)
+        label_tile = np.random.randint(0, 2, size=(SIZE, SIZE), dtype=DTYPE)
         with rasterio.open(os.path.join(path, f'{chip_id}.tif'), 'w', **profile) as f:
-            f.write(Z, 1)
+            f.write(label_tile, 1)

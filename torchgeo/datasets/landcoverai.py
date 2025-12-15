@@ -273,8 +273,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(query),
             'image': img.float(),
             'mask': mask.long(),
             'transform': torch.tensor(transform),

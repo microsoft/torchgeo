@@ -417,14 +417,12 @@ class TestRasterDataset:
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert len(naip.bands) == x['image'].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
         x = sentinel[sentinel.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert len(sentinel.bands) == x['image'].shape[0]
 
@@ -563,29 +561,28 @@ class TestVectorDataset:
         with pytest.raises(ValueError, match='Invalid task:'):
             CustomVectorDataset(dataset.paths, task='invalid-task')  # type: ignore[arg-type]
 
-    def test_getitem(self, dataset: CustomVectorDataset) -> None:
+    def test_getitem_sem_seg(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+    def test_getitem_obj_det(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'object_detection'
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert x['bbox_xyxy'].shape[-1] == 4
 
+    def test_getitem_ins_seg(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'instance_segmentation'
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
@@ -596,29 +593,34 @@ class TestVectorDataset:
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
-    def test_getitem_parquet(self, dataset_parquet: CustomVectorParquetDataset) -> None:
+    def test_getitem_parquet_sem_seg(
+        self, dataset_parquet: CustomVectorParquetDataset
+    ) -> None:
         dataset_parquet.task = 'semantic_segmentation'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+    def test_getitem_parquet_obj_det(
+        self, dataset_parquet: CustomVectorParquetDataset
+    ) -> None:
         dataset_parquet.task = 'object_detection'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert x['bbox_xyxy'].shape[-1] == 4
 
+    def test_getitem_parquet_ins_seg(
+        self, dataset_parquet: CustomVectorParquetDataset
+    ) -> None:
         dataset_parquet.task = 'instance_segmentation'
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
@@ -633,30 +635,29 @@ class TestVectorDataset:
         assert dataset.bounds[2].start > pd.Timestamp.min
         assert dataset.bounds[2].stop < pd.Timestamp.max
 
-    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+    def test_getitem_multilabel_sem_seg(self, multilabel: CustomVectorDataset) -> None:
         multilabel.task = 'semantic_segmentation'
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]
             torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
         )
 
+    def test_getitem_multilabel_obj_det(self, multilabel: CustomVectorDataset) -> None:
         multilabel.task = 'object_detection'
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
         assert x['bbox_xyxy'].shape[-1] == 4
 
+    def test_getitem_multilabel_ins_seg(self, multilabel: CustomVectorDataset) -> None:
         multilabel.task = 'instance_segmentation'
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))

@@ -102,7 +102,7 @@ Mypy won't fix your code for you, but will warn you about potential issues with 
 
 .. code-block:: console
 
-   $ mypy .
+   $ mypy
 
 
 If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.

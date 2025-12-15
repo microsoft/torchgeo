@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Cache dependencies
         uses: actions/cache@v4.3.0
         id: cache
@@ -43,12 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Cache dependencies
         uses: actions/cache@v4.3.0
         id: cache
@@ -71,9 +71,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up nodejs
-        uses: actions/setup-node@v6.0.0
+        uses: actions/setup-node@v6.1.0
         with:
           node-version: '20'
           cache: 'npm'
