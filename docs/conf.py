@@ -39,7 +39,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'nbsphinx',
 ]
@@ -105,12 +104,19 @@ html_theme_options = {
         'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
         'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
     },
+    'switcher': {
+        'json_url': 'https://torchgeo.readthedocs.io/en/stable/_static/switcher.json',
+        'version_match': version,
+    },
+    'navbar_start': ['navbar-logo', 'version-switcher'],
+    'navbar_center': ['navbar-nav'],
+    'navbar_end': ['theme-switcher', 'navbar-icon-links'],
 }
 
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['badge-height.css', 'notebook-prompt.css', 'table-scroll.css']
+html_css_files = ['notebook-prompt.css']
 
 # -- Extension configuration -------------------------------------------------
 
