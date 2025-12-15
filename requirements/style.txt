@@ -1,5 +1,5 @@
 # style
-mypy==1.19.0
+mypy==1.19.1
 pandas-stubs==2.3.3.251201
 ruff==0.14.9
 types-requests==2.32.4.20250913
