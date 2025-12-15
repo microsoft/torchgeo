@@ -1,12 +1,12 @@
 [
   {
     "name": "dev",
-    "version": "latest",
+    "version": "dev",
     "url": "https://torchgeo.readthedocs.io/en/latest/"
   },
   {
     "name": "0.8.0 (stable)",
-    "version": "stable",
+    "version": "v0.8.0",
     "url": "https://torchgeo.readthedocs.io/en/stable/",
     "preferred": true
   },
