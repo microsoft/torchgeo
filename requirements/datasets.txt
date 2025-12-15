@@ -4,7 +4,7 @@ h5py==3.14.0; python_version<'3.14'
 laspy==2.6.1
 netcdf4==1.7.3; python_version<'3.13'
 opencv-python==4.12.0.88; python_version<'3.14'
-pandas[parquet]==3.0.0rc0
+pandas[parquet]==2.3.3
 pycocotools==2.0.11
 rioxarray==0.19.0
 scikit-image==0.26.0
