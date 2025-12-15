@@ -77,6 +77,17 @@ nitpick_ignore = [
 # a list of builtin themes.
 html_theme = 'pydata_sphinx_theme'
 
+# Define the version we use for matching in the version switcher.
+version_match = os.environ.get('READTHEDOCS_VERSION')
+# If READTHEDOCS_VERSION doesn't exist, we're not on RTD
+# If it is an integer, we're in a PR build and the version isn't correct.
+# If it's "latest" → change to "dev" (that's what we want the switcher to call it)
+if not version_match or version_match.isdigit() or version_match == 'latest':
+    # For local development, infer the version to match from the package.
+    version_match = 'dev' if 'dev' in version else f'v{release}'
+elif version_match == 'stable':
+    version_match = f'v{release}'
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation: https://pydata-sphinx-theme.readthedocs.io/
@@ -106,7 +117,7 @@ html_theme_options = {
     },
     'switcher': {
         'json_url': 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json',
-        'version_match': version,
+        'version_match': version_match,
     },
     'navbar_start': ['navbar-logo', 'version-switcher'],
     'navbar_center': ['navbar-nav'],
