@@ -105,7 +105,7 @@ html_theme_options = {
         'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
     },
     'switcher': {
-        'json_url': 'https://torchgeo.readthedocs.io/en/stable/_static/switcher.json',
+        'json_url': 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json',
         'version_match': version,
     },
     'navbar_start': ['navbar-logo', 'version-switcher'],
