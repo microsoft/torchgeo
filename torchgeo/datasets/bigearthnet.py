@@ -862,31 +862,21 @@ class BigEarthNetV2(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
+        keys = ['s1', 's2'] if self.bands == 'all' else [self.bands]
+        keys += ['maps', 'metadata']
+        if self.bands != 'all':
+            to_remove = 's1' if self.bands == 's2' else 's2'
+            self.metadata_locs.pop(to_remove, None)
+        filenames = []
+        for k in keys:
+            entry = self.metadata_locs[k]['files']
+            filenames += [k for k, _ in entry.items()]
+
         exists = []
-        for key, metadata in self.metadata_locs.items():
-            exists.append(
-                os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
-            )
+        for file in filenames:
+            exists.append(os.path.exists(os.path.join(self.root, file)))
 
-        if all(exists):
-            return
-
-        # check if compressed files already exist
-        exists = []
-        for key, metadata in self.metadata_locs.items():
-            if key == 'metadata':
-                exists.append(
-                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
-                )
-            else:
-                for fname in metadata['files']:
-                    fpath = os.path.join(self.root, fname)
-                    exists.append(os.path.exists(fpath))
-
-        if all(exists):
-            return
-
-        if not self.download:
+        if not all(exists) and not self.download:
             raise DatasetNotFoundError(self)
 
         self._download()
@@ -914,14 +904,17 @@ class BigEarthNetV2(NonGeoDataset):
         for key, meta in self.metadata_locs.items():
             if key == 'metadata':
                 continue
-            parts = [os.path.join(self.root, f) for f in meta['files']]
+            parts = [os.path.join(self.root, f) for f in meta['files'].keys()]
             concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
-            with open(concat_path, 'wb') as outfile:
-                for part in parts:
-                    with open(part, 'rb') as g:
-                        while chunk := g.read(chunk_size):
-                            outfile.write(chunk)
-            extract_archive(concat_path, self.root)
+            if not os.path.exists(concat_path):
+                with open(concat_path, 'wb') as outfile:
+                    for part in parts:
+                        with open(part, 'rb') as g:
+                            while chunk := g.read(chunk_size):
+                                outfile.write(chunk)
+            extract_path = concat_path.removesuffix('.tar.gz')
+            if not os.path.exists(extract_path):
+                extract_archive(concat_path, self.root)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
