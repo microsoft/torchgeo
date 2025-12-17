@@ -256,6 +256,8 @@ def weighted_merge(
     output_path: str | Path | None = None,
     chunk_size: int = 4096,
     cog_config: dict[str, Any] | None = None,
+    dataset_bounds: tuple[float, float, float, float] | None = None,
+    dataset_res: float | None = None,
 ) -> None:
     """Merge patches from disk with weighted blending.
 
@@ -272,6 +274,8 @@ def weighted_merge(
         output_path: Where to save GeoTIFF.
         chunk_size: Size of chunks for processing.
         cog_config: COG configuration.
+        dataset_bounds: Original dataset bounds (minx, miny, maxx, maxy).
+        dataset_res: Original dataset resolution.
 
 
     """
@@ -280,9 +284,45 @@ def weighted_merge(
     first_patch = torch.load(patch_metadata[0]['file'])
     patch_h, patch_w = first_patch['logits'].shape[-2:]
 
-    output_shape, scene_transform = _reconstruct_scene_from_patches(
+    _, scene_transform = _reconstruct_scene_from_patches(
         patch_metadata, (patch_h, patch_w), delta
     )
+
+    # TODO: When delta > 0 and dataset_bounds is used, edge pixels (0 to delta-1)
+    # on west/north and (size-delta to size-1) on east/south remain uncovered
+    # because patches at boundaries still get delta-cropped. Possible fixes:
+    # (a) Skip delta cropping on boundary-touching edges per patch
+    # (b) Fill border with nearest neighbor values after merging
+    if dataset_bounds is not None and dataset_res is not None:
+        minx, miny, maxx, maxy = dataset_bounds
+        res = dataset_res[0] if not isinstance(dataset_res, float) else dataset_res
+        output_width = round((maxx - minx) / res)
+        output_height = round((maxy - miny) / res)
+        output_shape = (output_height, output_width)
+        scene_transform = Affine(res, 0, minx, 0, -res, maxy)
+
+        first_transform = patch_metadata[0]['transform']
+        x_res = first_transform[0].item()
+        y_res = first_transform[4].item()
+        effective_patch_h = patch_h - 2 * delta
+        effective_patch_w = patch_w - 2 * delta
+
+        for meta in patch_metadata:
+            geo_bbox = meta['geo_bbox']
+            patch_geo_xmin = geo_bbox[0] + delta * x_res
+            patch_geo_ymax = geo_bbox[3] - delta * abs(y_res)
+            patch_col_start = int((patch_geo_xmin - minx) / x_res)
+            patch_row_start = int((maxy - patch_geo_ymax) / abs(y_res))
+            meta['bbox'] = (
+                patch_col_start,
+                patch_row_start,
+                patch_col_start + effective_patch_w,
+                patch_row_start + effective_patch_h,
+            )
+    else:
+        output_shape, scene_transform = _reconstruct_scene_from_patches(
+            patch_metadata, (patch_h, patch_w), delta
+        )
 
     grid_size = chunk_size * 2
     grid = _build_grid_index(patch_metadata, grid_size)

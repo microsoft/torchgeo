@@ -67,6 +67,8 @@ class TiledInferenceCallback(Callback):
         self.patch_metadata: list[dict[str, Any]] = []
         self.num_classes: int | None = None
         self.crs: Any = None
+        self.dataset_bounds: tuple[float, float, float, float] | None = None
+        self.dataset_res: float | None = None
 
     def on_predict_start(self, trainer: Any, pl_module: Any) -> None:
         """Initialize state at start of prediction.
@@ -81,6 +83,16 @@ class TiledInferenceCallback(Callback):
             if hasattr(dataset, 'dataset'):
                 dataset = dataset.dataset
             self.crs = getattr(dataset, 'crs', None)
+            if hasattr(dataset, 'index') and hasattr(dataset.index, 'bounds'):
+                df = dataset.index.bounds
+                self.dataset_bounds = (
+                    float(df['minx'].min()),
+                    float(df['miny'].min()),
+                    float(df['maxx'].max()),
+                    float(df['maxy'].max()),
+                )
+            if hasattr(dataset, 'res'):
+                self.dataset_res = dataset.res
 
         self.temp_dir = self.output_path.parent / f'.tmp_{self.output_path.stem}'
         self.temp_dir.mkdir(exist_ok=True, parents=True)
@@ -176,6 +188,8 @@ class TiledInferenceCallback(Callback):
             output_path=self.output_path,
             chunk_size=self.chunk_size,
             cog_config=self.cog_config,
+            dataset_bounds=self.dataset_bounds,
+            dataset_res=self.dataset_res,
         )
 
         if self.temp_dir is not None and self.temp_dir.exists():
