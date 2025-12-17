@@ -1,7 +1,7 @@
-.. module:: torchgeo
+torchgeo
+========
 
-.. include:: ../README.md
-   :parser: myst_parser.sphinx_
+.. automodule:: torchgeo
 
 .. toctree::
    :maxdepth: 2
