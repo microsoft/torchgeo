@@ -33,7 +33,7 @@ def _reconstruct_scene_from_patches(
                 | d  e  f |   and a, e are x_res, y_res
                 | 0  0  1 |
         patch_size: Size of each patch as (height, width) in pixels.
-        delta: Pixels to crop from edges (unused, kept for API compatibility).
+        delta: Pixels to crop from patch edges before blending.
 
     Returns:
         output_shape: (height, width) of full scene.
@@ -65,18 +65,23 @@ def _reconstruct_scene_from_patches(
     global_geo_xmin = min(all_geo_xmin)
     global_geo_ymax = max(all_geo_ymax)
 
+    effective_geo_xmin = global_geo_xmin + delta * x_res
+    effective_geo_ymax = global_geo_ymax + delta * y_res
+
     patch_h, patch_w = patch_size
+    effective_patch_h = patch_h - 2 * delta
+    effective_patch_w = patch_w - 2 * delta
 
     for meta in patch_metadata:
         geo_bbox = meta['geo_bbox']
-        patch_col_start = round((geo_bbox[0] - global_geo_xmin) / x_res)
-        patch_row_start = round((global_geo_ymax - geo_bbox[3]) / abs(y_res))
+        patch_col_start = int((geo_bbox[0] - global_geo_xmin) / x_res) + delta
+        patch_row_start = int((global_geo_ymax - geo_bbox[3]) / abs(y_res)) + delta
 
         meta['bbox'] = (
             patch_col_start,
             patch_row_start,
-            patch_col_start + patch_w,
-            patch_row_start + patch_h,
+            patch_col_start + effective_patch_w,
+            patch_row_start + effective_patch_h,
         )
 
     all_x_starts = [meta['bbox'][0] for meta in patch_metadata]
@@ -89,7 +94,19 @@ def _reconstruct_scene_from_patches(
     max_x = max(all_x_stops)
     max_y = max(all_y_stops)
 
-    scene_transform = Affine(x_res, 0, global_geo_xmin, 0, y_res, global_geo_ymax)
+    for meta in patch_metadata:
+        bbox = meta['bbox']
+        meta['bbox'] = (
+            bbox[0] - min_x,
+            bbox[1] - min_y,
+            bbox[2] - min_x,
+            bbox[3] - min_y,
+        )
+
+    scene_geo_xmin = effective_geo_xmin + min_x * x_res
+    scene_geo_ymax = effective_geo_ymax + min_y * y_res
+
+    scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_geo_ymax)
 
     output_width = max_x - min_x
     output_height = max_y - min_y
@@ -267,11 +284,6 @@ def weighted_merge(
         patch_metadata, (patch_h, patch_w), delta
     )
 
-    x_res = scene_transform.a
-    y_res = scene_transform.e
-    global_geo_xmin = scene_transform.c
-    global_geo_ymax = scene_transform.f
-
     grid_size = chunk_size * 2
     grid = _build_grid_index(patch_metadata, grid_size)
 
@@ -313,14 +325,12 @@ def weighted_merge(
                 patch_data = torch.load(meta['file'])
                 logits = patch_data['logits'].numpy()
 
-                geo_bbox = meta['geo_bbox']
-                patch_col_start = int((geo_bbox[0] - global_geo_xmin) / x_res)
-                patch_row_start = int((global_geo_ymax - geo_bbox[3]) / abs(y_res))
-
                 if delta > 0:
                     logits = logits[:, delta:-delta, delta:-delta]
-                    patch_col_start += delta
-                    patch_row_start += delta
+
+                bbox = meta['bbox']
+                patch_col_start = bbox[0]
+                patch_row_start = bbox[1]
 
                 current_patch_h, current_patch_w = logits.shape[1], logits.shape[2]
 
@@ -367,7 +377,9 @@ def weighted_merge(
                     overlap_row_start:overlap_row_end, overlap_col_start:overlap_col_end
                 ] += mask_region
 
-            chunk_output = chunk_output / (chunk_weights[None, :, :] + 1e-8)
+            min_weight = blend_mask.min()
+            chunk_weights = np.maximum(chunk_weights, min_weight)
+            chunk_output = chunk_output / chunk_weights[None, :, :]
             chunk_labels = np.argmax(chunk_output, axis=0).astype(np.uint8)
 
             writer.write_chunk(chunk_labels, chunk_y, chunk_x)

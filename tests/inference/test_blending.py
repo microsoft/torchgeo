@@ -4,8 +4,11 @@
 
 """Tests for blending utilities."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
+import rasterio
 import torch
 from affine import Affine
 
@@ -14,6 +17,7 @@ from torchgeo.inference.blending import (
     _query_grid_index,
     _reconstruct_scene_from_patches,
     get_blend_mask,
+    weighted_merge,
 )
 
 
@@ -145,3 +149,142 @@ class TestGridIndexing:
         assert 0 in patch_ids
         assert 1 in patch_ids
         assert 2 not in patch_ids
+
+
+class TestExtentMismatch:
+    """Tests for output extent accuracy (Issue 1)."""
+
+    def test_extent_matches_input_bounds_3x3_grid(self) -> None:
+        """Verify output extent matches original input extent exactly.
+
+        Creates a 3x3 grid of overlapping patches covering exactly 160x160 pixels
+        at 1m resolution. The output shape and transform should match exactly.
+        """
+        patch_size = 64
+        stride = 48
+
+        origin_x, origin_y = 1000.0, 2000.0
+        res = 1.0
+
+        meta = []
+        for row in range(3):
+            for col in range(3):
+                geo_xmin = origin_x + col * stride * res
+                geo_ymax = origin_y - row * stride * res
+                geo_xmax = geo_xmin + patch_size * res
+                geo_ymin = geo_ymax - patch_size * res
+
+                meta.append(
+                    {
+                        'patch_id': row * 3 + col,
+                        'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                        'transform': torch.tensor(
+                            [res, 0, geo_xmin, 0, -res, geo_ymax]
+                        ),
+                    }
+                )
+
+        shape, transform = _reconstruct_scene_from_patches(
+            meta, (patch_size, patch_size)
+        )
+
+        expected_width = 2 * stride + patch_size
+        expected_height = 2 * stride + patch_size
+        assert shape == (expected_height, expected_width)
+        assert transform.c == pytest.approx(origin_x)
+        assert transform.f == pytest.approx(origin_y)
+
+
+class TestBlackBorder:
+    """Tests for edge blending artifacts (Issue 2)."""
+
+    def test_no_black_border_at_edges(self, tmp_path: Path) -> None:
+        """Verify edge pixels have valid values after blending.
+
+        Creates a 2x2 grid of patches where all patches predict class 1.
+        After blending, all pixels including edges/corners should be class 1.
+        This verifies that edge patches are correctly processed without artifacts.
+        """
+        patch_size = 64
+        overlap = 16
+        delta = 8
+        num_classes = 3
+        expected_class = 1
+        stride = patch_size - 2 * overlap
+
+        origin_x, origin_y = 0.0, 128.0
+        res = 1.0
+
+        patch_metadata = []
+        for row in range(2):
+            for col in range(2):
+                patch_id = row * 2 + col
+                geo_xmin = origin_x + col * stride * res
+                geo_ymax = origin_y - row * stride * res
+                geo_xmax = geo_xmin + patch_size * res
+                geo_ymin = geo_ymax - patch_size * res
+
+                logits = torch.zeros(num_classes, patch_size, patch_size)
+                logits[expected_class] = 1.0
+
+                patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
+                torch.save(
+                    {
+                        'logits': logits,
+                        'bounds': torch.tensor(
+                            [geo_xmin, geo_xmax, res, geo_ymin, geo_ymax, res]
+                        ),
+                        'transform': torch.tensor(
+                            [res, 0, geo_xmin, 0, -res, geo_ymax]
+                        ),
+                    },
+                    patch_file,
+                )
+
+                patch_metadata.append(
+                    {
+                        'patch_id': patch_id,
+                        'file': patch_file,
+                        'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                        'transform': torch.tensor(
+                            [res, 0, geo_xmin, 0, -res, geo_ymax]
+                        ),
+                    }
+                )
+
+        output_path = tmp_path / 'output.tif'
+        weighted_merge(
+            patch_metadata=patch_metadata,
+            num_classes=num_classes,
+            overlap=overlap,
+            delta=delta,
+            blend_method='cosine',
+            crs='EPSG:32631',
+            output_path=output_path,
+            chunk_size=256,
+        )
+
+        with rasterio.open(output_path) as src:
+            data = src.read(1)
+
+        assert data[0, 0] == expected_class, (
+            f'Top-left corner: {data[0, 0]} != {expected_class}'
+        )
+        assert data[0, -1] == expected_class, (
+            f'Top-right corner: {data[0, -1]} != {expected_class}'
+        )
+        assert data[-1, 0] == expected_class, (
+            f'Bottom-left corner: {data[-1, 0]} != {expected_class}'
+        )
+        assert data[-1, -1] == expected_class, (
+            f'Bottom-right corner: {data[-1, -1]} != {expected_class}'
+        )
+
+        assert np.all(data[0, :] == expected_class), 'Top edge has wrong values'
+        assert np.all(data[-1, :] == expected_class), 'Bottom edge has wrong values'
+        assert np.all(data[:, 0] == expected_class), 'Left edge has wrong values'
+        assert np.all(data[:, -1] == expected_class), 'Right edge has wrong values'
+
+        assert np.all(data == expected_class), (
+            f'Not all pixels are class {expected_class}'
+        )
