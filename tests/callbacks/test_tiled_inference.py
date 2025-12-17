@@ -66,7 +66,10 @@ class TestTiledInferenceCallback:
         outputs = {
             'logits': torch.randn(2, 5, 64, 64),
             'bounds': torch.tensor(
-                [[0, 64, 1, 0, 64, 1, 0, 1, 1], [64, 128, 1, 0, 64, 1, 0, 1, 1]]
+                [
+                    [0.0, 64.0, 1.0, 0.0, 64.0, 1.0, 0.0, 1.0, 1.0],
+                    [64.0, 128.0, 1.0, 0.0, 64.0, 1.0, 0.0, 1.0, 1.0],
+                ]
             ),
             'transform': torch.randn(2, 6),
         }
@@ -81,9 +84,9 @@ class TestTiledInferenceCallback:
         meta = callback.patch_metadata[0]
         assert 'patch_id' in meta
         assert 'file' in meta
-        assert 'bbox' in meta
+        assert 'geo_bbox' in meta
         assert 'transform' in meta
-        assert meta['bbox'] == (0, 0, 64, 64)
+        assert meta['geo_bbox'] == (0.0, 0.0, 64.0, 64.0)
 
     def test_on_predict_batch_end_missing_bounds_raises(
         self, callback: TiledInferenceCallback, tmp_path: Path
@@ -140,7 +143,7 @@ class TestTiledInferenceCallback:
             {
                 'patch_id': 0,
                 'file': patch_file,
-                'bbox': (0, 0, 64, 64),
+                'geo_bbox': (0.0, 0.0, 64.0, 64.0),
                 'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
             }
         ]

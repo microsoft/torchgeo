@@ -338,8 +338,8 @@ def time_series_split(
             )
 
         for other in lengths:
-            left = other.left
-            right = other.right
+            left = other.left  # type: ignore[union-attr]
+            right = other.right  # type: ignore[union-attr]
             if start < left < end or start < right < end:
                 raise ValueError("Pairs of timestamps in lengths can't overlap.")
 

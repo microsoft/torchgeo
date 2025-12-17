@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +41,7 @@ class TiledInferenceCallback(Callback):
         output_path: str | Path,
         overlap: int = 32,
         delta: int = 8,
-        blend_method: str = 'cosine',
+        blend_method: str = 'cosine',  # TODO: Get rid of linear
         chunk_size: int = 4096,
         cog_config: dict[str, Any] | None = None,
     ) -> None:
@@ -85,10 +86,6 @@ class TiledInferenceCallback(Callback):
         self.temp_dir.mkdir(exist_ok=True, parents=True)
         self.patch_metadata = []
 
-        print(f'Tiled inference: saving patches to {self.temp_dir}')
-        if self.crs:
-            print(f'Tiled inference: using CRS {self.crs}')
-
     def on_predict_batch_end(
         self,
         trainer: Any,
@@ -127,9 +124,9 @@ class TiledInferenceCallback(Callback):
         batch_size = logits.shape[0]
         for i in range(batch_size):
             patch_id = batch_idx * batch_size + i
-            patch_logits = logits[i].cpu()
-            bounds_tensor = bounds[i].cpu()
-            transform_tensor = transforms[i].cpu()
+            patch_logits = logits[i].cpu().clone()
+            bounds_tensor = bounds[i].cpu().clone()
+            transform_tensor = transforms[i].cpu().clone()
 
             assert self.temp_dir is not None
             patch_path = self.temp_dir / f'patch_{patch_id:06d}.pt'
@@ -142,22 +139,19 @@ class TiledInferenceCallback(Callback):
                 patch_path,
             )
 
-            x_start = int(bounds_tensor[0].item())
-            x_stop = int(bounds_tensor[1].item())
-            y_start = int(bounds_tensor[3].item())
-            y_stop = int(bounds_tensor[4].item())
+            geo_xmin = bounds_tensor[0].item()
+            geo_xmax = bounds_tensor[1].item()
+            geo_ymin = bounds_tensor[3].item()
+            geo_ymax = bounds_tensor[4].item()
 
             self.patch_metadata.append(
                 {
                     'patch_id': patch_id,
                     'file': patch_path,
-                    'bbox': (x_start, y_start, x_stop, y_stop),
+                    'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
                     'transform': transform_tensor,
                 }
             )
-
-        if batch_idx % 10 == 0:
-            print(f'Processed {len(self.patch_metadata)} patches...')
 
     def on_predict_epoch_end(self, trainer: Any, pl_module: Any) -> None:
         """Merge patches and write GeoTIFF.
@@ -171,26 +165,18 @@ class TiledInferenceCallback(Callback):
         if not self.patch_metadata:
             raise ValueError('No patches to merge')
 
-        print(f'Merging {len(self.patch_metadata)} patches...')
+        assert self.num_classes is not None
+        weighted_merge(
+            patch_metadata=self.patch_metadata,
+            num_classes=self.num_classes,
+            overlap=self.overlap,
+            delta=self.delta,
+            blend_method=self.blend_method,
+            crs=self.crs,
+            output_path=self.output_path,
+            chunk_size=self.chunk_size,
+            cog_config=self.cog_config,
+        )
 
-        try:
-            assert self.num_classes is not None
-            weighted_merge(
-                patch_metadata=self.patch_metadata,
-                num_classes=self.num_classes,
-                overlap=self.overlap,
-                delta=self.delta,
-                blend_method=self.blend_method,
-                crs=self.crs,
-                output_path=self.output_path,
-                chunk_size=self.chunk_size,
-                cog_config=self.cog_config,
-            )
-
-            print(f'✅ Inference complete: {self.output_path}')
-
-        finally:
-            if self.temp_dir and self.temp_dir.exists():
-                import shutil
-
-                shutil.rmtree(self.temp_dir)
+        if self.temp_dir is not None and self.temp_dir.exists():
+            shutil.rmtree(self.temp_dir)

@@ -35,7 +35,6 @@ class GeoTIFFWriter:
 
         writer.finalize()
 
-    .. versionadded:: 0.7
     """
 
     def __init__(
