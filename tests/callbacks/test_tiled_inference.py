@@ -159,3 +159,34 @@ class TestTiledInferenceCallback:
         """Test error when no patches collected."""
         with pytest.raises(ValueError, match='No patches to merge'):
             callback.on_predict_epoch_end(None, None)
+
+    def test_on_predict_start_nested_dataset(
+        self, callback: TiledInferenceCallback, tmp_path: Path
+    ) -> None:
+        """Test on_predict_start with nested dataset (e.g., IntersectionDataset)."""
+        import pandas as pd
+
+        class MockIndex:
+            bounds = pd.DataFrame(
+                {'minx': [0.0], 'miny': [0.0], 'maxx': [100.0], 'maxy': [100.0]}
+            )
+
+        class MockInnerDataset:
+            crs = 'EPSG:32631'
+            res = 1.0
+            index = MockIndex()
+
+        class MockOuterDataset:
+            dataset = MockInnerDataset()
+
+        class MockDatamodule:
+            predict_dataset = MockOuterDataset()
+
+        class MockTrainer:
+            datamodule = MockDatamodule()
+
+        callback.on_predict_start(MockTrainer(), None)
+
+        assert callback.crs == 'EPSG:32631'
+        assert callback.dataset_res == 1.0
+        assert callback.dataset_bounds == (0.0, 0.0, 100.0, 100.0)

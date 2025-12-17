@@ -116,7 +116,7 @@ def _reconstruct_scene_from_patches(
 
 def get_blend_mask(
     patch_size: int | tuple[int, int], overlap: int, delta: int, method: str = 'cosine'
-) -> np.ndarray:
+) -> np.typing.NDArray[np.floating[Any]]:
     """Generate blend mask for weighted patch merging.
 
     Uses the same formula as habitalp2 for proven compatibility.

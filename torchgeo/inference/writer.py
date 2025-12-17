@@ -92,7 +92,9 @@ class GeoTIFFWriter:
         self.dataset = rasterio.open(self.output_path, 'w', **kwargs)
         return self
 
-    def write_chunk(self, data: np.ndarray, y_offset: int, x_offset: int) -> None:
+    def write_chunk(
+        self, data: np.typing.NDArray[np.uint8], y_offset: int, x_offset: int
+    ) -> None:
         """Write a chunk to the output GeoTIFF.
 
         Args:

@@ -80,6 +80,11 @@ class TestReconstructSceneFromPatches:
         with pytest.raises(ValueError, match='Inconsistent resolutions'):
             _reconstruct_scene_from_patches(meta, (64, 64), delta=0)
 
+    def test_empty_metadata_raises(self) -> None:
+        """Test error on empty patch_metadata."""
+        with pytest.raises(ValueError, match='patch_metadata is empty'):
+            _reconstruct_scene_from_patches([], (64, 64), delta=0)
+
 
 class TestGetBlendMask:
     """Tests for get_blend_mask."""
@@ -98,6 +103,19 @@ class TestGetBlendMask:
         assert mask.shape == (64, 64)
         assert mask[0, 32] < mask[32, 32]
         assert mask[32, 32] == pytest.approx(1.0)
+
+    def test_with_overlap_linear(self) -> None:
+        """Test linear blend mask."""
+        mask = get_blend_mask(64, overlap=8, delta=0, method='linear')
+
+        assert mask.shape == (64, 64)
+        assert mask[0, 32] < mask[32, 32]
+        assert mask[32, 32] == pytest.approx(1.0)
+
+    def test_invalid_method_raises(self) -> None:
+        """Test invalid blend method raises error."""
+        with pytest.raises(ValueError, match='Unknown blend method'):
+            get_blend_mask(64, overlap=8, delta=0, method='invalid')
 
 
 class TestGridIndexing:
@@ -149,6 +167,33 @@ class TestGridIndexing:
         assert 0 in patch_ids
         assert 1 in patch_ids
         assert 2 not in patch_ids
+
+    def test_query_returns_non_overlapping_in_same_cell(self) -> None:
+        """Test grid query returns patches in same cell even if no pixel overlap.
+
+        This tests the scenario where patches in the same grid cell are returned
+        but don't actually overlap with the chunk at pixel level.
+        """
+        meta = [
+            {'patch_id': 0, 'bbox': (0, 0, 32, 32)},
+            {'patch_id': 1, 'bbox': (96, 96, 128, 128)},
+        ]
+        grid_size = 128
+        grid = _build_grid_index(meta, grid_size)
+
+        results = _query_grid_index(
+            grid,
+            meta,
+            chunk_y=0,
+            chunk_x=0,
+            chunk_h=64,
+            chunk_w=64,
+            grid_size=grid_size,
+        )
+
+        patch_ids = {r['patch_id'] for r in results}
+        assert 0 in patch_ids
+        assert 1 in patch_ids
 
 
 class TestExtentMismatch:
@@ -288,3 +333,140 @@ class TestBlackBorder:
         assert np.all(data == expected_class), (
             f'Not all pixels are class {expected_class}'
         )
+
+
+class TestNonOverlappingPatches:
+    """Tests for handling patches that don't overlap with chunks."""
+
+    def test_weighted_merge_skips_non_overlapping_patches(self, tmp_path: Path) -> None:
+        """Test weighted_merge skips patches that don't overlap with current chunk.
+
+        Creates two patches far apart but in the same grid cell (grid_size=1024).
+        When processing chunks, the grid query returns both patches, but the
+        overlap calculation should skip patches that don't actually overlap.
+        """
+        patch_size = 64
+        num_classes = 2
+        res = 1.0
+        origin_y = 564.0
+
+        patch_metadata = []
+        positions = [(0, 0), (500, 500)]
+        for patch_id, (col_offset, row_offset) in enumerate(positions):
+            geo_xmin = float(col_offset)
+            geo_ymax = origin_y - row_offset
+            geo_xmax = geo_xmin + patch_size * res
+            geo_ymin = geo_ymax - patch_size * res
+
+            logits = torch.zeros(num_classes, patch_size, patch_size)
+            logits[1] = 1.0
+
+            patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
+            torch.save(
+                {
+                    'logits': logits,
+                    'bounds': torch.tensor(
+                        [geo_xmin, geo_xmax, res, geo_ymin, geo_ymax, res]
+                    ),
+                    'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+                },
+                patch_file,
+            )
+
+            patch_metadata.append(
+                {
+                    'patch_id': patch_id,
+                    'file': patch_file,
+                    'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                    'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+                }
+            )
+
+        output_path = tmp_path / 'output_sparse.tif'
+        weighted_merge(
+            patch_metadata=patch_metadata,
+            num_classes=num_classes,
+            overlap=0,
+            delta=0,
+            blend_method='cosine',
+            crs='EPSG:32631',
+            output_path=output_path,
+            chunk_size=128,
+        )
+
+        with rasterio.open(output_path) as src:
+            data = src.read(1)
+            assert data[0, 0] == 1
+            assert data[500, 500] == 1
+
+
+class TestDatasetBoundsMode:
+    """Tests for weighted_merge with dataset_bounds parameter."""
+
+    def test_weighted_merge_with_dataset_bounds(self, tmp_path: Path) -> None:
+        """Test weighted_merge uses dataset_bounds for output extent."""
+        patch_size = 64
+        overlap = 16
+        delta = 8
+        num_classes = 3
+        expected_class = 1
+
+        dataset_bounds = (0.0, 0.0, 128.0, 128.0)
+        dataset_res = 1.0
+
+        patch_metadata = []
+        for row in range(2):
+            for col in range(2):
+                patch_id = row * 2 + col
+                geo_xmin = col * 32.0
+                geo_ymax = 128.0 - row * 32.0
+                geo_xmax = geo_xmin + patch_size
+                geo_ymin = geo_ymax - patch_size
+
+                logits = torch.zeros(num_classes, patch_size, patch_size)
+                logits[expected_class] = 1.0
+
+                patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
+                torch.save(
+                    {
+                        'logits': logits,
+                        'bounds': torch.tensor(
+                            [geo_xmin, geo_xmax, 1.0, geo_ymin, geo_ymax, 1.0]
+                        ),
+                        'transform': torch.tensor(
+                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                        ),
+                    },
+                    patch_file,
+                )
+
+                patch_metadata.append(
+                    {
+                        'patch_id': patch_id,
+                        'file': patch_file,
+                        'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                        'transform': torch.tensor(
+                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                        ),
+                    }
+                )
+
+        output_path = tmp_path / 'output_with_bounds.tif'
+        weighted_merge(
+            patch_metadata=patch_metadata,
+            num_classes=num_classes,
+            overlap=overlap,
+            delta=delta,
+            blend_method='cosine',
+            crs='EPSG:32631',
+            output_path=output_path,
+            chunk_size=256,
+            dataset_bounds=dataset_bounds,
+            dataset_res=dataset_res,
+        )
+
+        with rasterio.open(output_path) as src:
+            data = src.read(1)
+            assert src.width == 128
+            assert src.height == 128
+            assert data.shape == (128, 128)
