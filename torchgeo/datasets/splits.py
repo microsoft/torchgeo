@@ -3,6 +3,8 @@
 
 """Dataset splitting utilities."""
 
+from __future__ import annotations
+
 import itertools
 from collections.abc import Sequence
 from copy import deepcopy
@@ -283,7 +285,9 @@ def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
 
 def time_series_split(
     dataset: GeoDataset,
-    lengths: Sequence[float] | Sequence[pd.Timedelta] | Sequence[pd.Interval],
+    lengths: Sequence[float]
+    | Sequence[pd.Timedelta]
+    | Sequence[pd.Interval[pd.Timestamp]],
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -319,7 +323,7 @@ def time_series_split(
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[pd.Interval], lengths)
+    lengths = cast('Sequence[pd.Interval[pd.Timestamp]]', lengths)
 
     _totalt = pd.Timedelta(0)
     new_datasets = []

@@ -3,6 +3,8 @@
 
 """TorchGeo samplers."""
 
+from __future__ import annotations
+
 import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
@@ -34,7 +36,7 @@ class GeoSampler(Sampler[GeoSlice], abc.ABC):
         self,
         dataset: GeoDataset,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -96,7 +98,7 @@ class RandomGeoSampler(GeoSampler):
         size: tuple[float, float] | float,
         length: int | None = None,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -217,7 +219,7 @@ class GridGeoSampler(GeoSampler):
         size: tuple[float, float] | float,
         stride: tuple[float, float] | float | None = None,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -319,7 +321,7 @@ class PreChippedGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,
+        toi: pd.Interval[pd.Timestamp] | None = None,
         shuffle: bool = False,
         generator: Generator | None = None,
     ) -> None:
