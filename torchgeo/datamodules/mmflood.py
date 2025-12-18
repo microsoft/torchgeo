@@ -8,10 +8,10 @@ from typing import Any
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
+from shapely import Polygon
 from torch import Tensor
 
 from ..datasets import MMFlood
-from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -99,7 +99,7 @@ class MMFloodDataModule(GeoDataModule):
         return self.median[idxs], self.std[idxs]
 
     def setup(
-        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+        self, stage: str, roi: Polygon | None = None, stride: int | None = None
     ) -> None:
         """Set up datasets.
 

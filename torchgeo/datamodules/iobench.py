@@ -5,8 +5,9 @@
 
 from typing import Any
 
+from shapely import Polygon
+
 from ..datasets import IOBench
-from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomGeoSampler
 from .geo import GeoDataModule
 
@@ -45,7 +46,7 @@ class IOBenchDataModule(GeoDataModule):
         )
 
     def setup(
-        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+        self, stage: str, roi: Polygon | None = None, stride: int | None = None
     ) -> None:
         """Set up datasets.
 

@@ -7,10 +7,10 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch.nn.functional as F
+from shapely import Polygon
 from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
-from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
 
@@ -95,7 +95,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         )
 
     def setup(
-        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+        self, stage: str, roi: Polygon | None = None, stride: int | None = None
     ) -> None:
         """Set up datasets and samplers.
 

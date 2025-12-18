@@ -8,6 +8,7 @@ from typing import Any
 import kornia.augmentation as K
 import shapely
 from matplotlib.figure import Figure
+from shapely import Polygon
 
 from ..datasets import (
     NAIP,
@@ -19,7 +20,6 @@ from ..datasets import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
-from ..datasets.utils import BoundingBox
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
 
@@ -67,7 +67,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         )
 
     def setup(
-        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+        self, stage: str, roi: Polygon | None = None, stride: int | None = None
     ) -> None:
         """Set up datasets and samplers.
 
