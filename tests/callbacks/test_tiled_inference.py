@@ -190,3 +190,25 @@ class TestTiledInferenceCallback:
         assert callback.crs == 'EPSG:32631'
         assert callback.dataset_res == 1.0
         assert callback.dataset_bounds == (0.0, 0.0, 100.0, 100.0)
+
+    def test_on_predict_start_disables_prediction_storage(
+        self, callback: TiledInferenceCallback, tmp_path: Path
+    ) -> None:
+        """Test that prediction storage is disabled to prevent memory leak."""
+
+        class MockPredictLoop:
+            return_predictions = True
+
+        class MockDataset:
+            crs = 'EPSG:32631'
+
+        class MockDatamodule:
+            predict_dataset = MockDataset()
+
+        class MockTrainer:
+            predict_loop = MockPredictLoop()
+            datamodule = MockDatamodule()
+
+        callback.on_predict_start(MockTrainer(), None)
+
+        assert MockTrainer.predict_loop.return_predictions is False

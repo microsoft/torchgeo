@@ -77,6 +77,9 @@ class TiledInferenceCallback(Callback):
             trainer: PyTorch Lightning trainer.
             pl_module: PyTorch Lightning module.
         """
+        if hasattr(trainer, 'predict_loop'):
+            trainer.predict_loop.return_predictions = False
+
         datamodule = trainer.datamodule
         if hasattr(datamodule, 'predict_dataset'):
             dataset = datamodule.predict_dataset
