@@ -10,11 +10,11 @@ import kornia.augmentation as K
 import torch
 from lightning.pytorch import LightningDataModule
 from matplotlib.figure import Figure
+from shapely import Polygon
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
-from ..datasets.utils import BoundingBox
 from ..samplers import (
     BatchGeoSampler,
     GeoSampler,
@@ -214,7 +214,7 @@ class GeoDataModule(BaseDataModule):
         self.predict_batch_sampler: BatchGeoSampler | None = None
 
     def setup(
-        self, stage: str, roi: BoundingBox | None = None, stride: int | None = None
+        self, stage: str, roi: Polygon | None = None, stride: int | None = None
     ) -> None:
         """Set up datasets and samplers.
 
