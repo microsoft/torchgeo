@@ -9,7 +9,7 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from ..datasets import OSCD
+from ..datasets import OSCD, OSCD100
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -113,3 +113,45 @@ class OSCDDataModule(NonGeoDataModule):
                 keepdim=True,
             )
             self.test_dataset = OSCD(split='test', transforms=transforms, **self.kwargs)
+
+
+class OSCD100DataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the OSCD100 dataset.
+
+    Intended for tutorials and demonstrations, not benchmarking.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(
+        self, batch_size: int = 8, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new OSCD100DataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.OSCD100`.
+        """
+        super().__init__(
+            OSCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
+        )
+
+        self.train_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.val_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )

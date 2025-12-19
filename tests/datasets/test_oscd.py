@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import OSCD, DatasetNotFoundError, RGBBandsMissingError
+from torchgeo.datasets import OSCD, OSCD100, DatasetNotFoundError, RGBBandsMissingError
 
 
 class TestOSCD:
@@ -111,3 +111,63 @@ class TestOSCD:
         ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle='Test')
+
+
+class TestOSCD100:
+    @pytest.fixture(params=['train', 'val', 'test'])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> OSCD100:
+        directory = os.path.join('tests', 'data', 'oscd', 'oscd100')
+        splits = {
+            'train': {
+                'url': os.path.join(directory, 'oscd100_train.zip'),
+                'filename': 'oscd100_train.zip',
+                'md5': '7cdac1119cff05b45f99c1d220271850',
+            },
+            'val': {
+                'url': os.path.join(directory, 'oscd100_val.zip'),
+                'filename': 'oscd100_val.zip',
+                'md5': '1b2b2e1a24c03991248cbe0edb405540',
+            },
+            'test': {
+                'url': os.path.join(directory, 'oscd100_test.zip'),
+                'filename': 'oscd100_test.zip',
+                'md5': '168a307336091795ba0809085e20ca31',
+            },
+        }
+        monkeypatch.setattr(OSCD100, 'splits', splits)
+        root = tmp_path
+        split = request.param
+        transforms = nn.Identity()
+        return OSCD100(root, split, transforms, download=True)
+
+    def test_getitem(self, dataset: OSCD100) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert x['image'].shape[1] == 3
+
+    def test_len(self, dataset: OSCD100) -> None:
+        assert len(dataset) == 2
+
+    def test_already_downloaded(self, dataset: OSCD100) -> None:
+        OSCD100(root=dataset.root, download=True)
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            OSCD100(split='foo')
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            OSCD100(tmp_path)
+
+    def test_plot(self, dataset: OSCD100) -> None:
+        dataset.plot(dataset[0], suptitle='Test')
+        plt.close()
+
+        sample = dataset[0]
+        sample['prediction'] = sample['mask'].clone()
+        dataset.plot(sample, suptitle='Prediction')
+        plt.close()
