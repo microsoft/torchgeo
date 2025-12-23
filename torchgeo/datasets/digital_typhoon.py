@@ -6,7 +6,7 @@
 import glob
 import os
 import tarfile
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Hashable, Sequence
 from typing import Any, ClassVar, TypedDict
 
 import einops
@@ -176,7 +176,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Compute the hour difference between the first and second entry
         self.aux_df['hour_diff_to_next'] = (
-            self.aux_df.groupby('id')['datetime']  # type: ignore[attr-defined]
+            self.aux_df.groupby('id')['datetime']
             .shift(-1)
             .sub(self.aux_df['datetime'])
             .abs()
@@ -210,8 +210,12 @@ class DigitalTyphoon(NonGeoDataset):
                 self.aux_df = self.aux_df[self.aux_df[feature] <= max_value]
 
         # collect target mean and std for each target
-        self.target_mean: dict[str, float] = self.aux_df[self.targets].mean().to_dict()
-        self.target_std: dict[str, float] = self.aux_df[self.targets].std().to_dict()
+        self.target_mean: dict[Hashable, float] = (
+            self.aux_df[self.targets].mean().to_dict()
+        )
+        self.target_std: dict[Hashable, float] = (
+            self.aux_df[self.targets].std().to_dict()
+        )
 
         def _get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
             """Generate all possible subsequences of length k for a given group.
