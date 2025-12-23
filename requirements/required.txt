@@ -1,6 +1,6 @@
 # required
 einops==0.8.1
-geopandas==1.1.1
+geopandas==1.1.2
 jsonargparse[signatures]==4.44.0
 kornia==0.8.2
 lightly==1.5.22
