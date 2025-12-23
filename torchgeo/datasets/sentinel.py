@@ -121,7 +121,7 @@ class Sentinel1(Sentinel):
     # ssss:       Product ID
     filename_glob = 'S1*{}.*'
     filename_regex = r"""
-        ^S1(?P<mission>[AB])
+        ^S1(?P<mission>[A-D])
         _(?P<mode>SM|IW|EW|WV)
         _(?P<date>\d{8}T\d{6})
         _(?P<polarization>[DS][HV])
