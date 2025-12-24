@@ -6,7 +6,7 @@
 import glob
 import os
 import tarfile
-from collections.abc import Callable, Hashable, Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, ClassVar, TypedDict
 
 import einops
