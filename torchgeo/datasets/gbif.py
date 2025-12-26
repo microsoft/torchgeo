@@ -62,18 +62,18 @@ class GBIF(GeoDataset):
         usecols = ['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year']
         dtype = {'day': str, 'month': str, 'year': str}
         df = pd.read_table(files[0], usecols=usecols, dtype=dtype)  # type: ignore[arg-type]
-        df = df[df.decimalLatitude.notna()]
-        df = df[df.decimalLongitude.notna()]
-        df.day = df.day.str.zfill(2)
-        df.month = df.month.str.zfill(2)
-        date = df.day + ' ' + df.month + ' ' + df.year
+        df = df[df['decimalLatitude'].notna()]
+        df = df[df['decimalLongitude'].notna()]
+        df['day'] = df['day'].str.zfill(2)
+        df['month'] = df['month'].str.zfill(2)
+        date = df['day'] + ' ' + df['month'] + ' ' + df['year']
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
         func = functools.partial(disambiguate_timestamp, format='%d %m %Y')
         index = pd.IntervalIndex.from_tuples(
-            date.apply(func), closed='both', name='datetime'
+            date.apply(func).to_list(), closed='both', name='datetime'
         )
-        geometry = gpd.points_from_xy(df.decimalLongitude, df.decimalLatitude)
+        geometry = gpd.points_from_xy(df['decimalLongitude'], df['decimalLatitude'])
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:

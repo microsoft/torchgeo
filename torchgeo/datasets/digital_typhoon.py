@@ -176,7 +176,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Compute the hour difference between the first and second entry
         self.aux_df['hour_diff_to_next'] = (
-            self.aux_df.groupby('id')['datetime']  # type: ignore[attr-defined]
+            self.aux_df.groupby('id')['datetime']
             .shift(-1)
             .sub(self.aux_df['datetime'])
             .abs()
@@ -210,8 +210,8 @@ class DigitalTyphoon(NonGeoDataset):
                 self.aux_df = self.aux_df[self.aux_df[feature] <= max_value]
 
         # collect target mean and std for each target
-        self.target_mean: dict[str, float] = self.aux_df[self.targets].mean().to_dict()
-        self.target_std: dict[str, float] = self.aux_df[self.targets].std().to_dict()
+        self.target_mean = self.aux_df[self.targets].mean().to_dict()
+        self.target_std = self.aux_df[self.targets].std().to_dict()
 
         def _get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
             """Generate all possible subsequences of length k for a given group.
@@ -335,7 +335,7 @@ class DigitalTyphoon(NonGeoDataset):
         ).float()
         return tensor
 
-    def _load_features(self, filepath: str, image_path: str) -> dict[str, Any]:
+    def _load_features(self, filepath: str, image_path: str) -> dict[str, Tensor]:
         """Load features for the corresponding image.
 
         Args:
@@ -354,8 +354,8 @@ class DigitalTyphoon(NonGeoDataset):
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
-                feature_dict[feature] = (
-                    feature_dict[feature] - mean
+                feature_dict[feature] = (  # type: ignore[index]
+                    feature_dict[feature] - mean  # type: ignore[index]
                 ) / self.target_std[feature]
         return feature_dict
 
