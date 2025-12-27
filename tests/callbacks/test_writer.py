@@ -11,7 +11,7 @@ import pytest
 import rasterio
 from affine import Affine
 
-from torchgeo.inference.writer import GeoTIFFWriter
+from torchgeo.callbacks._writer import GeoTIFFWriter
 
 
 class TestGeoTIFFWriter:

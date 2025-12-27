@@ -279,7 +279,7 @@ def weighted_merge(
 
 
     """
-    from torchgeo.inference.writer import GeoTIFFWriter
+    from torchgeo.callbacks._writer import GeoTIFFWriter
 
     first_patch = torch.load(patch_metadata[0]['file'])
     patch_h, patch_w = first_patch['logits'].shape[-2:]

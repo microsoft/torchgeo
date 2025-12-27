@@ -175,7 +175,7 @@ class TiledInferenceCallback(Callback):
             trainer: PyTorch Lightning trainer.
             pl_module: PyTorch Lightning module.
         """
-        from torchgeo.inference.blending import weighted_merge
+        from torchgeo.callbacks._blending import weighted_merge
 
         if not self.patch_metadata:
             raise ValueError('No patches to merge')

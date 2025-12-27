@@ -12,7 +12,7 @@ import rasterio
 import torch
 from affine import Affine
 
-from torchgeo.inference.blending import (
+from torchgeo.callbacks._blending import (
     _build_grid_index,
     _query_grid_index,
     _reconstruct_scene_from_patches,
