@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -25,12 +26,11 @@ class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
         md5s = {
-            2011: '3346297a3cb53c9bd1c7e03b2e6e2d74',
-            2019: 'a307cdaa1add9dae05efe02fec4c33bb',
+            2011: '531fcba859a0bee6bfeb362a26f6a07f',
+            2019: '19a64a25e3c36d8d51b40ab59bddc1ec',
         }
         monkeypatch.setattr(NLCD, 'md5s', md5s)
-
-        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif')
+        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -68,15 +68,20 @@ class TestNLCD:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
 
+    def test_full_year(self, dataset: NLCD) -> None:
+        time = pd.Timestamp(2019, 6, 1)
+        query = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
+        dataset[query]
+
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(dataset.paths, download=True, years=[2019])
+        NLCD(dataset.paths, years=[2011, 2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join(
-            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_2019_CU_C1V0.tif'
-        )
+        pathname = os.path.join('tests', 'data', 'nlcd', '*_CU_C1V1.zip')
         root = tmp_path
-        shutil.copy(pathname, root)
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+
         NLCD(root, years=[2019])
 
     def test_invalid_year(self, tmp_path: Path) -> None:
