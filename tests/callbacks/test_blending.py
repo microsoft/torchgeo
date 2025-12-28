@@ -14,6 +14,7 @@ from affine import Affine
 
 from torchgeo.callbacks._blending import (
     _build_grid_index,
+    _get_edge_deltas,
     _query_grid_index,
     _reconstruct_scene_from_patches,
     get_blend_mask,
@@ -86,6 +87,78 @@ class TestReconstructSceneFromPatches:
             _reconstruct_scene_from_patches([], (64, 64), delta=0)
 
 
+class TestGetEdgeDeltas:
+    """Tests for _get_edge_deltas."""
+
+    def test_corner_patch_two_edges_zero(self) -> None:
+        """Corner patches get delta=0 on two boundary-touching edges."""
+        scene_bounds = (0.0, 0.0, 100.0, 100.0)
+        pixel_size = 1.0
+        delta = 8
+
+        top_left = (0.0, 36.0, 64.0, 100.0)
+        result = _get_edge_deltas(top_left, scene_bounds, pixel_size, delta)
+        assert result == (0, delta, 0, delta)
+
+        bottom_right = (36.0, 0.0, 100.0, 64.0)
+        result = _get_edge_deltas(bottom_right, scene_bounds, pixel_size, delta)
+        assert result == (delta, 0, delta, 0)
+
+    def test_interior_patch_all_edges_delta(self) -> None:
+        """Interior patches get delta on all edges."""
+        scene_bounds = (0.0, 0.0, 200.0, 200.0)
+        interior_patch = (68.0, 68.0, 132.0, 132.0)
+        pixel_size = 1.0
+        delta = 8
+
+        result = _get_edge_deltas(interior_patch, scene_bounds, pixel_size, delta)
+        assert result == (delta, delta, delta, delta)
+
+    def test_boundary_edge_single_edge_zero(self) -> None:
+        """Patches on one boundary get delta=0 on that edge only."""
+        scene_bounds = (0.0, 0.0, 200.0, 200.0)
+        pixel_size = 1.0
+        delta = 8
+
+        top_edge = (68.0, 136.0, 132.0, 200.0)
+        result = _get_edge_deltas(top_edge, scene_bounds, pixel_size, delta)
+        assert result == (0, delta, delta, delta)
+
+        left_edge = (0.0, 68.0, 64.0, 132.0)
+        result = _get_edge_deltas(left_edge, scene_bounds, pixel_size, delta)
+        assert result == (delta, delta, 0, delta)
+
+    def test_tolerance_within_threshold(self) -> None:
+        """Patches within 1.5 pixels of boundary count as boundary-touching."""
+        scene_bounds = (0.0, 0.0, 100.0, 100.0)
+        pixel_size = 1.0
+        delta = 8
+
+        almost_top = (32.0, 36.0, 68.0, 99.5)
+        result = _get_edge_deltas(almost_top, scene_bounds, pixel_size, delta)
+        assert result[0] == 0
+
+    def test_tolerance_outside_threshold(self) -> None:
+        """Patches beyond 1.5 pixels from boundary don't count as boundary."""
+        scene_bounds = (0.0, 0.0, 100.0, 100.0)
+        pixel_size = 1.0
+        delta = 8
+
+        not_at_top = (32.0, 36.0, 68.0, 98.0)
+        result = _get_edge_deltas(not_at_top, scene_bounds, pixel_size, delta)
+        assert result[0] == delta
+
+    def test_single_patch_all_edges_zero(self) -> None:
+        """Single patch covering entire scene has delta=0 on all edges."""
+        scene_bounds = (0.0, 0.0, 64.0, 64.0)
+        patch = (0.0, 0.0, 64.0, 64.0)
+        pixel_size = 1.0
+        delta = 8
+
+        result = _get_edge_deltas(patch, scene_bounds, pixel_size, delta)
+        assert result == (0, 0, 0, 0)
+
+
 class TestGetBlendMask:
     """Tests for get_blend_mask."""
 
@@ -116,6 +189,37 @@ class TestGetBlendMask:
         """Test invalid blend method raises error."""
         with pytest.raises(ValueError, match='Unknown blend method'):
             get_blend_mask(64, overlap=8, delta=0, method='invalid')
+
+    def test_edge_deltas_suppresses_ramp(self) -> None:
+        """Edges with delta=0 in edge_deltas get no blend ramp (weight=1)."""
+        edge_deltas = (0, 8, 0, 8)
+        mask = get_blend_mask(
+            64, overlap=8, delta=8, method='cosine', edge_deltas=edge_deltas
+        )
+
+        assert mask.shape == (56, 56)
+        assert mask[0, 28] == pytest.approx(1.0, rel=1e-4)
+        assert mask[-1, 28] < 1.0
+
+    def test_asymmetric_edge_deltas(self) -> None:
+        """Different deltas on each edge produce asymmetric mask."""
+        edge_deltas = (4, 8, 2, 6)
+        mask = get_blend_mask(
+            64, overlap=8, delta=8, method='cosine', edge_deltas=edge_deltas
+        )
+
+        expected_h = 64 - 4 - 8
+        expected_w = 64 - 2 - 6
+        assert mask.shape == (expected_h, expected_w)
+
+    def test_edge_deltas_none_uses_uniform_delta(self) -> None:
+        """When edge_deltas is None, uniform delta is used."""
+        mask_uniform = get_blend_mask(64, overlap=8, delta=8, method='cosine')
+        mask_explicit = get_blend_mask(
+            64, overlap=8, delta=8, method='cosine', edge_deltas=(8, 8, 8, 8)
+        )
+
+        np.testing.assert_allclose(mask_uniform, mask_explicit)
 
 
 class TestGridIndexing:
@@ -470,3 +574,130 @@ class TestDatasetBoundsMode:
             assert src.width == 128
             assert src.height == 128
             assert data.shape == (128, 128)
+
+    def test_dataset_bounds_edge_coverage(self, tmp_path: Path) -> None:
+        """Using dataset_bounds still produces full edge coverage with delta > 0."""
+        patch_size = 64
+        overlap = 16
+        delta = 8
+        num_classes = 2
+        expected_class = 1
+
+        dataset_bounds = (0.0, 0.0, 96.0, 96.0)
+        dataset_res = 1.0
+
+        patch_metadata = []
+        for row in range(2):
+            for col in range(2):
+                patch_id = row * 2 + col
+                geo_xmin = col * 32.0
+                geo_ymax = 96.0 - row * 32.0
+                geo_xmax = geo_xmin + patch_size
+                geo_ymin = geo_ymax - patch_size
+
+                logits = torch.zeros(num_classes, patch_size, patch_size)
+                logits[expected_class] = 1.0
+
+                patch_file = tmp_path / f'patch_bounds_{patch_id:06d}.pt'
+                torch.save(
+                    {
+                        'logits': logits,
+                        'transform': torch.tensor(
+                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                        ),
+                    },
+                    patch_file,
+                )
+
+                patch_metadata.append(
+                    {
+                        'patch_id': patch_id,
+                        'file': patch_file,
+                        'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                        'transform': torch.tensor(
+                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                        ),
+                    }
+                )
+
+        output_path = tmp_path / 'output_bounds_edge.tif'
+        weighted_merge(
+            patch_metadata=patch_metadata,
+            num_classes=num_classes,
+            overlap=overlap,
+            delta=delta,
+            blend_method='cosine',
+            crs='EPSG:32631',
+            output_path=output_path,
+            chunk_size=256,
+            dataset_bounds=dataset_bounds,
+            dataset_res=dataset_res,
+        )
+
+        with rasterio.open(output_path) as src:
+            data = src.read(1)
+
+        assert np.all(data[0, :] == expected_class), 'Top edge has wrong values'
+        assert np.all(data[-1, :] == expected_class), 'Bottom edge has wrong values'
+        assert np.all(data[:, 0] == expected_class), 'Left edge has wrong values'
+        assert np.all(data[:, -1] == expected_class), 'Right edge has wrong values'
+
+
+class TestSinglePatchScene:
+    """Tests for single-patch scenes."""
+
+    def test_single_patch_no_black_border(self, tmp_path: Path) -> None:
+        """Single patch covering entire scene has no black borders with delta > 0."""
+        patch_size = 64
+        delta = 8
+        num_classes = 2
+        expected_class = 1
+        res = 1.0
+
+        geo_xmin = 0.0
+        geo_ymax = 64.0
+        geo_xmax = 64.0
+        geo_ymin = 0.0
+
+        logits = torch.zeros(num_classes, patch_size, patch_size)
+        logits[expected_class] = 1.0
+
+        patch_file = tmp_path / 'single_patch.pt'
+        torch.save(
+            {
+                'logits': logits,
+                'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+            },
+            patch_file,
+        )
+
+        patch_metadata = [
+            {
+                'patch_id': 0,
+                'file': patch_file,
+                'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
+                'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+            }
+        ]
+
+        output_path = tmp_path / 'single_patch_output.tif'
+        weighted_merge(
+            patch_metadata=patch_metadata,
+            num_classes=num_classes,
+            overlap=0,
+            delta=delta,
+            blend_method='cosine',
+            crs='EPSG:32631',
+            output_path=output_path,
+            chunk_size=256,
+        )
+
+        with rasterio.open(output_path) as src:
+            data = src.read(1)
+
+        assert data.shape == (64, 64)
+        assert np.all(data == expected_class), 'Single patch has wrong values'
+        assert data[0, 0] == expected_class, 'Top-left corner wrong'
+        assert data[0, -1] == expected_class, 'Top-right corner wrong'
+        assert data[-1, 0] == expected_class, 'Bottom-left corner wrong'
+        assert data[-1, -1] == expected_class, 'Bottom-right corner wrong'

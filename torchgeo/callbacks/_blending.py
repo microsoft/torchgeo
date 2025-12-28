@@ -16,6 +16,42 @@ from affine import Affine
 from tqdm import tqdm
 
 
+def _get_edge_deltas(
+    geo_bbox: tuple[float, float, float, float],
+    scene_bounds: tuple[float, float, float, float],
+    pixel_size: float,
+    delta: int,
+) -> tuple[int, int, int, int]:
+    """Compute per-edge crop amounts based on boundary proximity.
+
+    Patches touching scene boundaries preserve their edge pixels (delta=0 on that
+    edge) to avoid black borders. Interior edges are cropped normally to remove
+    neural network edge artifacts.
+
+    A tolerance of 1.5 * pixel_size is used for boundary detection to handle
+    floating-point imprecision. This means patches within 1.5 pixels of a scene
+    boundary are treated as boundary-touching.
+
+    Args:
+        geo_bbox: Patch bounds as (xmin, ymin, xmax, ymax) in geo coordinates.
+        scene_bounds: Scene bounds as (minx, miny, maxx, maxy) in geo coordinates.
+        pixel_size: Size of one pixel in geo units.
+        delta: Default pixels to crop from edges.
+
+    Returns:
+        Tuple of (top, bottom, left, right) crop amounts in pixels.
+    """
+    minx, miny, maxx, maxy = scene_bounds
+    tolerance = abs(pixel_size) * 1.5
+
+    top = 0 if abs(geo_bbox[3] - maxy) < tolerance else delta
+    bottom = 0 if abs(geo_bbox[1] - miny) < tolerance else delta
+    left = 0 if abs(geo_bbox[0] - minx) < tolerance else delta
+    right = 0 if abs(geo_bbox[2] - maxx) < tolerance else delta
+
+    return top, bottom, left, right
+
+
 def _reconstruct_scene_from_patches(
     patch_metadata: list[dict[str, Any]], patch_size: tuple[int, int], delta: int = 0
 ) -> tuple[tuple[int, int], Affine]:
@@ -60,22 +96,34 @@ def _reconstruct_scene_from_patches(
             )
 
     all_geo_xmin = [meta['geo_bbox'][0] for meta in patch_metadata]
+    all_geo_xmax = [meta['geo_bbox'][2] for meta in patch_metadata]
+    all_geo_ymin = [meta['geo_bbox'][1] for meta in patch_metadata]
     all_geo_ymax = [meta['geo_bbox'][3] for meta in patch_metadata]
 
-    global_geo_xmin = min(all_geo_xmin)
-    global_geo_ymax = max(all_geo_ymax)
-
-    effective_geo_xmin = global_geo_xmin + delta * x_res
-    effective_geo_ymax = global_geo_ymax + delta * y_res
+    scene_bounds = (
+        min(all_geo_xmin),
+        min(all_geo_ymin),
+        max(all_geo_xmax),
+        max(all_geo_ymax),
+    )
+    global_geo_xmin, _, _, global_geo_ymax = scene_bounds
 
     patch_h, patch_w = patch_size
-    effective_patch_h = patch_h - 2 * delta
-    effective_patch_w = patch_w - 2 * delta
 
     for meta in patch_metadata:
         geo_bbox = meta['geo_bbox']
-        patch_col_start = int((geo_bbox[0] - global_geo_xmin) / x_res) + delta
-        patch_row_start = int((global_geo_ymax - geo_bbox[3]) / abs(y_res)) + delta
+        top, bottom, left, right = _get_edge_deltas(
+            geo_bbox, scene_bounds, x_res, delta
+        )
+        meta['edge_deltas'] = (top, bottom, left, right)
+
+        patch_geo_xmin = geo_bbox[0] + left * x_res
+        patch_geo_ymax = geo_bbox[3] - top * abs(y_res)
+        effective_patch_w = patch_w - left - right
+        effective_patch_h = patch_h - top - bottom
+
+        patch_col_start = round((patch_geo_xmin - global_geo_xmin) / x_res)
+        patch_row_start = round((global_geo_ymax - patch_geo_ymax) / abs(y_res))
 
         meta['bbox'] = (
             patch_col_start,
@@ -103,8 +151,8 @@ def _reconstruct_scene_from_patches(
             bbox[3] - min_y,
         )
 
-    scene_geo_xmin = effective_geo_xmin + min_x * x_res
-    scene_geo_ymax = effective_geo_ymax + min_y * y_res
+    scene_geo_xmin = global_geo_xmin + min_x * x_res
+    scene_geo_ymax = global_geo_ymax + min_y * y_res
 
     scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_geo_ymax)
 
@@ -115,7 +163,11 @@ def _reconstruct_scene_from_patches(
 
 
 def get_blend_mask(
-    patch_size: int | tuple[int, int], overlap: int, delta: int, method: str = 'cosine'
+    patch_size: int | tuple[int, int],
+    overlap: int,
+    delta: int,
+    method: str = 'cosine',
+    edge_deltas: tuple[int, int, int, int] | None = None,
 ) -> np.typing.NDArray[np.floating[Any]]:
     """Generate blend mask for weighted patch merging.
 
@@ -124,11 +176,13 @@ def get_blend_mask(
     Args:
         patch_size: Size of patch (H, W) or single int.
         overlap: Overlap in pixels on each side.
-        delta: Pixels to crop from edges.
+        delta: Default pixels to crop from edges.
         method: Blending method ('cosine' or 'linear').
+        edge_deltas: Optional per-edge crop amounts (top, bottom, left, right).
+            If provided, only applies blend ramps on edges where delta > 0.
 
     Returns:
-        Blend mask of shape (H-2*delta, W-2*delta) with values in [0, 1].
+        Blend mask with values in [0, 1].
 
     Raises:
         ValueError: If method is not 'cosine' or 'linear'.
@@ -138,35 +192,53 @@ def get_blend_mask(
     else:
         h, w = patch_size
 
-    h_crop = h - 2 * delta
-    w_crop = w - 2 * delta
+    if edge_deltas is not None:
+        top, bottom, left, right = edge_deltas
+        apply_top_ramp = top > 0
+        apply_bottom_ramp = bottom > 0
+        apply_left_ramp = left > 0
+        apply_right_ramp = right > 0
+    else:
+        top = bottom = left = right = delta
+        apply_top_ramp = apply_bottom_ramp = apply_left_ramp = apply_right_ramp = True
+
+    h_crop = h - top - bottom
+    w_crop = w - left - right
 
     if method == 'cosine':
         y = np.ones(h_crop, dtype=np.float32)
         if overlap > 0:
             ramp = np.cos(np.pi * (np.arange(overlap) + 1) / (overlap + 1)) / 2 + 0.5
-            y[:overlap] = ramp[::-1]
-            y[-overlap:] = ramp
+            if apply_top_ramp:
+                y[:overlap] = ramp[::-1]
+            if apply_bottom_ramp:
+                y[-overlap:] = ramp
 
         x = np.ones(w_crop, dtype=np.float32)
         if overlap > 0:
             ramp = np.cos(np.pi * (np.arange(overlap) + 1) / (overlap + 1)) / 2 + 0.5
-            x[:overlap] = ramp[::-1]
-            x[-overlap:] = ramp
+            if apply_left_ramp:
+                x[:overlap] = ramp[::-1]
+            if apply_right_ramp:
+                x[-overlap:] = ramp
 
         mask = y[:, None] * x[None, :]
     elif method == 'linear':
         y = np.ones(h_crop, dtype=np.float32)
         if overlap > 0:
             ramp = np.linspace(0, 1, overlap, dtype=np.float32)
-            y[:overlap] = ramp
-            y[-overlap:] = ramp[::-1]
+            if apply_top_ramp:
+                y[:overlap] = ramp
+            if apply_bottom_ramp:
+                y[-overlap:] = ramp[::-1]
 
         x = np.ones(w_crop, dtype=np.float32)
         if overlap > 0:
             ramp = np.linspace(0, 1, overlap, dtype=np.float32)
-            x[:overlap] = ramp
-            x[-overlap:] = ramp[::-1]
+            if apply_left_ramp:
+                x[:overlap] = ramp
+            if apply_right_ramp:
+                x[-overlap:] = ramp[::-1]
 
         mask = y[:, None] * x[None, :]
     else:
@@ -284,15 +356,6 @@ def weighted_merge(
     first_patch = torch.load(patch_metadata[0]['file'])
     patch_h, patch_w = first_patch['logits'].shape[-2:]
 
-    _, scene_transform = _reconstruct_scene_from_patches(
-        patch_metadata, (patch_h, patch_w), delta
-    )
-
-    # TODO: When delta > 0 and dataset_bounds is used, edge pixels (0 to delta-1)
-    # on west/north and (size-delta to size-1) on east/south remain uncovered
-    # because patches at boundaries still get delta-cropped. Possible fixes:
-    # (a) Skip delta cropping on boundary-touching edges per patch
-    # (b) Fill border with nearest neighbor values after merging
     if dataset_bounds is not None and dataset_res is not None:
         minx, miny, maxx, maxy = dataset_bounds
         res = dataset_res[0] if not isinstance(dataset_res, float) else dataset_res
@@ -300,19 +363,27 @@ def weighted_merge(
         output_height = round((maxy - miny) / res)
         output_shape = (output_height, output_width)
         scene_transform = Affine(res, 0, minx, 0, -res, maxy)
+        scene_bounds = dataset_bounds
 
         first_transform = patch_metadata[0]['transform']
         x_res = first_transform[0].item()
-        y_res = first_transform[4].item()
-        effective_patch_h = patch_h - 2 * delta
-        effective_patch_w = patch_w - 2 * delta
+        y_res = abs(first_transform[4].item())
 
         for meta in patch_metadata:
             geo_bbox = meta['geo_bbox']
-            patch_geo_xmin = geo_bbox[0] + delta * x_res
-            patch_geo_ymax = geo_bbox[3] - delta * abs(y_res)
-            patch_col_start = int((patch_geo_xmin - minx) / x_res)
-            patch_row_start = int((maxy - patch_geo_ymax) / abs(y_res))
+            top, bottom, left, right = _get_edge_deltas(
+                geo_bbox, scene_bounds, x_res, delta
+            )
+            meta['edge_deltas'] = (top, bottom, left, right)
+
+            patch_geo_xmin = geo_bbox[0] + left * x_res
+            patch_geo_ymax = geo_bbox[3] - top * y_res
+            effective_patch_w = patch_w - left - right
+            effective_patch_h = patch_h - top - bottom
+
+            patch_col_start = round((patch_geo_xmin - minx) / x_res)
+            patch_row_start = round((maxy - patch_geo_ymax) / y_res)
+
             meta['bbox'] = (
                 patch_col_start,
                 patch_row_start,
@@ -328,9 +399,9 @@ def weighted_merge(
     grid = _build_grid_index(patch_metadata, grid_size)
 
     effective_overlap = max(0, overlap - 2 * delta)
-    blend_mask = get_blend_mask(
-        (patch_h, patch_w), effective_overlap, delta, blend_method
-    )
+    mask_cache: dict[
+        tuple[int, int, int, int], np.typing.NDArray[np.floating[Any]]
+    ] = {}
 
     assert output_path is not None
     writer = GeoTIFFWriter(
@@ -365,8 +436,22 @@ def weighted_merge(
                 patch_data = torch.load(meta['file'])
                 logits = patch_data['logits'].numpy()
 
-                if delta > 0:
-                    logits = logits[:, delta:-delta, delta:-delta]
+                edge_deltas = meta.get('edge_deltas', (delta, delta, delta, delta))
+                top, bottom, left, right = edge_deltas
+
+                bottom_slice = -bottom if bottom > 0 else None
+                right_slice = -right if right > 0 else None
+                logits = logits[:, top:bottom_slice, left:right_slice]
+
+                if edge_deltas not in mask_cache:
+                    mask_cache[edge_deltas] = get_blend_mask(
+                        (patch_h, patch_w),
+                        effective_overlap,
+                        delta,
+                        blend_method,
+                        edge_deltas=edge_deltas,
+                    )
+                blend_mask = mask_cache[edge_deltas]
 
                 bbox = meta['bbox']
                 patch_col_start = bbox[0]
@@ -417,7 +502,7 @@ def weighted_merge(
                     overlap_row_start:overlap_row_end, overlap_col_start:overlap_col_end
                 ] += mask_region
 
-            min_weight = blend_mask.min()
+            min_weight = 1e-6
             chunk_weights = np.maximum(chunk_weights, min_weight)
             chunk_output = chunk_output / chunk_weights[None, :, :]
             chunk_labels = np.argmax(chunk_output, axis=0).astype(np.uint8)
