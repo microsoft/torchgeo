@@ -13,6 +13,13 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v6.1.0
         with:
+          python-version: '3.13'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+      - name: Install uv dependencies
+        run: uv pip install build
+      - name: List uv dependencies
+        run: uv pip list
           python-version: '3.14'
       - name: Install pip dependencies
         run: pip install build
@@ -42,4 +49,8 @@ jobs:
           name: pypi-dist
           path: dist/
       - name: Publish to PyPI
+        feat/migrate-ci-to-uv
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+
         uses: pypa/gh-action-pypi-publish@v1.13.0
+        main
