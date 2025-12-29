@@ -141,6 +141,9 @@ class OSCD(NonGeoDataset):
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
+
         Args:
             index: index to return
 
@@ -155,7 +158,12 @@ class OSCD(NonGeoDataset):
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
+            # FIXME: VideoSequential only works with a batch dimension
+            sample['image'] = sample['image'].unsqueeze(0)
+            sample['mask'] = sample['mask'].unsqueeze(0)
             sample = self.transforms(sample)
+            sample['image'] = sample['image'].squeeze(0)
+            sample['mask'] = sample['mask'].squeeze(0)
 
         return sample
 

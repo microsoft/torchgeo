@@ -131,6 +131,9 @@ class CaBuAr(NonGeoDataset):
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
+
         Args:
             index: index to return
 
@@ -277,7 +280,7 @@ class CaBuAr(NonGeoDataset):
             prediction = sample['prediction'][0]
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')

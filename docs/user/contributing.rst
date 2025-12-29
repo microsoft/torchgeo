@@ -102,7 +102,7 @@ Mypy won't fix your code for you, but will warn you about potential issues with 
 
 .. code-block:: console
 
-   $ mypy .
+   $ mypy
 
 
 If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
@@ -128,7 +128,7 @@ Now, every time you run ``git commit``, pre-commit will run and let you know if 
 Documentation
 -------------
 
-All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
+All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure you are using **Python < 3.13** and that the dependencies are installed:
 
 .. code-block:: console
 
@@ -136,6 +136,7 @@ All of our documentation is hosted on `Read the Docs <https://about.readthedocs.
    $ cd docs
    $ pip install -r requirements.txt
 
+Pandoc must also be installed. You can download it from the `official Pandoc website <https://pandoc.org/installing.html>`_ and ensure it is included in your system PATH.
 
 Then run the following commands:
 
@@ -192,3 +193,20 @@ before        17.223      10.974                 15.685               4.6075
 ======  ============  ==========  =====================  ===================
 
 In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
+
+Related Libraries
+-----------------
+
+TorchGeo maintains a list of :ref:`related-libraries`. New GeoML libraries can be added to this list using the following scripts in ``docs/user/metrics``:
+
+1. Add the library, GitHub repository, Codecov, PyPI/CRAN, and Conda information to ``common.py``.
+2. (Optional) Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
+3. (Optional) Sort all dictionaries in ``common.py`` in order of first commit.
+4. Run ``python3 update_github.py --api-key GITHUB_TOKEN`` to update ``github.csv``.
+5. Sort ``index`` in ``common.py`` and ``features.csv`` in the same order as ``github.csv``.
+6. Run ``python3 update_downloads.py --api-key PEPY_TOKEN`` to update ``downloads.csv``.
+7. Document all library features in ``features.csv``.
+8. Add a GitHub link to the bottom of ``../alternatives.rst``.
+9. Open a pull request.
+
+Libraries must be primarily geospatial machine learning libraries. Furthermore, libraries should have stable releases, recent commit activity, and at least 100 stars on GitHub. If you have any questions about how to determine any features, do not hesitate to ask for assistance on your pull request.

@@ -40,7 +40,7 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
-        return {'image': image, 'crs': self.index.crs, 'bounds': query}
+        return {'image': image, 'bounds': self._slice_to_tensor(query)}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
@@ -201,6 +201,16 @@ class TestGeoDataModule:
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
 
+    def test_drop_last(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset(length=2)
+        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
+
 
 class TestNonGeoDataModule:
     @pytest.fixture
@@ -273,3 +283,12 @@ class TestNonGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last(self) -> None:
+        dm = CustomNonGeoDataModule()
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last

@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.13'
       - name: Install uv
@@ -20,10 +20,15 @@ jobs:
         run: uv pip install build
       - name: List uv dependencies
         run: uv pip list
+          python-version: '3.14'
+      - name: Install pip dependencies
+        run: pip install build
+      - name: List pip dependencies
+        run: pip list
       - name: Build project
         run: python3 -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: pypi-dist
           path: dist/
@@ -39,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: pypi-dist
           path: dist/

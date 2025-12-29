@@ -87,11 +87,12 @@ class CloudCoverDetection(NonGeoDataset):
 
         self.root = root
         self.split = split
+        self.directory = os.path.join(self.root, self.splits[self.split])
         self.bands = bands
         self.transforms = transforms
         self.download = download
 
-        self.csv = os.path.join(self.root, self.split, f'{self.split}_metadata.csv')
+        self.csv = os.path.join(self.directory, f'{self.split}_metadata.csv')
         self._verify()
 
         self.metadata = pd.read_csv(self.csv)
@@ -113,7 +114,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             data and label at given index
         """
-        chip_id = self.metadata.iat[index, 0]
+        chip_id = str(self.metadata.iat[index, 0])
         image = self._load_image(chip_id)
         label = self._load_target(chip_id)
         sample = {'image': image, 'mask': label}
@@ -132,7 +133,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of stacked source image data
         """
-        path = os.path.join(self.root, self.split, f'{self.split}_features', chip_id)
+        path = os.path.join(self.directory, f'{self.split}_features', chip_id)
         images = []
         for band in self.bands:
             with rasterio.open(os.path.join(path, f'{band}.tif')) as src:
@@ -148,7 +149,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of the label image data
         """
-        path = os.path.join(self.root, self.split, f'{self.split}_labels')
+        path = os.path.join(self.directory, f'{self.split}_labels')
         with rasterio.open(os.path.join(path, f'{chip_id}.tif')) as src:
             return torch.from_numpy(src.read(1).astype(np.int64))
 
@@ -167,7 +168,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        directory = os.path.join(self.root, self.split)
+        directory = self.directory
         os.makedirs(directory, exist_ok=True)
         url = f'{self.url}/{self.splits[self.split]}'
         azcopy = which('azcopy')
@@ -202,13 +203,13 @@ class CloudCoverDetection(NonGeoDataset):
 
         if 'prediction' in sample:
             prediction = sample['prediction']
-            n_cols = 3
+            ncols = 3
         else:
-            n_cols = 2
+            ncols = 2
 
         image, mask = sample['image'] / 3000, sample['mask']
 
-        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis('off')

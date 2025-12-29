@@ -176,6 +176,11 @@ Open Buildings
 
 .. autoclass:: OpenBuildings
 
+OpenStreetMap
+^^^^^^^^^^^^^
+
+.. autoclass:: OpenStreetMap
+
 PRISMA
 ^^^^^^
 
@@ -559,10 +564,10 @@ Western USA Live Fuel Moisture
 
 .. autoclass:: WesternUSALiveFuelMoisture
 
-xView2
-^^^^^^
+xBD
+^^^
 
-.. autoclass:: XView2
+.. autoclass:: xBD
 
 ZueriCrop
 ^^^^^^^^^

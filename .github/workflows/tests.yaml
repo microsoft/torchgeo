@@ -18,13 +18,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - name: Clone repo
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
           feat/migrate-ci-to-uv
@@ -36,6 +36,9 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v4.2.4
         main
+          check-latest: true
+      - name: Cache dependencies
+        uses: actions/cache@v5.0.1
         id: cache
         with:
           path: ${{ runner.os == 'Windows' && '~\AppData\Local\uv\cache' || '~/.cache/uv' }}
@@ -53,7 +56,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -61,10 +64,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.11'
         feat/migrate-ci-to-uv
@@ -76,6 +79,7 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v4.2.4
         main
+        uses: actions/cache@v5.0.1
         id: cache
         with:
           path: ~/.cache/uv
@@ -93,7 +97,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   optional:
@@ -101,10 +105,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.1
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.13'
         feat/migrate-ci-to-uv
@@ -116,6 +120,9 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v4.2.4
         main
+          python-version: '3.14'
+      - name: Cache dependencies
+        uses: actions/cache@v5.0.1
         id: cache
         with:
           path: ~/.cache/uv
@@ -133,7 +140,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

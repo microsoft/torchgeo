@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-from pyproj import CRS
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
@@ -22,6 +21,7 @@ from torchgeo.datasets.utils import (
     disambiguate_timestamp,
     lazy_import,
     merge_samples,
+    pad_across_batches,
     percentile_normalization,
     stack_samples,
     unbind_samples,
@@ -404,42 +404,32 @@ def test_disambiguate_timestamp(
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[dict[str, Any]]:
-        return [
-            {'image': torch.tensor([1, 2, 0]), 'crs': CRS.from_epsg(2000)},
-            {'image': torch.tensor([0, 0, 3]), 'crs': CRS.from_epsg(2001)},
-        ]
+        return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample['image'].size() == torch.Size([2, 3])
         assert torch.allclose(sample['image'], torch.tensor([[1, 2, 0], [0, 0, 3]]))
-        assert sample['crs'] == [CRS.from_epsg(2000), CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
         for i in range(2):
             assert torch.allclose(samples[i]['image'], new_samples[i]['image'])
-            assert samples[i]['crs'] == new_samples[i]['crs']
 
     def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample['image'].size() == torch.Size([6])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0, 0, 0, 3]))
-        assert sample['crs'] == CRS.from_epsg(2000)
 
     def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample['image'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 3]))
-        assert sample['crs'] == CRS.from_epsg(2001)
 
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[dict[str, Any]]:
-        return [
-            {'image': torch.tensor([1, 2, 0]), 'crs1': CRS.from_epsg(2000)},
-            {'mask': torch.tensor([0, 0, 3]), 'crs2': CRS.from_epsg(2001)},
-        ]
+        return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
@@ -447,14 +437,10 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([1, 3])
         assert torch.allclose(sample['image'], torch.tensor([[1, 2, 0]]))
         assert torch.allclose(sample['mask'], torch.tensor([[0, 0, 3]]))
-        assert sample['crs1'] == [CRS.from_epsg(2000)]
-        assert sample['crs2'] == [CRS.from_epsg(2001)]
 
         new_samples = unbind_samples(sample)
         assert torch.allclose(samples[0]['image'], new_samples[0]['image'])
-        assert samples[0]['crs1'] == new_samples[0]['crs1']
         assert torch.allclose(samples[1]['mask'], new_samples[0]['mask'])
-        assert samples[1]['crs2'] == new_samples[0]['crs2']
 
     def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
@@ -462,8 +448,6 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0]))
         assert torch.allclose(sample['mask'], torch.tensor([0, 0, 3]))
-        assert sample['crs1'] == CRS.from_epsg(2000)
-        assert sample['crs2'] == CRS.from_epsg(2001)
 
     def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
@@ -471,8 +455,6 @@ class TestCollateFunctionsDifferingKeys:
         assert sample['mask'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0]))
         assert torch.allclose(sample['mask'], torch.tensor([0, 0, 3]))
-        assert sample['crs1'] == CRS.from_epsg(2000)
-        assert sample['crs2'] == CRS.from_epsg(2001)
 
 
 def test_existing_directory(tmp_path: Path) -> None:
@@ -537,3 +519,36 @@ def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
 def test_which() -> None:
     with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
         which('foo')
+
+
+def test_pad_across_batches() -> None:
+    batch = [
+        {'image': torch.ones(2, 10, 5, 5), 'mask': torch.zeros(5, 5)},
+        {'image': torch.ones(3, 10, 5, 5), 'mask': torch.zeros(5, 5)},
+    ]
+
+    out = pad_across_batches(batch, padding_value=0.0, padding_length=3)
+    assert out['image'].shape[1] == 3
+    assert out['mask'].shape[0] == len(batch)
+
+    with pytest.warns(UserWarning, match='Truncated 2 sequences to length 1'):
+        out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
+    assert out['image'].shape[1] == 1
+    assert out['mask'].shape[0] == len(batch)
+
+    batch = [
+        {
+            'image': torch.ones(3, 5, 5),
+            'bbox_xyxy': torch.ones(2, 4),
+            'label': torch.ones(2),
+        },
+        {
+            'image': torch.ones(2, 5, 5),
+            'bbox_xyxy': torch.ones(2, 4),
+            'label': torch.ones(2),
+        },
+    ]
+    out = pad_across_batches(batch, padding_value=0.0, padding_length=5)
+    assert out['image'].shape[1] == 5
+    assert out['bbox_xyxy'].shape[0] == len(batch)
+    assert out['label'].shape[0] == len(batch)

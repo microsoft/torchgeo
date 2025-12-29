@@ -8,17 +8,17 @@ import fnmatch
 import functools
 import glob
 import os
+import pathlib
 import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from typing import Any, ClassVar, Literal
 
-import fiona
-import fiona.transform
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import pyproj
 import rasterio
 import rasterio.merge
 import shapely
@@ -140,6 +140,29 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         geoslice = tuple(out)
         assert len(geoslice) == 3
         return geoslice
+
+    def _slice_to_tensor(self, query: GeoSlice) -> Tensor:
+        """Tensor representation of a spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            A tensor version of this slice.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        bounds = [
+            x.start,
+            x.stop,
+            x.step,
+            y.start,
+            y.stop,
+            y.step,
+            t.start.timestamp(),
+            t.stop.timestamp(),
+            t.step,
+        ]
+        return torch.tensor(bounds)
 
     @abc.abstractmethod
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
@@ -528,26 +551,21 @@ class RasterDataset(GeoDataset):
 
         if self.separate_files:
             data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in self.bands:
                 band_filepaths = []
                 for filepath in index.filepath:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
+                    filepath = self._update_filepath(band, filepath)
                     band_filepaths.append(filepath)
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'bounds': self._slice_to_tensor(query),
+            'transform': torch.tensor(transform),
+        }
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -559,6 +577,27 @@ class RasterDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _update_filepath(self, band: str, filepath: str) -> str:
+        """Update `filepath` to point to `band`.
+
+        Args:
+            band: band to search for.
+            filepath: base filepath to use for searching.
+
+        Returns:
+            updated filepath for `band`.
+        """
+        filename = os.path.basename(filepath)
+        directory = os.path.dirname(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'band' in match.groupdict():
+                start = match.start('band')
+                end = match.end('band')
+                filename = filename[:start] + band + filename[end:]
+        filepath = os.path.join(directory, filename)
+        return filepath
 
     def _merge_files(
         self,
@@ -731,7 +770,12 @@ class XarrayDataset(GeoDataset):
             )
 
         image = self._merge_files(index.filepath, query)
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'image': image}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'bounds': self._slice_to_tensor(query),
+            'image': image,
+            'transform': torch.tensor(transform),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -874,18 +918,21 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    with fiona.open(filepath, layer=layer) as src:
-                        if crs is None:
-                            crs = CRS.from_wkt(src.crs_wkt)
+                    if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                        src = gpd.read_parquet(filepath)
+                    else:
+                        src = gpd.read_file(filepath, layer=layer)
+                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    if src.crs is None:
+                        src.set_crs(crs, inplace=True)
+                    elif src.crs != crs:
+                        src.to_crs(crs, inplace=True)
 
-                        minx, miny, maxx, maxy = src.bounds
-                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                            src.crs, crs.to_wkt(), [minx, maxx], [miny, maxy]
-                        )
-                        geometry = shapely.box(minx, miny, maxx, maxy)
-                        geometries.append(geometry)
-                except fiona.errors.FionaValueError:
-                    # Skip files that fiona is unable to read
+                    minx, miny, maxx, maxy = src.total_bounds
+                    geom = shapely.box(minx, miny, maxx, maxy)
+                    geometries.append(geom)
+                except (RuntimeError, ValueError):
+                    # Skip files that geopandas is unable to read
                     continue
                 else:
                     filepaths.append(filepath)
@@ -936,20 +983,25 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            with fiona.open(filepath, layer=self.layer) as src:
-                # We need to know the bounding box of the query in the source CRS
-                (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_wkt(), src.crs, [x.start, x.stop], [y.start, y.stop]
-                )
+            if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                src = gpd.read_parquet(filepath)
+            else:
+                src = gpd.read_file(filepath, layer=self.layer)
 
-                # Filter geometries to those that intersect with the bounding box
-                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                    # Warp geometries to requested CRS
-                    shape = fiona.transform.transform_geom(
-                        src.crs, self.crs.to_wkt(), feature['geometry']
-                    )
-                    label = self.get_label(feature)
-                    shapes.append((shape, label))
+            # We need to know the bounding box of the query in the source CRS
+            transformer = pyproj.Transformer.from_crs(self.crs, src.crs, always_xy=True)
+            (minx, miny) = transformer.transform(x.start, y.start)
+            (maxx, maxy) = transformer.transform(x.stop, y.stop)
+
+            src = src.cx[minx:maxx, miny:maxy]
+            src.to_crs(self.crs, inplace=True)
+
+            # Get label values to use for rendering each geometry
+            labels = np.array(
+                [self.get_label(row) for _, row in src.iterrows()]
+            ).astype(np.int32)
+
+            shapes.extend(list(zip(src.geometry, labels)))
 
         # Rasterize geometries
         width = (x.stop - x.start) / x.step
@@ -968,57 +1020,48 @@ class VectorDataset(GeoDataset):
 
                 case 'object_detection':
                     # Get boxes for object detection or instance segmentation
-                    px_shapes = [
-                        convert_poly_coords(
-                            shapely.geometry.shape(s[0]), transform, inverse=True
-                        )
-                        for s in shapes
-                    ]
-                    px_shapes = [
-                        (shapely.clip_by_rect(p, 0, 0, width, height))
-                        for p in px_shapes
-                    ]
+                    label_list = []
+                    box_list = []
+                    for s in shapes:
+                        shape = shapely.geometry.shape(s[0])
+                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = shapely.clip_by_rect(p, 0, 0, width, height)
 
-                    # Get labels
-                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
+                        # Get labels
+                        label_list.append(s[1])
 
-                    # xmin, ymin, xmax, ymax format
-                    boxes_xyxy = np.array(
-                        [
-                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
-                            for p in px_shapes
-                        ]
-                    ).astype(np.float32)
+                        # xmin, ymin, xmax, ymax format
+                        box_list.append(p.bounds)
+
+                    labels = np.array(label_list).astype(np.int32)
+                    boxes_xyxy = np.array(box_list).astype(np.float32)
 
                 case 'instance_segmentation':
                     # Get boxes for object detection or instance segmentation
-                    px_shapes = [
-                        convert_poly_coords(
-                            shapely.geometry.shape(s[0]), transform, inverse=True
+                    label_list = []
+                    box_list = []
+                    mask_list = []
+                    for i, s in enumerate(shapes):
+                        shape = shapely.geometry.shape(s[0])
+                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = shapely.clip_by_rect(p, 0, 0, width, height)
+
+                        # Get labels
+                        label_list.append(s[1])
+
+                        # xmin, ymin, xmax, ymax format
+                        box_list.append(p.bounds)
+
+                        mask = rasterio.features.rasterize(
+                            [(s[0], i + 1)],
+                            out_shape=(round(height), round(width)),
+                            transform=transform,
                         )
-                        for s in shapes
-                    ]
-                    px_shapes = [
-                        (shapely.clip_by_rect(p, 0, 0, width, height))
-                        for p in px_shapes
-                    ]
+                        mask_list.append(mask)
 
-                    # Get labels
-                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
-
-                    # xmin, ymin, xmax, ymax format
-                    boxes_xyxy = np.array(
-                        [
-                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
-                            for p in px_shapes
-                        ]
-                    ).astype(np.float32)
-
-                    masks = rasterio.features.rasterize(
-                        [(s[0], i + 1) for i, s in enumerate(shapes)],
-                        out_shape=(round(height), round(width)),
-                        transform=transform,
-                    )
+                    labels = np.array(label_list).astype(np.int32)
+                    boxes_xyxy = np.array(box_list).astype(np.float32)
+                    masks = np.array(mask_list)
 
                     obj_ids = np.unique(masks)
 
@@ -1034,9 +1077,13 @@ class VectorDataset(GeoDataset):
             boxes_xyxy = np.empty((0, 4), dtype=np.float32)
             labels = np.empty((0,), dtype=np.int32)
 
-        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: dict[str, Any] = {
+            'bounds': self._slice_to_tensor(query),
+            'transform': torch.tensor(transform),
+        }
 
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         match self.task:
             case 'semantic_segmentation':
                 sample['mask'] = array_to_tensor(masks).to(self.dtype)
@@ -1055,19 +1102,21 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def get_label(self, feature: 'fiona.model.Feature') -> int:
+    def get_label(self, feature: pd.Series) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`fiona.model.Feature` from which to extract the label.
+            feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
 
         .. versionadded:: 0.6
+        .. versionchanged:: 0.8
+            The *feature* parameter changed to a :class:`pandas.Series`
         """
         if self.label_name:
-            return int(feature['properties'][self.label_name])
+            return int(feature[self.label_name])
         return 1
 
 

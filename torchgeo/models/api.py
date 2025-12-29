@@ -38,7 +38,18 @@ from .resnet import (
     resnet152,
 )
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
-from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
+from .swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
+    Swin_V2_B_Weights,
+    Swin_V2_T_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
+    swin_v2_b,
+    swin_v2_t,
+)
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -54,7 +65,6 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
@@ -71,6 +81,9 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'resnet50': resnet50,
     'resnet152': resnet152,
     'scalemae_large_patch16': scalemae_large_patch16,
+    'swin_t': swin_t,
+    'swin_s': swin_s,
+    'swin_b': swin_b,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
     'unet': unet,
@@ -80,7 +93,6 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_huge_patch14_224': vit_huge_patch14_224,
     'vit_large_patch16_224': vit_large_patch16_224,
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
-    'yolo': yolo,
 }
 
 _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
@@ -96,6 +108,9 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
+    swin_t: Swin_T_Weights,
+    swin_s: Swin_S_Weights,
+    swin_b: Swin_B_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
     unet: Unet_Weights,
@@ -105,7 +120,6 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     vit_huge_patch14_224: ViTHuge14_Weights,
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
-    yolo: YOLO_Weights,
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
@@ -118,6 +132,9 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
+    'swin_t': Swin_T_Weights,
+    'swin_s': Swin_S_Weights,
+    'swin_b': Swin_B_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
     'unet': Unet_Weights,
@@ -127,7 +144,6 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'vit_huge_patch14_224': ViTHuge14_Weights,
     'vit_large_patch16_224': ViTLarge16_Weights,
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
-    'yolo': YOLO_Weights,
 }
 
 

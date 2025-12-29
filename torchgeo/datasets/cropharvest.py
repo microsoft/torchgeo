@@ -126,9 +126,9 @@ class CropHarvest(NonGeoDataset):
 
         self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
-        self.classes = self.labels['properties.label'].unique()
-        self.classes = self.classes[self.classes != np.array(None)]
-        self.classes = np.insert(self.classes, 0, ['None', 'Other'])
+        classes = self.labels['properties.label'].unique()
+        classes = classes[classes != np.array(None)]
+        self.classes = np.insert(classes, 0, ['None', 'Other'])
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -228,11 +228,11 @@ class CropHarvest(NonGeoDataset):
             (self.labels['properties.index'] == index)
             & (self.labels['properties.dataset'] == dataset)
         ]
-        row = row.to_dict(orient='records')[0]
+        properties = row.to_dict(orient='records')[0]
         label = 'None'
-        if row['properties.label']:
-            label = row['properties.label']
-        elif row['properties.is_crop'] == 1:
+        if properties['properties.label']:
+            label = properties['properties.label']
+        elif properties['properties.is_crop'] == 1:
             label = 'Other'
 
         return torch.tensor(np.where(self.classes == label)[0][0])

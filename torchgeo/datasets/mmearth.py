@@ -350,7 +350,6 @@ class MMEarth(NonGeoDataset):
         * lat: latitude
         * lon: longitude
         * date: date
-        * crs: coordinate reference system
         * tile_id: tile identifier
 
         Args:
@@ -460,7 +459,6 @@ class MMEarth(NonGeoDataset):
             sample['lat'] = tile_info['lat']
             sample['lon'] = tile_info['lon']
             sample['date'] = tile_info['S2_DATE']
-            sample['crs'] = tile_info['CRS']
             sample['tile_id'] = name
 
         return sample
@@ -629,6 +627,8 @@ class MMEarth(NonGeoDataset):
         suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
+
+        .. versionadded:: 0.8
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.

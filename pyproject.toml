@@ -12,6 +12,7 @@ description = "TorchGeo: datasets, samplers, transforms, and pre-trained models 
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
 ]
@@ -31,20 +32,20 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # fiona 1.8.22+ required for Python 3.11 wheels
-    "fiona>=1.8.22",
-    # geopandas 0.12.1+ required for Shapely 2+ support
-    "geopandas>=0.12.1",
+    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
+    "geopandas>=0.13",
     # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
     "jsonargparse[signatures]>=4.25",
-    # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
-    "kornia>=0.7.4",
+    # kornia 0.8.2+ required for fix to VideoSequential
+    # https://github.com/kornia/kornia/pull/3330
+    "kornia>=0.8.2",
     # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/torchgeo/torchgeo/issues/1824
@@ -54,9 +55,9 @@ dependencies = [
     # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
-    # lightning 2.5.5 contains known bugs related to checkpoint loading
+    # lightning 2.5.5-2.5.6 contain known bugs related to checkpoint loading
     # https://github.com/torchgeo/torchgeo/issues/2995
-    "lightning>=2,!=2.3.*,!=2.5.0,<2.5.5",
+    "lightning>=2,!=2.3.*,!=2.5.0,!=2.5.5,!=2.5.6",
     # matplotlib 3.6+ required for Python 3.11 wheels
     "matplotlib>=3.6",
     # numpy 1.24+ required by rasterio
@@ -98,12 +99,14 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
-    "opencv-python>=4.6.0.66",
+    # opencv-python 4.5.5.64+ required for Python 3.11 wheels
+    "opencv-python>=4.5.5.64",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
     "pycocotools>=2.0.7",
+    # requests 2.23.0+ required for lightly 1.4.5 compatibility
+    "requests>=2.23.0",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
     # scikit-image 0.20+ required for Python 3.11 wheels
@@ -130,18 +133,24 @@ docs = [
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
-    # ultralytics 8.3+ fixes loading with weights_only=False
-    "ultralytics>=8.3",
 ]
 style = [
-    # mypy 0.900+ required for pyproject.toml support
-    "mypy>=0.900",
+    # mypy 1.16+ required for exclude_gitignore configuration
+    "mypy>=1.16",
+    # pandas 1.5+ required for Python 3.11 wheels
+    "pandas-stubs>=1.5",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
+    # requests 2.23.0+ required for lightly 1.4.5 comaptibility
+    "types-requests>=2.23",
+    # shapely 2+ required for shapely.Geometry
+    "types-shapely>=2",
 ]
 tests = [
     # nbmake 1.3.3+ required for variable mocking
     "nbmake>=1.3.3",
+    # packaging 20.9+ required by huggingface-hub
+    "packaging>=20.9",
     # pytest 7.3+ required for tmp_path_retention_policy
     "pytest>=7.3",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
@@ -172,8 +181,11 @@ show_missing = true
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
+packages = ["torchgeo", "tests"]
+exclude = ["^tests/data"]
+exclude_gitignore = true
 ignore_missing_imports = true
-exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
+disable_error_code = "import-untyped"
 
 # Disallow dynamic typing (TODO: work in progress)
 disallow_any_unimported = false
@@ -272,6 +284,10 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
+    # https://github.com/lightly-ai/lightly/issues/1791
+    # https://github.com/pydantic/pydantic/issues/12618
+    "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
+    "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
     # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
@@ -298,6 +314,9 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    # https://github.com/shapely/shapely/issues/2215
+    "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning:shapely",
+    "ignore:invalid value encountered in oriented_envelope:RuntimeWarning:shapely",
 ]
 markers = [
     "slow: marks tests as slow",

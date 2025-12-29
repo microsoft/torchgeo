@@ -108,7 +108,7 @@ class DIOR(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dior/resolve/ec7be9567d2e08eb3d3401c15a52ee2145d0ef01/{}'
+    url = 'https://hf.co/datasets/torchgeo/dior/resolve/0b8439a538b66457e553a8bd9105ef093cce8169/{}'
 
     files: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         'trainval': {

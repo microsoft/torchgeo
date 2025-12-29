@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -54,8 +53,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         )
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
             ),
             data_keys=None,
             keepdim=True,
@@ -63,8 +61,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         )
         self.test_aug = K.AugmentationSequential(
             K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
             ),
             data_keys=None,
             keepdim=True,
@@ -117,8 +114,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         )
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
             ),
             data_keys=None,
             keepdim=True,
@@ -126,8 +122,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         )
         self.test_aug = K.AugmentationSequential(
             K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.Normalize(mean=self.mean, std=self.std), K.CenterCrop(self.patch_size)
             ),
             data_keys=None,
             keepdim=True,

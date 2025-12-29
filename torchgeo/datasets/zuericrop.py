@@ -288,7 +288,7 @@ class ZueriCrop(NonGeoDataset):
             ncols += 1
             preds = torch.argmax(sample['prediction'], dim=0)
 
-        fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
+        fig, axs = plt.subplots(ncols=ncols, figsize=(10 * ncols, 10))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis('off')

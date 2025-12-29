@@ -13,6 +13,8 @@ from torch import Tensor
 class Rearrange(GeometricAugmentationBase3D):
     """Rearrange tensor dimensions.
 
+    .. versionadded:: 0.8
+
     Examples:
         To insert a time dimension::
 

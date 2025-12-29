@@ -286,6 +286,8 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            # drop_last is incompatible with batch sampler
+            drop_last=split == 'train' and batch_sampler is None,
             persistent_workers=self.num_workers > 0,
         )
 
@@ -336,28 +338,6 @@ class GeoDataModule(BaseDataModule):
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
         return self._dataloader_factory('predict')
-
-    def transfer_batch_to_device(
-        self, batch: dict[str, Tensor], device: torch.device, dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Transfer batch to device.
-
-        Defines how custom data types are moved to the target device.
-
-        Args:
-            batch: A batch of data that needs to be transferred to a new device.
-            device: The target device as defined in PyTorch.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A reference to the data on the new device.
-        """
-        # Non-Tensor values cannot be moved to a device
-        del batch['crs']
-        del batch['bounds']
-
-        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
-        return batch
 
 
 class NonGeoDataModule(BaseDataModule):
@@ -430,6 +410,7 @@ class NonGeoDataModule(BaseDataModule):
             shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            drop_last=split == 'train',
             persistent_workers=self.num_workers > 0,
         )
 

@@ -12,6 +12,7 @@ import importlib
 import os
 import shutil
 import subprocess
+import warnings
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -22,7 +23,9 @@ import pandas as pd
 import rasterio
 import shapely
 import torch
+from pandas import Timedelta, Timestamp
 from rasterio import Affine
+from shapely import Geometry
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -297,9 +300,7 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def disambiguate_timestamp(
-    date_str: str | None, format: str
-) -> tuple[datetime, datetime]:
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full
@@ -315,10 +316,7 @@ def disambiguate_timestamp(
     Returns:
         (mint, maxt) tuple for indexing
     """
-    if not isinstance(date_str, str):
-        return pd.NaT, pd.NaT
-
-    mint = datetime.strptime(date_str, format)
+    mint = pd.to_datetime(date_str, format=format)
     format = format.replace('%%', '')
 
     # TODO: May have issues with time zones, UTC vs. local time, and DST
@@ -326,33 +324,33 @@ def disambiguate_timestamp(
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
-        return pd.Timestamp.min, pd.Timestamp.max
+        return Timestamp.min, Timestamp.max
     elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
-        maxt = datetime(mint.year + 1, 1, 1)
+        maxt = Timestamp(year=mint.year + 1, month=1, day=1)
     elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
         # Month resolution
         if mint.month == 12:
-            maxt = datetime(mint.year + 1, 1, 1)
+            maxt = Timestamp(year=mint.year + 1, month=1, day=1)
         else:
-            maxt = datetime(mint.year, mint.month + 1, 1)
+            maxt = Timestamp(year=mint.year, month=mint.month + 1, day=1)
     elif not any([f'%{c}' in format for c in 'HIcX']):
         # Day resolution
-        maxt = mint + timedelta(days=1)
+        maxt = mint + Timedelta(days=1)
     elif not any([f'%{c}' in format for c in 'McX']):
         # Hour resolution
-        maxt = mint + timedelta(hours=1)
+        maxt = mint + Timedelta(hours=1)
     elif not any([f'%{c}' in format for c in 'ScX']):
         # Minute resolution
-        maxt = mint + timedelta(minutes=1)
+        maxt = mint + Timedelta(minutes=1)
     elif not any([f'%{c}' in format for c in 'f']):
         # Second resolution
-        maxt = mint + timedelta(seconds=1)
+        maxt = mint + Timedelta(seconds=1)
     else:
         # Microsecond resolution
-        maxt = mint + timedelta(microseconds=1)
+        maxt = mint + Timedelta(microseconds=1)
 
-    maxt -= timedelta(microseconds=1)
+    maxt -= Timedelta(microseconds=1)
 
     return mint, maxt
 
@@ -419,6 +417,55 @@ def _dict_list_to_list_dict(
         for i, value in enumerate(values):
             uncollated[i][key] = value
     return uncollated
+
+
+def pad_across_batches(
+    batch: list[dict[str, Tensor]], padding_length: int, padding_value: float = 0.0
+) -> dict[str, Any]:
+    """Custom time-series collate fn to handle variable length sequences.
+
+    Args:
+        batch: list of sample dicts returned by dataset
+        padding_length: the length to pad the sequences to
+        padding_value: value for padded elements
+
+    Returns:
+        batch dict output
+
+    .. versionadded:: 0.8
+    """
+    output: dict[str, Any] = {}
+    images = [sample['image'] for sample in batch]
+    feature_shape = images[0].shape[1:]
+
+    padded_images = torch.full(
+        (len(batch), padding_length, *feature_shape),
+        padding_value,
+        dtype=images[0].dtype,
+        device=images[0].device,
+    )
+
+    truncated = 0
+    for i, img in enumerate(images):
+        seq_len = img.size(0)
+        if seq_len > padding_length:
+            padded_images[i, :padding_length] = img[:padding_length]
+            truncated += 1
+        else:
+            padded_images[i, :seq_len] = img
+
+    if truncated > 0:
+        warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
+
+    output['image'] = padded_images
+    if 'mask' in batch[0]:
+        output['mask'] = torch.stack([sample['mask'] for sample in batch])
+    if 'bbox_xyxy' in batch[0]:
+        output['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
+    if 'label' in batch[0]:
+        output['label'] = torch.stack([sample['label'] for sample in batch])
+
+    return output
 
 
 def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
@@ -729,12 +776,12 @@ def which(name: Path) -> Executable:
 
 
 def convert_poly_coords(
-    geom: shapely.geometry.shape, affine_obj: Affine, inverse: bool = False
-) -> shapely.geometry.shape:
+    geom: Geometry, affine_obj: Affine, inverse: bool = False
+) -> Geometry:
     """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
 
     Args:
-        geom: shapely.geometry.shape to convert
+        geom: shape to convert
         affine_obj: rasterio.Affine object to use for geoconversion
         inverse: If true, convert geocoordinates to pixel coordinates
 
