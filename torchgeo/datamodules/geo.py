@@ -179,6 +179,8 @@ class GeoDataModule(BaseDataModule):
         patch_size: int | tuple[int, int] = 64,
         length: int | None = None,
         num_workers: int = 0,
+        predict_roi: Polygon | None = None,
+        predict_stride: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new GeoDataModule instance.
@@ -189,12 +191,19 @@ class GeoDataModule(BaseDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
             length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
+            predict_roi: Optional region of interest for predict stage. Useful for
+                running inference on a subset of a large dataset.
+            predict_stride: Optional stride for GridGeoSampler (predict stage only).
+                Formula: stride = patch_size - 2*overlap. Defaults to patch_size
+                (no overlap).
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
         self.patch_size = patch_size
         self.length = length
+        self.predict_roi = predict_roi
+        self.predict_stride = predict_stride
 
         # Collation
         self.collate_fn = stack_samples
@@ -213,9 +222,7 @@ class GeoDataModule(BaseDataModule):
         self.test_batch_sampler: BatchGeoSampler | None = None
         self.predict_batch_sampler: BatchGeoSampler | None = None
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 
         Called at the beginning of fit, validate, test, or predict. During distributed
@@ -224,10 +231,6 @@ class GeoDataModule(BaseDataModule):
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
-                Formula: stride = patch_size - 2*overlap. Defaults to patch_size
-                (no overlap).
         """
         if stage in ['fit']:
             self.train_dataset = cast(
@@ -261,7 +264,7 @@ class GeoDataModule(BaseDataModule):
             )
         if stage in ['predict']:
             self.predict_dataset = cast(GeoDataset, self.dataset_class(**self.kwargs))
-            # Default stride to patch_size (no overlap)
+            stride = self.predict_stride
             if stride is None:
                 stride = (
                     self.patch_size
@@ -269,7 +272,7 @@ class GeoDataModule(BaseDataModule):
                     else self.patch_size[0]
                 )
             self.predict_sampler = GridGeoSampler(
-                self.predict_dataset, self.patch_size, stride, roi=roi
+                self.predict_dataset, self.patch_size, stride, roi=self.predict_roi
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:

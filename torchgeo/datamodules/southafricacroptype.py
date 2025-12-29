@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
-from shapely import Polygon
 
 from ..datasets import SouthAfricaCropType, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -65,15 +64,11 @@ class SouthAfricaCropTypeDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         dataset = SouthAfricaCropType(**self.kwargs)
         generator = torch.Generator().manual_seed(0)

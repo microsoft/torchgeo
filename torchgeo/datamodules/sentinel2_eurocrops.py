@@ -9,7 +9,6 @@ import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
-from shapely import Polygon
 
 from ..datasets import EuroCrops, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -80,15 +79,11 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.eurocrops = EuroCrops(**self.eurocrops_kwargs)

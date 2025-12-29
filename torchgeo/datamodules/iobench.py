@@ -5,8 +5,6 @@
 
 from typing import Any
 
-from shapely import Polygon
-
 from ..datasets import IOBench
 from ..samplers import GridGeoSampler, RandomGeoSampler
 from .geo import GeoDataModule
@@ -45,15 +43,11 @@ class IOBenchDataModule(GeoDataModule):
             **kwargs,
         )
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         self.dataset = IOBench(**self.kwargs)
 

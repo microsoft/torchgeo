@@ -7,7 +7,6 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch.nn.functional as F
-from shapely import Polygon
 from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
@@ -94,15 +93,11 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         if stage in ['fit']:
             self.train_dataset = ChesapeakeCVPR(

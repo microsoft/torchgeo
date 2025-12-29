@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
-from shapely import Polygon
 from torch import Tensor
 
 from ..datasets import MMFlood
@@ -98,15 +97,11 @@ class MMFloodDataModule(GeoDataModule):
             idxs.append(3)
         return self.median[idxs], self.std[idxs]
 
-    def setup(
-        self, stage: str, roi: Polygon | None = None, stride: int | None = None
-    ) -> None:
+    def setup(self, stage: str) -> None:
         """Set up datasets.
 
         Args:
             stage: Either 'fit', 'validate', 'test', 'predict'.
-            roi: Optional region of interest for predict stage.
-            stride: Optional stride for GridGeoSampler (predict stage only).
         """
         if stage in ['fit']:
             self.train_dataset = MMFlood(**self.kwargs, split='train')
