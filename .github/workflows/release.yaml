@@ -20,7 +20,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: "pyproject.toml"
+          cache-dependency-glob: 'pyproject.toml'
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v6.1.0
@@ -46,7 +46,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: "pyproject.toml"
+          cache-dependency-glob: 'pyproject.toml'
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v6.1.0
