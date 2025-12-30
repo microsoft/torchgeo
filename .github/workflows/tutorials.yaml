@@ -20,24 +20,20 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements/*.txt"
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
           python-version: '3.14'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.1
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/docs.txt', 'requirements/tests.txt') }}-tutorials
       - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
-          pip cache purge
+        run: uv pip install --system -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
       - name: List pip dependencies
-        run: pip list
+        run: uv pip list --system
       - name: Run notebook checks
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:

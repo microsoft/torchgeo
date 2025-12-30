@@ -3,20 +3,19 @@
   "name": "Torchgeo DevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:3.14",
-
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" }
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    },
+    "ghcr.io/devcontainers-extra/features/uv-tool:1": {}
   },
-
   // "postCreateCommand": "",
-  "postStartCommand": "pip install -e .[all]",
-
+  "postStartCommand": "uv pip install --system -e .[all]",
   // Enable GPU support
   "hostRequirements": {
     "gpu": "optional"
   },
-
   "customizations": {
     "vscode": {
       "extensions": [
