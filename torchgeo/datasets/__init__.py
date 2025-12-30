@@ -121,6 +121,7 @@ from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
+from .odiac import ODIAC
 from .openbuildings import OpenBuildings
 from .openstreetmap import OpenStreetMap
 from .oscd import OSCD
@@ -200,6 +201,7 @@ __all__ = (
     'NAIP',
     'NCCM',
     'NLCD',
+    'ODIAC',
     'OSCD',
     'PASTIS',
     'PRISMA',
