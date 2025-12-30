@@ -22,7 +22,7 @@ class NLCD(RasterDataset):
 
     The `Annual NLCD products
     <https://www.usgs.gov/centers/eros/science/annual-national-land-cover-database>`_
-    is an annual land cover product for the conterminous U.S. initially covering the period
+    is an annual land cover product for the conterminous U.S. covering the period
     from 1985 to 2024. The product is a joint effort between the United States Geological Survey
     (`USGS <https://www.usgs.gov/>`_) and the Multi-Resolution Land Characteristics
     Consortium (`MRLC <https://www.mrlc.gov/>`_).
@@ -60,8 +60,6 @@ class NLCD(RasterDataset):
 
     .. versionadded:: 0.5
 
-    .. versionchanged:: 0.9.0
-        Added support and changed default year to 2024.
     """
 
     filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V1.tif'
