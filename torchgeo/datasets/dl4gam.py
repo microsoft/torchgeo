@@ -274,6 +274,7 @@ class DL4GAMAlps(NonGeoDataset):
         if self.transforms is not None:
             sample = self.transforms(sample)
 
+        nc.close()
         return sample
 
     def _verify(self) -> None:
