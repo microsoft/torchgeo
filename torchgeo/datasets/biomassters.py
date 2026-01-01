@@ -182,7 +182,10 @@ class BioMassters(NonGeoDataset):
         filepaths = [
             os.path.join(self.root, f'{self.split}_features', f) for f in filenames
         ]
-        arr_list = [rasterio.open(fp).read() for fp in filepaths]
+        arr_list = []
+        for fp in filepaths:
+            with rasterio.open(fp) as src:
+                arr_list.append(src.read())
         if self.as_time_series:
             arr = np.stack(arr_list, axis=0)
         else:
