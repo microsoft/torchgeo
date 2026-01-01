@@ -173,7 +173,7 @@ def get_2dalibi(num_heads: int, num_patches: int) -> Tensor:
         ratio = start
         return [start * ratio**i for i in range(n)]
 
-    slopes = torch.Tensor(get_slopes(num_heads)).unsqueeze(1)
+    slopes = torch.tensor(get_slopes(num_heads), dtype=torch.float32).unsqueeze(1)
     idxs = []
     for p1 in points:
         for p2 in points:

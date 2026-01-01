@@ -275,7 +275,9 @@ class DigitalTyphoon(NonGeoDataset):
         )
 
         # torchgeo expects a single label
-        sample['label'] = torch.Tensor([sample[target] for target in self.targets])
+        sample['label'] = torch.tensor(
+            [sample[target] for target in self.targets], dtype=torch.float32
+        )
 
         if self.transforms is not None:
             sample = self.transforms(sample)

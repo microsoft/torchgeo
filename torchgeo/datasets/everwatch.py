@@ -189,9 +189,10 @@ class EverWatch(NonGeoDataset):
         boxes = torch.from_numpy(
             sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values
         ).float()
-        labels = torch.Tensor(
-            [self.class2idx[label] for label in sample_df['label'].tolist()]
-        ).long()
+        labels = torch.tensor(
+            [self.class2idx[label] for label in sample_df['label'].tolist()],
+            dtype=torch.long,
+        )
         return boxes, labels
 
     def _verify(self) -> None:
