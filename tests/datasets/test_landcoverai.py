@@ -110,7 +110,7 @@ class TestLandCoverAI:
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         root = tmp_path
         # Copy with the expected filename for LandCoverAI
-        shutil.copy(url, os.path.join(root, 'landcoverai_split.zip'))
+        shutil.copy(url, os.path.join(root, 'output.zip'))
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

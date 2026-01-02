@@ -291,14 +291,14 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     .. note::
 
-       This dataset uses a pre-chipped version of the data that should be uploaded
-       to HuggingFace. The URL and MD5 checksum will need to be updated once the
-       pre-chipped dataset is available.
+       This dataset uses a pre-chipped version of the data available on HuggingFace.
+       The pre-chipped dataset contains the output/ directory with 512x512 image chips
+       and corresponding masks in JPG/PNG format.
     """
 
-    url = 'https://hf.co/datasets/dragon7/LandCover.ai/resolve/split/landcoverai_split.zip'
-    filename = 'landcoverai_split.zip'
-    md5 = None  # TODO: Update with actual MD5 once pre-chipped dataset is uploaded
+    url = 'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
+    filename = 'output.zip'
+    md5 = None  # TODO: Calculate MD5 checksum once file can be downloaded
 
     def __init__(
         self,
