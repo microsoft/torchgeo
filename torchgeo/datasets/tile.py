@@ -102,9 +102,10 @@ class TileDataset(Dataset[dict[str, Tensor]]):
                 - patch_size: size of the square patch to extract
 
         Returns:
-            dict containing:
-                - 'image': tensor of shape (C, H, W) with image data
-                - 'mask': tensor of shape (H, W) with mask data (if mask_paths provided)
+            sample dict with keys:
+
+            * 'image': tensor of shape (C, H, W) with image data
+            * 'mask': tensor of shape (H, W) with mask data (if mask_paths provided)
 
         Raises:
             IndexError: if file_index is out of bounds
