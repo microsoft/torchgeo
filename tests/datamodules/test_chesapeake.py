@@ -61,6 +61,13 @@ class TestChesapeakeCVPRDataModule:
         assert 'image' in batch
         assert 'mask' in batch
 
+    def test_predict_dataloader(self, datamodule: ChesapeakeCVPRDataModule) -> None:
+        datamodule.setup('predict')
+        dataloader = datamodule.predict_dataloader()
+        batch = next(iter(dataloader))
+        assert 'image' in batch
+        assert 'mask' in batch
+
     def test_invalid_param_config(self) -> None:
         with pytest.raises(ValueError, match='The pre-generated prior labels'):
             ChesapeakeCVPRDataModule(

@@ -119,6 +119,13 @@ class ChesapeakeCVPRDataModule(BaseDataModule):
             self.test_sampler = GridTileSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
+        if stage in ['predict']:
+            self.predict_dataset = ChesapeakeCVPRTileDataset(
+                splits=self.test_splits, layers=self.layers, **self.kwargs
+            )
+            self.predict_sampler = GridTileSampler(
+                self.predict_dataset, self.patch_size, self.patch_size
+            )
 
     def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
         """Create a DataLoader for the specified split.
@@ -166,6 +173,14 @@ class ChesapeakeCVPRDataModule(BaseDataModule):
             A DataLoader for testing.
         """
         return self._dataloader_factory('test')
+
+    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+        """Return a DataLoader for prediction.
+
+        Returns:
+            A DataLoader for prediction.
+        """
+        return self._dataloader_factory('predict')
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
