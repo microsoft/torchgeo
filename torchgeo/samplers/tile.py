@@ -17,6 +17,13 @@ TileQuery = tuple[int, int, int, int]
 class TileSampler(Sampler[TileQuery]):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.TileDataset`."""
 
+    def __init__(self, dataset: TileDataset) -> None:
+        """Initialize a new TileSampler instance.
+
+        Args:
+            dataset: tile dataset to sample from
+        """
+
 
 class RandomTileSampler(TileSampler):
     """Samples random patches from tiles, weighted by tile area.
@@ -42,6 +49,7 @@ class RandomTileSampler(TileSampler):
             length: number of samples to draw per epoch
             generator: optional random number generator for reproducibility
         """
+        super().__init__(dataset)
         self.size = size
         self.length = length
         self.generator = generator
@@ -114,6 +122,7 @@ class GridTileSampler(TileSampler):
             size: patch size in pixels (square patches)
             stride: step size between patches (defaults to size for non-overlapping)
         """
+        super().__init__(dataset)
         self.size = size
         self.stride = stride if stride is not None else size
 

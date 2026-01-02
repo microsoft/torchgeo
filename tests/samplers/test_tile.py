@@ -13,8 +13,14 @@ from torchgeo.samplers import GridTileSampler, RandomTileSampler, TileSampler
 
 
 class TestTileSampler:
-    def test_abstract(self) -> None:
-        sampler = TileSampler()
+    @pytest.fixture(scope='class')
+    def dataset(self) -> TileDataset:
+        root = os.path.join('tests', 'data', 'tile')
+        image_paths = sorted(Path(root, 'images').glob('*.tif'))
+        return TileDataset(image_paths=image_paths)
+
+    def test_abstract(self, dataset: TileDataset) -> None:
+        sampler = TileSampler(dataset)
         assert isinstance(sampler, TileSampler)
 
 
