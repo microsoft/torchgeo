@@ -10,6 +10,7 @@ import zipfile
 
 import numpy as np
 import rasterio
+from PIL import Image as PILImage
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
@@ -97,12 +98,11 @@ with rasterio.open(os.path.join('masks', f'{filename}.tif')) as src:
     mask_data = src.read(1)  # Read single band
 
 # Save pre-chipped versions
-from PIL import Image as PILImage
 for i in range(2):
     # Save image as JPEG
     img = PILImage.fromarray(img_data.astype(np.uint8))
     img.save(os.path.join('output', f'{filename}_{i}.jpg'))
-    
+
     # Save mask as PNG
     mask = PILImage.fromarray(mask_data.astype(np.uint8))
     mask.save(os.path.join('output', f'{filename}_{i}_m.png'))
