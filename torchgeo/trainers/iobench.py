@@ -5,7 +5,7 @@
 
 from typing import Any
 
-import lightning
+import lightning.pytorch.utilities.types
 import torch
 from torch import Tensor
 from torch.optim import SGD

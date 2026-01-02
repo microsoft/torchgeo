@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
+import rasterio.features
 import rasterio.merge
 import shapely
 import torch

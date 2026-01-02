@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
+from segmentation_models_pytorch.decoders.upernet.decoder import UPerNetDecoder
 from torch import Tensor
 from torch.nn.modules import Module
 from torchvision.models.feature_extraction import create_feature_extractor
@@ -48,7 +49,7 @@ class BTC(Module):
         self.encoder = SwinBackbone(backbone, backbone_pretrained=backbone_pretrained)
         self.difference = subtraction_fusion
         # pad at the beginning since smp impl. cuts first two elements off
-        self.decoder = smp.decoders.upernet.decoder.UPerNetDecoder(
+        self.decoder = UPerNetDecoder(
             encoder_channels=[0, 0, *self.encoder.channels],
             encoder_depth=4,
             decoder_channels=512,

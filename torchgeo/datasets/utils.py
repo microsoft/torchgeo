@@ -21,7 +21,7 @@ from typing import Any, TypeAlias, cast, overload
 import numpy as np
 import pandas as pd
 import rasterio
-import shapely
+import shapely.affinity
 import torch
 from pandas import Timedelta, Timestamp
 from rasterio import Affine
