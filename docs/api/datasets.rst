@@ -656,6 +656,11 @@ NonGeoClassificationDataset
 
 .. autoclass:: NonGeoClassificationDataset
 
+TileDataset
+^^^^^^^^^^^
+
+.. autoclass:: TileDataset
+
 IntersectionDataset
 ^^^^^^^^^^^^^^^^^^^
 
