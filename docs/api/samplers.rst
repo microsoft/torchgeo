@@ -64,7 +64,7 @@ Random Batch Geo Sampler
 Tile Samplers
 -------------
 
-Tile samplers are used to sample patches from :class:`~torchgeo.datasets.TileDataset` without geospatial reprojection overhead. These are useful when working with large raster files where you want to sample patches based on pixel coordinates rather than geographic coordinates.
+Tile samplers are used to sample patches from :class:`~torchgeo.datasets.TileDataset` without geospatial reprojection overhead. These are useful when working with large raster files in different projections where you want to sample patches based on pixel coordinates rather than geographic coordinates.
 
 .. code-block:: python
 
