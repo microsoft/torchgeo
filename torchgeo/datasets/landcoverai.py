@@ -296,9 +296,16 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
        and corresponding masks in JPG/PNG format.
     """
 
-    url = 'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
+    url = (
+        'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
+    )
     filename = 'output.zip'
-    md5 = "e0cf2403116dc08c97a69604bd0cdb74"
+    md5 = 'e0cf2403116dc08c97a69604bd0cdb74'
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {'filename': 'train.txt', 'md5': '059d87b49390d557d15090167493f758'},
+        'val': {'filename': 'val.txt', 'md5': '3f3ff579b050d1fcd12e66ce48f73d67'},
+        'test': {'filename': 'test.txt', 'md5': 'b019a7607a10166a81f4e243c456c212'},
+    }
 
     def __init__(
         self,
@@ -396,7 +403,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         for split in ['train', 'val', 'test']:
             if not os.path.exists(os.path.join(self.root, f'{split}.txt')):
                 return False
-        
+
         # Check for image chips
         img_query = os.path.join(self.root, 'output', '*_*.jpg')
         mask_query = os.path.join(self.root, 'output', '*_*_m.png')
@@ -408,12 +415,15 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         """Download the dataset and split files."""
         # Download the main output.zip file
         download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
-        
+
         # Download split files from the same base location
-        # Extract the base URL by removing the filename
         base_url = self.url.rsplit('/', 1)[0] + '/'
-        for split_file in ['train.txt', 'val.txt', 'test.txt']:
-            download_url(base_url + split_file, self.root)
+        for split_info in self.metadata.values():
+            download_url(
+                base_url + split_info['filename'],
+                self.root,
+                md5=split_info['md5'] if self.checksum else None,
+            )
 
 
 class LandCoverAI100(LandCoverAI):
