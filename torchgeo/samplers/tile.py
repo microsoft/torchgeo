@@ -3,17 +3,13 @@
 
 """TorchGeo tile samplers."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
-from typing import TYPE_CHECKING
 
 import torch
 from torch import Generator
 from torch.utils.data import Sampler
 
-if TYPE_CHECKING:
-    from ..datasets import TileDataset
+from ..datasets import TileDataset
 
 TileQuery = tuple[int, int, int, int]
 
@@ -28,7 +24,7 @@ class RandomTileSampler(TileSampler):
     Larger tiles are sampled more frequently in proportion to their pixel area.
     This ensures uniform spatial coverage across all tiles regardless of size.
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(
@@ -105,7 +101,7 @@ class GridTileSampler(TileSampler):
 
     Useful for inference when complete coverage of all tiles is needed.
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(

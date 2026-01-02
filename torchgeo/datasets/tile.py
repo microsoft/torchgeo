@@ -29,7 +29,7 @@ class TileDataset(Dataset[dict[str, Tensor]]):
     * Training workflows that require random patch sampling from tiles
     * Datasets where geospatial metadata is not needed or not available
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(
