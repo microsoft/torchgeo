@@ -90,3 +90,24 @@ class TestTileDataset:
     def test_mismatched_paths_length(self, image_paths: list[str]) -> None:
         with pytest.raises(ValueError, match='same length'):
             TileDataset(image_paths, image_paths[:1])
+
+    def test_multi_path_per_sample(self, image_paths: list[str]) -> None:
+        multi_paths: list[list[str]] = [[p, p] for p in image_paths]
+        dataset = TileDataset(multi_paths)
+        sample = dataset[(0, 0, 0, 16)]
+        assert sample['image'].shape == (6, 16, 16)
+
+    def test_mixed_single_and_multi_paths(
+        self, image_paths: list[str], mask_paths: list[str]
+    ) -> None:
+        mixed_paths: list[str | list[str]] = [
+            image_paths[0],
+            [image_paths[1], image_paths[1]],
+            image_paths[2],
+        ]
+        dataset = TileDataset(mixed_paths, mask_paths)
+        assert len(dataset) == 3
+        sample0 = dataset[(0, 0, 0, 16)]
+        assert sample0['image'].shape == (3, 16, 16)
+        sample1 = dataset[(1, 0, 0, 16)]
+        assert sample1['image'].shape == (6, 16, 16)

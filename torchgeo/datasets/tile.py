@@ -3,7 +3,9 @@
 
 """TileDataset for sampling patches from large raster files."""
 
-from collections.abc import Callable, Sequence
+import os
+from collections.abc import Callable, Iterable, Sequence
+from typing import cast
 
 import rasterio
 import rasterio.windows
@@ -34,17 +36,23 @@ class TileDataset(Dataset[dict[str, Tensor]]):
 
     def __init__(
         self,
-        image_paths: Sequence[Path],
+        image_paths: Sequence[Path | Sequence[Path]],
         mask_paths: Sequence[Path] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
         """Initialize a new TileDataset instance.
 
         Args:
-            image_paths: sequence of paths to image files (GeoTIFF or other
-                rasterio-readable formats)
+            image_paths: sequence of paths to image files. Each element can be either:
+
+                * a single path to a GeoTIFF (or other rasterio-readable format)
+                * a sequence of paths that will be concatenated channel-wise
+
+                This allows multi-layer datasets where each sample consists of
+                multiple source files (e.g., different spectral bands or sensors).
             mask_paths: optional sequence of paths to mask files, must be the same
-                length as image_paths if provided
+                length as image_paths if provided. Each mask should be a single-channel
+                GeoTIFF matching the spatial resolution of the corresponding image(s).
             transforms: a function/transform that takes a sample dict and returns
                 a transformed version
 
@@ -52,7 +60,15 @@ class TileDataset(Dataset[dict[str, Tensor]]):
             ValueError: if mask_paths is provided but has different length than
                 image_paths
         """
-        self.image_paths = [str(p) for p in image_paths]
+        # Normalize image_paths: convert each entry to a list of strings
+        self.image_paths: list[list[str]] = []
+        for entry in image_paths:
+            if isinstance(entry, (str, os.PathLike)):
+                self.image_paths.append([str(entry)])
+            else:
+                paths = cast(Iterable[Path], entry)
+                self.image_paths.append([str(p) for p in paths])
+
         self.mask_paths = (
             [str(p) for p in mask_paths] if mask_paths is not None else None
         )
@@ -101,10 +117,13 @@ class TileDataset(Dataset[dict[str, Tensor]]):
 
         window = rasterio.windows.Window(x, y, patch_size, patch_size)
 
-        image_path = self.image_paths[file_index]
-        with rasterio.open(image_path) as src:
-            image = src.read(window=window)
-        sample: dict[str, Tensor] = {'image': torch.from_numpy(image).float()}
+        image_tensors = []
+        for image_path in self.image_paths[file_index]:
+            with rasterio.open(image_path) as src:
+                data = src.read(window=window)
+            image_tensors.append(torch.from_numpy(data).float())
+        image = torch.cat(image_tensors, dim=0)
+        sample: dict[str, Tensor] = {'image': image}
 
         if self.mask_paths is not None:
             mask_path = self.mask_paths[file_index]
@@ -133,5 +152,5 @@ class TileDataset(Dataset[dict[str, Tensor]]):
             msg = f'file_index {file_index} out of bounds for dataset with {len(self.image_paths)} tiles'
             raise IndexError(msg)
 
-        with rasterio.open(self.image_paths[file_index]) as src:
+        with rasterio.open(self.image_paths[file_index][0]) as src:
             return src.height, src.width
