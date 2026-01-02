@@ -8,17 +8,19 @@ from typing import Any
 import kornia.augmentation as K
 import torch.nn.functional as F
 from torch import Tensor
+from torch.utils.data import DataLoader, default_collate
 
-from ..datasets import ChesapeakeCVPR
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from .geo import GeoDataModule
+from ..datasets import ChesapeakeCVPRTileDataset
+from ..samplers import GridTileSampler, RandomTileSampler
+from .geo import BaseDataModule
 
 
-class ChesapeakeCVPRDataModule(GeoDataModule):
+class ChesapeakeCVPRDataModule(BaseDataModule):
     """LightningDataModule implementation for the Chesapeake CVPR Land Cover dataset.
 
     Uses the random splits defined per state to partition tiles into train, val,
-    and test sets.
+    and test sets. Uses tile-based sampling for efficient patch extraction without
+    geospatial reprojection overhead.
     """
 
     def __init__(
@@ -51,21 +53,12 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 instead of the high-resolution labels themselves.
             prior_smoothing_constant: Additive smoothing to add when using prior labels.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.ChesapeakeCVPR`.
+                :class:`~torchgeo.datasets.ChesapeakeCVPRTileDataset`.
 
         Raises:
             ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
-        # This is a rough estimate of how large of a patch we will need to sample in
-        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 3
-        kwargs['transforms'] = K.AugmentationSequential(
-            K.CenterCrop(patch_size), data_keys=None, keepdim=True
-        )
-
-        super().__init__(
-            ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
-        )
+        super().__init__(ChesapeakeCVPRTileDataset, batch_size, num_workers, **kwargs)
 
         assert class_set in [5, 7]
         if use_prior_labels and class_set == 7:
@@ -74,6 +67,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 + ' class set of labels'
             )
 
+        self.patch_size = patch_size
+        self.length = length
         self.train_splits = train_splits
         self.val_splits = val_splits
         self.test_splits = test_splits
@@ -93,6 +88,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
+        self.collate_fn = default_collate
+
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 
@@ -100,29 +97,75 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit']:
-            self.train_dataset = ChesapeakeCVPR(
+            self.train_dataset = ChesapeakeCVPRTileDataset(
                 splits=self.train_splits, layers=self.layers, **self.kwargs
             )
-            self.train_batch_sampler = RandomBatchGeoSampler(
+            self.train_sampler = RandomTileSampler(
                 self.train_dataset,
-                self.original_patch_size,
-                self.batch_size,
-                self.length,
+                self.patch_size,
+                self.length or len(self.train_dataset) * 100,
             )
         if stage in ['fit', 'validate']:
-            self.val_dataset = ChesapeakeCVPR(
+            self.val_dataset = ChesapeakeCVPRTileDataset(
                 splits=self.val_splits, layers=self.layers, **self.kwargs
             )
-            self.val_sampler = GridGeoSampler(
-                self.val_dataset, self.original_patch_size, self.original_patch_size
+            self.val_sampler = GridTileSampler(
+                self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ['test']:
-            self.test_dataset = ChesapeakeCVPR(
+            self.test_dataset = ChesapeakeCVPRTileDataset(
                 splits=self.test_splits, layers=self.layers, **self.kwargs
             )
-            self.test_sampler = GridGeoSampler(
-                self.test_dataset, self.original_patch_size, self.original_patch_size
+            self.test_sampler = GridTileSampler(
+                self.test_dataset, self.patch_size, self.patch_size
             )
+
+    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+        """Create a DataLoader for the specified split.
+
+        Args:
+            split: Either 'train', 'val', 'test', or 'predict'.
+
+        Returns:
+            A DataLoader for the specified split.
+        """
+        dataset = self._valid_attribute(f'{split}_dataset', 'dataset')
+        sampler = self._valid_attribute(f'{split}_sampler', 'sampler')
+        batch_size = self._valid_attribute(f'{split}_batch_size', 'batch_size')
+
+        return DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+            drop_last=split == 'train',
+            persistent_workers=self.num_workers > 0,
+        )
+
+    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+        """Return a DataLoader for training.
+
+        Returns:
+            A DataLoader for training.
+        """
+        return self._dataloader_factory('train')
+
+    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+        """Return a DataLoader for validation.
+
+        Returns:
+            A DataLoader for validation.
+        """
+        return self._dataloader_factory('val')
+
+    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+        """Return a DataLoader for testing.
+
+        Returns:
+            A DataLoader for testing.
+        """
+        return self._dataloader_factory('test')
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int

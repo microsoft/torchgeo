@@ -20,6 +20,7 @@ from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     ChesapeakeCVPR,
+    ChesapeakeCVPRTileDataset,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -231,6 +232,7 @@ __all__ = (
     'ChaBuD',
     'Chesapeake',
     'ChesapeakeCVPR',
+    'ChesapeakeCVPRTileDataset',
     'ChesapeakeDC',
     'ChesapeakeDE',
     'ChesapeakeMD',
