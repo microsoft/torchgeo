@@ -298,7 +298,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     url = 'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
     filename = 'output.zip'
-    md5 = None  # TODO: Calculate MD5 checksum once file can be downloaded
+    md5 = "e0cf2403116dc08c97a69604bd0cdb74"
 
     def __init__(
         self,
