@@ -5,7 +5,6 @@
 
 import abc
 import glob
-import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
@@ -25,7 +24,7 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive, working_dir
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -289,16 +288,11 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     """LandCover.ai dataset.
 
     See the abstract LandCoverAIBase class to find out more.
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `opencv-python <https://pypi.org/project/opencv-python/>`_ to generate
-         the train/val/test split
     """
 
-    sha256 = '15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1'
+    url = 'https://hf.co/datasets/dragon7/LandCover.ai/resolve/split/landcoverai_split.zip'
+    filename = 'landcoverai_split.zip'
+    md5 = None  # To be determined after upload
 
     def __init__(
         self,
@@ -397,24 +391,6 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         images = glob.glob(img_query)
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
-
-    def _extract(self) -> None:
-        """Extract the dataset.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
-        super()._extract()
-
-        # Generate train/val/test splits
-        # Always check the sha256 of this file before executing to avoid malicious code injection
-        # The LandCoverAI100 dataset doesn't contain split.py, so only run if split.py exists
-        if os.path.exists(os.path.join(self.root, 'split.py')):
-            with working_dir(self.root):
-                with open('split.py') as f:
-                    split = f.read().encode('utf-8')
-                    assert hashlib.sha256(split).hexdigest() == self.sha256
-                    exec(split)
 
 
 class LandCoverAI100(LandCoverAI):
