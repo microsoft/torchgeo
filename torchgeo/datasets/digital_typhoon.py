@@ -7,7 +7,7 @@ import glob
 import os
 import tarfile
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, TypedDict
+from typing import ClassVar, TypedDict
 
 import einops
 import matplotlib.pyplot as plt
