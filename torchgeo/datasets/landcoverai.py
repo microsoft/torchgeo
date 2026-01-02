@@ -392,11 +392,28 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
+        # Check for split files
+        for split in ['train', 'val', 'test']:
+            if not os.path.exists(os.path.join(self.root, f'{split}.txt')):
+                return False
+        
+        # Check for image chips
         img_query = os.path.join(self.root, 'output', '*_*.jpg')
         mask_query = os.path.join(self.root, 'output', '*_*_m.png')
         images = glob.glob(img_query)
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
+
+    def _download(self) -> None:
+        """Download the dataset and split files."""
+        # Download the main output.zip file
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+        
+        # Download split files from the same base location
+        # Extract the base URL by removing the filename
+        base_url = self.url.rsplit('/', 1)[0] + '/'
+        for split_file in ['train.txt', 'val.txt', 'test.txt']:
+            download_url(base_url + split_file, self.root)
 
 
 class LandCoverAI100(LandCoverAI):
