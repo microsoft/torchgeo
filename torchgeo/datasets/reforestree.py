@@ -177,11 +177,15 @@ class ReforesTree(NonGeoDataset):
         """
         tile_df = self.annot_df[self.annot_df['img_path'] == os.path.basename(filepath)]
 
-        boxes = torch.Tensor(tile_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist())
-        labels = torch.Tensor(
-            [self.class2idx[label] for label in tile_df['group'].tolist()]
-        ).long()
-        agb = torch.Tensor(tile_df['AGB'].tolist())
+        boxes = torch.tensor(
+            tile_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist(),
+            dtype=torch.float32,
+        )
+        labels = torch.tensor(
+            [self.class2idx[label] for label in tile_df['group'].tolist()],
+            dtype=torch.long,
+        )
+        agb = torch.tensor(tile_df['AGB'].tolist(), dtype=torch.float32)
 
         return boxes, labels, agb
 

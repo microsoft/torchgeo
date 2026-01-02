@@ -20,8 +20,8 @@ class CaFFeDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     """
 
-    mean = torch.Tensor([0.5517])
-    std = torch.Tensor([11.8478])
+    mean = torch.tensor([0.5517])
+    std = torch.tensor([11.8478])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
