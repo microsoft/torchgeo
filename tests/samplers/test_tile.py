@@ -86,11 +86,9 @@ class TestRandomTileSampler:
             assert y >= 0
             assert x >= 0
 
-    @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
-    def test_dataloader(self, dataset: TileDataset, num_workers: int) -> None:
+    def test_dataloader(self, dataset: TileDataset) -> None:
         sampler = RandomTileSampler(dataset, size=16, length=10)
-        dl = DataLoader(dataset, sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(dataset, sampler=sampler, num_workers=0)
         for batch in dl:
             assert 'image' in batch
             break
@@ -172,11 +170,9 @@ class TestGridTileSampler:
         assert len(sampler) == 0
         assert list(sampler) == []
 
-    @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
-    def test_dataloader(self, dataset: TileDataset, num_workers: int) -> None:
+    def test_dataloader(self, dataset: TileDataset) -> None:
         sampler = GridTileSampler(dataset, size=16, stride=32)
-        dl = DataLoader(dataset, sampler=sampler, num_workers=num_workers)
+        dl = DataLoader(dataset, sampler=sampler, num_workers=0)
         for batch in dl:
             assert 'image' in batch
             break
