@@ -129,11 +129,12 @@ class TropicalCyclone(NonGeoDataset):
             the image
         """
         filename = os.path.join(self.root, self.split, f'{image_id}.jpg')
-        with Image.open(filename) as img:
+        with Image.open(filename) as f:
+            img = f.convert('RGB')
             if img.height != self.size or img.width != self.size:
                 resample = Image.Resampling.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             tensor = tensor.permute((2, 0, 1)).float()
             return tensor
