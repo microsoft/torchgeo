@@ -3,7 +3,6 @@
 
 """Implementation of a random convolutional feature projection model."""
 
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -182,8 +181,8 @@ class RCF(Module):
             a tensor of size (B, ``self.num_features``)
         """
         y = F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0)
-        x1a = y.clamp_min(0).mean(dim=(-2, -1), keepdim=True)
-        x1b = y.clamp_max(0).neg_().mean(dim=(-2, -1), keepdim=True)
+        x1a = y.clamp_min(0).mean(dim=(-2, -1))
+        x1b = y.clamp_max(0).neg_().mean(dim=(-2, -1))
         return torch.cat((x1a, x1b), dim=1)
 
 
