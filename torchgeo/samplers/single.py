@@ -272,22 +272,25 @@ class GridGeoSampler(GeoSampler):
             [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
         # For each tile...
-        for i in range(len(self.index)):
-            bounds = self.index.geometry.iloc[i].bounds
+        for tile_idx in range(len(self.index)):
+            bounds = self.index.geometry.iloc[tile_idx].bounds
             xmin, ymin, xmax, ymax = bounds
             if xmax - xmin < self.size[1] or ymax - ymin < self.size[0]:
                 continue
-            tmin, tmax = self.index.index[i].left, self.index.index[i].right
+            tmin, tmax = (
+                self.index.index[tile_idx].left,
+                self.index.index[tile_idx].right,
+            )
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
 
             # For each row...
-            for i in range(rows):
-                ymin = bounds[1] + i * self.stride[0]
+            for row_idx in range(rows):
+                ymin = bounds[1] + row_idx * self.stride[0]
                 ymax = ymin + self.size[0]
 
                 # For each column...
-                for j in range(cols):
-                    xmin = bounds[0] + j * self.stride[1]
+                for col_idx in range(cols):
+                    xmin = bounds[0] + col_idx * self.stride[1]
                     xmax = xmin + self.size[1]
 
                     yield slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)
