@@ -10,7 +10,7 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,❌,✅,✅,✅
 `SPy`_,numpy,numpy,-,numpy,3,0,❌,❌,❌,❌,❌
 `srai`_,PyTorch,"pandas, polars, duckdb","geopandas, duckdb-spatial",-,0,0,❌,❌,❌,❌,❌
-`GeoAI`_,PyTorch,"GDAL, xarray",geopandas,Albumentations,0,6,❌,❌,✅,✅,❌
+`GeoAI`_,PyTorch,"GDAL, xarray",geopandas,Albumentations,0,6,❌,✅,✅,✅,❌
 `ML4Floods`_,PyTorch,pandas,geopandas,Albumentations,0,0,❌,❌,✅,❌,🚧
 `GeoTessera`_,scikit-learn,GDAL,-,geopandas,0,0,✅,❌,✅,❌,❌
 `scikit-eo`_,"scikit-learn, TensorFlow","GDAL, pandas, scipy",geopandas,numpy,0,0,❌,❌,❌,❌,🚧
