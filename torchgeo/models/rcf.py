@@ -3,6 +3,7 @@
 
 """Implementation of a random convolutional feature projection model."""
 
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -171,7 +172,6 @@ class RCF(Module):
 
         return patches_normalized.reshape(orig_shape).astype('float32')
 
-    @torch.inference_mode()
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the RCF model.
 
@@ -182,10 +182,8 @@ class RCF(Module):
             a tensor of size (B, ``self.num_features``)
         """
         y = F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0)
-        x1a = F.relu(y, inplace=False)
-        x1b = F.relu(-y, inplace=True)
-        x1a = x1a.mean(dim=(-2, -1), keepdim=True)
-        x1b = x1b.mean(dim=(-2, -1), keepdim=True)
+        x1a = y.clamp_min(0).mean(dim=(-2, -1), keepdim=True)
+        x1b = y.clamp_max(0).neg_().mean(dim=(-2, -1), keepdim=True)
         return torch.cat((x1a, x1b), dim=1)
 
 
