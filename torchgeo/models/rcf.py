@@ -171,6 +171,7 @@ class RCF(Module):
 
         return patches_normalized.reshape(orig_shape).astype('float32')
 
+    @torch.inference_mode()
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the RCF model.
 
