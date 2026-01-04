@@ -8,5 +8,3 @@ Panopticon_Weights.VIT_BASE14,`link <https://github.com/Panopticon-FM/panopticon
 ResNet50_Weights.FMOW_RGB_GASSL,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__,-,implicit,-,-,,,,,,,,,,,,
 ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,CC-BY-NC-4.0,explicit,-,-,,,,,,,,,,,
 Tessera_Weights.TESSERA,`link <https://github.com/developmentseed/pixelverse>`__,`link <https://arxiv.org/abs/2505.05416>`__,Apache-2.0,-,explicit,implicit,,,,,,,,,,,,
-Tessera_S2_Encoder_Weights.TESSERA,`link <https://github.com/developmentseed/pixelverse>`__,`link <https://arxiv.org/abs/2505.05416>`__,Apache-2.0,-,explicit,implicit,,,,,,,,,,,,
-Tessera_S1_Encoder_Weights.TESSERA,`link <https://github.com/developmentseed/pixelverse>`__,`link <https://arxiv.org/abs/2505.05416>`__,Apache-2.0,-,explicit,implicit,,,,,,,,,,,,

@@ -49,15 +49,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tessera import (
-    Tessera,
-    Tessera_S1_Encoder_Weights,
-    Tessera_S2_Encoder_Weights,
-    Tessera_Weights,
-    tessera,
-    tessera_s1_encoder,
-    tessera_s2_encoder,
-)
+from .tessera import Tessera, Tessera_Weights, tessera
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -113,8 +105,6 @@ __all__ = (
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'Tessera',
-    'Tessera_S1_Encoder_Weights',
-    'Tessera_S2_Encoder_Weights',
     'Tessera_Weights',
     'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
@@ -147,8 +137,6 @@ __all__ = (
     'swin_v2_b',
     'swin_v2_t',
     'tessera',
-    'tessera_s1_encoder',
-    'tessera_s2_encoder',
     'unet',
     'vit_base_patch14_dinov2',
     'vit_base_patch16_224',

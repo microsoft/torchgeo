@@ -8,7 +8,7 @@ Reference implementation:
 * https://github.com/developmentseed/pixelverse
 """
 
-from typing import Any
+from typing import Any, Literal
 
 import torch
 from torch import Tensor, nn
@@ -159,7 +159,7 @@ class Tessera(nn.Module):
 
     * https://arxiv.org/abs/2503.00557
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(self, embed_dim: int = 128) -> None:
@@ -214,7 +214,11 @@ class Tessera(nn.Module):
 
 
 class _TesseraTransforms(nn.Module):
-    """Transforms for Tessera model normalization."""
+    """Transforms for Tessera model normalization.
+
+    Normalizes pixel time series data with shape (..., C) where C is the
+    number of channels in the last dimension.
+    """
 
     mean: Tensor
     std: Tensor
@@ -287,7 +291,7 @@ _tessera_s1_transforms = _TesseraTransforms(mean=_TESSERA_S1_MEAN, std=_TESSERA_
 class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
     """Tessera model weights.
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     TESSERA = Weights(
@@ -320,14 +324,7 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-
-class Tessera_S2_Encoder_Weights(WeightsEnum):  # type: ignore[misc]
-    """Tessera Sentinel-2 encoder weights.
-
-    .. versionadded:: 0.8
-    """
-
-    TESSERA = Weights(
+    S2_ENCODER = Weights(
         url='https://hf.co/isaaccorley/tessera/resolve/11dda783c258148bc6342832df6ef8dc05963702/s2_encoder.pt',
         transforms=_tessera_s2_transforms,
         meta={
@@ -354,14 +351,7 @@ class Tessera_S2_Encoder_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-
-class Tessera_S1_Encoder_Weights(WeightsEnum):  # type: ignore[misc]
-    """Tessera Sentinel-1 encoder weights.
-
-    .. versionadded:: 0.8
-    """
-
-    TESSERA = Weights(
+    S1_ENCODER = Weights(
         url='https://hf.co/isaaccorley/tessera/resolve/439ae74f34d3db458976138907302ac1b2ca4903/s1_encoder.pt',
         transforms=_tessera_s1_transforms,
         meta={
@@ -378,75 +368,44 @@ class Tessera_S1_Encoder_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def tessera(
-    weights: Tessera_Weights | None = None, *args: Any, **kwargs: Any
-) -> Tessera:
+    weights: Tessera_Weights | None = None,
+    model: Literal['combined', 's2', 's1'] = 'combined',
+    *args: Any,
+    **kwargs: Any,
+) -> nn.Module:
     """Tessera pixel time series foundation model.
 
     If you use this model in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2503.00557
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
 
     Args:
         weights: Pre-trained model weights to use.
+        model: Which model variant to return:
+            - 'combined': Full Tessera model with both S1 and S2 encoders (default)
+            - 's2': Sentinel-2 encoder only
+            - 's1': Sentinel-1 encoder only
         *args: Additional arguments to pass to :class:`Tessera`.
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
-        A Tessera model.
+        A Tessera model or encoder.
     """
-    model = Tessera(*args, **kwargs)
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
-    return model
+    tessera_model = Tessera(*args, **kwargs)
 
+    if model == 'combined':
+        output: nn.Module = tessera_model
+        if weights is not None:
+            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+    elif model == 's2':
+        output = tessera_model.s2_backbone
+        if weights is not None:
+            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+    else:
+        output = tessera_model.s1_backbone
+        if weights is not None:
+            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
 
-def tessera_s2_encoder(
-    weights: Tessera_S2_Encoder_Weights | None = None, *args: Any, **kwargs: Any
-) -> nn.Module:
-    """Tessera Sentinel-2 transformer encoder.
-
-    If you use this model in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/2503.00557
-
-    .. versionadded:: 0.8
-
-    Args:
-        weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :class:`Tessera`.
-        **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
-
-    Returns:
-        A transformer encoder for Sentinel-2 data.
-    """
-    model = Tessera(*args, **kwargs).s2_backbone
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
-    return model
-
-
-def tessera_s1_encoder(
-    weights: Tessera_S1_Encoder_Weights | None = None, *args: Any, **kwargs: Any
-) -> nn.Module:
-    """Tessera Sentinel-1 transformer encoder.
-
-    If you use this model in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/2503.00557
-
-    .. versionadded:: 0.8
-
-    Args:
-        weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :class:`Tessera`.
-        **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
-
-    Returns:
-        A transformer encoder for Sentinel-1 data.
-    """
-    model = Tessera(*args, **kwargs).s1_backbone
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
-    return model
+    return output

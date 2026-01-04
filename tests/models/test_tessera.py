@@ -9,15 +9,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.models import (
-    Tessera,
-    Tessera_S1_Encoder_Weights,
-    Tessera_S2_Encoder_Weights,
-    Tessera_Weights,
-    tessera,
-    tessera_s1_encoder,
-    tessera_s2_encoder,
-)
+from torchgeo.models import Tessera, Tessera_Weights, tessera
 
 
 class TestTessera:
@@ -46,7 +38,7 @@ class TestTessera:
 
 
 class TestTesseraWeights:
-    @pytest.fixture(params=[*Tessera_Weights])
+    @pytest.fixture(params=[Tessera_Weights.TESSERA])
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
@@ -65,7 +57,7 @@ class TestTesseraWeights:
         tessera()
 
     def test_tessera_weights(self, mocked_weights: WeightsEnum) -> None:
-        tessera(weights=mocked_weights)
+        tessera(weights=Tessera_Weights(mocked_weights))
 
     def test_transforms(self, weights: WeightsEnum) -> None:
         x = torch.randn(2, 10, 14)
@@ -73,11 +65,11 @@ class TestTesseraWeights:
 
     @pytest.mark.slow
     def test_tessera_download(self, weights: WeightsEnum) -> None:
-        tessera(weights=weights)
+        tessera(weights=Tessera_Weights(weights))
 
 
-class TestTesseraS2EncoderWeights:
-    @pytest.fixture(params=[*Tessera_S2_Encoder_Weights])
+class TestTesseraS2Encoder:
+    @pytest.fixture(params=[Tessera_Weights.S2_ENCODER])
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
@@ -85,21 +77,21 @@ class TestTesseraS2EncoderWeights:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
-        weights = Tessera_S2_Encoder_Weights.TESSERA
+        weights = Tessera_Weights.S2_ENCODER
         path = tmp_path / f'{weights}.pth'
-        model = tessera_s2_encoder()
+        model = tessera(model='s2')
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_tessera_s2_encoder(self) -> None:
-        model = tessera_s2_encoder()
+        model = tessera(model='s2')
         x = torch.randn(2, 10, 11)
         out = model(x)
         assert out.shape == torch.Size([2, 512])
 
     def test_tessera_s2_encoder_weights(self, mocked_weights: WeightsEnum) -> None:
-        tessera_s2_encoder(weights=mocked_weights)
+        tessera(weights=Tessera_Weights(mocked_weights), model='s2')
 
     def test_transforms(self, weights: WeightsEnum) -> None:
         x = torch.randn(2, 10, 11)
@@ -107,11 +99,11 @@ class TestTesseraS2EncoderWeights:
 
     @pytest.mark.slow
     def test_tessera_s2_download(self, weights: WeightsEnum) -> None:
-        tessera_s2_encoder(weights=weights)
+        tessera(weights=Tessera_Weights(weights), model='s2')
 
 
-class TestTesseraS1EncoderWeights:
-    @pytest.fixture(params=[*Tessera_S1_Encoder_Weights])
+class TestTesseraS1Encoder:
+    @pytest.fixture(params=[Tessera_Weights.S1_ENCODER])
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
@@ -119,21 +111,21 @@ class TestTesseraS1EncoderWeights:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
-        weights = Tessera_S1_Encoder_Weights.TESSERA
+        weights = Tessera_Weights.S1_ENCODER
         path = tmp_path / f'{weights}.pth'
-        model = tessera_s1_encoder()
+        model = tessera(model='s1')
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_tessera_s1_encoder(self) -> None:
-        model = tessera_s1_encoder()
+        model = tessera(model='s1')
         x = torch.randn(2, 10, 3)
         out = model(x)
         assert out.shape == torch.Size([2, 512])
 
     def test_tessera_s1_encoder_weights(self, mocked_weights: WeightsEnum) -> None:
-        tessera_s1_encoder(weights=mocked_weights)
+        tessera(weights=Tessera_Weights(mocked_weights), model='s1')
 
     def test_transforms(self, weights: WeightsEnum) -> None:
         x = torch.randn(2, 10, 3)
@@ -141,4 +133,4 @@ class TestTesseraS1EncoderWeights:
 
     @pytest.mark.slow
     def test_tessera_s1_download(self, weights: WeightsEnum) -> None:
-        tessera_s1_encoder(weights=weights)
+        tessera(weights=Tessera_Weights(weights), model='s1')
