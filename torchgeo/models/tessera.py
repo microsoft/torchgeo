@@ -5,7 +5,7 @@
 
 Reference implementation:
 
-* https://github.com/ucam-eo/tessera
+* https://github.com/developmentseed/pixelverse
 """
 
 from typing import Any
