@@ -488,18 +488,7 @@ class RasterDataset(GeoDataset):
                     continue
                 else:
                     filepaths.append(filepath)
-
-                    mint = self.mint
-                    maxt = self.maxt
-                    if 'date' in match.groupdict():
-                        date = match.group('date')
-                        mint, maxt = disambiguate_timestamp(date, self.date_format)
-                    elif 'start' in match.groupdict() and 'stop' in match.groupdict():
-                        start = match.group('start')
-                        stop = match.group('stop')
-                        mint, _ = disambiguate_timestamp(start, self.date_format)
-                        _, maxt = disambiguate_timestamp(stop, self.date_format)
-
+                    mint, maxt = self._filepath_to_timestamp(filepath)
                     datetimes.append((mint, maxt))
 
         if len(filepaths) == 0:
@@ -581,6 +570,32 @@ class RasterDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _filepath_to_timestamp(self, filepath: Path) -> tuple[datetime, datetime]:
+        """Extract minimum and maximum timestamps from the filepath.
+
+        Args:
+            filepath: Full path to the file.
+
+        Returns:
+            (mint, maxt) tuple.
+        """
+        mint = self.mint
+        maxt = self.maxt
+
+        filename = os.path.basename(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'date' in match.groupdict():
+                date = match.group('date')
+                mint, maxt = disambiguate_timestamp(date, self.date_format)
+            elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                start = match.group('start')
+                stop = match.group('stop')
+                mint, _ = disambiguate_timestamp(start, self.date_format)
+                _, maxt = disambiguate_timestamp(stop, self.date_format)
+
+        return mint, maxt
 
     def _update_filepath(self, band: str, filepath: str) -> str:
         """Update `filepath` to point to `band`.

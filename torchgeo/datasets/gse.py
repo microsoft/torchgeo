@@ -3,13 +3,16 @@
 
 """Google Satellite Embedding dataset."""
 
+import pathlib
+from datetime import datetime
+
 import einops
 import torch
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import RasterDataset
-from .utils import Sample
+from .utils import Path, Sample, disambiguate_timestamp
 
 
 class GoogleSatelliteEmbedding(RasterDataset):
@@ -58,13 +61,31 @@ class GoogleSatelliteEmbedding(RasterDataset):
     .. versionadded:: 0.9
     """
 
-    # TODO: only possible to get year from directory path, e.g.,
-    #
-    # * GCS/SC: 2024/10N/x086q72fv2f9q1x4a-0000000000-0000000000.tiff
-    # * HF:     2024/U/1/L/7/471U_587L.tif
+    date_format = '%Y'
 
     # https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_SATELLITE_EMBEDDING_V1_ANNUAL#bands
     all_bands = tuple(f'A{n:02}' for n in range(64))
+
+    def _filepath_to_timestamp(self, filepath: Path) -> tuple[datetime, datetime]:
+        """Extract minimum and maximum timestamps from the filepath.
+
+        Args:
+            filepath: Full path to the file.
+
+        Returns:
+            (mint, maxt) tuple.
+        """
+        # Example file paths:
+        #
+        # * GCS/SC: 2024/10N/x086q72fv2f9q1x4a-0000000000-0000000000.tiff
+        # * HF:     2024/U/1/L/7/471U_587L.tif
+        for part in pathlib.Path(filepath).parts[::-1]:
+            try:
+                return disambiguate_timestamp(part, self.date_format)
+            except ValueError:
+                pass
+
+        return self.mint, self.maxt
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

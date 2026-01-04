@@ -40,6 +40,8 @@ Z = np.random.randint(np.iinfo(dtype).min, np.iinfo(dtype).max, size=size, dtype
 os.makedirs(directory, exist_ok=True)
 with rasterio.open(os.path.join(directory, filename), 'w', **profile) as src:
     src.write(Z)
+with rasterio.open(filename, 'w', **profile) as src:
+    src.write(Z)
 
 # Major TOM Hugging Face format
 directory = os.path.join('2024', 'U', '1', 'L', '7')

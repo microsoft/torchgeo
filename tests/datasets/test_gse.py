@@ -21,7 +21,11 @@ from torchgeo.datasets import (
 
 class TestGoogleSatelliteEmbedding:
     @pytest.fixture(
-        params=[os.path.join('2024', '10N'), os.path.join('2024', 'U', '1', 'L', '7')]
+        params=[
+            os.path.join('2024', '10N'),
+            os.path.join('2024', 'U', '1', 'L', '7'),
+            'x086q72fv2f9q1x4a-0000000000-0000000000.tiff',
+        ]
     )
     def dataset(self, request: SubRequest) -> GoogleSatelliteEmbedding:
         paths = os.path.join('tests', 'data', 'gse', request.param)
