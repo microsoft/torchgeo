@@ -18,3 +18,4 @@ ViTSmall14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON, 2,`link <https://github.com/zhu
 ViTBase14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON, 2,`link <https://github.com/zhu-xlab/softcon>`__,`link <https://arxiv.org/abs/2405.20462>`__,"CC-BY-4.0"
 Swin_V2_B_Weights.SENTINEL1_MI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
 Swin_V2_B_Weights.SENTINEL1_SI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
+Tessera_Weights.TESSERA_SENTINEL1_ENCODER,3,`link <https://github.com/ucam-eo/tessera>`__,`link <https://arxiv.org/abs/2506.20380>`__,"MIT"

@@ -1,18 +1,87 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
+#
+# Based on the original code: https://github.com/ucam-eo/tessera
 
-"""Tessera pixel time series foundation model.
+"""Tessera pixel time-series foundation model."""
 
-Reference implementation:
-
-* https://github.com/developmentseed/pixelverse
-"""
-
-from typing import Any, Literal
+from typing import Any
 
 import torch
+import torchvision.transforms.v2 as T
+from einops import rearrange
 from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
+
+_S2_BAND_MEAN = [
+    1711.0938,
+    1308.8511,
+    1546.4543,
+    3010.1293,
+    3106.5083,
+    2068.3044,
+    2685.0845,
+    2931.5889,
+    2514.6928,
+    1899.4922,
+]
+_S2_BAND_STD = [
+    1926.1026,
+    1862.9751,
+    1803.1792,
+    1741.7837,
+    1677.4543,
+    1888.7862,
+    1736.3090,
+    1715.8104,
+    1514.5199,
+    1398.4779,
+]
+_S1_BAND_MEAN = [5484.0407, 3003.7812]
+_S1_BAND_STD = [1871.2334, 1726.0670]
+_TESSERA_S2_MEAN = [*_S2_BAND_MEAN, 0.0]
+_TESSERA_S2_STD = [*_S2_BAND_STD, 1.0]
+_TESSERA_S1_MEAN = [*_S1_BAND_MEAN, 0.0]
+_TESSERA_S1_STD = [*_S1_BAND_STD, 1.0]
+_TESSERA_MEAN = _TESSERA_S2_MEAN + _TESSERA_S1_MEAN
+_TESSERA_STD = _TESSERA_S2_STD + _TESSERA_S1_STD
+
+
+class _PixelTimeSeriesNormalize(T.Normalize):
+    """Normalize pixel time series data."""
+
+    def forward(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the PixelTimeSeriesNormalize.
+
+        Args:
+            tensor: Input tensor of shape (time, channels) or (batch, time, channels).
+
+        Returns:
+            Normalized tensor with the same shape as input.
+        """
+        assert tensor.ndim in [2, 3], (
+            'Input must be a 2D (time, channels) or 3D (batch, time, channels) tensor'
+        )
+        if tensor.ndim == 2:
+            x = rearrange(tensor, 't c -> () c () t')
+            x = super().forward(x)
+            x = rearrange(x, '() c () t -> t c')
+        elif tensor.ndim == 3:
+            x = rearrange(tensor, 'b t c -> b c () t')
+            x = super().forward(x)
+            x = rearrange(x, 'b c () t -> b t c')
+        return x
+
+
+_tessera_transforms = torch.nn.Sequential(
+    _PixelTimeSeriesNormalize(mean=_TESSERA_MEAN, std=_TESSERA_STD, inplace=True)
+)
+_tessera_s2_transforms = torch.nn.Sequential(
+    _PixelTimeSeriesNormalize(mean=_TESSERA_S2_MEAN, std=_TESSERA_S2_STD, inplace=True)
+)
+_tessera_s1_transforms = torch.nn.Sequential(
+    _PixelTimeSeriesNormalize(mean=_TESSERA_S1_MEAN, std=_TESSERA_S1_STD, inplace=True)
+)
 
 
 class TemporalAwarePooling(nn.Module):
@@ -151,13 +220,9 @@ class Tessera(nn.Module):
     Sentinel-1 and Sentinel-2 satellites. It uses separate transformer
     encoders for SAR and optical data with temporal-aware pooling.
 
-    Reference implementation:
-
-    * https://github.com/ucam-eo/tessera
-
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2503.00557
+    * https://arxiv.org/abs/2506.20380
 
     .. versionadded:: 0.9
     """
@@ -213,81 +278,6 @@ class Tessera(nn.Module):
         return output
 
 
-class _TesseraTransforms(nn.Module):
-    """Transforms for Tessera model normalization.
-
-    Normalizes pixel time series data with shape (..., C) where C is the
-    number of channels in the last dimension.
-    """
-
-    mean: Tensor
-    std: Tensor
-
-    def __init__(self, mean: list[float], std: list[float]) -> None:
-        """Initialize a new _TesseraTransforms instance.
-
-        Args:
-            mean: Mean values for each channel.
-            std: Standard deviation values for each channel.
-        """
-        super().__init__()
-        self.register_buffer('mean', torch.tensor(mean))
-        self.register_buffer('std', torch.tensor(std))
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Apply normalization to input tensor.
-
-        Args:
-            x: Input tensor of shape (..., C).
-
-        Returns:
-            Normalized tensor.
-        """
-        output: Tensor = (x - self.mean) / self.std
-        return output
-
-
-# Sentinel-2 and Sentinel-1 band statistics
-_S2_BAND_MEAN = [
-    1711.0938,
-    1308.8511,
-    1546.4543,
-    3010.1293,
-    3106.5083,
-    2068.3044,
-    2685.0845,
-    2931.5889,
-    2514.6928,
-    1899.4922,
-]
-_S2_BAND_STD = [
-    1926.1026,
-    1862.9751,
-    1803.1792,
-    1741.7837,
-    1677.4543,
-    1888.7862,
-    1736.3090,
-    1715.8104,
-    1514.5199,
-    1398.4779,
-]
-
-_S1_BAND_MEAN = [5484.0407, 3003.7812]
-_S1_BAND_STD = [1871.2334, 1726.0670]
-
-_TESSERA_S2_MEAN = [*_S2_BAND_MEAN, 0.0]
-_TESSERA_S2_STD = [*_S2_BAND_STD, 1.0]
-_TESSERA_S1_MEAN = [*_S1_BAND_MEAN, 0.0]
-_TESSERA_S1_STD = [*_S1_BAND_STD, 1.0]
-_TESSERA_MEAN = [*_TESSERA_S2_MEAN, *_TESSERA_S1_MEAN]
-_TESSERA_STD = [*_TESSERA_S2_STD, *_TESSERA_S1_STD]
-
-_tessera_transforms = _TesseraTransforms(mean=_TESSERA_MEAN, std=_TESSERA_STD)
-_tessera_s2_transforms = _TesseraTransforms(mean=_TESSERA_S2_MEAN, std=_TESSERA_S2_STD)
-_tessera_s1_transforms = _TesseraTransforms(mean=_TESSERA_S1_MEAN, std=_TESSERA_S1_STD)
-
-
 class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
     """Tessera model weights.
 
@@ -298,11 +288,9 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
         url='https://hf.co/isaaccorley/tessera/resolve/51afe75b724d387ef9fcb6f6e090a5be0b906919/model.pt',
         transforms=_tessera_transforms,
         meta={
-            'dataset': 'Major TOM',
-            'model': 'tessera',
-            'publication': 'https://arxiv.org/abs/2503.00557',
+            'dataset': 'TESSERA',
+            'publication': 'https://arxiv.org/abs/2506.20380',
             'repo': 'https://github.com/ucam-eo/tessera',
-            'ssl_method': 'contrastive',
             'bands': [
                 'B2',
                 'B3',
@@ -324,15 +312,13 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    S2_ENCODER = Weights(
+    TESSERA_SENTINEL2_ENCODER = Weights(
         url='https://hf.co/isaaccorley/tessera/resolve/11dda783c258148bc6342832df6ef8dc05963702/s2_encoder.pt',
         transforms=_tessera_s2_transforms,
         meta={
-            'dataset': 'Major TOM',
-            'model': 'tessera_s2_encoder',
-            'publication': 'https://arxiv.org/abs/2503.00557',
+            'dataset': 'TESSERA',
+            'publication': 'https://arxiv.org/abs/2506.20380',
             'repo': 'https://github.com/ucam-eo/tessera',
-            'ssl_method': 'contrastive',
             'bands': [
                 'B2',
                 'B3',
@@ -351,15 +337,13 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    S1_ENCODER = Weights(
+    TESSERA_SENTINEL1_ENCODER = Weights(
         url='https://hf.co/isaaccorley/tessera/resolve/439ae74f34d3db458976138907302ac1b2ca4903/s1_encoder.pt',
         transforms=_tessera_s1_transforms,
         meta={
-            'dataset': 'Major TOM',
-            'model': 'tessera_s1_encoder',
-            'publication': 'https://arxiv.org/abs/2503.00557',
+            'dataset': 'TESSERA',
+            'publication': 'https://arxiv.org/abs/2506.20380',
             'repo': 'https://github.com/ucam-eo/tessera',
-            'ssl_method': 'contrastive',
             'bands': ['VV', 'VH', 'S1_DOY'],
             'in_chans': 3,
             'embed_dim': 512,
@@ -368,44 +352,41 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def tessera(
-    weights: Tessera_Weights | None = None,
-    model: Literal['combined', 's2', 's1'] = 'combined',
-    *args: Any,
-    **kwargs: Any,
+    weights: Tessera_Weights | None = None, *args: Any, **kwargs: Any
 ) -> nn.Module:
     """Tessera pixel time series foundation model.
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2503.00557
+    * https://arxiv.org/abs/2506.20380
 
     .. versionadded:: 0.9
 
     Args:
         weights: Pre-trained model weights to use.
-        model: Which model variant to return:
-            - 'combined': Full Tessera model with both S1 and S2 encoders (default)
-            - 's2': Sentinel-2 encoder only
-            - 's1': Sentinel-1 encoder only
         *args: Additional arguments to pass to :class:`Tessera`.
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
         A Tessera model or encoder.
     """
-    tessera_model = Tessera(*args, **kwargs)
+    model: nn.Module = Tessera(*args, **kwargs)
 
-    if model == 'combined':
-        output: nn.Module = tessera_model
-        if weights is not None:
-            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
-    elif model == 's2':
-        output = tessera_model.s2_backbone
-        if weights is not None:
-            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+    if weights is None:
+        return model
+
+    if weights == Tessera_Weights.TESSERA:
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+        return model
+    elif weights == Tessera_Weights.TESSERA_SENTINEL2_ENCODER:
+        model.s2_backbone.load_state_dict(
+            weights.get_state_dict(progress=True), strict=True
+        )
+        return model.s2_backbone
+    elif weights == Tessera_Weights.TESSERA_SENTINEL1_ENCODER:
+        model.s1_backbone.load_state_dict(
+            weights.get_state_dict(progress=True), strict=True
+        )
+        return model.s1_backbone
     else:
-        output = tessera_model.s1_backbone
-        if weights is not None:
-            output.load_state_dict(weights.get_state_dict(progress=True), strict=True)
-
-    return output
+        raise ValueError(f'Unsupported weights: {weights}')
