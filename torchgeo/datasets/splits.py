@@ -13,6 +13,7 @@ from typing import cast
 import geopandas
 import pandas as pd
 import shapely
+import shapely.ops
 from geopandas import GeoDataFrame
 from shapely import LineString, Polygon
 from torch import Generator, default_generator, randint, randperm

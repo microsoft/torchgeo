@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pyproj
 import rasterio
+import rasterio.features
 import shapely
 import torch
 from geopandas import GeoDataFrame

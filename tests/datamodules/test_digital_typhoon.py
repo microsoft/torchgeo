@@ -10,7 +10,7 @@ import pytest
 from torchgeo.datamodules import DigitalTyphoonDataModule
 from torchgeo.datasets.digital_typhoon import DigitalTyphoon, _SampleSequenceDict
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestDigitalTyphoonDataModule:
