@@ -404,7 +404,7 @@ def tessera(
 
 def tessera_s2_encoder(
     weights: Tessera_S2_Encoder_Weights | None = None, *args: Any, **kwargs: Any
-) -> TransformerEncoder:
+) -> nn.Module:
     """Tessera Sentinel-2 transformer encoder.
 
     If you use this model in your research, please cite the following paper:
@@ -419,7 +419,7 @@ def tessera_s2_encoder(
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
-        A TransformerEncoder for Sentinel-2 data.
+        A transformer encoder for Sentinel-2 data.
     """
     model = Tessera(*args, **kwargs).s2_backbone
     if weights is not None:
@@ -429,7 +429,7 @@ def tessera_s2_encoder(
 
 def tessera_s1_encoder(
     weights: Tessera_S1_Encoder_Weights | None = None, *args: Any, **kwargs: Any
-) -> TransformerEncoder:
+) -> nn.Module:
     """Tessera Sentinel-1 transformer encoder.
 
     If you use this model in your research, please cite the following paper:
@@ -444,7 +444,7 @@ def tessera_s1_encoder(
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
-        A TransformerEncoder for Sentinel-1 data.
+        A transformer encoder for Sentinel-1 data.
     """
     model = Tessera(*args, **kwargs).s1_backbone
     if weights is not None:
