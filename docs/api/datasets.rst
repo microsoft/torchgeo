@@ -71,6 +71,11 @@ Global Mangrove Distribution
 
 .. autoclass:: CMSGlobalMangroveCanopy
 
+Google Satellite Embedding
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GoogleSatelliteEmbedding
+
 Cropland Data Layer
 ^^^^^^^^^^^^^^^^^^^
 
