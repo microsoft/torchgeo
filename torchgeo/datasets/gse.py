@@ -67,10 +67,7 @@ class GoogleSatelliteEmbedding(RasterDataset):
     all_bands = tuple(f'A{n:02}' for n in range(64))
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -87,11 +84,11 @@ class GoogleSatelliteEmbedding(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        c, h, w = sample['image'].shape
+        _, h, w = sample['image'].shape
         A = einops.rearrange(sample['image'], 'c h w -> (h w) c')
 
         # Use PCA to project embeddings from 64D to 3D space
-        U, S, V = torch.pca_lowrank(A, q=3)
+        _, _, V = torch.pca_lowrank(A, q=3)
         B = A @ V
 
         B = (B - B.min()) / (B.max() - B.min())
