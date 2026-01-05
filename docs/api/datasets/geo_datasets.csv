@@ -32,3 +32,4 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
 `South Africa Crop Type`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
 `South America Soybean`_,Masks,"Landsat, MODIS",-,-,30
+`Tessera Embeddings`_,Embedding,Sentinel 1/2,CC-BY-4.0,"1,000x1,000",10

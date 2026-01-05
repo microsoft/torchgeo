@@ -3,7 +3,6 @@
 
 """Tessera embeddings dataset."""
 
-
 import einops
 import torch
 from matplotlib import pyplot as plt

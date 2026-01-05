@@ -203,6 +203,11 @@ South America Soybean
 
 .. autoclass:: SouthAmericaSoybean
 
+Tessera Embeddings
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TesseraEmbeddings
+
 .. _Non-geospatial Datasets:
 
 Non-geospatial Datasets
