@@ -166,6 +166,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .tessera import TesseraEmbeddings
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -343,6 +344,7 @@ __all__ = (
     'SpaceNet8',
     'Substation',
     'SustainBenchCropYield',
+    'TesseraEmbeddings',
     'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
