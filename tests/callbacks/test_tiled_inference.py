@@ -7,6 +7,7 @@
 from pathlib import Path
 
 import pytest
+import rasterio
 import torch
 
 from torchgeo.callbacks import TiledInferenceCallback
@@ -78,8 +79,8 @@ class TestTiledInferenceCallback:
         callback.on_predict_batch_end(None, None, outputs, batch, 0)
 
         assert len(callback.patch_metadata) == 2
-        assert (callback.temp_dir / 'patch_000000.pt').exists()
-        assert (callback.temp_dir / 'patch_000001.pt').exists()
+        assert (callback.temp_dir / 'patch_000000.tif').exists()
+        assert (callback.temp_dir / 'patch_000001.tif').exists()
 
         meta = callback.patch_metadata[0]
         assert 'patch_id' in meta
@@ -129,15 +130,21 @@ class TestTiledInferenceCallback:
         callback.crs = 'EPSG:32631'
         callback.num_classes = 5
 
-        patch_file = callback.temp_dir / 'patch_000000.pt'
-        torch.save(
-            {
-                'logits': torch.randn(5, 64, 64),
-                'bounds': torch.tensor([0, 64, 1, 0, 64, 1, 0, 1, 1]),
-                'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
-            },
+        patch_file = callback.temp_dir / 'patch_000000.tif'
+        logits = torch.randn(5, 64, 64).numpy()
+        with rasterio.open(
             patch_file,
-        )
+            'w',
+            driver='GTiff',
+            height=64,
+            width=64,
+            count=5,
+            dtype='float32',
+            compress='lzw',
+            predictor=2,
+            tiled=True,
+        ) as dst:
+            dst.write(logits)
 
         callback.patch_metadata = [
             {

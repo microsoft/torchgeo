@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import torch
+import rasterio
 from affine import Affine
 from tqdm import tqdm
 
@@ -353,8 +353,8 @@ def weighted_merge(
     """
     from torchgeo.callbacks._writer import GeoTIFFWriter
 
-    first_patch = torch.load(patch_metadata[0]['file'])
-    patch_h, patch_w = first_patch['logits'].shape[-2:]
+    with rasterio.open(patch_metadata[0]['file']) as src:
+        patch_h, patch_w = src.height, src.width
 
     if dataset_bounds is not None and dataset_res is not None:
         minx, miny, maxx, maxy = dataset_bounds
@@ -433,8 +433,8 @@ def weighted_merge(
                 grid, patch_metadata, chunk_y, chunk_x, chunk_h, chunk_w, grid_size
             )
             for meta in overlapping:
-                patch_data = torch.load(meta['file'])
-                logits = patch_data['logits'].numpy()
+                with rasterio.open(meta['file']) as src:
+                    logits = src.read().astype(np.float32)
 
                 edge_deltas = meta.get('edge_deltas', (delta, delta, delta, delta))
                 top, bottom, left, right = edge_deltas

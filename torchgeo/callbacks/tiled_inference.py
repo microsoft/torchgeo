@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import rasterio
 import torch
 from lightning.pytorch.callbacks import Callback
 
@@ -144,15 +145,29 @@ class TiledInferenceCallback(Callback):
             transform_tensor = transforms[i].cpu().clone()
 
             assert self.temp_dir is not None
-            patch_path = self.temp_dir / f'patch_{patch_id:06d}.pt'
-            torch.save(
-                {
-                    'logits': patch_logits,
-                    'bounds': bounds_tensor,
-                    'transform': transform_tensor,
-                },
-                patch_path,
+            patch_path = self.temp_dir / f'patch_{patch_id:06d}.tif'
+            num_classes = patch_logits.shape[0]
+            class_predictions = patch_logits.argmax(dim=0)
+            one_hot = (
+                torch.nn.functional.one_hot(
+                    class_predictions.long(), num_classes=num_classes
+                )
+                .permute(2, 0, 1)
+                .to(torch.uint8)
+                .numpy()
             )
+            with rasterio.open(
+                patch_path,
+                'w',
+                driver='GTiff',
+                height=one_hot.shape[1],
+                width=one_hot.shape[2],
+                count=one_hot.shape[0],
+                dtype='uint8',
+                compress='lzw',
+                tiled=True,
+            ) as dst:
+                dst.write(one_hot)
 
             geo_xmin = bounds_tensor[0].item()
             geo_xmax = bounds_tensor[1].item()
