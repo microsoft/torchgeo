@@ -14,7 +14,6 @@ from collections.abc import Callable
 from typing import Any
 
 import torch.nn as nn
-from tessera import Tessera_Weights, tessera
 from torchvision.models._api import WeightsEnum
 
 from .aurora import Aurora_Weights, aurora_swin_unet
@@ -51,6 +50,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
+from .tessera import Tessera_Weights, tessera
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
