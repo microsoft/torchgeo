@@ -365,3 +365,13 @@ torchgeo = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = ["torchgeo*"]
+
+[tool.ty.rules]
+deprecated = "ignore"
+unresolved-attribute = "ignore"
+unresolved-import = "ignore"
+unresolved-reference = "ignore"
+
+[tool.ty.src]
+include = ["torchgeo", "tests"]
+exclude = ["tests/data"]
