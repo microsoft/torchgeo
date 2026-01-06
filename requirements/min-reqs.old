@@ -6,6 +6,7 @@ jsonargparse[signatures]==4.25.0
 kornia==0.8.2
 lightly==1.4.5
 lightning==2.0.0
+lightning-cloud<0.6
 matplotlib==3.6.0
 numpy==1.24.0
 pandas==1.5.0
