@@ -655,7 +655,7 @@ class RasterDataset(GeoDataset):
         src = rasterio.open(filepath)
 
         # Only warp if necessary
-        if src.crs != self.crs:
+        if src.crs != self.crs or src.transform.a < 0 or src.transform.e > 0:
             vrt = WarpedVRT(src, crs=self.crs)
             src.close()
             return vrt
