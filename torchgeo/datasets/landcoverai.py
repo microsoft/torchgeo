@@ -297,7 +297,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     """
 
     url = (
-        'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
+        'https://hf.co/datasets/dragon7/LandCover.ai/resolve/262c75fbbf77d107f0a8335e9eef1f6234481d08/output.zip'
     )
     filename = 'output.zip'
     md5 = 'e0cf2403116dc08c97a69604bd0cdb74'
