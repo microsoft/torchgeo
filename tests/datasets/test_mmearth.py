@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 
 from torchgeo.datasets import DatasetNotFoundError, MMEarth
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 data_dir_dict = {
     'MMEarth': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001'),

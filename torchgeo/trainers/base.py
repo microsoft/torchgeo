@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any
 
-import lightning
+import lightning.pytorch.utilities.types
 from lightning.pytorch import LightningModule
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau

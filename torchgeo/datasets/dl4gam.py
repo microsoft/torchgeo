@@ -241,38 +241,42 @@ class DL4GAMAlps(NonGeoDataset):
                 * the additional features (DEM, derived features, etc.) if required
         """
         xr = lazy_import('xarray')
-        nc = xr.open_dataset(
+
+        with xr.open_dataset(
             self.fp_patches[index], decode_coords='all', mask_and_scale=True
-        )
+        ) as nc:
+            # extract the S2 image and masks from the netcdf file
+            all_band_names = nc.band_data.long_name
+            idx_img = [all_band_names.index(b) for b in self.bands]
+            image = nc.band_data.isel(band=idx_img).values.astype(np.float32)
+            id_cloud_mask = all_band_names.index('CLOUDLESS_MASK')
+            mask_clouds_and_shadows = ~(
+                nc.band_data.isel(band=id_cloud_mask).values == 1
+            )
+            sample = {
+                'image': torch.from_numpy(image),
+                'mask_glacier': torch.from_numpy(~np.isnan(nc.mask_all_g_id.values)),
+                'mask_debris': torch.from_numpy(nc.mask_debris.values == 1),
+                'mask_clouds_and_shadows': torch.from_numpy(mask_clouds_and_shadows),
+            }
 
-        # extract the S2 image and masks from the netcdf file
-        all_band_names = nc.band_data.long_name
-        idx_img = [all_band_names.index(b) for b in self.bands]
-        image = nc.band_data.isel(band=idx_img).values.astype(np.float32)
-        id_cloud_mask = all_band_names.index('CLOUDLESS_MASK')
-        mask_clouds_and_shadows = ~(nc.band_data.isel(band=id_cloud_mask).values == 1)
-        sample = {
-            'image': torch.from_numpy(image),
-            'mask_glacier': torch.from_numpy(~np.isnan(nc.mask_all_g_id.values)),
-            'mask_debris': torch.from_numpy(nc.mask_debris.values == 1),
-            'mask_clouds_and_shadows': torch.from_numpy(mask_clouds_and_shadows),
-        }
+            # extract the additional features if needed
+            if self.extra_features:
+                for feature in self.extra_features:
+                    assert feature in nc, (
+                        f'Feature {feature} not found in the netcdf file'
+                    )
+                    vals = nc[feature].values.astype(np.float32)
 
-        # extract the additional features if needed
-        if self.extra_features:
-            for feature in self.extra_features:
-                assert feature in nc, f'Feature {feature} not found in the netcdf file'
-                vals = nc[feature].values.astype(np.float32)
+                    # impute the missing values with the mean
+                    # or zero (for dh/dt and surface velocity)
+                    v_fill = 0.0 if feature in ('dhdt', 'v') else np.nanmean(vals)
+                    vals[np.isnan(vals)] = v_fill
 
-                # impute the missing values with the mean
-                # or zero (for dh/dt and surface velocity)
-                v_fill = 0.0 if feature in ('dhdt', 'v') else np.nanmean(vals)
-                vals[np.isnan(vals)] = v_fill
+                    sample[feature] = torch.from_numpy(vals)
 
-                sample[feature] = torch.from_numpy(vals)
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+            if self.transforms is not None:
+                sample = self.transforms(sample)
 
         return sample
 

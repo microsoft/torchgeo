@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
-pytest.importorskip('laspy', minversion='2')
+pytest.importorskip('laspy', minversion='2.5.3')
 
 
 class TestIDTReeS:

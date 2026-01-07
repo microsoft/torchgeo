@@ -51,7 +51,7 @@ class TestCopernicusBench:
         dataset, directory, kwargs = request.param
 
         if dataset == 'lcz_s2':
-            pytest.importorskip('h5py', minversion='3.8')
+            pytest.importorskip('h5py', minversion='3.10')
 
         root = os.path.join('tests', 'data', 'copernicus', directory)
         transforms = nn.Identity()
