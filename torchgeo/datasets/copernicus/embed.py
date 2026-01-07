@@ -23,9 +23,9 @@ class CopernicusEmbed(RasterDataset):
     `Copernicus-Embed
     <https://github.com/zhu-xlab/Copernicus-FM/tree/main/Copernicus-Embed-025deg>`__
     is an embedding dataset that gives each 0.25x0.25 grid one embedding vector,
-    aggregrated over all available modalities from the whole Copernicus-Pretrain dataset
+    aggregated over all available modalities from the whole Copernicus-Pretrain dataset
     (721x1440x768, filling empty ocean grids with 0). This dataset can be seen as a
-    semantic representaion product that integrates various sources of satellite
+    semantic representation product that integrates various sources of satellite
     observations at an extremely high compression ratio. It also makes it very
     convenient to link Earth's surface to the atmosphere (e.g., as improved static
     variables adding to ERA5), unlocking new possibilities in the development of
