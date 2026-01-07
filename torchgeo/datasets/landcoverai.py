@@ -297,7 +297,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     """
 
     url = (
-        'https://huggingface.co/datasets/dragon7/LandCover.ai/resolve/split/output.zip'
+        'https://hf.co/datasets/dragon7/LandCover.ai/resolve/262c75fbbf77d107f0a8335e9eef1f6234481d08/output.zip'
     )
     filename = 'output.zip'
     md5 = 'e0cf2403116dc08c97a69604bd0cdb74'
@@ -417,7 +417,12 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
 
         # Download split files from the same base location
-        base_url = self.url.rsplit('/', 1)[0] + '/'
+        # Handle both URL paths (/) and Windows paths (\)
+        if '/' in self.url:
+            base_url = self.url.rsplit('/', 1)[0] + '/'
+        else:
+            base_url = self.url.rsplit(os.sep, 1)[0] + os.sep
+
         for split_info in self.metadata.values():
             download_url(
                 base_url + split_info['filename'],
