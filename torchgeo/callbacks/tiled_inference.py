@@ -13,6 +13,7 @@ from typing import Any
 import rasterio
 import torch
 from lightning.pytorch.callbacks import Callback
+from rasterio.transform import Affine
 
 
 class TiledInferenceCallback(Callback):
@@ -156,6 +157,14 @@ class TiledInferenceCallback(Callback):
                 .to(torch.uint8)
                 .numpy()
             )
+            patch_transform = Affine(
+                transform_tensor[0].item(),
+                transform_tensor[1].item(),
+                transform_tensor[2].item(),
+                transform_tensor[3].item(),
+                transform_tensor[4].item(),
+                transform_tensor[5].item(),
+            )
             with rasterio.open(
                 patch_path,
                 'w',
@@ -166,6 +175,8 @@ class TiledInferenceCallback(Callback):
                 dtype='uint8',
                 compress='lzw',
                 tiled=True,
+                transform=patch_transform,
+                crs=self.crs,
             ) as dst:
                 dst.write(one_hot)
 

@@ -63,6 +63,7 @@ class TestTiledInferenceCallback:
         """Test on_predict_batch_end saves patches to disk."""
         callback.temp_dir = tmp_path / '.tmp_test'
         callback.temp_dir.mkdir()
+        callback.crs = 'EPSG:32631'
 
         outputs = {
             'logits': torch.randn(2, 5, 64, 64),
@@ -131,7 +132,13 @@ class TestTiledInferenceCallback:
         callback.num_classes = 5
 
         patch_file = callback.temp_dir / 'patch_000000.tif'
-        logits = torch.randn(5, 64, 64).numpy()
+        logits = torch.randn(5, 64, 64)
+        one_hot = (
+            torch.nn.functional.one_hot(logits.argmax(dim=0).long(), num_classes=5)
+            .permute(2, 0, 1)
+            .to(torch.uint8)
+            .numpy()
+        )
         with rasterio.open(
             patch_file,
             'w',
@@ -139,12 +146,13 @@ class TestTiledInferenceCallback:
             height=64,
             width=64,
             count=5,
-            dtype='float32',
+            dtype='uint8',
             compress='lzw',
-            predictor=2,
             tiled=True,
+            transform=rasterio.transform.from_bounds(0, 0, 64, 64, 64, 64),
+            crs='EPSG:32631',
         ) as dst:
-            dst.write(logits)
+            dst.write(one_hot)
 
         callback.patch_metadata = [
             {
