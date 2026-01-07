@@ -60,10 +60,8 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
        dem = sample['dem.pth']
 
        # Create a DataLoader for distributed training on 2 GPUs
-       dataset = dataset.dataset.batched(10) # batch size
-       dataloader = webdataset.WebLoader(
-           dataset, batch_size=None, num_workers=2
-       )
+       dataset = dataset.dataset.batched(10)  # batch size
+       dataloader = webdataset.WebLoader(dataset, batch_size=None, num_workers=2)
        # Unbatch, shuffle, and rebatch to mix samples from different workers
        dataloader = dataloader.unbatched().shuffle(100).batched(10)
        # A resampled dataset is infinite size, but we can recreate a fixed epoch length

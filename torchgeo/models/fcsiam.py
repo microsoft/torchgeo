@@ -69,7 +69,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
 
                   **Example**:
                   ```python
-                  decoder_use_norm={"type": "layernorm", "eps": 1e-2}
+                  decoder_use_norm = {'type': 'layernorm', 'eps': 1e-2}
                   ```
             decoder_attention_type: Attention module used in decoder of the model.
                 Available options are **None** and **scse**. SCSE paper

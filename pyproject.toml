@@ -338,6 +338,7 @@ extend-include = ["*.ipynb"]
 fix = true
 
 [tool.ruff.format]
+docstring-code-format = true
 quote-style = "single"
 skip-magic-trailing-comma = true
 

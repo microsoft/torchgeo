@@ -59,9 +59,9 @@ class OpenStreetMap(VectorDataset):
     Example::
 
         classes = [
-            {'name': 'buildings', 'selector': [{'building': '*'}]},        # label=1
-            {'name': 'roads', 'selector': [{'highway': '*'}]},             # label=2
-            {'name': 'commercial', 'selector': [{'landuse': 'commercial'}]} # label=3
+            {'name': 'buildings', 'selector': [{'building': '*'}]},  # label=1
+            {'name': 'roads', 'selector': [{'highway': '*'}]},  # label=2
+            {'name': 'commercial', 'selector': [{'landuse': 'commercial'}]},  # label=3
         ]
 
         # A feature with tags {'building': 'yes', 'landuse': 'commercial'}
