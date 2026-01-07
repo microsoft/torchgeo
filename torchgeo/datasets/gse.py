@@ -112,7 +112,8 @@ class GoogleSatelliteEmbedding(RasterDataset):
         _, _, V = torch.pca_lowrank(A, q=3)
         B = A @ V
 
-        B = (B - B.min()) / (B.max() - B.min())
+        B -= B.min(dim=0, keepdim=True)[0]
+        B /= B.max(dim=0, keepdim=True)[0]
         image = einops.rearrange(B, '(h w) c -> h w c', h=h, w=w)
 
         fig, ax = plt.subplots()
