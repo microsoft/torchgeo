@@ -48,6 +48,7 @@ from .copernicus import (
     CopernicusBenchLC100ClsS3,
     CopernicusBenchLC100SegS3,
     CopernicusBenchLCZS2,
+    CopernicusEmbed,
     CopernicusPretrain,
 )
 from .cowc import COWC, COWCCounting, COWCDetection
@@ -255,6 +256,7 @@ __all__ = (
     'CopernicusBenchLC100ClsS3',
     'CopernicusBenchLC100SegS3',
     'CopernicusBenchLCZS2',
+    'CopernicusEmbed',
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',

@@ -17,6 +17,7 @@ from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
 from .dfc2020_s1 import CopernicusBenchDFC2020S1
 from .dfc2020_s2 import CopernicusBenchDFC2020S2
+from .embed import CopernicusEmbed
 from .eurosat_s1 import CopernicusBenchEuroSATS1
 from .eurosat_s2 import CopernicusBenchEuroSATS2
 from .flood_s1 import CopernicusBenchFloodS1
@@ -43,6 +44,7 @@ __all__ = (
     'CopernicusBenchLC100ClsS3',
     'CopernicusBenchLC100SegS3',
     'CopernicusBenchLCZS2',
+    'CopernicusEmbed',
     'CopernicusPretrain',
 )
 
