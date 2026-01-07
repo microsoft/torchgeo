@@ -83,7 +83,6 @@ class TestLandCoverAI:
         monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
-        # Use the same filename for both classes during tests
         monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
         transforms = nn.Identity()
