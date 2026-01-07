@@ -121,22 +121,20 @@ class TestOSCD100:
         directory = os.path.join('tests', 'data', 'oscd', 'oscd100')
         splits = {
             'train': {
-                'url': os.path.join(directory, 'oscd100_train.zip'),
                 'filename': 'oscd100_train.zip',
                 'md5': '7cdac1119cff05b45f99c1d220271850',
             },
             'val': {
-                'url': os.path.join(directory, 'oscd100_val.zip'),
                 'filename': 'oscd100_val.zip',
                 'md5': '1b2b2e1a24c03991248cbe0edb405540',
             },
             'test': {
-                'url': os.path.join(directory, 'oscd100_test.zip'),
                 'filename': 'oscd100_test.zip',
                 'md5': '168a307336091795ba0809085e20ca31',
             },
         }
         monkeypatch.setattr(OSCD100, 'splits', splits)
+        monkeypatch.setattr(OSCD100, 'url', directory)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()

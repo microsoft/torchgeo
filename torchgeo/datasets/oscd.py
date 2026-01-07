@@ -56,13 +56,16 @@ class OSCD(NonGeoDataset):
 
     urls: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
-            'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
+            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
+            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip'
         ),
         'Onera Satellite Change Detection dataset - Train Labels.zip': (
-            'https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download'
+            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
+            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip'
         ),
         'Onera Satellite Change Detection dataset - Test Labels.zip': (
-            'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
+            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
+            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip'
         ),
     }
     md5s: ClassVar[dict[str, str]] = {
@@ -280,12 +283,12 @@ class OSCD(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for f_name in self.urls:
+        for filename in self.urls:
             download_url(
-                self.urls[f_name],
+                self.urls[filename],
                 self.root,
-                filename=f_name,
-                md5=self.md5s[f_name] if self.checksum else None,
+                filename=filename,
+                md5=self.md5s[filename] if self.checksum else None,
             )
 
     def _extract(self) -> None:
@@ -376,22 +379,20 @@ class OSCD100(NonGeoDataset):
 
     * https://doi.org/10.1109/IGARSS.2018.8518015
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
+    url = 'https://huggingface.co/datasets/hkristen/oscd100/resolve/main'
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://drive.google.com/file/d/1IbpGIBwYaw9dYvbhVXewA6A9cGBxi5Be',
             'filename': 'oscd100_train.zip',
             'md5': '08bdfb95625bb8b3b9f3496dffbcda80',
         },
         'val': {
-            'url': 'https://drive.google.com/file/d/1piFepOtQlNgPGCKg-Co8kzAuB3v5UgEE',
             'filename': 'oscd100_val.zip',
             'md5': 'dc9f97c5d98660ef29d1c285b75dfc92',
         },
         'test': {
-            'url': 'https://drive.google.com/file/d/1sDDRt6_yiFDxx3RI5RM55gCul4r_C9A4',
             'filename': 'oscd100_test.zip',
             'md5': '430e03d6153774265cc61402ae42e153',
         },
@@ -528,10 +529,11 @@ class OSCD100(NonGeoDataset):
             return
 
         for split in self.splits:
+            filename = self.splits[split]['filename']
             download_and_extract_archive(
-                self.splits[split]['url'],
+                f'{self.url}/{filename}',
                 self.root,
-                filename=self.splits[split]['filename'],
+                filename=filename,
                 md5=self.splits[split]['md5'] if self.checksum else None,
             )
 
