@@ -61,6 +61,35 @@ Random Batch Geo Sampler
 
 .. autoclass:: RandomBatchGeoSampler
 
+Tile Samplers
+-------------
+
+Tile samplers are used to sample patches from :class:`~torchgeo.datasets.TileDataset` without geospatial reprojection overhead. These are useful when working with large raster files in different projections where you want to sample patches based on pixel coordinates rather than geographic coordinates.
+
+.. code-block:: python
+
+   from torch.utils.data import DataLoader
+
+   from torchgeo.datasets import TileDataset
+   from torchgeo.samplers import RandomTileSampler
+
+   dataset = TileDataset(image_paths=[...], mask_paths=[...])
+   sampler = RandomTileSampler(dataset, size=256, length=10000)
+   dataloader = DataLoader(dataset, sampler=sampler)
+
+
+This data loader will return 256x256 px image patches, and has an epoch length of 10,000.
+
+Random Tile Sampler
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RandomTileSampler
+
+Grid Tile Sampler
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GridTileSampler
+
 Base Classes
 ------------
 
@@ -75,6 +104,11 @@ Batch Geo Sampler
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: BatchGeoSampler
+
+Tile Sampler
+^^^^^^^^^^^^
+
+.. autoclass:: TileSampler
 
 Utilities
 ---------

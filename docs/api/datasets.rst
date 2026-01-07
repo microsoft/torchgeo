@@ -55,6 +55,7 @@ Chesapeake Land Cover
 .. autoclass:: ChesapeakeVA
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
+.. autoclass:: ChesapeakeCVPRTileDataset
 
 GlobalBuildingMap
 ^^^^^^^^^^^^^^^^^
@@ -655,6 +656,11 @@ NonGeoClassificationDataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: NonGeoClassificationDataset
+
+TileDataset
+^^^^^^^^^^^
+
+.. autoclass:: TileDataset
 
 IntersectionDataset
 ^^^^^^^^^^^^^^^^^^^

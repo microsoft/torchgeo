@@ -20,6 +20,7 @@ from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     ChesapeakeCVPR,
+    ChesapeakeCVPRTileDataset,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -166,6 +167,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .tile import TileDataset
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -230,6 +232,7 @@ __all__ = (
     'ChaBuD',
     'Chesapeake',
     'ChesapeakeCVPR',
+    'ChesapeakeCVPRTileDataset',
     'ChesapeakeDC',
     'ChesapeakeDE',
     'ChesapeakeMD',
@@ -343,6 +346,7 @@ __all__ = (
     'SpaceNet8',
     'Substation',
     'SustainBenchCropYield',
+    'TileDataset',
     'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',

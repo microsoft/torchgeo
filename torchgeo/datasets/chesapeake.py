@@ -27,6 +27,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
+from .tile import TileDataset
 from .utils import GeoSlice, Path, download_url, extract_archive
 
 
@@ -710,3 +711,208 @@ class ChesapeakeCVPR(GeoDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class ChesapeakeCVPRTileDataset(TileDataset):
+    """Tile-based version of the CVPR 2019 Chesapeake Land Cover dataset.
+
+    This dataset provides direct access to the pre-tiled images without geospatial
+    overhead. Unlike :class:`ChesapeakeCVPR`, this class:
+
+    * Uses pixel-based indexing instead of geospatial coordinates
+    * Samples patches of exact sizes without reprojection artifacts
+    * Works with :class:`~torchgeo.samplers.RandomTileSampler` and
+      :class:`~torchgeo.samplers.GridTileSampler`
+
+    See :class:`ChesapeakeCVPR` for dataset details and citations.
+
+    .. versionadded:: 0.9
+    """
+
+    subdatasets = ('base', 'prior_extension')
+    urls: ClassVar[dict[str, str]] = {
+        'base': 'https://lilawildlife.blob.core.windows.net/lila-wildlife/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
+    }
+    filenames: ClassVar[dict[str, str]] = {
+        'base': 'cvpr_chesapeake_landcover.zip',
+        'prior_extension': 'cvpr_chesapeake_landcover_prior_extension.zip',
+    }
+    md5s: ClassVar[dict[str, str]] = {
+        'base': '1225ccbb9590e9396875f221e5031514',
+        'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
+    }
+
+    states = ('de', 'md', 'va', 'wv', 'pa', 'ny')
+    splits = (
+        [f'{state}-train' for state in states]
+        + [f'{state}-val' for state in states]
+        + [f'{state}-test' for state in states]
+    )
+
+    # these are used to check the integrity of the dataset
+    _files = (
+        'de_1m_2013_extended-debuffered-test_tiles',
+        'de_1m_2013_extended-debuffered-train_tiles',
+        'de_1m_2013_extended-debuffered-val_tiles',
+        'md_1m_2013_extended-debuffered-test_tiles',
+        'md_1m_2013_extended-debuffered-train_tiles',
+        'md_1m_2013_extended-debuffered-val_tiles',
+        'ny_1m_2013_extended-debuffered-test_tiles',
+        'ny_1m_2013_extended-debuffered-train_tiles',
+        'ny_1m_2013_extended-debuffered-val_tiles',
+        'pa_1m_2013_extended-debuffered-test_tiles',
+        'pa_1m_2013_extended-debuffered-train_tiles',
+        'pa_1m_2013_extended-debuffered-val_tiles',
+        'va_1m_2014_extended-debuffered-test_tiles',
+        'va_1m_2014_extended-debuffered-train_tiles',
+        'va_1m_2014_extended-debuffered-val_tiles',
+        'wv_1m_2014_extended-debuffered-test_tiles',
+        'wv_1m_2014_extended-debuffered-train_tiles',
+        'wv_1m_2014_extended-debuffered-val_tiles',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+        'spatial_index.geojson',
+    )
+
+    valid_layers = (
+        'naip-new',
+        'naip-old',
+        'landsat-leaf-on',
+        'landsat-leaf-off',
+        'nlcd',
+        'lc',
+        'buildings',
+        'prior_from_cooccurrences_101_31_no_osm_no_buildings',
+    )
+
+    image_layers = ('naip-new', 'naip-old', 'landsat-leaf-on', 'landsat-leaf-off')
+    mask_layers = (
+        'lc',
+        'nlcd',
+        'buildings',
+        'prior_from_cooccurrences_101_31_no_osm_no_buildings',
+    )
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        splits: Sequence[str] = ['de-train'],
+        layers: Sequence[str] = ['naip-new', 'lc'],
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        download: bool = False,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new ChesapeakeCVPRTileDataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            splits: a list of strings in the format "{state}-{train,val,test}"
+                indicating the subset of data to use, for example "ny-train"
+            layers: a list containing a subset of valid layers to load
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``splits`` or ``layers`` are not valid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+            ValueError: if more than one mask layer is requested
+        """
+        for split in splits:
+            assert split in self.splits
+        assert all([layer in self.valid_layers for layer in layers])
+
+        self.root = root
+        self.splits = list(splits)
+        self.layers = list(layers)
+        self.download = download
+        self.checksum = checksum
+
+        self._verify()
+
+        image_layer_list = [layer for layer in layers if layer in self.image_layers]
+        mask_layer_list = [layer for layer in layers if layer in self.mask_layers]
+
+        if len(mask_layer_list) > 1:
+            msg = f'Only one mask layer supported, got {mask_layer_list}'
+            raise ValueError(msg)
+
+        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
+        gdf = gdf[gdf['split'].isin(self.splits)]
+
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
+            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
+        )
+
+        image_paths: list[list[str]] = []
+        mask_paths: list[str] = []
+
+        for _, row in gdf.iterrows():
+            if image_layer_list:
+                image_paths.append(
+                    [os.path.join(root, row[layer]) for layer in image_layer_list]
+                )
+            if mask_layer_list:
+                mask_paths.append(os.path.join(root, row[mask_layer_list[0]]))
+
+        if not image_paths:
+            image_paths = [[p] for p in mask_paths] if mask_paths else []
+
+        super().__init__(
+            image_paths=image_paths,
+            mask_paths=mask_paths if mask_paths else None,
+            transforms=transforms,
+        )
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+
+        def exists(filename: Path) -> bool:
+            return os.path.exists(os.path.join(self.root, filename))
+
+        # Check if the extracted files already exist
+        if all(map(exists, self._files)):
+            return
+
+        # Check if the zip files have already been downloaded
+        if all(
+            [
+                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+                for subdataset in self.subdatasets
+            ]
+        ):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        for subdataset in self.subdatasets:
+            download_url(
+                self.urls[subdataset],
+                self.root,
+                filename=self.filenames[subdataset],
+                md5=self.md5s[subdataset],
+            )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        for subdataset in self.subdatasets:
+            extract_archive(os.path.join(self.root, self.filenames[subdataset]))

@@ -15,6 +15,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     ChesapeakeCVPR,
+    ChesapeakeCVPRTileDataset,
     ChesapeakeDC,
     DatasetNotFoundError,
     IntersectionDataset,
@@ -213,3 +214,121 @@ class TestChesapeakeCVPR:
             x['prediction'] = x['mask'][0, :, :].clone()
         dataset.plot(x)
         plt.close()
+
+
+class TestChesapeakeCVPRTileDataset:
+    @pytest.fixture(
+        params=[
+            (['naip-new', 'lc'],),
+            (['naip-new', 'naip-old', 'nlcd'],),
+            (['landsat-leaf-on', 'landsat-leaf-off', 'lc'],),
+            (['naip-new', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'],),
+        ]
+    )
+    def dataset(
+        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> ChesapeakeCVPRTileDataset:
+        monkeypatch.setattr(
+            ChesapeakeCVPRTileDataset,
+            'md5s',
+            {
+                'base': '882d18b1f15ea4498bf54e674aecd5d4',
+                'prior_extension': '677446c486f3145787938b14ee3da13f',
+            },
+        )
+        monkeypatch.setattr(
+            ChesapeakeCVPRTileDataset,
+            'urls',
+            {
+                'base': os.path.join(
+                    'tests',
+                    'data',
+                    'chesapeake',
+                    'cvpr',
+                    'cvpr_chesapeake_landcover.zip',
+                ),
+                'prior_extension': os.path.join(
+                    'tests',
+                    'data',
+                    'chesapeake',
+                    'cvpr',
+                    'cvpr_chesapeake_landcover_prior_extension.zip',
+                ),
+            },
+        )
+        monkeypatch.setattr(
+            ChesapeakeCVPRTileDataset,
+            '_files',
+            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
+        )
+        root = tmp_path
+        transforms = nn.Identity()
+        (layers,) = request.param
+        return ChesapeakeCVPRTileDataset(
+            root,
+            splits=['de-test'],
+            layers=layers,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+        )
+
+    def test_getitem(self, dataset: ChesapeakeCVPRTileDataset) -> None:
+        height, width = dataset.get_tile_size(0)
+        patch_size = min(16, height, width)
+        x = dataset[(0, 0, 0, patch_size)]
+        assert isinstance(x, dict)
+        has_image = any(layer in dataset.image_layers for layer in dataset.layers)
+        has_mask = any(layer in dataset.mask_layers for layer in dataset.layers)
+        if has_image:
+            assert 'image' in x
+            assert isinstance(x['image'], torch.Tensor)
+            assert x['image'].shape[-2:] == (patch_size, patch_size)
+        if has_mask:
+            assert 'mask' in x
+            assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: ChesapeakeCVPRTileDataset) -> None:
+        assert len(dataset) == 1
+
+    def test_get_tile_size(self, dataset: ChesapeakeCVPRTileDataset) -> None:
+        height, width = dataset.get_tile_size(0)
+        assert height > 0
+        assert width > 0
+
+    def test_getitem_out_of_bounds(self, dataset: ChesapeakeCVPRTileDataset) -> None:
+        with pytest.raises(IndexError, match='out of bounds'):
+            dataset[(10, 0, 0, 16)]
+
+    def test_get_tile_size_out_of_bounds(
+        self, dataset: ChesapeakeCVPRTileDataset
+    ) -> None:
+        with pytest.raises(IndexError, match='out of bounds'):
+            dataset.get_tile_size(10)
+
+    def test_already_extracted(self, dataset: ChesapeakeCVPRTileDataset) -> None:
+        ChesapeakeCVPRTileDataset(root=dataset.root, download=True)
+
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        root = tmp_path
+        shutil.copy(
+            os.path.join(
+                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
+            ),
+            root,
+        )
+        shutil.copy(
+            os.path.join(
+                'tests',
+                'data',
+                'chesapeake',
+                'cvpr',
+                'cvpr_chesapeake_landcover_prior_extension.zip',
+            ),
+            root,
+        )
+        ChesapeakeCVPRTileDataset(root)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            ChesapeakeCVPRTileDataset(tmp_path, checksum=True)
