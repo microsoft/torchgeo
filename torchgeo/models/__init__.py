@@ -36,6 +36,7 @@ from .resnet import (
     resnet152,
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
+from .seq2seq import Seq2Seq
 from .swin import (
     Swin_B_Weights,
     Swin_S_Weights,
@@ -97,6 +98,7 @@ __all__ = (
     'ResNet152_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
+    'Seq2Seq',
     'SwinBackbone_Weights',
     'Swin_B_Weights',
     'Swin_S_Weights',
