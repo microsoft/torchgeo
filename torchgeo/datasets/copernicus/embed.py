@@ -112,10 +112,13 @@ class CopernicusEmbed(RasterDataset):
         A = einops.rearrange(sample['image'], 'c h w -> (h w) c')
 
         # Use PCA to project embeddings from 64D to 3D space
-        _, _, V = torch.pca_lowrank(A, q=3)
+        valid = A.sum(dim=1) != 0
+        invalid = A.sum(dim=1) == 0
+        _, _, V = torch.pca_lowrank(A[valid], q=3)
         B = A @ V
 
         B = (B - B.min()) / (B.max() - B.min())
+        B[invalid] = 1
         image = einops.rearrange(B, '(h w) c -> h w c', h=h, w=w)
 
         fig, ax = plt.subplots()
