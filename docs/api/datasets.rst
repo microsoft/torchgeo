@@ -56,6 +56,11 @@ Chesapeake Land Cover
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
+Copernicus-Embed
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: CopernicusEmbed
+
 GlobalBuildingMap
 ^^^^^^^^^^^^^^^^^
 
