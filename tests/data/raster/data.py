@@ -96,6 +96,7 @@ if __name__ == '__main__':
         src_epsg = EPSG[0]
         write_raster(res, src_epsg)
 
+    for res in RES[:4]:
         for dst_epsg in EPSG[1:]:
             reproject_raster(res, src_epsg, dst_epsg)
 
