@@ -117,7 +117,8 @@ class CopernicusEmbed(RasterDataset):
         _, _, V = torch.pca_lowrank(A[valid], q=3)
         B = A @ V
 
-        B = (B - B.min()) / (B.max() - B.min())
+        B -= B.min(dim=0, keepdim=True)[0]
+        B /= B.max(dim=0, keepdim=True)[0]
         B[invalid] = 1
         image = einops.rearrange(B, '(h w) c -> h w c', h=h, w=w)
 
