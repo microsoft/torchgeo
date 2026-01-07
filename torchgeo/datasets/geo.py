@@ -12,6 +12,7 @@ import pathlib
 import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
+from contextlib import ExitStack
 from datetime import datetime
 from typing import Any, ClassVar, Literal
 
@@ -769,27 +770,30 @@ class XarrayDataset(GeoDataset):
         bounds = (x.start, y.start, x.stop, y.stop)
         res = (x.step, y.step)
 
-        datasets = []
-        for filepath in filepaths:
-            src = xr.open_dataset(filepath, decode_times=True, decode_coords='all')
+        with ExitStack() as stack:
+            datasets = []
+            for filepath in filepaths:
+                src = stack.enter_context(
+                    xr.open_dataset(filepath, decode_times=True, decode_coords='all')
+                )
 
-            if src.rio.crs is None:
-                src = src.rio.write_crs(self.crs)
+                if src.rio.crs is None:
+                    src = src.rio.write_crs(self.crs)
 
-            if src.rio.crs != self.crs or res != src.rio.resolution():
-                src = src.rio.reproject(self.crs, resolution=res)
+                if src.rio.crs != self.crs or res != src.rio.resolution():
+                    src = src.rio.reproject(self.crs, resolution=res)
 
-            datasets.append(src)
+                datasets.append(src)
 
-        dataset = rioxr.merge.merge_datasets(
-            datasets, bounds=bounds, res=res, nodata=0, crs=self.crs
-        )
-        dataset = dataset.sel(time=t)
+            dataset = rioxr.merge.merge_datasets(
+                datasets, bounds=bounds, res=res, nodata=0, crs=self.crs
+            )
+            dataset = dataset.sel(time=t)
 
-        # Use array_to_tensor since merge may return uint16/uint32 arrays.
-        tensors = []
-        for var in self.data_vars:
-            tensors.append(array_to_tensor(dataset[var].values))
+            # Use array_to_tensor since merge may return uint16/uint32 arrays.
+            tensors = []
+            for var in self.data_vars:
+                tensors.append(array_to_tensor(dataset[var].values))
 
         return torch.stack(tensors)
 
