@@ -370,16 +370,14 @@ def tessera(
     .. versionadded:: 0.9
 
     Args:
-        weights: Pre-trained model weights to use. If
-            :attr:`Tessera_Weights.TESSERA_SENTINEL1_ENCODER` or
-            :attr:`Tessera_Weights.TESSERA_SENTINEL2_ENCODER`, returns the
-            respective :class:`TransformerEncoder` backbone instead of the
-            full :class:`Tessera` model.
+        weights: Pre-trained model weights to use. If using encoder-only weights
+            (``TESSERA_SENTINEL1_ENCODER`` or ``TESSERA_SENTINEL2_ENCODER``),
+            returns the respective encoder backbone instead of the full model.
         *args: Additional arguments to pass to :class:`Tessera`.
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
-        A Tessera model or TransformerEncoder backbone.
+        A Tessera model or encoder backbone.
     """
     model = Tessera(*args, **kwargs)
 
