@@ -47,8 +47,14 @@ _TESSERA_MEAN = _TESSERA_S2_MEAN + _TESSERA_S1_MEAN
 _TESSERA_STD = _TESSERA_S2_STD + _TESSERA_S1_STD
 
 
-class _PixelTimeSeriesNormalize(T.Normalize):
+class _PixelTimeSeriesNormalize(nn.Module):
     """Normalize pixel time series data."""
+
+    def __init__(
+        self, mean: list[float], std: list[float], inplace: bool = False
+    ) -> None:
+        super().__init__()
+        self.normalize = T.Normalize(mean=mean, std=std, inplace=inplace)
 
     def forward(self, tensor: torch.Tensor) -> torch.Tensor:
         """Forward pass of the PixelTimeSeriesNormalize.
@@ -62,13 +68,14 @@ class _PixelTimeSeriesNormalize(T.Normalize):
         assert tensor.ndim in [2, 3], (
             'Input must be a 2D (time, channels) or 3D (batch, time, channels) tensor'
         )
+        x: torch.Tensor
         if tensor.ndim == 2:
             x = rearrange(tensor, 't c -> () c () t')
-            x = super().forward(x)
+            x = self.normalize(x)
             x = rearrange(x, '() c () t -> t c')
-        elif tensor.ndim == 3:
+        else:
             x = rearrange(tensor, 'b t c -> b c () t')
-            x = super().forward(x)
+            x = self.normalize(x)
             x = rearrange(x, 'b c () t -> b t c')
         return x
 
@@ -363,14 +370,18 @@ def tessera(
     .. versionadded:: 0.9
 
     Args:
-        weights: Pre-trained model weights to use.
+        weights: Pre-trained model weights to use. If
+            :attr:`Tessera_Weights.TESSERA_SENTINEL1_ENCODER` or
+            :attr:`Tessera_Weights.TESSERA_SENTINEL2_ENCODER`, returns the
+            respective :class:`TransformerEncoder` backbone instead of the
+            full :class:`Tessera` model.
         *args: Additional arguments to pass to :class:`Tessera`.
         **kwargs: Additional keyword arguments to pass to :class:`Tessera`.
 
     Returns:
-        A Tessera model or encoder.
+        A Tessera model or TransformerEncoder backbone.
     """
-    model: nn.Module = Tessera(*args, **kwargs)
+    model = Tessera(*args, **kwargs)
 
     if weights is None:
         return model
