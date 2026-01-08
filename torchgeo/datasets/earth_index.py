@@ -4,12 +4,15 @@
 """Earth Index Embeddings dataset."""
 
 import einops
+import geopandas as gpd
+import pandas as pd
+import rasterio
 import torch
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import VectorDataset
-from .utils import Sample
+from .utils import GeoSlice, Sample, lazy_import
 
 
 class EarthIndexEmbeddings(VectorDataset):
@@ -24,6 +27,11 @@ class EarthIndexEmbeddings(VectorDataset):
     centroids are encoded in geoparquet. The GeoParquet is named similarly to the
     imagery and references the original MGRS/UTM tile which the imagery covered.
 
+    .. note::
+       This dataset requires the following additional library to be installed:
+
+       * `geocube <https://pypi.org/project/geocube/>`_: to rasterize the dataset.
+
     .. versionadded:: 0.9
     """
 
@@ -35,6 +43,47 @@ class EarthIndexEmbeddings(VectorDataset):
     """
     date_format = '%Y-%m-%d'
     is_image = True
+
+    def __getitem__(self, query: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *query* is not found in the index.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
+
+        if index.empty:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        df = pd.concat([gpd.read_parquet(f) for f in index.filepath])
+        geocube = lazy_import('geocube.api.core')
+        ds = geocube.make_geocube(
+            df, measurements=['embedding'], output_crs=self.crs, resolution=self.res
+        )
+
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(query),
+            'image': torch.from_numpy(ds['embedding'].values),
+            'transform': torch.tensor(transform),
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
