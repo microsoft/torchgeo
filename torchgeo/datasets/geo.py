@@ -1031,9 +1031,7 @@ class VectorDataset(GeoDataset):
             src.to_crs(self.crs, inplace=True)
 
             # Get label values to use for rendering each geometry
-            labels = np.array(
-                [self.get_label(row) for _, row in src.iterrows()]
-            ).astype(np.int32)
+            labels = np.array([self.get_label(row) for _, row in src.iterrows()])
 
             shapes.extend(list(zip(src.geometry, labels)))
 
@@ -1145,21 +1143,21 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def get_label(self, feature: pd.Series) -> int:
+    def get_label(self, feature: pd.Series) -> object:
         """Get label value to use for rendering a feature.
 
         Args:
             feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
-            the integer label, or 0 if the feature should not be rendered.
+            the label, or 0 if the feature should not be rendered.
 
         .. versionadded:: 0.6
         .. versionchanged:: 0.8
             The *feature* parameter changed to a :class:`pandas.Series`
         """
         if self.label_name:
-            return int(feature[self.label_name])
+            return feature[self.label_name]
         return 1
 
 
