@@ -840,11 +840,14 @@ class VectorDataset(GeoDataset):
     #: groups. The following groups are specifically searched for by the base class:
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    #: * ``start``: used to calculate ``mint`` for ``index`` insertion
+    #: * ``stop``: used to calculate ``maxt`` for ``index`` insertion
     filename_regex = '.*'
 
     #: Date format string used to parse date from filename.
     #:
-    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group or
+    #: ``start`` and ``stop`` groups.
     date_format = '%Y%m%d'
 
     @property
@@ -948,6 +951,11 @@ class VectorDataset(GeoDataset):
                     if 'date' in match.groupdict():
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                        start = match.group('start')
+                        stop = match.group('stop')
+                        mint, _ = disambiguate_timestamp(start, self.date_format)
+                        _, maxt = disambiguate_timestamp(stop, self.date_format)
 
                     datetimes.append((mint, maxt))
 
