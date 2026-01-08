@@ -842,6 +842,9 @@ class VectorDataset(GeoDataset):
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
     #: * ``start``: used to calculate ``mint`` for ``index`` insertion
     #: * ``stop``: used to calculate ``maxt`` for ``index`` insertion
+    #:
+    #: .. versionchanged:: 0.9
+    #:    Added support for ``start`` and ``stop``.
     filename_regex = '.*'
 
     #: Date format string used to parse date from filename.
@@ -850,18 +853,35 @@ class VectorDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = '%Y%m%d'
 
+    #: True if the dataset only contains model inputs (such as images). False if the
+    #: dataset only contains ground truth model outputs (such as segmentation masks).
+    #:
+    #: The sample returned by the dataset/data loader will use the "image" key if
+    #: *is_image* is True, otherwise it will use the "mask" key.
+    #:
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `VectorDataset` instances and combine them using an `IntersectionDataset`.
+    #:
+    #: .. versionadded:: 0.9
+    is_image = False
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
 
-        Defaults to long.
+        Defaults to float32 if :attr:`~VectorDataset.is_image` is True, else long.
+        Can be overridden for tasks like pixel-wise regression where the mask should be
+        float32 instead of long.
 
         Returns:
             the dtype of the dataset
 
         .. versionadded:: 0.6
         """
-        return torch.long
+        if self.is_image:
+            return torch.float32
+        else:
+            return torch.long
 
     def __init__(
         self,
@@ -1100,14 +1120,23 @@ class VectorDataset(GeoDataset):
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         match self.task:
             case 'semantic_segmentation':
-                sample['mask'] = array_to_tensor(masks).to(self.dtype)
+                mask = array_to_tensor(masks).to(self.dtype)
+                if self.is_image:
+                    sample['image'] = mask
+                else:
+                    sample['mask'] = mask
 
             case 'object_detection':
                 sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
                 sample['label'] = torch.from_numpy(labels)
 
             case 'instance_segmentation':
-                sample['mask'] = array_to_tensor(masks)
+                mask = array_to_tensor(masks).to(self.dtype)
+                if self.is_image:
+                    sample['image'] = mask
+                else:
+                    sample['mask'] = mask
+
                 sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
                 sample['label'] = torch.from_numpy(labels)
 

@@ -27,13 +27,14 @@ class EarthIndexEmbeddings(VectorDataset):
     .. versionadded:: 0.9
     """
 
-    filename_regex = """
-        ^(?P<mgrs>\d{2}[A-Z]{3}
+    filename_regex = r"""
+        ^(?P<mgrs>\d{2}[A-Z]{3})
         _(?P<start>\d{4}-\d{2}-\d{2})
         _(?P<stop>\d{4}-\d{2}-\d{2})
         \.
     """
     date_format = '%Y-%m-%d'
+    is_image = True
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
