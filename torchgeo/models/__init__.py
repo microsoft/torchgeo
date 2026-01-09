@@ -49,7 +49,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tile2vec import Tile2Vec_Weights, tile2vec_resnet18
+from .tilenet import TileNet, tilenet, make_tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -104,7 +104,7 @@ __all__ = (
     'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
-    'Tile2Vec_Weights',
+    'TileNet',
     'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
     'ViTBase16_Weights',
@@ -125,6 +125,7 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'make_tilenet',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',
@@ -135,7 +136,7 @@ __all__ = (
     'swin_t',
     'swin_v2_b',
     'swin_v2_t',
-    'tile2vec_resnet18',
+    'tilenet',
     'unet',
     'vit_base_patch14_dinov2',
     'vit_base_patch16_224',

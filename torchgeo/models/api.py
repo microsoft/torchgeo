@@ -50,7 +50,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tile2vec import tile2vec_resnet18
+from .tilenet import tilenet, make_tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -66,6 +66,7 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
@@ -87,8 +88,8 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'swin_b': swin_b,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
+    'tilenet': tilenet,
     'unet': unet,
-    "tile2vec_resnet18": tile2vec_resnet18,
     'vit_small_patch16_224': vit_small_patch16_224,
     'vit_base_patch14_dinov2': vit_base_patch14_dinov2,
     'vit_base_patch16_224': vit_base_patch16_224,
