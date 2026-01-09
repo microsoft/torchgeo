@@ -61,8 +61,6 @@ class GoogleSatelliteEmbedding(RasterDataset):
     .. versionadded:: 0.9
     """
 
-    date_format = '%Y'
-
     # https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_SATELLITE_EMBEDDING_V1_ANNUAL#bands
     all_bands = tuple(f'A{n:02}' for n in range(64))
 
@@ -79,9 +77,10 @@ class GoogleSatelliteEmbedding(RasterDataset):
         #
         # * GCS/SC: 2024/10N/x086q72fv2f9q1x4a-0000000000-0000000000.tiff
         # * HF:     2024/U/1/L/7/471U_587L.tif
+        date_format = '%Y'
         for part in pathlib.Path(filepath).parts[::-1]:
             try:
-                return disambiguate_timestamp(part, self.date_format)
+                return disambiguate_timestamp(part, date_format)
             except ValueError:
                 pass
 
