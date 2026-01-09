@@ -178,8 +178,11 @@ class TestCopernicusPretrain:
 
 class TestCopernicusEmbed:
     @pytest.fixture
-    def dataset(self) -> CopernicusEmbed:
+    def dataset(self, monkeypatch: MonkeyPatch) -> CopernicusEmbed:
         paths = os.path.join('tests', 'data', 'copernicus', 'embed')
+        monkeypatch.setattr(
+            CopernicusEmbed, 'url', os.path.join(paths, 'embed_map_310k.tif')
+        )
         transforms = nn.Identity()
         return CopernicusEmbed(paths, transforms=transforms)
 
@@ -204,7 +207,10 @@ class TestCopernicusEmbed:
         dataset.plot(x, suptitle='Test')
         plt.close()
 
-    def test_no_data(self, tmp_path: Path) -> None:
+    def test_download(self, dataset: CopernicusEmbed, tmp_path: Path) -> None:
+        CopernicusEmbed(tmp_path, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CopernicusEmbed(tmp_path)
 
