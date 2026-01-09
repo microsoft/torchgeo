@@ -42,7 +42,7 @@ class TesseraEmbeddings(RasterDataset):
         .tiff$
     """
     date_format = '%Y'
-    all_bands = tuple(range(128))
+    all_bands = tuple(map(str, range(128)))
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
