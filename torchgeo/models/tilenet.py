@@ -98,7 +98,10 @@ class BasicBlock(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
 
         if self.no_relu:
-            return self.bn3(self.conv3(out))
+            out_no_relu: torch.Tensor = self.bn3(self.conv3(out))
+            return out_no_relu
+
+
 
         out = self.bn2(self.conv2(out))
         out += self.shortcut(x)
