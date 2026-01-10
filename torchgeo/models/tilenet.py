@@ -101,8 +101,6 @@ class BasicBlock(nn.Module):
             out_no_relu: torch.Tensor = self.bn3(self.conv3(out))
             return out_no_relu
 
-
-
         out = self.bn2(self.conv2(out))
         out += self.shortcut(x)
         return F.relu(out)
