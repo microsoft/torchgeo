@@ -50,4 +50,3 @@ class TestPASTISR100DataModule:
     def test_test_dataloader(self, datamodule: PASTISR100DataModule) -> None:
         datamodule.setup('test')
         next(iter(datamodule.test_dataloader()))
-
