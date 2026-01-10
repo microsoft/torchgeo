@@ -124,7 +124,7 @@ from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .openstreetmap import OpenStreetMap
 from .oscd import OSCD
-from .pastis import PASTIS
+from .pastis import PASTIS, PASTISR100
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .prisma import PRISMA
@@ -202,6 +202,7 @@ __all__ = (
     'NLCD',
     'OSCD',
     'PASTIS',
+    'PASTISR100',
     'PRISMA',
     'RESISC45',
     'SEN12MS',

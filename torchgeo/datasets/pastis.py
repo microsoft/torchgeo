@@ -396,3 +396,17 @@ class PASTIS(NonGeoDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class PASTISR100(PASTIS):
+    """Subset of PASTIS-R containing only 100 time-series.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    .. versionadded:: 0.9
+    """
+
+    directory = 'PASTIS-R-100'
+    filename = 'PASTIS-R-100.zip'
+    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/PASTIS-R-100/resolve/main/PASTIS-R-100.zip'
+    md5 = 'd2dc4a4315e02afebc56ecd4fbf50394'

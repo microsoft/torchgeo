@@ -13,7 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import PASTIS, DatasetNotFoundError
+from torchgeo.datasets import PASTIS, PASTISR100, DatasetNotFoundError
 
 
 class TestPASTIS:
@@ -101,3 +101,47 @@ class TestPASTIS:
             x['prediction_labels'] = x['label'].clone()
         dataset.plot(x)
         plt.close()
+
+
+class TestPASTISR100:
+    @pytest.fixture(
+        params=[
+            {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
+            {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
+            {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
+        ]
+    )
+    def dataset(self, tmp_path: Path, request: SubRequest) -> PASTISR100:
+        src = os.path.join('tests', 'data', 'pastis', 'PASTIS-R')
+        dst = tmp_path / 'PASTIS-R-100'
+        shutil.copytree(src, dst)
+
+        folds = request.param['folds']
+        bands = request.param['bands']
+        mode = request.param['mode']
+        transforms = nn.Identity()
+        return PASTISR100(
+            root=tmp_path,
+            folds=folds,
+            bands=bands,
+            mode=mode,
+            transforms=transforms,
+        )
+
+    def test_getitem_semantic(self, dataset: PASTISR100) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+
+    def test_getitem_instance(self, dataset: PASTISR100) -> None:
+        dataset.mode = 'instance'
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+
+    def test_len(self, dataset: PASTISR100) -> None:
+        assert len(dataset) == 2
