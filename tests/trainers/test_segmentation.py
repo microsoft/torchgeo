@@ -301,12 +301,12 @@ class TestSemanticSegmentationTask:
         batch = {'image': torch.randn(2, 3, 64, 64)}
         result = task.predict_step(batch, 0)
 
-        assert 'logits' in result
+        assert 'probabilities' in result
         assert 'bounds' in result
         assert 'transform' in result
 
-    def test_predict_step_logits_shape(self) -> None:
-        """Test that logits have correct shape."""
+    def test_predict_step_probabilities_shape(self) -> None:
+        """Test that probabilities have correct shape."""
         num_classes = 10
         task = SemanticSegmentationTask(task='multiclass', num_classes=num_classes)
         batch_size = 2
@@ -314,8 +314,8 @@ class TestSemanticSegmentationTask:
         batch = {'image': torch.randn(batch_size, 3, height, width)}
         result = task.predict_step(batch, 0)
 
-        logits = result['logits']
-        assert logits.shape == (batch_size, num_classes, height, width)
+        probabilities = result['probabilities']
+        assert probabilities.shape == (batch_size, num_classes, height, width)
 
     def test_predict_step_preserves_metadata(self) -> None:
         """Test that bounds and transform are passed through correctly."""
