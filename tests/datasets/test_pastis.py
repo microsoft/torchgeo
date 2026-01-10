@@ -121,11 +121,7 @@ class TestPASTISR100:
         mode = request.param['mode']
         transforms = nn.Identity()
         return PASTISR100(
-            root=tmp_path,
-            folds=folds,
-            bands=bands,
-            mode=mode,
-            transforms=transforms,
+            root=tmp_path, folds=folds, bands=bands, mode=mode, transforms=transforms
         )
 
     def test_getitem_semantic(self, dataset: PASTISR100) -> None:
