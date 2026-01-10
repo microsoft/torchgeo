@@ -1,31 +1,55 @@
-# Copyright (c) TorchGeo Contributors.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+from pathlib import Path
 
+import pytest
 import torch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
+from torchvision.models._api import WeightsEnum
+
+from torchgeo.models import TileNet_Weights, tilenet
 
 
-def test_tilenet_pretrained_print():
-    from torchgeo.models import tilenet
+class TestTileNet:
+    @pytest.fixture(params=[*TileNet_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
 
-    print("\n Creating TileNet with pretrained=True ")
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        weights = TileNet_Weights.NAIP
+        path = tmp_path / f"{weights}.pth"
 
-    model = tilenet(pretrained=True, in_channels=4)
-    model.eval()
+        # Create dummy TileNet checkpoint
+        model = tilenet(in_channels=weights.meta["in_chans"])
+        torch.save(model.state_dict(), path)
 
-    print(" Model created successfully")
+        monkeypatch.setattr(weights.value, "url", str(path))
+        return weights
 
-    # Print a strong signal from weights
-    conv1_weight_sum = model.conv1.weight.detach().abs().sum().item()
-    print(f"conv1 weight absolute sum: {conv1_weight_sum:.6f}")
+    def test_tilenet(self) -> None:
+        tilenet()
 
-    # Forward pass
-    x = torch.randn(1, 4, 50, 50)
-    y = model(x)
+    def test_tilenet_weights(self, mocked_weights: WeightsEnum) -> None:
+        tilenet(weights=mocked_weights)
 
-    print(f"Forward pass output shape: {y.shape}")
+    def test_bands(self, weights: WeightsEnum) -> None:
+        assert len(weights.meta["bands"]) == weights.meta["in_chans"]
 
-    assert y.shape == (1, 512)
-    assert conv1_weight_sum > 0
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta["in_chans"]
+        sample = {
+            "image": torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)
+        }
+        weights.transforms(sample)
 
-    print("Hugging Face pretrained weights loaded correctly\n")
+    @pytest.mark.slow
+    def test_tilenet_download(self, weights: WeightsEnum) -> None:
+        tilenet(weights=weights)

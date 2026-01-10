@@ -49,7 +49,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tilenet import TileNet, tilenet, make_tilenet
+from .tilenet import TileNet, TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -105,6 +105,7 @@ __all__ = (
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'TileNet',
+    'TileNet_Weights',
     'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
     'ViTBase16_Weights',

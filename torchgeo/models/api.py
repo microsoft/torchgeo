@@ -50,7 +50,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tilenet import tilenet, make_tilenet
+from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -66,7 +66,6 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
@@ -116,6 +115,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     swin_b: Swin_B_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    tilenet: TileNet_Weights,
     unet: Unet_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
@@ -140,6 +140,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'swin_b': Swin_B_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'tilenet': TileNet_Weights,
     'unet': Unet_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
     'vit_base_patch14_dinov2': ViTBase14_DINOv2_Weights,
