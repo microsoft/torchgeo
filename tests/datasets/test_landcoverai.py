@@ -120,7 +120,9 @@ class TestLandCoverAI:
         with pytest.raises(AssertionError):
             LandCoverAI(split='foo')
 
-    def test_download_windows_path(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    def test_download_windows_path(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
         # Test that LandCoverAI handles Windows-style paths correctly
         md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
         monkeypatch.setattr(LandCoverAI, 'md5', md5)
