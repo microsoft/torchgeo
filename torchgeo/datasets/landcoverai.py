@@ -412,15 +412,11 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
 
         # Download split files from the same base location
-        # Handle both URL paths (/) and Windows paths (\)
-        if '/' in self.url:
-            base_url = self.url.rsplit('/', 1)[0] + '/'
-        else:
-            base_url = self.url.rsplit(os.sep, 1)[0] + os.sep
-
+        # Simply replace the filename in the URL
         for split_info in self.metadata.values():
+            split_url = self.url.replace(self.filename, split_info['filename'])
             download_url(
-                base_url + split_info['filename'],
+                split_url,
                 self.root,
                 md5=split_info['md5'] if self.checksum else None,
             )

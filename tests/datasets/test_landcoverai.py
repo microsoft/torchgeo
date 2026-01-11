@@ -120,23 +120,6 @@ class TestLandCoverAI:
         with pytest.raises(AssertionError):
             LandCoverAI(split='foo')
 
-    def test_download_windows_path(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> None:
-        # Test that LandCoverAI handles Windows-style paths correctly
-        md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
-        monkeypatch.setattr(LandCoverAI, 'md5', md5)
-        # Use a path without forward slashes to trigger Windows path handling
-        # Replace / with os.sep to simulate Windows path on any OS
-        url = f'tests{os.sep}data{os.sep}landcoverai{os.sep}landcover.ai.v1.zip'
-        # Also copy split files to test data dir (they're already there, just verifying)
-        monkeypatch.setattr(LandCoverAI, 'url', url)
-        monkeypatch.setattr(LandCoverAI, 'filename', 'landcover.ai.v1.zip')
-        # Create dataset which triggers download
-        LandCoverAI(root=tmp_path, split='train', download=True, checksum=True)
-        # Verify split files were downloaded
-        assert os.path.exists(tmp_path / 'train.txt')
-
     def test_plot(self, dataset: LandCoverAI) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
