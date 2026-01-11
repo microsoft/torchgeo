@@ -416,9 +416,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         for split_info in self.metadata.values():
             split_url = self.url.replace(self.filename, split_info['filename'])
             download_url(
-                split_url,
-                self.root,
-                md5=split_info['md5'] if self.checksum else None,
+                split_url, self.root, md5=split_info['md5'] if self.checksum else None
             )
 
 
