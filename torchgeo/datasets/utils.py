@@ -21,7 +21,7 @@ from typing import Any, TypeAlias, cast, overload
 import numpy as np
 import pandas as pd
 import rasterio
-import shapely
+import shapely.affinity
 import torch
 from pandas import Timedelta, Timestamp
 from rasterio import Affine
@@ -47,10 +47,12 @@ __all__ = (
 )
 
 
-GeoSlice: TypeAlias = (
+# Waiting to upgrade Sphinx before switching to type statement
+GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
-Path: TypeAlias = str | os.PathLike[str]
+Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
+Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')

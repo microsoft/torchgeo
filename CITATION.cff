@@ -29,14 +29,13 @@ preferred-citation:
       given-names: 'Juan M.'
     - family-names: 'Banerjee'
       given-names: 'Arindam'
-  doi: '10.1145/3707459'
-  issn: '2374-0353'
+  end: 28
   journal: 'ACM Transactions on Spatial Algorithms and Systems'
-  month: 12
-  publisher:
-    name: 'Association for Computing Machinery'
+  month: 8
+  number: 4
+  start: 1
   title: 'TorchGeo: Deep Learning With Geospatial Data'
   type: 'article'
-  url: 'https://doi.org/10.1145/3707459'
-  year: 2024
+  volume: 11
+  year: 2025
 title: 'TorchGeo: Deep Learning With Geospatial Data'

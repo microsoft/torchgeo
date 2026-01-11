@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -21,6 +21,7 @@ from .geo import RasterDataset
 from .utils import (
     GeoSlice,
     Path,
+    Sample,
     check_integrity,
     disambiguate_timestamp,
     extract_archive,
@@ -146,7 +147,7 @@ class GlobBiomass(RasterDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         measurement: str = 'agb',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -184,7 +185,7 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -246,10 +247,7 @@ class GlobBiomass(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

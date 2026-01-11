@@ -22,12 +22,11 @@ import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -129,7 +128,7 @@ class Chesapeake(RasterDataset, ABC):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -200,10 +199,7 @@ class Chesapeake(RasterDataset, ABC):
             extract_archive(file)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -436,7 +432,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['de-train'],
         layers: Sequence[str] = ['naip-new', 'lc'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -497,7 +493,7 @@ class ChesapeakeCVPR(GeoDataset):
         gdf.set_index(index, inplace=True)
         self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -516,7 +512,7 @@ class ChesapeakeCVPR(GeoDataset):
         index = index.cx[x.start : x.stop, y.start : y.stop]
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': [],
             'mask': [],
             'bounds': self._slice_to_tensor(query),
@@ -623,10 +619,7 @@ class ChesapeakeCVPR(GeoDataset):
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

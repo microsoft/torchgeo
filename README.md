@@ -255,14 +255,15 @@ See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/l
 If you use this software in your work, please cite our [paper](https://doi.org/10.1145/3707459):
 
 ```bibtex
-@article{Stewart_TorchGeo_Deep_Learning_2024,
+@article{stewart2024torchgeo,
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
-    doi = {10.1145/3707459},
-    journal = {ACM Transactions on Spatial Algorithms and Systems},
-    month = dec,
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
-    url = {https://doi.org/10.1145/3707459},
-    year = {2024}
+    journal = {ACM Transactions on Spatial Algorithms and Systems},
+    volume = {11},
+    number = {4},
+    pages = {1--28},
+    month = aug,
+    year = {2025}
 }
 ```
 

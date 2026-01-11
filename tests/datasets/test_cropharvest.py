@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import CropHarvest, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestCropHarvest:

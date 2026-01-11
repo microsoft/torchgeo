@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class SolarPlantsBrazil(NonGeoDataset):
@@ -60,7 +60,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -121,7 +121,7 @@ class SolarPlantsBrazil(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the image and mask at the given index.
 
         Args:

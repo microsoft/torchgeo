@@ -28,20 +28,6 @@ HOLDOUT_IDS = ['turkey-earthquake_00000413']
 VAL_IDS = ['val-disaster_00000001', 'val-disaster_00000002']
 
 SIZE = 32
-crs = CRS.from_wkt("""
-GEOGCS["WGS 84",
-    DATUM["WGS_1984",
-        SPHEROID["WGS 84",6378137,298.257223563,
-            AUTHORITY["EPSG","7030"]],
-        AUTHORITY["EPSG","6326"]],
-    PRIMEM["Greenwich",0,
-        AUTHORITY["EPSG","8901"]],
-    UNIT["degree",0.0174532925199433,
-        AUTHORITY["EPSG","9122"]],
-    AXIS["Latitude",NORTH],
-    AXIS["Longitude",EAST],
-    AUTHORITY["EPSG","4326"]]
-""")
 transform = Affine(
     4.572424737366368e-06,
     0.0,
@@ -82,7 +68,7 @@ def write_tif(filepath: str, channels: int, classes: int) -> None:
         height=SIZE,
         width=SIZE,
         count=channels,
-        crs=crs,
+        crs=CRS.from_epsg(4326),
         dtype=data.dtype,
         compress='lzw',
         transform=transform,

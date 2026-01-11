@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -15,7 +15,7 @@ from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class Sentinel(RasterDataset):
@@ -154,7 +154,7 @@ class Sentinel1(Sentinel):
         crs: CRS | None = None,
         res: float | tuple[float, float] = (10, 10),
         bands: Sequence[str] = ['VV', 'VH'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -201,10 +201,7 @@ To create a dataset containing both, use:
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -356,7 +353,7 @@ class Sentinel2(Sentinel):
         crs: CRS | None = None,
         res: float | tuple[float, float] = 10,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -414,10 +411,7 @@ class Sentinel2(Sentinel):
         return os.path.join(supdir, subdir, filename)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

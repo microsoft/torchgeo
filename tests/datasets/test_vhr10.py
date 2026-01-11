@@ -72,7 +72,7 @@ class TestVHR10:
             VHR10(tmp_path)
 
     def test_plot(self, dataset: VHR10) -> None:
-        pytest.importorskip('skimage', minversion='0.20')
+        pytest.importorskip('skimage', minversion='0.22')
         x = dataset[1].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()

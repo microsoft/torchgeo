@@ -8,7 +8,7 @@ import warnings
 from typing import Any
 
 import kornia.augmentation as K
-import lightning
+import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn as nn

@@ -21,23 +21,7 @@ files = [
     'S3B_20200514T234457_20200514T234757.tif',
 ]
 
-profile = {
-    'driver': 'GTiff',
-    'crs': CRS.from_wkt("""
-GEOGCS["WGS 84",
-    DATUM["WGS_1984",
-        SPHEROID["WGS 84",6378137,298.257223563,
-            AUTHORITY["EPSG","7030"]],
-        AUTHORITY["EPSG","6326"]],
-    PRIMEM["Greenwich",0,
-        AUTHORITY["EPSG","8901"]],
-    UNIT["degree",0.0174532925199433,
-        AUTHORITY["EPSG","9122"]],
-    AXIS["Latitude",NORTH],
-    AXIS["Longitude",EAST],
-    AUTHORITY["EPSG","4326"]]
-    """),
-}
+profile = {'driver': 'GTiff', 'crs': CRS.from_epsg(4326)}
 
 # Images
 directory = os.path.join('biomass_s3', 's3_olci', location)
