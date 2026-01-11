@@ -442,3 +442,11 @@ class LandCoverAI100(LandCoverAI):
     url = 'https://hf.co/datasets/isaaccorley/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
+
+    def _download(self) -> None:
+        """Download the dataset.
+
+        Unlike the parent LandCoverAI class, LandCoverAI100 includes split files
+        in the zip, so we don't need to download them separately.
+        """
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
