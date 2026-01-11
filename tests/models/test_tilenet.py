@@ -23,10 +23,7 @@ class TestTileNet:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
         """Mock TileNet weights download."""
         weights = TileNet_Weights.NAIP
@@ -79,9 +76,7 @@ class TestTileNet:
     def test_transforms(self, weights: WeightsEnum) -> None:
         """Test weight transforms."""
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)
-        }
+        sample = {'image': torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)}
         weights.transforms(sample)
 
     @pytest.mark.slow
