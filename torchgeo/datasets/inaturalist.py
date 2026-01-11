@@ -6,7 +6,6 @@
 import functools
 import glob
 import os
-from typing import Any
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -18,7 +17,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class INaturalist(GeoDataset):
@@ -70,7 +69,7 @@ class INaturalist(GeoDataset):
         geometry = gpd.points_from_xy(df.longitude, df.latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -104,10 +103,7 @@ class INaturalist(GeoDataset):
         return sample
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

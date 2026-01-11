@@ -24,10 +24,10 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
-class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
+class LandCoverAIBase(Dataset[Sample], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from
@@ -120,7 +120,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, query: Any) -> dict[str, Any]:
+    def __getitem__(self, query: Any) -> Sample:
         """Retrieve image, mask and metadata indexed by index.
 
         Args:
@@ -146,10 +146,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -208,7 +205,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -242,7 +239,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -309,7 +306,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -336,7 +333,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         with open(os.path.join(self.root, split + '.txt')) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

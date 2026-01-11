@@ -39,6 +39,7 @@ from .errors import DatasetNotFoundError
 from .utils import (
     GeoSlice,
     Path,
+    Sample,
     array_to_tensor,
     concat_samples,
     convert_poly_coords,
@@ -49,7 +50,7 @@ from .utils import (
 )
 
 
-class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -167,7 +168,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         return torch.tensor(bounds)
 
     @abc.abstractmethod
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -426,7 +427,7 @@ class RasterDataset(GeoDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new RasterDataset instance.
@@ -528,7 +529,7 @@ class RasterDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -564,7 +565,7 @@ class RasterDataset(GeoDataset):
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }
@@ -676,7 +677,7 @@ class XarrayDataset(GeoDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         data_vars: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new XarrayDataset instance.
 
@@ -748,7 +749,7 @@ class XarrayDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -773,7 +774,7 @@ class XarrayDataset(GeoDataset):
 
         image = self._merge_files(index.filepath, query)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'image': image,
             'transform': torch.tensor(transform),
@@ -864,7 +865,7 @@ class VectorDataset(GeoDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] = (0.0001, 0.0001),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         label_name: str | None = None,
         task: Literal[
             'object_detection', 'semantic_segmentation', 'instance_segmentation'
@@ -963,7 +964,7 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -1083,7 +1084,7 @@ class VectorDataset(GeoDataset):
             labels = np.empty((0,), dtype=np.int32)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'bounds': self._slice_to_tensor(query),
             'transform': torch.tensor(transform),
         }
@@ -1125,14 +1126,14 @@ class VectorDataset(GeoDataset):
         return 1
 
 
-class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
+class NonGeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
     """
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -1175,7 +1176,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         loader: Callable[[Path], Any] | None = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
@@ -1203,7 +1204,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # Must be set after calling super().__init__()
         self.transforms = transforms
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -1276,7 +1277,7 @@ class IntersectionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
 
@@ -1343,7 +1344,7 @@ class IntersectionDataset(GeoDataset):
                 msg += ' if you want to ignore temporal intersection'
                 raise RuntimeError(msg)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -1444,7 +1445,7 @@ class UnionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = merge_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
 
@@ -1479,7 +1480,7 @@ class UnionDataset(GeoDataset):
 
         self.index = pd.concat([dataset1.index, dataset2.index])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:

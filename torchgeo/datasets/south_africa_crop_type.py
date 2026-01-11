@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, which
+from .utils import GeoSlice, Path, Sample, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -116,7 +116,7 @@ class SouthAfricaCropType(RasterDataset):
         crs: CRS | None = None,
         classes: Sequence[int] = list(cmap.keys()),
         bands: Sequence[str] = s2_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
@@ -153,7 +153,7 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -265,10 +265,7 @@ class SouthAfricaCropType(RasterDataset):
         azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

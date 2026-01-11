@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import Path, Sample, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -157,7 +157,7 @@ class IDTReeS(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         task: str = 'task1',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -194,7 +194,7 @@ class IDTReeS(NonGeoDataset):
         self._verify()
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -489,7 +489,7 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),

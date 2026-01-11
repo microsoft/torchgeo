@@ -22,7 +22,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import GeoSlice, Path, check_integrity
+from .utils import GeoSlice, Path, Sample, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -209,7 +209,7 @@ class OpenBuildings(VectorDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -271,7 +271,7 @@ class OpenBuildings(VectorDataset):
         if crs is not None and crs != self._source_crs:
             self.index.to_crs(crs, inplace=True)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
@@ -374,10 +374,7 @@ class OpenBuildings(VectorDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

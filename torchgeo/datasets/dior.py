@@ -21,6 +21,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     download_and_extract_archive,
     download_url,
@@ -158,7 +159,7 @@ class DIOR(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -202,7 +203,7 @@ class DIOR(NonGeoDataset):
         """
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -215,7 +216,7 @@ class DIOR(NonGeoDataset):
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
 
-        sample: dict[str, Tensor] = {'image': image}
+        sample: Sample = {'image': image}
 
         if self.split != 'test':
             boxes, labels = self._load_target(
@@ -330,7 +331,7 @@ class DIOR(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,

@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive
+from .utils import Path, Sample, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -95,7 +95,7 @@ class LoveDA(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         scene: Sequence[str] = ['urban', 'rural'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -143,7 +143,7 @@ class LoveDA(NonGeoDataset):
 
         self.files = self._load_files(self.scene_paths, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -256,7 +256,7 @@ class LoveDA(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

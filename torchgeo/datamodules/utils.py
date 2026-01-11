@@ -9,7 +9,8 @@ from typing import Any
 
 import numpy as np
 import torch
-from torch import Tensor
+
+from ..datasets.utils import Sample
 
 
 # Based on lightning_lite.utilities.exceptions
@@ -17,7 +18,7 @@ class MisconfigurationException(Exception):
     """Exception used to inform users of misuse with Lightning."""
 
 
-def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
+def collate_fn_detection(batch: list[Sample]) -> Sample:
     """Custom collate fn for object detection and instance segmentation.
 
     Args:
@@ -28,7 +29,7 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 
     .. versionadded:: 0.6
     """
-    output: dict[str, Any] = {}
+    output: Sample = {}
     output['image'] = torch.stack([sample['image'] for sample in batch])
     output['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
     if 'label' in batch[0].keys():

@@ -10,9 +10,8 @@ from typing import ClassVar, Literal
 
 import pandas as pd
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
-from ..utils import Path, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -225,7 +224,7 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['static', 'time-series'] = 'static',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -252,7 +251,7 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
             filepath = os.path.join(root, self.directory, f'static_fnames-{split}.csv')
             self.static_files = pd.read_csv(filepath, header=None)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

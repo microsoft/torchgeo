@@ -6,7 +6,6 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import pytest
 import torch
@@ -14,6 +13,7 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, SolarPlantsBrazil
+from torchgeo.datasets.utils import Sample
 
 root = os.path.join('tests', 'data', 'solar_plants_brazil')
 
@@ -59,7 +59,7 @@ class TestSolarPlantsBrazil:
             SolarPlantsBrazil(root=tmp_path, split='train', download=False)
 
     def test_getitem_with_transform(self, dataset_root: str) -> None:
-        def dummy_transform(sample: dict[str, Any]) -> dict[str, Any]:
+        def dummy_transform(sample: Sample) -> Sample:
             sample['image'] += 1
             return sample
 

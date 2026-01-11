@@ -5,9 +5,8 @@
 
 from typing import Any, Literal
 
-from torch import Tensor
-
 from ..geo import NonGeoDataset
+from ..utils import Sample
 from .aq_no2_s5p import CopernicusBenchAQNO2S5P
 from .aq_o3_s5p import CopernicusBenchAQO3S5P
 from .base import CopernicusBenchBase
@@ -118,7 +117,7 @@ class CopernicusBench(NonGeoDataset):
         """
         return len(self.dataset)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
