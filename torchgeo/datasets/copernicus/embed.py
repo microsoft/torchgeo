@@ -40,7 +40,7 @@ class CopernicusEmbed(RasterDataset):
 
     filename_glob = 'embed_map_*'
 
-    url = 'https://hf.co/datasets/ajstewart/copernicus_embed/resolve/ff892440609bc644df2c573a37f145c9d1c986fc/embed_map_310k.tif'
+    url = 'https://hf.co/datasets/torchgeo/copernicus_embed/resolve/435b4a7bdce6f6fdbf4272f9d6e54f2604f35fdb/embed_map_310k.tif'
     md5 = '63de14ab9f5eeffb785066f3013a40b4'
 
     def __init__(
