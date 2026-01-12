@@ -15,11 +15,13 @@ import torch.nn as nn
 from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchmetrics import MetricCollection
 from torchmetrics.classification import Accuracy, FBetaScore, JaccardIndex
 from torchvision.models._api import WeightsEnum
 from typing_extensions import deprecated
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import get_weight
 from . import utils
@@ -215,10 +217,10 @@ class ClassificationTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
+            and isinstance(self.logger.experiment, SummaryWriter)
         ):
             datamodule = self.trainer.datamodule
             aug = K.AugmentationSequential(

@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from timm.models import adapt_input_conv
 from torch import Tensor
 from torch.nn.parameter import Parameter
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import ResNet50_Weights
@@ -20,6 +21,7 @@ from torchvision.models.detection import (
     maskrcnn_resnet50_fpn,
 )
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
@@ -182,10 +184,10 @@ class InstanceSegmentationTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
+            and isinstance(self.logger.experiment, SummaryWriter)
         ):
             datamodule = self.trainer.datamodule
             aug = K.AugmentationSequential(

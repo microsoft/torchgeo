@@ -14,6 +14,7 @@ from matplotlib.figure import Figure
 from timm.models import adapt_input_conv
 from torch import Tensor
 from torch.nn.parameter import Parameter
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -22,6 +23,7 @@ from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
@@ -291,10 +293,10 @@ class ObjectDetectionTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
+            and isinstance(self.logger.experiment, SummaryWriter)
         ):
             datamodule = self.trainer.datamodule
             aug = K.AugmentationSequential(

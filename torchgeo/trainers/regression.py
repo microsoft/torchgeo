@@ -14,9 +14,11 @@ import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
@@ -198,10 +200,10 @@ class RegressionTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
+            and isinstance(self.logger.experiment, SummaryWriter)
         ):
             datamodule = self.trainer.datamodule
             aug = K.AugmentationSequential(
