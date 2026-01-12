@@ -26,7 +26,7 @@ from torchgeo.datasets import (
 class TestLandCoverAIGeo:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
+        md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
         monkeypatch.setattr(LandCoverAIGeo, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(LandCoverAIGeo, 'url', url)
@@ -71,8 +71,6 @@ class TestLandCoverAIGeo:
 
 
 class TestLandCoverAI:
-    pytest.importorskip('cv2', minversion='4.5.5')
-
     @pytest.fixture(
         params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
     )
@@ -81,14 +79,11 @@ class TestLandCoverAI:
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
         split: str = request.param[1]
-        md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
+        md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
         monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
-        sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(base_class, 'sha256', sha256)
-        if base_class == LandCoverAI100:
-            monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
+        monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
         transforms = nn.Identity()
         return base_class(root, split, transforms, download=True, checksum=True)
@@ -111,11 +106,10 @@ class TestLandCoverAI:
         LandCoverAI(root=dataset.root, download=True)
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         root = tmp_path
-        shutil.copy(url, root)
+        # Copy with the expected filename for LandCoverAI
+        shutil.copy(url, os.path.join(root, 'output.zip'))
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

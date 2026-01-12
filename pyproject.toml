@@ -99,14 +99,12 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.5.5.64+ required for Python 3.11 wheels
-    "opencv-python>=4.5.5.64",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
     "pycocotools>=2.0.7",
     # requests 2.23.0+ required for lightly 1.4.5 compatibility
-    "requests>=2.23.0",
+    "requests>=2.23.0", 
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
     # scikit-image 0.20+ required for Python 3.11 wheels
