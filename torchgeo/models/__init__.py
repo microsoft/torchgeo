@@ -126,7 +126,6 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
-    'make_tilenet',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',

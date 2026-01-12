@@ -20,20 +20,17 @@ from torchvision.models._api import Weights, WeightsEnum
 # -----------------------------------------------------------------------------
 # Weights
 # -----------------------------------------------------------------------------
-class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
+class TileNet_Weights(WeightsEnum):
     """TileNet (Tile2Vec) weights.
 
     NAIP-pretrained Tile2Vec encoder.
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.9
     """
 
-    NAIP = Weights(
+    NAIP_ALL_TILE2VEC = Weights(
         url=(
-            'https://hf.co/pgangapurwala/'
-            'TileNet_Weights.NAIP_ALL_TILE2VEC/resolve/'
-            'af12210f5c130af76579ce8ec5e7036c1551ba25/'
-            'TileNet_Weights.NAIP_ALL_TILE2VEC.pth'
+            'https://hf.co/pgangapurwala/TileNet_Weights.NAIP_ALL_TILE2VEC/resolve/af12210f5c130af76579ce8ec5e7036c1551ba25/TileNet_Weights.NAIP_ALL_TILE2VEC.pth'
         ),
         transforms=T.Normalize(mean=[0], std=[255], inplace=True),
         meta={
@@ -56,19 +53,15 @@ class BasicBlock(nn.Module):
 
     expansion: int = 1
 
-    def __init__(
-        self, in_planes: int, planes: int, stride: int = 1, no_relu: bool = False
-    ) -> None:
+    def __init__(self, in_planes: int, planes: int, stride: int = 1) -> None:
         """Initialize a BasicBlock.
 
         Args:
             in_planes: Number of input channels.
             planes: Number of output channels.
             stride: Convolution stride.
-            no_relu: Disable final ReLU (used in last block).
         """
         super().__init__()
-        self.no_relu = no_relu
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -96,12 +89,8 @@ class BasicBlock(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
         out = F.relu(self.bn1(self.conv1(x)))
-
-        if self.no_relu:
-            out_no_relu: torch.Tensor = self.bn3(self.conv3(out))
-            return out_no_relu
-
-        out = self.bn2(self.conv2(out))
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
         out += self.shortcut(x)
         return F.relu(out)
 
@@ -110,10 +99,10 @@ class BasicBlock(nn.Module):
 # TileNet model
 # -----------------------------------------------------------------------------
 class TileNet(nn.Module):
-    """TileNet encoder (Tile2Vec NAIP exact)."""
+    """TileNet encoder.
 
-    name: str = 'tilenet'
-    embedding_dim: int = 512
+    versionadded:: 0.9
+    """
 
     def __init__(self, in_channels: int = 4, z_dim: int = 512) -> None:
         """Initialize TileNet.
@@ -134,23 +123,24 @@ class TileNet(nn.Module):
         self.layer2 = self._make_layer(128, 2, stride=2)
         self.layer3 = self._make_layer(256, 2, stride=2)
         self.layer4 = self._make_layer(512, 2, stride=2)
-        self.layer5 = self._make_layer(z_dim, 2, stride=2, no_relu=True)
+        self.layer5 = self._make_layer(z_dim, 2, stride=2)
 
-    def _make_layer(
-        self, planes: int, num_blocks: int, stride: int, no_relu: bool = False
-    ) -> nn.Sequential:
+    def _make_layer(self, planes: int, num_blocks: int, stride: int) -> nn.Sequential:
+        """Create a sequential residual layer.
+
+        Args:
+            planes: Number of output channels for each block.
+            num_blocks: Number of residual blocks in the layer.
+            stride: Stride of the first block.
+
+        Returns:
+            A sequential container of residual blocks.
+        """
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
 
         for i, s in enumerate(strides):
-            layers.append(
-                BasicBlock(
-                    self.in_planes,
-                    planes,
-                    stride=s,
-                    no_relu=no_relu and i == num_blocks - 1,
-                )
-            )
+            layers.append(BasicBlock(self.in_planes, planes, stride=s))
             self.in_planes = planes
 
         return nn.Sequential(*layers)
@@ -159,10 +149,10 @@ class TileNet(nn.Module):
         """Compute TileNet embeddings.
 
         Args:
-        x: Input image tensor of shape (B, C, H, W).
+            x: Input image tensor of shape (B, C, H, W).
 
         Returns:
-        Embedding tensor of shape (B, embedding_dim).
+            Embedding tensor of shape (B, embedding_dim).
         """
         x = F.relu(self.bn1(self.conv1(x)))
         x = self.layer1(x)
@@ -175,22 +165,6 @@ class TileNet(nn.Module):
 
 
 # -----------------------------------------------------------------------------
-# Internal factory
-# -----------------------------------------------------------------------------
-def make_tilenet(in_channels: int = 4, z_dim: int = 512) -> TileNet:
-    """Create a TileNet encoder.
-
-    Args:
-      in_channels: Number of input channels.
-      z_dim: Output embedding dimension.
-
-    Returns:
-      A TileNet model instance.
-    """
-    return TileNet(in_channels=in_channels, z_dim=z_dim)
-
-
-# -----------------------------------------------------------------------------
 # Public factory (TorchGeo API)
 # -----------------------------------------------------------------------------
 def tilenet(
@@ -198,10 +172,12 @@ def tilenet(
 ) -> nn.Module:
     """TileNet (Tile2Vec) encoder.
 
+        .. versionadded:: 0.9
+
     Args:
         weights: Pre-trained TileNet weights to load.
-        *args: Positional arguments (unused, kept for API compatibility).
-        **kwargs: Keyword arguments forwarded to ``make_tilenet``.
+        *args: Positional arguments.
+        **kwargs: Keyword arguments forwarded to model.
 
     Returns:
         A TileNet model.
@@ -209,7 +185,7 @@ def tilenet(
     if weights:
         kwargs['in_channels'] = weights.meta['in_chans']
 
-    model = make_tilenet(*args, **kwargs)
+    model = TileNet(*args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -219,6 +195,3 @@ def tilenet(
         assert unexpected_keys == []
 
     return model
-
-
-__all__ = ['TileNet', 'TileNet_Weights', 'make_tilenet', 'tilenet']
