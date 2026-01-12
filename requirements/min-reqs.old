@@ -26,7 +26,6 @@ typing-extensions==4.8.0
 h5py==3.10.0
 laspy==2.5.3
 netcdf4==1.6.5
-opencv-python==4.5.5.64
 pycocotools==2.0.8
 rioxarray==0.14.1
 scikit-image==0.22.0

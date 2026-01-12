@@ -10,6 +10,7 @@ import zipfile
 
 import numpy as np
 import rasterio
+from PIL import Image as PILImage
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
@@ -84,29 +85,29 @@ for split in ['train', 'val', 'test']:
         for file in files:
             f.write(f'{file}\n')
 
-# Create split.py
-code = f"""\
-import os
+# Create output directory with pre-chipped images using PIL instead of cv2
+os.makedirs('output', exist_ok=True)
 
-import cv2
+# Load the images and masks with rasterio and save as jpg/png
+with rasterio.open(os.path.join('images', f'{filename}.tif')) as src:
+    img_data = src.read()  # Read all bands
+    # Convert from CxHxW to HxWxC for PIL
+    img_data = np.transpose(img_data, (1, 2, 0))
 
-image = cv2.imread(os.path.join("images", "{filename}.tif"))
-mask = cv2.imread(os.path.join("masks", "{filename}.tif"))
+with rasterio.open(os.path.join('masks', f'{filename}.tif')) as src:
+    mask_data = src.read(1)  # Read single band
 
-os.makedirs("output")
+# Save pre-chipped versions
 for i in range(2):
-    cv2.imwrite(os.path.join("output", f"{filename}_{{i}}.jpg"), image)
-    cv2.imwrite(os.path.join("output", f"{filename}_{{i}}_m.png"), mask)
-"""
-with open('split.py', 'w') as f:
-    f.write(code)
+    # Save image as JPEG
+    img = PILImage.fromarray(img_data.astype(np.uint8))
+    img.save(os.path.join('output', f'{filename}_{i}.jpg'))
 
-# Create output
-with open('split.py') as f:
-    split = f.read().encode('utf-8')
-    exec(split)
+    # Save mask as PNG
+    mask = PILImage.fromarray(mask_data.astype(np.uint8))
+    mask.save(os.path.join('output', f'{filename}_{i}_m.png'))
 
-# Compress data
+# Compress data - include the pre-chipped output folder
 with zipfile.ZipFile(zipfilename, 'w') as f:
     for file in [
         'images/M-33-20-D-c-4-2.tif',
@@ -114,12 +115,13 @@ with zipfile.ZipFile(zipfilename, 'w') as f:
         'train.txt',
         'val.txt',
         'test.txt',
-        'split.py',
     ]:
         f.write(file, arcname=file)
+    # Add output directory files
+    for file in files:
+        f.write(f'output/{file}.jpg', arcname=f'output/{file}.jpg')
+        f.write(f'output/{file}_m.png', arcname=f'output/{file}_m.png')
 
 # Compute checksums
 with open(zipfilename, 'rb') as f:
     print(zipfilename, hashlib.md5(f.read()).hexdigest())
-with open('split.py', 'rb') as f:
-    print('split.py', hashlib.sha256(f.read()).hexdigest())

@@ -97,8 +97,6 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.5+ required for Python 3.12 wheels
     "netcdf4>=1.6.5",
-    # opencv-python 4.5.5.64+ required for wheels
-    "opencv-python>=4.5.5.64",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
     # pycocotools 2.0.8+ required for Python 3.12 wheels
