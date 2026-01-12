@@ -172,7 +172,7 @@ def tilenet(
 ) -> nn.Module:
     """TileNet (Tile2Vec) encoder.
 
-        .. versionadded:: 0.9
+    .. versionadded:: 0.9
 
     Args:
         weights: Pre-trained TileNet weights to load.

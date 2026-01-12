@@ -22,11 +22,6 @@ Model API
 
 .. autofunction:: torchgeo.models.tilenet
 
-Internal Factory
-----------------
-
-.. autofunction:: torchgeo.models.tilenet
-
 Weights
 -------
 
