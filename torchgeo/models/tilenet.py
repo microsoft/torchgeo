@@ -20,7 +20,7 @@ from torchvision.models._api import Weights, WeightsEnum
 # -----------------------------------------------------------------------------
 # Weights
 # -----------------------------------------------------------------------------
-class TileNet_Weights(WeightsEnum):
+class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
     """TileNet (Tile2Vec) weights.
 
     NAIP-pretrained Tile2Vec encoder.
