@@ -4,7 +4,6 @@
 """Common trainer utilities."""
 
 import warnings
-from collections import OrderedDict
 from typing import cast
 
 import torch
@@ -31,7 +30,7 @@ class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[mi
         return image, target
 
 
-def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:
+def extract_backbone(path: str) -> tuple[str, dict[str, Tensor]]:
     """Extracts a backbone from a lightning checkpoint file.
 
     Args:
@@ -51,19 +50,17 @@ def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:
     if 'model' in checkpoint['hyper_parameters']:
         name = checkpoint['hyper_parameters']['model']
         state_dict = checkpoint['state_dict']
-        state_dict = OrderedDict({k: v for k, v in state_dict.items() if 'model.' in k})
-        state_dict = OrderedDict(
-            {k.replace('model.', ''): v for k, v in state_dict.items()}
-        )
+        state_dict = {k: v for k, v in state_dict.items() if 'model.' in k}
+        state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}
     elif 'backbone' in checkpoint['hyper_parameters']:
         name = checkpoint['hyper_parameters']['backbone']
         state_dict = checkpoint['state_dict']
-        state_dict = OrderedDict(
-            {k: v for k, v in state_dict.items() if 'model.backbone.model' in k}
-        )
-        state_dict = OrderedDict(
-            {k.replace('model.backbone.model.', ''): v for k, v in state_dict.items()}
-        )
+        state_dict = {
+            k: v for k, v in state_dict.items() if 'model.backbone.model' in k
+        }
+        state_dict = {
+            k.replace('model.backbone.model.', ''): v for k, v in state_dict.items()
+        }
     else:
         raise ValueError(
             'Unknown checkpoint task. Only backbone or model extraction is supported'
@@ -90,7 +87,7 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
 
 
 def load_state_dict(
-    model: Module, state_dict: 'OrderedDict[str, Tensor]'
+    model: Module, state_dict: dict[str, Tensor]
 ) -> tuple[list[str], list[str]]:
     """Load pretrained resnet weights to a model.
 
