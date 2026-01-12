@@ -205,8 +205,6 @@ def random_grid_cell_assignment(
     if grid_size < 2:
         raise ValueError('Input grid_size must be greater than 1.')
 
-    lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
-
     # Generate the grid's cells for each bbox in index
     left = []
     right = []
@@ -231,6 +229,8 @@ def random_grid_cell_assignment(
                     right.append(index.right)
                     rows.append(row)
                     geometry.append(geom)
+
+    lengths = _fractions_to_lengths(fractions, len(rows))
 
     indexes_sr = pd.IntervalIndex.from_arrays(
         left, right, closed='both', name='datetime'
