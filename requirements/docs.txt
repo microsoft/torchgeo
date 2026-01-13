@@ -2,4 +2,4 @@
 ipywidgets==8.1.8
 nbsphinx==0.9.8
 pydata-sphinx-theme==0.16.1
-sphinx==9.0.4
+sphinx==9.1.0
