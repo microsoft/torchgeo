@@ -199,7 +199,7 @@ disallow_untyped_decorators = true
 
 # Configuring warnings
 warn_redundant_casts = true
-warn_unused_ignores = true
+warn_unused_ignores = false  # remove if/when we drop ty
 warn_no_return = true
 warn_return_any = true
 warn_unreachable = true
@@ -369,6 +369,7 @@ deprecated = "ignore"
 unresolved-attribute = "ignore"
 unresolved-import = "ignore"
 unresolved-reference = "ignore"
+unused-ignore-comment = "ignore"  # remove if/when we drop mypy
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]
