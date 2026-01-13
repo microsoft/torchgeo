@@ -345,7 +345,6 @@ ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
-"experiments/**" = ["D"]
 "tests/**" = ["D"]
 
 [tool.ruff.lint.isort]
