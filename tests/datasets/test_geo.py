@@ -505,8 +505,10 @@ class TestXarrayDataset:
         transforms = nn.Identity()
         match request.param[0]:
             case 'hdf5':
+                pytest.importorskip('h5py', minversion='3.10')
                 ds = XarrayDataset(root, crs=request.param[1], transforms=transforms)
             case 'netcdf':
+                pytest.importorskip('netCDF4', minversion='1.6.5')
                 with pytest.warns(UserWarning, match='Unable to decode coordinates'):
                     ds = XarrayDataset(root, crs=request.param[1], res=3)
 
