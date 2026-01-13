@@ -116,6 +116,23 @@ html_theme_options = {
             'url': 'https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw',
             'icon': 'fa-brands fa-slack',
         },
+        {
+            'name': 'YouTube',
+            'url': 'https://www.youtube.com/@TorchGeo',
+            'icon': 'fa-brands fa-youtube',
+        },
+        {
+            'name': 'Hugging Face',
+            'url': 'https://huggingface.co/torchgeo',
+            'icon': '_static/hf-logo.svg',
+            'type': 'local',
+        },
+        {
+            'name': 'OSGeo',
+            'url': 'https://www.osgeo.org/community/getting-started-osgeo/',
+            'icon': '_static/osgeo-logo.svg',
+            'type': 'local',
+        },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
@@ -131,7 +148,7 @@ html_theme_options = {
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['notebook-prompt.css']
+html_css_files = ['notebook-prompt.css', 'custom.css']
 
 # -- Extension configuration -------------------------------------------------
 
