@@ -40,7 +40,7 @@ class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
             'ssl_method': 'tile2vec',
             'publication': 'https://arxiv.org/abs/1805.02855',
             'repo': 'https://github.com/ermongroup/tile2vec',
-            'bands': ['R', 'G', 'B', 'NIR'],
+            'bands': ('R', 'G', 'B', 'NIR'),
         },
     )
 

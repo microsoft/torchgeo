@@ -15,9 +15,6 @@ from torchgeo.models import TileNet_Weights, tilenet
 class TestTileNet:
     """Tests for TileNet (Tile2Vec) model."""
 
-    # ------------------------------------------------------------------
-    # Fixtures
-    # ------------------------------------------------------------------
     @pytest.fixture(params=[*TileNet_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
         """Return all available TileNet weights."""
@@ -37,9 +34,6 @@ class TestTileNet:
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
-    # ------------------------------------------------------------------
-    # Model tests
-    # ------------------------------------------------------------------
     def test_tilenet(self) -> None:
         """Test TileNet construction and forward pass."""
         model = tilenet()
@@ -65,9 +59,6 @@ class TestTileNet:
 
         assert y.shape == (1, 512)
 
-    # ------------------------------------------------------------------
-    # Weights metadata tests
-    # ------------------------------------------------------------------
     def test_bands(self, weights: WeightsEnum) -> None:
         """Test bands metadata consistency."""
         assert len(weights.meta['bands']) == weights.meta['in_chans']
@@ -78,9 +69,6 @@ class TestTileNet:
         sample = {'image': torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)}
         weights.transforms(sample)
 
-    # ------------------------------------------------------------------
-    # Download test
-    # ------------------------------------------------------------------
     @pytest.mark.slow
     def test_tilenet_download(self, weights: WeightsEnum) -> None:
         """Test real weight download."""
