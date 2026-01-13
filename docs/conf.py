@@ -12,8 +12,6 @@
 import os
 import sys
 
-import pytorch_sphinx_theme
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -40,7 +38,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'nbsphinx',
 ]
@@ -50,8 +47,9 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 4.0+ required for autodoc_typehints_description_traget
-needs_sphinx = '4.0'
+# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+# https://github.com/sphinx-doc/sphinx/pull/10887
+needs_sphinx = '5.3'
 
 nitpicky = True
 nitpick_ignore = [
@@ -76,25 +74,64 @@ nitpick_ignore = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'pytorch_sphinx_theme'
-html_theme_path = [pytorch_sphinx_theme.get_html_theme_path()]
+html_theme = 'pydata_sphinx_theme'
+
+# Define the version we use for matching in the version switcher.
+version_match = os.environ.get('READTHEDOCS_VERSION')
+json_url = 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json'
+
+# If READTHEDOCS_VERSION doesn't exist, we're not on RTD
+# If it is an integer, we're in a PR build and the version isn't correct.
+# If it's "latest" → change to "dev" (that's what we want the switcher to call it)
+if not version_match or version_match.isdigit() or version_match == 'latest':
+    # For local development, infer the version to match from the package.
+    if 'dev' in release or 'rc' in release:
+        version_match = 'dev'
+        # We want to keep the relative reference if we are in dev mode
+        # but we want the whole url if we are effectively in a released version
+        json_url = '_static/switcher.json'
+    else:
+        version_match = f'v{release}'
+elif version_match == 'stable':
+    version_match = f'v{release}'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
-# documentation.
+# documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
     'collapse_navigation': False,
-    'display_version': True,
-    'logo_only': True,
-    'pytorch_project': 'docs',
-    'navigation_with_keys': True,
-    'analytics_id': 'UA-209075005-1',
+    'show_nav_level': 2,
+    'show_toc_level': 2,
+    'navigation_depth': 4,
+    'navbar_align': 'left',
+    'header_links_before_dropdown': 6,
+    'icon_links': [
+        {
+            'name': 'GitHub',
+            'url': 'https://github.com/torchgeo/torchgeo',
+            'icon': 'fa-brands fa-github',
+        },
+        {
+            'name': 'Slack',
+            'url': 'https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw',
+            'icon': 'fa-brands fa-slack',
+        },
+    ],
+    'analytics': {'google_analytics_id': 'UA-209075005-1'},
+    'logo': {
+        'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
+        'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
+    },
+    'switcher': {'json_url': json_url, 'version_match': version_match},
+    'navbar_start': ['navbar-logo', 'version-switcher'],
+    'navbar_center': ['navbar-nav'],
+    'navbar_end': ['theme-switcher', 'navbar-icon-links'],
 }
 
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['badge-height.css', 'notebook-prompt.css', 'table-scroll.css']
+html_css_files = ['notebook-prompt.css']
 
 # -- Extension configuration -------------------------------------------------
 
@@ -128,12 +165,8 @@ intersphinx_mapping = {
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
+
 # nbsphinx
 nbsphinx_execute = 'never'
 with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
-
-# Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
-# See more information here https://github.com/spatialaudio/nbsphinx/issues/599
-# NOTE: This will likely break nbsphinx widgets
-nbsphinx_requirejs_path = ''
