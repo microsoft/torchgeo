@@ -17,9 +17,6 @@ from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 
-# -----------------------------------------------------------------------------
-# Weights
-# -----------------------------------------------------------------------------
 class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
     """TileNet (Tile2Vec) weights.
 
@@ -45,9 +42,7 @@ class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-# -----------------------------------------------------------------------------
-# Model blocks
-# -----------------------------------------------------------------------------
+
 class BasicBlock(nn.Module):
     """Tile2Vec residual block with extra conv3 branch."""
 
@@ -95,9 +90,7 @@ class BasicBlock(nn.Module):
         return F.relu(out)
 
 
-# -----------------------------------------------------------------------------
-# TileNet model
-# -----------------------------------------------------------------------------
+
 class TileNet(nn.Module):
     """TileNet encoder.
 
@@ -164,9 +157,6 @@ class TileNet(nn.Module):
         return x.view(x.size(0), -1)
 
 
-# -----------------------------------------------------------------------------
-# Public factory (TorchGeo API)
-# -----------------------------------------------------------------------------
 def tilenet(
     weights: TileNet_Weights | None = None, *args: Any, **kwargs: Any
 ) -> nn.Module:
