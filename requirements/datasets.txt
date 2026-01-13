@@ -7,6 +7,6 @@ pandas[parquet]==2.3.3
 pycocotools==2.0.11
 rioxarray==0.20.0
 scikit-image==0.26.0
-scipy==1.16.3
+scipy==1.17.0
 webdataset==1.0.2
 xarray==2025.12.0
