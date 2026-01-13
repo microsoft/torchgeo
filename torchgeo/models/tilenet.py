@@ -42,7 +42,6 @@ class TileNet_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-
 class BasicBlock(nn.Module):
     """Tile2Vec residual block with extra conv3 branch."""
 
@@ -88,7 +87,6 @@ class BasicBlock(nn.Module):
         out = self.bn3(self.conv3(out))
         out += self.shortcut(x)
         return F.relu(out)
-
 
 
 class TileNet(nn.Module):
