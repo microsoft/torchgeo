@@ -136,7 +136,7 @@ html_theme_options = {
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['notebook-prompt.css', 'custom.css']
+html_css_files = ['custom.css']
 
 # -- Extension configuration -------------------------------------------------
 

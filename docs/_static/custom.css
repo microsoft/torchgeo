@@ -13,3 +13,9 @@ html {
   border-left-color: #ee4c2c;
   color: #ee4c2c;
 }
+
+/* Hide Jupyter notebook input/output prompts */
+.nbinput .prompt,
+.nboutput .prompt {
+  display: none;
+}
