@@ -121,18 +121,6 @@ html_theme_options = {
             'url': 'https://www.youtube.com/@TorchGeo',
             'icon': 'fa-brands fa-youtube',
         },
-        {
-            'name': 'Hugging Face',
-            'url': 'https://huggingface.co/torchgeo',
-            'icon': '_static/hf-logo.svg',
-            'type': 'local',
-        },
-        {
-            'name': 'OSGeo',
-            'url': 'https://www.osgeo.org/community/getting-started-osgeo/',
-            'icon': '_static/osgeo-logo.svg',
-            'type': 'local',
-        },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
