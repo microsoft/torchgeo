@@ -60,6 +60,7 @@ from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
 from .dota import DOTA
+from .earth_index import EarthIndexEmbeddings
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
@@ -263,6 +264,7 @@ __all__ = (
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EarthIndexEmbeddings',
     'EnMAP',
     'EnviroAtlas',
     'Esri2020',
