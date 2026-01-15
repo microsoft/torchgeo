@@ -11,6 +11,8 @@ from torch import Tensor
 
 from torchgeo.datasets import DatasetNotFoundError, EarthIndexEmbeddings
 
+pytest.importorskip('pyarrow')
+
 
 class TestEarthIndexEmbeddings:
     @pytest.fixture
