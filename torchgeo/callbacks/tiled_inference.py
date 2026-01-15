@@ -56,6 +56,8 @@ class TiledInferenceCallback(Callback):
             blend_method: Blending method ('cosine' or 'linear').
             chunk_size: Chunk size for output processing (memory vs speed).
             cog_config: Optional Cloud-Optimized GeoTIFF configuration.
+                Defaults to building overviews at levels [2, 4, 8, 16, 32, 64]
+                with nearest resampling and LZW compression.
         """
         super().__init__()
         self.output_path = Path(output_path)
@@ -63,7 +65,13 @@ class TiledInferenceCallback(Callback):
         self.delta = delta
         self.blend_method = blend_method
         self.chunk_size = chunk_size
-        self.cog_config = cog_config or {}
+
+        default_cog_config = {
+            'overviews': [2, 4, 8, 16, 32, 64],
+            'overview_resampling': 'nearest',
+            'compress': 'lzw',
+        }
+        self.cog_config = {**default_cog_config, **(cog_config or {})}
 
         self.temp_dir: Path | None = None
         self.patch_metadata: list[dict[str, Any]] = []
