@@ -48,7 +48,7 @@ class EarthIndexEmbeddings(NonGeoDataset):
 
         try:
             self.data = gpd.read_parquet(root)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError):
             raise DatasetNotFoundError(self)
 
     def __len__(self) -> int:
