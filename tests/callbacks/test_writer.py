@@ -1,5 +1,4 @@
 # Copyright (c) TorchGeo Contributors
-# All rights reserved.
 # Licensed under the MIT License.
 
 """Tests for GeoTIFF writer."""
@@ -9,9 +8,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 import rasterio
-from affine import Affine
+from rasterio.transform import Affine
 
-from torchgeo.callbacks._writer import GeoTIFFWriter
+from torchgeo.callbacks.writer import GeoTIFFWriter
 
 
 class TestGeoTIFFWriter:

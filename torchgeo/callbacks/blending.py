@@ -1,5 +1,4 @@
 # Copyright (c) TorchGeo Contributors
-# All rights reserved.
 # Licensed under the MIT License.
 
 """Blending utilities for tiled inference."""
@@ -12,7 +11,7 @@ from typing import Any
 
 import numpy as np
 import rasterio
-from affine import Affine
+from rasterio.transform import Affine
 from tqdm import tqdm
 
 
@@ -351,7 +350,7 @@ def weighted_merge(
 
 
     """
-    from torchgeo.callbacks._writer import GeoTIFFWriter
+    from torchgeo.callbacks.writer import GeoTIFFWriter
 
     with rasterio.open(patch_metadata[0]['file']) as src:
         patch_h, patch_w = src.height, src.width

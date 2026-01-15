@@ -1,5 +1,4 @@
 # Copyright (c) TorchGeo Contributors
-# All rights reserved.
 # Licensed under the MIT License.
 
 """Tests for blending utilities."""
@@ -11,9 +10,9 @@ import numpy as np
 import pytest
 import rasterio
 import torch
-from affine import Affine
+from rasterio.transform import Affine
 
-from torchgeo.callbacks._blending import (
+from torchgeo.callbacks.blending import (
     _build_grid_index,
     _get_edge_deltas,
     _query_grid_index,

@@ -1,5 +1,4 @@
 # Copyright (c) TorchGeo Contributors
-# All rights reserved.
 # Licensed under the MIT License.
 
 """GeoTIFF writer with Cloud-Optimized GeoTIFF support."""
@@ -11,7 +10,7 @@ from typing import Any
 
 import numpy as np
 import rasterio
-from affine import Affine
+from rasterio.transform import Affine
 from rasterio.windows import Window
 
 
@@ -146,7 +145,21 @@ class GeoTIFFWriter:
             except ImportError:
                 import subprocess
 
-                cmd = [
+                newer_cmd = [
+                    'gdal',
+                    'raster',
+                    'overview',
+                    'add',
+                    '-r',
+                    resampling,
+                    '--config',
+                    'COMPRESS_OVERVIEW',
+                    compress,
+                    str(self.output_path),
+                    *map(str, overview_levels),
+                ]
+
+                legacy_cmd = [
                     'gdaladdo',
                     '-r',
                     resampling,
@@ -158,11 +171,18 @@ class GeoTIFFWriter:
                 ]
 
                 try:
-                    subprocess.run(cmd, check=True, capture_output=True, text=True)
-                except FileNotFoundError:
-                    raise RuntimeError(
-                        'GDAL Python bindings not available and gdaladdo not found. '
-                        'Install GDAL or disable overviews.'
+                    subprocess.run(
+                        newer_cmd, check=True, capture_output=True, text=True
                     )
-                except subprocess.CalledProcessError as e:
-                    raise RuntimeError(f'gdaladdo failed: {e.stderr}') from e
+                except (FileNotFoundError, subprocess.CalledProcessError):
+                    try:
+                        subprocess.run(
+                            legacy_cmd, check=True, capture_output=True, text=True
+                        )
+                    except FileNotFoundError:
+                        raise RuntimeError(
+                            'GDAL Python bindings not available and GDAL CLI not found. '
+                            'Install GDAL or disable overviews.'
+                        )
+                    except subprocess.CalledProcessError as e:
+                        raise RuntimeError(f'gdaladdo failed: {e.stderr}') from e

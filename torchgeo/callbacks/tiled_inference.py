@@ -1,5 +1,4 @@
 # Copyright (c) TorchGeo Contributors
-# All rights reserved.
 # Licensed under the MIT License.
 
 """Tiled inference callback for semantic segmentation."""
@@ -35,7 +34,7 @@ class TiledInferenceCallback(Callback):
         trainer = Trainer(callbacks=[callback])
         trainer.predict(task, datamodule)
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.9
     """
 
     def __init__(
@@ -203,7 +202,7 @@ class TiledInferenceCallback(Callback):
             trainer: PyTorch Lightning trainer.
             pl_module: PyTorch Lightning module.
         """
-        from torchgeo.callbacks._blending import weighted_merge
+        from torchgeo.callbacks.blending import weighted_merge
 
         if not self.patch_metadata:
             raise ValueError('No patches to merge')
