@@ -84,15 +84,15 @@ def _reconstruct_scene_from_patches(
         raise ValueError('patch_metadata is empty')
 
     first_transform = patch_metadata[0]['transform']
-    x_res = first_transform[0].item()
-    y_res = first_transform[4].item()
+    x_res = first_transform[0]
+    y_res = first_transform[4]
 
     for meta in patch_metadata[1:]:
         t = meta['transform']
-        if abs(t[0].item() - x_res) > 1e-6 or abs(t[4].item() - y_res) > 1e-6:
+        if abs(t[0] - x_res) > 1e-6 or abs(t[4] - y_res) > 1e-6:
             raise ValueError(
                 f'Inconsistent resolutions: first patch has ({x_res}, {y_res}), '
-                f'but patch {meta["patch_id"]} has ({t[0].item()}, {t[4].item()})'
+                f'but patch {meta["patch_id"]} has ({t[0]}, {t[4]})'
             )
 
     all_geo_xmin = [meta['geo_bbox'][0] for meta in patch_metadata]
@@ -366,8 +366,8 @@ def weighted_merge(
         scene_bounds = dataset_bounds
 
         first_transform = patch_metadata[0]['transform']
-        x_res = first_transform[0].item()
-        y_res = abs(first_transform[4].item())
+        x_res = first_transform[0]
+        y_res = abs(first_transform[4])
 
         for meta in patch_metadata:
             geo_bbox = meta['geo_bbox']

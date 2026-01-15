@@ -121,16 +121,32 @@ class GeoTIFFWriter:
             self.dataset.close()
 
     def finalize(self) -> None:
-        """Finalize COG with overviews if requested."""
-        if self.cog_config.get('overviews'):
-            import subprocess
+        """Finalize COG with overviews if requested.
 
+        Tries GDAL Python bindings first, falls back to gdaladdo CLI.
+
+        Raises:
+            RuntimeError: If both GDAL Python API and gdaladdo fail.
+        """
+        if self.cog_config.get('overviews'):
             overview_levels = self.cog_config['overviews']
             resampling = self.cog_config.get('overview_resampling', 'nearest')
             compress = self.cog_config.get('compress', 'lzw')
 
-            subprocess.run(
-                [
+            try:
+                from osgeo import gdal
+
+                gdal.UseExceptions()
+                ds = gdal.Open(str(self.output_path), gdal.GA_Update)
+                if ds is None:
+                    raise RuntimeError(f'GDAL failed to open {self.output_path}')
+                ds.SetMetadataItem('COMPRESS_OVERVIEW', compress.upper())
+                ds.BuildOverviews(resampling, overview_levels)
+                ds = None
+            except ImportError:
+                import subprocess
+
+                cmd = [
                     'gdaladdo',
                     '-r',
                     resampling,
@@ -139,6 +155,14 @@ class GeoTIFFWriter:
                     compress,
                     str(self.output_path),
                     *map(str, overview_levels),
-                ],
-                check=True,
-            )
+                ]
+
+                try:
+                    subprocess.run(cmd, check=True, capture_output=True, text=True)
+                except FileNotFoundError:
+                    raise RuntimeError(
+                        'GDAL Python bindings not available and gdaladdo not found. '
+                        'Install GDAL or disable overviews.'
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise RuntimeError(f'gdaladdo failed: {e.stderr}') from e

@@ -157,14 +157,8 @@ class TiledInferenceCallback(Callback):
                 .to(torch.uint8)
                 .numpy()
             )
-            patch_transform = Affine(
-                transform_tensor[0].item(),
-                transform_tensor[1].item(),
-                transform_tensor[2].item(),
-                transform_tensor[3].item(),
-                transform_tensor[4].item(),
-                transform_tensor[5].item(),
-            )
+            transform_list = transform_tensor.tolist()
+            patch_transform = Affine(*transform_list)
             with rasterio.open(
                 patch_path,
                 'w',
@@ -190,7 +184,7 @@ class TiledInferenceCallback(Callback):
                     'patch_id': patch_id,
                     'file': patch_path,
                     'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                    'transform': transform_tensor,
+                    'transform': transform_list,
                 }
             )
 

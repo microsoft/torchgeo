@@ -5,6 +5,7 @@
 """Tests for blending utilities."""
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -22,6 +23,39 @@ from torchgeo.callbacks._blending import (
 )
 
 
+def _save_test_patch(
+    path: Path, logits: torch.Tensor, transform: list[float], crs: Any = 'EPSG:32631'
+) -> None:
+    """Save test patch as GeoTIFF with one-hot encoded predictions.
+
+    Args:
+        path: Output file path.
+        logits: Logits tensor of shape (num_classes, H, W).
+        transform: Affine transform as list [a, b, c, d, e, f].
+        crs: Coordinate reference system.
+    """
+    num_classes = logits.shape[0]
+    class_predictions = logits.argmax(dim=0)
+    one_hot = (
+        torch.nn.functional.one_hot(class_predictions.long(), num_classes=num_classes)
+        .permute(2, 0, 1)
+        .to(torch.uint8)
+        .numpy()
+    )
+    with rasterio.open(
+        path,
+        'w',
+        driver='GTiff',
+        height=one_hot.shape[1],
+        width=one_hot.shape[2],
+        count=one_hot.shape[0],
+        dtype='uint8',
+        transform=Affine(*transform),
+        crs=crs,
+    ) as dst:
+        dst.write(one_hot)
+
+
 class TestReconstructSceneFromPatches:
     """Tests for _reconstruct_scene_from_patches."""
 
@@ -31,7 +65,7 @@ class TestReconstructSceneFromPatches:
             {
                 'patch_id': 0,
                 'geo_bbox': (0.0, 360.0, 640.0, 1000.0),
-                'transform': torch.tensor([10.0, 0, 0, 0, -10.0, 1000]),
+                'transform': [10.0, 0, 0, 0, -10.0, 1000],
             }
         ]
 
@@ -47,12 +81,12 @@ class TestReconstructSceneFromPatches:
             {
                 'patch_id': 0,
                 'geo_bbox': (100.0, 136.0, 164.0, 200.0),
-                'transform': torch.tensor([1.0, 0, 100.0, 0, -1.0, 200.0]),
+                'transform': [1.0, 0, 100.0, 0, -1.0, 200.0],
             },
             {
                 'patch_id': 1,
                 'geo_bbox': (132.0, 136.0, 196.0, 200.0),
-                'transform': torch.tensor([1.0, 0, 132.0, 0, -1.0, 200.0]),
+                'transform': [1.0, 0, 132.0, 0, -1.0, 200.0],
             },
         ]
 
@@ -69,12 +103,12 @@ class TestReconstructSceneFromPatches:
             {
                 'patch_id': 0,
                 'geo_bbox': (0.0, 36.0, 64.0, 100.0),
-                'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
+                'transform': [1.0, 0, 0, 0, -1.0, 100],
             },
             {
                 'patch_id': 1,
                 'geo_bbox': (64.0, 36.0, 192.0, 100.0),
-                'transform': torch.tensor([2.0, 0, 64, 0, -1.0, 100]),
+                'transform': [2.0, 0, 64, 0, -1.0, 100],
             },
         ]
 
@@ -327,9 +361,7 @@ class TestExtentMismatch:
                     {
                         'patch_id': row * 3 + col,
                         'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                        'transform': torch.tensor(
-                            [res, 0, geo_xmin, 0, -res, geo_ymax]
-                        ),
+                        'transform': [res, 0, geo_xmin, 0, -res, geo_ymax],
                     }
                 )
 
@@ -376,28 +408,16 @@ class TestBlackBorder:
                 logits = torch.zeros(num_classes, patch_size, patch_size)
                 logits[expected_class] = 1.0
 
-                patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
-                torch.save(
-                    {
-                        'logits': logits,
-                        'bounds': torch.tensor(
-                            [geo_xmin, geo_xmax, res, geo_ymin, geo_ymax, res]
-                        ),
-                        'transform': torch.tensor(
-                            [res, 0, geo_xmin, 0, -res, geo_ymax]
-                        ),
-                    },
-                    patch_file,
-                )
+                patch_file = tmp_path / f'patch_{patch_id:06d}.tif'
+                transform = [res, 0, geo_xmin, 0, -res, geo_ymax]
+                _save_test_patch(patch_file, logits, transform)
 
                 patch_metadata.append(
                     {
                         'patch_id': patch_id,
                         'file': patch_file,
                         'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                        'transform': torch.tensor(
-                            [res, 0, geo_xmin, 0, -res, geo_ymax]
-                        ),
+                        'transform': transform,
                     }
                 )
 
@@ -465,24 +485,16 @@ class TestNonOverlappingPatches:
             logits = torch.zeros(num_classes, patch_size, patch_size)
             logits[1] = 1.0
 
-            patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
-            torch.save(
-                {
-                    'logits': logits,
-                    'bounds': torch.tensor(
-                        [geo_xmin, geo_xmax, res, geo_ymin, geo_ymax, res]
-                    ),
-                    'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
-                },
-                patch_file,
-            )
+            patch_file = tmp_path / f'patch_{patch_id:06d}.tif'
+            transform = [res, 0, geo_xmin, 0, -res, geo_ymax]
+            _save_test_patch(patch_file, logits, transform)
 
             patch_metadata.append(
                 {
                     'patch_id': patch_id,
                     'file': patch_file,
                     'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                    'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+                    'transform': transform,
                 }
             )
 
@@ -530,28 +542,16 @@ class TestDatasetBoundsMode:
                 logits = torch.zeros(num_classes, patch_size, patch_size)
                 logits[expected_class] = 1.0
 
-                patch_file = tmp_path / f'patch_{patch_id:06d}.pt'
-                torch.save(
-                    {
-                        'logits': logits,
-                        'bounds': torch.tensor(
-                            [geo_xmin, geo_xmax, 1.0, geo_ymin, geo_ymax, 1.0]
-                        ),
-                        'transform': torch.tensor(
-                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
-                        ),
-                    },
-                    patch_file,
-                )
+                patch_file = tmp_path / f'patch_{patch_id:06d}.tif'
+                transform = [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                _save_test_patch(patch_file, logits, transform)
 
                 patch_metadata.append(
                     {
                         'patch_id': patch_id,
                         'file': patch_file,
                         'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                        'transform': torch.tensor(
-                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
-                        ),
+                        'transform': transform,
                     }
                 )
 
@@ -598,25 +598,16 @@ class TestDatasetBoundsMode:
                 logits = torch.zeros(num_classes, patch_size, patch_size)
                 logits[expected_class] = 1.0
 
-                patch_file = tmp_path / f'patch_bounds_{patch_id:06d}.pt'
-                torch.save(
-                    {
-                        'logits': logits,
-                        'transform': torch.tensor(
-                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
-                        ),
-                    },
-                    patch_file,
-                )
+                patch_file = tmp_path / f'patch_bounds_{patch_id:06d}.tif'
+                transform = [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
+                _save_test_patch(patch_file, logits, transform)
 
                 patch_metadata.append(
                     {
                         'patch_id': patch_id,
                         'file': patch_file,
                         'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                        'transform': torch.tensor(
-                            [1.0, 0, geo_xmin, 0, -1.0, geo_ymax]
-                        ),
+                        'transform': transform,
                     }
                 )
 
@@ -662,21 +653,16 @@ class TestSinglePatchScene:
         logits = torch.zeros(num_classes, patch_size, patch_size)
         logits[expected_class] = 1.0
 
-        patch_file = tmp_path / 'single_patch.pt'
-        torch.save(
-            {
-                'logits': logits,
-                'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
-            },
-            patch_file,
-        )
+        patch_file = tmp_path / 'single_patch.tif'
+        transform = [res, 0, geo_xmin, 0, -res, geo_ymax]
+        _save_test_patch(patch_file, logits, transform)
 
         patch_metadata = [
             {
                 'patch_id': 0,
                 'file': patch_file,
                 'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
-                'transform': torch.tensor([res, 0, geo_xmin, 0, -res, geo_ymax]),
+                'transform': transform,
             }
         ]
 

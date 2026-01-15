@@ -159,7 +159,7 @@ class TestTiledInferenceCallback:
                 'patch_id': 0,
                 'file': patch_file,
                 'geo_bbox': (0.0, 0.0, 64.0, 64.0),
-                'transform': torch.tensor([1.0, 0, 0, 0, -1.0, 100]),
+                'transform': [1.0, 0, 0, 0, -1.0, 100],
             }
         ]
 
