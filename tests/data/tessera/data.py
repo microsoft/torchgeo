@@ -14,7 +14,6 @@ SIZE = 36
 
 np.random.seed(0)
 
-# Official GCP, Source Cooperative format
 directory = os.path.join('global_0.1_degree_representation', '2024', 'grid_0.05_51.35')
 filename = 'grid_0.05_51.35_2024.tiff'
 
