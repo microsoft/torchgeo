@@ -127,6 +127,7 @@ from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .presto import PrestoEmbeddings
 from .prisma import PRISMA
 from .quakeset import QuakeSet
 from .reforestree import ReforesTree
@@ -315,6 +316,7 @@ __all__ = (
     'OpenStreetMap',
     'PatternNet',
     'Potsdam2D',
+    'PrestoEmbeddings',
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
