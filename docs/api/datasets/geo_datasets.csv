@@ -28,6 +28,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `NLCD`_,Masks,Landsat,"public domain",-,30
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
 `OpenStreetMap`_,Geometries,OpenStreetMap,ODbL-1.0,-,-
+`Presto Embeddings`_,Embedding,"Sentinel 1/2, ERA5, SRTM",CC-BY-4.0,"4,096x4,096",10
 `PRISMA`_,Imagery,PRISMA,-,512x512,5--30
 `Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
 `South Africa Crop Type`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10

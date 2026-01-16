@@ -181,6 +181,11 @@ OpenStreetMap
 
 .. autoclass:: OpenStreetMap
 
+Presto Embeddings
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: PrestoEmbeddings
+
 PRISMA
 ^^^^^^
 
