@@ -73,7 +73,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
       - name: Set up nodejs
-        uses: actions/setup-node@v6.1.0
+        uses: actions/setup-node@v6.2.0
         with:
           node-version: '20'
           cache: 'npm'
