@@ -28,6 +28,7 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from .clay import ClayEmbeddings
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .copernicus import (
@@ -240,6 +241,7 @@ __all__ = (
     'ChesapeakePA',
     'ChesapeakeVA',
     'ChesapeakeWV',
+    'ClayEmbeddings',
     'CloudCoverDetection',
     'CopernicusBench',
     'CopernicusBenchAQNO2S5P',
