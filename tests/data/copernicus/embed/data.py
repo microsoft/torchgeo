@@ -13,7 +13,6 @@ SIZE = 36
 
 np.random.seed(0)
 
-# Major TOM Hugging Face format
 file = 'embed_map_310k.tif'
 
 profile = {
