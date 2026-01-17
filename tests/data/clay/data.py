@@ -18,13 +18,13 @@ np.random.seed(0)
 x = np.arange(SIZE)
 y = np.arange(SIZE)
 t = pd.date_range('2018-01-01', '2018-01-04')
-id_ = np.arange(SIZE * SIZE)
+ids = np.arange(SIZE * SIZE)
 embedding = np.random.rand(SIZE * SIZE, EMBED)
 
 X, Y = np.meshgrid(x, y)
 x = X.flatten()
 y = Y.flatten()
-data = {'id': id_, 'date': t, 'embeddings': list(embedding)}
+data = {'id': ids, 'date': t, 'embeddings': list(embedding)}
 geometry = gpd.points_from_xy(x, y).buffer(0.05).envelope
 
 gdf = gpd.GeoDataFrame(data, geometry=geometry)
