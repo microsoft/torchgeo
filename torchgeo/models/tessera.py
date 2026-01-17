@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 #
+# Copyright (c) 2025 Frank Feng
 # Based on the original code: https://github.com/ucam-eo/tessera
 
 """Tessera pixel time-series foundation model."""
@@ -13,6 +14,7 @@ from einops import rearrange
 from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
+# Normalization statistics from https://github.com/ucam-eo/tessera/blob/b994972f637d1985185725153b55cf1624a7a445/tessera_infer/src/datasets/ssl_dataset.py#L20-L26
 _S2_BAND_MEAN = [
     1711.0938,
     1308.8511,
@@ -292,7 +294,7 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     TESSERA = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/51afe75b724d387ef9fcb6f6e090a5be0b906919/model.pt',
+        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/model-b00edea0.pth',
         transforms=_tessera_transforms,
         meta={
             'dataset': 'TESSERA',
@@ -320,7 +322,7 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     TESSERA_SENTINEL2_ENCODER = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/11dda783c258148bc6342832df6ef8dc05963702/s2_encoder.pt',
+        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/s2_encoder-38fd63b9.pth',
         transforms=_tessera_s2_transforms,
         meta={
             'dataset': 'TESSERA',
@@ -345,7 +347,7 @@ class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     TESSERA_SENTINEL1_ENCODER = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/439ae74f34d3db458976138907302ac1b2ca4903/s1_encoder.pt',
+        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/s1_encoder-7797f44d.pth',
         transforms=_tessera_s1_transforms,
         meta={
             'dataset': 'TESSERA',
