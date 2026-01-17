@@ -23,6 +23,7 @@ import pyproj
 import rasterio
 import rasterio.features
 import rasterio.merge
+import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
@@ -627,10 +628,19 @@ class RasterDataset(GeoDataset):
             file handle of warped VRT
         """
         src = rasterio.open(filepath)
+        left = min(src.bounds.left, src.bounds.right)
+        bottom = min(src.bounds.bottom, src.bounds.top)
+        right = max(src.bounds.left, src.bounds.right)
+        top = max(src.bounds.bottom, src.bounds.top)
+        transform, width, height = rasterio.warp.calculate_default_transform(
+            src.crs, self.crs, src.width, src.height, left, bottom, right, top
+        )
 
         # Only warp if necessary
-        if src.crs != self.crs:
-            vrt = WarpedVRT(src, crs=self.crs)
+        if src.crs != self.crs or src.transform != transform:
+            vrt = WarpedVRT(
+                src, crs=self.crs, transform=transform, height=height, width=width
+            )
             src.close()
             return vrt
         else:

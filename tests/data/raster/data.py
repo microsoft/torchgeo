@@ -8,7 +8,7 @@ import rasterio as rio
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, reproject
 
-RES = [2, 4, 8, (2, 1)]
+RES = [2, 4, 8, (2, 1), (-2, 2), (2, -2), (-2, -2)]
 EPSG = [4087, 4326, 32631]
 SIZE = 16
 
@@ -38,8 +38,8 @@ def write_raster(
         'count': 1,
         'crs': f'epsg:{epsg}',
         'transform': from_bounds(0, 0, SIZE, SIZE, width, height),
-        'height': height,
-        'width': width,
+        'height': abs(height),
+        'width': abs(width),
         'nodata': 0,
     }
 
@@ -51,7 +51,7 @@ def write_raster(
     os.makedirs(directory, exist_ok=True)
 
     with rio.open(path, 'w', **profile) as f:
-        x = np.ones((1, height, width))
+        x = np.ones((1, abs(height), abs(width)))
         f.write(x)
 
 
@@ -96,6 +96,7 @@ if __name__ == '__main__':
         src_epsg = EPSG[0]
         write_raster(res, src_epsg)
 
+    for res in RES[:4]:
         for dst_epsg in EPSG[1:]:
             reproject_raster(res, src_epsg, dst_epsg)
 
