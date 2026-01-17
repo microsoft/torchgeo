@@ -17,7 +17,7 @@ np.random.seed(0)
 
 x = np.arange(SIZE)
 y = np.arange(SIZE)
-t = pd.date_range('2018-01-01', '2018-01-4')
+t = pd.date_range('2018-01-01', '2018-01-04')
 id_ = np.arange(SIZE * SIZE)
 embedding = np.random.rand(SIZE * SIZE, EMBED)
 
