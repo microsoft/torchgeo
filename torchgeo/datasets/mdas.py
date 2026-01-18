@@ -232,16 +232,16 @@ class MDAS(NonGeoDataset):
 
             return torch.from_numpy(img)
 
-    def __getitem__(self, idx: int) -> Sample:
+    def __getitem__(self, index: int) -> Sample:
         """Return the dataset sample at the given index.
 
         Args:
-            idx: The index of the sample to return
+            index: The index of the sample to return
 
         Returns:
             a dictionary containing the data of chosen modalities
         """
-        sample_files = self.files[idx]
+        sample_files = self.files[index]
         sample: Sample = {}
         for modality, path in sample_files.items():
             if 'osm' in modality:
