@@ -208,7 +208,7 @@ class GlobBiomass(RasterDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        mask = self._merge_files(index.filepath, index)
+        mask = self._merge_files(df.filepath, index)
 
         std_error_paths = df.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
         std_err_mask = self._merge_files(std_error_paths, index)

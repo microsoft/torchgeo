@@ -98,7 +98,7 @@ class GBIF(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        keypoints = torch.tensor(index.get_coordinates().values, dtype=torch.float32)
+        keypoints = torch.tensor(df.get_coordinates().values, dtype=torch.float32)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'bounds': self._slice_to_tensor(index),

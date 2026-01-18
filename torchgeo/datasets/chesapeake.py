@@ -523,7 +523,7 @@ class ChesapeakeCVPR(GeoDataset):
             raise IndexError(
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(index) == 1:
+        elif len(df) == 1:
             filenames = df.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
