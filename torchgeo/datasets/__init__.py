@@ -115,6 +115,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
+from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
@@ -314,6 +315,7 @@ __all__ = (
     'LoveDA',
     'MMEarth',
     'MMFlood',
+    'MajorTOMEmbeddings',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',
