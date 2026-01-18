@@ -16,16 +16,14 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args:
-          - --strict
-          - --ignore-missing-imports
-          - --show-error-codes
+        pass_filenames: false
         additional_dependencies:
           - einops>=0.6.0
           - kornia>=0.7.4
           - lightning>=2.0.9
           - matplotlib>=3.9.2
           - numpy>=1.24
+          - pandas-stubs>=2.1.1
           - pillow>=10.4.0
           - pytest>=7.3
           - scikit-image>=0.22.0
@@ -33,7 +31,8 @@ repos:
           - torch>=2.8
           - torchmetrics>=1.6.2
           - torchvision>=0.18
-        exclude: (build|data|dist|logo|logs|output|docs/user/metrics)/
+          - types-requests>=2.25
+          - types-shapely>=2.0.2
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
