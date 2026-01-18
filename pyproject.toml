@@ -366,6 +366,7 @@ include = ["torchgeo*"]
 
 [tool.ty.rules]
 deprecated = "ignore"
+possibly-missing-attribute = "ignore"
 unresolved-attribute = "ignore"
 unresolved-import = "ignore"
 unresolved-reference = "ignore"
