@@ -13,6 +13,8 @@ from torchgeo.datasets import DatasetNotFoundError, MajorTOMEmbeddings
 
 
 class TestMajorTOMEmbeddings:
+    pytest.importorskip('pyarrow')
+
     @pytest.fixture
     def dataset(self) -> MajorTOMEmbeddings:
         root = os.path.join('tests', 'data', 'major_tom', 'embeddings', 'embeddings')
