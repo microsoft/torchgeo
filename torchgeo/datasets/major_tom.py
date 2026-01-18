@@ -101,8 +101,7 @@ class MajorTOMEmbeddings(NonGeoDataset):
             x = sample['x'].item()
             y = sample['y'].item()
             t = pd.Timestamp.fromtimestamp(sample['t'].item())
-            datetime = t.strftime('%Y-%m-%d %H:%M:%S')
-            ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {datetime}')
+            ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
 
         fig.tight_layout()
         return fig
