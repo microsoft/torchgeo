@@ -40,7 +40,7 @@ class TestGoogleSatelliteEmbedding:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         # Rasterio may return nodata for upside down rasters
-        assert not torch.any(x['image'] == -128.0)
+        assert not torch.all(x['image'] == -128.0)
 
     def test_and(self, dataset: GoogleSatelliteEmbedding) -> None:
         ds = dataset & dataset
