@@ -53,6 +53,6 @@ class TestNAIP:
 
     def test_invalid_index(self, dataset: NAIP) -> None:
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

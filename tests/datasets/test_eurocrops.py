@@ -75,7 +75,7 @@ class TestEuroCrops:
 
     def test_invalid_index(self, dataset: EuroCrops) -> None:
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[200:200, 200:200, pd.Timestamp.min : pd.Timestamp.min]
 

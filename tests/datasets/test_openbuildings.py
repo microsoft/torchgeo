@@ -91,7 +91,7 @@ class TestOpenBuildings:
 
     def test_invalid_index(self, dataset: OpenBuildings) -> None:
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 

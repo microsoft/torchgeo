@@ -90,7 +90,7 @@ class TestSentinel1:
 
     def test_invalid_index(self, dataset: Sentinel1) -> None:
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -153,7 +153,7 @@ class TestSentinel2:
 
     def test_invalid_index(self, dataset: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

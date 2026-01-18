@@ -48,7 +48,7 @@ class TestINaturalist:
     def test_invalid_index(self, dataset: INaturalist) -> None:
         mint = pd.Timestamp('2022-05-07 11:02:53+01:00')
         with pytest.raises(
-            IndexError, match=r'index: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, mint:mint]
 
