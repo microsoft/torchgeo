@@ -422,6 +422,11 @@ LoveDA
 
 .. autoclass:: LoveDA
 
+Major TOM
+^^^^^^^^^
+
+.. autoclass:: MajorTOMEmbeddings
+
 MapInWild
 ^^^^^^^^^
 
