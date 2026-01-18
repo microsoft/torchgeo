@@ -14,7 +14,6 @@ from matplotlib.figure import Figure
 from timm.models import adapt_input_conv
 from torch import Tensor
 from torch.nn.parameter import Parameter
-from torch.utils.tensorboard.writer import SummaryWriter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -296,7 +295,7 @@ class ObjectDetectionTask(BaseTask):
             and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
-            and isinstance(self.logger.experiment, SummaryWriter)
+            and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
             aug = K.AugmentationSequential(
@@ -325,7 +324,7 @@ class ObjectDetectionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )
+                )  # type: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
