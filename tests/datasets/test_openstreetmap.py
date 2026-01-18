@@ -406,8 +406,8 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
 
         # Get proper sample from dataset
-        query = dataset.bounds
-        sample = dataset[query]
+        index = dataset.bounds
+        sample = dataset[index]
         fig = dataset.plot(sample)
 
         assert fig is not None
@@ -898,8 +898,8 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Get sample and add prediction
-        query = dataset.bounds
-        sample = dataset[query]
+        index = dataset.bounds
+        sample = dataset[index]
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample, suptitle='Prediction')
         plt.close()

@@ -39,8 +39,8 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
-        return {'index': query}
+    def __getitem__(self, index: GeoSlice) -> dict[str, GeoSlice]:
+        return {'index': index}
 
 
 class TestBatchGeoSampler:
