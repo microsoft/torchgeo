@@ -34,28 +34,34 @@ bands = [
 
 # Clean up old directories
 for dirname in [
-    'OSCD100_Images',
-    'OSCD100_Train_Labels',
-    'OSCD100_Val_Labels',
-    'OSCD100_Test_Labels',
+    'Onera Satellite Change Detection dataset - Images',
+    'Onera Satellite Change Detection dataset - Train Labels',
+    'Onera Satellite Change Detection dataset - Val Labels',
+    'Onera Satellite Change Detection dataset - Test Labels',
 ]:
     if os.path.exists(dirname):
         shutil.rmtree(dirname)
 
 for split in splits:
-    for fname in [f'oscd100_{split}_labels.zip']:
-        if os.path.exists(fname):
-            os.remove(fname)
-if os.path.exists('oscd100_images.zip'):
-    os.remove('oscd100_images.zip')
+    fname = (
+        f'Onera Satellite Change Detection dataset - {split.capitalize()} Labels.zip'
+    )
+    if os.path.exists(fname):
+        os.remove(fname)
+
+fname = 'Onera Satellite Change Detection dataset - Images.zip'
+if os.path.exists(fname):
+    os.remove(fname)
 
 # Create directories
-images_dir = Path('OSCD100_Images')
+images_dir = Path('Onera Satellite Change Detection dataset - Images')
 images_dir.mkdir(exist_ok=True)
 
 # Create 2 crops per split
 for split in splits:
-    labels_dir = Path(f'OSCD100_{split.capitalize()}_Labels')
+    labels_dir = Path(
+        f'Onera Satellite Change Detection dataset - {split.capitalize()} Labels'
+    )
     labels_dir.mkdir(exist_ok=True)
 
     for i in range(2):
@@ -76,6 +82,10 @@ for split in splits:
             Image.fromarray(data1).save(imgs1_dir / f'{band}.tif')
             Image.fromarray(data2).save(imgs2_dir / f'{band}.tif')
 
+        # Create dates.txt for OSCD compatibility
+        dates_file = crop_img_dir / 'dates.txt'
+        dates_file.write_text('img1 2020-01-01\nimg2 2020-06-01\n')
+
         # Labels
         crop_label_dir = labels_dir / crop_name / 'cm'
         crop_label_dir.mkdir(parents=True, exist_ok=True)
@@ -85,7 +95,9 @@ for split in splits:
         Image.fromarray(mask, mode='L').save(crop_label_dir / 'cm.png')
 
 # Zip Images
-with zipfile.ZipFile('oscd100_images.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+with zipfile.ZipFile(
+    'Onera Satellite Change Detection dataset - Images.zip', 'w', zipfile.ZIP_DEFLATED
+) as zf:
     for root, dirs, files in os.walk(images_dir):
         for file in files:
             file_path = Path(root) / file
@@ -93,22 +105,32 @@ with zipfile.ZipFile('oscd100_images.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
 
 # Zip each split's labels
 for split in splits:
-    labels_dir = Path(f'OSCD100_{split.capitalize()}_Labels')
-    with zipfile.ZipFile(
-        f'oscd100_{split}_labels.zip', 'w', zipfile.ZIP_DEFLATED
-    ) as zf:
+    labels_dir = Path(
+        f'Onera Satellite Change Detection dataset - {split.capitalize()} Labels'
+    )
+    filename = (
+        f'Onera Satellite Change Detection dataset - {split.capitalize()} Labels.zip'
+    )
+    with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(labels_dir):
             for file in files:
                 file_path = Path(root) / file
                 zf.write(file_path, file_path)
 
 # Print MD5s for updating test file
-with open('oscd100_images.zip', 'rb') as f:
+with open('Onera Satellite Change Detection dataset - Images.zip', 'rb') as f:
     md5 = hashlib.md5(f.read()).hexdigest()
-    print(repr('oscd100_images.zip') + ': ' + repr(md5) + ',')
+    print(
+        repr('Onera Satellite Change Detection dataset - Images.zip')
+        + ': '
+        + repr(md5)
+        + ','
+    )
 
 for split in splits:
-    filename = f'oscd100_{split}_labels.zip'
+    filename = (
+        f'Onera Satellite Change Detection dataset - {split.capitalize()} Labels.zip'
+    )
     with open(filename, 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
         print(repr(filename) + ': ' + repr(md5) + ',')

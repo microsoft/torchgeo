@@ -120,20 +120,24 @@ class TestOSCD100:
     ) -> OSCD100:
         directory = os.path.join('tests', 'data', 'oscd', 'oscd100')
         urls = {
-            'oscd100_images.zip': os.path.join(directory, 'oscd100_images.zip'),
-            'oscd100_train_labels.zip': os.path.join(
-                directory, 'oscd100_train_labels.zip'
+            'Onera Satellite Change Detection dataset - Images.zip': os.path.join(
+                directory, 'Onera Satellite Change Detection dataset - Images.zip'
             ),
-            'oscd100_val_labels.zip': os.path.join(directory, 'oscd100_val_labels.zip'),
-            'oscd100_test_labels.zip': os.path.join(
-                directory, 'oscd100_test_labels.zip'
+            'Onera Satellite Change Detection dataset - Train Labels.zip': os.path.join(
+                directory, 'Onera Satellite Change Detection dataset - Train Labels.zip'
+            ),
+            'Onera Satellite Change Detection dataset - Val Labels.zip': os.path.join(
+                directory, 'Onera Satellite Change Detection dataset - Val Labels.zip'
+            ),
+            'Onera Satellite Change Detection dataset - Test Labels.zip': os.path.join(
+                directory, 'Onera Satellite Change Detection dataset - Test Labels.zip'
             ),
         }
         md5s = {
-            'oscd100_images.zip': 'adbdbe3bca66acb1537a07dc9d5bd6ee',
-            'oscd100_train_labels.zip': '7a7b93ce32b24957bb4ea32846a6abed',
-            'oscd100_val_labels.zip': 'ba437a18dbe3a95a61a036182ebabcd1',
-            'oscd100_test_labels.zip': 'baf0b1aeb27f42e2e75179e0f09860fe',
+            'Onera Satellite Change Detection dataset - Images.zip': '4fbb84f1327f1c8eb9304ae79711f20a',
+            'Onera Satellite Change Detection dataset - Train Labels.zip': '67f9244aea9201e76bac53b4227728d6',
+            'Onera Satellite Change Detection dataset - Val Labels.zip': '42f5f268c698bf2f32766dda45f8011b',
+            'Onera Satellite Change Detection dataset - Test Labels.zip': '75e462452c6e0c2c7b0f96ec8097b734',
         }
         monkeypatch.setattr(OSCD100, 'urls', urls)
         monkeypatch.setattr(OSCD100, 'md5s', md5s)

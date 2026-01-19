@@ -72,7 +72,7 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits = ('train', 'test')
+    splits: ClassVar[tuple[str, ...]] = ('train', 'test')
 
     colormap = ('blue',)
 
@@ -364,51 +364,15 @@ class OSCD100(OSCD):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'oscd100_images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_images.zip',
-        'oscd100_train_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_train_labels.zip',
-        'oscd100_val_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_val_labels.zip',
-        'oscd100_test_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_test_labels.zip',
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
     md5s: ClassVar[dict[str, str]] = {
-        'oscd100_images.zip': '7d483d326aa5364119864f32bf636395',
-        'oscd100_train_labels.zip': '4f1bb58cfd3a1392b41a404e2d3d30d7',
-        'oscd100_val_labels.zip': '6936a9ba9664b81615c269ab9b670d87',
-        'oscd100_test_labels.zip': 'f6e0eedeb29a768e701b7ef2fd8a534a',
+        'Onera Satellite Change Detection dataset - Images.zip': '2e8792a3da012f7eb0440b557eef4c11',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': '4fdc210a90e2c881a553fa9c72c7d6ce',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': '99a38997829cc81a18b04d4afb3493ba',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': '5e43ae36cfe0cc83ddcbd4fcb03ace60',
     }
-
-    zipfile_glob = '*oscd100*.zip'
-    filename_glob = '*OSCD100*'
     splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
-
-    def _load_files(self) -> list[dict[str, str | Sequence[str]]]:
-        """Load file paths for OSCD100."""
-        regions = []
-        labels_root = os.path.join(
-            self.root, f'OSCD100_{self.split.capitalize()}_Labels'
-        )
-        images_root = os.path.join(self.root, 'OSCD100_Images')
-
-        folders = glob.glob(os.path.join(labels_root, '*/'))
-        for folder in folders:
-            region = folder.split(os.sep)[-2]
-            mask = os.path.join(labels_root, region, 'cm', 'cm.png')
-
-            def get_image_paths(ind: int) -> list[str]:
-                return sorted(
-                    glob.glob(
-                        os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
-                    ),
-                    key=sort_sentinel2_bands,
-                )
-
-            images1, images2 = get_image_paths(1), get_image_paths(2)
-            images1 = [images1[i] for i in self.all_band_indices]
-            images2 = [images2[i] for i in self.all_band_indices]
-
-            regions.append(
-                dict(
-                    region=region, images1=images1, images2=images2, mask=mask, dates=()
-                )
-            )
-
-        return regions
