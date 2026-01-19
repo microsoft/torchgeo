@@ -491,6 +491,13 @@ class TestRasterDataset:
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
 
+    @pytest.mark.parametrize('x,y', [(-2, 2), (2, -2), (-2, -2)])
+    def test_malformed_res(self, x: int, y: int) -> None:
+        root = os.path.join('tests', 'data', 'raster', f'res_{x}-{y}_epsg_4087')
+        ds = RasterDataset(root)
+        x = ds[ds.bounds]
+        assert torch.all(x['image'] == 1)
+
 
 class TestXarrayDataset:
     pytest.importorskip('rioxarray', minversion='0.14.1')
@@ -505,8 +512,10 @@ class TestXarrayDataset:
         transforms = nn.Identity()
         match request.param[0]:
             case 'hdf5':
+                pytest.importorskip('h5py', minversion='3.10')
                 ds = XarrayDataset(root, crs=request.param[1], transforms=transforms)
             case 'netcdf':
+                pytest.importorskip('netCDF4', minversion='1.6.5')
                 with pytest.warns(UserWarning, match='Unable to decode coordinates'):
                     ds = XarrayDataset(root, crs=request.param[1], res=3)
 

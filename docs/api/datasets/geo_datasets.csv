@@ -5,8 +5,10 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Aster Global DEM`_,DEM,Aster,"public domain","3,601x3,601",30
 `Canadian Building Footprints`_,Geometries,Bing Imagery,"ODbL-1.0",-,-
 `Chesapeake Land Cover`_,"Imagery, Masks",NAIP,"CC0-1.0",-,1
+`Copernicus-Embed`_,Embedding,"Sentinel 1/2/3/5P, Copernicus DEM",CC-BY-4.0,"1,440x721",0.25°
 `GlobalBuildingMap`_,Masks,PlanetScope,CC-BY-4.0,180K,3
 `Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements","public domain",-,3
+`Google Satellite Embedding`_,Embedding,"Sentinel 1/2, Landsat 8/9",CC-BY-4.0,"8,192",10
 `Cropland Data Layer`_,Masks,Landsat,"public domain",-,30
 `EDDMapS`_,Points,Citizen Scientists,-,-,-
 `EnMAP`_,Imagery,EnMAP,`EnMAP Data License <https://www.enmap.org/data/resources/EnMAP_Data_License.pdf>`_,"1,200x1,200",30
@@ -28,7 +30,9 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `NLCD`_,Masks,Landsat,"public domain",-,30
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
 `OpenStreetMap`_,Geometries,OpenStreetMap,ODbL-1.0,-,-
+`Presto Embeddings`_,Embedding,"Sentinel 1/2, ERA5, SRTM",CC-BY-4.0,"4,096x4,096",10
 `PRISMA`_,Imagery,PRISMA,-,512x512,5--30
 `Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
 `South Africa Crop Type`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
 `South America Soybean`_,Masks,"Landsat, MODIS",-,-,30
+`Tessera Embeddings`_,Embedding,Sentinel 1/2,CC-BY-4.0,"1,000x1,000",10

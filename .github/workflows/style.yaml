@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v5.0.1
+        uses: actions/cache@v5.0.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v5.0.1
+        uses: actions/cache@v5.0.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -73,7 +73,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
       - name: Set up nodejs
-        uses: actions/setup-node@v6.1.0
+        uses: actions/setup-node@v6.2.0
         with:
           node-version: '20'
           cache: 'npm'

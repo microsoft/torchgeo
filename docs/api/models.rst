@@ -30,6 +30,7 @@ Model Architectures
    models/scale-mae
    models/swin-transformer
    models/tilenet
+   models/tessera
    models/u-net
    models/vision-transformer
 

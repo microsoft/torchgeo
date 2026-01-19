@@ -23,6 +23,7 @@ import pyproj
 import rasterio
 import rasterio.features
 import rasterio.merge
+import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
@@ -487,18 +488,7 @@ class RasterDataset(GeoDataset):
                     continue
                 else:
                     filepaths.append(filepath)
-
-                    mint = self.mint
-                    maxt = self.maxt
-                    if 'date' in match.groupdict():
-                        date = match.group('date')
-                        mint, maxt = disambiguate_timestamp(date, self.date_format)
-                    elif 'start' in match.groupdict() and 'stop' in match.groupdict():
-                        start = match.group('start')
-                        stop = match.group('stop')
-                        mint, _ = disambiguate_timestamp(start, self.date_format)
-                        _, maxt = disambiguate_timestamp(stop, self.date_format)
-
+                    mint, maxt = self._filepath_to_timestamp(filepath)
                     datetimes.append((mint, maxt))
 
         if len(filepaths) == 0:
@@ -581,6 +571,32 @@ class RasterDataset(GeoDataset):
 
         return sample
 
+    def _filepath_to_timestamp(self, filepath: Path) -> tuple[datetime, datetime]:
+        """Extract minimum and maximum timestamps from the filepath.
+
+        Args:
+            filepath: Full path to the file.
+
+        Returns:
+            (mint, maxt) tuple.
+        """
+        mint = self.mint
+        maxt = self.maxt
+
+        filename = os.path.basename(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'date' in match.groupdict():
+                date = match.group('date')
+                mint, maxt = disambiguate_timestamp(date, self.date_format)
+            elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                start = match.group('start')
+                stop = match.group('stop')
+                mint, _ = disambiguate_timestamp(start, self.date_format)
+                _, maxt = disambiguate_timestamp(stop, self.date_format)
+
+        return mint, maxt
+
     def _update_filepath(self, band: str, filepath: str) -> str:
         """Update `filepath` to point to `band`.
 
@@ -655,10 +671,19 @@ class RasterDataset(GeoDataset):
             file handle of warped VRT
         """
         src = rasterio.open(filepath)
+        left = min(src.bounds.left, src.bounds.right)
+        bottom = min(src.bounds.bottom, src.bounds.top)
+        right = max(src.bounds.left, src.bounds.right)
+        top = max(src.bounds.bottom, src.bounds.top)
+        transform, width, height = rasterio.warp.calculate_default_transform(
+            src.crs, self.crs, src.width, src.height, left, bottom, right, top
+        )
 
         # Only warp if necessary
-        if src.crs != self.crs:
-            vrt = WarpedVRT(src, crs=self.crs)
+        if src.crs != self.crs or src.transform != transform:
+            vrt = WarpedVRT(
+                src, crs=self.crs, transform=transform, height=height, width=width
+            )
             src.close()
             return vrt
         else:
