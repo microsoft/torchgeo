@@ -54,9 +54,9 @@ class OSCD(NonGeoDataset):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
-        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
-        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',  # noqa: E501
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',  # noqa: E501
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',  # noqa: E501
     }
     md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
@@ -364,10 +364,10 @@ class OSCD100(OSCD):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
-        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
-        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
-        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',  # noqa: E501
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',  # noqa: E501
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',  # noqa: E501
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',  # noqa: E501
     }
     md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': '2e8792a3da012f7eb0440b557eef4c11',
