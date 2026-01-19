@@ -28,6 +28,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
+from .galileo import galileo, GalileoWeights
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .resnet import (
     ResNet18_Weights,
@@ -50,6 +51,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
+from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -76,6 +78,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
+    'gaileo': galileo,
     'panopticon_vitb14': panopticon_vitb14,
     'resnet18': resnet18,
     'resnet50': resnet50,
@@ -86,6 +89,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'swin_b': swin_b,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
+    'tilenet': tilenet,
     'unet': unet,
     'vit_small_patch16_224': vit_small_patch16_224,
     'vit_base_patch14_dinov2': vit_base_patch14_dinov2,
@@ -103,6 +107,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
+    galileo: GalileoWeights,
     panopticon_vitb14: Panopticon_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
@@ -113,6 +118,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     swin_b: Swin_B_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    tilenet: TileNet_Weights,
     unet: Unet_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
@@ -137,6 +143,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'swin_b': Swin_B_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'tilenet': TileNet_Weights,
     'unet': Unet_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
     'vit_base_patch14_dinov2': ViTBase14_DINOv2_Weights,

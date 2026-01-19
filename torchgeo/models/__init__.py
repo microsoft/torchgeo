@@ -24,6 +24,7 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .galileo import GalileoEncoder, GalileoWeights, galileo
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import MOSAIKS, RCF
@@ -49,6 +50,7 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
+from .tilenet import TileNet, TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -90,6 +92,8 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'GalileoEncoder',
+    'GalileoWeights',
     'Panopticon',
     'Panopticon_Weights',
     'ResNet18_Weights',
@@ -103,6 +107,8 @@ __all__ = (
     'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'TileNet',
+    'TileNet_Weights',
     'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
     'ViTBase16_Weights',
@@ -119,6 +125,7 @@ __all__ = (
     'dofa_large_patch16_224',
     'dofa_small_patch16_224',
     'earthloc',
+    'galileo',
     'get_model',
     'get_model_weights',
     'get_weight',
@@ -133,6 +140,7 @@ __all__ = (
     'swin_t',
     'swin_v2_b',
     'swin_v2_t',
+    'tilenet',
     'unet',
     'vit_base_patch14_dinov2',
     'vit_base_patch16_224',
