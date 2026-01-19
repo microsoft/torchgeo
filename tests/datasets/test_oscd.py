@@ -119,33 +119,35 @@ class TestOSCD100:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD100:
         directory = os.path.join('tests', 'data', 'oscd', 'oscd100')
-        splits = {
-            'train': {
-                'filename': 'oscd100_train.zip',
-                'md5': '7cdac1119cff05b45f99c1d220271850',
-            },
-            'val': {
-                'filename': 'oscd100_val.zip',
-                'md5': '1b2b2e1a24c03991248cbe0edb405540',
-            },
-            'test': {
-                'filename': 'oscd100_test.zip',
-                'md5': '168a307336091795ba0809085e20ca31',
-            },
+        urls = {
+            'oscd100_images.zip': os.path.join(directory, 'oscd100_images.zip'),
+            'oscd100_train_labels.zip': os.path.join(
+                directory, 'oscd100_train_labels.zip'
+            ),
+            'oscd100_val_labels.zip': os.path.join(directory, 'oscd100_val_labels.zip'),
+            'oscd100_test_labels.zip': os.path.join(
+                directory, 'oscd100_test_labels.zip'
+            ),
         }
-        monkeypatch.setattr(OSCD100, 'splits', splits)
-        monkeypatch.setattr(OSCD100, 'url', directory)
+        md5s = {
+            'oscd100_images.zip': 'adbdbe3bca66acb1537a07dc9d5bd6ee',
+            'oscd100_train_labels.zip': '7a7b93ce32b24957bb4ea32846a6abed',
+            'oscd100_val_labels.zip': 'ba437a18dbe3a95a61a036182ebabcd1',
+            'oscd100_test_labels.zip': 'baf0b1aeb27f42e2e75179e0f09860fe',
+        }
+        monkeypatch.setattr(OSCD100, 'urls', urls)
+        monkeypatch.setattr(OSCD100, 'md5s', md5s)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return OSCD100(root, split, transforms, download=True)
+        return OSCD100(root=root, split=split, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: OSCD100) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['image'].shape[1] == 3
+        assert x['image'].shape[1] == 13
 
     def test_len(self, dataset: OSCD100) -> None:
         assert len(dataset) == 2

@@ -21,11 +21,9 @@ from .geo import NonGeoDataset
 from .utils import (
     Path,
     Sample,
-    download_and_extract_archive,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
-    percentile_normalization,
     sort_sentinel2_bands,
 )
 
@@ -350,22 +348,13 @@ class OSCD(NonGeoDataset):
         return fig
 
 
-class OSCD100(NonGeoDataset):
-    """Subset of OSCD with 100 RGB image pairs at 256x256 resolution.
+class OSCD100(OSCD):
+    """Subset of OSCD with 100 pre-cropped image pairs at 256x256 resolution.
 
     Intended for tutorials and demonstrations, not benchmarking.
 
-    Dataset features:
-
-    * 100 image pairs cropped from OSCD Sentinel-2 scenes
-    * RGB bands only (B04, B03, B02) at 10m resolution
-    * 256x256 pixel crops
-    * Binary change masks
-
-    Dataset classes:
-
-    0. no change
-    1. change
+    Maintains the same file structure and all 13 Sentinel-2 bands as OSCD, but with
+    100 pre-cropped 256x256 patches. Adds a validation split (train/val/test).
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -374,206 +363,52 @@ class OSCD100(NonGeoDataset):
     .. versionadded:: 0.9
     """
 
-    url = 'https://hf.co/datasets/hkristen/oscd100/resolve/318475c71c42da38ade70dade29035117be178eb'
-    splits: ClassVar[dict[str, dict[str, str]]] = {
-        'train': {
-            'filename': 'oscd100_train.zip',
-            'md5': '08bdfb95625bb8b3b9f3496dffbcda80',
-        },
-        'val': {
-            'filename': 'oscd100_val.zip',
-            'md5': 'dc9f97c5d98660ef29d1c285b75dfc92',
-        },
-        'test': {
-            'filename': 'oscd100_test.zip',
-            'md5': '430e03d6153774265cc61402ae42e153',
-        },
+    urls: ClassVar[dict[str, str]] = {
+        'oscd100_images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_images.zip',
+        'oscd100_train_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_train_labels.zip',
+        'oscd100_val_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_val_labels.zip',
+        'oscd100_test_labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/main/oscd100_test_labels.zip',
     }
-    directories = ('A', 'B', 'label')
+    md5s: ClassVar[dict[str, str]] = {
+        'oscd100_images.zip': '7d483d326aa5364119864f32bf636395',
+        'oscd100_train_labels.zip': '4f1bb58cfd3a1392b41a404e2d3d30d7',
+        'oscd100_val_labels.zip': '6936a9ba9664b81615c269ab9b670d87',
+        'oscd100_test_labels.zip': 'f6e0eedeb29a768e701b7ef2fd8a534a',
+    }
 
-    def __init__(
-        self,
-        root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[Sample], Sample] | None = None,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new OSCD100 dataset instance.
+    zipfile_glob = '*oscd100*.zip'
+    filename_glob = '*OSCD100*'
+    splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
 
-        Args:
-            root: root directory where dataset can be found
-            split: one of "train", "val", or "test"
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        assert split in self.splits
-
-        self.root = root
-        self.split = split
-        self.transforms = transforms
-        self.checksum = checksum
-
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise DatasetNotFoundError(self)
-
-        self.files = self._load_files()
-
-    def __getitem__(self, index: int) -> Sample:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data and label at that index
-        """
-        files = self.files[index]
-        image1 = self._load_image(files['image1'])
-        image2 = self._load_image(files['image2'])
-        mask = self._load_target(files['mask'])
-        sample = {'image': torch.stack([image1, image2]), 'mask': mask}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.files)
-
-    def _load_files(self) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Returns:
-            list of dicts containing paths for each pair of image1, image2, mask
-        """
-        images1 = sorted(glob.glob(os.path.join(self.root, 'A', f'{self.split}*.png')))
-        images2 = sorted(glob.glob(os.path.join(self.root, 'B', f'{self.split}*.png')))
-        masks = sorted(
-            glob.glob(os.path.join(self.root, 'label', f'{self.split}*.png'))
+    def _load_files(self) -> list[dict[str, str | Sequence[str]]]:
+        """Load file paths for OSCD100."""
+        regions = []
+        labels_root = os.path.join(
+            self.root, f'OSCD100_{self.split.capitalize()}_Labels'
         )
+        images_root = os.path.join(self.root, 'OSCD100_Images')
 
-        files = []
-        for image1, image2, mask in zip(images1, images2, masks):
-            files.append(dict(image1=image1, image2=image2, mask=mask))
-        return files
+        folders = glob.glob(os.path.join(labels_root, '*/'))
+        for folder in folders:
+            region = folder.split(os.sep)[-2]
+            mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
-    def _load_image(self, path: Path) -> Tensor:
-        """Load a single image.
+            def get_image_paths(ind: int) -> list[str]:
+                return sorted(
+                    glob.glob(
+                        os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
+                    ),
+                    key=sort_sentinel2_bands,
+                )
 
-        Args:
-            path: path to the image
+            images1, images2 = get_image_paths(1), get_image_paths(2)
+            images1 = [images1[i] for i in self.all_band_indices]
+            images2 = [images2[i] for i in self.all_band_indices]
 
-        Returns:
-            the image
-        """
-        with Image.open(path) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
-            tensor = torch.from_numpy(array).float()
-            return einops.rearrange(tensor, 'h w c -> c h w')
-
-    def _load_target(self, path: Path) -> Tensor:
-        """Load the target mask for a single image.
-
-        Args:
-            path: path to the image
-
-        Returns:
-            the target mask
-        """
-        with Image.open(path) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
-            tensor = torch.from_numpy(array)
-            tensor = torch.clamp(tensor, min=0, max=1)
-            tensor = tensor.to(torch.long)
-            return einops.rearrange(tensor, 'h w -> () h w')
-
-    def _check_integrity(self) -> bool:
-        """Check the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        return all(
-            os.path.exists(os.path.join(self.root, directory))
-            for directory in self.directories
-        )
-
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        if self._check_integrity():
-            print('Files already downloaded and verified')
-            return
-
-        for split in self.splits:
-            filename = self.splits[split]['filename']
-            download_and_extract_archive(
-                f'{self.url}/{filename}',
-                self.root,
-                filename=filename,
-                md5=self.splits[split]['md5'] if self.checksum else None,
+            regions.append(
+                dict(
+                    region=region, images1=images1, images2=images2, mask=mask, dates=()
+                )
             )
 
-    def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional suptitle to use for figure
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-        """
-        ncols = 3
-
-        image1 = sample['image'][0].permute(1, 2, 0).numpy()
-        image1 = percentile_normalization(image1, axis=(0, 1))
-
-        image2 = sample['image'][1].permute(1, 2, 0).numpy()
-        image2 = percentile_normalization(image2, axis=(0, 1))
-
-        if 'prediction' in sample:
-            ncols += 1
-
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
-
-        axs[0].imshow(image1)
-        axs[0].axis('off')
-        axs[1].imshow(image2)
-        axs[1].axis('off')
-        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
-        axs[2].axis('off')
-
-        if 'prediction' in sample:
-            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
-            axs[3].axis('off')
-            if show_titles:
-                axs[3].set_title('Prediction')
-
-        if show_titles:
-            axs[0].set_title('Image 1')
-            axs[1].set_title('Image 2')
-            axs[2].set_title('Mask')
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-
-        return fig
+        return regions

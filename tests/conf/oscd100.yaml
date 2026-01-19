@@ -11,3 +11,4 @@ data:
     batch_size: 2
   dict_kwargs:
     root: 'tests/data/oscd/oscd100'
+    bands: ['B04', 'B03', 'B02']

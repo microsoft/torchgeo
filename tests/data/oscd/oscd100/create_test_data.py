@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
+"""Generate minimal test data for OSCD100 in GeoTIFF format."""
 
-# Copyright (c) TorchGeo Contributors. All rights reserved.
-# Licensed under the MIT License.
-
-import hashlib
 import os
-import shutil
 import zipfile
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-SIZE = 8
-np.random.seed(0)
-
+# Create test structure
 splits = ['train', 'val', 'test']
 bands = [
     'B01',
@@ -32,30 +26,17 @@ bands = [
     'B12',
 ]
 
-# Clean up old directories
-for dirname in [
-    'OSCD100_Images',
-    'OSCD100_Train_Labels',
-    'OSCD100_Val_Labels',
-    'OSCD100_Test_Labels',
-]:
-    if os.path.exists(dirname):
-        shutil.rmtree(dirname)
-
-for split in splits:
-    for fname in [f'oscd100_{split}_labels.zip']:
-        if os.path.exists(fname):
-            os.remove(fname)
-if os.path.exists('oscd100_images.zip'):
-    os.remove('oscd100_images.zip')
+# Minimal 8x8 test images
+SIZE = 8
 
 # Create directories
-images_dir = Path('OSCD100_Images')
+base = Path(__file__).parent
+images_dir = base / 'OSCD100_Images'
 images_dir.mkdir(exist_ok=True)
 
 # Create 2 crops per split
 for split in splits:
-    labels_dir = Path(f'OSCD100_{split.capitalize()}_Labels')
+    labels_dir = base / f'OSCD100_{split.capitalize()}_Labels'
     labels_dir.mkdir(exist_ok=True)
 
     for i in range(2):
@@ -84,31 +65,26 @@ for split in splits:
         mask = np.random.randint(0, 2, (SIZE, SIZE), dtype=np.uint8) * 255
         Image.fromarray(mask, mode='L').save(crop_label_dir / 'cm.png')
 
+print('Creating zip archives...')
+
 # Zip Images
-with zipfile.ZipFile('oscd100_images.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
+with zipfile.ZipFile(base / 'oscd100_images.zip', 'w', zipfile.ZIP_DEFLATED) as zf:
     for root, dirs, files in os.walk(images_dir):
         for file in files:
             file_path = Path(root) / file
-            zf.write(file_path, file_path)
+            arcname = file_path.relative_to(base)
+            zf.write(file_path, arcname)
 
 # Zip each split's labels
 for split in splits:
-    labels_dir = Path(f'OSCD100_{split.capitalize()}_Labels')
+    labels_dir = base / f'OSCD100_{split.capitalize()}_Labels'
     with zipfile.ZipFile(
-        f'oscd100_{split}_labels.zip', 'w', zipfile.ZIP_DEFLATED
+        base / f'oscd100_{split}_labels.zip', 'w', zipfile.ZIP_DEFLATED
     ) as zf:
         for root, dirs, files in os.walk(labels_dir):
             for file in files:
                 file_path = Path(root) / file
-                zf.write(file_path, file_path)
+                arcname = file_path.relative_to(base)
+                zf.write(file_path, arcname)
 
-# Print MD5s for updating test file
-with open('oscd100_images.zip', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(repr('oscd100_images.zip') + ': ' + repr(md5) + ',')
-
-for split in splits:
-    filename = f'oscd100_{split}_labels.zip'
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(repr(filename) + ': ' + repr(md5) + ',')
+print('Test data created!')
