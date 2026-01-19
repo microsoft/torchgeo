@@ -9,6 +9,7 @@ from __future__ import annotations
 import bz2
 import collections
 import contextlib
+import hashlib
 import importlib
 import os
 import pathlib
@@ -32,7 +33,6 @@ from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
 from torchvision.datasets.utils import (
-    check_integrity,
     download_and_extract_archive,
     download_url,
 )
@@ -42,7 +42,7 @@ from typing_extensions import deprecated
 from .errors import DependencyNotFoundError
 
 # Only include import redirects
-__all__ = ('check_integrity', 'download_and_extract_archive', 'download_url')
+__all__ = ('download_and_extract_archive', 'download_url')
 
 
 # Waiting to upgrade Sphinx before switching to type statement
@@ -298,6 +298,34 @@ class Executable:
         """
         kwargs['check'] = True
         return subprocess.run((self.name, *args), **kwargs)
+
+
+def check_integrity(fpath: Path, checksum: str | None = None) -> bool:
+    """Check the integrity of a file.
+
+    Args:
+        fpath: File path to check.
+        checksum: Expected MD5 or SHA256 checksum.
+
+    Returns:
+        True if file exists and *checksum* is None or matches, else False.
+    """
+    if not os.path.isfile(fpath):
+        return False
+
+    if checksum is None:
+        return True
+
+    match len(checksum):
+        case 32:
+            digest = 'md5'
+        case 64:
+            digest = 'sha256'
+        case _:
+            raise ValueError('Unsupported hashing algorithm')
+
+    with open(fpath, 'rb') as f:
+        return hashlib.file_digest(f, digest).hexdigest() == checksum
 
 
 def extract_archive(
