@@ -10,7 +10,6 @@ import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch import nn
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
     ViTBase14_DINOv2_Weights,
@@ -30,7 +29,7 @@ from torchgeo.models import (
 
 class TestViTSmall16:
     @pytest.fixture(params=[*ViTSmall16_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTSmall16_Weights:
         return request.param
 
     @pytest.fixture
@@ -40,7 +39,7 @@ class TestViTSmall16:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTSmall16_Weights:
         weights = ViTSmall16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -57,22 +56,22 @@ class TestViTSmall16:
         vit_small_patch16_224()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTSmall16_Weights, features_only: bool
     ) -> None:
         vit_small_patch16_224(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTSmall16_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTSmall16_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTSmall16_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -81,13 +80,13 @@ class TestViTSmall16:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTSmall16_Weights) -> None:
         vit_small_patch16_224(weights=weights)
 
 
 class TestViTBase16:
     @pytest.fixture(params=[*ViTBase16_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTBase16_Weights:
         return request.param
 
     @pytest.fixture
@@ -97,7 +96,7 @@ class TestViTBase16:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTBase16_Weights:
         weights = ViTBase16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -114,22 +113,22 @@ class TestViTBase16:
         vit_base_patch16_224()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTBase16_Weights, features_only: bool
     ) -> None:
         vit_base_patch16_224(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTBase16_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTBase16_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTBase16_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -138,13 +137,13 @@ class TestViTBase16:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTBase16_Weights) -> None:
         vit_base_patch16_224(weights=weights)
 
 
 class TestViTLarge16:
     @pytest.fixture(params=[*ViTLarge16_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTLarge16_Weights:
         return request.param
 
     @pytest.fixture
@@ -154,7 +153,7 @@ class TestViTLarge16:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTLarge16_Weights:
         weights = ViTLarge16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -171,22 +170,22 @@ class TestViTLarge16:
         vit_large_patch16_224()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTLarge16_Weights, features_only: bool
     ) -> None:
         vit_large_patch16_224(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTLarge16_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTLarge16_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTLarge16_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -195,13 +194,13 @@ class TestViTLarge16:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTLarge16_Weights) -> None:
         vit_large_patch16_224(weights=weights)
 
 
 class TestViTHuge14:
     @pytest.fixture(params=[*ViTHuge14_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTHuge14_Weights:
         return request.param
 
     @pytest.fixture
@@ -211,7 +210,7 @@ class TestViTHuge14:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTHuge14_Weights:
         weights = ViTHuge14_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -228,22 +227,22 @@ class TestViTHuge14:
         vit_huge_patch14_224()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTHuge14_Weights, features_only: bool
     ) -> None:
         vit_huge_patch14_224(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTHuge14_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTHuge14_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTHuge14_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -252,13 +251,13 @@ class TestViTHuge14:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTHuge14_Weights) -> None:
         vit_huge_patch14_224(weights=weights)
 
 
 class TestViTSmall14_DINOv2:
     @pytest.fixture(params=[*ViTSmall14_DINOv2_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTSmall14_DINOv2_Weights:
         return request.param
 
     @pytest.fixture
@@ -268,7 +267,7 @@ class TestViTSmall14_DINOv2:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTSmall14_DINOv2_Weights:
         weights = ViTSmall14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -286,17 +285,17 @@ class TestViTSmall14_DINOv2:
         vit_small_patch14_dinov2()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTSmall14_DINOv2_Weights, features_only: bool
     ) -> None:
         vit_small_patch14_dinov2(
             weights=mocked_weights, features_only=not features_only
         )
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTSmall14_DINOv2_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTSmall14_DINOv2_Weights) -> None:
         c = weights.meta['in_chans']
         img_size = weights.meta['img_size']
         if isinstance(img_size, int):
@@ -306,7 +305,7 @@ class TestViTSmall14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTSmall14_DINOv2_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -315,13 +314,13 @@ class TestViTSmall14_DINOv2:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTSmall14_DINOv2_Weights) -> None:
         vit_small_patch14_dinov2(weights=weights)
 
 
 class TestViTBase14_DINOv2:
     @pytest.fixture(params=[*ViTBase14_DINOv2_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> ViTBase14_DINOv2_Weights:
         return request.param
 
     @pytest.fixture
@@ -331,7 +330,7 @@ class TestViTBase14_DINOv2:
         monkeypatch: MonkeyPatch,
         features_only: bool,
         load_state_dict_from_url: None,
-    ) -> WeightsEnum:
+    ) -> ViTBase14_DINOv2_Weights:
         weights = ViTBase14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -349,15 +348,15 @@ class TestViTBase14_DINOv2:
         vit_base_patch14_dinov2()
 
     def test_vit_weights(
-        self, mocked_weights: WeightsEnum, features_only: bool
+        self, mocked_weights: ViTBase14_DINOv2_Weights, features_only: bool
     ) -> None:
         vit_base_patch14_dinov2(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: ViTBase14_DINOv2_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: ViTBase14_DINOv2_Weights) -> None:
         c = weights.meta['in_chans']
         img_size = weights.meta['img_size']
         if isinstance(img_size, int):
@@ -367,7 +366,7 @@ class TestViTBase14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: ViTBase14_DINOv2_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -376,5 +375,5 @@ class TestViTBase14_DINOv2:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_vit_download(self, weights: WeightsEnum) -> None:
+    def test_vit_download(self, weights: ViTBase14_DINOv2_Weights) -> None:
         vit_base_patch14_dinov2(weights=weights)

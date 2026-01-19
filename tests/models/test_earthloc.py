@@ -7,20 +7,19 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import EarthLoc_Weights, earthloc
 
 
 class TestEarthLoc:
     @pytest.fixture(params=[*EarthLoc_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> EarthLoc_Weights:
         return request.param
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> EarthLoc_Weights:
         weights = EarthLoc_Weights.SENTINEL2_RESNET50
         path = tmp_path / f'{weights}.pth'
         kwargs = {
@@ -39,10 +38,10 @@ class TestEarthLoc:
     def test_earthloc(self) -> None:
         earthloc()
 
-    def test_earthloc_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_earthloc_weights(self, mocked_weights: EarthLoc_Weights) -> None:
         earthloc(weights=mocked_weights)
 
-    def test_earthloc_forward(self, mocked_weights: WeightsEnum) -> None:
+    def test_earthloc_forward(self, mocked_weights: EarthLoc_Weights) -> None:
         model = earthloc(weights=mocked_weights)
         c = mocked_weights.meta['in_chans']
         h = w = mocked_weights.meta['image_size']
@@ -50,18 +49,18 @@ class TestEarthLoc:
         y = model(x)
         assert y.shape == (1, mocked_weights.meta['desc_dim'])
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: EarthLoc_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: EarthLoc_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: EarthLoc_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -70,5 +69,5 @@ class TestEarthLoc:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_earthloc_download(self, weights: WeightsEnum) -> None:
+    def test_earthloc_download(self, weights: EarthLoc_Weights) -> None:
         earthloc(weights=weights)
