@@ -92,7 +92,7 @@ class EuroCrops(VectorDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS = CRS.from_epsg(4326),
+        crs: CRS | None = None,
         res: float | tuple[float, float] = (0.00001, 0.00001),
         classes: list[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -125,6 +125,9 @@ class EuroCrops(VectorDataset):
 
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
+
+        if crs is None:
+            crs = CRS.from_epsg(4326)
 
         self._load_class_map(classes)
 

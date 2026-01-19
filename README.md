@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
+<img class="dark-light" src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
 
 TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), providing datasets, samplers, transforms, and pre-trained models specific to geospatial data.
 

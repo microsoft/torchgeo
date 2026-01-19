@@ -117,14 +117,15 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
+    # myst-parser 0.18.0+ required for sphinx 5.0+ compatibility
+    "myst-parser>=0.18.0",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
-    # release versions missing files, must install from master
-    "pytorch-sphinx-theme",
-    # sphinx 4+ required for autodoc_typehints_description_target
-    # sphinx 6+ is incompatible with pytorch-sphinx-theme
-    # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-    "sphinx>=4,<6",
+    # pydata-sphinx-theme 0.14.0+ required for sphinx 5.0+ compatibility
+    "pydata-sphinx-theme>=0.14.0",
+    # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+    # https://github.com/sphinx-doc/sphinx/pull/10887
+    "sphinx>=5.3",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
@@ -199,7 +200,7 @@ disallow_untyped_decorators = true
 
 # Configuring warnings
 warn_redundant_casts = true
-warn_unused_ignores = true
+warn_unused_ignores = false  # remove if/when we drop ty
 warn_no_return = true
 warn_return_any = true
 warn_unreachable = true
@@ -345,7 +346,6 @@ ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
-"experiments/**" = ["D"]
 "tests/**" = ["D"]
 
 [tool.ruff.lint.isort]
@@ -366,9 +366,11 @@ include = ["torchgeo*"]
 
 [tool.ty.rules]
 deprecated = "ignore"
+possibly-missing-attribute = "ignore"
 unresolved-attribute = "ignore"
 unresolved-import = "ignore"
 unresolved-reference = "ignore"
+unused-ignore-comment = "ignore"  # remove if/when we drop mypy
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]

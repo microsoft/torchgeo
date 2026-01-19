@@ -130,7 +130,7 @@ class L7Irish(IntersectionDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = CRS.from_epsg(3857),
+        crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -162,6 +162,9 @@ class L7Irish(IntersectionDataset):
         self.checksum = checksum
 
         self._verify()
+
+        if crs is None:
+            crs = CRS.from_epsg(3857)
 
         self.image = L7IrishImage(paths, crs, res, bands, transforms, cache)
         self.mask = L7IrishMask(paths, crs, res, None, transforms, cache)
