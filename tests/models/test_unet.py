@@ -15,7 +15,7 @@ from torchgeo.models import Unet_Weights, unet
 class TestUnet:
     @pytest.fixture(params=[*Unet_Weights])
     def weights(self, request: SubRequest) -> Unet_Weights:
-        return request.param
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
@@ -31,7 +31,7 @@ class TestUnet:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_unet(self) -> None:
         unet()

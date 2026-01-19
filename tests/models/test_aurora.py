@@ -17,7 +17,7 @@ pytest.importorskip('aurora')
 class TestAurora:
     @pytest.fixture(params=[*Aurora_Weights])
     def weights(self, request: SubRequest) -> Aurora_Weights:
-        return request.param
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
@@ -30,7 +30,7 @@ class TestAurora:
         monkeypatch.setattr(
             aurora.Aurora, 'load_checkpoint', lambda self, *args, **kwargs: None
         )
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_aurora_swin_unet(self) -> None:
         aurora_swin_unet()

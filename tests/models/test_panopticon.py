@@ -56,7 +56,7 @@ class TestPanopticon:
 class TestPanopticonBase:
     @pytest.fixture(params=[*Panopticon_Weights])
     def weights(self, request: SubRequest) -> Panopticon_Weights:
-        return request.param
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
@@ -70,7 +70,7 @@ class TestPanopticonBase:
         state_dict['pos_embed'] = torch.nn.Parameter(torch.randn(1, 1370, 768))
         torch.save(state_dict, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_panopticon(self) -> None:
         model = panopticon_vitb14(img_size=28)
