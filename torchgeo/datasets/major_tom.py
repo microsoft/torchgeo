@@ -6,7 +6,9 @@
 from collections.abc import Callable
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
+import shapely.wkb
 import torch
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -37,7 +39,7 @@ class MajorTOMEmbeddings(NonGeoDataset):
         """Initialize a new MajorTOMEmbeddings instance.
 
         Args:
-            root: Root directory where dataset can be found.
+            root: Root directory where dataset parquet files can be found.
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
 
@@ -48,9 +50,22 @@ class MajorTOMEmbeddings(NonGeoDataset):
         self.transforms = transforms
 
         try:
-            self.data = gpd.read_parquet(root)
-        except (FileNotFoundError, ValueError):
-            raise DatasetNotFoundError(self)
+            path = Path(root)
+            # If it's a directory, let read_parquet handle it (it usually does), 
+            # or you can manually glob if read_parquet fails on non-standard folder structures.
+            self.data = gpd.read_parquet(path)
+        except (FileNotFoundError, ValueError, OSError):
+            # Fallback: manually find all .parquet files and concatenate them
+            # This is useful if the folder structure isn't a clean PyArrow dataset
+            if path.is_dir():
+                files = sorted(path.glob('*.parquet'))
+                if not files:
+                    raise DatasetNotFoundError(self)
+                # Read all and concat
+                dfs = [gpd.read_parquet(f) for f in files]
+                self.data = pd.concat(dfs, ignore_index=True)
+            else:
+                raise DatasetNotFoundError(self)
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -67,7 +82,7 @@ class MajorTOMEmbeddings(NonGeoDataset):
             index: Index to return.
 
         Returns:
-            Data and label at that index.
+            Data and label at that index. All items are Tensors.
         """
         row = self.data.iloc[index]
         t = pd.Timestamp(row['timestamp'])
@@ -76,7 +91,7 @@ class MajorTOMEmbeddings(NonGeoDataset):
             'embedding': torch.tensor(row['embedding']),
             'x': torch.tensor(row['centre_lon']),
             'y': torch.tensor(row['centre_lat']),
-            't': torch.tensor(t.timestamp()),
+            't': torch.tensor(t.timestamp())
         }
 
         if self.transforms is not None:
@@ -95,13 +110,21 @@ class MajorTOMEmbeddings(NonGeoDataset):
             A matplotlib Figure with the rendered sample.
         """
         fig, ax = plt.subplots()
+        
+        # Plotting the embedding
         ax.plot(sample['embedding'])
+        ax.set_xlabel('embedding dimension')
 
         if show_titles:
-            x = sample['x'].item()
-            y = sample['y'].item()
+            x_raw = sample['x'].item()
+            y_raw = sample['y'].item()
             t = pd.Timestamp.fromtimestamp(sample['t'].item())
-            ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
+
+            # Determine Cardinal Directions
+            lat_dir = 'N' if y_raw >= 0 else 'S'
+            lon_dir = 'E' if x_raw >= 0 else 'W'
+
+            ax.set_title(f'{abs(y_raw):0.3f}°{lat_dir}, {abs(x_raw):0.3f}°{lon_dir}, {t}')
 
         fig.tight_layout()
         return fig
