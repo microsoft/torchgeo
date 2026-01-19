@@ -73,14 +73,14 @@ class TestEsri2020:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: Esri2020) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: Esri2020) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -89,8 +89,8 @@ class TestEsri2020:
         ds = Esri2020(os.path.join('tests', 'data', 'esri2020'))
         assert 'ai4edataeuwest.blob.core.windows.net' in ds.url
 
-    def test_invalid_query(self, dataset: Esri2020) -> None:
+    def test_invalid_index(self, dataset: Esri2020) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

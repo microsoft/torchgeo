@@ -56,19 +56,19 @@ class L7IrishMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
+        sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 

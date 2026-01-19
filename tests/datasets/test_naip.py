@@ -42,8 +42,8 @@ class TestNAIP:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: NAIP) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
@@ -51,8 +51,8 @@ class TestNAIP:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             NAIP(tmp_path)
 
-    def test_invalid_query(self, dataset: NAIP) -> None:
+    def test_invalid_index(self, dataset: NAIP) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

@@ -59,13 +59,13 @@ class TestCanadianBuildingFootprints:
         CanadianBuildingFootprints(dataset.paths, download=True)
 
     def test_plot(self, dataset: CanadianBuildingFootprints) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
 
     def test_plot_prediction(self, dataset: CanadianBuildingFootprints) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
 
@@ -73,8 +73,8 @@ class TestCanadianBuildingFootprints:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CanadianBuildingFootprints(tmp_path)
 
-    def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
+    def test_invalid_index(self, dataset: CanadianBuildingFootprints) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[2:2, 2:2, pd.Timestamp.min : pd.Timestamp.min]

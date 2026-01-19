@@ -59,8 +59,8 @@ class TestGoogleSatelliteEmbedding:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GoogleSatelliteEmbedding(tmp_path)
 
-    def test_invalid_query(self, dataset: GoogleSatelliteEmbedding) -> None:
+    def test_invalid_index(self, dataset: GoogleSatelliteEmbedding) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
