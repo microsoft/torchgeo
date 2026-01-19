@@ -120,7 +120,7 @@ class OSCD100DataModule(NonGeoDataModule):
 
     Intended for tutorials and demonstrations, not benchmarking.
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(
@@ -138,20 +138,8 @@ class OSCD100DataModule(NonGeoDataModule):
             OSCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
-        self.train_aug = K.AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
             data_keys=None,
             keepdim=True,
-        )
-        self.val_aug = K.AugmentationSequential(
-            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
-            data_keys=None,
-            keepdim=True,
-            same_on_batch=True,
-        )
-        self.test_aug = K.AugmentationSequential(
-            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
-            data_keys=None,
-            keepdim=True,
-            same_on_batch=True,
         )

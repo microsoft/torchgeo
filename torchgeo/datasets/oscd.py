@@ -56,18 +56,9 @@ class OSCD(NonGeoDataset):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': (
-            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
-            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip'
-        ),
-        'Onera Satellite Change Detection dataset - Train Labels.zip': (
-            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
-            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip'
-        ),
-        'Onera Satellite Change Detection dataset - Test Labels.zip': (
-            'https://huggingface.co/datasets/hkristen/oscd/resolve/main/'
-            'Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip'
-        ),
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
     md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
@@ -383,7 +374,7 @@ class OSCD100(NonGeoDataset):
     .. versionadded:: 0.9
     """
 
-    url = 'https://huggingface.co/datasets/hkristen/oscd100/resolve/main'
+    url = 'https://hf.co/datasets/hkristen/oscd100/resolve/318475c71c42da38ade70dade29035117be178eb'
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'oscd100_train.zip',
