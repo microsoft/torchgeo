@@ -216,7 +216,7 @@ class MMFlood(IntersectionDataset):
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *index* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
         data = super().__getitem__(index)
         missing_data = data['image'].isnan().any(dim=0)

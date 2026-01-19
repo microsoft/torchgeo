@@ -66,7 +66,7 @@ class L7IrishMask(RasterDataset):
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *index* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
         sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
