@@ -4,6 +4,7 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -342,7 +343,9 @@ class TestBoundingBox:
     ],
 )
 def test_extract_archive(from_path: str, tmp_path: Path) -> None:
-    extract_archive(from_path, tmp_path)
+    shutil.copy(from_path, tmp_path)
+    from_path = os.path.join(tmp_path, os.path.basename(from_path))
+    extract_archive(from_path, tmp_path, remove_finished=True)
 
 
 @pytest.mark.parametrize(
