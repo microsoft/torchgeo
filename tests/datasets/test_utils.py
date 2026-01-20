@@ -333,19 +333,18 @@ class TestBoundingBox:
 
 def test_check_integrity() -> None:
     fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
-    checksums = [
-        '497cb7e19a12c7d5abbefe8eac71d22d',
-        '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46',
-    ]
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
     assert check_integrity(fpath)
+    assert check_integrity(fpath, md5=md5)
+    assert check_integrity(fpath, sha256=sha256)
+
     assert not check_integrity(fpath + '2')
-
-    for checksum in checksums:
-        assert check_integrity(fpath, checksum)
-        assert not check_integrity(fpath + '2', checksum)
-
-    with pytest.raises(ValueError, match='Unsupported hashing algorithm'):
-        check_integrity(fpath, checksums[0] + '2')
+    assert not check_integrity(fpath + '2', md5=md5)
+    assert not check_integrity(fpath + '2', sha256=sha256)
+    assert not check_integrity(fpath, md5=md5 + '2')
+    assert not check_integrity(fpath, sha256=sha256 + '2')
 
 
 @pytest.mark.parametrize(

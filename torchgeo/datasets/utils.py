@@ -300,32 +300,30 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def check_integrity(fpath: Path, checksum: str | None = None) -> bool:
+def check_integrity(
+    fpath: Path, md5: str | None = None, sha256: str | None = None
+) -> bool:
     """Check the integrity of a file.
 
     Args:
         fpath: File path to check.
-        checksum: Expected MD5 or SHA256 checksum.
+        md5: Expected MD5 checksum.
+        sha256: Expected SHA256 checksum.
 
     Returns:
-        True if file exists and *checksum* is None or matches, else False.
+        True if file exists and checksum is None or matches, else False.
     """
     if not os.path.isfile(fpath):
         return False
 
-    if checksum is None:
+    if md5 is None and sha256 is None:
         return True
 
-    match len(checksum):
-        case 32:
-            digest = 'md5'
-        case 64:
-            digest = 'sha256'
-        case _:
-            raise ValueError('Unsupported hashing algorithm')
-
     with open(fpath, 'rb') as f:
-        return hashlib.file_digest(f, digest).hexdigest() == checksum
+        if md5:
+            return hashlib.file_digest(f, 'md5').hexdigest() == md5
+        else:
+            return hashlib.file_digest(f, 'sha256').hexdigest() == sha256
 
 
 def extract_archive(
