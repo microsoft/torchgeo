@@ -6,13 +6,17 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
+import bz2
 import collections
 import contextlib
 import importlib
 import os
+import pathlib
 import shutil
 import subprocess
+import tarfile
 import warnings
+import zipfile
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -31,7 +35,6 @@ from torchvision.datasets.utils import (
     check_integrity,
     download_and_extract_archive,
     download_url,
-    extract_archive,
 )
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
@@ -39,12 +42,7 @@ from typing_extensions import deprecated
 from .errors import DependencyNotFoundError
 
 # Only include import redirects
-__all__ = (
-    'check_integrity',
-    'download_and_extract_archive',
-    'download_url',
-    'extract_archive',
-)
+__all__ = ('check_integrity', 'download_and_extract_archive', 'download_url')
 
 
 # Waiting to upgrade Sphinx before switching to type statement
@@ -300,6 +298,41 @@ class Executable:
         """
         kwargs['check'] = True
         return subprocess.run((self.name, *args), **kwargs)
+
+
+def extract_archive(
+    from_path: Path, to_path: Path | None = None, remove_finished: bool = False
+) -> Path:
+    """Extract an archive.
+
+    Args:
+        from_path: Path to the file to be extracted.
+        to_path: Path to the directory the file will be extracted to.
+            Defaults to the directory of *from_path*.
+        remove_finished: If True, remove *from_path* after extraction.
+
+    Returns:
+        Path to the directory the file was extracted to.
+    """
+    to_path = to_path or os.path.dirname(from_path)
+    suffixes = pathlib.Path(from_path).suffixes
+
+    if suffixes[-1] == '.zip':
+        with zipfile.ZipFile(from_path, 'r') as z:
+            z.extractall(to_path)
+    elif suffixes[-1] == '.bz2' and '.tar' not in suffixes:
+        stem = pathlib.Path(from_path).stem
+        to_path = os.path.join(to_path, stem)
+        with bz2.open(from_path, 'rb') as src, open(to_path, 'wb') as dst:
+            dst.write(src.read())
+    else:
+        with tarfile.open(from_path, 'r') as t:
+            t.extractall(to_path, filter='data')
+
+    if remove_finished:
+        os.remove(from_path)
+
+    return to_path
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
