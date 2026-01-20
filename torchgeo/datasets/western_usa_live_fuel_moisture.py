@@ -7,7 +7,6 @@ import glob
 import json
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,7 +15,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -201,7 +200,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self,
         root: Path = 'data',
         input_features: Iterable[str] = all_variable_names,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
@@ -236,7 +235,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         return len(self.dataframe)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -302,7 +301,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Sample,
         variables_to_plot: list[str] | None = None,
         show_titles: bool = True,
         suptitle: str | None = None,

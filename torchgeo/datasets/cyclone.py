@@ -6,7 +6,6 @@
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -55,7 +54,7 @@ class TropicalCyclone(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new TropicalCyclone instance.
@@ -87,7 +86,7 @@ class TropicalCyclone(NonGeoDataset):
         self.features = pd.read_csv(os.path.join(root, f'{self.filename}_features.csv'))
         self.labels = pd.read_csv(os.path.join(root, f'{self.filename}_labels.csv'))
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -129,11 +128,12 @@ class TropicalCyclone(NonGeoDataset):
             the image
         """
         filename = os.path.join(self.root, self.split, f'{image_id}.jpg')
-        with Image.open(filename) as img:
+        with Image.open(filename) as f:
+            img = f.convert('RGB')
             if img.height != self.size or img.width != self.size:
                 resample = Image.Resampling.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             tensor = tensor.permute((2, 0, 1)).float()
             return tensor
@@ -164,10 +164,7 @@ class TropicalCyclone(NonGeoDataset):
             azcopy('copy', f'{self.url}/{file}', self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

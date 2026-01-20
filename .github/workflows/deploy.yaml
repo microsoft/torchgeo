@@ -13,7 +13,7 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: '3.14'
+          python-version: '3.13'
       - name: Install pip dependencies
         run: pip install build
       - name: List pip dependencies

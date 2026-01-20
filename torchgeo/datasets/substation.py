@@ -13,11 +13,10 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class Substation(NonGeoDataset):
@@ -64,7 +63,7 @@ class Substation(NonGeoDataset):
         num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
         | None = 'concat',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -93,7 +92,7 @@ class Substation(NonGeoDataset):
         self._verify()
         self.image_filenames = pd.Series(sorted(os.listdir(self.image_dir)))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Get an item from the dataset by index.
 
         Args:
@@ -158,10 +157,7 @@ class Substation(NonGeoDataset):
         return len(self.image_filenames)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

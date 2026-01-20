@@ -7,6 +7,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `CaBuAr`_,CD,Sentinel-2,"OpenRAIL",424,2,512x512,20,MSI
 `CaFFe`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","19092","2 or 4","512x512",6-20,"SAR"
 `ChaBuD`_,CD,Sentinel-2,"OpenRAIL",356,2,512x512,10,MSI
+`Clay Embeddings`_,E,Sentinel-2,ODC-By-1.0,"1,517",768,528,"5,120",Embedding
 `Cloud Cover Detection`_,S,Sentinel-2,"CC-BY-4.0","22,728",2,512x512,10,MSI
 `Copernicus-Pretrain`_,T,"Sentinel-1/2/3/5P, DEM","CC-BY-4.0",18.7M,-,"264x264 or 96x96 or 28x28 or 960x960",10--1000,"SAR, MSI, Air Pollutants, DEM"
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","AGPL-3.0-only","388,435",2,256x256,0.15,RGB
@@ -18,6 +19,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Digital Typhoon`_,"C, R",Himawari,"CC-BY-4.0","189,364",8,512,5000,Infrared
 `DL4GAM`_,S,"Sentinel-2","CC-BY-4.0","2,251 or 11,440","2","256x256","10","MSI"
 `DOTA`_,OD,"Google Earth, Gaofen-2, Jilin-1, CycloMedia B.V.","non-commercial","5,229",15,"800--4000",,RGB
+`Earth Index Embeddings`_,E,Sentinel-2,CC-BY-4.0,-,384,484x484,320,Embedding
 `ETCI2021 Flood Detection`_,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR
 `EuroSAT`_,C,Sentinel-2,"MIT","27,000",10,64x64,10,MSI
 `EverWatch`_,OD,Aerial,"CC0-1.0","5,325",8,"1,500x1500p",0.01,RGB
@@ -34,6 +36,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `LEVIR-CD`_,CD,Google Earth,-,637,2,"1,024x1,024",0.5,RGB
 `LEVIR-CD+`_,CD,Google Earth,-,985,2,"1,024x1,024",0.5,RGB
 `LoveDA`_,S,Google Earth,"CC-BY-NC-SA-4.0","5,987",7,"1,024x1,024",0.3,RGB
+`Major TOM`_,E,Sentinel-1/2,CC-BY-SA-4.0,-,2048,765x765,"2,140--3,560",Embedding
 `MapInWild`_,S,"Sentinel-1/2, ESA WorldCover, NOAA VIIRS DNB","CC-BY-4.0",1018,1,1920x1920,10--463.83,"SAR, MSI, 2020_Map, avg_rad"
 `MDAS`_,S,"Sentinel-1/2,EnMAP,HySpex","CC-BY-SA-4.0",3,20,"100x120, 300x360, 1364x1636, 10000x12000, 15000x18000",0.3--30,HSI
 `Million-AID`_,C,Google Earth,-,1M,51--73,,0.5--153,RGB

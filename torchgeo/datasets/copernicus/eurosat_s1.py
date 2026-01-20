@@ -6,8 +6,8 @@
 import os
 
 import torch
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 
@@ -45,7 +45,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
         'SeaLake',
     )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

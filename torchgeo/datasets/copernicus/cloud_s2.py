@@ -6,8 +6,8 @@
 import os
 
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 
@@ -72,7 +72,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     cmap = ListedColormap(['white', 'yellow', 'green', 'red'])
     classes = ('Clear', 'Thick Cloud', 'Thin Cloud', 'Cloud Shadow')
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

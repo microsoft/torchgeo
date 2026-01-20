@@ -22,12 +22,11 @@ import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -129,7 +128,7 @@ class Chesapeake(RasterDataset, ABC):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -200,10 +199,7 @@ class Chesapeake(RasterDataset, ABC):
             extract_archive(file)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -436,7 +432,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['de-train'],
         layers: Sequence[str] = ['naip-new', 'lc'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -497,38 +493,38 @@ class ChesapeakeCVPR(GeoDataset):
         gdf.set_index(index, inplace=True)
         self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': [],
             'mask': [],
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(index) == 1:
-            filenames = index.iloc[0]
+        elif len(df) == 1:
+            filenames = df.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
@@ -566,7 +562,7 @@ class ChesapeakeCVPR(GeoDataset):
                 ]:
                     sample['mask'].append(data)
         else:
-            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
+            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
         sample['image'] = np.concatenate(sample['image'], axis=0)
         sample['mask'] = np.concatenate(sample['mask'], axis=0)
@@ -623,10 +619,7 @@ class ChesapeakeCVPR(GeoDataset):
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

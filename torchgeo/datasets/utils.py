@@ -21,7 +21,7 @@ from typing import Any, TypeAlias, cast, overload
 import numpy as np
 import pandas as pd
 import rasterio
-import shapely
+import shapely.affinity
 import torch
 from pandas import Timedelta, Timestamp
 from rasterio import Affine
@@ -47,10 +47,12 @@ __all__ = (
 )
 
 
-GeoSlice: TypeAlias = (
+# Waiting to upgrade Sphinx before switching to type statement
+GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
-Path: TypeAlias = str | os.PathLike[str]
+Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
+Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
@@ -739,7 +741,7 @@ def lazy_import(name: str) -> Any:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
         module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        module_to_pypi |= {'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:

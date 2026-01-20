@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -14,9 +15,12 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     CopernicusBench,
+    CopernicusEmbed,
     CopernicusPretrain,
     DatasetNotFoundError,
+    IntersectionDataset,
     RGBBandsMissingError,
+    UnionDataset,
 )
 
 
@@ -51,7 +55,7 @@ class TestCopernicusBench:
         dataset, directory, kwargs = request.param
 
         if dataset == 'lcz_s2':
-            pytest.importorskip('h5py', minversion='3.8')
+            pytest.importorskip('h5py', minversion='3.10')
 
         root = os.path.join('tests', 'data', 'copernicus', directory)
         transforms = nn.Identity()
@@ -170,3 +174,48 @@ class TestCopernicusPretrain:
         x = next(iter(dataset))
         dataset.plot(x, suptitle='Test')
         plt.close()
+
+
+class TestCopernicusEmbed:
+    @pytest.fixture
+    def dataset(self, monkeypatch: MonkeyPatch) -> CopernicusEmbed:
+        paths = os.path.join('tests', 'data', 'copernicus', 'embed')
+        monkeypatch.setattr(
+            CopernicusEmbed, 'url', os.path.join(paths, 'embed_map_310k.tif')
+        )
+        transforms = nn.Identity()
+        return CopernicusEmbed(paths, transforms=transforms)
+
+    def test_len(self, dataset: CopernicusEmbed) -> None:
+        assert len(dataset) == 1
+
+    def test_getitem(self, dataset: CopernicusEmbed) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+
+    def test_and(self, dataset: CopernicusEmbed) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: CopernicusEmbed) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
+
+    def test_plot(self, dataset: CopernicusEmbed) -> None:
+        x = dataset[dataset.bounds]
+        dataset.plot(x, suptitle='Test')
+        plt.close()
+
+    def test_download(self, dataset: CopernicusEmbed, tmp_path: Path) -> None:
+        CopernicusEmbed(tmp_path, download=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            CopernicusEmbed(tmp_path)
+
+    def test_invalid_index(self, dataset: CopernicusEmbed) -> None:
+        with pytest.raises(
+            IndexError, match=r'index: .* not found in dataset with bounds:'
+        ):
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, which
+from .utils import GeoSlice, Path, Sample, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -116,7 +116,7 @@ class SouthAfricaCropType(RasterDataset):
         crs: CRS | None = None,
         classes: Sequence[int] = list(cmap.keys()),
         bands: Sequence[str] = s2_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
@@ -153,27 +153,27 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -184,7 +184,7 @@ class SouthAfricaCropType(RasterDataset):
         # Store date in July for s1 and s2 we want to use for each sample
         imagery_dates: dict[str, dict[str, str]] = {}
 
-        for filepath in index.filepath:
+        for filepath in df.filepath:
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
@@ -218,7 +218,7 @@ class SouthAfricaCropType(RasterDataset):
                     f'{field_id}_{date}_{band}_10m.tif',
                 )
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, query))
+            data_list.append(self._merge_files(band_filepaths, index))
         image = torch.cat(data_list)
 
         # Add labels for each field
@@ -229,11 +229,11 @@ class SouthAfricaCropType(RasterDataset):
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query).squeeze(0)
+        mask = self._merge_files(mask_filepaths, index).squeeze(0)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'image': image.float(),
             'mask': mask.long(),
             'transform': torch.tensor(transform),
@@ -265,10 +265,7 @@ class SouthAfricaCropType(RasterDataset):
         azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

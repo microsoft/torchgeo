@@ -18,7 +18,7 @@ from matplotlib.colors import ListedColormap
 from pyproj import Transformer
 from torch import Tensor
 
-from ..utils import Path, disambiguate_timestamp
+from ..utils import Path, Sample, disambiguate_timestamp
 from .base import CopernicusBenchBase
 
 
@@ -54,7 +54,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal[1, 2] = 1,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -88,7 +88,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
             self.metadata = json.load(f)
         self.files = pd.Series(sorted(self.metadata.keys()))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

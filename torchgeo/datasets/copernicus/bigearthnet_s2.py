@@ -10,9 +10,8 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import torch
-from torch import Tensor
 
-from ..utils import Path
+from ..utils import Path, Sample
 from .base import CopernicusBenchBase
 
 
@@ -78,7 +77,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -100,7 +99,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

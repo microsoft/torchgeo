@@ -17,6 +17,7 @@ from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
 from .utils import (
     Path,
+    Sample,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -109,7 +110,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -162,7 +163,7 @@ class EuroSAT(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -228,10 +229,7 @@ class EuroSAT(NonGeoClassificationDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

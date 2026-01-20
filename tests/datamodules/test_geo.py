@@ -13,7 +13,6 @@ from geopandas import GeoDataFrame
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from torchgeo.datamodules import (
     GeoDataModule,
@@ -21,7 +20,7 @@ from torchgeo.datamodules import (
     NonGeoDataModule,
 )
 from torchgeo.datasets import GeoDataset, NonGeoDataset
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, Sample
 from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
 
 MINT = pd.Timestamp(2025, 4, 24)
@@ -38,9 +37,9 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
-        return {'image': image, 'bounds': self._slice_to_tensor(query)}
+        return {'image': image, 'bounds': self._slice_to_tensor(index)}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
@@ -75,7 +74,7 @@ class CustomNonGeoDataset(NonGeoDataset):
     ) -> None:
         self.length = length
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
 
     def __len__(self) -> int:

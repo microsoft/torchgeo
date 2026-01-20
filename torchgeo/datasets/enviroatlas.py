@@ -23,7 +23,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -256,7 +256,7 @@ class EnviroAtlas(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
         layers: Sequence[str] = ['naip', 'prior'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -312,38 +312,38 @@ class EnviroAtlas(GeoDataset):
         gdf.set_index(index, inplace=True)
         self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': [],
             'mask': [],
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(index) == 1:
-            filenames = index.iloc[0]
+        elif len(df) == 1:
+            filenames = df.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
@@ -386,7 +386,7 @@ class EnviroAtlas(GeoDataset):
                     data = self.raw_enviroatlas_to_idx_map[data]
                     sample['mask'].append(data)
         else:
-            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
+            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
         sample['image'] = np.concatenate(sample['image'], axis=0)
         sample['mask'] = np.concatenate(sample['mask'], axis=0)
@@ -431,10 +431,7 @@ class EnviroAtlas(GeoDataset):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

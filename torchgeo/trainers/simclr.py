@@ -5,10 +5,10 @@
 
 import os
 import warnings
-from typing import Any
+from typing import Any, cast
 
 import kornia.augmentation as K
-import lightning
+import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn as nn
@@ -171,7 +171,7 @@ class SimCLRTask(BaseTask):
             utils.load_state_dict(self.backbone, state_dict)
 
         # Create projection head
-        input_dim = self.backbone.num_features
+        input_dim = cast(int, self.backbone.num_features)
         if self.hparams['hidden_dim'] is None:
             self.hparams['hidden_dim'] = input_dim
         if self.hparams['output_dim'] is None:

@@ -20,7 +20,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+)
 
 
 class SODAA(NonGeoDataset):
@@ -95,7 +101,7 @@ class SODAA(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bbox_orientation: Literal['oriented', 'horizontal'] = 'horizontal',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -138,21 +144,21 @@ class SODAA(NonGeoDataset):
         """Return the number of samples in the dataset."""
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the sample at the given index.
 
         Args:
-            idx: index of the sample to return
+            index: index of the sample to return
 
         Returns:
             the sample at the given index
         """
-        row = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[index]
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
         boxes, labels = self._load_labels(os.path.join(self.root, row['label_path']))
 
-        sample: dict[str, Tensor] = {'image': image, 'label': labels}
+        sample: Sample = {'image': image, 'label': labels}
 
         if self.bbox_orientation == 'oriented':
             sample['bbox'] = boxes
@@ -281,7 +287,7 @@ class SODAA(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,

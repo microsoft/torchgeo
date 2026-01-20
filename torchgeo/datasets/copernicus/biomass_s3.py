@@ -10,9 +10,8 @@ from typing import Literal
 
 import pandas as pd
 import torch
-from torch import Tensor
 
-from ..utils import Path, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -74,7 +73,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['static', 'time-series'] = 'static',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -98,7 +97,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:

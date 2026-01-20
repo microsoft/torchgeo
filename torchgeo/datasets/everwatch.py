@@ -18,7 +18,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class EverWatch(NonGeoDataset):
@@ -82,7 +88,7 @@ class EverWatch(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -137,7 +143,7 @@ class EverWatch(NonGeoDataset):
         index = cast(pd.MultiIndex, self.annot_df.index)
         return len(index.levels[0])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -189,9 +195,10 @@ class EverWatch(NonGeoDataset):
         boxes = torch.from_numpy(
             sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values
         ).float()
-        labels = torch.Tensor(
-            [self.class2idx[label] for label in sample_df['label'].tolist()]
-        ).long()
+        labels = torch.tensor(
+            [self.class2idx[label] for label in sample_df['label'].tolist()],
+            dtype=torch.long,
+        )
         return boxes, labels
 
     def _verify(self) -> None:
@@ -236,10 +243,7 @@ class EverWatch(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        suptitle: str | None = None,
-        box_alpha: float = 0.7,
+        self, sample: Sample, suptitle: str | None = None, box_alpha: float = 0.7
     ) -> Figure:
         """Plot a sample from the dataset.
 

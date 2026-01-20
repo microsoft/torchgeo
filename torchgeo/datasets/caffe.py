@@ -20,7 +20,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class CaFFe(NonGeoDataset):
@@ -85,7 +85,7 @@ class CaFFe(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -139,16 +139,16 @@ class CaFFe(NonGeoDataset):
         """Return the number of images in the dataset."""
         return len(self.fpaths)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the image and mask at the given index.
 
         Args:
-            idx: index of the image and mask to return
+            index: index of the image and mask to return
 
         Returns:
             dict: a dict containing the image and mask
         """
-        zones_filename = os.path.basename(self.fpaths[idx])
+        zones_filename = os.path.basename(self.fpaths[index])
         img_filename = zones_filename.replace('_zones_', '_')
         front_filename = zones_filename.replace('_zones_', '_front_')
 
@@ -237,10 +237,7 @@ class CaFFe(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.zipfilename), self.root)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

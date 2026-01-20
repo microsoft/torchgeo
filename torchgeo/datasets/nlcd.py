@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, download_url
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -22,8 +22,8 @@ class NLCD(RasterDataset):
 
     The `Annual NLCD products
     <https://www.usgs.gov/centers/eros/science/annual-national-land-cover-database>`_
-    is an annual land cover product for the conterminous U.S. initially covering the period
-    from 1985 to 2023. The product is a joint effort between the United States Geological Survey
+    is an annual land cover product for the conterminous U.S. covering the period
+    from 1985 to 2024. The product is a joint effort between the United States Geological Survey
     (`USGS <https://www.usgs.gov/>`_) and the Multi-Resolution Land Characteristics
     Consortium (`MRLC <https://www.mrlc.gov/>`_).
 
@@ -59,55 +59,58 @@ class NLCD(RasterDataset):
     * https://doi.org/10.5066/P94UXNTS
 
     .. versionadded:: 0.5
+
     """
 
-    filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V0.tif'
-    filename_regex = r'Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V0\.tif'
+    filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V1.tif'
+    filename_regex = r'Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V1\.tif'
+    zipfile_glob = 'Annual_NLCD_LndCov_*_CU_C1V1.zip'
     date_format = '%Y'
     is_image = False
 
-    url = 'https://s3-us-west-2.amazonaws.com/mrlc/Annual_NLCD_LndCov_{}_CU_C1V0.tif'
+    url = 'https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/Annual_NLCD_LndCov_{}_CU_C1V1.zip'
 
     md5s: ClassVar[dict[int, str]] = {
-        1985: 'a2e1c5f0b34e9b15a63a9dc10e8d3ec2',
-        1986: 'da1d08ca51ac43abc14711c8d6139f1d',
-        1987: '2cb85e8f077c227605cd7bac62a72a75',
-        1988: 'b20fb987cc30926d2d125d045e02626d',
-        1989: 'dbe851cbea34d0a57c2a94eb745a1267',
-        1990: '1927e0e040b9ff513ff039749b64919b',
-        1991: 'eca73474843d6c58693eba62d70e507c',
-        1992: '8beda41ba79000f55a8e9358ba3fa5a4',
-        1993: '1a023552967cdac1111e9968ea62c879',
-        1994: 'acc30ce4f6cdd78af5f7887d17ac4de3',
-        1995: 'f728e8fc231b2e8e74a14201f500543a',
-        1996: 'd2580904244f89b20d6258150fbf4161',
-        1997: 'fec4e08032e162f2cc7dbe019d042609',
-        1998: '87ea19434de96ea99cd5d7991042816c',
-        1999: 'd4133737f20e75f3bd3a5baa32a668da',
-        2000: 'e20b61bb2e7f4034a33c9fd536798a01',
-        2001: 'b1f46ace9aedd17a89efab489cb67bc3',
-        2002: '57bf60d7cd473096af3bb125391bde63',
-        2003: '5e346854da9abf739152e85fee4c7aff',
-        2004: '13136f271f53a454358eb7ec12bda686',
-        2005: 'f00b66b57a23eb49a077e88704964a91',
-        2006: '074ba90de5e62a37a5f001b7572f6baa',
-        2007: 'cdef29a191cf165baaae80857ce5a980',
-        2008: 'da907c76a1f12739333148504fd111c9',
-        2009: '47890b306b875e681990b3db0c709da3',
-        2010: '9a81f405f9e2f45d581078afd53c2d4b',
-        2011: '13f4ef40b204aa1108dc0599d9546701',
-        2012: '66b33146f9a9d9491be10c59c51e3e33',
-        2013: 'f8d230f7dea493c47fbc74984ff856cc',
-        2014: '68eb07ce86c1f7c2546ec43c2f9f7029',
-        2015: 'f5a1b59fe54a70752f544c06cb965be4',
-        2016: 'f0c2e74824fc281a57821e28e2c7fe6e',
-        2017: 'a0aa8be0ed7d637f0f88f26d3742b20e',
-        2018: 'a01f31547837ff1dfec1aba07b89bbec',
-        2019: 'fa738201cddc1393dac4383b6ce2561a',
-        2020: 'aa8f51690c7b01f3b3b413be9a7c36d6',
-        2021: '47fc1794a64704a918b6ad586df4267c',
-        2022: '11359748229e138cde971947864104a4',
-        2023: '498ff8a512d32fe905720796fdb7fd52',
+        1985: 'f7f743f805ab7ae7936b0800ecbef7db',
+        1986: 'd93907e9a5492eeffe7cbf6723ddcc44',
+        1987: 'b70033acf5db6e31b2a55d345e6aec5a',
+        1988: '9259716eb6271c23318175e0f9b2ff87',
+        1989: '38d18b76359a920a5380bc95ae25fd5b',
+        1990: '73395f3d7eb407aa7174b2d8b0db3f15',
+        1991: 'b5f0b2b7e9a4df2aaf52613111a441f6',
+        1992: '8d7fe907c70ff272fcb5fc0ac8c73316',
+        1993: '4418f8e4b01461491918575b1a460464',
+        1994: '2291e36a8cbe8d7196796e51ceb6cba4',
+        1995: '482e2a5c5f8c2fd1640aff7b4e72b3f2',
+        1996: 'e811f432d5313951b2d05cf1501e306b',
+        1997: '2cab84eaafaea4772bbf826a530dd54e',
+        1998: '81ecc39e1bd449cd4d64e3c530f7786c',
+        1999: 'a08ef94f6a4e40c48ccec8f582200370',
+        2000: '57567a28b5f630aae56975f77f7d6dc1',
+        2001: 'ee2b75def58a680fc61a754833ef37c5',
+        2002: 'a48508b6bc8baead07c6d7d63168c16a',
+        2003: '445eb671d1073c44fe036931b7ab5243',
+        2004: '2cb5e27862f1ff338dd5fba0b04e8aa0',
+        2005: '2e0649de53505720a28a662d5a936998',
+        2006: '59b7a8351d9653e81d14a7b74e8bc0c9',
+        2007: '36ba9129c569efa83f32bedba7c4b99a',
+        2008: 'c574c8ac75a8474d29313d421e4d0b5b',
+        2009: '2e6573190078bd47153bf33014d0cbc1',
+        2010: '651107f0236d733e0ebd501862793370',
+        2011: '55e95a40118c7c4509e4ab833aa35d80',
+        2012: '95e2e3276f5cddf30790a18547c981aa',
+        2013: 'e7ffdafbca94de9e2c3d6b160cdac2f4',
+        2014: '984e2fb078ae67bdfe4cf81700d36754',
+        2015: '2d1b623da4b1a76c5163948b001d3c98',
+        2016: '6af6c05ddd87bd1cee7d49c4d08a6f61',
+        2017: '46e12333ed2ab0170666344e9e6da406',
+        2018: 'fbde066fdbc325de4157c53c2d294117',
+        2019: 'cb707a4cfec22c743338282b60d08f79',
+        2020: '986cb81ca0483d3ee52c4904682b2c4d',
+        2021: '63b859744b5b12ffbd13b9896a587428',
+        2022: '68514fedcf928b44fc562d166d938f02',
+        2023: '2ac10a23e6a1ccef47b2a8e15ec3ba3c',
+        2024: '3e0ded4eb7bb5d355743abe9552b3588',
     }
 
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
@@ -135,9 +138,9 @@ class NLCD(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2023],
+        years: list[int] = [2024],
         classes: list[int] = list(cmap.keys()),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -190,32 +193,37 @@ class NLCD(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
+        sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
-        # Check if the TIFF files for the specified years have already been downloaded
+        # Check if the extracted files already exist
+        if self.files:
+            return
+
+        # Check if the zip files have already been downloaded
         exists = []
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            filename_year = self.filename_glob.replace('*', str(year), 1)
-            assert isinstance(self.paths, str | os.PathLike)
-            pathname = os.path.join(self.paths, filename_year)
+            pathname = os.path.join(
+                self.paths, self.zipfile_glob.replace('*', str(year))
+            )
             if os.path.exists(pathname):
                 exists.append(True)
+                self._extract()
             else:
                 exists.append(False)
 
@@ -228,6 +236,7 @@ class NLCD(RasterDataset):
 
         # Download the dataset
         self._download()
+        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -238,11 +247,16 @@ class NLCD(RasterDataset):
                 md5=self.md5s[year] if self.checksum else None,
             )
 
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        for year in self.years:
+            zipfile_name = self.zipfile_glob.replace('*', str(year))
+            pathname = os.path.join(self.paths, zipfile_name)
+            extract_archive(pathname, self.paths)
+
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
