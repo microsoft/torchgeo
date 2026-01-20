@@ -9,16 +9,15 @@ Datasets, samplers, transforms, and pre-trained models for geospatial data.
 pip install -e ".[all]"
 
 # Lint (run from repo root)
-pre-commit run --all-files
-# or: ruff format && ruff check && mypy && prettier --write .
+ruff format && ruff check && mypy && prettier --write .
 
 # Test
 pytest --cov=torchgeo tests/                                                        # all (skip slow)
-pytest --cov=torchgeo.datasets.foo tests/datasets/test_foo.py                       # single file
-pytest --cov=torchgeo.datasets.foo tests/datasets/test_foo.py::TestFooDataset::test_getitem  # single method
+pytest --cov=torchgeo.datasets tests/datasets/test_foo.py                          # single file
+pytest --cov=torchgeo.datasets tests/datasets/test_foo.py::TestFooDataset::test_getitem  # single method
 pytest -m "" --cov=torchgeo tests/                                                  # include slow
 
-# Docs (requires Pandoc + pip install -e ".[docs]")
+# Docs (requires Pandoc + pip install ".[docs]")
 cd docs && make clean && make html
 ```
 
@@ -43,13 +42,13 @@ tests/{data/<dataset>/,datasets/,...}
 - Single quotes, no trailing commas
 - Imports: isort order (stdlib → third-party → local)
 - Local imports (`from .utils`) in `torchgeo/`; absolute (`from torchgeo`) in `tests/`
-- `# noqa: E501` only for unsplittable URLs
 
 ### Type Hints (strict mypy)
 
 - All functions require full annotations
 - Union: `X | Y` (not `Union[X, Y]`)
-- Avoid `Any`; use `Sequence` over `List`/`Tuple`
+- Avoid `Any`; use `Sequence` for parameters, `list`/`tuple` for return values
+- Prefer built-in types (`list`, `dict`, `tuple`) over `typing.List`, etc.
 - `type: ignore` only for external lib issues
 
 ### Docstrings (Google style)
@@ -71,7 +70,6 @@ def func(x: Tensor, weights: Weights | None = None) -> Tensor:
     Warns:
         UserWarning: If weights are outdated.
 
-    .. versionadded:: 0.6
     """
 ```
 
@@ -84,8 +82,9 @@ def func(x: Tensor, weights: Weights | None = None) -> Tensor:
 ### RST Conventions (docs/docstrings)
 
 - Monospace: double backticks ` ``code`` `
+- Bold: `**text**`
 - Italics: `*text*`
-- Single backticks create links (not monospace)
+- Single backticks create links only when followed by underscore; otherwise italics
 - Blank line required before bulleted lists
 
 ### Classes
@@ -102,8 +101,6 @@ class Foo(NonGeoDataset):
     def __init__(self, root: Path = 'data', download: bool = False) -> None:
 ```
 
-- Class attributes for constants (url, classes, filename_glob, etc.)
-
 ## Testing
 
 ```python
@@ -116,16 +113,12 @@ class TestFooDataset:
         x = dataset[0]
         assert x['image'].ndim == 3
         assert x['mask'].ndim == 2
-
-    @pytest.mark.slow
-    def test_download(self, tmp_path: Path) -> None:
-        FooDataset(root=tmp_path, download=True)
 ```
 
-- 100% coverage required; check with `pytest --cov=torchgeo.datasets.foo tests/datasets/test_foo.py`
+- 100% coverage required; check with `pytest --cov=torchgeo.datasets tests/datasets/test_foo.py`
 - Fake data in `tests/data/<dataset>/` (never real data); `data.py` generates it
 - `@pytest.mark.slow` for downloads/network
-- `pytest.importorskip('pkg')` for optional deps
+- `pytest.importorskip('pkg', minversion='X.X')` for optional deps
 - `plt.close()` at end of plot tests
 
 ## Dataset Implementation
@@ -138,9 +131,8 @@ class MyDataset(RasterDataset):
     is_image = True
 ```
 
-- `root="data"` default; `_verify()` for existence checks
+- `root='data'` default; `_verify()` for existence checks
 - Sample dict: `{"image": tensor, "mask": tensor}`
-- Use `torchvision.datasets.utils` for downloads
 - PIL for non-geo images, rasterio for geo images
 
 ### New Dataset Checklist
@@ -155,9 +147,10 @@ class MyDataset(RasterDataset):
 ## Error Handling
 
 - Never catch bare `Exception`; be specific
-- Include context: `f"Dataset not found in {self.root}"`
+- Utilize torchgeo exceptions from `torchgeo.datasets.errors` if applicable, e.g. `DatasetNotFoundError`, `RGBBandsMissingError`, `DependencyNotFoundError`
 - Document in `Raises` section
-- Optional deps: lazy import + helpful ImportError (`"scipy required for ..."`)
+- Optional deps: lazy import + helpful ImportError (`'scipy required for ...'`)
+- Use `None` only for mutable defaults; prefer immutable tuples
 
 ## Geospatial
 
@@ -181,9 +174,8 @@ class MyDataset(RasterDataset):
 
 ## Performance
 
-- Compile regex outside loops; glob once, reuse result
 - Class attributes for reusable objects (not per-call instantiation)
-- `torch.view` > reshape; specify `dim` in `squeeze()`
+- Prefer `einops` operations for readability, like `einops.rearrange` and `einops.reshape`; always specify `dim` in `squeeze()`
 - Checksums slow—make optional
 
 ## Models
@@ -200,7 +192,7 @@ class MyDataset(RasterDataset):
 
 ## Git
 
-- Conventional commits: `feat|fix|refactor|docs|test|chore: description`
+- PR titles should match release notes style; use milestones for backports
 - Add license header to new files
 - Update MD5s when test files change
 - Separate logical changes into separate PRs
