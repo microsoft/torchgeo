@@ -461,21 +461,20 @@ def swin_b(
     if weights:
         # here we use the class directly to support non-default larger window-size
         window_size = weights.meta.get('window_size', 7)
-        model: SwinTransformer = torchvision.models.SwinTransformer(
-            patch_size=[4, 4],
-            embed_dim=128,
-            depths=[2, 2, 18, 2],
-            num_heads=[4, 8, 16, 32],
-            window_size=[window_size, window_size],
-            stochastic_depth_prob=0.5,
-            *args,
-            **kwargs,
-        )
+        kwargs |= {
+            'patch_size': [4, 4],
+            'embed_dim': 128,
+            'depths': [2, 2, 18, 2],
+            'num_heads': [4, 8, 16, 32],
+            'window_size': [window_size, window_size],
+            'stochastic_depth_prob': 0.5,
+        }
+        model: SwinTransformer = torchvision.models.SwinTransformer(*args, **kwargs)
 
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # type: ignore[not-subscriptable]
         # same as for swinv2
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # type: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
