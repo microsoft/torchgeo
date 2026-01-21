@@ -300,15 +300,18 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def check_integrity(
-    fpath: Path, md5: str | None = None, sha256: str | None = None
-) -> bool:
+def check_integrity(fpath: Path, md5: str | None = None, **kwargs: str | None) -> bool:
     """Check the integrity of a file.
+
+    Examples:
+        check_integrity(fpath)
+        check_integrity(fpath, md5='...')
+        check_integrity(fpath, sha256='...')
 
     Args:
         fpath: File path to check.
         md5: Expected MD5 checksum.
-        sha256: Expected SHA256 checksum.
+        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
 
     Returns:
         True if file exists and checksum is None or matches, else False.
@@ -316,14 +319,14 @@ def check_integrity(
     if not os.path.isfile(fpath):
         return False
 
-    if md5 is None and sha256 is None:
-        return True
+    kwargs['md5'] = md5
 
-    with open(fpath, 'rb') as f:
-        if md5:
-            return hashlib.file_digest(f, 'md5').hexdigest() == md5
-        else:
-            return hashlib.file_digest(f, 'sha256').hexdigest() == sha256
+    for algorithm, checksum in kwargs.items():
+        if checksum:
+            with open(fpath, 'rb') as f:
+                return hashlib.file_digest(f, algorithm).hexdigest() == checksum
+
+    return True
 
 
 def extract_archive(
