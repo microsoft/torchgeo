@@ -59,13 +59,13 @@ class TestEuroCrops:
         EuroCrops(dataset.paths, download=True)
 
     def test_plot(self, dataset: EuroCrops) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
 
     def test_plot_prediction(self, dataset: EuroCrops) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
 
@@ -73,9 +73,9 @@ class TestEuroCrops:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EuroCrops(tmp_path)
 
-    def test_invalid_query(self, dataset: EuroCrops) -> None:
+    def test_invalid_index(self, dataset: EuroCrops) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[200:200, 200:200, pd.Timestamp.min : pd.Timestamp.min]
 

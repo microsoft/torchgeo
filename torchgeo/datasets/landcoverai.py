@@ -120,17 +120,17 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, query: Any) -> Sample:
+    def __getitem__(self, index: Any) -> Sample:
         """Retrieve image, mask and metadata indexed by index.
 
         Args:
-            query: coordinates or an index
+            index: coordinates or an index
 
         Returns:
             sample of image, mask and metadata at that index
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: if index is not found in the dataset
         """
 
     @abc.abstractmethod
@@ -239,37 +239,37 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        img_filepaths = index.filepath
+        img_filepaths = df.filepath
         mask_filepaths = img_filepaths.apply(lambda x: x.replace('images', 'masks'))
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        img = self._merge_files(img_filepaths, query, self.band_indexes)
-        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        img = self._merge_files(img_filepaths, index, self.band_indexes)
+        mask = self._merge_files(mask_filepaths, index, self.band_indexes)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'image': img.float(),
             'mask': mask.long(),
             'transform': torch.tensor(transform),

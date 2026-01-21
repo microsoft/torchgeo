@@ -203,16 +203,16 @@ class DIOR(NonGeoDataset):
         """
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> Sample:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
-            idx: index to return
+            index: index to return
 
         Returns:
             data and label at that index
         """
-        row = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[index]
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
 

@@ -271,30 +271,30 @@ class OpenBuildings(VectorDataset):
         if crs is not None and crs != self._source_crs:
             self.index.to_crs(crs, inplace=True)
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        shapes = self._filter_geometries(query, index.filepath)
+        shapes = self._filter_geometries(index, df.filepath)
 
         # Rasterize geometries
         width = (x.stop - x.start) / x.step
@@ -313,7 +313,7 @@ class OpenBuildings(VectorDataset):
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'mask': masks,
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
@@ -323,21 +323,21 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: GeoSlice, filepaths: list[str]
+        self, index: GeoSlice, filepaths: list[str]
     ) -> list[dict[str, Any]]:
-        """Filters a df read from the polygon csv file based on query and conf thresh.
+        """Filters a df read from the polygon csv file based on index and conf thresh.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             filepaths: filepaths to files that were hits from rmtree index
 
         Returns:
             List with all polygons from all hit filepaths
 
         """
-        x, y, _ = self._disambiguate_slice(query)
+        x, y, _ = self._disambiguate_slice(index)
 
-        # We need to know the bounding box of the query in the source CRS
+        # We need to know the bounding box of the index in the source CRS
         transformer = pyproj.Transformer.from_crs(
             self.crs, self._source_crs, always_xy=True
         )

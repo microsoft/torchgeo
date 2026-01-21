@@ -63,14 +63,14 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()

@@ -185,40 +185,40 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        mask = self._merge_files(index.filepath, query)
+        mask = self._merge_files(df.filepath, index)
 
-        std_error_paths = index.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
-        std_err_mask = self._merge_files(std_error_paths, query)
+        std_error_paths = df.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
+        std_err_mask = self._merge_files(std_error_paths, index)
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'mask': mask,
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 

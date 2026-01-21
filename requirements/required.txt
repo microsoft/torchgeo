@@ -6,8 +6,7 @@ kornia==0.8.2
 lightly==1.5.22
 lightning==2.6.0
 matplotlib==3.10.8
-numpy==2.3.5; python_version=='3.14'
-numpy==2.2.4; python_version<'3.14'
+numpy==2.4.1
 pandas==2.3.3
 pillow==12.1.0
 pyproj==3.7.2

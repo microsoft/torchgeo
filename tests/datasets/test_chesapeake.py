@@ -72,17 +72,17 @@ class TestChesapeakeDC:
             ChesapeakeDC(tmp_path, checksum=True)
 
     def test_plot(self, dataset: ChesapeakeDC) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: ChesapeakeDC) -> None:
+    def test_invalid_index(self, dataset: ChesapeakeDC) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -186,18 +186,18 @@ class TestChesapeakeCVPR:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ChesapeakeCVPR(tmp_path, checksum=True)
 
-    def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
+    def test_out_of_bounds_index(self, dataset: ChesapeakeCVPR) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_multiple_hits_query(self, dataset: ChesapeakeCVPR) -> None:
+    def test_multiple_hits_index(self, dataset: ChesapeakeCVPR) -> None:
         ds = ChesapeakeCVPR(
             root=dataset.root, splits=['de-train', 'de-test'], layers=dataset.layers
         )
         with pytest.raises(
-            IndexError, match=r'query: .* spans multiple tiles which is not valid'
+            IndexError, match=r'index: .* spans multiple tiles which is not valid'
         ):
             ds[dataset.bounds]
 

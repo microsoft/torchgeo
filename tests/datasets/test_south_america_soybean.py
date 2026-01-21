@@ -65,14 +65,14 @@ class TestSouthAmericaSoybean:
         SouthAmericaSoybean(root)
 
     def test_plot(self, dataset: SouthAmericaSoybean) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: SouthAmericaSoybean) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -81,8 +81,8 @@ class TestSouthAmericaSoybean:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SouthAmericaSoybean(tmp_path)
 
-    def test_invalid_query(self, dataset: SouthAmericaSoybean) -> None:
+    def test_invalid_index(self, dataset: SouthAmericaSoybean) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
