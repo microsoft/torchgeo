@@ -7,6 +7,7 @@ from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .cnnlstm import CNNLSTM
 from .changevit import ChangeViT
 from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
@@ -68,6 +69,7 @@ from .vit import (
 )
 
 __all__ = (
+    'CNNLSTM',
     'BTC',
     'CROMA',
     'DOFA',

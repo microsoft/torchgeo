@@ -16,6 +16,7 @@ Model Architectures
    models/changestar
    models/changevit
    models/convlstm
+   models/cnnlstm
    models/copernicus-fm
    models/croma
    models/dofa
