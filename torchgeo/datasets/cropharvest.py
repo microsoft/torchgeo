@@ -230,7 +230,7 @@ class CropHarvest(NonGeoDataset):
         ]
         properties = row.to_dict(orient='records')[0]
         label = 'None'
-        if properties['properties.label']:
+        if isinstance(properties['properties.label'], str):
             label = properties['properties.label']
         elif properties['properties.is_crop'] == 1:
             label = 'Other'
