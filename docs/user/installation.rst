@@ -36,7 +36,39 @@ By default, only required dependencies are installed. TorchGeo has a number of o
 
 See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
 
+uv
+--
+
+The fastest way to install TorchGeo is with `uv <https://docs.astral.sh/uv/>`_, a modern Python package manager:
+
+.. code-block:: console
+
+   $ uv pip install torchgeo
+
+If you want to install a development version, you can use a VCS project URL:
+
+.. code-block:: console
+
+   $ uv pip install git+https://github.com/torchgeo/torchgeo.git
+
+or a local git checkout:
+
+.. code-block:: console
+
+   $ git clone https://github.com/torchgeo/torchgeo.git
+   $ cd torchgeo
+   $ uv pip install .
+
+Optional dependencies can be installed the same way:
+
+.. code-block:: console
+
+   $ uv pip install torchgeo[datasets,models]
+
+See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
+
 conda
+
 -----
 
 First, you'll want to configure conda to only use the conda-forge channel:

@@ -10,14 +10,14 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
-      - name: Set up python
-        uses: actions/setup-python@v6.1.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
-      - name: Install pip dependencies
-        run: pip install build
-      - name: List pip dependencies
-        run: pip list
+      - name: Install dependencies
+        run: uv pip install build
+      - name: List dependencies
+        run: uv pip list
       - name: Build project
         run: python3 -m build
       - name: Upload artifacts

@@ -507,7 +507,7 @@ def test_lazy_import(name: str) -> None:
 
 @pytest.mark.parametrize('name', ['foo_bar', 'foo_bar.baz'])
 def test_lazy_import_missing(name: str) -> None:
-    with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
+    with pytest.raises(DependencyNotFoundError, match='uv pip install foo-bar'):
         lazy_import(name)
 
 
