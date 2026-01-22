@@ -39,5 +39,6 @@ microsoft-aurora==1.6.0
 # tests
 nbmake==1.3.3
 packaging==21.0
+pydantic<2  # nbmake 1.3.3 is not compatible with pydantic 2.x
 pytest==7.3.2
 pytest-cov==4.0.0
