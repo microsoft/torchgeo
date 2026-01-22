@@ -197,3 +197,74 @@ class MyDataset(RasterDataset):
 - Update MD5s when test files change
 - Separate logical changes into separate PRs
 - Keep files < 500 LOC
+
+## Boundaries
+
+### ✅ Always
+- Specify CRS explicitly when creating datasets
+- Use TorchGeo samplers (RandomGeoSampler, GridGeoSampler)
+- Handle multispectral data correctly (variable channels)
+- Use spatial transforms that preserve geospatial alignment
+- Validate coordinate systems match when combining datasets
+- Use appropriate resolution for different data sources
+- Test with small spatial regions before full scenes
+
+### ⚠️ Ask First
+- Changing CRS or resolution of datasets
+- Implementing custom sampling strategies
+- Modifying pretrained model architectures
+- Processing very large scenes (>10GB)
+- Implementing custom geospatial transforms
+- Using non-standard raster formats
+
+### 🚫 Never
+- Mix datasets with different CRS without reprojection
+- Use standard PyTorch samplers (won't respect spatial indexing)
+- Apply non-spatial transforms to both image and mask
+- Ignore resolution differences between datasets
+- Process entire large scenes in memory
+- Use RGB-only models for multispectral data without modification
+- Assume all bands have same scale/range
+- Forget to normalize multispectral imagery
+
+## Code Quality Standards
+
+**CRITICAL: Avoid AI Slop - Make Minimal Changes Only**
+
+- **Change ONLY what's necessary** to fix TorchGeo issues or add features
+- **No unnecessary refactoring** - don't restructure working geospatial pipelines
+- **No extra features** - implement exactly what's requested
+- **No placeholder comments** like "# TODO: add transform" or "# Optimize later"
+- **No redundant code** - don't duplicate existing TorchGeo utilities
+- **Preserve existing patterns** - match the TorchGeo coding style in use
+- **Don't over-engineer** - avoid complex data pipelines unless needed
+- **No premature optimization** - don't add tiling or caching unless required
+- **Keep datasets simple** - avoid excessive preprocessing or augmentation
+- **No boilerplate bloat** - skip unnecessary samplers or transforms
+
+**When making changes:**
+1. Identify the minimal TorchGeo change needed
+2. Reuse existing TorchGeo datasets, samplers, and transforms
+3. Make surgical edits - change only the specific geospatial logic needed
+4. Keep the same TorchGeo patterns (dataset composition, sampling strategies)
+5. Don't add complex features unless there's proven benefit
+
+### Common Pitfalls to Avoid
+
+| Pitfall | Impact | Fix |
+|---------|--------|-----|
+| CRS mismatch | Spatial misalignment | Ensure all datasets use same CRS |
+| Wrong sampler | Invalid samples | Use GeoSamplers, not standard samplers |
+| Missing normalization | Poor convergence | Normalize multispectral bands |
+| Ignoring resolution | Scale issues | Match resolution across datasets |
+| Loading full scenes | OOM errors | Use samplers and patch-based processing |
+| RGB-only models | Can't use all bands | Adapt models for N channels |
+
+### Error Handling
+
+- Catch CRS mismatch errors early
+- Validate bounding boxes are within dataset bounds
+- Check for missing or corrupted raster files
+- Handle edge cases in grid sampling (partial tiles)
+- Log spatial metadata for debugging
+- Validate multispectral band counts
