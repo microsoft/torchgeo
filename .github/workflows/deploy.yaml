@@ -15,9 +15,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install dependencies
-        run: uv pip install build
+        run: uv pip install --system build
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Build project
         run: python3 -m build
       - name: Upload artifacts

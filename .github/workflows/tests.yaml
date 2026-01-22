@@ -30,9 +30,9 @@ jobs:
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: ${{ matrix.os }}-${{ matrix.python-version }}
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
+        run: uv pip install --system -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -55,9 +55,9 @@ jobs:
           cache-dependency-glob: 'requirements/min-reqs.old'
           cache-suffix: minimum
       - name: Install dependencies
-        run: uv pip install -r requirements/min-reqs.old
+        run: uv pip install --system -r requirements/min-reqs.old
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -80,9 +80,9 @@ jobs:
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: optional
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/tests.txt
+        run: uv pip install --system -r requirements/required.txt -r requirements/tests.txt
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml

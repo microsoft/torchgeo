@@ -26,9 +26,9 @@ jobs:
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: mypy
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
+        run: uv pip install --system -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run mypy checks
         run: mypy
   ruff:
@@ -45,9 +45,9 @@ jobs:
           cache-dependency-glob: 'requirements/style.txt'
           cache-suffix: ruff
       - name: Install dependencies
-        run: uv pip install -r requirements/style.txt
+        run: uv pip install --system -r requirements/style.txt
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run ruff checks
         run: |
           ruff check --output-format=github --no-fix .

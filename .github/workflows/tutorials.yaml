@@ -28,9 +28,9 @@ jobs:
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: tutorials
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
+        run: uv pip install --system -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
       - name: List dependencies
-        run: uv pip list
+        run: uv pip list --system
       - name: Run notebook checks
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
