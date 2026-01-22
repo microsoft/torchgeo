@@ -201,6 +201,7 @@ class MyDataset(RasterDataset):
 ## Boundaries
 
 ### Always
+
 - Specify CRS explicitly when creating datasets
 - Use TorchGeo samplers (RandomGeoSampler, GridGeoSampler)
 - Handle multispectral data correctly (variable channels)
@@ -210,6 +211,7 @@ class MyDataset(RasterDataset):
 - Test with small spatial regions before full scenes
 
 ### Ask First
+
 - Changing CRS or resolution of datasets
 - Implementing custom sampling strategies
 - Modifying pretrained model architectures
@@ -218,6 +220,7 @@ class MyDataset(RasterDataset):
 - Using non-standard raster formats
 
 ### Never
+
 - Mix datasets with different CRS without reprojection
 - Use standard PyTorch samplers (won't respect spatial indexing)
 - Apply non-spatial transforms to both image and mask
@@ -243,6 +246,7 @@ class MyDataset(RasterDataset):
 - **No boilerplate bloat** - skip unnecessary samplers or transforms
 
 **When making changes:**
+
 1. Identify the minimal TorchGeo change needed
 2. Reuse existing TorchGeo datasets, samplers, and transforms
 3. Make surgical edits - change only the specific geospatial logic needed
@@ -251,14 +255,14 @@ class MyDataset(RasterDataset):
 
 ### Common Pitfalls to Avoid
 
-| Pitfall             | Impact             | Fix                                   |
-| ------------------ | ------------------ | ------------------------------------- |
-| CRS mismatch        | Spatial misalignment | Ensure all datasets use same CRS      |
-| Wrong sampler       | Invalid samples     | Use GeoSamplers, not standard samplers |
-| Missing normalization | Poor convergence  | Normalize multispectral bands         |
-| Ignoring resolution | Scale issues        | Match resolution across datasets      |
-| Loading full scenes | OOM errors          | Use samplers and patch-based processing |
-| RGB-only models     | Can't use all bands | Adapt models for N channels           |
+| Pitfall               | Impact               | Fix                                     |
+| --------------------- | -------------------- | --------------------------------------- |
+| CRS mismatch          | Spatial misalignment | Ensure all datasets use same CRS        |
+| Wrong sampler         | Invalid samples      | Use GeoSamplers, not standard samplers  |
+| Missing normalization | Poor convergence     | Normalize multispectral bands           |
+| Ignoring resolution   | Scale issues         | Match resolution across datasets        |
+| Loading full scenes   | OOM errors           | Use samplers and patch-based processing |
+| RGB-only models       | Can't use all bands  | Adapt models for N channels             |
 
 ### Error Handling
 
