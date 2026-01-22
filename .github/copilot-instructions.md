@@ -251,14 +251,14 @@ class MyDataset(RasterDataset):
 
 ### Common Pitfalls to Avoid
 
-| Pitfall | Impact | Fix |
-|---------|--------|-----|
-| CRS mismatch | Spatial misalignment | Ensure all datasets use same CRS |
-| Wrong sampler | Invalid samples | Use GeoSamplers, not standard samplers |
-| Missing normalization | Poor convergence | Normalize multispectral bands |
-| Ignoring resolution | Scale issues | Match resolution across datasets |
-| Loading full scenes | OOM errors | Use samplers and patch-based processing |
-| RGB-only models | Can't use all bands | Adapt models for N channels |
+| Pitfall             | Impact             | Fix                                   |
+| ------------------ | ------------------ | ------------------------------------- |
+| CRS mismatch        | Spatial misalignment | Ensure all datasets use same CRS      |
+| Wrong sampler       | Invalid samples     | Use GeoSamplers, not standard samplers |
+| Missing normalization | Poor convergence  | Normalize multispectral bands         |
+| Ignoring resolution | Scale issues        | Match resolution across datasets      |
+| Loading full scenes | OOM errors          | Use samplers and patch-based processing |
+| RGB-only models     | Can't use all bands | Adapt models for N channels           |
 
 ### Error Handling
 
