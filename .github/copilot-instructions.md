@@ -200,7 +200,7 @@ class MyDataset(RasterDataset):
 
 ## Boundaries
 
-### ✅ Always
+### Always
 - Specify CRS explicitly when creating datasets
 - Use TorchGeo samplers (RandomGeoSampler, GridGeoSampler)
 - Handle multispectral data correctly (variable channels)
@@ -209,7 +209,7 @@ class MyDataset(RasterDataset):
 - Use appropriate resolution for different data sources
 - Test with small spatial regions before full scenes
 
-### ⚠️ Ask First
+### Ask First
 - Changing CRS or resolution of datasets
 - Implementing custom sampling strategies
 - Modifying pretrained model architectures
@@ -217,7 +217,7 @@ class MyDataset(RasterDataset):
 - Implementing custom geospatial transforms
 - Using non-standard raster formats
 
-### 🚫 Never
+### Never
 - Mix datasets with different CRS without reprojection
 - Use standard PyTorch samplers (won't respect spatial indexing)
 - Apply non-spatial transforms to both image and mask
