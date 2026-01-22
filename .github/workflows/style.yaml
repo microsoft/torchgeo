@@ -32,7 +32,9 @@ jobs:
       - name: List dependencies
         run: uv pip list
       - name: Run mypy checks
-        run: uv run mypy
+        run: |
+          source .venv/bin/activate
+          mypy
   ruff:
     name: ruff
     runs-on: ubuntu-latest
@@ -54,8 +56,9 @@ jobs:
         run: uv pip list
       - name: Run ruff checks
         run: |
-          uv run ruff check --output-format=github --no-fix .
-          uv run ruff format --diff
+          source .venv/bin/activate
+          ruff check --output-format=github --no-fix .
+          ruff format --diff
   prettier:
     name: prettier
     runs-on: ubuntu-latest

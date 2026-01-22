@@ -21,7 +21,9 @@ jobs:
       - name: List dependencies
         run: uv pip list
       - name: Build project
-        run: uv run python -m build
+        run: |
+          source .venv/bin/activate
+          python -m build
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
         with:
