@@ -1,78 +1,90 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import torch
+from pathlib import Path
+from typing import cast
+
 import pytest
-from torchgeo.models import galileo, GalileoWeights, GalileoEncoder
-from torchgeo.models.galileo import GalileoVariant
-from typing import Optional
+import torch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
+from torch import nn
+from torchvision.models._api import WeightsEnum
+
+from torchgeo.models import galileo, GalileoWeights
 
 
-@pytest.mark.parametrize("variant,dim", [
-    ("nano", 192),
-    ("tiny", 384),
-    ("base", 768),
-])
-def test_galileo_forward_shapes(variant: str, dim: int) -> None:
-    model = galileo(variant=variant)
-    x = torch.randn(2, 4, 224, 224)
-    y = model(x)
+class TestGalileo:
+    @pytest.fixture(params=[*GalileoWeights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
 
-    assert y.shape == (2, dim)
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        """
+        Create a fake local checkpoint matching the Galileo encoder
+        and monkeypatch the weights URL to point to it.
+        """
+        weights = GalileoWeights.GALILEO_S2_NANO_V1
+        path = tmp_path / f"{weights}.pth"
 
-def test_galileo_invalid_input_size() -> None:
-    model = galileo()
-    x = torch.randn(1, 4, 256, 256)
+        model = galileo(variant=weights.meta["variant"])
+        torch.save(model.state_dict(), path)
 
-    with pytest.raises(ValueError):
-        model(x)
+        monkeypatch.setattr(weights.value, "url", str(path))
+        return weights
 
+    def test_galileo(self) -> None:
+        galileo()
 
-def test_galileo_variant_weight_mismatch() -> None:
-    with pytest.raises(ValueError):
-        galileo(
-            variant="tiny",
-            weights=GalileoWeights.GALILEO_S2_BASE_V1,
-        )
+    def test_galileo_weights(self, mocked_weights: WeightsEnum) -> None:
+        galileo(weights=mocked_weights)
 
-def test_galileo_load_state_dict(monkeypatch):
-    model = galileo(variant="nano")
+    def test_forward_shape(self, weights: WeightsEnum) -> None:
+        variant = weights.meta["variant"]
+        embed_dim = weights.meta["embed_dim"]
 
-    dummy_state = {
-        k: torch.randn_like(v)
-        for k, v in model.state_dict().items()
-    }
+        model = galileo(variant=variant)
+        x = torch.randn(2, 4, 224, 224)
+        y = model(x)
 
-    def fake_get_state_dict(*args, **kwargs):
-        return dummy_state
+        assert y.shape == (2, embed_dim)
 
-    monkeypatch.setattr(
-        GalileoWeights.GALILEO_S2_NANO_V1,
-        "get_state_dict",
-        fake_get_state_dict,
-    )
+    def test_invalid_input_shape(self) -> None:
+        model = galileo()
+        x = torch.randn(1, 4, 256, 256)
 
-def galileo(
-    *,
-    variant: GalileoVariant = "base",
-    weights: Optional[GalileoWeights] = None,
-) -> GalileoEncoder:
+        with pytest.raises(ValueError):
+            model(x)
 
-    if weights is not None:
-        weights = GalileoWeights.verify(weights)
-        expected = weights.meta["variant"]
-
-        # ✅ FAIL FAST — no checkpoint touched
-        if variant != expected:
-            raise ValueError(
-                f"Variant '{variant}' does not match weights '{expected}'"
+    def test_variant_weight_mismatch(self) -> None:
+        with pytest.raises(ValueError):
+            galileo(
+                variant="tiny",
+                weights=GalileoWeights.GALILEO_S2_BASE_V1,
             )
 
-    model = GalileoEncoder(variant=variant)
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta["in_channels"]
+        sample = {
+            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+        }
+        weights.transforms(sample)
 
-    if weights is not None:
-        state_dict = weights.get_state_dict(progress=True, map_location="cpu")
-        model.load_state_dict(state_dict, strict=False)
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Ensure transforms are torch.export compatible."""
+        torch = pytest.importorskip("torch", minversion="2.6.0")
+        torch.compiler.reset()
 
-    return model
+        c = weights.meta["in_channels"]
+        inputs = (torch.randn(1, c, 224, 224),)
+        torch.export.export(weights.transforms, inputs)
 
+    @pytest.mark.slow
+    def test_galileo_download(self, weights: WeightsEnum) -> None:
+        galileo(weights=weights)
