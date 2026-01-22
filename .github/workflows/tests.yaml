@@ -37,9 +37,8 @@ jobs:
         run: uv pip list
       - name: Run pytest checks
         run: |
-          source .venv/bin/activate || .venv\Scripts\activate
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run --no-sync pytest --cov=torchgeo --cov-report=xml
+          uv run --no-sync python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -65,9 +64,8 @@ jobs:
         run: uv pip list
       - name: Run pytest checks
         run: |
-          source .venv/bin/activate
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run --no-sync pytest --cov=torchgeo --cov-report=xml
+          uv run --no-sync python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -93,9 +91,8 @@ jobs:
         run: uv pip list
       - name: Run pytest checks
         run: |
-          source .venv/bin/activate
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run --no-sync pytest --cov=torchgeo --cov-report=xml
+          uv run --no-sync python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
