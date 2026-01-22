@@ -31,7 +31,7 @@ rioxarray==0.14.1
 scikit-image==0.22.0
 scipy==1.11.2
 webdataset==0.2.4
-xarray==0.17.0
+xarray==0.17
 
 # models
 microsoft-aurora==1.6.0
