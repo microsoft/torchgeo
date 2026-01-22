@@ -14,12 +14,14 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
+      - name: Create virtual environment
+        run: uv venv
       - name: Install dependencies
-        run: uv pip install --system build
+        run: uv pip install build
       - name: List dependencies
-        run: uv pip list --system
+        run: uv pip list
       - name: Build project
-        run: python3 -m build
+        run: uv run python -m build
       - name: Upload artifacts
         uses: actions/upload-artifact@v6.0.0
         with:

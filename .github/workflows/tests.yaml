@@ -29,14 +29,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: ${{ matrix.os }}-${{ matrix.python-version }}
+      - name: Create virtual environment
+        run: uv venv
       - name: Install dependencies
-        run: uv pip install --system -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
+        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
       - name: List dependencies
-        run: uv pip list --system
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -54,14 +56,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: 'requirements/min-reqs.old'
           cache-suffix: minimum
+      - name: Create virtual environment
+        run: uv venv
       - name: Install dependencies
-        run: uv pip install --system -r requirements/min-reqs.old
+        run: uv pip install -r requirements/min-reqs.old
       - name: List dependencies
-        run: uv pip list --system
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -79,14 +83,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: 'requirements/*.txt'
           cache-suffix: optional
+      - name: Create virtual environment
+        run: uv venv
       - name: Install dependencies
-        run: uv pip install --system -r requirements/required.txt -r requirements/tests.txt
+        run: uv pip install -r requirements/required.txt -r requirements/tests.txt
       - name: List dependencies
-        run: uv pip list --system
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
