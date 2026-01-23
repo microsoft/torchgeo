@@ -16,56 +16,46 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.1.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.2
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install .[datasets,tests]
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          enable-cache: true
+          cache-dependency-glob: 'pyproject.toml'
+          cache-suffix: integration
+      - name: Create virtual environment
+        run: uv venv
+      - name: Install dependencies
+        run: uv pip install .[datasets,tests]
+      - name: List dependencies
+        run: uv pip list
       - name: Run integration checks
         run: |
-          pytest -m slow --durations=10 tests/samplers
-          pytest -m slow --durations=10 tests/trainers
-          python -m torchgeo --help
-          torchgeo --help
+          uv run --no-sync pytest -m slow --durations=10 tests/samplers
+          uv run --no-sync pytest -m slow --durations=10 tests/trainers
+          uv run --no-sync python -m torchgeo --help
+          uv run --no-sync torchgeo --help
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.1
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.1.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.2
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}-tutorials
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          enable-cache: true
+          cache-dependency-glob: 'pyproject.toml'
+          cache-suffix: release-notebooks
+      - name: Create virtual environment
+        run: uv venv
+      - name: Install dependencies
+        run: uv pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
+      - name: List dependencies
+        run: uv pip list
       - name: Run notebook checks
-        run: pytest --nbmake --durations=10 docs/tutorials
+        run: uv run --no-sync pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

@@ -118,7 +118,7 @@ You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatica
 
 .. code-block:: console
 
-   $ pip install pre-commit
+   $ uv pip install pre-commit  # or: pip install pre-commit
    $ pre-commit install
    $ pre-commit run --all-files
 
@@ -132,7 +132,7 @@ All of our documentation is hosted on `Read the Docs <https://about.readthedocs.
 
 .. code-block:: console
 
-   $ pip install .[docs]
+   $ uv pip install .[docs]  # or: pip install .[docs]
    $ cd docs
 
 Pandoc must also be installed. You can download it from the `official Pandoc website <https://pandoc.org/installing.html>`_ and ensure it is included in your system PATH.
