@@ -237,7 +237,7 @@ filterwarnings = [
     # https://github.com/Lightning-AI/torchmetrics/pull/2137
     "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
     # https://github.com/Lightning-AI/pytorch-lightning/issues/21326
-    "ignore:`isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.",
+    'ignore:`isinstance\(treespec, LeafSpec\)` is deprecated, use `isinstance\(treespec, TreeSpec\) and treespec.is_leaf\(\)` instead.',
     # https://github.com/Lightning-AI/pytorch-lightning/issues/13256
     # https://github.com/Lightning-AI/pytorch-lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
