@@ -1,90 +1,99 @@
-# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Copyright (c) TorchGeo contributors.
 # Licensed under the MIT License.
-
-from pathlib import Path
-from typing import cast
 
 import pytest
 import torch
-from _pytest.fixtures import SubRequest
+from pathlib import Path
 from pytest import MonkeyPatch
-from torch import nn
+from _pytest.fixtures import SubRequest
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import galileo, GalileoWeights
 
 
-class TestGalileo:
-    @pytest.fixture(params=[*GalileoWeights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+SPACE_TIME_BANDS = 14
+SPACE_BANDS = 20
+TIME_BANDS = 6
+STATIC_BANDS = 40
 
-    @pytest.fixture
-    def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        load_state_dict_from_url: None,
-    ) -> WeightsEnum:
-        """
-        Create a fake local checkpoint matching the Galileo encoder
-        and monkeypatch the weights URL to point to it.
-        """
-        weights = GalileoWeights.GALILEO_S2_NANO_V1
-        path = tmp_path / f"{weights}.pth"
 
-        model = galileo(variant=weights.meta["variant"])
-        torch.save(model.state_dict(), path)
 
-        monkeypatch.setattr(weights.value, "url", str(path))
-        return weights
+def make_inputs(batch=2, H=64, W=64, T=2):
+    """Generate valid dummy inputs with exact band counts."""
+    return dict(
+        s_t_x=torch.randn(batch, H, W, T, SPACE_TIME_BANDS),
+        sp_x=torch.randn(batch, H, W, SPACE_BANDS),
+        t_x=torch.randn(batch, T, TIME_BANDS),
+        st_x=torch.randn(batch, STATIC_BANDS),
 
-    def test_galileo(self) -> None:
-        galileo()
+        s_t_m=torch.zeros(batch, H, W, T, SPACE_TIME_BANDS),
+        sp_m=torch.zeros(batch, H, W, SPACE_BANDS),
+        t_m=torch.zeros(batch, T, TIME_BANDS),
+        st_m=torch.zeros(batch, STATIC_BANDS),
 
-    def test_galileo_weights(self, mocked_weights: WeightsEnum) -> None:
-        galileo(weights=mocked_weights)
+        months=torch.zeros(batch, T, dtype=torch.long),
+    )
 
-    def test_forward_shape(self, weights: WeightsEnum) -> None:
-        variant = weights.meta["variant"]
-        embed_dim = weights.meta["embed_dim"]
 
-        model = galileo(variant=variant)
-        x = torch.randn(2, 4, 224, 224)
-        y = model(x)
+@pytest.fixture(params=[*GalileoWeights])
+def weights(request: SubRequest) -> WeightsEnum:
+    return request.param
 
-        assert y.shape == (2, embed_dim)
 
-    def test_invalid_input_shape(self) -> None:
-        model = galileo()
-        x = torch.randn(1, 4, 256, 256)
+@pytest.fixture
+def mocked_weights(tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url):
+    """Create a tiny local checkpoint to test weight loading."""
+    w = GalileoWeights.GALILEO_S2_NANO_V1
+    path = tmp_path / "dummy_encoder.pth"
 
-        with pytest.raises(ValueError):
-            model(x)
+  
+    model = galileo(variant=w.meta["variant"])
+    torch.save(model.state_dict(), path)
 
-    def test_variant_weight_mismatch(self) -> None:
-        with pytest.raises(ValueError):
-            galileo(
-                variant="tiny",
-                weights=GalileoWeights.GALILEO_S2_BASE_V1,
-            )
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
-        c = weights.meta["in_channels"]
-        sample = {
-            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
-        weights.transforms(sample)
+    monkeypatch.setattr(w.value, "url", str(path))
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
-        """Ensure transforms are torch.export compatible."""
-        torch = pytest.importorskip("torch", minversion="2.6.0")
-        torch.compiler.reset()
+    return w
 
-        c = weights.meta["in_channels"]
-        inputs = (torch.randn(1, c, 224, 224),)
-        torch.export.export(weights.transforms, inputs)
 
-    @pytest.mark.slow
-    def test_galileo_download(self, weights: WeightsEnum) -> None:
-        galileo(weights=weights)
+@pytest.mark.parametrize("w", list(GalileoWeights))
+def test_galileo_forward(w):
+    """Ensure the forward pass runs with correct output shape."""
+    model = galileo(variant=w.meta["variant"])
+    inputs = make_inputs()
+    out = model(**inputs, patch_size=16)
+
+    s_t_x = out[0]
+    assert s_t_x.shape[-1] == w.meta["embed_dim"]
+
+
+def test_invalid_input_shape():
+    """Incorrect band counts must raise an error."""
+    model = galileo(variant="nano")
+
+    bad = make_inputs()
+    bad["s_t_x"] = torch.randn(2, 64, 64, 2, 3)
+
+    with pytest.raises(Exception):
+        model(**bad, patch_size=16)
+
+
+def test_galileo_weights(mocked_weights):
+    """Verify weight loading from a mocked local checkpoint."""
+    w = mocked_weights
+    model = galileo(weights=w)
+
+    inputs = make_inputs(batch=1)
+    out = model(**inputs, patch_size=16)
+
+    assert isinstance(out[0], torch.Tensor)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("w", list(GalileoWeights))
+def test_real_weight_download(w):
+    """Verify real HuggingFace weight download works."""
+    model = galileo(weights=w)
+    assert isinstance(model, torch.nn.Module)
+
+

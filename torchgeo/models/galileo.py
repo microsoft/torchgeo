@@ -8,20 +8,23 @@ Reference:
 Gabriel et al., Galileo: Learning Global & Local Features of Many Remote Sensing Modalities
 
 """
+import collections.abc
+import itertools
+from collections import OrderedDict
+from collections import OrderedDict as OrderedDictType
+from collections.abc import Sequence
+from functools import partial
+from typing import Any
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import collections.abc
-import itertools
-from functools import partial
-from typing import Any, Literal, Dict, Optional, Sequence, Tuple, Union, OrderedDict, List
 from einops import rearrange, repeat
-from torchvision.models._api import Weights, WeightsEnum
-from torchvision.transforms import Resize
 from torch import Tensor, vmap
 from torch.jit import Final
-from typing import OrderedDict as OrderedDictType
+from torchvision.models._api import Weights, WeightsEnum
+from torchvision.transforms import Resize
 
 BASE_GSD = 10
 
@@ -83,7 +86,7 @@ SPACE_BANDS = SRTM_BANDS + DW_BANDS + WC_BANDS
 STATIC_BANDS = LANDSCAN_BANDS + LOCATION_BANDS + STATIC_DW_BANDS + STATIC_WC_BANDS
 
 
-SPACE_TIME_BANDS_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
+SPACE_TIME_BANDS_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
     {
         "S1": [SPACE_TIME_BANDS.index(b) for b in S1_BANDS],
         "S2_RGB": [SPACE_TIME_BANDS.index(b) for b in ["B2", "B3", "B4"]],
@@ -95,7 +98,7 @@ SPACE_TIME_BANDS_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
     }
 )
 
-TIME_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
+TIME_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
     {
         "ERA5": [TIME_BANDS.index(b) for b in ERA5_BANDS],
         "TC": [TIME_BANDS.index(b) for b in TC_BANDS],
@@ -103,7 +106,7 @@ TIME_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
     }
 )
 
-SPACE_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
+SPACE_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
     {
         "SRTM": [SPACE_BANDS.index(b) for b in SRTM_BANDS],
         "DW": [SPACE_BANDS.index(b) for b in DW_BANDS],
@@ -111,7 +114,7 @@ SPACE_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
     }
 )
 
-STATIC_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
+STATIC_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
     {
         "LS": [STATIC_BANDS.index(b) for b in LANDSCAN_BANDS],
         "location": [STATIC_BANDS.index(b) for b in LOCATION_BANDS],
@@ -124,10 +127,10 @@ STATIC_BAND_GROUPS_IDX: OrderedDictType[str, List[int]] = OrderedDict(
 def get_2d_sincos_pos_embed_with_resolution(
     embed_dim, grid_size, res, cls_token=False, device="cpu"
 ):
-    """
-    grid_size: int of the grid height and width
+    """grid_size: int of the grid height and width
     res: array of size n, representing the resolution of a pixel (say, in meters),
-    return:
+
+    Return:
     pos_embed: [n,grid_size*grid_size, embed_dim] or [n,1+grid_size*grid_size, embed_dim] (w/ or w/o cls_token)
     """
     res = res.to(device)
@@ -166,8 +169,7 @@ def get_2d_sincos_pos_embed_from_grid_torch(embed_dim, grid):
 
 
 def get_1d_sincos_pos_embed_from_grid_torch(embed_dim, pos):
-    """
-    embed_dim: output dimension for each position
+    """embed_dim: output dimension for each position
     pos: a list of positions to be encoded: size (M,)
     out: (M, D)
     """
@@ -200,7 +202,7 @@ def get_month_encoding_table(embed_dim):
 # thanks to https://github.com/bwconrad/flexivit/ for this nice implementation
 
 # of the FlexiPatchEmbed module
-def to_2tuple(x: Any) -> Tuple:
+def to_2tuple(x: Any) -> tuple:
     if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
         return tuple(x)
     return tuple(itertools.repeat(x, 2))
@@ -208,7 +210,7 @@ def to_2tuple(x: Any) -> Tuple:
 
 # thanks to https://github.com/bwconrad/flexivit/ for this nice implementation
 # of the FlexiPatchEmbed module
-def to_2tuple(x: Any) -> Tuple:
+def to_2tuple(x: Any) -> tuple:
     if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
         return tuple(x)
     return tuple(itertools.repeat(x, 2))
@@ -217,10 +219,10 @@ def to_2tuple(x: Any) -> Tuple:
 class FlexiPatchEmbed(nn.Module):
     def __init__(
         self,
-        patch_size: Union[int, Tuple[int, int]],
+        patch_size: int | tuple[int, int],
         in_chans: int = 3,
         embed_dim: int = 128,
-        norm_layer: Optional[nn.Module] = None,
+        norm_layer: nn.Module | None = None,
         bias: bool = True,
         patch_size_seq: Sequence[int] = (1, 2, 3, 4, 5, 6),
         interpolation: str = "bicubic",
@@ -270,7 +272,7 @@ class FlexiPatchEmbed(nn.Module):
             pinvs[tuple_ps] = self._calculate_pinv(self.patch_size, tuple_ps)
         return pinvs
 
-    def _resize(self, x: Tensor, shape: Tuple[int, int]) -> Tensor:
+    def _resize(self, x: Tensor, shape: tuple[int, int]) -> Tensor:
         x_resized = F.interpolate(
             x[None, None, ...],
             shape,
@@ -279,7 +281,7 @@ class FlexiPatchEmbed(nn.Module):
         )
         return x_resized[0, 0, ...]
 
-    def _calculate_pinv(self, old_shape: Tuple[int, int], new_shape: Tuple[int, int]) -> Tensor:
+    def _calculate_pinv(self, old_shape: tuple[int, int], new_shape: tuple[int, int]) -> Tensor:
         mat = []
         for i in range(np.prod(old_shape)):
             basis_vec = torch.zeros(old_shape)
@@ -288,7 +290,7 @@ class FlexiPatchEmbed(nn.Module):
         resize_matrix = torch.stack(mat)
         return torch.linalg.pinv(resize_matrix)
 
-    def resize_patch_embed(self, patch_embed: Tensor, new_patch_size: Tuple[int, int]):
+    def resize_patch_embed(self, patch_embed: Tensor, new_patch_size: tuple[int, int]):
         """Resize patch_embed to target resolution via pseudo-inverse resizing"""
         # Return original kernel if no resize is necessary
         if self.patch_size == new_patch_size:
@@ -312,8 +314,8 @@ class FlexiPatchEmbed(nn.Module):
     def forward(
         self,
         x: Tensor,
-        patch_size: Optional[Union[int, Tuple[int, int]]] = None,
-    ) -> Union[Tensor, Tuple[Tensor, Tuple[int, int]]]:
+        patch_size: int | tuple[int, int] | None = None,
+    ) -> Tensor | tuple[Tensor, tuple[int, int]]:
         # x has input shape [b, h, w, (t), c]
         batch_size = x.shape[0]
         has_time_dimension = False
@@ -816,8 +818,7 @@ class Encoder(GalileoBase):
         st_m: torch.Tensor,
         patch_size: int,
     ):
-        """
-        Given a [B, H, W, (T), C] inputs, returns a [B, H, W, (T), C_G, D] output.
+        """Given a [B, H, W, (T), C] inputs, returns a [B, H, W, (T), C_G, D] output.
         We assume that the spatial masks are consistent for the given patch size,
         so that if patch_size == 2 then one possible mask would be
         [0, 0, 1, 1]
@@ -1101,9 +1102,9 @@ class Encoder(GalileoBase):
         st_m: torch.Tensor,
         months: torch.Tensor,
         patch_size: int,
-        input_resolution_m: Optional[int] = BASE_GSD,
-        exit_after: Optional[int] = None,
-        token_exit_cfg: Optional[Dict] = None,
+        input_resolution_m: int | None = BASE_GSD,
+        exit_after: int | None = None,
+        token_exit_cfg: dict | None = None,
         add_layernorm_on_exit: bool = True,
     ):
         (
@@ -1194,13 +1195,25 @@ class GalileoWeights(WeightsEnum):
     )
 
 
-def galileo(*, weights: GalileoWeights | None = None, **kwargs: Any) -> Encoder:
-    """Galileo encoder factory."""
+def galileo(
+    *,
+    variant: str | None = None,
+    weights: GalileoWeights | None = None,
+    **kwargs: Any,
+) -> Encoder:
+
     if weights is not None:
         weights = GalileoWeights.verify(weights)
         variant = weights.meta["variant"]
-    else:
+
+    if variant is None:
         variant = "base"
+
+    if variant not in _GALILEO_CONFIGS:
+        raise ValueError(
+            f"Unknown Galileo variant: {variant!r}. "
+            f"Available: {list(_GALILEO_CONFIGS.keys())}"
+        )
 
     cfg = _GALILEO_CONFIGS[variant]
 
@@ -1208,6 +1221,7 @@ def galileo(*, weights: GalileoWeights | None = None, **kwargs: Any) -> Encoder:
         embedding_size=cfg["embed_dim"],
         depth=cfg["depth"],
         num_heads=cfg["num_heads"],
+        **kwargs,
     )
 
     if weights is not None:
@@ -1218,4 +1232,3 @@ def galileo(*, weights: GalileoWeights | None = None, **kwargs: Any) -> Encoder:
         model.load_state_dict(state_dict, strict=True)
 
     return model
-
