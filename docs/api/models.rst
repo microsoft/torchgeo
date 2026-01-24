@@ -8,31 +8,64 @@ This section provides an overview of all models available in ``torchgeo.models``
 Model Architectures
 -------------------
 
+TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
+
+1D Time Series (:math:`B \times T \times C`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. toctree::
    :maxdepth: 1
 
-   models/aurora
-   models/btc
-   models/changestar
-   models/changevit
-   models/convlstm
+   models/l-tae
+   models/tessera
+
+2D Images (:math:`B \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
    models/copernicus-fm
    models/croma
    models/dofa
    models/earthloc
    models/farseg
    models/fcn
-   models/fc-siamese-networks
-   models/l-tae
    models/mosaiks
    models/panopticon
    models/resnet
    models/scale-mae
    models/swin-transformer
    models/tilenet
-   models/tessera
    models/u-net
    models/vision-transformer
+
+3D Change Detection (:math:`B \times 2 \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/btc
+   models/changestar
+   models/changevit
+   models/fc-siamese-networks
+
+3D Image Time Series (:math:`B \times T \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/convlstm
+
+4D Ocean and Atmosphere (:math:`B \times T \times C \times Z \times Y \times X`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/aurora
 
 Utility Functions
 -----------------
