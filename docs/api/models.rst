@@ -40,6 +40,8 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/u-net
    models/vision-transformer
 
+TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__ encoders and `SMP <https://segmentation-modelspytorch.readthedocs.io/en/latest/>`__ decoders.
+
 3D Change Detection (:math:`B \times 2 \times C \times H \times W`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -50,6 +52,8 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/changestar
    models/changevit
    models/fc-siamese-networks
+
+See `torchange <https://github.com/Z-Zheng/pytorch-change-models>`__ for additional change detection architectures.
 
 3D Image Time Series (:math:`B \times T \times C \times H \times W`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
