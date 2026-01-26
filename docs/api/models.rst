@@ -10,8 +10,8 @@ Model Architectures
 
 TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
 
-1D Time Series (:math:`B \times T \times C`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1D Time Series (:math:`\scriptstyle B \times T \times C`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
@@ -19,8 +19,8 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/l-tae
    models/tessera
 
-2D Images (:math:`B \times C \times H \times W`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2D Images (:math:`\scriptstyle B \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
@@ -42,8 +42,8 @@ TorchGeo contains a number of model architectures depending on the task you are 
 
 TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__ encoders and `SMP <https://segmentation-modelspytorch.readthedocs.io/en/latest/>`__ decoders.
 
-3D Change Detection (:math:`B \times 2 \times C \times H \times W`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3D Change Detection (:math:`\scriptstyle B \times 2 \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
@@ -55,16 +55,16 @@ TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__
 
 See `torchange <https://github.com/Z-Zheng/pytorch-change-models>`__ for additional change detection architectures.
 
-3D Image Time Series (:math:`B \times T \times C \times H \times W`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3D Image Time Series (:math:`\scriptstyle B \times T \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
 
    models/convlstm
 
-4D Ocean and Atmosphere (:math:`B \times T \times C \times Z \times Y \times X`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+4D Ocean and Atmosphere (:math:`\scriptstyle B \times T \times C \times Z \times Y \times X`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
