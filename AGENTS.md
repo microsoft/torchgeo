@@ -1,4 +1,4 @@
-# TorchGeo Instructions
+# TorchGeo LLM Instructions
 
 Datasets, samplers, transforms, and pre-trained models for geospatial data.
 
