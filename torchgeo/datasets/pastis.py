@@ -408,5 +408,5 @@ class PASTISR100(PASTIS):
 
     directory = 'PASTIS-R-100'
     filename = 'PASTIS-R-100.zip'
-    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/PASTIS-R-100/resolve/main/PASTIS-R-100.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/7288f86b79e87da71d4789bebce05c4f6e242b8b/PASTIS-R-100.zip'
     md5 = 'd2dc4a4315e02afebc56ecd4fbf50394'
