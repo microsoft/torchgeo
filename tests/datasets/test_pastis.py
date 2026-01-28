@@ -60,11 +60,7 @@ class TestPASTIS:
         dst = tmp_path / 'PASTIS-R-100'
         shutil.copytree(src, dst)
         return base_class(
-            root=root,
-            folds=folds,
-            bands=bands,
-            mode=mode,
-            transforms=transforms,
+            root=root, folds=folds, bands=bands, mode=mode, transforms=transforms
         )
 
     def test_getitem_semantic(self, dataset: PASTIS) -> None:
