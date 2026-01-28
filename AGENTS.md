@@ -1,4 +1,4 @@
-# TorchGeo Copilot Instructions
+# TorchGeo Instructions
 
 Datasets, samplers, transforms, and pre-trained models for geospatial data.
 
