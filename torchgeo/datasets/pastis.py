@@ -398,7 +398,7 @@ class PASTIS(NonGeoDataset):
         return fig
 
 
-class PASTISR100(PASTIS):
+class PASTIS100(PASTIS):
     """Subset of PASTIS-R containing only 100 time-series.
 
     Intended for tutorials and demonstrations, not for benchmarking.

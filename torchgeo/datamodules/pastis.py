@@ -9,7 +9,7 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from ..datasets import PASTIS, PASTISR100
+from ..datasets import PASTIS, PASTIS100
 from ..datasets.utils import pad_across_batches
 from .geo import NonGeoDataModule
 
@@ -75,7 +75,7 @@ class PASTISDataModule(NonGeoDataModule):
         )
 
 
-class PASTISR100DataModule(NonGeoDataModule):
+class PASTIS100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the PASTIS-R-100 dataset.
 
     .. versionadded:: 0.9
@@ -90,7 +90,7 @@ class PASTISR100DataModule(NonGeoDataModule):
         padding_length: int = 61,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new PASTISR100DataModule instance.
+        """Initialize a new PASTIS100DataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
@@ -99,10 +99,10 @@ class PASTISR100DataModule(NonGeoDataModule):
             test_split_pct: Percentage of the dataset to use as a test set.
             padding_length: Padding length of the time series.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.PASTISR100`.
+                :class:`~torchgeo.datasets.PASTIS100`.
         """
         super().__init__(
-            PASTISR100, batch_size=batch_size, num_workers=num_workers, **kwargs
+            PASTIS100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
         self.padding_length = padding_length
         self.collate_fn = lambda batch: pad_across_batches(
@@ -123,7 +123,7 @@ class PASTISR100DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = PASTISR100(**self.kwargs)
+        self.dataset = PASTIS100(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
             self.dataset,
