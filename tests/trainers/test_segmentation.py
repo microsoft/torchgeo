@@ -93,6 +93,12 @@ class TestSemanticSegmentationTask:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
+            case 'pastis100':
+                # Reuse the existing PASTIS fixture directory to avoid duplicating
+                # `tests/data/pastis/PASTIS-R` as `PASTIS-R-100` on disk.
+                from torchgeo.datasets import PASTIS100
+
+                monkeypatch.setattr(PASTIS100, 'directory', 'PASTIS-R')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
