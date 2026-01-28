@@ -741,7 +741,7 @@ def lazy_import(name: str) -> Any:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
         module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        module_to_pypi |= {'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:

@@ -16,7 +16,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
+from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
@@ -92,11 +92,6 @@ class TestSemanticSegmentationTask:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
-            case 'landcoverai':
-                sha256 = (
-                    'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-                )
-                monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

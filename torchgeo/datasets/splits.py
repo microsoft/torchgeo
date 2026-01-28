@@ -114,6 +114,7 @@ def random_bbox_splitting(
     if any(n <= 0 for n in fractions):
         raise ValueError('All items in input fractions must be greater than 0.')
 
+    i_geom = dataset.index.columns.get_loc('geometry')
     new_datasets = [deepcopy(dataset) for _ in fractions]
 
     for i in range(len(dataset)):
@@ -165,8 +166,7 @@ def random_bbox_splitting(
                             new_geometry, geometry_remaining = geom1, geom2
                         else:
                             geometry_remaining, new_geometry = geom1, geom2
-
-            new_datasets[j].index.iloc[i].geometry = new_geometry
+            new_datasets[j].index.iloc[i, i_geom] = new_geometry
 
             fraction_remaining -= fraction
             horizontal = not horizontal
@@ -205,8 +205,6 @@ def random_grid_cell_assignment(
     if grid_size < 2:
         raise ValueError('Input grid_size must be greater than 1.')
 
-    lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
-
     # Generate the grid's cells for each bbox in index
     left = []
     right = []
@@ -231,6 +229,8 @@ def random_grid_cell_assignment(
                     right.append(index.right)
                     rows.append(row)
                     geometry.append(geom)
+
+    lengths = _fractions_to_lengths(fractions, len(rows))
 
     indexes_sr = pd.IntervalIndex.from_arrays(
         left, right, closed='both', name='datetime'

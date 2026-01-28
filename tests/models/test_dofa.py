@@ -7,7 +7,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
     DOFA,
@@ -77,19 +76,19 @@ class TestDOFASmall16:
 
 class TestDOFABase16:
     @pytest.fixture(params=[*DOFABase16_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    def weights(self, request: SubRequest) -> DOFABase16_Weights:
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> DOFABase16_Weights:
         weights = DOFABase16_Weights.DOFA_MAE
         path = tmp_path / f'{weights}.pth'
         model = dofa_base_patch16_224()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_dofa(self) -> None:
         model = dofa_base_patch16_224()
@@ -97,17 +96,17 @@ class TestDOFABase16:
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
-    def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_dofa_weights(self, mocked_weights: DOFABase16_Weights) -> None:
         dofa_base_patch16_224(weights=mocked_weights)
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: DOFABase16_Weights) -> None:
         c = 4
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: DOFABase16_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -116,25 +115,25 @@ class TestDOFABase16:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_dofa_download(self, weights: WeightsEnum) -> None:
+    def test_dofa_download(self, weights: DOFABase16_Weights) -> None:
         dofa_base_patch16_224(weights=weights)
 
 
 class TestDOFALarge16:
     @pytest.fixture(params=[*DOFALarge16_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    def weights(self, request: SubRequest) -> DOFALarge16_Weights:
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> DOFALarge16_Weights:
         weights = DOFALarge16_Weights.DOFA_MAE
         path = tmp_path / f'{weights}.pth'
         model = dofa_large_patch16_224()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_dofa(self) -> None:
         model = dofa_large_patch16_224()
@@ -142,17 +141,17 @@ class TestDOFALarge16:
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
-    def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_dofa_weights(self, mocked_weights: DOFALarge16_Weights) -> None:
         dofa_large_patch16_224(weights=mocked_weights)
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: DOFALarge16_Weights) -> None:
         c = 4
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         weights.transforms(sample)
 
-    def test_export_transforms(self, weights: WeightsEnum) -> None:
+    def test_export_transforms(self, weights: DOFALarge16_Weights) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
@@ -161,7 +160,7 @@ class TestDOFALarge16:
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
-    def test_dofa_download(self, weights: WeightsEnum) -> None:
+    def test_dofa_download(self, weights: DOFALarge16_Weights) -> None:
         dofa_large_patch16_224(weights=weights)
 
 

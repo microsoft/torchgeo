@@ -62,19 +62,19 @@ class L8BiomeMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
+        sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
@@ -134,7 +134,7 @@ class L8Biome(IntersectionDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path],
-        crs: CRS | None = CRS.from_epsg(3857),
+        crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -166,6 +166,9 @@ class L8Biome(IntersectionDataset):
         self.checksum = checksum
 
         self._verify()
+
+        if crs is None:
+            crs = CRS.from_epsg(3857)
 
         self.image = L8BiomeImage(paths, crs, res, bands, transforms, cache)
         self.mask = L8BiomeMask(paths, crs, res, None, transforms, cache)

@@ -144,16 +144,16 @@ class SODAA(NonGeoDataset):
         """Return the number of samples in the dataset."""
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> Sample:
+    def __getitem__(self, index: int) -> Sample:
         """Return the sample at the given index.
 
         Args:
-            idx: index of the sample to return
+            index: index of the sample to return
 
         Returns:
             the sample at the given index
         """
-        row = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[index]
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
         boxes, labels = self._load_labels(os.path.join(self.root, row['label_path']))

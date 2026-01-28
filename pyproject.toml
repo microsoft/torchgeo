@@ -31,6 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: GIS",
 ]
@@ -97,8 +98,6 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.5+ required for Python 3.12 wheels
     "netcdf4>=1.6.5",
-    # opencv-python 4.5.5.64+ required for wheels
-    "opencv-python>=4.5.5.64",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
     # pycocotools 2.0.8+ required for Python 3.12 wheels
@@ -119,14 +118,15 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
+    # myst-parser 0.18.0+ required for sphinx 5.0+ compatibility
+    "myst-parser>=0.18.0",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
-    # release versions missing files, must install from master
-    "pytorch-sphinx-theme",
-    # sphinx 4+ required for autodoc_typehints_description_target
-    # sphinx 6+ is incompatible with pytorch-sphinx-theme
-    # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-    "sphinx>=4,<6",
+    # pydata-sphinx-theme 0.14.0+ required for sphinx 5.0+ compatibility
+    "pydata-sphinx-theme>=0.14.0",
+    # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+    # https://github.com/sphinx-doc/sphinx/pull/10887
+    "sphinx>=5.3",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
@@ -201,7 +201,7 @@ disallow_untyped_decorators = true
 
 # Configuring warnings
 warn_redundant_casts = true
-warn_unused_ignores = true
+warn_unused_ignores = false  # remove if/when we drop ty
 warn_no_return = true
 warn_return_any = true
 warn_unreachable = true
@@ -236,12 +236,14 @@ filterwarnings = [
     # https://github.com/Lightning-AI/torchmetrics/issues/2121
     # https://github.com/Lightning-AI/torchmetrics/pull/2137
     "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
-    # https://github.com/Lightning-AI/lightning/issues/13256
-    # https://github.com/Lightning-AI/lightning/pull/13261
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/21326
+    'ignore:`isinstance\(treespec, LeafSpec\)` is deprecated, use `isinstance\(treespec, TreeSpec\) and treespec.is_leaf\(\)` instead.',
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/13256
+    # https://github.com/Lightning-AI/pytorch-lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
-    # https://github.com/Lightning-AI/lightning/issues/13989
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/13989
     "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
-    # https://github.com/Lightning-AI/lightning/issues/14594
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/14594
     "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
     # https://github.com/rasterio/rasterio/issues/1742
     # https://github.com/rasterio/rasterio/pull/1753
@@ -254,7 +256,7 @@ filterwarnings = [
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
     # https://github.com/pytorch/pytorch/pull/24929
-    "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
+    "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning",
     # https://github.com/scikit-image/scikit-image/issues/6663
     # https://github.com/scikit-image/scikit-image/pull/6637
     "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
@@ -347,7 +349,6 @@ ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
-"experiments/**" = ["D"]
 "tests/**" = ["D"]
 
 [tool.ruff.lint.isort]
@@ -368,9 +369,11 @@ include = ["torchgeo*"]
 
 [tool.ty.rules]
 deprecated = "ignore"
+possibly-missing-attribute = "ignore"
 unresolved-attribute = "ignore"
 unresolved-import = "ignore"
 unresolved-reference = "ignore"
+unused-ignore-comment = "ignore"  # remove if/when we drop mypy
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]

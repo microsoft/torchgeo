@@ -40,7 +40,6 @@ scripts:
       - any-glob-to-any-file:
           - 'torchgeo/__main__.py'
           - 'torchgeo/main.py'
-          - 'experiments/**'
 testing:
   - changed-files:
       - any-glob-to-any-file:

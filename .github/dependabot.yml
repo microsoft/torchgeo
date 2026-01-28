@@ -23,11 +23,6 @@ updates:
         patterns:
           - 'torch'
           - 'torchvision'
-    ignore:
-      # sphinx 6 is incompatible with pytorch-sphinx-theme
-      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-      - dependency-name: 'sphinx'
-        versions: '>=6'
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

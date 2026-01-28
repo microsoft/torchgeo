@@ -88,9 +88,9 @@ class TestSentinel1:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
 
-    def test_invalid_query(self, dataset: Sentinel1) -> None:
+    def test_invalid_index(self, dataset: Sentinel1) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -151,9 +151,9 @@ class TestSentinel2:
         ):
             ds.plot(x)
 
-    def test_invalid_query(self, dataset: Sentinel2) -> None:
+    def test_invalid_index(self, dataset: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

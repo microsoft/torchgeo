@@ -37,9 +37,9 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: GeoSlice) -> Sample:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
-        return {'image': image, 'bounds': self._slice_to_tensor(query)}
+        return {'image': image, 'bounds': self._slice_to_tensor(index)}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()

@@ -74,8 +74,9 @@ class CROMA(nn.Module):
         self.s1_channels = 2  # fixed at 2 SAR backscatter channels
         self.s2_channels = 12  # fixed at 12 multispectral optical channels
 
-        self.attn_bias = get_2dalibi(
-            num_heads=self.num_heads, num_patches=self.num_patches
+        self.register_buffer(
+            'attn_bias',
+            get_2dalibi(num_heads=self.num_heads, num_patches=self.num_patches),
         )
 
         def initialize_encoder(
