@@ -84,7 +84,6 @@ jobs:
     name: ty
     runs-on: ubuntu-latest
     steps:
-    steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.2
       - name: Set up python
