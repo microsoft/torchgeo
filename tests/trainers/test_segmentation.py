@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -88,7 +89,7 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, name: str, fast_dev_run: bool
     ) -> None:
         match name:
             case 'ftw':
@@ -114,6 +115,13 @@ class TestSemanticSegmentationTask:
             '--trainer.log_every_n_steps',
             '1',
         ]
+
+        if name == 'pastis100':
+            src = os.path.join('tests', 'data', 'pastis', 'PASTIS-R')
+            root = tmp_path / 'pastis'
+            dst = root / 'PASTIS-R-100'
+            shutil.copytree(src, dst)
+            args.extend(['--data.dict_kwargs.root', str(root)])
 
         main(['fit', *args])
         try:
