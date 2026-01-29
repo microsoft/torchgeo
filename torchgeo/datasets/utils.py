@@ -32,10 +32,7 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
-from torchvision.datasets.utils import (
-    download_and_extract_archive,
-    download_url,
-)
+from torchvision.datasets.utils import download_and_extract_archive, download_url
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
 
