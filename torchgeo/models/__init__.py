@@ -50,7 +50,6 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tilenet import TileNet, TileNet_Weights, tilenet
 from .tessera import Tessera, Tessera_Weights, tessera
 from .tilenet import TileNet, TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet

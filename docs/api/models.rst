@@ -23,6 +23,7 @@ Model Architectures
    models/farseg
    models/fcn
    models/fc-siamese-networks
+   models/galileo
    models/l-tae
    models/mosaiks
    models/panopticon

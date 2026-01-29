@@ -16,6 +16,7 @@ from torchgeo.models import (
     dofa_base_patch16_224,
     dofa_large_patch16_224,
     earthloc,
+    galileo,
     ltae,
     panopticon_vitb14,
     resnet18,
@@ -47,6 +48,7 @@ __all__ = (
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
     'earthloc',
+    'galileo'
     'ltae',
     'panopticon_vitb14',
     'resnet18',

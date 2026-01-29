@@ -28,7 +28,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .galileo import galileo, GalileoWeights
+from .galileo import GalileoWeights, galileo
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .resnet import (
     ResNet18_Weights,
@@ -51,7 +51,6 @@ from .swin import (
     swin_v2_b,
     swin_v2_t,
 )
-from .tilenet import TileNet_Weights, tilenet
 from .tessera import Tessera_Weights, tessera
 from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
