@@ -153,6 +153,8 @@ tests = [
     "pytest>=7.3.2",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # pytest-socket 0.3.4+ required for wheels
+    "pytest-socket>=0.3.4",
 ]
 all = [
     "torchgeo[datasets,docs,models,style,tests]",
@@ -218,7 +220,7 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
-addopts = "-m 'not slow'"
+addopts = "-m 'not slow' --disable-socket"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control

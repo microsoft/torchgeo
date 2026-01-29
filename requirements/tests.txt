@@ -3,3 +3,4 @@ nbmake==1.5.5
 packaging==26.0
 pytest==9.0.2
 pytest-cov==7.0.0
+pytest-socket==0.7.0
