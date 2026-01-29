@@ -184,22 +184,14 @@ class ChangeStarFarSeg(ChangeStar):
     * https://arxiv.org/abs/2108.07002
     """
 
-    def __init__(
-        self,
-        backbone: str = 'resnet50',
-        classes: int = 1,
-        backbone_pretrained: bool = True,
-    ) -> None:
+    def __init__(self, backbone: str = 'resnet50', classes: int = 1) -> None:
         """Initializes a new ChangeStarFarSeg model.
 
         Args:
             backbone: name of ResNet backbone
             classes: number of output segmentation classes
-            backbone_pretrained: whether to use pretrained weight for backbone
         """
-        model = FarSeg(
-            backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
-        )
+        model = FarSeg(backbone=backbone, classes=classes)
         seg_classifier: Module = model.decoder.classifier
         model.decoder.classifier = nn.modules.Identity()  # type: ignore[assignment]
 
