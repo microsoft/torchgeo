@@ -116,13 +116,6 @@ class TestSemanticSegmentationTask:
             '1',
         ]
 
-        if name == 'pastis100':
-            src = os.path.join('tests', 'data', 'pastis', 'PASTIS-R')
-            root = tmp_path / 'pastis'
-            dst = root / 'PASTIS-R-100'
-            shutil.copytree(src, dst)
-            args.extend(['--data.dict_kwargs.root', str(root)])
-
         main(['fit', *args])
         try:
             main(['test', *args])
