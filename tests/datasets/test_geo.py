@@ -495,8 +495,8 @@ class TestRasterDataset:
     def test_malformed_res(self, x: int, y: int) -> None:
         root = os.path.join('tests', 'data', 'raster', f'res_{x}-{y}_epsg_4087')
         ds = RasterDataset(root)
-        x = ds[ds.bounds]
-        assert torch.all(x['image'] == 1)
+        sample = ds[ds.bounds]
+        assert torch.all(sample['image'] == 1)
 
 
 class TestXarrayDataset:

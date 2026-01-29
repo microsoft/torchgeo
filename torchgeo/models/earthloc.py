@@ -159,7 +159,7 @@ class EarthLoc(nn.Module):
         image_size: int = 320,
         desc_dim: int = 4096,
         backbone: str = 'resnet50',
-        pretrained: bool = True,
+        pretrained: bool = False,
     ) -> None:
         """Initialize the EarthLoc model.
 

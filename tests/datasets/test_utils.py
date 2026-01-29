@@ -4,6 +4,7 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,7 @@ from torchgeo.datasets.utils import (
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
+    extract_archive,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -326,6 +328,24 @@ class TestBoundingBox:
             match="Bounding box is invalid: 'mint=2025-04-25 00:00:00' > 'maxt=2025-04-24 00:00:00'",
         ):
             BoundingBox(0, 1, 2, 3, MAXT, MINT)
+
+
+@pytest.mark.parametrize(
+    'from_path',
+    [
+        os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip'),
+        os.path.join('tests', 'data', 'satlas', 'metadata.tar'),
+        os.path.join('tests', 'data', 'cropharvest', 'features.tar.gz'),
+        os.path.join('tests', 'data', 'cowc_counting', 'COWC_Counting_Utah_AGRC.tbz'),
+        os.path.join(
+            'tests', 'data', 'cowc_counting', 'COWC_test_list_64_class.txt.bz2'
+        ),
+    ],
+)
+def test_extract_archive(from_path: str, tmp_path: Path) -> None:
+    shutil.copy(from_path, tmp_path)
+    from_path = os.path.join(tmp_path, os.path.basename(from_path))
+    extract_archive(from_path, tmp_path, remove_finished=True)
 
 
 @pytest.mark.parametrize(
