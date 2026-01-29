@@ -16,6 +16,7 @@ import pathlib
 import shutil
 import subprocess
 import tarfile
+import urllib.request
 import warnings
 import zipfile
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
@@ -32,14 +33,14 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
-from torchvision.datasets.utils import download_and_extract_archive, download_url
+from torchvision.datasets.utils import download_and_extract_archive
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
 
 # Only include import redirects
-__all__ = ('download_and_extract_archive', 'download_url')
+__all__ = ('download_and_extract_archive',)
 
 
 # Waiting to upgrade Sphinx before switching to type statement
@@ -359,6 +360,50 @@ def extract_archive(
         os.remove(from_path)
 
     return to_path
+
+
+def download_url(
+    url: str,
+    root: Path,
+    filename: Path | None = None,
+    md5: str | None = None,
+    max_redirect_hops: int = 3,
+    **kwargs: str,
+) -> None:
+    """Download a file from a url and place it in root.
+
+    Examples:
+        download_url(url, root)
+        download_url(url, root, md5='...')
+        download_url(url, root, sha256='...')
+
+    Args:
+        url: URL to download.
+        root: Root directory to save downloaded file to.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        max_redirect_hops: Maximum number of allowed redirection attempts.
+        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+
+    Raises:
+        RuntimeError: If checksum of downloaded file does not match.
+        urllib.error.URLError: If download fails.
+    """
+    if not filename:
+        filename = os.path.basename(url)
+
+    root = os.path.expanduser(root)
+    os.makedirs(root, exist_ok=True)
+
+    fpath = os.path.join(root, filename)
+    if not check_integrity(fpath, md5, **kwargs):
+        # TODO: use fsspec if we want AWS/Azure/GCS support
+        # TODO: use gdown if we want Google Drive support
+        # TODO: use requests if we want redirect support
+        # TODO: use tqdm if we want a progress bar
+        urllib.request.urlretrieve(url, fpath)
+        if not check_integrity(fpath, md5, **kwargs):
+            raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:

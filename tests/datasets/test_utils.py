@@ -22,6 +22,7 @@ from torchgeo.datasets.utils import (
     check_integrity,
     concat_samples,
     disambiguate_timestamp,
+    download_url,
     extract_archive,
     lazy_import,
     merge_samples,
@@ -363,6 +364,16 @@ def test_extract_archive(from_path: str, tmp_path: Path) -> None:
     shutil.copy(from_path, tmp_path)
     from_path = os.path.join(tmp_path, os.path.basename(from_path))
     extract_archive(from_path, tmp_path, remove_finished=True)
+
+
+def test_download_url(tmp_path: Path) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
+    download_url(url, tmp_path)
+    download_url(url, tmp_path, md5=md5)
+    download_url(url, tmp_path, sha256=sha256)
 
 
 @pytest.mark.parametrize(
