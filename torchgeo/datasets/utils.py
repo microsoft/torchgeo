@@ -33,15 +33,10 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
-from torchvision.datasets.utils import download_and_extract_archive
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
-
-# Only include import redirects
-__all__ = ('download_and_extract_archive',)
-
 
 # Waiting to upgrade Sphinx before switching to type statement
 GeoSlice: TypeAlias = (  # noqa: UP040
@@ -404,6 +399,40 @@ def download_url(
         urllib.request.urlretrieve(url, fpath)
         if not check_integrity(fpath, md5, **kwargs):
             raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
+
+
+def download_and_extract_archive(
+    url: str,
+    download_root: Path,
+    extract_root: Path | None = None,
+    filename: Path | None = None,
+    md5: str | None = None,
+    remove_finished: bool = False,
+    **kwargs: str,
+) -> None:
+    """Download and extract a remote archive.
+
+    Examples:
+        download_and_extract_archive(url, root)
+        download_and_extract_archive(url, root, md5=md5)
+        download_and_extract_archive(url, root, sha256=sha256)
+
+    Args:
+        url: URL to download.
+        download_root: Root directory to save downloaded file to.
+        extract_root: Root directory to extract archive to. Defaults to *download_root*.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        remove_finished: If True, remove *filename* after extraction.
+        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+    """
+    download_root = os.path.expanduser(download_root)
+    extract_root = extract_root or download_root
+    filename = filename or os.path.basename(url)
+    from_path = os.path.join(download_root, filename)
+
+    download_url(url, download_root, filename, md5, **kwargs)
+    extract_archive(from_path, extract_root, remove_finished)
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
