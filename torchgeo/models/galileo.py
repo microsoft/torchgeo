@@ -1,6 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
-# Adapted from https://github.com/nasaharvest/galileo. Copyright (c) nasaharvest
+# Adapted from https://github.com/nasaharvest/galileo. Copyright (c) Presto Authors.
 
 """Galileo encoder models.
 
