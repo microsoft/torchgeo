@@ -41,26 +41,18 @@ class TestPASTIS:
         mode = params['mode']
         transforms = nn.Identity()
 
-        if base_class is PASTIS:
-            md5 = '135a29fb8221241dde14f31579c07f45'
-            monkeypatch.setattr(base_class, 'md5', md5)
-            url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
-            monkeypatch.setattr(base_class, 'url', url)
-            return base_class(
-                root=root,
-                folds=folds,
-                bands=bands,
-                mode=mode,
-                transforms=transforms,
-                download=True,
-                checksum=True,
-            )
-
-        src = os.path.join('tests', 'data', 'pastis', 'PASTIS-R')
-        dst = tmp_path / 'PASTIS-R'
-        shutil.copytree(src, dst)
+        md5 = '135a29fb8221241dde14f31579c07f45'
+        monkeypatch.setattr(base_class, 'md5', md5)
+        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
+        monkeypatch.setattr(base_class, 'url', url)
         return base_class(
-            root=root, folds=folds, bands=bands, mode=mode, transforms=transforms
+            root=root,
+            folds=folds,
+            bands=bands,
+            mode=mode,
+            transforms=transforms,
+            download=True,
+            checksum=True,
         )
 
     def test_getitem_semantic(self, dataset: PASTIS) -> None:
