@@ -406,7 +406,7 @@ class PASTIS100(PASTIS):
     .. versionadded:: 0.9
     """
 
-    directory = 'PASTIS-R-100'
-    filename = 'PASTIS-R-100.zip'
-    url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/7288f86b79e87da71d4789bebce05c4f6e242b8b/PASTIS-R-100.zip'
+    directory = 'PASTIS-R'
+    filename = 'PASTIS-R.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/acd0180e834e40934b79c0121f606d4f8ca3299d/PASTIS-R.zip'
     md5 = 'd2dc4a4315e02afebc56ecd4fbf50394'
