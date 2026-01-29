@@ -88,7 +88,7 @@ class TestSemanticSegmentationTask:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, name: str, fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
             case 'ftw':

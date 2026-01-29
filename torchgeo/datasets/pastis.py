@@ -409,4 +409,4 @@ class PASTIS100(PASTIS):
     directory = 'PASTIS-R'
     filename = 'PASTIS-R.zip'
     url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/acd0180e834e40934b79c0121f606d4f8ca3299d/PASTIS-R.zip'
-    md5 = 'd2dc4a4315e02afebc56ecd4fbf50394'
+    md5 = '6b4a428bd27cdbc2abda44973ba42892'

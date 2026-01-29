@@ -57,7 +57,7 @@ class TestPASTIS:
             )
 
         src = os.path.join('tests', 'data', 'pastis', 'PASTIS-R')
-        dst = tmp_path / 'PASTIS-R-100'
+        dst = tmp_path / 'PASTIS-R'
         shutil.copytree(src, dst)
         return base_class(
             root=root, folds=folds, bands=bands, mode=mode, transforms=transforms
