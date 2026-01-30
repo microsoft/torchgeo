@@ -3,7 +3,7 @@
 
 from collections import OrderedDict
 from pathlib import Path
-
+from typing import Any
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
@@ -35,21 +35,26 @@ STATIC_GROUPS = OrderedDict({
 })
 
 
-def make_inputs(batch=2, H=64, W=64, T=2):
+def make_inputs(
+    batch: int = 2,
+    H: int = 64,
+    W: int = 64,
+    T: int = 2
+) -> dict[str, torch.Tensor]:
     """Generate valid dummy inputs with exact band counts."""
-    return dict(
-        s_t_x=torch.randn(batch, H, W, T, SPACE_TIME_BANDS),
-        sp_x=torch.randn(batch, H, W, SPACE_BANDS),
-        t_x=torch.randn(batch, T, TIME_BANDS),
-        st_x=torch.randn(batch, STATIC_BANDS),
+    return {
+        "s_t_x": torch.randn(batch, H, W, T, SPACE_TIME_BANDS),
+        "sp_x": torch.randn(batch, H, W, SPACE_BANDS),
+        "t_x": torch.randn(batch, T, TIME_BANDS),
+        "st_x": torch.randn(batch, STATIC_BANDS),
 
-        s_t_m=torch.zeros(batch, H, W, T, SPACE_TIME_BANDS),
-        sp_m=torch.zeros(batch, H, W, SPACE_BANDS),
-        t_m=torch.zeros(batch, T, TIME_BANDS),
-        st_m=torch.zeros(batch, STATIC_BANDS),
+        "s_t_m": torch.zeros(batch, H, W, T, SPACE_TIME_BANDS),
+        "sp_m": torch.zeros(batch, H, W, SPACE_BANDS),
+        "t_m": torch.zeros(batch, T, TIME_BANDS),
+        "st_m": torch.zeros(batch, STATIC_BANDS),
 
-        months=torch.zeros(batch, T, dtype=torch.long),
-    )
+        "months": torch.zeros(batch, T, dtype=torch.long),
+    }
 
 
 @pytest.fixture(params=[*GalileoWeights])
@@ -58,7 +63,11 @@ def weights(request: SubRequest) -> WeightsEnum:
 
 
 @pytest.fixture
-def mocked_weights(tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url):
+def mocked_weights(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    load_state_dict_from_url: Any
+) -> GalileoWeights:
     """Create a tiny local checkpoint to test weight loading."""
     w = GalileoWeights.GALILEO_S2_NANO_V1
     path = tmp_path / "dummy_encoder.pth"
@@ -77,7 +86,7 @@ def mocked_weights(tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_fro
 
 
 @pytest.mark.parametrize("w", list(GalileoWeights))
-def test_galileo_forward(w):
+def test_galileo_forward(w: WeightsEnum) -> None:
     """Ensure the forward pass runs with correct output shape."""
     model = galileo(
         variant=w.meta["variant"],
@@ -93,7 +102,7 @@ def test_galileo_forward(w):
     assert s_t_x.shape[-1] == w.meta["embed_dim"]
 
 
-def test_invalid_input_shape():
+def test_invalid_input_shape() -> None:
     """Incorrect band counts must raise an error."""
     model = galileo(
         variant="nano",
@@ -110,7 +119,7 @@ def test_invalid_input_shape():
         model(**bad, patch_size=16)
 
 
-def test_galileo_weights(mocked_weights):
+def test_galileo_weights(mocked_weights: GalileoWeights) -> None:
     """Verify weight loading from a mocked local checkpoint."""
     w = mocked_weights
     model = galileo(
@@ -129,7 +138,7 @@ def test_galileo_weights(mocked_weights):
 
 @pytest.mark.slow
 @pytest.mark.parametrize("w", list(GalileoWeights))
-def test_real_weight_download(w):
+def test_real_weight_download(w: WeightsEnum) -> None:
     """Verify real HuggingFace weight download works."""
     model = galileo(
         weights=w,

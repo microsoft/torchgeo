@@ -13,14 +13,14 @@ from collections import OrderedDict
 from collections import OrderedDict as OrderedDictType
 from collections.abc import Sequence
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
-from timm.models.vision_transformer import Attention
+from timm.models.vision_transformer import Attention  # type: ignore[attr-defined]
 from torch import Tensor, vmap
 from torchvision.models._api import Weights, WeightsEnum
 from torchvision.transforms import Resize
@@ -148,8 +148,8 @@ def get_2d_sincos_pos_embed_with_resolution(
     res = res.to(device)
     grid_h = torch.arange(grid_size, device=device)
     grid_w = torch.arange(grid_size, device=device)
-    grid = torch.meshgrid(grid_w, grid_h, indexing="xy")
-    grid = torch.stack(grid, dim=0)
+    gw, gh = torch.meshgrid(grid_w, grid_h, indexing="xy")
+    grid = torch.stack([gw, gh], dim=0)
 
     grid = torch.einsum("chw,n->cnhw", grid, res)
     _, n, h, w = grid.shape
@@ -220,14 +220,14 @@ def get_month_encoding_table(embed_dim: int) -> Tensor:
     assert embed_dim % 2 == 0
     angles = torch.arange(0, 13) / (12 / (2 * np.pi))
 
-    sin_table = torch.sin(torch.stack([angles for _ in range(embed_dim // 2)], axis=-1))
-    cos_table = torch.cos(torch.stack([angles for _ in range(embed_dim // 2)], axis=-1))
-    month_table = torch.concatenate([sin_table[:-1], cos_table[:-1]], axis=-1)
+    sin_table = torch.sin(torch.stack([angles for _ in range(embed_dim // 2)], dim=-1))
+    cos_table = torch.cos(torch.stack([angles for _ in range(embed_dim // 2)], dim=-1))
+    month_table = torch.concatenate([sin_table[:-1], cos_table[:-1]], dim=-1)
 
     return month_table
 
 
-def to_2tuple(x: Any) -> tuple:
+def to_2tuple(x: Any) -> tuple[Any, Any]:
     """Convert input into a 2-tuple.
 
     Args:
@@ -290,7 +290,7 @@ class FlexiPatchEmbed(nn.Module):
 
         self.pinvs = self._cache_pinvs()
 
-    def _cache_pinvs(self) -> dict:
+    def _cache_pinvs(self) -> dict[tuple[int, int], Tensor]:
         """Precompute pseudo-inverse matrices for different patch sizes.
 
         Returns:
@@ -336,8 +336,8 @@ class FlexiPatchEmbed(nn.Module):
             basis_vec[np.unravel_index(i, old_shape)] = 1.0
             mat.append(self._resize(basis_vec, new_shape).reshape(-1))
         resize_matrix = torch.stack(mat)
-        return torch.linalg.pinv(resize_matrix)
-
+        return cast(Tensor, torch.linalg.pinv(resize_matrix))
+    
     def resize_patch_embed(self, patch_embed: Tensor, new_patch_size: tuple[int, int]) -> Tensor:
         """Resize patch embedding weights to a new patch size.
 
@@ -362,7 +362,7 @@ class FlexiPatchEmbed(nn.Module):
             return rearrange(resampled_kernel, "(h w) -> h w", h=h, w=w)
 
         v_resample_patch_embed = vmap(vmap(resample_patch_embed, 0, 0), 1, 1)
-        return v_resample_patch_embed(patch_embed)
+        return cast(Tensor, v_resample_patch_embed(patch_embed))
 
     def forward(
         self,
@@ -515,10 +515,12 @@ class DropPath(nn.Module):
     Args:
         drop_prob (float | None): Probability of dropping paths.
     """
+    drop_prob: float | None
 
     def __init__(self, drop_prob: float | None = None) -> None:
         """Initialize DropPath module."""
         super().__init__()
+        self.drop_prob = drop_prob
 
 
     def forward(self, x: Tensor) -> Tensor:
@@ -530,7 +532,7 @@ class DropPath(nn.Module):
         Returns:
             Tensor: Output with stochastic depth applied.
         """
-        return drop_path(x, self.drop_prob, self.training)
+        return drop_path(x,self.drop_prob if self.drop_prob is not None else 0.0, self.training)
 
 
 class Block(nn.Module):
@@ -642,10 +644,11 @@ class GalileoBase(nn.Module):
 
     def __init__(
         self,
-        space_time_groups: dict,
-        space_groups: dict,
-        time_groups: dict,
-        static_groups: dict,
+        space_time_groups: dict[str, Any],
+        space_groups: dict[str, Any],
+        time_groups: dict[str, Any],
+        static_groups: dict[str, Any],
+
         *,
         embedding_size: int = 128,
         depth: int = 2,
@@ -667,6 +670,7 @@ class GalileoBase(nn.Module):
 
         self.embedding_size = embedding_size
         self.base_patch_size = base_patch_size
+        
 
         self.blocks = ModuleListWithInit(
             [
@@ -693,7 +697,11 @@ class GalileoBase(nn.Module):
 
         # Month embeddings (non-trainable)
         month_tab = get_month_encoding_table(int(embedding_size * 0.25))
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
+        embed = nn.Embedding.from_pretrained( # type: ignore[no-untyped-call] 
+            month_tab, 
+            freeze=True)
+        
+        self.month_embed = cast(nn.Embedding, embed)
 
         # Channel embeddings (optionally learnable)
         args = {"requires_grad": True} if use_channel_embs else {"requires_grad": False}
@@ -735,7 +743,7 @@ class GalileoBase(nn.Module):
         sp_m: torch.Tensor,
         t_m: torch.Tensor,
         st_m: torch.Tensor,
-    )-> tuple[Tensor, Tensor, Tensor, Tensor]:
+    )-> tuple[Tensor, Tensor]:
         """Flatten and concatenate heterogeneous spatiotemporal token groups.
 
         Args:
@@ -849,13 +857,9 @@ class GalileoBase(nn.Module):
         m_embed_t = repeat(self.month_embed(months), "b t d -> b t c_g d", c_g=t_c_g)
 
         t_zeros = torch.zeros(b, t, t_c_g, int(self.embedding_size * 0.25), device=t_x.device)
-        sp_zeros = torch.zeros(
-            b, h, w, sp_c_g, sp_channel.shape[-1] * 2, device=sp_channel.device
-        )
+        sp_zeros = torch.zeros(b, h, w, sp_c_g, sp_channel.shape[-1] * 2, device=sp_channel.device)
         st_zeros = torch.zeros(b, st_c_g, st_channel.shape[-1] * 3, device=st_channel.device)
 
-        if patch_size is None:
-            patch_size = self.base_patch_size
         token_res = input_res * patch_size
         gsd_ratio = token_res / BASE_GSD
 
@@ -864,7 +868,7 @@ class GalileoBase(nn.Module):
             int(self.embedding_size * 0.25),
             h,
             torch.ones(b).to(s_t_x.device) * gsd_ratio,
-            device=s_t_x.device,
+            device=str(s_t_x.device),
         )
         spatial_embed = rearrange(spatial_embed, "b (h w) d -> b h w d", h=h, w=w)
 
@@ -906,10 +910,11 @@ class Encoder(GalileoBase):
     def __init__(
 
         self,
-        space_time_groups: dict,
-        space_groups: dict,
-        time_groups: dict,
-        static_groups:dict,
+        space_time_groups: dict[str, Any],
+        space_groups: dict[str, Any],
+        time_groups: dict[str, Any],
+        static_groups: dict[str, Any],
+
         *,
         max_patch_size: int = 8,
         embedding_size: int = 128,
@@ -1185,7 +1190,7 @@ class Encoder(GalileoBase):
         patch_size: int,
         input_res: float,
         exit_after: int | None,
-        token_exit_cfg: dict | None,
+        token_exit_cfg: dict[str, Any] | None,
     ) -> tuple[
         Tensor, Tensor, Tensor, Tensor,
         Tensor, Tensor, Tensor, Tensor
@@ -1240,7 +1245,11 @@ class Encoder(GalileoBase):
 
         if exit_ids_seq is not None:
             exit_ids_seq, _, _ = self.remove_masked_tokens(exit_ids_seq, m >= 1)
+            assert exited_tokens is not None
             exited_tokens, _, _ = self.remove_masked_tokens(exited_tokens, m >= 1)
+            assert exited_tokens is not None
+            final_exited_tokens = exited_tokens
+            
 
         for i_blk, blk in enumerate(self.blocks):
             if (exit_after is not None) and ((i_blk + 1) > exit_after):
@@ -1250,7 +1259,7 @@ class Encoder(GalileoBase):
                 exited_tokens = torch.where(
                     exit_ids_seq == i_blk,
                     x.detach(),
-                    exited_tokens.detach(),
+                    final_exited_tokens.detach(),
                 )
 
             x = blk(x)
@@ -1260,7 +1269,7 @@ class Encoder(GalileoBase):
             x = torch.where(
                 exit_ids_seq == (i_blk + 1),
                 x.detach(),
-                exited_tokens.detach(),
+                final_exited_tokens.detach(),
             )
 
         x, _ = self.add_removed_tokens(x, indices, new_m)
@@ -1367,7 +1376,7 @@ class Encoder(GalileoBase):
         sp_x: Tensor,
         t_x: Tensor,
         st_x: Tensor,
-        token_exit_cfg: dict,
+        token_exit_cfg: dict[str, Any]
     ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         """Create early-exit IDs for token groups.
 
@@ -1415,7 +1424,7 @@ class Encoder(GalileoBase):
         patch_size: int,
         input_resolution_m: int | None = BASE_GSD,
         exit_after: int | None = None,
-        token_exit_cfg: dict | None = None,
+        token_exit_cfg: dict[str, Any] | None = None,
         add_layernorm_on_exit: bool = True,
     ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
         """Forward pass of the Galileo Encoder.
@@ -1472,7 +1481,7 @@ class Encoder(GalileoBase):
                 st_m,
                 months,
                 patch_size,
-                input_resolution_m,
+                float(input_resolution_m) if input_resolution_m is not None else 0.0,
                 exit_after=exit_after,
                 token_exit_cfg=token_exit_cfg,
             )
@@ -1496,7 +1505,7 @@ class Encoder(GalileoBase):
         )
 
 
-class GalileoWeights(WeightsEnum):
+class GalileoWeights(WeightsEnum):     # type: ignore[misc]
     """Pretrained weights for Galileo encoder variants.
 
     Each weight entry includes:
@@ -1551,11 +1560,10 @@ def galileo(
     *,
     variant: str | None = None,
     weights: GalileoWeights | None = None,
-    space_time_groups: dict | None = None,
-    space_groups: dict | None = None,
-    time_groups: dict | None = None,
-    static_groups: dict | None = None,
-
+    space_time_groups: dict[str, Any] | None,
+    space_groups: dict[str, Any] | None,
+    time_groups: dict[str, Any] | None,
+    static_groups: dict[str, Any] | None,
     **kwargs: Any,
 ) -> Encoder:
     """Build a Galileo encoder instance.
@@ -1595,6 +1603,11 @@ def galileo(
         )
 
     cfg = _GALILEO_CONFIGS[variant]
+
+    assert space_time_groups is not None
+    assert space_groups is not None
+    assert time_groups is not None
+    assert static_groups is not None
 
     model = Encoder(
         embedding_size=cfg["embed_dim"],
