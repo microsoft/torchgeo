@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Cache dependencies
-        uses: actions/cache@v5.0.2
+        uses: actions/cache@v5.0.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -52,7 +52,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Cache dependencies
-        uses: actions/cache@v5.0.2
+        uses: actions/cache@v5.0.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}

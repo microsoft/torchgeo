@@ -17,9 +17,7 @@ SF = [4, 8, 1]
 class TestChangeStar:
     @torch.no_grad()
     def test_changestar_farseg_classes(self) -> None:
-        model = ChangeStarFarSeg(
-            classes=4, backbone='resnet50', backbone_pretrained=False
-        )
+        model = ChangeStarFarSeg(classes=4, backbone='resnet50')
         x = torch.randn(2, 2, 3, 128, 128)
         y = model(x)
 
@@ -27,9 +25,7 @@ class TestChangeStar:
 
     @torch.no_grad()
     def test_changestar_farseg_output_size(self) -> None:
-        model = ChangeStarFarSeg(
-            classes=4, backbone='resnet50', backbone_pretrained=False
-        )
+        model = ChangeStarFarSeg(classes=4, backbone='resnet50')
         model.eval()
         x = torch.randn(2, 2, 3, 128, 128)
         y = model(x)
@@ -46,12 +42,12 @@ class TestChangeStar:
 
     @pytest.mark.parametrize('backbone', BACKBONE)
     def test_valid_changestar_farseg_backbone(self, backbone: str) -> None:
-        ChangeStarFarSeg(classes=4, backbone=backbone, backbone_pretrained=False)
+        ChangeStarFarSeg(classes=4, backbone=backbone)
 
     def test_invalid_changestar_farseg_backbone(self) -> None:
         match = 'unknown backbone: anynet.'
         with pytest.raises(ValueError, match=match):
-            ChangeStarFarSeg(classes=4, backbone='anynet', backbone_pretrained=False)
+            ChangeStarFarSeg(classes=4, backbone='anynet')
 
     @torch.no_grad()
     @pytest.mark.parametrize('inc', IN_CHANNELS)

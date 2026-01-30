@@ -11,16 +11,10 @@ from torchgeo.models import FarSeg
 class TestFarSeg:
     @torch.no_grad()
     @pytest.mark.parametrize(
-        'backbone,pretrained',
-        [
-            ('resnet18', True),
-            ('resnet34', False),
-            ('resnet50', True),
-            ('resnet101', False),
-        ],
+        'backbone', ['resnet18', 'resnet34', 'resnet50', 'resnet101']
     )
-    def test_valid_backbone(self, backbone: str, pretrained: bool) -> None:
-        model = FarSeg(classes=4, backbone=backbone, backbone_pretrained=pretrained)
+    def test_valid_backbone(self, backbone: str) -> None:
+        model = FarSeg(classes=4, backbone=backbone)
         x = torch.randn(2, 3, 128, 128)
         y = model(x)
 
@@ -29,4 +23,4 @@ class TestFarSeg:
     def test_invalid_backbone(self) -> None:
         match = 'unknown backbone: anynet.'
         with pytest.raises(ValueError, match=match):
-            FarSeg(classes=4, backbone='anynet', backbone_pretrained=False)
+            FarSeg(classes=4, backbone='anynet')
