@@ -16,7 +16,7 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models import resnet as R
+from torchvision.models._api import WeightsEnum
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -39,18 +39,6 @@ BACKBONE_LAT_DIM_MAP = {
     'wide_resnet101_2': 2048,
 }
 
-BACKBONE_WEIGHT_MAP = {
-    'resnet18': R.ResNet18_Weights.DEFAULT,
-    'resnet34': R.ResNet34_Weights.DEFAULT,
-    'resnet50': R.ResNet50_Weights.DEFAULT,
-    'resnet101': R.ResNet101_Weights.DEFAULT,
-    'resnet152': R.ResNet152_Weights.DEFAULT,
-    'resnext50_32x4d': R.ResNeXt50_32X4D_Weights.DEFAULT,
-    'resnext101_32x8d': R.ResNeXt101_32X8D_Weights.DEFAULT,
-    'wide_resnet50_2': R.Wide_ResNet50_2_Weights.DEFAULT,
-    'wide_resnet101_2': R.Wide_ResNet101_2_Weights.DEFAULT,
-}
-
 
 class ObjectDetectionTask(BaseTask):
     """Object detection.
@@ -58,7 +46,6 @@ class ObjectDetectionTask(BaseTask):
     .. versionadded:: 0.4
     """
 
-    ignore = None
     monitor = 'val_map'
     mode = 'max'
 
@@ -66,7 +53,7 @@ class ObjectDetectionTask(BaseTask):
         self,
         model: str = 'faster-rcnn',
         backbone: str = 'resnet50',
-        weights: bool | None = None,
+        weights: WeightsEnum | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
@@ -88,8 +75,7 @@ class ObjectDetectionTask(BaseTask):
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.
-            weights: Initial model weights. True for ImageNet weights, False or None
-                for random weights.
+            weights: Initial model weights.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
@@ -108,6 +94,7 @@ class ObjectDetectionTask(BaseTask):
            *pretrained*, *learning_rate*, and *learning_rate_schedule_patience* were
            renamed to *weights*, *lr*, and *patience*.
         """
+        self.weights = weights
         super().__init__()
 
     def configure_models(self) -> None:
@@ -118,7 +105,6 @@ class ObjectDetectionTask(BaseTask):
         """
         backbone: str = self.hparams['backbone']
         model: str = self.hparams['model']
-        weights: bool | None = self.hparams['weights']
         in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
         freeze_backbone: bool = self.hparams['freeze_backbone']
@@ -127,12 +113,8 @@ class ObjectDetectionTask(BaseTask):
             kwargs = {
                 'backbone_name': backbone,
                 'trainable_layers': self.hparams['trainable_layers'],
+                'weights': self.weights,
             }
-            if weights:
-                kwargs['weights'] = BACKBONE_WEIGHT_MAP[backbone]
-            else:
-                kwargs['weights'] = None
-
             latent_dim = BACKBONE_LAT_DIM_MAP[backbone]
         else:
             raise ValueError(f"Backbone type '{backbone}' is not valid.")
@@ -161,7 +143,7 @@ class ObjectDetectionTask(BaseTask):
         elif model == 'fcos':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
             kwargs['norm_layer'] = (
-                misc.FrozenBatchNorm2d if weights else torch.nn.BatchNorm2d
+                misc.FrozenBatchNorm2d if self.weights else torch.nn.BatchNorm2d
             )
 
             model_backbone = resnet_fpn_backbone(**kwargs)
