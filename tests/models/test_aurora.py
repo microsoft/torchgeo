@@ -15,7 +15,7 @@ pytest.importorskip('aurora')
 
 
 class TestAurora:
-    @pytest.fixture(params=[*Aurora_Weights])
+    @pytest.fixture(params=list(Aurora_Weights))
     def weights(self, request: SubRequest) -> Aurora_Weights:
         return request.param  # type: ignore[no-any-return]
 
