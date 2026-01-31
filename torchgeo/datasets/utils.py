@@ -309,7 +309,7 @@ def check_integrity(fpath: Path, md5: str | None = None, **kwargs: str | None) -
     Args:
         fpath: File path to check.
         md5: Expected MD5 checksum.
-        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
 
     Returns:
         True if file exists and checksum is None or matches, else False.
@@ -383,7 +383,7 @@ def download_url(
         filename: File path to save to. Defaults to the basename of the URL.
         md5: Expected MD5 checksum.
         max_redirect_hops: Maximum number of allowed redirection attempts.
-        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
 
     Raises:
         RuntimeError: If checksum of downloaded file does not match.
