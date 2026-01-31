@@ -79,7 +79,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
-    'gaileo': galileo,
+    'galileo': galileo,
     'panopticon_vitb14': panopticon_vitb14,
     'resnet18': resnet18,
     'resnet50': resnet50,
