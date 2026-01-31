@@ -1,7 +1,7 @@
 Galileo
 =======
 
-.. currentmodule:: torchgeo.models.galileo
+.. currentmodule:: torchgeo.models
 .. autofunction:: galileo
 .. autoclass:: torchgeo.models.galileo.GalileoEncoder
 .. autoclass:: GalileoWeights
