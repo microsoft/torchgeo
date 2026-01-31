@@ -3,6 +3,6 @@ Galileo
 
 .. currentmodule:: torchgeo.models
 .. autofunction:: galileo
-.. autoclass:: torchgeo.models.galileo.GalileoEncoder
+.. autoclass:: GalileoEncoder
 .. autoclass:: GalileoWeights
    :members:
