@@ -320,6 +320,7 @@ class CDL(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
             download_url(
                 self.url.format(year),

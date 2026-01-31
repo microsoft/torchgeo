@@ -3,6 +3,7 @@
 
 """Northeastern China Crop Map Dataset."""
 
+import os
 from collections.abc import Callable, Iterable
 from typing import ClassVar
 
@@ -160,6 +161,7 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
             download_url(
                 self.urls[year],

@@ -187,9 +187,9 @@ class Chesapeake(RasterDataset, ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
         for year, md5 in self.md5s.items():
             url = self.url.format(state=self.state, year=year)
-            print(url)
             download_url(url, self.paths, md5=md5 if self.checksum else None)
 
     def _extract(self) -> None:

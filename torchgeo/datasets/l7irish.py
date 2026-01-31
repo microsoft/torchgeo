@@ -206,6 +206,7 @@ class L7Irish(IntersectionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
         for biome, md5 in self.md5s.items():
             download_url(
                 self.url.format(biome), self.paths, md5=md5 if self.checksum else None

@@ -128,6 +128,7 @@ class Esri2020(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
         download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
