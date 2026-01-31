@@ -240,19 +240,19 @@ class LEVIRCD(LEVIRCDBase):
 
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/06ddd30d7310e3ba784b8e818b7762913120c3f4/train.zip',
             'filename': 'train.zip',
-            'md5': 'a638e71f480628652dea78d8544307e4',
+            'md5': '94e53e3e4163898de9d1db420b89f009',
         },
         'val': {
-            'url': 'https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/06ddd30d7310e3ba784b8e818b7762913120c3f4/val.zip',
             'filename': 'val.zip',
-            'md5': 'f7b857978524f9aa8c3bf7f94e3047a4',
+            'md5': 'b86b5ec05030b88a00349b6abcaca343',
         },
         'test': {
-            'url': 'https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/06ddd30d7310e3ba784b8e818b7762913120c3f4/test.zip',
             'filename': 'test.zip',
-            'md5': '07d5dd89e46f5c1359e2eca746989ed9',
+            'md5': '9b393cf9c0374c55d46eac3228b4a7fb',
         },
     }
 
