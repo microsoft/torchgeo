@@ -5,4 +5,3 @@ Galileo
 .. autofunction:: galileo
 .. autoclass:: GalileoEncoder
 .. autoclass:: GalileoWeights
-   :members:
