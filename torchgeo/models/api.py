@@ -136,6 +136,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
+    'galileo': GalileoWeights,
     'panopticon_vitb14': Panopticon_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
