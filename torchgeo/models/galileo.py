@@ -893,7 +893,7 @@ class GalileoBase(nn.Module):
         return s_t_x + s_t_embed, sp_x + sp_embed, t_x + t_embed, st_x + st_embed
 
 
-class Encoder(GalileoBase):
+class GalileoEncoder(GalileoBase):
     """Galileo encoder implementing flexible patch embeddings and Transformer layers.
 
     Extends `GalileoBase` by adding:
@@ -1554,7 +1554,7 @@ def galileo(
     time_groups: dict[str, Any] | None,
     static_groups: dict[str, Any] | None,
     **kwargs: Any,
-) -> Encoder:
+) -> GalileoEncoder:
     """Build a Galileo encoder instance.
 
     You may specify either:
@@ -1576,7 +1576,7 @@ def galileo(
         ValueError: If unknown variant is provided.
 
     Returns:
-        Encoder: Instantiated (and optionally pretrained) Galileo encoder.
+        GalileoEncoder: Instantiated (and optionally pretrained) Galileo encoder.
     """
     if weights is not None:
         weights = GalileoWeights.verify(weights)
@@ -1598,7 +1598,7 @@ def galileo(
     assert time_groups is not None
     assert static_groups is not None
 
-    model = Encoder(
+    model = GalileoEncoder(
         embedding_size=cfg['embed_dim'],
         depth=cfg['depth'],
         num_heads=cfg['num_heads'],
