@@ -14,11 +14,8 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models import ResNet50_Weights
-from torchvision.models.detection import (
-    MaskRCNN_ResNet50_FPN_Weights,
-    maskrcnn_resnet50_fpn,
-)
+from torchvision.models._api import WeightsEnum
+from torchvision.models.detection import maskrcnn_resnet50_fpn
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -32,7 +29,7 @@ class InstanceSegmentationTask(BaseTask):
     .. versionadded:: 0.7
     """
 
-    ignore = None
+    ignore = ('weights', 'weights_backbone')
     monitor = 'val_segm_map'
     mode = 'max'
 
@@ -40,7 +37,8 @@ class InstanceSegmentationTask(BaseTask):
         self,
         model: str = 'mask-rcnn',
         backbone: str = 'resnet50',
-        weights: bool | None = None,
+        weights: WeightsEnum | None = None,
+        weights_backbone: WeightsEnum | None = None,
         in_channels: int = 3,
         num_classes: int = 91,
         lr: float = 1e-3,
@@ -55,15 +53,20 @@ class InstanceSegmentationTask(BaseTask):
         Args:
             model: Name of the model to use.
             backbone: Name of the backbone to use.
-            weights: Initial model weights. True for ImageNet weights, False or None
-                for random weights.
+            weights: Initial model weights.
+            weights_backbone: Initial backbone weights.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
                 decoder and segmentation head.
+
+        .. versionadded:: 0.9
+           The *weights_backbone* parameter.
         """
+        self.weights = weights
+        self.weights_backbone = weights_backbone
         super().__init__()
 
     def configure_models(self) -> None:
@@ -77,21 +80,13 @@ class InstanceSegmentationTask(BaseTask):
         in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
 
-        weights = None
-        weights_backbone = None
-        if self.hparams['weights']:
-            weights_backbone = ResNet50_Weights.IMAGENET1K_V1
-            # TODO: drop last layer of weights
-            if num_classes == 91:
-                weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
-
         # Create model
         if model == 'mask-rcnn':
             if backbone == 'resnet50':
                 self.model = maskrcnn_resnet50_fpn(
-                    weights=weights,
+                    weights=self.weights,
                     num_classes=num_classes,
-                    weights_backbone=weights_backbone,
+                    weights_backbone=self.weights_backbone,
                 )
                 self.model.transform = GeneralizedRCNNTransformNoOp()
             else:
