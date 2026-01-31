@@ -142,7 +142,6 @@ __all__ = (
     'swin_t',
     'swin_v2_b',
     'swin_v2_t',
-    'tilenet',
     'tessera',
     'tilenet',
     'unet',
