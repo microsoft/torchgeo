@@ -24,7 +24,7 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .galileo import GalileoWeights, galileo, GalileoEncoder
+from .galileo import GalileoEncoder, GalileoWeights, galileo
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import MOSAIKS, RCF
