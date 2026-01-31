@@ -69,7 +69,7 @@ def mocked_weights(
     load_state_dict_from_url: Any
 ) -> GalileoWeights:
     """Create a tiny local checkpoint to test weight loading."""
-    w = GalileoWeights.GALILEO_S2_NANO_V1
+    w: GalileoWeights.GALILEO_S2_NANO_V1
     path = tmp_path / "dummy_encoder.pth"
 
     model = galileo(
