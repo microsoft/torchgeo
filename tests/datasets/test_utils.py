@@ -375,6 +375,9 @@ def test_download_url(tmp_path: Path) -> None:
     download_url(url, tmp_path, md5=md5)
     download_url(url, tmp_path, sha256=sha256)
 
+    with pytest.raises(RuntimeError, match='Download file .* is corrupted'):
+        download_url(url, tmp_path, md5=md5 + '2')
+
 
 @pytest.mark.parametrize(
     'date_string,format,min_datetime,max_datetime',
