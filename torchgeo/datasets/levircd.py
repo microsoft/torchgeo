@@ -331,7 +331,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     * https://arxiv.org/abs/2107.09244
     """
 
-    url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
+    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'
