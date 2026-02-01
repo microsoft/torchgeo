@@ -49,7 +49,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     md5 = '362bad07b51a1264172b8376b39d1fc9'
 
-    url = 'https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link'
+    url = 'https://hf.co/datasets/torchgeo/sustainbench_crop_yield/resolve/eceefda0b866c321c18baa256205d21fa6f5eb8c/soybeans_updated.zip'
 
     dir = 'soybeans'
 

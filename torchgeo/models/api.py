@@ -51,6 +51,7 @@ from .swin import (
     swin_v2_t,
 )
 from .tessera import Tessera_Weights, tessera
+from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -87,6 +88,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'swin_b': swin_b,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
+    'tilenet': tilenet,
     'tessera': tessera,
     'unet': unet,
     'vit_small_patch16_224': vit_small_patch16_224,
@@ -115,6 +117,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     swin_b: Swin_B_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    tilenet: TileNet_Weights,
     tessera: Tessera_Weights,
     unet: Unet_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
@@ -140,6 +143,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     'swin_b': Swin_B_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'tilenet': TileNet_Weights,
     'tessera': Tessera_Weights,
     'unet': Unet_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,

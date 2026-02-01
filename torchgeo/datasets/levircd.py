@@ -240,17 +240,17 @@ class LEVIRCD(LEVIRCDBase):
 
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/train.zip',
             'filename': 'train.zip',
             'md5': 'a638e71f480628652dea78d8544307e4',
         },
         'val': {
-            'url': 'https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/val.zip',
             'filename': 'val.zip',
             'md5': 'f7b857978524f9aa8c3bf7f94e3047a4',
         },
         'test': {
-            'url': 'https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/test.zip',
             'filename': 'test.zip',
             'md5': '07d5dd89e46f5c1359e2eca746989ed9',
         },
@@ -307,7 +307,8 @@ class LEVIRCDPlus(LEVIRCDBase):
     """LEVIR-CD+ dataset.
 
     The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset is a dataset for building change detection.
+    dataset extends LEVIR-CD to 985 image pairs and is designed
+    to be easier due to its urban locations and near-nadir angles.
 
     Dataset features:
 
@@ -331,7 +332,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     * https://arxiv.org/abs/2107.09244
     """
 
-    url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
+    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'

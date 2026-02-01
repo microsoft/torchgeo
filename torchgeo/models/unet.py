@@ -200,9 +200,9 @@ def unet(
         A U-Net model.
     """
     kwargs['arch'] = 'Unet'
+    kwargs['encoder_weights'] = None
 
     if weights:
-        kwargs['encoder_weights'] = None
         kwargs['in_channels'] = weights.meta['in_chans']
         kwargs['encoder_name'] = weights.meta['encoder']
         kwargs['classes'] = weights.meta['num_classes'] if classes is None else classes

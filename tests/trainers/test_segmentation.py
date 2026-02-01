@@ -67,6 +67,7 @@ class TestSemanticSegmentationTask:
             'mmflood',
             'naipchesapeake',
             'pastis',
+            'pastis100',
             'potsdam2d',
             'sen12ms_all',
             'sen12ms_s1',

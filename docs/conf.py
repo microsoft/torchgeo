@@ -61,6 +61,7 @@ nitpick_ignore = [
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
+    ('py:class', 'numpy.uint8'),
     ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
     ('py:class', 'timm.models.resnet.ResNet'),
     ('py:class', 'timm.models.vision_transformer.VisionTransformer'),

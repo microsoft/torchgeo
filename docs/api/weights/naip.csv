@@ -1,3 +1,4 @@
 Weight,Channels,Source,Citation,License
 Swin_V2_B_Weights.NAIP_RGB_MI_SATLAS,3,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
 Swin_V2_B_Weights.NAIP_RGB_SI_SATLAS,3,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
+TileNet_Weights.NAIP_ALL_TILE2VEC,4,`link <https://github.com/ermongroup/tile2vec>`__,`link <https://arxiv.org/abs/1805.02855>`__,MIT

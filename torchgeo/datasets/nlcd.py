@@ -261,7 +261,7 @@ class NLCD(RasterDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

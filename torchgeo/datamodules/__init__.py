@@ -35,7 +35,7 @@ from .mmflood import MMFloodDataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCD100DataModule, OSCDDataModule
-from .pastis import PASTISDataModule
+from .pastis import PASTIS100DataModule, PASTISDataModule
 from .patternnet import PatternNetDataModule
 from .potsdam import Potsdam2DDataModule
 from .quakeset import QuakeSetDataModule
@@ -104,6 +104,7 @@ __all__ = (
     'NonGeoDataModule',
     'OSCD100DataModule',
     'OSCDDataModule',
+    'PASTIS100DataModule',
     'PASTISDataModule',
     'PatternNetDataModule',
     'Potsdam2DDataModule',

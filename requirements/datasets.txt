@@ -3,7 +3,7 @@
 h5py==3.14.0; python_version<'3.14'
 laspy==2.7.0
 netcdf4==1.7.4
-pandas[parquet]==2.3.3
+pandas[parquet]==3.0.0
 pycocotools==2.0.11
 rioxarray==0.20.0
 scikit-image==0.26.0

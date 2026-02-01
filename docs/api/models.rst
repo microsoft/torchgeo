@@ -8,30 +8,68 @@ This section provides an overview of all models available in ``torchgeo.models``
 Model Architectures
 -------------------
 
+TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
+
+1D Time Series (:math:`\scriptstyle B \times T \times C`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. toctree::
    :maxdepth: 1
 
-   models/aurora
-   models/btc
-   models/changestar
-   models/changevit
-   models/convlstm
+   models/l-tae
+   models/tessera
+
+2D Images (:math:`\scriptstyle B \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
    models/copernicus-fm
    models/croma
    models/dofa
    models/earthloc
    models/farseg
    models/fcn
-   models/fc-siamese-networks
-   models/l-tae
    models/mosaiks
    models/panopticon
    models/resnet
    models/scale-mae
    models/swin-transformer
-   models/tessera
+   models/tilenet
    models/u-net
    models/vision-transformer
+
+TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__ encoders and `SMP <https://segmentation-modelspytorch.readthedocs.io/en/latest/>`__ decoders.
+
+3D Change Detection (:math:`\scriptstyle B \times 2 \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/btc
+   models/changestar
+   models/changevit
+   models/fc-siamese-networks
+
+See `torchange <https://github.com/Z-Zheng/pytorch-change-models>`__ for additional change detection architectures.
+
+3D Image Time Series (:math:`\scriptstyle B \times T \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/convlstm
+
+4D Ocean and Atmosphere (:math:`\scriptstyle B \times T \times C \times Z \times Y \times X`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/aurora
 
 Utility Functions
 -----------------

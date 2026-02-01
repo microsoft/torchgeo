@@ -4,6 +4,7 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -18,8 +19,10 @@ from torchgeo.datasets.utils import (
     Executable,
     Sample,
     array_to_tensor,
+    check_integrity,
     concat_samples,
     disambiguate_timestamp,
+    extract_archive,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -328,6 +331,40 @@ class TestBoundingBox:
             BoundingBox(0, 1, 2, 3, MAXT, MINT)
 
 
+def test_check_integrity() -> None:
+    fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
+    assert check_integrity(fpath)
+    assert check_integrity(fpath, md5=md5)
+    assert check_integrity(fpath, sha256=sha256)
+
+    assert not check_integrity(fpath + '2')
+    assert not check_integrity(fpath + '2', md5=md5)
+    assert not check_integrity(fpath + '2', sha256=sha256)
+    assert not check_integrity(fpath, md5=md5 + '2')
+    assert not check_integrity(fpath, sha256=sha256 + '2')
+
+
+@pytest.mark.parametrize(
+    'from_path',
+    [
+        os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip'),
+        os.path.join('tests', 'data', 'satlas', 'metadata.tar'),
+        os.path.join('tests', 'data', 'cropharvest', 'features.tar.gz'),
+        os.path.join('tests', 'data', 'cowc_counting', 'COWC_Counting_Utah_AGRC.tbz'),
+        os.path.join(
+            'tests', 'data', 'cowc_counting', 'COWC_test_list_64_class.txt.bz2'
+        ),
+    ],
+)
+def test_extract_archive(from_path: str, tmp_path: Path) -> None:
+    shutil.copy(from_path, tmp_path)
+    from_path = os.path.join(tmp_path, os.path.basename(from_path))
+    extract_archive(from_path, tmp_path, remove_finished=True)
+
+
 @pytest.mark.parametrize(
     'date_string,format,min_datetime,max_datetime',
     [
@@ -430,7 +467,10 @@ class TestCollateFunctionsMatchingKeys:
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[Sample]:
-        return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
+        return [
+            {'image': torch.tensor([1, 2, 0])},
+            {'mask': torch.tensor([0, 0, 3]), 'other': 5},
+        ]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
         sample = stack_samples(samples)
