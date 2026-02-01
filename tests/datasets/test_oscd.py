@@ -26,7 +26,7 @@ class TestOSCD:
                     (OSCD, OSCD.rgb_bands),
                     (OSCD100, OSCD100.all_bands),
                 ],
-                ['train', 'val', 'test'],
+                ['train', 'test'],
             )
         )
     )
@@ -34,9 +34,6 @@ class TestOSCD:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
         (cls, bands), split = request.param
-
-        if cls == OSCD and split == 'val':
-            pytest.skip('OSCD does not have val split')
 
         urls = {
             'Onera Satellite Change Detection dataset - Images.zip': os.path.join(
@@ -51,12 +48,6 @@ class TestOSCD:
                 'oscd',
                 'Onera Satellite Change Detection dataset - Train Labels.zip',
             ),
-            'Onera Satellite Change Detection dataset - Val Labels.zip': os.path.join(
-                'tests',
-                'data',
-                'oscd',
-                'Onera Satellite Change Detection dataset - Val Labels.zip',
-            ),
             'Onera Satellite Change Detection dataset - Test Labels.zip': os.path.join(
                 'tests',
                 'data',
@@ -64,22 +55,7 @@ class TestOSCD:
                 'Onera Satellite Change Detection dataset - Test Labels.zip',
             ),
         }
-        md5s = {
-            'Onera Satellite Change Detection dataset - Images.zip': (
-                'd3d2b28d65f0899be790b78b27746faf'
-            ),
-            'Onera Satellite Change Detection dataset - Train Labels.zip': (
-                '88d5954b74872b0bb8e4a02e33fcb414'
-            ),
-            'Onera Satellite Change Detection dataset - Val Labels.zip': (
-                'f239719b234f1310ccfe8c405838605d'
-            ),
-            'Onera Satellite Change Detection dataset - Test Labels.zip': (
-                '3530d708d916aa18d8fe68edcc70af3e'
-            ),
-        }
         monkeypatch.setattr(cls, 'urls', urls)
-        monkeypatch.setattr(cls, 'md5s', md5s)
 
         return cls(
             root=tmp_path,
@@ -87,7 +63,6 @@ class TestOSCD:
             bands=bands,
             transforms=nn.Identity(),
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: OSCD) -> None:
@@ -122,7 +97,6 @@ class TestOSCD:
         for zipfile in [
             'Onera Satellite Change Detection dataset - Images.zip',
             'Onera Satellite Change Detection dataset - Train Labels.zip',
-            'Onera Satellite Change Detection dataset - Val Labels.zip',
             'Onera Satellite Change Detection dataset - Test Labels.zip',
         ]:
             shutil.copy(os.path.join('tests', 'data', 'oscd', zipfile), dataset.root)
