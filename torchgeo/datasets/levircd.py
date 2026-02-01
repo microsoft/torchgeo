@@ -307,7 +307,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     """LEVIR-CD+ dataset.
 
     The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset extends LEVIR-CD to 985 image pairs and is designed 
+    dataset extends LEVIR-CD to 985 image pairs and is designed
     to be easier due to its urban locations and near-nadir angles.
 
     Dataset features:
