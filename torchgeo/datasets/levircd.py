@@ -308,6 +308,10 @@ class LEVIRCDPlus(LEVIRCDBase):
 
     The `LEVIR-CD+ dataset extends the LEVIR-CD dataset to 985 image pairs
     and is designed to be easier due to its urban locations and near-nadir angles.
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2107.09244
     """
 
     url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
