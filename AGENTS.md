@@ -47,6 +47,7 @@ tests/{data/<dataset>/,datasets/,...}
 
 - All functions require full annotations
 - Union: `X | Y` (not `Union[X, Y]`)
+- Treat `Path` as `type Path = str | os.PathLike[str]` when imported from `torchgeo.datasets.utils`
 - Avoid `Any`; use `Sequence` for parameters, `list`/`tuple` for return values
 - Prefer built-in types (`list`, `dict`, `tuple`) over `typing.List`, etc.
 - `type: ignore` only for external lib issues
