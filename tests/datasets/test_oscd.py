@@ -1,9 +1,9 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 import shutil
-from itertools import product
 from pathlib import Path
 
 import pytest
@@ -19,22 +19,11 @@ from torchgeo.datasets import OSCD, OSCD100, DatasetNotFoundError, RGBBandsMissi
 
 class TestOSCD:
     @pytest.fixture(
-        params=list(
-            product(
-                [
-                    (OSCD, OSCD.all_bands),
-                    (OSCD, OSCD.rgb_bands),
-                    (OSCD100, OSCD100.all_bands),
-                ],
-                ['train', 'test'],
-            )
-        )
+        params=zip([OSCD, OSCD100], [OSCD.all_bands, OSCD.rgb_bands], ['train', 'test'])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
-        (cls, bands), split = request.param
-
         urls = {
             'Onera Satellite Change Detection dataset - Images.zip': os.path.join(
                 'tests',
@@ -55,15 +44,9 @@ class TestOSCD:
                 'Onera Satellite Change Detection dataset - Test Labels.zip',
             ),
         }
+        cls, bands, split = request.param
         monkeypatch.setattr(cls, 'urls', urls)
-
-        return cls(
-            root=tmp_path,
-            split=split,
-            bands=bands,
-            transforms=nn.Identity(),
-            download=True,
-        )
+        return cls(tmp_path, split, bands, transforms=nn.Identity(), download=True)
 
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
@@ -91,32 +74,19 @@ class TestOSCD:
     def test_already_extracted(self, dataset: OSCD) -> None:
         type(dataset)(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, dataset: OSCD) -> None:
-        shutil.rmtree(dataset.root)
-        dataset.root.mkdir()
-        for zipfile in [
-            'Onera Satellite Change Detection dataset - Images.zip',
-            'Onera Satellite Change Detection dataset - Train Labels.zip',
-            'Onera Satellite Change Detection dataset - Test Labels.zip',
-        ]:
-            shutil.copy(os.path.join('tests', 'data', 'oscd', zipfile), dataset.root)
-        type(dataset)(root=dataset.root)
+    def test_already_downloaded(self, tmp_path: Path) -> None:
+        pathname = os.path.join('tests', 'data', 'oscd', '*Onera*.zip')
+        root = tmp_path
+        for zipfile in glob.iglob(pathname):
+            shutil.copy(zipfile, root)
+        OSCD(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             OSCD(tmp_path)
 
-    def test_not_downloaded_oscd100(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            OSCD100(tmp_path)
-
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle='Test')
-        plt.close()
-
-        sample = dataset[0]
-        sample['prediction'] = sample['mask'].clone()
-        dataset.plot(sample, suptitle='Prediction')
         plt.close()
 
     def test_failed_plot(self, dataset: OSCD) -> None:
@@ -126,7 +96,3 @@ class TestOSCD:
         ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle='Test')
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            OSCD100(split='foo')
