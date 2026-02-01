@@ -306,29 +306,8 @@ class LEVIRCD(LEVIRCDBase):
 class LEVIRCDPlus(LEVIRCDBase):
     """LEVIR-CD+ dataset.
 
-    The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset is a dataset for building change detection.
-
-    Dataset features:
-
-    * image pairs of 20 different urban regions across Texas between 2002-2020
-    * binary change masks representing building change
-    * three spectral bands - RGB
-    * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
-
-    Dataset format:
-
-    * images are three-channel pngs
-    * masks are single-channel pngs where no change = 0, change = 255
-
-    Dataset classes:
-
-    1. no change
-    2. change
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/2107.09244
+    The `LEVIR-CD+ dataset extends the LEVIR-CD dataset to 985 image pairs
+    and is designed to be easier due to its urban locations and near-nadir angles.
     """
 
     url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
