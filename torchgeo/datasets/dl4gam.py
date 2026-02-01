@@ -340,7 +340,7 @@ class DL4GAMAlps(NonGeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`DL4GAMAlps.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             clip_extrema: flag indicating whether to clip the lowest/highest 2.5% of the
