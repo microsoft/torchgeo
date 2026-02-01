@@ -72,7 +72,7 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits: ClassVar[tuple[str, ...]] = ('train', 'test')
+    splits: tuple[str, ...] = ('train', 'test')
 
     colormap = ('blue',)
 
@@ -375,4 +375,4 @@ class OSCD100(OSCD):
         'Onera Satellite Change Detection dataset - Val Labels.zip': '99a38997829cc81a18b04d4afb3493ba',
         'Onera Satellite Change Detection dataset - Test Labels.zip': '5e43ae36cfe0cc83ddcbd4fcb03ace60',
     }
-    splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
+    splits: tuple[str, ...] = ('train', 'val', 'test')
