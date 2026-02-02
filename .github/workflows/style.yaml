@@ -104,7 +104,7 @@ jobs:
       - name: List pip dependencies
         run: uv pip list
       - name: Run ty checks
-        run: ty check
+        run: ty check --output-format=concise
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
