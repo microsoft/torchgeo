@@ -431,7 +431,7 @@ def download_and_extract_archive(
     filename = filename or os.path.basename(url)
     from_path = os.path.join(download_root, filename)
 
-    download_url(url, download_root, filename, md5, **kwargs)
+    download_url(url, download_root, filename, md5, 3, **kwargs)
     extract_archive(from_path, extract_root, remove_finished)
 
 
