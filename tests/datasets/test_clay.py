@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from torch import Tensor
 
 from torchgeo.datasets import ClayEmbeddings, DatasetNotFoundError
@@ -15,9 +16,9 @@ pytest.importorskip('pyarrow')
 
 
 class TestClayEmbeddings:
-    @pytest.fixture
-    def dataset(self) -> ClayEmbeddings:
-        root = os.path.join('tests', 'data', 'clay', 'data')
+    @pytest.fixture(params=['v0', 'v1.5'])
+    def dataset(self, request: SubRequest) -> ClayEmbeddings:
+        root = os.path.join('tests', 'data', 'clay', request.param)
         transforms = nn.Identity()
         return ClayEmbeddings(root, transforms=transforms)
 
