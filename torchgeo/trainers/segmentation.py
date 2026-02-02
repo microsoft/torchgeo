@@ -381,7 +381,7 @@ class SemanticSegmentationTask(BaseTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> dict[str, Any]:
+    ) -> dict[str, Tensor]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -390,13 +390,9 @@ class SemanticSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Dictionary containing:
-                - probabilities: Model predictions (B, C, H, W) with softmax/sigmoid
-                  applied
-                - bounds: Patch bounds tensor (B, 9) if available
-                - transform: Per-patch affine transform (B, 6) if available
+            Dictionary with 'probabilities', 'bounds', and 'transform' keys.
 
-        .. versionchanged:: 0.8
+        .. versionchanged:: 0.9
            Changed return type from Tensor to dict with probabilities, bounds,
            and transform keys.
         """
