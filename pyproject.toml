@@ -273,10 +273,6 @@ filterwarnings = [
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
     # https://github.com/rr-/docstring_parser/pull/82
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
-    # https://github.com/python/cpython/pull/102953
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.digital_typhoon",
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchvision.datasets.utils",
     # https://github.com/kornia/kornia/pull/2967
     "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
     # https://github.com/kornia/kornia/pull/2981
