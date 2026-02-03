@@ -192,7 +192,7 @@ class TreeSatAI(NonGeoDataset):
         sample = {'label': label}
         for directory in self.sensors:
             with rio.open(os.path.join(self.root, directory, '60m', file)) as f:
-                sample[f'image_{directory}'] = torch.tensor(f.read().astype('float32'))
+                sample[f'image_{directory}'] = torch.tensor(f.read().astype('float32')).unsqueeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
