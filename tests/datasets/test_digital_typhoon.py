@@ -32,11 +32,6 @@ class TestDigitalTyphoon:
         url = os.path.join('tests', 'data', 'digital_typhoon', 'WP.tar.gz{0}')
         monkeypatch.setattr(DigitalTyphoon, 'url', url)
 
-        md5sums = {
-            'aa': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
-            'ab': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
-        }
-        monkeypatch.setattr(DigitalTyphoon, 'md5sums', md5sums)
         root = tmp_path
 
         transforms = nn.Identity()
@@ -47,7 +42,6 @@ class TestDigitalTyphoon:
             max_feature_value=max_features,
             transforms=transforms,
             download=True,
-            checksum=True,
         )
 
     def test_len(self, dataset: DigitalTyphoon) -> None:

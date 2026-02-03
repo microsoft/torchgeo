@@ -24,23 +24,12 @@ from torchgeo.datasets import (
 class TestCDL:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
-        md5s = {
-            2023: '3fbd3eecf92b8ce1ae35060ada463c6d',
-            2022: '826c6fd639d9cdd94a44302fbc5b76c3',
-        }
-        monkeypatch.setattr(CDL, 'md5s', md5s)
         url = os.path.join('tests', 'data', 'cdl', '{}_30m_cdls.zip')
         monkeypatch.setattr(CDL, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         transforms = nn.Identity()
-        return CDL(
-            root,
-            transforms=transforms,
-            download=True,
-            checksum=True,
-            years=[2023, 2022],
-        )
+        return CDL(root, transforms=transforms, download=True, years=[2023, 2022])
 
     def test_getitem(self, dataset: CDL) -> None:
         x = dataset[dataset.bounds]

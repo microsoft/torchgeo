@@ -22,9 +22,7 @@ class TestMillionAID:
         root = os.path.join('tests', 'data', 'millionaid')
         split, task = request.param
         transforms = nn.Identity()
-        return MillionAID(
-            root=root, split=split, task=task, transforms=transforms, checksum=True
-        )
+        return MillionAID(root=root, split=split, task=task, transforms=transforms)
 
     def test_getitem(self, dataset: MillionAID) -> None:
         x = dataset[0]

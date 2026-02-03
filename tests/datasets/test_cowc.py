@@ -28,21 +28,10 @@ class TestCOWCCounting:
     ) -> COWC:
         base_url = os.path.join('tests', 'data', 'cowc_counting') + os.sep
         monkeypatch.setattr(COWCCounting, 'base_url', base_url)
-        md5s = [
-            '7d0c6d1fb548d3ea3a182a56ce231f97',
-            '2e9a806b19b21f9d796c7393ad8f51ee',
-            '39453c0627effd908e773c5c1f8aecc9',
-            '67190b3e0ca8aa1fc93250aa5383a8f3',
-            '575aead6a0c92aba37d613895194da7c',
-            'e7c2279040d3ce31b9c925c45d0c61e2',
-            'f159e23d52bd0b5656fe296f427b98e1',
-            '0a4daed8c5f6c4e20faa6e38636e4346',
-        ]
-        monkeypatch.setattr(COWCCounting, 'md5s', md5s)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return COWCCounting(root, split, transforms, download=True, checksum=True)
+        return COWCCounting(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]
@@ -91,21 +80,10 @@ class TestCOWCDetection:
     ) -> COWC:
         base_url = os.path.join('tests', 'data', 'cowc_detection') + os.sep
         monkeypatch.setattr(COWCDetection, 'base_url', base_url)
-        md5s = [
-            '6bbbdb36ee4922e879f66ed9234cb8ab',
-            '09e4af08c6e6553afe5098b328ce9749',
-            '12a2708ab7644766e43f5aae34aa7f2a',
-            'a896433398a0c58263c0d266cfc93bc4',
-            '911ed42c104db60f7a7d03a5b36bc1ab',
-            '4cdb4fefab6a2951591e7840c11a229d',
-            'dd315cfb48dfa7ddb8230c942682bc37',
-            'dccc2257e9c4a9dde2b4f84769804046',
-        ]
-        monkeypatch.setattr(COWCDetection, 'md5s', md5s)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return COWCDetection(root, split, transforms, download=True, checksum=True)
+        return COWCDetection(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]

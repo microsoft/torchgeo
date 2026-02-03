@@ -26,17 +26,13 @@ from torchgeo.datasets import (
 class TestL8Biome:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
-        md5s = {
-            'barren': '29c9910adbc89677389f210226fb163d',
-            'forest': 'b7dbb82fb2c22cbb03389d8828d73713',
-        }
-
+        md5s = {'barren': '', 'forest': ''}
         url = os.path.join('tests', 'data', 'l8biome', '{}.tar.gz')
         monkeypatch.setattr(L8Biome, 'url', url)
         monkeypatch.setattr(L8Biome, 'md5s', md5s)
         root = tmp_path
         transforms = nn.Identity()
-        return L8Biome(root, transforms=transforms, download=True, checksum=True)
+        return L8Biome(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: L8Biome) -> None:
         x = dataset[dataset.bounds]

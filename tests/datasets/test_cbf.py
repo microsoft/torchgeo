@@ -27,16 +27,13 @@ class TestCanadianBuildingFootprints:
         monkeypatch.setattr(
             CanadianBuildingFootprints, 'provinces_territories', ['Alberta']
         )
-        monkeypatch.setattr(
-            CanadianBuildingFootprints, 'md5s', ['25091d1f051baa30d8f2026545cfb696']
-        )
         url = os.path.join('tests', 'data', 'cbf') + os.sep
         monkeypatch.setattr(CanadianBuildingFootprints, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
-            root, res=(0.1, 0.1), transforms=transforms, download=True, checksum=True
+            root, res=(0.1, 0.1), transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:

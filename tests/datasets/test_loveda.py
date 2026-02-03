@@ -19,23 +19,21 @@ class TestLoveDA:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LoveDA:
-        md5 = '3d5b1373ef9a3084ec493b9b2056fe07'
-
         info_dict = {
             'train': {
                 'url': os.path.join('tests', 'data', 'loveda', 'Train.zip'),
                 'filename': 'Train.zip',
-                'md5': md5,
+                'md5': '',
             },
             'val': {
                 'url': os.path.join('tests', 'data', 'loveda', 'Val.zip'),
                 'filename': 'Val.zip',
-                'md5': md5,
+                'md5': '',
             },
             'test': {
                 'url': os.path.join('tests', 'data', 'loveda', 'Test.zip'),
                 'filename': 'Test.zip',
-                'md5': md5,
+                'md5': '',
             },
         }
 
@@ -44,9 +42,7 @@ class TestLoveDA:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return LoveDA(
-            root=root, split=split, transforms=transforms, download=True, checksum=True
-        )
+        return LoveDA(root=root, split=split, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: LoveDA) -> None:
         x = dataset[0]

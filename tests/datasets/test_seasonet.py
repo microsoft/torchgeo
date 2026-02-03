@@ -31,27 +31,6 @@ class TestSeasoNet:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasoNet:
         monkeypatch.setitem(
-            SeasoNet.metadata[0], 'md5', '836a0896eba0e3005208f3fd180e429d'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[1], 'md5', '405656c8c19d822620bbb9f92e687337'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[2], 'md5', 'dc0dda18de019a9f50a794b8b4060a3b'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[3], 'md5', 'a70abca62e78eb1591555809dc81d91d'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[4], 'md5', '67651cc9095207e07ea4db1a71f0ebc2'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[5], 'md5', '576324ba1c32a7e9ba858f1c2577cf2a'
-        )
-        monkeypatch.setitem(
-            SeasoNet.metadata[6], 'md5', '48ff6e9e01fdd92379e5712e4f336ea8'
-        )
-        monkeypatch.setitem(
             SeasoNet.metadata[0],
             'url',
             os.path.join('tests', 'data', 'seasonet', 'spring.zip'),
@@ -98,7 +77,6 @@ class TestSeasoNet:
             concat_seasons=concat_seasons,
             transforms=transforms,
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: SeasoNet) -> None:

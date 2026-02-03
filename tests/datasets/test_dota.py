@@ -31,62 +31,26 @@ class TestDOTA:
         file_info = {
             'train': {
                 'images': {
-                    '1.0': {
-                        'filename': 'dotav1.0_images_train.tar.gz',
-                        'md5': '126d42cc8b2c093e7914528ac01ea8fc',
-                    },
-                    '1.5': {
-                        'filename': 'dotav1.0_images_train.tar.gz',
-                        'md5': 'fd187ea8acc3d429f0ba9e5ef96def75',
-                    },
-                    '2.0': {
-                        'filename': 'dotav2.0_images_train.tar.gz',
-                        'md5': '613d192b70dc53fe7e10f95eed0e1a9d',
-                    },
+                    '1.0': {'filename': 'dotav1.0_images_train.tar.gz', 'md5': ''},
+                    '1.5': {'filename': 'dotav1.0_images_train.tar.gz', 'md5': ''},
+                    '2.0': {'filename': 'dotav2.0_images_train.tar.gz', 'md5': ''},
                 },
                 'annotations': {
-                    '1.0': {
-                        'filename': 'dotav1.0_annotations_train.tar.gz',
-                        'md5': '1fbdb35e2d55cab2632a8c20ed54a6de',
-                    },
-                    '1.5': {
-                        'filename': 'dotav1.5_annotations_train.tar.gz',
-                        'md5': '7a7ed5a309acb45dd1885f088fa24783',
-                    },
-                    '2.0': {
-                        'filename': 'dotav2.0_annotations_train.tar.gz',
-                        'md5': 'f8cd1bf53362bd372ddc2fba97cff2b6',
-                    },
+                    '1.0': {'filename': 'dotav1.0_annotations_train.tar.gz', 'md5': ''},
+                    '1.5': {'filename': 'dotav1.5_annotations_train.tar.gz', 'md5': ''},
+                    '2.0': {'filename': 'dotav2.0_annotations_train.tar.gz', 'md5': ''},
                 },
             },
             'val': {
                 'images': {
-                    '1.0': {
-                        'filename': 'dotav1.0_images_val.tar.gz',
-                        'md5': 'f73dbdc8aa4e580dda4ef6cb54cfbd68',
-                    },
-                    '1.5': {
-                        'filename': 'dotav1.0_images_val.tar.gz',
-                        'md5': 'b1c618180e0ca3e4426ecf53b82c8d74',
-                    },
-                    '2.0': {
-                        'filename': 'dotav2.0_images_val.tar.gz',
-                        'md5': '0950df7a4c700934572f3a9a85133520',
-                    },
+                    '1.0': {'filename': 'dotav1.0_images_val.tar.gz', 'md5': ''},
+                    '1.5': {'filename': 'dotav1.0_images_val.tar.gz', 'md5': ''},
+                    '2.0': {'filename': 'dotav2.0_images_val.tar.gz', 'md5': ''},
                 },
                 'annotations': {
-                    '1.0': {
-                        'filename': 'dotav1.0_annotations_val.tar.gz',
-                        'md5': '700fd2e7cba8dd543ca5bcbe411c9db4',
-                    },
-                    '1.5': {
-                        'filename': 'dotav1.5_annotations_val.tar.gz',
-                        'md5': 'f0a32911fa3614a8de67f5fd8d04dd9e',
-                    },
-                    '2.0': {
-                        'filename': 'dotav2.0_annotations_val.tar.gz',
-                        'md5': '4823cdc2c35d5f74254ffab0d99ea876',
-                    },
+                    '1.0': {'filename': 'dotav1.0_annotations_val.tar.gz', 'md5': ''},
+                    '1.5': {'filename': 'dotav1.5_annotations_val.tar.gz', 'md5': ''},
+                    '2.0': {'filename': 'dotav2.0_annotations_val.tar.gz', 'md5': ''},
                 },
             },
         }

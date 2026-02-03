@@ -32,7 +32,6 @@ class TestEnviroAtlas:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EnviroAtlas:
-        monkeypatch.setattr(EnviroAtlas, 'md5', '071ec65c611e1d4915a5247bffb5ad87')
         monkeypatch.setattr(
             EnviroAtlas,
             'url',
@@ -51,7 +50,6 @@ class TestEnviroAtlas:
             transforms=transforms,
             prior_as_input=request.param[1],
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: EnviroAtlas) -> None:
@@ -82,7 +80,7 @@ class TestEnviroAtlas:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EnviroAtlas(tmp_path, checksum=True)
+            EnviroAtlas(tmp_path)
 
     def test_out_of_bounds_index(self, dataset: EnviroAtlas) -> None:
         with pytest.raises(

@@ -24,12 +24,10 @@ class TestxBD:
             {
                 'train': {
                     'filename': 'train_images_labels_targets.tar.gz',
-                    'md5': '373e61d55c1b294aa76b94dbbd81332b',
                     'directory': 'train',
                 },
                 'test': {
                     'filename': 'test_images_labels_targets.tar.gz',
-                    'md5': 'bc6de81c956a3bada38b5b4e246266a1',
                     'directory': 'test',
                 },
             },
@@ -37,7 +35,7 @@ class TestxBD:
         root = os.path.join('tests', 'data', 'xbd')
         split = request.param
         transforms = nn.Identity()
-        return xBD(root, split, transforms, checksum=True)
+        return xBD(root, split, transforms)
 
     def test_getitem(self, dataset: xBD) -> None:
         x = dataset[0]

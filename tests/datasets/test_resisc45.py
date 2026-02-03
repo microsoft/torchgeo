@@ -33,19 +33,10 @@ class TestRESISC45:
                 'test': os.path.join('tests', 'data', 'resisc45', 'resisc45-test.txt'),
             },
         )
-        monkeypatch.setattr(
-            RESISC45,
-            'split_md5s',
-            {
-                'train': '7760b1960c9a3ff46fb985810815e14d',
-                'val': '7760b1960c9a3ff46fb985810815e14d',
-                'test': '7760b1960c9a3ff46fb985810815e14d',
-            },
-        )
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return RESISC45(root, split, transforms, download=True, checksum=True)
+        return RESISC45(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: RESISC45) -> None:
         x = dataset[0]

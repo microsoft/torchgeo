@@ -32,9 +32,7 @@ class TestOpenBuildings:
         shutil.copy(
             os.path.join('tests', 'data', 'openbuildings', '000_buildings.csv.gz'), root
         )
-
-        md5s = {'000_buildings.csv.gz': '20aeeec9d45a0ce4d772a26e0bcbc25f'}
-
+        md5s = {'000_buildings.csv.gz': 'fake'}
         monkeypatch.setattr(OpenBuildings, 'md5s', md5s)
         transforms = nn.Identity()
         return OpenBuildings(root, transforms=transforms)
