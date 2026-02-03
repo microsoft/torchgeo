@@ -693,6 +693,12 @@ class RasterDataset(GeoDataset):
 class XarrayDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files.
 
+    .. warning::
+       This dataset is considered experimental and subject to change. Users are
+       encouraged to experiment with this dataset, introduce subclasses, and report
+       bugs. However, this dataset should not be used in production, as the API is
+       very likely to change in future releases.
+
     .. versionadded:: 0.8
     """
 
