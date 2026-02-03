@@ -1,4 +1,4 @@
-<img class="dark-light" src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
+<img class="dark-light" src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
 
 TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), providing datasets, samplers, transforms, and pre-trained models specific to geospatial data.
 
@@ -68,7 +68,7 @@ from torchgeo.trainers import SemanticSegmentationTask
 
 Many remote sensing applications involve working with [_geospatial datasets_](https://torchgeo.readthedocs.io/en/stable/api/datasets.html#geospatial-datasets)—datasets with geographic metadata. These datasets can be challenging to work with due to the sheer variety of data. Geospatial imagery is often multispectral with a different number of spectral bands and spatial resolution for every satellite. In addition, each file may be in a different coordinate reference system (CRS), requiring the data to be reprojected into a matching CRS.
 
-<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
 
 In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
@@ -148,7 +148,7 @@ for batch in dataloader:
     # train a model, or make predictions using a pre-trained model
 ```
 
-<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
@@ -186,7 +186,7 @@ trainer = Trainer(default_root_dir="...")
 trainer.fit(model=task, datamodule=datamodule)
 ```
 
-<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
 
 TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
