@@ -1,3 +1,5 @@
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
 # Copyright (c) 2024 Presto Authors
 
 # Modified from https://github.com/nasaharvest/presto
