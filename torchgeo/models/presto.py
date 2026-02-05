@@ -655,7 +655,7 @@ class Decoder(nn.Module):
                 else:
                     eo_output.append(self.eo_decoder_pred[group_name](group_tokens))
 
-        # we can just do this concatenation because the BANDS_GROUP_IDX # is ordered
+        # we can just do this concatenation because the BANDS_GROUP_IDX is ordered
         return torch.cat(eo_output, dim=-1), dw_output
 
     def forward(
