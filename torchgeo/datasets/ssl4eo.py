@@ -406,12 +406,12 @@ class SSL4EOS12(SSL4EO):
        * - s2c
          - Sentinel-2
          - TOA
-         - 12
+         - 13
          - `GEE <https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_HARMONIZED>`__
        * - s2a
          - Sentinel-2
          - SR
-         - 13
+         - 12
          - `GEE <https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR_HARMONIZED>`__
 
     Each patch has the following properties:
