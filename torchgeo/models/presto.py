@@ -39,7 +39,7 @@ def get_sinusoid_encoding_table(
         positions: The positions to encode.
         device: The device to place the tensor on.
         d_hid: The dimension of the hidden state.
-        T: The maximum time step
+        T: The maximum time step.
 
     Returns:
         A tensor of shape (len(positions), d_hid) containing the position encodings.
