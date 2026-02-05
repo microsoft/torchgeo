@@ -33,16 +33,19 @@ NUM_DYNAMIC_WORLD_CLASSES = 9
 def get_sinusoid_encoding_table(
     positions: int | list[int], device: torch.device, d_hid: int, T: int = 1000
 ) -> torch.Tensor:
-    """Sinusoid position encoding table positions: int or list of integer, if int range(positions).
+    """Generate a sinusoid positional encoding table for the given positions.
 
     Args:
-        positions: The positions to encode.
-        device: The device to place the tensor on.
-        d_hid: The dimension of the hidden state.
-        T: The maximum time step.
+        positions: Either an integer specifying the maximum position (encoded as
+            ``range(positions)``) or a list of integer positions to encode.
+        device: The device on which to place the returned tensor.
+        d_hid: The dimensionality of the positional encoding.
+        T: Scaling factor that controls the frequencies of the sinusoidal basis
+            functions.
 
     Returns:
-        A tensor of shape (len(positions), d_hid) containing the position encodings.
+        A tensor of shape ``(len(positions), d_hid)`` containing the positional
+        encodings.
     """
     if isinstance(positions, int):
         positions = list(range(positions))
