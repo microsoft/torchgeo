@@ -136,7 +136,7 @@ class UCMerced(NonGeoClassificationDataset):
             the image and class label
         """
         img, label = super()._load_image(index)
-        img = F.resize(img, size=(256, 256), antialias=True)
+        img = F.resize(img, size=[256, 256], antialias=True)
         return img, label
 
     def _check_integrity(self) -> bool:
