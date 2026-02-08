@@ -1,0 +1,7 @@
+.. _ETCI2021 Flood Detection:
+
+ETCI2021 Flood Detection
+========================
+
+.. currentmodule:: torchgeo.datasets
+.. autoclass:: ETCI2021
