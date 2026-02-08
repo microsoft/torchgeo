@@ -2,7 +2,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 :ref:`ADVANCE`,C,"Google Earth, Freesound","CC-BY-4.0","5,075",13,512x512,0.5,RGB
 :ref:`Benin Cashew Plantations`,S,Airbus Pléiades,"CC-BY-4.0",70,6,"1,122x1,186",10,MSI
 :ref:`BigEarthNet`,C,Sentinel-1/2,"CDLA-Permissive-1.0","590,326",19--43,120x120,10,"SAR, MSI"
-:ref:`BioMassters`,R,Sentinel-1/2 and Lidar,"CC-BY-4.0",,,256x256, 10, "SAR, MSI"
+:ref:`BioMassters`,R,Sentinel-1/2 and Lidar,"CC-BY-4.0",,,256x256,10,"SAR, MSI"
 :ref:`BRIGHT`,CD,"MAXAR, NAIP, Capella, Umbra","CC-BY-4.0 AND CC-BY-NC-4.0",3239,4,1024x1024,"0.1--1","RGB, SAR"
 :ref:`CaBuAr`,CD,Sentinel-2,"OpenRAIL",424,2,512x512,20,MSI
 :ref:`CaFFe`,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","19092","2 or 4","512x512",6-20,"SAR"
@@ -58,7 +58,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 :ref:`SKIPP'D`,R,"Fish-eye","CC-BY-4.0","363,375",-,64x64,-,RGB
 :ref:`SkyScript`,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",MIT,5.2M,-,100--1000,0.1--30,RGB
 :ref:`So2Sat`,C,Sentinel-1/2,"CC-BY-4.0","400,673",17,32x32,10,"SAR, MSI"
-:ref:`SODA`,OD,Aerial,"CC-BY-NC-4.0","2513",9,"~2700x~4800","RGB"
+:ref:`SODA`,OD,Aerial,"CC-BY-NC-4.0","2513",9,"~2700x~4800",-,"RGB"
 :ref:`Solar Plants Brazil`,S,Aerial,"CC-BY-NC-4.0","272",2,256x256,10,"RGB + NIR"
 :ref:`SSL4EO`-L,T,Landsat,"CC0-1.0",1M,-,264x264,30,MSI
 :ref:`SSL4EO`-S12,T,Sentinel-1/2,"CC-BY-4.0",1M,-,264x264,10,"SAR, MSI"
