@@ -44,3 +44,4 @@ packaging==21.0
 pytest==7.3.2
 pytest-cov==4.0.0
 pytest-socket==0.3.4
+setuptools==81.0.0  # remove once nbmake 1.4.4+ required
