@@ -20,6 +20,7 @@ Geospatial Datasets
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    datasets/aboveground-woody-biomass
    datasets/agrifieldnet
@@ -74,6 +75,7 @@ Non-geospatial Datasets
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    datasets/advance
    datasets/benin-cashew-plantations
