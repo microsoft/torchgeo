@@ -86,7 +86,7 @@ class SeasoNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    metadata = (
+    metadata: tuple[dict[str, str], ...] = (
         {
             'name': 'spring',
             'ext': '.zip',
