@@ -168,7 +168,7 @@ class SimCLRTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(self.backbone, state_dict)
+            utils.load_state_dict(self.backbone, state_dict)  # type: ignore[invalid-argument-type]
 
         # Create projection head
         input_dim = cast(int, self.backbone.num_features)
