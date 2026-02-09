@@ -584,10 +584,15 @@ class Decoder(nn.Module):
         # when we expand the encodings, each channel_group gets num_timesteps
         # encodings. However, there is only one SRTM token so we remove the
         # excess SRTM encodings
+        device = x.device
         remove_mask = torch.full(
-            size=(num_timesteps * num_channel_groups,), fill_value=False
+            size=(num_timesteps * num_channel_groups,),
+            fill_value=False,
+            device=device,
+            dtype=torch.bool,
         )
-        remove_mask[torch.arange(num_timesteps - 1) + srtm_index] = True
+        remove_indices = torch.arange(num_timesteps - 1, device=device) + srtm_index
+        remove_mask[remove_indices] = True
 
         month_embedding = repeat(
             self.month_embed(months),
