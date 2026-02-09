@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import einops
 import torch
@@ -86,7 +87,8 @@ class CopernicusEmbed(RasterDataset):
 
         if self.download:
             assert isinstance(self.paths, str | os.PathLike)
-            download_url(self.url, self.paths, md5=self.md5 if self.checksum else None)
+            paths = cast(Path, self.paths)
+            download_url(self.url, paths, md5=self.md5 if self.checksum else None)
         else:
             raise DatasetNotFoundError(self)
 

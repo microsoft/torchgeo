@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -186,6 +186,7 @@ class AgriFieldNet(RasterDataset):
             IndexError: If *index* is not found in the dataset.
         """
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
 
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
@@ -217,7 +218,7 @@ class AgriFieldNet(RasterDataset):
         image = torch.cat(data_list)
 
         mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.paths, 'train_labels')):
+        for root, dirs, files in os.walk(os.path.join(paths, 'train_labels')):
             for file in files:
                 if not file.endswith('_field_ids.tif') and file.endswith('.tif'):
                     file_path = os.path.join(root, file)
@@ -255,9 +256,10 @@ class AgriFieldNet(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        os.makedirs(self.paths, exist_ok=True)
+        paths = cast(Path, self.paths)
+        os.makedirs(paths, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', paths, '--recursive=true')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

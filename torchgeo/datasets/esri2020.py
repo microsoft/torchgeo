@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -113,7 +114,8 @@ class Esri2020(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
             return
@@ -129,12 +131,14 @@ class Esri2020(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
+        paths = cast(Path, self.paths)
+        download_url(self.url, paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        extract_archive(os.path.join(self.paths, self.zipfile))
+        paths = cast(Path, self.paths)
+        extract_archive(os.path.join(paths, self.zipfile))
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

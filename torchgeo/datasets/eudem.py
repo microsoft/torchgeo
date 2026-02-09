@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -118,7 +118,8 @@ class EUDEM(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)

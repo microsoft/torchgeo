@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -203,13 +203,14 @@ class SouthAfricaCropType(RasterDataset):
 
         # Create Tensors for each band using stored dates
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
                 filepath = os.path.join(
-                    self.paths,
+                    paths,
                     'train',
                     'imagery',
                     band_type,
@@ -225,7 +226,7 @@ class SouthAfricaCropType(RasterDataset):
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
-                self.paths, 'train', 'labels', f'{field_id}.tif'
+                paths, 'train', 'labels', f'{field_id}.tif'
             )
             mask_filepaths.append(file_path)
 
@@ -260,9 +261,10 @@ class SouthAfricaCropType(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        os.makedirs(self.paths, exist_ok=True)
+        paths = cast(Path, self.paths)
+        os.makedirs(paths, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', paths, '--recursive=true')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

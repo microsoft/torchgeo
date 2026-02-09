@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -181,15 +181,17 @@ class L8Biome(IntersectionDataset):
         if not isinstance(self.paths, str | os.PathLike):
             return
 
+        paths = cast(Path, self.paths)
+
         for classname in [L8BiomeImage, L8BiomeMask]:
-            pathname = os.path.join(self.paths, '**', classname.filename_glob)
+            pathname = os.path.join(paths, '**', classname.filename_glob)
             if not glob.glob(pathname, recursive=True):
                 break
         else:
             return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.paths, '*.tar.gz')
+        pathname = os.path.join(paths, '*.tar.gz')
         if glob.glob(pathname):
             self._extract()
             return
@@ -205,15 +207,17 @@ class L8Biome(IntersectionDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for biome, md5 in self.md5s.items():
             download_url(
-                self.url.format(biome), self.paths, md5=md5 if self.checksum else None
+                self.url.format(biome), paths, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, '*.tar.gz')
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 

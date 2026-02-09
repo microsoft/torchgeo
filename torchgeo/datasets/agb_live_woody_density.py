@@ -6,6 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -106,15 +107,16 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        download_url(self.url, self.paths, self.base_filename)
+        paths = cast(Path, self.paths)
+        download_url(self.url, paths, self.base_filename)
 
-        with open(os.path.join(self.paths, self.base_filename)) as f:
+        with open(os.path.join(paths, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content['features']:
             download_url(
                 item['properties']['Mg_px_1_download'],
-                self.paths,
+                paths,
                 item['properties']['tile_id'] + '.tif',
             )
 

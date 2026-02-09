@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -162,10 +162,11 @@ class NCCM(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.urls[year],
-                self.paths,
+                paths,
                 filename=self.fnames[year],
                 md5=self.md5s[year] if self.checksum else None,
             )

@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -310,7 +310,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         """
         # Make iterable
         if isinstance(self.paths, str | os.PathLike):
-            paths: Iterable[Path] = [self.paths]
+            paths: Iterable[Path] = [cast(Path, self.paths)]
         else:
             paths = self.paths
 

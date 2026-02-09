@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -230,6 +230,8 @@ class OpenBuildings(VectorDataset):
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
+        assert isinstance(paths, str | os.PathLike)
+        paths = cast(Path, paths)
         self.paths = paths
         if isinstance(res, int | float):
             res = (res, res)
@@ -239,12 +241,10 @@ class OpenBuildings(VectorDataset):
 
         self._verify()
 
-        assert isinstance(self.paths, str | os.PathLike)
-
-        polygon_files = glob.glob(os.path.join(self.paths, self.zipfile_glob))
+        polygon_files = glob.glob(os.path.join(paths, self.zipfile_glob))
         polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
-        filename = os.path.join(self.paths, 'tiles.geojson')
+        filename = os.path.join(paths, 'tiles.geojson')
         gdf = gpd.read_file(filename)
         gdf.set_crs(self._source_crs, inplace=True)
 
@@ -257,7 +257,7 @@ class OpenBuildings(VectorDataset):
             lambda row: shapely.box(row['minx'], row['miny'], row['maxx'], row['maxy']),
             axis=1,
         )
-        filepaths = [os.path.join(self.paths, filepath) for filepath in gdf['filepath']]
+        filepaths = [os.path.join(paths, filepath) for filepath in gdf['filepath']]
         datetimes = [(pd.Timestamp.min, pd.Timestamp.max)] * len(filepaths)
 
         if not len(filepaths):
@@ -360,7 +360,8 @@ class OpenBuildings(VectorDataset):
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)

@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -229,7 +230,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError('Dataset found, but corrupted.')
@@ -241,7 +243,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         extract_archive(pathname)
 
     def plot(

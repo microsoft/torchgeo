@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -235,7 +235,8 @@ class GlobBiomass(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)

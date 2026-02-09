@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -126,10 +126,11 @@ class SouthAmericaSoybean(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 

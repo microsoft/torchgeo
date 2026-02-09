@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -173,7 +173,8 @@ class Chesapeake(RasterDataset, ABC):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
 
@@ -188,14 +189,16 @@ class Chesapeake(RasterDataset, ABC):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year, md5 in self.md5s.items():
             url = self.url.format(state=self.state, year=year)
-            download_url(url, self.paths, md5=md5 if self.checksum else None)
+            download_url(url, paths, md5=md5 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        for file in glob.iglob(os.path.join(paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
     def plot(

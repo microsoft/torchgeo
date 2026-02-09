@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -217,10 +217,9 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
-            pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace('*', str(year))
-            )
+            pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):
                 exists.append(True)
                 self._extract()
@@ -241,20 +240,22 @@ class NLCD(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
-            pathname = os.path.join(self.paths, zipfile_name)
-            extract_archive(pathname, self.paths)
+            pathname = os.path.join(paths, zipfile_name)
+            extract_archive(pathname, paths)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
