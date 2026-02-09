@@ -109,7 +109,7 @@ def month_to_tensor(
     if isinstance(month, int):
         assert month < 12
     else:
-        assert max(month.flatten()) < 12
+        assert month.max().item() < 12
 
     if isinstance(month, int):
         # >>> torch.fmod(torch.tensor([9., 10, 11, 12, 13, 14]), 12)
