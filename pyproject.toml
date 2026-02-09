@@ -372,6 +372,7 @@ unresolved-attribute = "ignore"
 unresolved-import = "ignore"
 unresolved-reference = "ignore"
 unused-ignore-comment = "ignore"  # remove if/when we drop mypy
+unused-type-ignore-comment = "ignore"  # remove if/when we drop mypy
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]
