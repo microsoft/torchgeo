@@ -16,7 +16,7 @@ from einops import repeat
 from timm.models.vision_transformer import Block
 from torchvision.models._api import Weights, WeightsEnum
 
-BANDS_GROUPS_IDX = {
+BANDS_GROUPS_IDX: dict[str, list[int]] = {
     'S1': [0, 1],
     'S2_RGB': [2, 3, 4],
     'S2_Red_Edge': [5, 6, 7],
@@ -51,9 +51,11 @@ def get_sinusoid_encoding_table(
         positions = list(range(positions))
 
     def cal_angle(position: int, hid_idx: int) -> float:
+        """Compute the angle for a single position/index pair."""
         return float(position / np.power(T, 2 * (hid_idx // 2) / d_hid))
 
     def get_posi_angle_vec(position: int) -> list[float]:
+        """Build the angle vector for a single position."""
         return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
 
     sinusoid_table = np.array([get_posi_angle_vec(pos_i) for pos_i in positions])
@@ -92,10 +94,11 @@ def get_month_encoding_table(d_hid: int, device: torch.device) -> torch.Tensor:
 def month_to_tensor(
     month: torch.Tensor | int, batch_size: int, seq_len: int, device: torch.device
 ) -> torch.Tensor:
-    """Convert month to a tensor.
+    """Convert month indices into a per-sample sequence, wrapping every 12 months.
 
     Args:
-        month: Month as an integer or a tensor of integers.
+        month: Month as an integer, per-sample start month tensor of shape [batch],
+            or explicit month tensor of shape [batch, seq_len].
         batch_size: Number of samples in the batch.
         seq_len: Length of the sequence.
         device: Device to place the tensor on.
@@ -131,6 +134,7 @@ class Encoder(nn.Module):
 
     def __init__(
         self,
+        band_groups: dict[str, list[int]] | None = None,
         embedding_size: int = 128,
         channel_embed_ratio: float = 0.25,
         month_embed_ratio: float = 0.25,
@@ -142,6 +146,7 @@ class Encoder(nn.Module):
         """Initialize a new Encoder instance.
 
         Args:
+            band_groups: Mapping of band group names to channel indices.
             embedding_size: Size of the embedding for each token.
             channel_embed_ratio: Ratio of the embedding size to use for channel embeddings.
             month_embed_ratio: Ratio of the embedding size to use for month embeddings.
@@ -152,7 +157,9 @@ class Encoder(nn.Module):
         """
         super().__init__()
 
-        self.band_groups = BANDS_GROUPS_IDX
+        self.band_groups = (
+            dict(band_groups) if band_groups is not None else BANDS_GROUPS_IDX
+        )
         self.embedding_size = embedding_size
 
         # this is used for the channel embedding
@@ -320,6 +327,7 @@ class Encoder(nn.Module):
 
         if mask is None:
             mask = torch.zeros_like(x, device=x.device).float()
+        mask = torch.as_tensor(mask)
 
         months = month_to_tensor(month, x.shape[0], x.shape[1], device)
         month_embedding = self.month_embed(months)
@@ -413,6 +421,7 @@ class Decoder(nn.Module):
     def __init__(
         self,
         channel_embeddings: nn.Embedding,
+        band_groups: dict[str, list[int]] | None = None,
         encoder_embed_dim: int = 128,
         decoder_embed_dim: int = 128,
         decoder_depth: int = 2,
@@ -424,6 +433,7 @@ class Decoder(nn.Module):
 
         Args:
             channel_embeddings: Embedding layer for channel groups.
+            band_groups: Mapping of band group names to channel indices.
             encoder_embed_dim: Embedding dimension of the encoder.
             decoder_embed_dim: Embedding dimension of the decoder.
             decoder_depth: Number of Transformer blocks in the decoder.
@@ -433,7 +443,9 @@ class Decoder(nn.Module):
         """
         super().__init__()
 
-        self.band_groups = BANDS_GROUPS_IDX
+        self.band_groups = (
+            dict(band_groups) if band_groups is not None else BANDS_GROUPS_IDX
+        )
 
         # this is used for the channel embedding
         self.band_group_to_idx = {
@@ -692,11 +704,12 @@ class Decoder(nn.Module):
 class Presto(nn.Module):
     """Pretrained Remote Sensing Transformer (Presto).
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     def __init__(
         self,
+        band_groups: dict[str, list[int]] | None = None,
         encoder_embedding_size: int = 128,
         channel_embed_ratio: float = 0.25,
         month_embed_ratio: float = 0.25,
@@ -711,6 +724,7 @@ class Presto(nn.Module):
         """Initialize a new Presto instance.
 
         Args:
+            band_groups: Mapping of band group names to channel indices.
             encoder_embedding_size: Size of the embedding for each token in the encoder.
             channel_embed_ratio: Ratio of the embedding size to use for channel embeddings in the encoder.
             month_embed_ratio: Ratio of the embedding size to use for month embeddings in the encoder.
@@ -724,6 +738,7 @@ class Presto(nn.Module):
         """
         super().__init__()
         self.encoder = Encoder(
+            band_groups=band_groups,
             embedding_size=encoder_embedding_size,
             channel_embed_ratio=channel_embed_ratio,
             month_embed_ratio=month_embed_ratio,
@@ -732,8 +747,10 @@ class Presto(nn.Module):
             num_heads=encoder_num_heads,
             max_sequence_length=max_sequence_length,
         )
+        decoder_band_groups = self.encoder.band_groups
         self.decoder = Decoder(
             channel_embeddings=self.encoder.channel_embed,
+            band_groups=decoder_band_groups,
             encoder_embed_dim=encoder_embedding_size,
             decoder_embed_dim=decoder_embedding_size,
             decoder_depth=decoder_depth,
@@ -774,14 +791,14 @@ class Presto(nn.Module):
 class Presto_Weights(WeightsEnum):  # type: ignore[misc]
     """Presto weights.
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
     """
 
     PRESTO = Weights(
         url='https://github.com/nasaharvest/presto/raw/5afde40850d73bfaed26078fc3bda621a55c311d/data/default_model.pt',
         transforms=None,
         meta={
-            'dataset': 'Presto LEM',
+            'dataset': 'LEM (Presto pretraining dataset)',
             'model': 'Presto',
             'publication': 'https://arxiv.org/abs/2304.14065',
             'repo': 'https://github.com/nasaharvest/presto',
@@ -796,7 +813,7 @@ def presto(weights: Presto_Weights | None = None, *args: Any, **kwargs: Any) -> 
 
     * https://arxiv.org/abs/2304.14065
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.9
 
     Args:
         weights: Pre-trained model weights to use.
