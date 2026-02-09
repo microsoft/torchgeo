@@ -646,7 +646,7 @@ class Decoder(nn.Module):
         srtm_token = x[:, srtm_index : srtm_index + 1, :]
 
         mask = torch.full((x.shape[1],), True, device=x.device)
-        mask[torch.tensor(srtm_index)] = False
+        mask[srtm_index] = False
         x = x[:, mask]
 
         x = x.view(x.shape[0], num_channel_groups, num_timesteps, x.shape[-1])
