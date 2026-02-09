@@ -304,8 +304,8 @@ CropHarvest
 
 .. autoclass:: CropHarvest
 
-Kenya Crop Type
-^^^^^^^^^^^^^^^
+CV4A Kenya Crop Type
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CV4AKenyaCropType
 
