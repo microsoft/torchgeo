@@ -804,7 +804,7 @@ class Presto_Weights(WeightsEnum):  # type: ignore[misc]
 
     PRESTO = Weights(
         url='https://github.com/nasaharvest/presto/raw/5afde40850d73bfaed26078fc3bda621a55c311d/data/default_model.pt',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'LEM (Presto pretraining dataset)',
             'model': 'Presto',
