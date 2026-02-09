@@ -358,7 +358,7 @@ class BigEarthNet(NonGeoDataset):
         ]
         return folders
 
-    def _load_paths(self, index: int) -> list[str]:
+    def _load_paths(self, index: int) -> list[Path] | list[str]:
         """Load paths to band files.
 
         Args:
