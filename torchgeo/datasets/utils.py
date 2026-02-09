@@ -618,7 +618,7 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     .. versionadded:: 0.2
     """
     uncollated = _list_dict_to_dict_list(samples)
-    collated = {}
+    collated: dict[Any, Any] = {}
     for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
