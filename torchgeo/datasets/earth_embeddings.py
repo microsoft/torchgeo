@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Earth Embeddings datasets."""
+"""EarthEmbeddings datasets."""
 
 from collections.abc import Callable
 
@@ -17,9 +17,9 @@ from .utils import Path, Sample
 
 
 class EarthEmbeddings(NonGeoDataset):
-    """Major TOM Embeddings dataset.
+    """EarthEmbeddings dataset.
 
-    `Earth Embeddings <https://huggingface.co/datasets/ML4Sustain/EarthEmbeddings>`__
+    `EarthEmbeddings <https://huggingface.co/datasets/ML4Sustain/EarthEmbeddings>`__
     are pre-computed embeddings of uniformly sampled MajorTOM-Core-S2L2A imagery
     using SatCLIP, FarSLIP, DINOv2, SigLIP models. These embeddings power the
     `EarthEmbeddingExplorer <https://huggingface.co/spaces/ML4RS-Anonymous/EarthEmbeddingExplorer>`__
@@ -28,7 +28,7 @@ class EarthEmbeddings(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/ (A tutorial paper to be uploaded to arXiv soon)
+    * A tutorial paper to be uploaded to arXiv soon.
 
     .. versionadded:: 0.9
     """

@@ -20,6 +20,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 :ref:`Digital Typhoon`,"C, R",Himawari,"CC-BY-4.0","189,364",8,512,5000,Infrared
 :ref:`DL4GAM`,S,"Sentinel-2","CC-BY-4.0","2,251 or 11,440","2","256x256","10","MSI"
 :ref:`DOTA`,OD,"Google Earth, Gaofen-2, Jilin-1, CycloMedia B.V.","non-commercial","5,229",15,"800--4000",,RGB
+:ref:`EarthEmbeddings`,E,Sentinel-2,CC-BY-SA-4.0,-,256--1152,384x384,3840,Embedding
 :ref:`Earth Index Embeddings`,E,Sentinel-2,CC-BY-4.0,-,384,484x484,320,Embedding
 :ref:`ETCI2021 Flood Detection`,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR
 :ref:`EuroSAT`,C,Sentinel-2,"MIT","27,000",10,64x64,10,MSI

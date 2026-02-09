@@ -98,6 +98,7 @@ Non-geospatial Datasets
    datasets/digital-typhoon
    datasets/dl4gam
    datasets/dota
+   datasets/earth-embeddings
    datasets/earth-index-embeddings
    datasets/etci2021
    datasets/eurosat
