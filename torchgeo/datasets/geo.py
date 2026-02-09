@@ -143,6 +143,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         geoslice = tuple(out)
         assert len(geoslice) == 3
+        geoslice = cast(tuple[slice, slice, slice], geoslice)
         return geoslice
 
     def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
