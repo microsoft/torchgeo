@@ -134,7 +134,8 @@ class EuroSAT(NonGeoClassificationDataset):
         """
         self.root = root
         self.split = split
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
         self.download = download
         self.checksum = checksum
 
@@ -176,8 +177,8 @@ class EuroSAT(NonGeoClassificationDataset):
         image = torch.index_select(image, dim=0, index=self.band_indices).float()
         sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 

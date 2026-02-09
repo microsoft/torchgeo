@@ -1242,8 +1242,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             is_valid_file=is_valid_file,
         )
 
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -1257,8 +1257,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         image, label = self._load_image(index)
         sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 
