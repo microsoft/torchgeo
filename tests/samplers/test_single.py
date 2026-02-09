@@ -200,7 +200,7 @@ class TestGridGeoSampler:
             assert math.isclose(y.stop - y.start, sampler.size[0])
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        bounds = sampler.index.total_bounds
+        bounds = tuple(sampler.index.total_bounds)
         rows, cols = tile_to_chips(bounds, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
