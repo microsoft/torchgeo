@@ -334,32 +334,6 @@ class TestRasterDataset:
         'R10m',
     )
 
-    @pytest.fixture(params=zip([['R', 'G', 'B'], None], [True, False]))
-    def naip(self, request: SubRequest) -> NAIP:
-        bands = request.param[0]
-        crs = CRS.from_epsg(4087)
-        transforms = nn.Identity()
-        cache = request.param[1]
-        return NAIP(
-            self.naip_dir, crs=crs, bands=bands, transforms=transforms, cache=cache
-        )
-
-    @pytest.fixture(
-        params=zip(
-            [
-                ['B04', 'B03', 'B02'],
-                ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'],
-            ],
-            [True, False],
-        )
-    )
-    def sentinel(self, request: SubRequest) -> Sentinel2:
-        root = os.path.join('tests', 'data', 'sentinel2')
-        bands = request.param[0]
-        transforms = nn.Identity()
-        cache = request.param[1]
-        return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
-
     @pytest.mark.parametrize(
         'paths',
         [
@@ -376,7 +350,7 @@ class TestRasterDataset:
             {naip_dir, os.path.join(naip_dir, 'm_3807511_ne_18_060_20181104.tif')},
         ],
     )
-    def test_files(self, paths: str | Iterable[str]) -> None:
+    def test_files_single(self, paths: str | Iterable[str]) -> None:
         assert len(NAIP(paths).files) == 2
 
     @pytest.mark.parametrize(
@@ -414,23 +388,56 @@ class TestRasterDataset:
     def test_files_separate(self, paths: str | Iterable[str]) -> None:
         assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
-    def test_getitem_single_file(self, naip: NAIP) -> None:
-        x = naip[naip.bounds]
+    @pytest.mark.parametrize('bands', [('R', 'G', 'B'), None])
+    @pytest.mark.parametrize('cache', [True, False])
+    @pytest.mark.parametrize('time_series', [True, False])
+    @pytest.mark.parametrize('is_image', [True, False])
+    def test_getitem_single(
+        self, bands: tuple[str] | None, cache: bool, time_series: bool, is_image: bool
+    ) -> None:
+        paths = self.naip_dir
+        transforms = nn.Identity()
+        ds = NAIP(paths, None, None, bands, transforms, cache, time_series)
+        ds.is_image = is_image
+        x = ds[ds.bounds]
+        key = 'image' if is_image else 'mask'
+        expected_ndim = 4 if time_series else 3
         assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
-        assert len(naip.bands) == x['image'].shape[0]
+        assert isinstance(x[key], torch.Tensor)
+        assert x[key].ndim == expected_ndim
+        assert x[key].shape[-3] == len(ds.bands)
 
-    def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
-        x = sentinel[sentinel.bounds]
+    @pytest.mark.parametrize(
+        'bands',
+        [
+            ('B04', 'B03', 'B02'),
+            ('B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'),
+        ],
+    )
+    @pytest.mark.parametrize('cache', [True, False])
+    @pytest.mark.parametrize('time_series', [True, False])
+    @pytest.mark.parametrize('is_image', [True, False])
+    def test_getitem_separate(
+        self, bands: tuple[str], cache: bool, time_series: bool, is_image: bool
+    ) -> None:
+        paths = os.path.join('tests', 'data', 'sentinel2')
+        transforms = nn.Identity()
+        ds = Sentinel2(paths, None, None, bands, transforms, cache, time_series)
+        ds.is_image = is_image
+        x = ds[ds.bounds]
+        key = 'image' if is_image else 'mask'
+        expected_ndim = 4 if time_series else 3
         assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
-        assert len(sentinel.bands) == x['image'].shape[0]
+        assert isinstance(x[key], torch.Tensor)
+        assert x[key].ndim == expected_ndim
+        assert x[key].shape[-3] == len(ds.bands)
 
-    def test_reprojection(self, naip: NAIP) -> None:
-        naip2 = NAIP(naip.paths, crs=CRS.from_epsg(4326))
-        assert naip.crs != naip2.crs
-        assert not math.isclose(naip.res[0], naip2.res[0])
-        assert not math.isclose(naip.res[1], naip2.res[1])
+    def test_reprojection(self) -> None:
+        naip1 = NAIP(self.naip_dir, crs=CRS.from_epsg(4087))
+        naip2 = NAIP(self.naip_dir, crs=CRS.from_epsg(4326))
+        assert naip1.crs != naip2.crs
+        assert not math.isclose(naip1.res[0], naip2.res[0])
+        assert not math.isclose(naip1.res[1], naip2.res[1])
 
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
@@ -457,11 +464,12 @@ class TestRasterDataset:
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
-    def test_invalid_index(self, sentinel: Sentinel2) -> None:
+    def test_invalid_index(self) -> None:
+        ds = Sentinel2(os.path.join('tests', 'data', 'sentinel2'))
         with pytest.raises(
             IndexError, match=r'index: .* not found in dataset with bounds: .*'
         ):
-            sentinel[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+            ds[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

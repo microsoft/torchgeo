@@ -209,6 +209,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
@@ -224,12 +225,25 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
-        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
+        RasterDataset.__init__(
+            self,
+            root,
+            crs,
+            res,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
+        )
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
@@ -265,8 +279,8 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        img = self._merge_files(img_filepaths, index, self.band_indexes)
-        mask = self._merge_files(mask_filepaths, index, self.band_indexes)
+        img = self._merge_or_stack(img_filepaths, index, self.band_indexes)
+        mask = self._merge_or_stack(mask_filepaths, index, self.band_indexes)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'bounds': self._slice_to_tensor(index),

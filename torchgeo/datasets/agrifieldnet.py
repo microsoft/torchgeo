@@ -133,6 +133,7 @@ class AgriFieldNet(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
@@ -147,9 +148,14 @@ class AgriFieldNet(RasterDataset):
                 entry and returns a transformed version
             cache: if True, cache the dataset in memory
             download: if True, download dataset and store it in the root directory
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(classes) <= self.cmap.keys(), (
             f'Only the following classes are valid: {list(self.cmap.keys())}.'
@@ -163,7 +169,12 @@ class AgriFieldNet(RasterDataset):
         self._verify()
 
         super().__init__(
-            paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
+            paths=paths,
+            crs=crs,
+            bands=bands,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
@@ -213,7 +224,7 @@ class AgriFieldNet(RasterDataset):
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, index))
+            data_list.append(self._merge_or_stack(band_filepaths, index))
         image = torch.cat(data_list)
 
         mask_filepaths = []
@@ -223,7 +234,7 @@ class AgriFieldNet(RasterDataset):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, index)
+        mask = self._merge_or_stack(mask_filepaths, index)
         mask = self.ordinal_map[mask.squeeze().long()]
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)

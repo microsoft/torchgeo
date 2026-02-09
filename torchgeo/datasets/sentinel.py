@@ -156,6 +156,7 @@ class Sentinel1(Sentinel):
         bands: Sequence[str] = ['VV', 'VH'],
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -170,10 +171,15 @@ class Sentinel1(Sentinel):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: if ``bands`` is invalid
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -198,7 +204,7 @@ To create a dataset containing both, use:
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -355,6 +361,7 @@ class Sentinel2(Sentinel):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -369,9 +376,14 @@ class Sentinel2(Sentinel):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
             *root* was renamed to *paths*
@@ -383,7 +395,7 @@ class Sentinel2(Sentinel):
             res = (res, res)
 
         self.filename_regex = self.filename_regex.format(self.resolutions[bands[0]])
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def _update_filepath(self, band: str, filepath: str) -> str:
         """Update `filepath` to point to `band`.

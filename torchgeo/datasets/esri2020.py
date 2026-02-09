@@ -75,6 +75,7 @@ class Esri2020(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -90,9 +91,14 @@ class Esri2020(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -103,7 +109,9 @@ class Esri2020(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""

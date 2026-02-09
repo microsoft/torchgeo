@@ -137,6 +137,7 @@ class L7Irish(IntersectionDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new L7Irish instance.
 
@@ -153,9 +154,14 @@ class L7Irish(IntersectionDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         self.paths = paths
         self.download = download
@@ -166,8 +172,10 @@ class L7Irish(IntersectionDataset):
         if crs is None:
             crs = CRS.from_epsg(3857)
 
-        self.image = L7IrishImage(paths, crs, res, bands, transforms, cache)
-        self.mask = L7IrishMask(paths, crs, res, None, transforms, cache)
+        self.image = L7IrishImage(
+            paths, crs, res, bands, transforms, cache, time_series
+        )
+        self.mask = L7IrishMask(paths, crs, res, None, transforms, cache, time_series)
 
         # Mask filename does not include the date, grab it from the image filename
         self.mask.index.index = self.image.index.index

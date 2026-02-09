@@ -217,6 +217,7 @@ class CDL(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -235,10 +236,15 @@ class CDL(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionadded:: 0.5
            The *years* and *classes* parameters.
@@ -265,7 +271,9 @@ class CDL(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):

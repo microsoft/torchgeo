@@ -118,6 +118,7 @@ class SouthAfricaCropType(RasterDataset):
         bands: Sequence[str] = s2_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
 
@@ -129,9 +130,14 @@ class SouthAfricaCropType(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(classes) <= self.cmap.keys(), (
             f'Only the following classes are valid: {list(self.cmap.keys())}.'
@@ -144,7 +150,13 @@ class SouthAfricaCropType(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
+        super().__init__(
+            paths=paths,
+            crs=crs,
+            bands=bands,
+            transforms=transforms,
+            time_series=time_series,
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
@@ -218,7 +230,7 @@ class SouthAfricaCropType(RasterDataset):
                     f'{field_id}_{date}_{band}_10m.tif',
                 )
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, index))
+            data_list.append(self._merge_or_stack(band_filepaths, index))
         image = torch.cat(data_list)
 
         # Add labels for each field
@@ -229,7 +241,7 @@ class SouthAfricaCropType(RasterDataset):
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, index).squeeze(0)
+        mask = self._merge_or_stack(mask_filepaths, index).squeeze(0)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {

@@ -91,6 +91,7 @@ class NCCM(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new dataset.
 
@@ -107,9 +108,14 @@ class NCCM(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(years) <= self.md5s.keys(), (
             'NCCM data product only exists for the following years: '
@@ -123,7 +129,9 @@ class NCCM(RasterDataset):
         self.ordinal_cmap = torch.zeros((5, 4), dtype=torch.uint8)
 
         self._verify()
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
         for i, (k, v) in enumerate(self.cmap.items()):
             self.ordinal_map[k] = i
