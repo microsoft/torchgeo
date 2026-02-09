@@ -17,7 +17,7 @@ class TestTileNet:
     @pytest.fixture(params=[*TileNet_Weights])
     def weights(self, request: SubRequest) -> TileNet_Weights:
         """Return all available TileNet weights."""
-        return request.param
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
@@ -31,7 +31,7 @@ class TestTileNet:
         torch.save(model.state_dict(), path)
 
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_tilenet(self) -> None:
         """Test TileNet construction and forward pass."""
