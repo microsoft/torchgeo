@@ -133,9 +133,6 @@ class Substation(NonGeoDataset):
                 image = image[0]
             case 'random':
                 image = image[np.random.randint(image.shape[0])]
-            case None:
-                # preserve T x C x H x W
-                pass
 
         mask = np.load(mask_path)['arr_0']
         mask[mask != 3] = 0
@@ -181,7 +178,8 @@ class Substation(NonGeoDataset):
         if is_time_series:
             images = sample['image'][:, :3].cpu().numpy().transpose(0, 2, 3, 1)
             images = images / 255.0
-            ncols = 3
+            num_images = min(len(images), 2)
+            ncols = num_images + 1
         else:
             image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
             image = image / 255.0
@@ -201,21 +199,22 @@ class Substation(NonGeoDataset):
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
 
         if is_time_series:
-            axs[0].imshow(images[0])
-            axs[0].axis('off')
-            axs[1].imshow(images[1])
-            axs[1].axis('off')
-            axs[2].imshow(mask, cmap='gray', interpolation='none')
-            axs[2].axis('off')
-            if show_titles:
-                axs[0].set_title('Image 0')
-                axs[1].set_title('Image 1')
-                axs[2].set_title('Mask')
-            if showing_predictions:
-                axs[3].imshow(prediction, cmap='gray', interpolation='none')
-                axs[3].axis('off')
+            for i in range(num_images):
+                axs[i].imshow(images[i])
+                axs[i].axis('off')
                 if show_titles:
-                    axs[3].set_title('Prediction')
+                    axs[i].set_title(f'Image {i}')
+            axs[num_images].imshow(mask, cmap='gray', interpolation='none')
+            axs[num_images].axis('off')
+            if show_titles:
+                axs[num_images].set_title('Mask')
+            if showing_predictions:
+                axs[num_images + 1].imshow(
+                    prediction, cmap='gray', interpolation='none'
+                )
+                axs[num_images + 1].axis('off')
+                if show_titles:
+                    axs[num_images + 1].set_title('Prediction')
         else:
             axs[0].imshow(image)
             axs[0].axis('off')
