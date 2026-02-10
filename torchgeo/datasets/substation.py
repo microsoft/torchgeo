@@ -189,17 +189,21 @@ class Substation(NonGeoDataset):
                 raise RGBBandsMissingError()
 
         if is_time_series:
-            images = torch.clamp(
-                sample['image'][:, rgb_indices] / 4000, min=0, max=1
+            images = (
+                torch.clamp(sample['image'][:, rgb_indices] / 4000, min=0, max=1)
+                .cpu()
+                .numpy()
+                .transpose(0, 2, 3, 1)
             )
-            images = images.cpu().numpy().transpose(0, 2, 3, 1)
             num_images = min(len(images), 2)
             ncols = num_images + 1
         else:
-            image = torch.clamp(
-                sample['image'][rgb_indices] / 4000, min=0, max=1
+            image = (
+                torch.clamp(sample['image'][rgb_indices] / 4000, min=0, max=1)
+                .permute(1, 2, 0)
+                .cpu()
+                .numpy()
             )
-            image = image.permute(1, 2, 0).cpu().numpy()
             ncols = 2
 
         if self.mask_2d:
