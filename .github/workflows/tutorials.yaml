@@ -36,7 +36,7 @@ jobs:
       - name: List dependencies
         run: uv pip list
       - name: Run notebook checks
-        run: pytest --nbmake --durations=10 docs/tutorials
+        run: pytest --force-enable-socket --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
