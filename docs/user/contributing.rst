@@ -167,7 +167,7 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add an import alias to this dataset in ``torchgeo/datasets/__init__.py``
 * Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
 * Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
-* Create a new ``docs/api/datasets/<dataset-name>.rst`` file with the dataset documentation (see existing files for the format)
+* Create a new ``docs/api/datasets/foo.rst`` file with the dataset documentation (see existing files for the format)
 * Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
 * Add the dataset to the appropriate toctree in ``docs/api/datasets.rst``
 
