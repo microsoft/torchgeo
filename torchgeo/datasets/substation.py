@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 from matplotlib.figure import Figure
 
-from .errors import DatasetNotFoundError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import Path, Sample, download_url, extract_archive
 
@@ -47,6 +47,9 @@ class Substation(NonGeoDataset):
 
     * https://doi.org/10.48550/arXiv.2409.17363
     """
+
+    # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue) = indices 3, 2, 1
+    rgb_bands = (3, 2, 1)
 
     directory = 'Substation'
     filename_images = 'image_stack.tar.gz'
@@ -172,21 +175,35 @@ class Substation(NonGeoDataset):
 
         Returns:
             A matplotlib Figure containing the rendered sample.
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         is_time_series = sample['image'].ndim == 4
 
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(list(self.bands).index(band))
+            else:
+                raise RGBBandsMissingError()
+
         if is_time_series:
-            images = sample['image'][:, :3].cpu().numpy().transpose(0, 2, 3, 1)
-            images = images / 255.0
+            images = torch.clamp(
+                sample['image'][:, rgb_indices] / 4000, min=0, max=1
+            )
+            images = images.cpu().numpy().transpose(0, 2, 3, 1)
             num_images = min(len(images), 2)
             ncols = num_images + 1
         else:
-            image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
-            image = image / 255.0
+            image = torch.clamp(
+                sample['image'][rgb_indices] / 4000, min=0, max=1
+            )
+            image = image.permute(1, 2, 0).cpu().numpy()
             ncols = 2
 
         if self.mask_2d:
-            mask = sample['mask'][0].squeeze(0).cpu().numpy()
+            mask = sample['mask'][1].squeeze(dim=0).cpu().numpy()
         else:
             mask = sample['mask'].cpu().numpy()
         showing_predictions = 'prediction' in sample
