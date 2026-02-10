@@ -137,6 +137,51 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'license': 'non-commercial',
         },
     )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB3 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb3_ccby-aa82bfe9.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b3',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB5 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb5_ccby-a3aaa8b6.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b5',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB7 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb7_ccby-da5ad55e.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b7',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
     OAM_RGB_RESNET50_TCD = Weights(
         url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,

@@ -50,4 +50,7 @@ Unet_Weights.SENTINEL2_3CLASS_NC_FTW,8,`link <https://github.com/fieldsoftheworl
 Unet_Weights.SENTINEL2_FTW_PRUE_EFNETB3,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"non-commercial",,,
 Unet_Weights.SENTINEL2_FTW_PRUE_EFNETB5,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"non-commercial",,,
 Unet_Weights.SENTINEL2_FTW_PRUE_EFNETB7,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"non-commercial",,,
+Unet_Weights.SENTINEL2_FTW_PRUE_CCBY_EFNETB3,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"CC-BY-4.0",,,
+Unet_Weights.SENTINEL2_FTW_PRUE_CCBY_EFNETB5,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"CC-BY-4.0",,,
+Unet_Weights.SENTINEL2_FTW_PRUE_CCBY_EFNETB7,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,,"CC-BY-4.0",,,
 EarthLoc_Weights.SENTINEL2_RESNET50,3,`link <https://github.com/gmberton/EarthLoc>`__,`link <https://arxiv.org/abs/2403.06758>`__,"MIT",,,
