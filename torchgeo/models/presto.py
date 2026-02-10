@@ -423,7 +423,7 @@ class Decoder(nn.Module):
     def __init__(
         self,
         channel_embeddings: nn.Embedding,
-        band_groups: dict[str, list[int]] | None = None,
+        band_groups: dict[str, Sequence[int]] | None = None,
         encoder_embed_dim: int = 128,
         decoder_embed_dim: int = 128,
         decoder_depth: int = 2,
@@ -716,7 +716,7 @@ class Presto(nn.Module):
 
     def __init__(
         self,
-        band_groups: dict[str, list[int]] | None = None,
+        band_groups: dict[str, Sequence[int]] | None = None,
         encoder_embedding_size: int = 128,
         channel_embed_ratio: float = 0.25,
         month_embed_ratio: float = 0.25,
