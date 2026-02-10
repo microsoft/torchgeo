@@ -7,6 +7,7 @@
 """Pretrained Remote Sensing Transformer (Presto)."""
 
 import math
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -16,16 +17,16 @@ from einops import repeat
 from timm.models.vision_transformer import Block
 from torchvision.models._api import Weights, WeightsEnum
 
-BANDS_GROUPS_IDX: dict[str, list[int]] = {
-    'S1': [0, 1],
-    'S2_RGB': [2, 3, 4],
-    'S2_Red_Edge': [5, 6, 7],
-    'S2_NIR_10m': [8],
-    'S2_NIR_20m': [9],
-    'S2_SWIR': [10, 11],
-    'ERA5': [12, 13],
-    'SRTM': [14, 15],
-    'NDVI': [16],
+BANDS_GROUPS_IDX: dict[str, Sequence[int]] = {
+    'S1': (0, 1),
+    'S2_RGB': (2, 3, 4),
+    'S2_Red_Edge': (5, 6, 7),
+    'S2_NIR_10m': (8,),
+    'S2_NIR_20m': (9,),
+    'S2_SWIR': (10, 11),
+    'ERA5': (12, 13),
+    'SRTM': (14, 15),
+    'NDVI': (16,),
 }
 NUM_DYNAMIC_WORLD_CLASSES = 9
 
@@ -134,7 +135,7 @@ class Encoder(nn.Module):
 
     def __init__(
         self,
-        band_groups: dict[str, list[int]] | None = None,
+        band_groups: dict[str, Sequence[int]] | None = None,
         embedding_size: int = 128,
         channel_embed_ratio: float = 0.25,
         month_embed_ratio: float = 0.25,
@@ -801,7 +802,7 @@ class Presto_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     PRESTO = Weights(
-        url='https://github.com/nasaharvest/presto/raw/5afde40850d73bfaed26078fc3bda621a55c311d/data/default_model.pt',
+        url='https://hf.co/torchgeo/presto/resolve/40de9c69b1611bb11de7b572cf3d24bb60cb8c82/model-bfa691d3.pth',
         transforms=nn.Identity(),
         meta={
             'dataset': 'LEM (Presto pretraining dataset)',
