@@ -173,6 +173,24 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'license': 'CC-BY-NC-4.0',
         },
     )
+    NAIP_RGBN_RESNET18_CHESAPEAKERSC = Weights(
+        url='https://hf.co/isaaccorley/chesapeakersc/resolve/fe3dc77a9edfe95fde49b0318fb047c1fc6dd195/unet-resnet18-6c2e3984.pth',
+        transforms=T.Normalize(mean=[0.0], std=[255.0], inplace=True),
+        meta={
+            'dataset': 'ChesapeakeRSC',
+            'in_chans': 4,
+            'num_classes': 2,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2401.06762',
+            'repo': 'https://github.com/isaaccorley/ChesapeakeRSC',
+            'bands': ('R', 'G', 'B', 'N'),
+            'classes': ('background', 'road'),
+            'input_shape': (4, 512, 512),
+            'resolution': 1.0,
+            'license': 'MIT',
+        },
+    )
 
 
 def unet(
