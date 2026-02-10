@@ -22,6 +22,32 @@ _ftw_transforms = nn.Sequential(T.Normalize(mean=[0.0], std=[3000.0], inplace=Tr
 _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
+_wstsplus_bands = (
+    'VIIRS band M11',
+    'VIIRS band I2',
+    'VIIRS band I1',
+    'NDVI',
+    'EVI2',
+    'Total Precipitation',
+    'Wind Speed',
+    'Wind Direction',
+    'Minimum Temperature',
+    'Maximum Temperature',
+    'Energy Release Component',
+    'Specific Humidity',
+    'Slope',
+    'Aspect',
+    'Elevation',
+    'Palmer Drought Severity Index (PDSI)',
+    'Landcover Type',
+    'Forecast Total Precipitation',
+    'Forecast Wind Speed',
+    'Forecast Wind Direction',
+    'Forecast Temperature',
+    'Forecast Specific Humidity',
+)
+_wstsplus_transforms = nn.Identity()
+
 
 class Unet_Weights(WeightsEnum):  # type: ignore[misc]
     """U-Net weights.
@@ -171,6 +197,114 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'input_shape': (3, 1024, 1024),
             'resolution': 0.1,
             'license': 'CC-BY-NC-4.0',
+        },
+    )
+    WSTSPLUS_RESNET18_T1_ALL = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t1-all-c27e119a.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 40,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (40, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
+        },
+    )
+    WSTSPLUS_RESNET18_T1_MULTI = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t1-multi-90a4c4e4.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 33,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (33, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
+        },
+    )
+    WSTSPLUS_RESNET18_T1_VEG = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t1-veg-88dc1286.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 7,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (7, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
+        },
+    )
+    WSTSPLUS_RESNET18_T5_ALL = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t5-all-cabe7be9.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 120,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (120, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
+        },
+    )
+    WSTSPLUS_RESNET18_T5_MULTI = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t5-multi-463aa9fd.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 85,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (85, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
+        },
+    )
+    WSTSPLUS_RESNET18_T5_VEG = Weights(
+        url='https://hf.co/isaaccorley/wstsplus/resolve/main/unet-resnet18-t5-veg-d06d5d88.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'WildfireSpreadTS+',
+            'in_chans': 35,
+            'num_classes': 1,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2502.12003',
+            'repo': 'https://github.com/slahrichi/WildfireSpreadTS',
+            'bands': _wstsplus_bands,
+            'classes': ('active-fire',),
+            'input_shape': (35, 128, 128),
+            'resolution': 375.0,
+            'license': 'MIT',
         },
     )
 
