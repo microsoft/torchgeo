@@ -215,8 +215,6 @@ class TestOpenAerialMap:
             with pytest.raises(DatasetNotFoundError):
                 OpenAerialMap(tmp_path, bbox=mock_bbox, download=True)
 
-        assert (tmp_path / '.downloaded').exists()
-
     def test_download_image_id_no_bbox_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

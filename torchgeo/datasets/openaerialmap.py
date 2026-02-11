@@ -223,8 +223,7 @@ class OpenAerialMap(RasterDataset):
                 downloading.
             max_items: maximum number of STAC items to query.
             transforms: a function/transform that takes an input sample
-                and returns a transformed version. Note: CRS transformation is handled
-                automatically via the crs parameter.
+                and returns a transformed version.
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download imagery from STAC API based on bbox
             image_id: optional STAC item ID to download specific imagery
@@ -277,10 +276,6 @@ class OpenAerialMap(RasterDataset):
                 UserWarning,
                 stacklevel=2,
             )
-            with open(os.path.join(root, '.downloaded'), 'w') as f:
-                f.write('Download attempted but no imagery found.\n')
-            return
-
         tiles_url = result
 
         if self.bbox is None:
