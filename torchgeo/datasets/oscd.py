@@ -185,8 +185,8 @@ class OSCD(NonGeoDataset):
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
-            def get_image_paths(ind: int) -> list[Path]:
-                return sorted(
+            def get_image_paths(ind: int) -> list[str]:
+                return sorted(  # type: ignore[invalid-return-type]
                     glob.glob(
                         os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
                     ),
