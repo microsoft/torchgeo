@@ -12,7 +12,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import rasterio
 import requests
 from matplotlib.figure import Figure
@@ -166,22 +165,12 @@ class OpenAerialMap(RasterDataset):
     * Tile naming following mercantile standard: OAM-{x}-{y}-{z}.tif
     * Automatic georeferencing using rasterio
     * RGB imagery (3-band)
-    * Bbox format compatible with OpenStreetMap for easy dataset combination
+    * Bbox format
 
     Dataset usage
     -------------
 
-    The dataset can be used in two modes:
-
-    1. **Search mode**: Query available imagery in a bbox.
-    2. **Download mode**: Query STAC API and download TMS tiles.
-
-    For search mode::
-
-        oam = OpenAerialMap(bbox=bbox, search=True)
-        # oam.search_results contains the DataFrame
-
-    For download mode, provide a bounding box (same format as OpenStreetMap) and zoom level::
+    Provide a bounding box and zoom level to download tiles::
 
         dataset = OpenAerialMap(
             paths='data/openaerial',
@@ -214,7 +203,6 @@ class OpenAerialMap(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        search: bool = False,
         image_id: str | None = None,
         tile_size: Literal[256, 512] = 256,
     ) -> None:
@@ -227,7 +215,6 @@ class OpenAerialMap(RasterDataset):
             res: resolution of the dataset in units of CRS
                 (defaults to resolution of first file found)
             bbox: bounding box for STAC query as (xmin, ymin, xmax, ymax) in EPSG:4326.
-                Same format as OpenStreetMap for easy dataset combination.
             zoom: zoom level for tiles (15-23), only used when download=True.
                 Higher zoom = more detail. Typical values: 18-20 for high-res
                 drone imagery. Higher zoom gives higher resolution but covers
@@ -240,8 +227,6 @@ class OpenAerialMap(RasterDataset):
                 automatically via the crs parameter.
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download imagery from STAC API based on bbox
-            search: if True, query STAC API for available imagery and return results in
-                self.search_results. Skips dataset initialization if download=False.
             image_id: optional STAC item ID to download specific imagery
             tile_size: size of the tiles to download (supported : 256 , 512 );
                 Do verify they exists in the remote image source.
@@ -256,16 +241,7 @@ class OpenAerialMap(RasterDataset):
         self.max_items = max_items
         self.download = download
         self.image_id = image_id
-        self.search_results: pd.DataFrame | None = None
         self.tile_size = tile_size
-
-        if search:
-            if self.bbox is None:
-                raise ValueError('bbox must be provided when search=True')
-            self._search_stac()
-            # If user only wants to search, return early, because dataset will raise error if it is empty and is instantiated by super init
-            if not download:
-                return
 
         if download:
             if bbox is None and image_id is None:
@@ -278,47 +254,6 @@ class OpenAerialMap(RasterDataset):
         super().__init__(
             paths, crs or CRS.from_epsg(3857), res, transforms=transforms, cache=cache
         )
-
-    def _search_stac(self) -> None:
-        """Query and display available imagery as a DataFrame."""
-        assert self.bbox is not None
-        try:
-            resp = requests.post(
-                f'{self._stac_url}/search',
-                json={'bbox': list(self.bbox), 'limit': self.max_items},
-                headers={'User-Agent': 'torchgeo'},
-                timeout=30,
-            )
-            resp.raise_for_status()
-        except requests.RequestException as e:
-            warnings.warn(f'STAC search failed: {e}', UserWarning)
-            return
-
-        features = resp.json().get('features', [])
-        if not features:
-            print('No images found in this bounding box.')
-            return
-
-        self.search_results = pd.DataFrame(
-            [
-                {
-                    'ID': f['id'],
-                    'Date': (
-                        f['properties'].get('start_datetime')
-                        or f['properties'].get('created')
-                        or ''
-                    ),
-                    'Platform': f['properties'].get('oam:platform_type'),
-                    'Provider': f['properties'].get('oam:producer_name'),
-                    'GSD': f['properties'].get('gsd'),
-                    'Title': f['properties'].get('title'),
-                }
-                for f in features
-            ]
-        )
-
-        print(f'Found {len(features)} available images')
-        print('\nUse .search_results to view.\n')
 
     def _download(self) -> None:
         """Download imagery from STAC API and TMS endpoints.

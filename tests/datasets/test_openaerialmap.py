@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import pytest
 import requests
 import torch
@@ -139,9 +138,6 @@ class TestOpenAerialMap:
         plt.close()
 
     def test_init_validation(self) -> None:
-        with pytest.raises(ValueError, match='bbox must be provided when search=True'):
-            OpenAerialMap(search=True)
-
         with pytest.raises(ValueError, match='bbox or image_id must be provided'):
             OpenAerialMap(download=True)
 
@@ -151,81 +147,6 @@ class TestOpenAerialMap:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             OpenAerialMap(tmp_path)
-
-    def test_search(
-        self,
-        mock_bbox: tuple[float, float, float, float],
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        class MockResponse:
-            status_code = 200
-
-            @staticmethod
-            def json() -> dict[str, Any]:
-                return {
-                    'features': [
-                        {
-                            'id': 'test_id',
-                            'properties': {
-                                'start_datetime': '2022-01-01',
-                                'oam:platform_type': 'uav',
-                                'oam:producer_name': 'test',
-                                'gsd': 0.1,
-                                'title': 'Test Image',
-                            },
-                        }
-                    ]
-                }
-
-        monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.post',
-            lambda *args, **kwargs: MockResponse(),
-        )
-
-        ds = OpenAerialMap(tmp_path, bbox=mock_bbox, search=True, download=False)
-        assert isinstance(ds.search_results, pd.DataFrame)
-        assert len(ds.search_results) == 1
-        assert ds.search_results.iloc[0]['ID'] == 'test_id'
-
-    def test_search_empty(
-        self,
-        mock_bbox: tuple[float, float, float, float],
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        class MockResponse:
-            status_code = 200
-
-            @staticmethod
-            def json() -> dict[str, list[Any]]:
-                return {'features': []}
-
-        monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.post',
-            lambda *args, **kwargs: MockResponse(),
-        )
-
-        OpenAerialMap(tmp_path, bbox=mock_bbox, search=True, download=False)
-        captured = capsys.readouterr()
-        assert 'No images found' in captured.out
-
-    def test_search_failure(
-        self,
-        mock_bbox: tuple[float, float, float, float],
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        def raise_request_exception(*args: Any, **kwargs: Any) -> None:
-            raise requests.RequestException('Search failed')
-
-        monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.post', raise_request_exception
-        )
-
-        with pytest.warns(UserWarning, match='STAC search failed'):
-            OpenAerialMap(tmp_path, bbox=mock_bbox, search=True, download=False)
 
     def test_download_flow(
         self,
