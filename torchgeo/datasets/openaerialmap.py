@@ -3,6 +3,7 @@
 
 """OpenAerialMap dataset."""
 
+import glob
 import math
 import os
 import warnings
@@ -243,8 +244,8 @@ class OpenAerialMap(RasterDataset):
         self.tile_size = tile_size
 
         if download:
-            if bbox is None and image_id is None:
-                raise ValueError('bbox or image_id must be provided when download=True')
+            if bbox is None:
+                raise ValueError('bbox must be provided when download=True')
             if not 15 <= zoom <= 23:
                 raise ValueError(f'zoom must be between 15 and 23, got {zoom}')
             self._download()
@@ -268,6 +269,11 @@ class OpenAerialMap(RasterDataset):
         if isinstance(root, (str, os.PathLike)):
             os.makedirs(root, exist_ok=True)
 
+        existing = glob.glob(os.path.join(root, self.filename_glob))
+        if existing:
+            print(f'Found {len(existing)} existing tiles, skipping download.')
+            return
+
         result = self._fetch_item_id()
         if not result:
             warnings.warn(
@@ -276,16 +282,10 @@ class OpenAerialMap(RasterDataset):
                 UserWarning,
                 stacklevel=2,
             )
-        tiles_url = result
+            return
 
-        if self.bbox is None:
-            raise ValueError(
-                'Bounding box (bbox) is required to calculate tiles. '
-                'Please provide a bbox when initializing OpenAerialMap, even when image_id is provided.'
-            )
-        # we use truncate=True to avoid tiles outside the bbox, just to make sure there won't be corner tiles
         tiles = list(TileUtils.tiles(*self.bbox, self.zoom, truncate=True))
-        self._download_tiles(tiles_url, tiles)
+        self._download_tiles(result, tiles)
 
     def _fetch_item_id(self) -> str | None:
         """Query STAC API and extract tiles URL.
@@ -395,18 +395,6 @@ class OpenAerialMap(RasterDataset):
         url += '?assets=visual'
         filename = f'OAM-{tile.x}-{tile.y}-{tile.z}.tif'
         filepath = os.path.join(root, filename)
-
-        if os.path.exists(filepath):
-            is_valid = False
-            try:
-                with rasterio.open(filepath) as ds:
-                    is_valid = ds.crs is not None
-            except (rasterio.errors.RasterioIOError, OSError):
-                is_valid = False
-
-            if is_valid:
-                return
-            os.unlink(filepath)
 
         try:
             response = requests.get(url, headers={'User-Agent': 'torchgeo'}, timeout=30)
