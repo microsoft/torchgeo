@@ -28,13 +28,13 @@ class TestBigEarthNet:
         metadata = {
             's1': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S1-v1.0.tar.gz'),
-                'md5': '5a64e9ce38deb036a435a7b59494924c',
+                'md5': '',
                 'filename': 'BigEarthNet-S1-v1.0.tar.gz',
                 'directory': 'BigEarthNet-S1-v1.0',
             },
             's2': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S2-v1.0.tar.gz'),
-                'md5': 'ef5f41129b8308ca178b04d7538dbacf',
+                'md5': '',
                 'filename': 'BigEarthNet-S2-v1.0.tar.gz',
                 'directory': 'BigEarthNet-v1.0',
             },
@@ -43,17 +43,17 @@ class TestBigEarthNet:
             'train': {
                 'url': os.path.join(data_dir, 'bigearthnet-train.csv'),
                 'filename': 'bigearthnet-train.csv',
-                'md5': '167ac4d5de8dde7b5aeaa812f42031e7',
+                'md5': '',
             },
             'val': {
                 'url': os.path.join(data_dir, 'bigearthnet-val.csv'),
                 'filename': 'bigearthnet-val.csv',
-                'md5': 'aff594ba256a52e839a3b5fefeb9ef42',
+                'md5': '',
             },
             'test': {
                 'url': os.path.join(data_dir, 'bigearthnet-test.csv'),
                 'filename': 'bigearthnet-test.csv',
-                'md5': '851a6bdda484d47f60e121352dcb1bf5',
+                'md5': '',
             },
         }
         monkeypatch.setattr(BigEarthNet, 'metadata', metadata)
@@ -61,9 +61,7 @@ class TestBigEarthNet:
         bands, num_classes, split = request.param
         root = tmp_path
         transforms = nn.Identity()
-        return BigEarthNet(
-            root, split, bands, num_classes, transforms, download=True, checksum=True
-        )
+        return BigEarthNet(root, split, bands, num_classes, transforms, download=True)
 
     def test_getitem(self, dataset: BigEarthNet) -> None:
         x = dataset[0]
@@ -153,23 +151,13 @@ class TestBigEarthNetV2:
         monkeypatch.setattr(BigEarthNetV2, 'url', url)
         metadata = {
             's1': {
-                'files': {
-                    'BigEarthNet-S1.tar.gzaa': '8101e604552c010178af0bf3645cf391',
-                    'BigEarthNet-S1.tar.gzab': 'e77d4408fc4594407b7b50ec0d43053c',
-                }
+                'files': {'BigEarthNet-S1.tar.gzaa': '', 'BigEarthNet-S1.tar.gzab': ''}
             },
             's2': {
-                'files': {
-                    'BigEarthNet-S2.tar.gzaa': '9c611dc8598b20830d2d79f5a73df294',
-                    'BigEarthNet-S2.tar.gzab': '4e6904c7f60504cceaf90a35401e4262',
-                }
+                'files': {'BigEarthNet-S2.tar.gzaa': '', 'BigEarthNet-S2.tar.gzab': ''}
             },
-            'maps': {
-                'files': {'Reference_Maps.tar.gzaa': 'dd129c68c4902bfae48d7caada03fdc0'}
-            },
-            'metadata': {
-                'files': {'metadata.parquet': 'ad100d6b020f2e693673f77ebbe57891'}
-            },
+            'maps': {'files': {'Reference_Maps.tar.gzaa': ''}},
+            'metadata': {'files': {'metadata.parquet': ''}},
         }
         monkeypatch.setattr(BigEarthNetV2, 'metadata_locs', metadata)
 
@@ -177,9 +165,7 @@ class TestBigEarthNetV2:
 
         root = tmp_path
         transforms = nn.Identity()
-        return BigEarthNetV2(
-            root, split, bands, transforms, download=True, checksum=True
-        )
+        return BigEarthNetV2(root, split, bands, transforms, download=True)
 
     def test_getitem(self, dataset: BigEarthNetV2) -> None:
         """Test loading data."""

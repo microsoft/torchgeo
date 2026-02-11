@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -22,23 +21,16 @@ from torchgeo.datasets import (
 
 class TestGlobBiomass:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> GlobBiomass:
+    def dataset(self, tmp_path: Path) -> GlobBiomass:
         shutil.copy(
             os.path.join('tests', 'data', 'globbiomass', 'N00E020_agb.zip'), tmp_path
         )
         shutil.copy(
             os.path.join('tests', 'data', 'globbiomass', 'N00E020_gsv.zip'), tmp_path
         )
-
-        md5s = {
-            'N00E020_agb.zip': '22e11817ede672a2a76b8a5588bc4bf4',
-            'N00E020_gsv.zip': 'e79bf051ac5d659cb21c566c53ce7b98',
-        }
-
-        monkeypatch.setattr(GlobBiomass, 'md5s', md5s)
         root = tmp_path
         transforms = nn.Identity()
-        return GlobBiomass(root, transforms=transforms, checksum=True)
+        return GlobBiomass(root, transforms=transforms)
 
     def test_getitem(self, dataset: GlobBiomass) -> None:
         x = dataset[dataset.bounds]
@@ -53,7 +45,7 @@ class TestGlobBiomass:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            GlobBiomass(tmp_path, checksum=True)
+            GlobBiomass(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'N00E020_agb.zip'), 'w') as f:

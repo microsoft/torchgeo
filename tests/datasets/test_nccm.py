@@ -22,12 +22,6 @@ from torchgeo.datasets import (
 class TestNCCM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
-        md5s = {
-            2017: 'ae5c390d0ffb8970d544b8a09142759f',
-            2018: '0d453bdb8ea5b7318c33e62513760580',
-            2019: 'd4ab7ab00bb57623eafb6b27747e5639',
-        }
-        monkeypatch.setattr(NCCM, 'md5s', md5s)
         urls = {
             2017: os.path.join('tests', 'data', 'nccm', 'CDL2017_clip.tif'),
             2018: os.path.join('tests', 'data', 'nccm', 'CDL2018_clip1.tif'),
@@ -36,7 +30,7 @@ class TestNCCM:
         monkeypatch.setattr(NCCM, 'urls', urls)
         transforms = nn.Identity()
         root = tmp_path
-        return NCCM(root, transforms=transforms, download=True, checksum=True)
+        return NCCM(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: NCCM) -> None:
         x = dataset[dataset.bounds]

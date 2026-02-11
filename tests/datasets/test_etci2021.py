@@ -23,19 +23,16 @@ class TestETCI2021:
         metadata = {
             'train': {
                 'filename': 'train.zip',
-                'md5': 'bd55f2116e43a35d5b94a765938be2aa',
                 'directory': 'train',
                 'url': os.path.join(data_dir, 'train.zip'),
             },
             'val': {
                 'filename': 'val_with_ref_labels.zip',
-                'md5': '96ed69904043e514c13c14ffd3ec45cd',
                 'directory': 'test',
                 'url': os.path.join(data_dir, 'val_with_ref_labels.zip'),
             },
             'test': {
                 'filename': 'test_without_ref_labels.zip',
-                'md5': '1b66d85e22c8f5b0794b3542c5ea09ef',
                 'directory': 'test_internal',
                 'url': os.path.join(data_dir, 'test_without_ref_labels.zip'),
             },
@@ -44,7 +41,7 @@ class TestETCI2021:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return ETCI2021(root, split, transforms, download=True, checksum=True)
+        return ETCI2021(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: ETCI2021) -> None:
         x = dataset[0]

@@ -126,8 +126,8 @@ html_theme_options = {
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
-        'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
-        'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
+        'image_light': os.path.join('_static', 'logo', 'logo-color.svg'),
+        'image_dark': os.path.join('_static', 'logo', 'logo-color.svg'),
     },
     'switcher': {'json_url': json_url, 'version_match': version_match},
     'navbar_start': ['navbar-logo', 'version-switcher'],
@@ -135,7 +135,7 @@ html_theme_options = {
     'navbar_end': ['theme-switcher', 'navbar-icon-links'],
 }
 
-html_favicon = os.path.join('..', 'logo', 'favicon.ico')
+html_favicon = os.path.join('_static', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
 html_css_files = ['custom.css']

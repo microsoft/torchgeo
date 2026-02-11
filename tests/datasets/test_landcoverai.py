@@ -26,13 +26,11 @@ from torchgeo.datasets import (
 class TestLandCoverAIGeo:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
-        monkeypatch.setattr(LandCoverAIGeo, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(LandCoverAIGeo, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return LandCoverAIGeo(root, transforms=transforms, download=True, checksum=True)
+        return LandCoverAIGeo(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: LandCoverAIGeo) -> None:
         x = dataset[dataset.bounds]
@@ -79,14 +77,12 @@ class TestLandCoverAI:
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
         split: str = request.param[1]
-        md5 = '3ac7a20f8bbf2cedb2999b70e153b229'
-        monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
         monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
         transforms = nn.Identity()
-        return base_class(root, split, transforms, download=True, checksum=True)
+        return base_class(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:
         x = dataset[0]

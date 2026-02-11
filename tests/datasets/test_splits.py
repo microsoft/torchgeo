@@ -261,7 +261,8 @@ def test_roi_split() -> None:
     ],
 )
 def test_time_series_split(
-    lengths: Sequence[tuple[int, int] | int | float], expected_lengths: Sequence[int]
+    lengths: Sequence[float] | Sequence[pd.Interval] | Sequence[pd.Timedelta],
+    expected_lengths: Sequence[int],
 ) -> None:
     geometry = [
         shapely.box(0, 0, 1, 1),

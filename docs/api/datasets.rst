@@ -18,215 +18,48 @@ Geospatial Datasets
    :align: center
    :file: datasets/geo_datasets.csv
 
-Aboveground Woody Biomass
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: AbovegroundLiveWoodyBiomassDensity
-
-AgriFieldNet
-^^^^^^^^^^^^
-
-.. autoclass:: AgriFieldNet
-
-Airphen
-^^^^^^^
-
-.. autoclass:: Airphen
-
-Aster Global DEM
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: AsterGDEM
-
-Canadian Building Footprints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CanadianBuildingFootprints
-
-Chesapeake Land Cover
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: Chesapeake
-.. autoclass:: ChesapeakeDC
-.. autoclass:: ChesapeakeDE
-.. autoclass:: ChesapeakeMD
-.. autoclass:: ChesapeakeNY
-.. autoclass:: ChesapeakePA
-.. autoclass:: ChesapeakeVA
-.. autoclass:: ChesapeakeWV
-.. autoclass:: ChesapeakeCVPR
-
-Copernicus-Embed
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: CopernicusEmbed
-
-GlobalBuildingMap
-^^^^^^^^^^^^^^^^^
-
-.. autoclass:: GlobalBuildingMap
-
-Global Mangrove Distribution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CMSGlobalMangroveCanopy
-
-Google Satellite Embedding
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: GoogleSatelliteEmbedding
-
-Cropland Data Layer
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CDL
-
-EDDMapS
-^^^^^^^
-
-.. autoclass:: EDDMapS
-
-EnMAP
-^^^^^
-
-.. autoclass:: EnMAP
-
-EnviroAtlas
-^^^^^^^^^^^
-
-.. autoclass:: EnviroAtlas
-
-Esri2020
-^^^^^^^^
-
-.. autoclass:: Esri2020
-
-EU-DEM
-^^^^^^
-
-.. autoclass:: EUDEM
-
-EuroCrops
-^^^^^^^^^
-
-.. autoclass:: EuroCrops
-
-GBIF
-^^^^
-
-.. autoclass:: GBIF
-
-GlobBiomass
-^^^^^^^^^^^
-
-.. autoclass:: GlobBiomass
-
-iNaturalist
-^^^^^^^^^^^
-
-.. autoclass:: INaturalist
-
-I/O Bench
-^^^^^^^^^
-
-.. autoclass:: IOBench
-
-L7 Irish
-^^^^^^^^
-
-.. autoclass:: L7Irish
-
-L8 Biome
-^^^^^^^^
-
-.. autoclass:: L8Biome
-
-LandCover.ai Geo
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: LandCoverAIBase
-.. autoclass:: LandCoverAIGeo
-
-Landsat
-^^^^^^^
-
-.. autoclass:: Landsat
-.. autoclass:: Landsat9
-.. autoclass:: Landsat8
-.. autoclass:: Landsat7
-.. autoclass:: Landsat5TM
-.. autoclass:: Landsat5MSS
-.. autoclass:: Landsat4TM
-.. autoclass:: Landsat4MSS
-.. autoclass:: Landsat3
-.. autoclass:: Landsat2
-.. autoclass:: Landsat1
-
-MMFlood
-^^^^^^^
-.. autoclass:: MMFlood
-
-NAIP
-^^^^
-
-.. autoclass:: NAIP
-
-NCCM
-^^^^
-
-.. autoclass:: NCCM
-
-NLCD
-^^^^
-
-.. autoclass:: NLCD
-
-Open Buildings
-^^^^^^^^^^^^^^
-
-.. autoclass:: OpenBuildings
-
-OpenAerialMap
-^^^^^^^^^^^^^
-
-.. autoclass:: OpenAerialMap
-
-OpenStreetMap
-^^^^^^^^^^^^^
-
-.. autoclass:: OpenStreetMap
-
-Presto Embeddings
-^^^^^^^^^^^^^^^^^
-
-.. autoclass:: PrestoEmbeddings
-
-PRISMA
-^^^^^^
-
-.. autoclass:: PRISMA
-
-Sentinel
-^^^^^^^^
-
-.. autoclass:: Sentinel
-.. autoclass:: Sentinel1
-.. autoclass:: Sentinel2
-
-South Africa Crop Type
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SouthAfricaCropType
-
-South America Soybean
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SouthAmericaSoybean
-
-Tessera Embeddings
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: TesseraEmbeddings
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   datasets/aboveground-woody-biomass
+   datasets/agrifieldnet
+   datasets/airphen
+   datasets/aster-global-dem
+   datasets/canadian-building-footprints
+   datasets/chesapeake
+   datasets/copernicus-embed
+   datasets/global-building-map
+   datasets/global-mangrove-distribution
+   datasets/google-satellite-embedding
+   datasets/cropland-data-layer
+   datasets/eddmaps
+   datasets/embedded-seamless-data
+   datasets/enmap
+   datasets/enviroatlas
+   datasets/esri2020
+   datasets/eu-dem
+   datasets/eurocrops
+   datasets/gbif
+   datasets/globbiomass
+   datasets/inaturalist
+   datasets/io-bench
+   datasets/l7-irish
+   datasets/l8-biome
+   datasets/landcover-ai-geo
+   datasets/landsat
+   datasets/mmflood
+   datasets/naip
+   datasets/nccm
+   datasets/nlcd
+   datasets/open-buildings
+   datasets/openstreetmap
+   datasets/presto-embeddings
+   datasets/prisma
+   datasets/sentinel
+   datasets/south-africa-crop-type
+   datasets/south-america-soybean
+   datasets/tessera-embeddings
 
 .. _Non-geospatial Datasets:
 
@@ -241,381 +74,83 @@ Non-geospatial Datasets
    :align: center
    :file: datasets/non_geo_datasets.csv
 
-ADVANCE
-^^^^^^^
-
-.. autoclass:: ADVANCE
-
-Benin Cashew Plantations
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: BeninSmallHolderCashews
-
-BigEarthNet
-^^^^^^^^^^^
-
-.. autoclass:: BigEarthNet
-.. autoclass:: BigEarthNetV2
-
-BioMassters
-^^^^^^^^^^^
-
-.. autoclass:: BioMassters
-
-BRIGHT
-^^^^^^
-
-.. autoclass:: BRIGHTDFC2025
-
-CaBuAr
-^^^^^^
-
-.. autoclass:: CaBuAr
-
-CaFFe
-^^^^^
-
-.. autoclass:: CaFFe
-
-ChaBuD
-^^^^^^
-
-.. autoclass:: ChaBuD
-
-Clay Embeddings
-^^^^^^^^^^^^^^^
-
-.. autoclass:: ClayEmbeddings
-
-Cloud Cover Detection
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CloudCoverDetection
-
-Copernicus-Pretrain
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CopernicusPretrain
-
-COWC
-^^^^
-
-.. autoclass:: COWC
-.. autoclass:: COWCCounting
-.. autoclass:: COWCDetection
-
-CropHarvest
-^^^^^^^^^^^
-
-.. autoclass:: CropHarvest
-
-Kenya Crop Type
-^^^^^^^^^^^^^^^
-
-.. autoclass:: CV4AKenyaCropType
-
-DeepGlobe Land Cover
-^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: DeepGlobeLandCover
-
-DFC2022
-^^^^^^^
-
-.. autoclass:: DFC2022
-
-DIOR
-^^^^
-
-.. autoclass:: DIOR
-
-
-Digital Typhoon
-^^^^^^^^^^^^^^^
-
-.. autoclass:: DigitalTyphoon
-
-DL4GAM
-^^^^^^
-.. autoclass:: DL4GAMAlps
-
-DOTA
-^^^^
-.. autoclass:: DOTA
-
-Earth Index Embeddings
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: EarthIndexEmbeddings
-
-ETCI2021 Flood Detection
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: ETCI2021
-
-EuroSAT
-^^^^^^^
-
-.. autoclass:: EuroSAT
-.. autoclass:: EuroSATSpatial
-.. autoclass:: EuroSAT100
-
-EverWatch
-^^^^^^^^^
-
-.. autoclass:: EverWatch
-
-FAIR1M
-^^^^^^
-
-.. autoclass:: FAIR1M
-
-Fields Of The World
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: FieldsOfTheWorld
-
-FireRisk
-^^^^^^^^
-
-.. autoclass:: FireRisk
-
-Forest Damage
-^^^^^^^^^^^^^
-
-.. autoclass:: ForestDamage
-
-GeoNRW
-^^^^^^^
-
-.. autoclass:: GeoNRW
-
-GID-15
-^^^^^^
-
-.. autoclass:: GID15
-
-HySpecNet-11k
-^^^^^^^^^^^^^
-
-.. autoclass:: HySpecNet11k
-
-IDTReeS
-^^^^^^^
-
-.. autoclass:: IDTReeS
-
-Inria Aerial Image Labeling
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: InriaAerialImageLabeling
-
-LandCover.ai
-^^^^^^^^^^^^
-
-.. autoclass:: LandCoverAI
-.. autoclass:: LandCoverAI100
-
-LEVIR-CD
-^^^^^^^^
-
-.. autoclass:: LEVIRCDBase
-.. autoclass:: LEVIRCD
-
-LEVIR-CD+
-^^^^^^^^^
-
-.. autoclass:: LEVIRCDPlus
-
-LoveDA
-^^^^^^
-
-.. autoclass:: LoveDA
-
-Major TOM
-^^^^^^^^^
-
-.. autoclass:: MajorTOMEmbeddings
-
-MapInWild
-^^^^^^^^^
-
-.. autoclass:: MapInWild
-
-MDAS
-^^^^
-
-.. autoclass:: MDAS
-
-Million-AID
-^^^^^^^^^^^
-
-.. autoclass:: MillionAID
-
-MMEarth
-^^^^^^^^
-
-.. autoclass:: MMEarth
-
-NASA Marine Debris
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: NASAMarineDebris
-
-OSCD
-^^^^
-
-.. autoclass:: OSCD
-.. autoclass:: OSCD100
-
-PASTIS
-^^^^^^
-
-.. autoclass:: PASTIS
-
-PatternNet
-^^^^^^^^^^
-
-.. autoclass:: PatternNet
-
-Potsdam
-^^^^^^^
-
-.. autoclass:: Potsdam2D
-
-QuakeSet
-^^^^^^^^
-
-.. autoclass:: QuakeSet
-
-ReforesTree
-^^^^^^^^^^^
-
-.. autoclass:: ReforesTree
-
-RESISC45
-^^^^^^^^
-
-.. autoclass:: RESISC45
-
-Rwanda Field Boundary
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: RwandaFieldBoundary
-
-SatlasPretrain
-^^^^^^^^^^^^^^
-
-.. autoclass:: SatlasPretrain
-
-Seasonal Contrast
-^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SeasonalContrastS2
-
-SeasoNet
-^^^^^^^^
-
-.. autoclass:: SeasoNet
-
-SEN12MS
-^^^^^^^
-
-.. autoclass:: SEN12MS
-
-SKIPP'D
-^^^^^^^
-
-.. autoclass:: SKIPPD
-
-SkyScript
-^^^^^^^^^
-
-.. autoclass:: SkyScript
-
-So2Sat
-^^^^^^
-
-.. autoclass:: So2Sat
-
-Solar Plants Brazil
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SolarPlantsBrazil
-
-SODA
-^^^^
-
-.. autoclass:: SODAA
-
-SSL4EO
-^^^^^^
-
-.. autoclass:: SSL4EO
-.. autoclass:: SSL4EOL
-.. autoclass:: SSL4EOS12
-
-SSL4EO-L Benchmark
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SSL4EOLBenchmark
-
-Substation
-^^^^^^^^^^
-
-.. autoclass:: Substation
-
-SustainBench Crop Yield
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SustainBenchCropYield
-
-TreeSatAI
-^^^^^^^^^
-
-.. autoclass:: TreeSatAI
-
-Tropical Cyclone
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: TropicalCyclone
-
-UC Merced
-^^^^^^^^^
-
-.. autoclass:: UCMerced
-
-USAVars
-^^^^^^^
-
-.. autoclass:: USAVars
-
-Vaihingen
-^^^^^^^^^
-
-.. autoclass:: Vaihingen2D
-
-VHR-10
-^^^^^^
-
-.. autoclass:: VHR10
-
-Western USA Live Fuel Moisture
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: WesternUSALiveFuelMoisture
-
-xBD
-^^^
-
-.. autoclass:: xBD
-
-ZueriCrop
-^^^^^^^^^
-
-.. autoclass:: ZueriCrop
-
-.. _Base Classes:
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   datasets/advance
+   datasets/benin-cashew-plantations
+   datasets/bigearthnet
+   datasets/biomassters
+   datasets/bright
+   datasets/cabuar
+   datasets/caffe
+   datasets/chabud
+   datasets/clay-embeddings
+   datasets/cloud-cover-detection
+   datasets/copernicus-pretrain
+   datasets/cowc
+   datasets/cropharvest
+   datasets/kenya-crop-type
+   datasets/deepglobe-land-cover
+   datasets/dfc2022
+   datasets/dior
+   datasets/digital-typhoon
+   datasets/dl4gam
+   datasets/dota
+   datasets/earth-index-embeddings
+   datasets/etci2021
+   datasets/eurosat
+   datasets/everwatch
+   datasets/fair1m
+   datasets/fields-of-the-world
+   datasets/firerisk
+   datasets/forest-damage
+   datasets/geonrw
+   datasets/gid15
+   datasets/hyspecnet11k
+   datasets/idtrees
+   datasets/inria-aerial-image-labeling
+   datasets/landcover-ai
+   datasets/levircd
+   datasets/levircd-plus
+   datasets/loveda
+   datasets/major-tom
+   datasets/mapinwild
+   datasets/mdas
+   datasets/million-aid
+   datasets/mmearth
+   datasets/nasa-marine-debris
+   datasets/oscd
+   datasets/pastis
+   datasets/patternnet
+   datasets/potsdam
+   datasets/quakeset
+   datasets/reforestree
+   datasets/resisc45
+   datasets/rwanda-field-boundary
+   datasets/satlas-pretrain
+   datasets/seasonal-contrast
+   datasets/seasonet
+   datasets/sen12ms
+   datasets/skippd
+   datasets/skyscript
+   datasets/so2sat
+   datasets/solar-plants-brazil
+   datasets/soda
+   datasets/ssl4eo
+   datasets/ssl4eo-l-benchmark
+   datasets/substation
+   datasets/sustainbench-crop-yield
+   datasets/treesatai
+   datasets/tropical-cyclone
+   datasets/uc-merced
+   datasets/usavars
+   datasets/vaihingen
+   datasets/vhr10
+   datasets/western-usa-live-fuel-moisture
+   datasets/xbd
+   datasets/zuericrop
 
 Copernicus-Bench
 ----------------
@@ -628,23 +163,10 @@ Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream task
    :align: center
    :file: datasets/copernicus_bench.csv
 
-.. autoclass:: CopernicusBench
-.. autoclass:: CopernicusBenchBase
-.. autoclass:: CopernicusBenchCloudS2
-.. autoclass:: CopernicusBenchCloudS3
-.. autoclass:: CopernicusBenchEuroSATS1
-.. autoclass:: CopernicusBenchEuroSATS2
-.. autoclass:: CopernicusBenchBigEarthNetS1
-.. autoclass:: CopernicusBenchBigEarthNetS2
-.. autoclass:: CopernicusBenchLC100ClsS3
-.. autoclass:: CopernicusBenchLC100SegS3
-.. autoclass:: CopernicusBenchDFC2020S1
-.. autoclass:: CopernicusBenchDFC2020S2
-.. autoclass:: CopernicusBenchFloodS1
-.. autoclass:: CopernicusBenchLCZS2
-.. autoclass:: CopernicusBenchBiomassS3
-.. autoclass:: CopernicusBenchAQNO2S5P
-.. autoclass:: CopernicusBenchAQO3S5P
+.. toctree::
+   :maxdepth: 1
+
+   datasets/copernicus-bench
 
 SpaceNet
 --------
@@ -657,15 +179,12 @@ The `SpaceNet Dataset <https://spacenet.ai/datasets/>`_ is hosted as an Amazon W
    :align: center
    :file: datasets/spacenet.csv
 
-.. autoclass:: SpaceNet
-.. autoclass:: SpaceNet1
-.. autoclass:: SpaceNet2
-.. autoclass:: SpaceNet3
-.. autoclass:: SpaceNet4
-.. autoclass:: SpaceNet5
-.. autoclass:: SpaceNet6
-.. autoclass:: SpaceNet7
-.. autoclass:: SpaceNet8
+.. toctree::
+   :maxdepth: 1
+
+   datasets/spacenet
+
+.. _Base Classes:
 
 Base Classes
 ------------

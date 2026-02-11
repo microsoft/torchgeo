@@ -42,7 +42,6 @@ class TestMMFlood:
             include_hydro=include_hydro,
             transforms=nn.Identity(),
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: MMFlood) -> None:

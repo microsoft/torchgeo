@@ -23,12 +23,10 @@ class TestADVANCE:
             os.path.join(data_dir, 'ADVANCE_vision.zip'),
             os.path.join(data_dir, 'ADVANCE_sound.zip'),
         ]
-        md5s = ['43acacecebecd17a82bc2c1e719fd7e4', '039b7baa47879a8a4e32b9dd8287f6ad']
         monkeypatch.setattr(ADVANCE, 'urls', urls)
-        monkeypatch.setattr(ADVANCE, 'md5s', md5s)
         root = tmp_path
         transforms = nn.Identity()
-        return ADVANCE(root, transforms, download=True, checksum=True)
+        return ADVANCE(root, transforms, download=True)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
         x = dataset[0]

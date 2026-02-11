@@ -26,8 +26,6 @@ class TestEsri2020:
         zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
         monkeypatch.setattr(Esri2020, 'zipfile', zipfile)
 
-        md5 = '34aec55538694171c7b605b0cc0d0138'
-        monkeypatch.setattr(Esri2020, 'md5', md5)
         url = os.path.join(
             'tests',
             'data',
@@ -37,7 +35,7 @@ class TestEsri2020:
         monkeypatch.setattr(Esri2020, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return Esri2020(root, transforms=transforms, download=True, checksum=True)
+        return Esri2020(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: Esri2020) -> None:
         x = dataset[dataset.bounds]
@@ -62,7 +60,7 @@ class TestEsri2020:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Esri2020(tmp_path, checksum=True)
+            Esri2020(tmp_path)
 
     def test_and(self, dataset: Esri2020) -> None:
         ds = dataset & dataset

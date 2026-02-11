@@ -22,7 +22,7 @@ from .utils import Path, Sample, which
 class NASAMarineDebris(NonGeoDataset):
     """NASA Marine Debris dataset.
 
-    The `NASA Marine Debris <https://beta.source.coop/repositories/nasa/marine-debris/>`__
+    The `NASA Marine Debris <https://source.coop/nasa/marine-debris>`__
     dataset is a dataset for detection of floating marine debris in satellite imagery.
 
     Dataset features:

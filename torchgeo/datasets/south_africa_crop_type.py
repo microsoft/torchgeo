@@ -25,7 +25,7 @@ class SouthAfricaCropType(RasterDataset):
     """South Africa Crop Type Challenge dataset.
 
     The `South Africa Crop Type Challenge
-    <https://beta.source.coop/repositories/radiantearth/south-africa-crops-competition/description/>`__
+    <https://source.coop/radiantearth/south-africa-crops-competition>`__
     dataset includes satellite imagery from Sentinel-1 and Sentinel-2 and labels for
     crop type that were collected by aerial and vehicle survey from May 2017 to March
     2018. Data was provided by the Western Cape Department of Agriculture and is

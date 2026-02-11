@@ -20,11 +20,9 @@ class TestInriaAerialImageLabeling:
         self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
         root = os.path.join('tests', 'data', 'inria')
-        test_md5 = '3ecbe95eb84aea064e455c4321546be1'
-        monkeypatch.setattr(InriaAerialImageLabeling, 'md5', test_md5)
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
-            root, split=request.param, transforms=transforms, checksum=True
+            root, split=request.param, transforms=transforms
         )
 
     def test_getitem(self, dataset: InriaAerialImageLabeling) -> None:
@@ -53,7 +51,6 @@ class TestInriaAerialImageLabeling:
             InriaAerialImageLabeling(tmp_path)
 
     def test_dataset_checksum(self, dataset: InriaAerialImageLabeling) -> None:
-        InriaAerialImageLabeling.md5 = 'randommd5hash123'
         shutil.rmtree(os.path.join(dataset.root, dataset.directory))
         with pytest.raises(RuntimeError, match='Dataset corrupted'):
             InriaAerialImageLabeling(root=dataset.root, checksum=True)

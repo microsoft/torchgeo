@@ -43,8 +43,8 @@ class AgriFieldNet(RasterDataset):
     crops being over represented. The test set was drawn randomly from an area
     weighted field list that ensured that fields with less common crop types
     were better represented in the test set. The original dataset can be
-    downloaded from `Source Cooperative <https://beta.source.coop/
-    radiantearth/agrifieldnet-competition/>`__.
+    downloaded from `Source Cooperative <https://source.coop/
+    radiantearth/agrifieldnet-competition>`__.
 
     Dataset format:
 

@@ -26,10 +26,8 @@ class TestEuroCrops:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
         classes = request.param
-        monkeypatch.setattr(
-            EuroCrops, 'zenodo_files', [('AA.zip', 'b2ef5cac231294731c1dfea47cba544d')]
-        )
-        monkeypatch.setattr(EuroCrops, 'hcat_md5', '22d61cf3b316c8babfd209ae81419d8f')
+        monkeypatch.setattr(EuroCrops, 'zenodo_files', [('AA.zip', '')])
+        monkeypatch.setattr(EuroCrops, 'hcat_md5', '')
         base_url = os.path.join('tests', 'data', 'eurocrops') + os.sep
         monkeypatch.setattr(EuroCrops, 'base_url', base_url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)

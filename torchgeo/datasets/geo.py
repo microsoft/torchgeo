@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -143,6 +143,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         geoslice = tuple(out)
         assert len(geoslice) == 3
+        geoslice = cast(tuple[slice, slice, slice], geoslice)
         return geoslice
 
     def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
@@ -467,22 +468,20 @@ class RasterDataset(GeoDataset):
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
+                vrt = None
                 try:
-                    with rasterio.open(filepath) as src:
-                        # See if file has a color map
-                        if len(self.cmap) == 0:
-                            try:
-                                self.cmap = src.colormap(1)  # type: ignore[misc]
-                            except ValueError:
-                                pass
-
-                        if crs is None:
-                            crs = src.crs
-
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
-                            if res is None:
-                                res = vrt.res
+                    vrt = self._load_warp_file(filepath=filepath, crs=crs)
+                    # See if file has a color map
+                    if len(self.cmap) == 0:
+                        try:
+                            self.cmap = vrt.colormap(1)  # type: ignore[misc]
+                        except ValueError:
+                            pass
+                    if crs is None:
+                        crs = vrt.crs
+                    geometries.append(shapely.box(*vrt.bounds))
+                    if res is None:
+                        res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -490,6 +489,9 @@ class RasterDataset(GeoDataset):
                     filepaths.append(filepath)
                     mint, maxt = self._filepath_to_timestamp(filepath)
                     datetimes.append((mint, maxt))
+                finally:
+                    if vrt is not None:
+                        vrt.close()
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -661,28 +663,37 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: Path) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path, crs: CRS | None = None) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
 
         Args:
             filepath: file to load and warp
+            crs: Optionally specify which CRS to reproject to. This is used in __init__
+                as self.index.crs is not defined at this point.
 
         Returns:
             file handle of warped VRT
         """
         src = rasterio.open(filepath)
+
+        if crs is None:
+            try:
+                crs = self.crs
+            except AttributeError:
+                crs = src.crs
+
         left = min(src.bounds.left, src.bounds.right)
         bottom = min(src.bounds.bottom, src.bounds.top)
         right = max(src.bounds.left, src.bounds.right)
         top = max(src.bounds.bottom, src.bounds.top)
         transform, width, height = rasterio.warp.calculate_default_transform(
-            src.crs, self.crs, src.width, src.height, left, bottom, right, top
+            src.crs, crs, src.width, src.height, left, bottom, right, top
         )
 
         # Only warp if necessary
-        if src.crs != self.crs or src.transform != transform:
+        if src.crs != crs or src.transform != transform:
             vrt = WarpedVRT(
-                src, crs=self.crs, transform=transform, height=height, width=width
+                src, crs=crs, transform=transform, height=height, width=width
             )
             src.close()
             return vrt
@@ -692,6 +703,12 @@ class RasterDataset(GeoDataset):
 
 class XarrayDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files.
+
+    .. warning::
+       This dataset is considered experimental and subject to change. Users are
+       encouraged to experiment with this dataset, introduce subclasses, and report
+       bugs. However, this dataset should not be used in production, as the API is
+       very likely to change in future releases.
 
     .. versionadded:: 0.8
     """
@@ -1226,8 +1243,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             is_valid_file=is_valid_file,
         )
 
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -1241,8 +1258,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         image, label = self._load_image(index)
         sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 

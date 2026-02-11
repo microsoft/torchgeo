@@ -1,0 +1,7 @@
+.. _Esri2020:
+
+Esri2020
+========
+
+.. currentmodule:: torchgeo.datasets
+.. autoclass:: Esri2020

@@ -513,7 +513,7 @@ def panopticon_vitb14(
         state_dict.pop('mask_token')
 
         # interpolate positional embeddings (timm==0.9.2) does not support this yet
-        state_dict['pos_embed'] = resize_abs_pos_embed(
+        state_dict['pos_embed'] = resize_abs_pos_embed(  # type: ignore[invalid-assignment]
             state_dict['pos_embed'], img_size // patch_size, 518 // patch_size
         )
 

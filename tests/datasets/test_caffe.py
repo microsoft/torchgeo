@@ -20,14 +20,12 @@ class TestCaFFe:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CaFFe:
-        md5 = '73c0aba603c356b2cce9ebf952fb7be0'
-        monkeypatch.setattr(CaFFe, 'md5', md5)
         url = os.path.join('tests', 'data', 'caffe', 'caffe.zip')
         monkeypatch.setattr(CaFFe, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return CaFFe(root, split, transforms, download=True, checksum=True)
+        return CaFFe(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: CaFFe) -> None:
         x = dataset[0]

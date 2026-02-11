@@ -7,7 +7,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import TileNet_Weights, tilenet
 
@@ -16,14 +15,14 @@ class TestTileNet:
     """Tests for TileNet (Tile2Vec) model."""
 
     @pytest.fixture(params=[*TileNet_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> TileNet_Weights:
         """Return all available TileNet weights."""
-        return request.param
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> TileNet_Weights:
         """Mock TileNet weights download."""
         weights = TileNet_Weights.NAIP_ALL_TILE2VEC
         path = tmp_path / f'{weights}.pth'
@@ -32,7 +31,7 @@ class TestTileNet:
         torch.save(model.state_dict(), path)
 
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_tilenet(self) -> None:
         """Test TileNet construction and forward pass."""
@@ -51,7 +50,7 @@ class TestTileNet:
 
         assert y.shape == (1, 256)
 
-    def test_tilenet_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_tilenet_weights(self, mocked_weights: TileNet_Weights) -> None:
         """Test TileNet with pretrained weights."""
         model = tilenet(weights=mocked_weights)
         x = torch.randn(1, mocked_weights.meta['in_chans'], 50, 50)
@@ -59,17 +58,17 @@ class TestTileNet:
 
         assert y.shape == (1, 512)
 
-    def test_bands(self, weights: WeightsEnum) -> None:
+    def test_bands(self, weights: TileNet_Weights) -> None:
         """Test bands metadata consistency."""
         assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: TileNet_Weights) -> None:
         """Test that transforms run without error."""
         c = weights.meta['in_chans']
         sample = {'image': torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)}
         weights.transforms(sample)
 
     @pytest.mark.slow
-    def test_tilenet_download(self, weights: WeightsEnum) -> None:
+    def test_tilenet_download(self, weights: TileNet_Weights) -> None:
         """Test real weight download."""
         tilenet(weights=weights)

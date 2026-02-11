@@ -18,17 +18,15 @@ from torchgeo.datasets import DatasetNotFoundError, Vaihingen2D
 class TestVaihingen2D:
     @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Vaihingen2D:
-        md5s = ['c15fbff78d307e51c73f609c0859afc3', 'ec2c0a5149f2371479b38cf8cfbab961']
         splits = {
             'train': ['top_mosaic_09cm_area1.tif', 'top_mosaic_09cm_area11.tif'],
             'test': ['top_mosaic_09cm_area6.tif', 'top_mosaic_09cm_area24.tif'],
         }
-        monkeypatch.setattr(Vaihingen2D, 'md5s', md5s)
         monkeypatch.setattr(Vaihingen2D, 'splits', splits)
         root = os.path.join('tests', 'data', 'vaihingen')
         split = request.param
         transforms = nn.Identity()
-        return Vaihingen2D(root, split, transforms, checksum=True)
+        return Vaihingen2D(root, split, transforms)
 
     def test_getitem(self, dataset: Vaihingen2D) -> None:
         x = dataset[0]

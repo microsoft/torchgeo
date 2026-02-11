@@ -30,7 +30,7 @@ from .utils import (
 class FieldsOfTheWorld(NonGeoDataset):
     """Fields Of The World dataset.
 
-    The `Fields Of The World <https://beta.source.coop/repositories/kerner-lab/fields-of-the-world/>`__
+    The `Fields Of The World <https://source.coop/kerner-lab/fields-of-the-world>`__
     datataset is a semantic and instance segmentation dataset for delineating field
     boundaries.
 

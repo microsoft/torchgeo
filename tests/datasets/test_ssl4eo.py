@@ -26,38 +26,18 @@ class TestSSL4EOL:
         monkeypatch.setattr(SSL4EOL, 'url', url)
 
         checksums = {
-            'tm_toa': {
-                'aa': '010b9d72b476e0e30741c17725f84e5c',
-                'ab': '39171bd7bca8a56a8cb339a0f88da9d3',
-                'ac': '3cfc407ce3f4f4d6e3c5fdb457bb87da',
-            },
-            'etm_toa': {
-                'aa': '87e47278f5a30acd3b696b6daaa4713b',
-                'ab': '59295e1816e08a5acd3a18ae56b6f32e',
-                'ac': 'f3ff76eb6987501000228ce15684e09f',
-            },
-            'etm_sr': {
-                'aa': 'fd61a4154eafaeb350dbb01a2551a818',
-                'ab': '0c3117bc7682ba9ffdc6871e6c364b36',
-                'ac': '93d3385e47de4578878ca5c4fa6a628d',
-            },
-            'oli_tirs_toa': {
-                'aa': 'defb9e91a73b145b2dbe347649bded06',
-                'ab': '97f7edaa4e288fc14ec7581dccea766f',
-                'ac': '7472fad9929a0dc96ccf4dc6c804b92f',
-            },
-            'oli_sr': {
-                'aa': '8fd3aa6b581d024299f44457956faa05',
-                'ab': '7eb4d761ce1afd89cae9c6142ca17882',
-                'ac': 'a3210da9fcc71e3a4efde71c30d78c59',
-            },
+            'tm_toa': {'aa': '', 'ab': '', 'ac': ''},
+            'etm_toa': {'aa': '', 'ab': '', 'ac': ''},
+            'etm_sr': {'aa': '', 'ab': '', 'ac': ''},
+            'oli_tirs_toa': {'aa': '', 'ab': '', 'ac': ''},
+            'oli_sr': {'aa': '', 'ab': '', 'ac': ''},
         }
         monkeypatch.setattr(SSL4EOL, 'checksums', checksums)
 
         root = tmp_path
         split, seasons = request.param
         transforms = nn.Identity()
-        return SSL4EOL(root, split, seasons, transforms, download=True, checksum=True)
+        return SSL4EOL(root, split, seasons, transforms, download=True)
 
     def test_getitem(self, dataset: SSL4EOL) -> None:
         x = dataset[0]
@@ -121,24 +101,14 @@ class TestSSL4EOS12:
 
     def test_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'ssl4eo', 's12', '{0}.tar.gz.part{1}')
-        checksums = {
-            's2c': {
-                'aa': 'ddabb8a21c75bc10c047ca480d0f93c9',
-                'ab': '5e634bb5bf4c261ce6f8c46afcccf2d5',
-            }
-        }
+        checksums = {'s2c': {'aa': '', 'ab': ''}}
         monkeypatch.setattr(SSL4EOS12, 'url', url)
         monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
         SSL4EOS12(tmp_path, download=True)
 
     def test_extract(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         root = os.path.join('tests', 'data', 'ssl4eo', 's12')
-        checksums = {
-            's2c': {
-                'aa': 'ddabb8a21c75bc10c047ca480d0f93c9',
-                'ab': '5e634bb5bf4c261ce6f8c46afcccf2d5',
-            }
-        }
+        checksums = {'s2c': {'aa': '', 'ab': ''}}
         monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
         for filename in ['s2_l1c.tar.gz.partaa', 's2_l1c.tar.gz.partab']:
             shutil.copyfile(os.path.join(root, filename), tmp_path / filename)

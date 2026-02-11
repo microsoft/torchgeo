@@ -381,7 +381,7 @@ class SemanticSegmentationTask(BaseTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+    ) -> dict[str, Tensor]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -390,7 +390,11 @@ class SemanticSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Dictionary with 'probabilities', 'bounds', and 'transform' keys.
+
+        .. versionchanged:: 0.9
+           Changed return type from Tensor to dict with probabilities, bounds,
+           and transform keys.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
@@ -401,4 +405,8 @@ class SemanticSegmentationTask(BaseTask):
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
-        return y_hat
+        return {
+            'probabilities': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
+        }

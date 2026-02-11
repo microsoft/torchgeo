@@ -30,11 +30,7 @@ class TestSouthAmericaSoybean:
         monkeypatch.setattr(SouthAmericaSoybean, 'url', url)
         root = tmp_path
         return SouthAmericaSoybean(
-            paths=root,
-            years=[2002, 2021],
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            paths=root, years=[2002, 2021], transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: SouthAmericaSoybean) -> None:

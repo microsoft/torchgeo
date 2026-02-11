@@ -67,6 +67,7 @@ from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
+from .esd import EmbeddedSeamlessData
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
@@ -276,6 +277,7 @@ __all__ = (
     'DigitalTyphoon',
     'EDDMapS',
     'EarthIndexEmbeddings',
+    'EmbeddedSeamlessData',
     'EnMAP',
     'EnviroAtlas',
     'Esri2020',

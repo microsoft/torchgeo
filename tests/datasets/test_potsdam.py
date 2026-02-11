@@ -18,17 +18,15 @@ from torchgeo.datasets import DatasetNotFoundError, Potsdam2D
 class TestPotsdam2D:
     @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Potsdam2D:
-        md5s = ['e47175da529c5844052c7d483b483a30', '0cb795003a01154a72db7efaabbc76ae']
         splits = {
             'train': ['top_potsdam_2_10', 'top_potsdam_2_11'],
             'test': ['top_potsdam_5_15', 'top_potsdam_6_15'],
         }
-        monkeypatch.setattr(Potsdam2D, 'md5s', md5s)
         monkeypatch.setattr(Potsdam2D, 'splits', splits)
         root = os.path.join('tests', 'data', 'potsdam')
         split = request.param
         transforms = nn.Identity()
-        return Potsdam2D(root, split, transforms, checksum=True)
+        return Potsdam2D(root, split, transforms)
 
     def test_getitem(self, dataset: Potsdam2D) -> None:
         x = dataset[0]

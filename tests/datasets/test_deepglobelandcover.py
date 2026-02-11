@@ -10,22 +10,17 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, DeepGlobeLandCover
 
 
 class TestDeepGlobeLandCover:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, request: SubRequest
-    ) -> DeepGlobeLandCover:
-        md5 = '2cbd68d36b1485f09f32d874dde7c5c5'
-        monkeypatch.setattr(DeepGlobeLandCover, 'md5', md5)
+    def dataset(self, request: SubRequest) -> DeepGlobeLandCover:
         root = os.path.join('tests', 'data', 'deepglobelandcover')
         split = request.param
         transforms = nn.Identity()
-        return DeepGlobeLandCover(root, split, transforms, checksum=True)
+        return DeepGlobeLandCover(root, split, transforms)
 
     def test_getitem(self, dataset: DeepGlobeLandCover) -> None:
         x = dataset[0]

@@ -26,17 +26,10 @@ class TestCMSGlobalMangroveCanopy:
     ) -> CMSGlobalMangroveCanopy:
         zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
         monkeypatch.setattr(CMSGlobalMangroveCanopy, 'zipfile', zipfile)
-
-        md5 = 'd6894fa6293cc9c0f3f95a810e842de5'
-        monkeypatch.setattr(CMSGlobalMangroveCanopy, 'md5', md5)
-
         root = os.path.join('tests', 'data', 'cms_mangrove_canopy')
         transforms = nn.Identity()
         country = 'Angola'
-
-        return CMSGlobalMangroveCanopy(
-            root, country=country, transforms=transforms, checksum=True
-        )
+        return CMSGlobalMangroveCanopy(root, country=country, transforms=transforms)
 
     def test_getitem(self, dataset: CMSGlobalMangroveCanopy) -> None:
         x = dataset[dataset.bounds]

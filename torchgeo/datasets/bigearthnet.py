@@ -384,7 +384,7 @@ class BigEarthNet(NonGeoDataset):
             paths = glob.glob(os.path.join(folder, '*.tif'))
             paths = sorted(paths, key=sort_sentinel2_bands)
 
-        return paths
+        return paths  # type: ignore[invalid-return-type]
 
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
@@ -894,7 +894,12 @@ class BigEarthNetV2(NonGeoDataset):
             for fname, md5 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
-                    download_url(self.url.format(fname), self.root, md5)
+                    download_url(
+                        self.url.format(fname),
+                        self.root,
+                        filename=fname,
+                        md5=md5 if self.checksum else None,
+                    )
 
     def _extract(self) -> None:
         """Extract the tarball parts.
