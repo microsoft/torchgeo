@@ -138,7 +138,9 @@ class TestOpenAerialMap:
         plt.close()
 
     def test_init_validation(self) -> None:
-        with pytest.raises(ValueError, match='bbox or image_id must be provided'):
+        with pytest.raises(
+            ValueError, match='bbox must be provided when download=True'
+        ):
             OpenAerialMap(download=True)
 
         with pytest.raises(ValueError, match='zoom must be between'):
@@ -203,6 +205,10 @@ class TestOpenAerialMap:
             status_code = 200
 
             @staticmethod
+            def raise_for_status() -> None:
+                pass
+
+            @staticmethod
             def json() -> dict[str, list[Any]]:
                 return {'features': []}
 
@@ -214,62 +220,6 @@ class TestOpenAerialMap:
         with pytest.warns(UserWarning, match='No imagery found'):
             with pytest.raises(DatasetNotFoundError):
                 OpenAerialMap(tmp_path, bbox=mock_bbox, download=True)
-
-    def test_download_image_id_no_bbox_error(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        class MockStacResponse:
-            status_code = 200
-
-            @staticmethod
-            def json() -> dict[str, Any]:
-                return {
-                    'features': [
-                        {
-                            'id': 'test_id',
-                            'collection': 'test_collection',
-                            'properties': {},
-                            'assets': {
-                                'visual': {'href': 'http://example.com/image.tif'}
-                            },
-                        }
-                    ]
-                }
-
-        class MockTilesResponse:
-            status_code = 200
-
-            @staticmethod
-            def json() -> dict[str, Any]:
-                return {
-                    'tilesets': [
-                        {
-                            'links': [
-                                {
-                                    'rel': 'tile',
-                                    'href': 'http://example.com/WebMercatorQuad/{z}/{x}/{y}',
-                                }
-                            ]
-                        }
-                    ]
-                }
-
-        def mock_requests_func(
-            url: str, **_kwargs: Any
-        ) -> MockStacResponse | MockTilesResponse:
-            if 'search' in url:
-                return MockStacResponse()
-            return MockTilesResponse()
-
-        monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.post', mock_requests_func
-        )
-        monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.get', mock_requests_func
-        )
-
-        with pytest.raises(ValueError, match='is required to calculate tiles'):
-            OpenAerialMap(tmp_path, image_id='test_id', download=True)
 
     def test_fetch_item_id_variations(
         self,
@@ -288,10 +238,17 @@ class TestOpenAerialMap:
         post_exception: type[Exception] | None = None
 
         class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
             def json(self) -> dict[str, Any]:
                 return post_response
 
         class MockGetResponse:
+            @staticmethod
+            def raise_for_status() -> None:
+                pass
+
             @staticmethod
             def json() -> dict[str, Any]:
                 return {

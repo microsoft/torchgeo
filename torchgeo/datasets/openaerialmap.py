@@ -282,6 +282,7 @@ class OpenAerialMap(RasterDataset):
             )
             return
 
+        assert self.bbox is not None
         tiles = list(TileUtils.tiles(*self.bbox, self.zoom, truncate=True))
         self._download_tiles(result, tiles)
 
