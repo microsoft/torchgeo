@@ -17,9 +17,7 @@ class TestEarthEmbeddings:
 
     @pytest.fixture
     def dataset(self) -> EarthEmbeddings:
-        root = os.path.join(
-            'tests', 'data', 'earth_embeddings', 'embeddings', 'embeddings'
-        )
+        root = os.path.join('tests', 'data', 'earth_embeddings', 'dinov2')
         transforms = nn.Identity()
         return EarthEmbeddings(root, transforms=transforms)
 

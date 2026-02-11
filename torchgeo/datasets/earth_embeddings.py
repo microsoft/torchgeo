@@ -5,7 +5,6 @@
 
 from collections.abc import Callable
 
-import geopandas as gpd
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
@@ -50,7 +49,7 @@ class EarthEmbeddings(NonGeoDataset):
         self.transforms = transforms
 
         try:
-            self.data = gpd.read_parquet(root)
+            self.data = pd.read_parquet(root)
         except (FileNotFoundError, ValueError):
             raise DatasetNotFoundError(self)
 

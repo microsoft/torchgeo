@@ -5,7 +5,6 @@
 
 import os
 
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 
@@ -24,11 +23,10 @@ X, Y = np.meshgrid(x, y)
 x = X.flatten()
 y = Y.flatten()
 data = {'embedding': list(embedding), 'centre_lon': x, 'centre_lat': y, 'timestamp': t}
-geometry = gpd.points_from_xy(x, y).buffer(0.5).envelope
 
-gdf = gpd.GeoDataFrame(data, geometry=geometry)
+df = pd.DataFrame(data)
 
-directory = 'embeddings'
-filename = 'part_00001-00050.parquet'
+directory = 'dinov2'
+filename = 'DINOv2_grid_sample_center_384x384_244k.parquet'
 os.makedirs(directory, exist_ok=True)
-gdf.to_parquet(os.path.join(directory, filename), compression=COMPRESSION)
+df.to_parquet(os.path.join(directory, filename), compression=COMPRESSION)
