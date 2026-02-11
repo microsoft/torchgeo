@@ -45,9 +45,9 @@ class TestGBIF:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GBIF(tmp_path)
 
-    def test_invalid_query(self, dataset: GBIF) -> None:
+    def test_invalid_index(self, dataset: GBIF) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

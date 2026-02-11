@@ -7,7 +7,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import Panopticon, Panopticon_Weights, panopticon_vitb14
 from torchgeo.models.panopticon import (
@@ -56,13 +55,13 @@ class TestPanopticon:
 
 class TestPanopticonBase:
     @pytest.fixture(params=[*Panopticon_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    def weights(self, request: SubRequest) -> Panopticon_Weights:
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> Panopticon_Weights:
         weights = Panopticon_Weights.VIT_BASE14
         path = tmp_path / f'{weights}.pth'
         model = panopticon_vitb14()
@@ -71,7 +70,7 @@ class TestPanopticonBase:
         state_dict['pos_embed'] = torch.nn.Parameter(torch.randn(1, 1370, 768))
         torch.save(state_dict, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_panopticon(self) -> None:
         model = panopticon_vitb14(img_size=28)
@@ -82,7 +81,7 @@ class TestPanopticonBase:
         output = model(x_dict)
         assert output.shape == (2, 768)  # (B, embed_dim)
 
-    def test_panopticon_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_panopticon_weights(self, mocked_weights: Panopticon_Weights) -> None:
         model = panopticon_vitb14(weights=mocked_weights)
         x_dict = dict(
             imgs=torch.randn(2, 3, 224, 224),
@@ -92,7 +91,7 @@ class TestPanopticonBase:
         assert tuple(normed_cls_token.shape) == (2, 768)
 
     @pytest.mark.slow
-    def test_panopticon_download(self, weights: WeightsEnum) -> None:
+    def test_panopticon_download(self, weights: Panopticon_Weights) -> None:
         """Test forward pass with weights loaded."""
         model = panopticon_vitb14(weights)
         x_dict = dict(

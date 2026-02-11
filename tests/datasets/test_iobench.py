@@ -25,13 +25,11 @@ from torchgeo.datasets import (
 class TestIOBench:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> IOBench:
-        md5 = 'e82398add7c35896a31c4398c608ef83'
         url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
         monkeypatch.setattr(IOBench, 'url', url)
-        monkeypatch.setitem(IOBench.md5s, 'preprocessed', md5)
         root = tmp_path
         transforms = nn.Identity()
-        return IOBench(root, transforms=transforms, download=True, checksum=True)
+        return IOBench(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: IOBench) -> None:
         x = dataset[dataset.bounds]
@@ -69,9 +67,9 @@ class TestIOBench:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             IOBench(tmp_path)
 
-    def test_invalid_query(self, dataset: IOBench) -> None:
+    def test_invalid_index(self, dataset: IOBench) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

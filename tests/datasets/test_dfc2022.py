@@ -10,29 +10,17 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import DFC2022, DatasetNotFoundError
 
 
 class TestDFC2022:
     @pytest.fixture(params=['train', 'train-unlabeled', 'val'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> DFC2022:
-        monkeypatch.setitem(
-            DFC2022.metadata['train'], 'md5', '6e380c4fa659d05ca93be71b50cacd90'
-        )
-        monkeypatch.setitem(
-            DFC2022.metadata['train-unlabeled'],
-            'md5',
-            'b2bf3839323d4eae636f198921442945',
-        )
-        monkeypatch.setitem(
-            DFC2022.metadata['val'], 'md5', 'e018dc6865bd3086738038fff27b818a'
-        )
+    def dataset(self, request: SubRequest) -> DFC2022:
         root = os.path.join('tests', 'data', 'dfc2022')
         split = request.param
         transforms = nn.Identity()
-        return DFC2022(root, split, transforms, checksum=True)
+        return DFC2022(root, split, transforms)
 
     def test_getitem(self, dataset: DFC2022) -> None:
         x = dataset[0]

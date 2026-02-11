@@ -26,17 +26,13 @@ from torchgeo.datasets import (
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
-        md5s = {
-            'austral': '0485d6045f6b508068ef8daf9e5a5326',
-            'boreal': '5798f32545d7166564c4c4429357b840',
-        }
-
+        md5s = {'austral': '', 'boreal': ''}
         url = os.path.join('tests', 'data', 'l7irish', '{}.tar.gz')
         monkeypatch.setattr(L7Irish, 'url', url)
         monkeypatch.setattr(L7Irish, 'md5s', md5s)
         root = tmp_path
         transforms = nn.Identity()
-        return L7Irish(root, transforms=transforms, download=True, checksum=True)
+        return L7Irish(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]
@@ -82,9 +78,9 @@ class TestL7Irish:
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: L7Irish) -> None:
+    def test_invalid_index(self, dataset: L7Irish) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

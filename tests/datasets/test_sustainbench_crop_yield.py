@@ -20,8 +20,6 @@ class TestSustainBenchCropYield:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SustainBenchCropYield:
-        md5 = '7a5591794e14dd73d2b747cd2244acbc'
-        monkeypatch.setattr(SustainBenchCropYield, 'md5', md5)
         url = os.path.join('tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip')
         monkeypatch.setattr(SustainBenchCropYield, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
@@ -29,9 +27,7 @@ class TestSustainBenchCropYield:
         split = request.param
         countries = ['argentina', 'brazil', 'usa']
         transforms = nn.Identity()
-        return SustainBenchCropYield(
-            root, split, countries, transforms, download=True, checksum=True
-        )
+        return SustainBenchCropYield(root, split, countries, transforms, download=True)
 
     def test_already_extracted(self, dataset: SustainBenchCropYield) -> None:
         SustainBenchCropYield(root=dataset.root, download=True)

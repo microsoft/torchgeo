@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class CloudCoverDetection(NonGeoDataset):
@@ -26,7 +26,7 @@ class CloudCoverDetection(NonGeoDataset):
     This training dataset was generated as part of a `crowdsourcing competition
     <https://www.drivendata.org/competitions/83/cloud-cover/>`_ on DrivenData.org, and
     later on was validated using a team of expert annotators. See `this website
-    <https://beta.source.coop/radiantearth/cloud-cover-detection-challenge/>`__
+    <https://source.coop/radiantearth/cloud-cover-detection-challenge>`__
     for dataset details.
 
     The dataset consists of Sentinel-2 satellite imagery and corresponding cloudy
@@ -65,7 +65,7 @@ class CloudCoverDetection(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initiatlize a CloudCoverDetection instance.
@@ -105,7 +105,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.metadata)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Returns a sample from dataset.
 
         Args:
@@ -175,10 +175,7 @@ class CloudCoverDetection(NonGeoDataset):
         azcopy('sync', url, directory, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -179,6 +179,7 @@ OSCD
 ^^^^
 
 .. autoclass:: OSCDDataModule
+.. autoclass:: OSCD100DataModule
 
 PASTIS
 ^^^^^^

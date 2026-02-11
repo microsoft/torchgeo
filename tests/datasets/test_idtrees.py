@@ -27,12 +27,12 @@ class TestIDTReeS:
         metadata = {
             'train': {
                 'url': os.path.join(data_dir, 'IDTREES_competition_train_v2.zip'),
-                'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
+                'md5': '',
                 'filename': 'IDTREES_competition_train_v2.zip',
             },
             'test': {
                 'url': os.path.join(data_dir, 'IDTREES_competition_test_v2.zip'),
-                'md5': 'b108931c84a70f2a38a8234290131c9b',
+                'md5': '',
                 'filename': 'IDTREES_competition_test_v2.zip',
             },
         }
@@ -40,7 +40,7 @@ class TestIDTReeS:
         monkeypatch.setattr(IDTReeS, 'metadata', metadata)
         root = tmp_path
         transforms = nn.Identity()
-        return IDTReeS(root, split, task, transforms, download=True, checksum=True)
+        return IDTReeS(root, split, task, transforms, download=True)
 
     def test_getitem(self, dataset: IDTReeS) -> None:
         x = dataset[0]

@@ -32,9 +32,7 @@ class TestOpenBuildings:
         shutil.copy(
             os.path.join('tests', 'data', 'openbuildings', '000_buildings.csv.gz'), root
         )
-
-        md5s = {'000_buildings.csv.gz': '20aeeec9d45a0ce4d772a26e0bcbc25f'}
-
+        md5s = {'000_buildings.csv.gz': 'fake'}
         monkeypatch.setattr(OpenBuildings, 'md5s', md5s)
         transforms = nn.Identity()
         return OpenBuildings(root, transforms=transforms)
@@ -89,9 +87,9 @@ class TestOpenBuildings:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
 
-    def test_invalid_query(self, dataset: OpenBuildings) -> None:
+    def test_invalid_index(self, dataset: OpenBuildings) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 

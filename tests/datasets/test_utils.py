@@ -4,6 +4,7 @@
 import os
 import pickle
 import re
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -16,9 +17,14 @@ import torch
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
+    Sample,
     array_to_tensor,
+    check_integrity,
     concat_samples,
     disambiguate_timestamp,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -327,6 +333,63 @@ class TestBoundingBox:
             BoundingBox(0, 1, 2, 3, MAXT, MINT)
 
 
+def test_check_integrity() -> None:
+    fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
+    assert check_integrity(fpath)
+    assert check_integrity(fpath, md5=md5)
+    assert check_integrity(fpath, sha256=sha256)
+
+    assert not check_integrity(fpath + '2')
+    assert not check_integrity(fpath + '2', md5=md5)
+    assert not check_integrity(fpath + '2', sha256=sha256)
+    assert not check_integrity(fpath, md5=md5 + '2')
+    assert not check_integrity(fpath, sha256=sha256 + '2')
+
+
+@pytest.mark.parametrize(
+    'from_path',
+    [
+        os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip'),
+        os.path.join('tests', 'data', 'satlas', 'metadata.tar'),
+        os.path.join('tests', 'data', 'cropharvest', 'features.tar.gz'),
+        os.path.join('tests', 'data', 'cowc_counting', 'COWC_Counting_Utah_AGRC.tbz'),
+        os.path.join(
+            'tests', 'data', 'cowc_counting', 'COWC_test_list_64_class.txt.bz2'
+        ),
+    ],
+)
+def test_extract_archive(from_path: str, tmp_path: Path) -> None:
+    shutil.copy(from_path, tmp_path)
+    from_path = os.path.join(tmp_path, os.path.basename(from_path))
+    extract_archive(from_path, tmp_path, remove_finished=True)
+
+
+def test_download_url(tmp_path: Path) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
+    download_url(url, tmp_path)
+    download_url(url, tmp_path, md5=md5)
+    download_url(url, tmp_path, sha256=sha256)
+
+    with pytest.raises(RuntimeError, match=r'Downloaded file .* is corrupted'):
+        download_url(url, tmp_path, md5=md5 + '2')
+
+
+def test_download_and_extract_archive(tmp_path: Path) -> None:
+    url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
+    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+
+    download_and_extract_archive(url, tmp_path)
+    download_and_extract_archive(url, tmp_path, md5=md5)
+    download_and_extract_archive(url, tmp_path, sha256=sha256)
+
+
 @pytest.mark.parametrize(
     'date_string,format,min_datetime,max_datetime',
     [
@@ -403,10 +466,10 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[dict[str, Any]]:
+    def samples(self) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
-    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
         sample = stack_samples(samples)
         assert sample['image'].size() == torch.Size([2, 3])
         assert torch.allclose(sample['image'], torch.tensor([[1, 2, 0], [0, 0, 3]]))
@@ -415,12 +478,12 @@ class TestCollateFunctionsMatchingKeys:
         for i in range(2):
             assert torch.allclose(samples[i]['image'], new_samples[i]['image'])
 
-    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[Sample]) -> None:
         sample = concat_samples(samples)
         assert sample['image'].size() == torch.Size([6])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0, 0, 0, 3]))
 
-    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[Sample]) -> None:
         sample = merge_samples(samples)
         assert sample['image'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 3]))
@@ -428,10 +491,13 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[dict[str, Any]]:
-        return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
+    def samples(self) -> list[Sample]:
+        return [
+            {'image': torch.tensor([1, 2, 0])},
+            {'mask': torch.tensor([0, 0, 3]), 'other': 5},
+        ]
 
-    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
         sample = stack_samples(samples)
         assert sample['image'].size() == torch.Size([1, 3])
         assert sample['mask'].size() == torch.Size([1, 3])
@@ -442,14 +508,14 @@ class TestCollateFunctionsDifferingKeys:
         assert torch.allclose(samples[0]['image'], new_samples[0]['image'])
         assert torch.allclose(samples[1]['mask'], new_samples[0]['mask'])
 
-    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[Sample]) -> None:
         sample = concat_samples(samples)
         assert sample['image'].size() == torch.Size([3])
         assert sample['mask'].size() == torch.Size([3])
         assert torch.allclose(sample['image'], torch.tensor([1, 2, 0]))
         assert torch.allclose(sample['mask'], torch.tensor([0, 0, 3]))
 
-    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[Sample]) -> None:
         sample = merge_samples(samples)
         assert sample['image'].size() == torch.Size([3])
         assert sample['mask'].size() == torch.Size([3])

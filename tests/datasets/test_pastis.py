@@ -3,7 +3,9 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,31 +15,41 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import PASTIS, DatasetNotFoundError
+from torchgeo.datasets import PASTIS, PASTIS100, DatasetNotFoundError
 
 
 class TestPASTIS:
     @pytest.fixture(
-        params=[
-            {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
-            {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
-            {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
-        ]
+        params=product(
+            [PASTIS, PASTIS100],
+            [
+                {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
+            ],
+        )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
-        md5 = '135a29fb8221241dde14f31579c07f45'
-        monkeypatch.setattr(PASTIS, 'md5', md5)
-        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
-        monkeypatch.setattr(PASTIS, 'url', url)
+        base_class: type[PASTIS] = request.param[0]
+        params: dict[str, Any] = request.param[1]
+
         root = tmp_path
-        folds = request.param['folds']
-        bands = request.param['bands']
-        mode = request.param['mode']
+        folds = params['folds']
+        bands = params['bands']
+        mode = params['mode']
         transforms = nn.Identity()
-        return PASTIS(
-            root, folds, bands, mode, transforms, download=True, checksum=True
+
+        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
+        monkeypatch.setattr(base_class, 'url', url)
+        return base_class(
+            root=root,
+            folds=folds,
+            bands=bands,
+            mode=mode,
+            transforms=transforms,
+            download=True,
         )
 
     def test_getitem_semantic(self, dataset: PASTIS) -> None:
@@ -64,7 +76,13 @@ class TestPASTIS:
         assert len(ds) == 4
 
     def test_already_extracted(self, dataset: PASTIS) -> None:
-        PASTIS(root=dataset.root, download=True)
+        type(dataset)(
+            root=dataset.root,
+            folds=dataset.folds,
+            bands=dataset.bands,
+            mode=dataset.mode,
+            download=True,
+        )
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')

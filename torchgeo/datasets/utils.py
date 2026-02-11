@@ -6,13 +6,19 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
+import bz2
 import collections
 import contextlib
+import hashlib
 import importlib
 import os
+import pathlib
 import shutil
 import subprocess
+import tarfile
+import urllib.request
 import warnings
+import zipfile
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -27,31 +33,17 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
-from torchvision.datasets.utils import (
-    check_integrity,
-    download_and_extract_archive,
-    download_url,
-    extract_archive,
-)
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
-
-# Only include import redirects
-__all__ = (
-    'check_integrity',
-    'download_and_extract_archive',
-    'download_url',
-    'extract_archive',
-)
-
 
 # Waiting to upgrade Sphinx before switching to type statement
 GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
 Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
+Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
@@ -301,6 +293,148 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
+def check_integrity(fpath: Path, md5: str | None = None, **kwargs: str | None) -> bool:
+    """Check the integrity of a file.
+
+    Examples:
+        check_integrity(fpath)
+        check_integrity(fpath, md5='...')
+        check_integrity(fpath, sha256='...')
+
+    Args:
+        fpath: File path to check.
+        md5: Expected MD5 checksum.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
+
+    Returns:
+        True if file exists and checksum is None or matches, else False.
+    """
+    if not os.path.isfile(fpath):
+        return False
+
+    kwargs['md5'] = md5
+
+    for algorithm, checksum in kwargs.items():
+        if checksum:
+            with open(fpath, 'rb') as f:
+                return hashlib.file_digest(f, algorithm).hexdigest() == checksum
+
+    return True
+
+
+def extract_archive(
+    from_path: Path, to_path: Path | None = None, remove_finished: bool = False
+) -> Path:
+    """Extract an archive.
+
+    Args:
+        from_path: Path to the file to be extracted.
+        to_path: Path to the directory the file will be extracted to.
+            Defaults to the directory of *from_path*.
+        remove_finished: If True, remove *from_path* after extraction.
+
+    Returns:
+        Path to the directory the file was extracted to.
+    """
+    to_path = to_path or os.path.dirname(from_path)
+    suffixes = pathlib.Path(from_path).suffixes
+
+    if suffixes[-1] == '.zip':
+        with zipfile.ZipFile(from_path, 'r') as z:
+            z.extractall(to_path)
+    elif suffixes[-1] == '.bz2' and '.tar' not in suffixes:
+        stem = pathlib.Path(from_path).stem
+        to_path = os.path.join(to_path, stem)
+        with bz2.open(from_path, 'rb') as src, open(to_path, 'wb') as dst:
+            dst.write(src.read())
+    else:
+        with tarfile.open(from_path, 'r') as t:
+            t.extractall(to_path, filter='data')
+
+    if remove_finished:
+        os.remove(from_path)
+
+    return to_path
+
+
+def download_url(
+    url: str,
+    root: Path,
+    filename: Path | None = None,
+    md5: str | None = None,
+    max_redirect_hops: int = 3,
+    **kwargs: str,
+) -> None:
+    """Download a file from a url and place it in root.
+
+    Examples:
+        download_url(url, root)
+        download_url(url, root, md5='...')
+        download_url(url, root, sha256='...')
+
+    Args:
+        url: URL to download.
+        root: Root directory to save downloaded file to.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        max_redirect_hops: Maximum number of allowed redirection attempts.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
+
+    Raises:
+        RuntimeError: If checksum of downloaded file does not match.
+        urllib.error.URLError: If download fails.
+    """
+    if not filename:
+        filename = os.path.basename(url)
+
+    root = os.path.expanduser(root)
+    os.makedirs(root, exist_ok=True)
+
+    fpath = os.path.join(root, filename)
+    if not check_integrity(fpath, md5, **kwargs):
+        # TODO: use fsspec if we want AWS/Azure/GCS support
+        # TODO: use gdown if we want Google Drive support
+        # TODO: use requests if we want redirect support
+        # TODO: use tqdm if we want a progress bar
+        urllib.request.urlretrieve(url, fpath)
+        if not check_integrity(fpath, md5, **kwargs):
+            raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
+
+
+def download_and_extract_archive(
+    url: str,
+    download_root: Path,
+    extract_root: Path | None = None,
+    filename: Path | None = None,
+    md5: str | None = None,
+    remove_finished: bool = False,
+    **kwargs: str,
+) -> None:
+    """Download and extract a remote archive.
+
+    Examples:
+        download_and_extract_archive(url, root)
+        download_and_extract_archive(url, root, md5=md5)
+        download_and_extract_archive(url, root, sha256=sha256)
+
+    Args:
+        url: URL to download.
+        download_root: Root directory to save downloaded file to.
+        extract_root: Root directory to extract archive to. Defaults to *download_root*.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        remove_finished: If True, remove *filename* after extraction.
+        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+    """
+    download_root = os.path.expanduser(download_root)
+    extract_root = extract_root or download_root
+    filename = filename or os.path.basename(url)
+    from_path = os.path.join(download_root, filename)
+
+    download_url(url, download_root, filename, md5, 3, **kwargs)
+    extract_archive(from_path, extract_root, remove_finished)
+
+
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
     """Disambiguate partial timestamps.
 
@@ -483,10 +617,13 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
+        else:
+            collated[key] = value
     return collated
 
 
@@ -503,8 +640,9 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
         else:
@@ -586,7 +724,7 @@ def draw_semantic_segmentation_masks(
     image: Tensor,
     mask: Tensor,
     alpha: float = 0.5,
-    colors: Sequence[str | tuple[int, int, int]] | None = None,
+    colors: list[str | tuple[int, int, int]] | str | tuple[int, int, int] | None = None,
 ) -> np.typing.NDArray[np.uint8]:
     """Overlay a semantic segmentation mask onto an image.
 
@@ -740,7 +878,7 @@ def lazy_import(name: str) -> Any:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
         module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        module_to_pypi |= {'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:

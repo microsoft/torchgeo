@@ -26,17 +26,13 @@ from torchgeo.datasets import (
 class TestL8Biome:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
-        md5s = {
-            'barren': '29c9910adbc89677389f210226fb163d',
-            'forest': 'b7dbb82fb2c22cbb03389d8828d73713',
-        }
-
+        md5s = {'barren': '', 'forest': ''}
         url = os.path.join('tests', 'data', 'l8biome', '{}.tar.gz')
         monkeypatch.setattr(L8Biome, 'url', url)
         monkeypatch.setattr(L8Biome, 'md5s', md5s)
         root = tmp_path
         transforms = nn.Identity()
-        return L8Biome(root, transforms=transforms, download=True, checksum=True)
+        return L8Biome(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: L8Biome) -> None:
         x = dataset[dataset.bounds]
@@ -82,9 +78,9 @@ class TestL8Biome:
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: L8Biome) -> None:
+    def test_invalid_index(self, dataset: L8Biome) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

@@ -19,14 +19,12 @@ class TestGID15:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> GID15:
-        md5 = '3d5b1373ef9a3084ec493b9b2056fe07'
-        monkeypatch.setattr(GID15, 'md5', md5)
         url = os.path.join('tests', 'data', 'gid15', 'gid-15.zip')
         monkeypatch.setattr(GID15, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return GID15(root, split, transforms, download=True, checksum=True)
+        return GID15(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: GID15) -> None:
         x = dataset[0]

@@ -17,13 +17,11 @@ from torchgeo.datasets import DatasetNotFoundError, PatternNet
 class TestPatternNet:
     @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
-        md5 = '5649754c78219a2c19074ff93666cc61'
-        monkeypatch.setattr(PatternNet, 'md5', md5)
         url = os.path.join('tests', 'data', 'patternnet', 'PatternNet.zip')
         monkeypatch.setattr(PatternNet, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return PatternNet(root, transforms, download=True, checksum=True)
+        return PatternNet(root, transforms, download=True)
 
     def test_getitem(self, dataset: PatternNet) -> None:
         x = dataset[0]

@@ -26,6 +26,8 @@ from torchgeo.models import (
     Swin_T_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
+    Tessera_Weights,
+    TileNet_Weights,
     Unet_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -56,6 +58,8 @@ from torchgeo.models import (
     swin_t,
     swin_v2_b,
     swin_v2_t,
+    tessera,
+    tilenet,
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
@@ -85,6 +89,8 @@ builders = [
     swin_b,
     swin_v2_t,
     swin_v2_b,
+    tilenet,
+    tessera,
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
@@ -111,6 +117,8 @@ enums = [
     Swin_B_Weights,
     Swin_V2_T_Weights,
     Swin_V2_B_Weights,
+    TileNet_Weights,
+    Tessera_Weights,
     Unet_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -144,7 +152,7 @@ def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('enum', enums)
 def test_get_weight(enum: WeightsEnum) -> None:
-    for weight in enum:
+    for weight in enum:  # type: ignore[not-iterable]
         assert weight == get_weight(str(weight))
 
 

@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import Path, Sample, download_url, extract_archive, lazy_import
 
 
 class CropHarvest(NonGeoDataset):
@@ -98,7 +98,7 @@ class CropHarvest(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -130,7 +130,7 @@ class CropHarvest(NonGeoDataset):
         classes = classes[classes != np.array(None)]
         self.classes = np.insert(classes, 0, ['None', 'Other'])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -230,7 +230,7 @@ class CropHarvest(NonGeoDataset):
         ]
         properties = row.to_dict(orient='records')[0]
         label = 'None'
-        if properties['properties.label']:
+        if isinstance(properties['properties.label'], str):
             label = properties['properties.label']
         elif properties['properties.is_crop'] == 1:
             label = 'Other'
@@ -289,7 +289,7 @@ class CropHarvest(NonGeoDataset):
         features_path = os.path.join(self.root, self.file_dict['features']['filename'])
         extract_archive(features_path)
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset using bands for Agriculture RGB composite.
 
         Args:

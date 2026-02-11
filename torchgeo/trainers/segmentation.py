@@ -18,6 +18,7 @@ from torch import Tensor
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
@@ -308,7 +309,7 @@ class SemanticSegmentationTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
             and hasattr(self.logger.experiment, 'add_figure')
@@ -354,7 +355,7 @@ class SemanticSegmentationTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )
+                )  # type: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
@@ -380,7 +381,7 @@ class SemanticSegmentationTask(BaseTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+    ) -> dict[str, Tensor]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -389,7 +390,11 @@ class SemanticSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Dictionary with 'probabilities', 'bounds', and 'transform' keys.
+
+        .. versionchanged:: 0.9
+           Changed return type from Tensor to dict with probabilities, bounds,
+           and transform keys.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
@@ -400,4 +405,8 @@ class SemanticSegmentationTask(BaseTask):
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
-        return y_hat
+        return {
+            'probabilities': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
+        }

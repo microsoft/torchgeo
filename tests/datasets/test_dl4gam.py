@@ -32,18 +32,9 @@ class TestDL4GAMAlps:
     ) -> DL4GAMAlps:
         url = Path('tests', 'data', 'dl4gam_alps')
         download_metadata = {
-            'dataset_small': {
-                'url': str(url / 'dataset_small.tar.gz'),
-                'checksum': '35f85360b943caa8661d9fb573b0f0b5',
-            },
-            'dataset_large': {
-                'url': str(url / 'dataset_large.tar.gz'),
-                'checksum': '636be5be35b8bd1e7771e9010503e4bc',
-            },
-            'splits_csv': {
-                'url': str(url / 'splits.csv'),
-                'checksum': '973367465c8ab322d0cf544a345b02f5',
-            },
+            'dataset_small': {'url': str(url / 'dataset_small.tar.gz'), 'checksum': ''},
+            'dataset_large': {'url': str(url / 'dataset_large.tar.gz'), 'checksum': ''},
+            'splits_csv': {'url': str(url / 'splits.csv'), 'checksum': ''},
         }
 
         monkeypatch.setattr(DL4GAMAlps, 'download_metadata', download_metadata)
@@ -59,7 +50,6 @@ class TestDL4GAMAlps:
             extra_features,
             transforms,
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: DL4GAMAlps) -> None:

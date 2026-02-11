@@ -5,7 +5,6 @@
 
 import abc
 import glob
-import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
@@ -25,10 +24,10 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive, working_dir
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
-class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
+class LandCoverAIBase(Dataset[Sample], abc.ABC):
     r"""Abstract base class for LandCover.ai Geo and NonGeo datasets.
 
     The `LandCover.ai <https://landcover.ai.linuxpolska.com/>`__ (Land Cover from
@@ -121,17 +120,17 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, query: Any) -> dict[str, Any]:
+    def __getitem__(self, index: Any) -> Sample:
         """Retrieve image, mask and metadata indexed by index.
 
         Args:
-            query: coordinates or an index
+            index: coordinates or an index
 
         Returns:
             sample of image, mask and metadata at that index
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: if index is not found in the dataset
         """
 
     @abc.abstractmethod
@@ -147,10 +146,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -209,7 +205,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -243,37 +239,37 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        img_filepaths = index.filepath
+        img_filepaths = df.filepath
         mask_filepaths = img_filepaths.apply(lambda x: x.replace('images', 'masks'))
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        img = self._merge_files(img_filepaths, query, self.band_indexes)
-        mask = self._merge_files(mask_filepaths, query, self.band_indexes)
+        img = self._merge_files(img_filepaths, index, self.band_indexes)
+        mask = self._merge_files(mask_filepaths, index, self.band_indexes)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'image': img.float(),
             'mask': mask.long(),
             'transform': torch.tensor(transform),
@@ -292,19 +288,25 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     .. note::
 
-       This dataset requires the following additional library to be installed:
-
-       * `opencv-python <https://pypi.org/project/opencv-python/>`_ to generate
-         the train/val/test split
+       This dataset uses a pre-chipped version of the data available on HuggingFace.
+       The pre-chipped dataset contains the output/ directory with 512x512 image chips
+       and corresponding masks in JPG/PNG format.
     """
 
-    sha256 = '15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1'
+    url = 'https://hf.co/datasets/dragon7/LandCover.ai/resolve/262c75fbbf77d107f0a8335e9eef1f6234481d08/output.zip'
+    filename = 'output.zip'
+    md5 = 'e0cf2403116dc08c97a69604bd0cdb74'
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {'filename': 'train.txt', 'md5': '059d87b49390d557d15090167493f758'},
+        'val': {'filename': 'val.txt', 'md5': '3f3ff579b050d1fcd12e66ce48f73d67'},
+        'test': {'filename': 'test.txt', 'md5': 'b019a7607a10166a81f4e243c456c212'},
+    }
 
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -331,7 +333,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         with open(os.path.join(self.root, split + '.txt')) as f:
             self.ids = f.readlines()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -392,29 +394,30 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
+        # Check for split files
+        for split in ['train', 'val', 'test']:
+            if not os.path.exists(os.path.join(self.root, f'{split}.txt')):
+                return False
+
+        # Check for image chips
         img_query = os.path.join(self.root, 'output', '*_*.jpg')
         mask_query = os.path.join(self.root, 'output', '*_*_m.png')
         images = glob.glob(img_query)
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def _extract(self) -> None:
-        """Extract the dataset.
+    def _download(self) -> None:
+        """Download the dataset and split files."""
+        # Download the main output.zip file
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
 
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
-        super()._extract()
-
-        # Generate train/val/test splits
-        # Always check the sha256 of this file before executing to avoid malicious code injection
-        # The LandCoverAI100 dataset doesn't contain split.py, so only run if split.py exists
-        if os.path.exists(os.path.join(self.root, 'split.py')):
-            with working_dir(self.root):
-                with open('split.py') as f:
-                    split = f.read().encode('utf-8')
-                    assert hashlib.sha256(split).hexdigest() == self.sha256
-                    exec(split)
+        # Download split files from the same base location
+        # Simply replace the filename in the URL
+        for split_info in self.metadata.values():
+            split_url = self.url.replace(self.filename, split_info['filename'])
+            download_url(
+                split_url, self.root, md5=split_info['md5'] if self.checksum else None
+            )
 
 
 class LandCoverAI100(LandCoverAI):
@@ -430,3 +433,11 @@ class LandCoverAI100(LandCoverAI):
     url = 'https://hf.co/datasets/isaaccorley/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
+
+    def _download(self) -> None:
+        """Download the dataset.
+
+        Unlike the parent LandCoverAI class, LandCoverAI100 includes split files
+        in the zip, so we don't need to download them separately.
+        """
+        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)

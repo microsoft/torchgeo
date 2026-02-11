@@ -7,7 +7,6 @@ import glob
 import os
 import re
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +17,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -61,7 +66,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new InriaAerialImageLabeling Dataset instance.
@@ -158,7 +163,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -194,10 +199,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         extract_archive(archive_path)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

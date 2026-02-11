@@ -6,7 +6,6 @@
 import functools
 import glob
 import os
-from typing import Any
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -18,7 +17,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class GBIF(GeoDataset):
@@ -76,33 +75,33 @@ class GBIF(GeoDataset):
         geometry = gpd.points_from_xy(df['decimalLongitude'], df['decimalLatitude'])
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        keypoints = torch.tensor(index.get_coordinates().values, dtype=torch.float32)
+        keypoints = torch.tensor(df.get_coordinates().values, dtype=torch.float32)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'bounds': self._slice_to_tensor(query),
+            'bounds': self._slice_to_tensor(index),
             'keypoints': keypoints,
             'transform': torch.tensor(transform),
         }
@@ -110,10 +109,7 @@ class GBIF(GeoDataset):
         return sample
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

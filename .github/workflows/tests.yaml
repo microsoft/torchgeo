@@ -18,34 +18,29 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.12', '3.13', '3.14', '3.14t']
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.1
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.1.0
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.3.0
         with:
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.1
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/tests.txt') }}
-        if: ${{ runner.os != 'macOS' }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
-      - name: Run pytest checks
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            requirements/required.txt
+            requirements/datasets.txt
+            requirements/models.txt
+            requirements/tests.txt
+      - name: Install dependencies
+        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -55,29 +50,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.1
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.1.0
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.3.0
         with:
           python-version: '3.12'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.1
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/min-reqs.old
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
-      - name: Run pytest checks
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            requirements/min-reqs.old
+      - name: Install dependencies
+        run: uv pip install -r requirements/min-reqs.old
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:
@@ -87,29 +76,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.1
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.1.0
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7.3.0
         with:
-          python-version: '3.13'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.1
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
-      - name: Run pytest checks
+          python-version: '3.14'
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            requirements/required.txt
+            requirements/tests.txt
+      - name: Install dependencies
+        run: uv pip install -r requirements/required.txt -r requirements/tests.txt
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.2
         with:

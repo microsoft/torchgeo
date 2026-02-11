@@ -24,23 +24,12 @@ from torchgeo.datasets import (
 class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
-        md5s = {
-            2011: '531fcba859a0bee6bfeb362a26f6a07f',
-            2019: '19a64a25e3c36d8d51b40ab59bddc1ec',
-        }
-        monkeypatch.setattr(NLCD, 'md5s', md5s)
         url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         transforms = nn.Identity()
-        return NLCD(
-            root,
-            transforms=transforms,
-            download=True,
-            checksum=True,
-            years=[2011, 2019],
-        )
+        return NLCD(root, transforms=transforms, download=True, years=[2011, 2019])
 
     def test_getitem(self, dataset: NLCD) -> None:
         x = dataset[dataset.bounds]
@@ -68,8 +57,8 @@ class TestNLCD:
 
     def test_full_year(self, dataset: NLCD) -> None:
         time = pd.Timestamp(2019, 6, 1)
-        query = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
-        dataset[query]
+        index = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
+        dataset[index]
 
     def test_already_extracted(self, dataset: NLCD) -> None:
         NLCD(dataset.paths, years=[2011, 2019])
@@ -97,14 +86,14 @@ class TestNLCD:
             NLCD(classes=[11])
 
     def test_plot(self, dataset: NLCD) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: NLCD) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -113,8 +102,8 @@ class TestNLCD:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             NLCD(tmp_path)
 
-    def test_invalid_query(self, dataset: NLCD) -> None:
+    def test_invalid_index(self, dataset: NLCD) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

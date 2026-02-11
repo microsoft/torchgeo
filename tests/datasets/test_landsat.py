@@ -67,8 +67,8 @@ class TestLandsat8:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             Landsat8(tmp_path)
 
-    def test_invalid_query(self, dataset: Landsat8) -> None:
+    def test_invalid_index(self, dataset: Landsat8) -> None:
         with pytest.raises(
-            IndexError, match=r'query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

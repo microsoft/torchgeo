@@ -8,7 +8,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import Aurora_Weights, aurora_swin_unet
 
@@ -17,11 +16,13 @@ pytest.importorskip('aurora')
 
 class TestAurora:
     @pytest.fixture(params=[*Aurora_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
-        return request.param
+    def weights(self, request: SubRequest) -> Aurora_Weights:
+        return request.param  # type: ignore[no-any-return]
 
     @pytest.fixture
-    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> Aurora_Weights:
         import aurora
 
         weights = Aurora_Weights.HRES_T0_PRETRAINED_SMALL_AURORA
@@ -29,21 +30,21 @@ class TestAurora:
         monkeypatch.setattr(
             aurora.Aurora, 'load_checkpoint', lambda self, *args, **kwargs: None
         )
-        return weights
+        return weights  # type: ignore[no-any-return]
 
     def test_aurora_swin_unet(self) -> None:
         aurora_swin_unet()
 
-    def test_aurora_swin_unet_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_aurora_swin_unet_weights(self, mocked_weights: Aurora_Weights) -> None:
         aurora_swin_unet(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_aurora_swin_unet_download(self, weights: WeightsEnum) -> None:
+    def test_aurora_swin_unet_download(self, weights: Aurora_Weights) -> None:
         aurora_swin_unet(weights=weights)
 
     @pytest.mark.slow
     @torch.inference_mode()
-    def test_aurora_prediction(self, weights: WeightsEnum) -> None:
+    def test_aurora_prediction(self, weights: Aurora_Weights) -> None:
         from aurora import Batch, Metadata
 
         model = aurora_swin_unet(weights=weights)

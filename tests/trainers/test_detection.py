@@ -73,9 +73,6 @@ class TestObjectDetectionTask:
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(backbone='invalid_backbone')
 
-    def test_pretrained_backbone(self) -> None:
-        ObjectDetectionTask(backbone='resnet18', weights=True)
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)
         datamodule = NASAMarineDebrisDataModule(

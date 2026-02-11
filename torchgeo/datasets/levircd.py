@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, percentile_normalization
+from .utils import Path, Sample, download_and_extract_archive, percentile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -35,7 +35,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -68,7 +68,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         .. versionchanged:: 0.8
@@ -133,10 +133,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             return einops.rearrange(tensor, 'h w -> () h w')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -243,17 +240,17 @@ class LEVIRCD(LEVIRCDBase):
 
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/train.zip',
             'filename': 'train.zip',
             'md5': 'a638e71f480628652dea78d8544307e4',
         },
         'val': {
-            'url': 'https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/val.zip',
             'filename': 'val.zip',
             'md5': 'f7b857978524f9aa8c3bf7f94e3047a4',
         },
         'test': {
-            'url': 'https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/test.zip',
             'filename': 'test.zip',
             'md5': '07d5dd89e46f5c1359e2eca746989ed9',
         },
@@ -310,7 +307,8 @@ class LEVIRCDPlus(LEVIRCDBase):
     """LEVIR-CD+ dataset.
 
     The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset is a dataset for building change detection.
+    dataset extends LEVIR-CD to 985 image pairs and is designed
+    to be easier due to its urban locations and near-nadir angles.
 
     Dataset features:
 
@@ -334,7 +332,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     * https://arxiv.org/abs/2107.09244
     """
 
-    url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
+    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'

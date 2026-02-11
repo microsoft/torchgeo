@@ -17,6 +17,7 @@ from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
+from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
@@ -99,7 +100,7 @@ class RegressionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(self.model, state_dict)
+            utils.load_state_dict(self.model, state_dict)  # type: ignore[invalid-argument-type]
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams['freeze_backbone']:
@@ -198,7 +199,7 @@ class RegressionTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
             and self.logger
             and hasattr(self.logger, 'experiment')
             and hasattr(self.logger.experiment, 'add_figure')
@@ -228,7 +229,7 @@ class RegressionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )
+                )  # type: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:

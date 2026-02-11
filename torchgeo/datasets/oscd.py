@@ -20,6 +20,7 @@ from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -53,15 +54,9 @@ class OSCD(NonGeoDataset):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': (
-            'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
-        ),
-        'Onera Satellite Change Detection dataset - Train Labels.zip': (
-            'https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download'
-        ),
-        'Onera Satellite Change Detection dataset - Test Labels.zip': (
-            'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
-        ),
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
     md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
@@ -77,7 +72,7 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits = ('train', 'test')
+    splits: tuple[str, ...] = ('train', 'test')
 
     colormap = ('blue',)
 
@@ -104,7 +99,7 @@ class OSCD(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -138,7 +133,7 @@ class OSCD(NonGeoDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         .. versionchanged:: 0.8
@@ -278,12 +273,12 @@ class OSCD(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for f_name in self.urls:
+        for filename in self.urls:
             download_url(
-                self.urls[f_name],
+                self.urls[filename],
                 self.root,
-                filename=f_name,
-                md5=self.md5s[f_name] if self.checksum else None,
+                filename=filename,
+                md5=self.md5s[filename] if self.checksum else None,
             )
 
     def _extract(self) -> None:
@@ -294,7 +289,7 @@ class OSCD(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,
@@ -351,3 +346,33 @@ class OSCD(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+class OSCD100(OSCD):
+    """Subset of OSCD with 100 pre-cropped image pairs at 256x256 resolution.
+
+    Intended for tutorials and demonstrations, not benchmarking.
+
+    Maintains the same file structure and all 13 Sentinel-2 bands as OSCD, but with
+    100 pre-cropped 256x256 patches. Adds a validation split (train/val/test).
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1109/IGARSS.2018.8518015
+
+    .. versionadded:: 0.9
+    """
+
+    urls: ClassVar[dict[str, str]] = {
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
+    }
+    md5s: ClassVar[dict[str, str]] = {
+        'Onera Satellite Change Detection dataset - Images.zip': '2e8792a3da012f7eb0440b557eef4c11',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': '4fdc210a90e2c881a553fa9c72c7d6ce',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': '99a38997829cc81a18b04d4afb3493ba',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': '5e43ae36cfe0cc83ddcbd4fcb03ace60',
+    }
+    splits: tuple[str, ...] = ('train', 'val', 'test')

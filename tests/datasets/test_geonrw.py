@@ -20,8 +20,6 @@ class TestGeoNRW:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> GeoNRW:
-        md5 = '6ffc014d4b345bba3076e8d76ab481fa'
-        monkeypatch.setattr(GeoNRW, 'md5', md5)
         url = os.path.join('tests', 'data', 'geonrw', 'nrw_dataset.tar.gz')
         monkeypatch.setattr(GeoNRW, 'url', url)
         monkeypatch.setattr(GeoNRW, 'train_list', ['aachen', 'bergisch', 'bielefeld'])
@@ -29,7 +27,7 @@ class TestGeoNRW:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return GeoNRW(root, split, transforms, download=True, checksum=True)
+        return GeoNRW(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: GeoNRW) -> None:
         x = dataset[0]

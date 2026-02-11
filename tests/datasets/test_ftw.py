@@ -29,23 +29,12 @@ class TestFieldsOfTheWorld:
         split, task = request.param
 
         monkeypatch.setattr(FieldsOfTheWorld, 'valid_countries', ['austria'])
-        monkeypatch.setattr(
-            FieldsOfTheWorld,
-            'country_to_md5',
-            {'austria': '1cf9593c9bdceeaba21bbcb24d35816c'},
-        )
         base_url = os.path.join('tests', 'data', 'ftw') + '/'
         monkeypatch.setattr(FieldsOfTheWorld, 'base_url', base_url)
         root = tmp_path
         transforms = nn.Identity()
         return FieldsOfTheWorld(
-            root,
-            split,
-            task,
-            countries='austria',
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root, split, task, countries='austria', transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: FieldsOfTheWorld) -> None:

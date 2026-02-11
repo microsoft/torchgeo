@@ -8,7 +8,6 @@ from collections import OrderedDict
 from typing import cast
 
 import torch.nn.functional as F
-import torchvision
 from torch import Tensor
 from torch.nn.modules import (
     BatchNorm2d,
@@ -22,6 +21,7 @@ from torch.nn.modules import (
     UpsamplingBilinear2d,
 )
 from torchvision.models import resnet
+from torchvision.models._api import WeightsEnum
 from torchvision.ops import FeaturePyramidNetwork as FPN
 
 
@@ -43,7 +43,7 @@ class FarSeg(Module):
         self,
         backbone: str = 'resnet50',
         classes: int = 16,
-        backbone_pretrained: bool = True,
+        backbone_weights: WeightsEnum | None = None,
     ) -> None:
         """Initialize a new FarSeg model.
 
@@ -51,7 +51,10 @@ class FarSeg(Module):
             backbone: name of ResNet backbone, one of ["resnet18", "resnet34",
                 "resnet50", "resnet101"]
             classes: number of output segmentation classes
-            backbone_pretrained: whether to use pretrained weight for backbone
+            backbone_weights: Pre-trained model weights to use.
+
+        .. versionadded:: 0.9
+           The *backbone_weights* parameter.
         """
         super().__init__()
         if backbone in ['resnet18', 'resnet34']:
@@ -60,17 +63,8 @@ class FarSeg(Module):
             max_channels = 2048
         else:
             raise ValueError(f'unknown backbone: {backbone}.')
-        kwargs = {}
-        if backbone_pretrained:
-            kwargs = {
-                'weights': getattr(
-                    torchvision.models, f'ResNet{backbone[6:]}_Weights'
-                ).DEFAULT
-            }
-        else:
-            kwargs = {'weights': None}
 
-        self.backbone = getattr(resnet, backbone)(**kwargs)
+        self.backbone = getattr(resnet, backbone)(weights=backbone_weights)
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],

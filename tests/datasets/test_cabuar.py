@@ -34,12 +34,7 @@ class TestCaBuAr:
         root = tmp_path
         transforms = nn.Identity()
         return CaBuAr(
-            root=root,
-            split=split,
-            bands=bands,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, split=split, bands=bands, transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: CaBuAr) -> None:

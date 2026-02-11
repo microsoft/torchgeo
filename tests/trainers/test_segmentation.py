@@ -16,7 +16,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
+from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
@@ -67,6 +67,7 @@ class TestSemanticSegmentationTask:
             'mmflood',
             'naipchesapeake',
             'pastis',
+            'pastis100',
             'potsdam2d',
             'sen12ms_all',
             'sen12ms_s1',
@@ -92,11 +93,6 @@ class TestSemanticSegmentationTask:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
-            case 'landcoverai':
-                sha256 = (
-                    'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-                )
-                monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -287,3 +283,50 @@ class TestSemanticSegmentationTask:
         SemanticSegmentationTask(
             model='dpt', backbone='tu-vit_base_patch16_224', num_classes=2
         )
+
+    def test_predict_step_returns_dict(self) -> None:
+        """Test that predict_step returns a dictionary."""
+        task = SemanticSegmentationTask(task='multiclass', num_classes=10)
+        batch = {'image': torch.randn(2, 3, 64, 64)}
+        result = task.predict_step(batch, 0)
+
+        assert isinstance(result, dict)
+
+    def test_predict_step_contains_required_keys(self) -> None:
+        """Test that predict_step dict contains required keys."""
+        task = SemanticSegmentationTask(task='multiclass', num_classes=10)
+        batch = {'image': torch.randn(2, 3, 64, 64)}
+        result = task.predict_step(batch, 0)
+
+        assert 'probabilities' in result
+        assert 'bounds' in result
+        assert 'transform' in result
+
+    def test_predict_step_probabilities_shape(self) -> None:
+        """Test that probabilities have correct shape."""
+        num_classes = 10
+        task = SemanticSegmentationTask(task='multiclass', num_classes=num_classes)
+        batch_size = 2
+        height, width = 64, 64
+        batch = {'image': torch.randn(batch_size, 3, height, width)}
+        result = task.predict_step(batch, 0)
+
+        probabilities = result['probabilities']
+        assert probabilities.shape == (batch_size, num_classes, height, width)
+
+    def test_predict_step_preserves_metadata(self) -> None:
+        """Test that bounds and transform are passed through correctly."""
+        task = SemanticSegmentationTask(task='multiclass', num_classes=10)
+        bounds_tensor = torch.randn(2, 9)
+        transform_tensor = torch.randn(2, 6)
+        batch = {
+            'image': torch.randn(2, 3, 64, 64),
+            'bounds': bounds_tensor,
+            'transform': transform_tensor,
+        }
+        result = task.predict_step(batch, 0)
+
+        assert result['bounds'] is not None
+        assert result['transform'] is not None
+        assert torch.equal(result['bounds'], bounds_tensor)
+        assert torch.equal(result['transform'], transform_tensor)

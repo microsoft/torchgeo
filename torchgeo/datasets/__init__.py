@@ -29,6 +29,7 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from .clay import ClayEmbeddings
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .copernicus import (
@@ -49,6 +50,7 @@ from .copernicus import (
     CopernicusBenchLC100ClsS3,
     CopernicusBenchLC100SegS3,
     CopernicusBenchLCZS2,
+    CopernicusEmbed,
     CopernicusPretrain,
 )
 from .cowc import COWC, COWCCounting, COWCDetection
@@ -61,10 +63,12 @@ from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
 from .dota import DOTA
+from .earth_index import EarthIndexEmbeddings
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
+from .esd import EmbeddedSeamlessData
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
@@ -90,6 +94,7 @@ from .geo import (
 from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
+from .gse import GoogleSatelliteEmbedding
 from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
@@ -113,6 +118,7 @@ from .landsat import (
 )
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
+from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
@@ -124,10 +130,11 @@ from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .openstreetmap import OpenStreetMap
-from .oscd import OSCD
-from .pastis import PASTIS
+from .oscd import OSCD, OSCD100
+from .pastis import PASTIS, PASTIS100
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .presto import PrestoEmbeddings
 from .prisma import PRISMA
 from .quakeset import QuakeSet
 from .reforestree import ReforesTree
@@ -167,6 +174,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .tessera import TesseraEmbeddings
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -202,7 +210,9 @@ __all__ = (
     'NCCM',
     'NLCD',
     'OSCD',
+    'OSCD100',
     'PASTIS',
+    'PASTIS100',
     'PRISMA',
     'RESISC45',
     'SEN12MS',
@@ -239,6 +249,7 @@ __all__ = (
     'ChesapeakePA',
     'ChesapeakeVA',
     'ChesapeakeWV',
+    'ClayEmbeddings',
     'CloudCoverDetection',
     'CopernicusBench',
     'CopernicusBenchAQNO2S5P',
@@ -257,6 +268,7 @@ __all__ = (
     'CopernicusBenchLC100ClsS3',
     'CopernicusBenchLC100SegS3',
     'CopernicusBenchLCZS2',
+    'CopernicusEmbed',
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
@@ -265,6 +277,8 @@ __all__ = (
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EarthIndexEmbeddings',
+    'EmbeddedSeamlessData',
     'EnMAP',
     'EnviroAtlas',
     'Esri2020',
@@ -280,6 +294,7 @@ __all__ = (
     'GeoNRW',
     'GlobBiomass',
     'GlobalBuildingMap',
+    'GoogleSatelliteEmbedding',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',
@@ -308,6 +323,7 @@ __all__ = (
     'LoveDA',
     'MMEarth',
     'MMFlood',
+    'MajorTOMEmbeddings',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',
@@ -317,6 +333,7 @@ __all__ = (
     'OpenStreetMap',
     'PatternNet',
     'Potsdam2D',
+    'PrestoEmbeddings',
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
@@ -345,6 +362,7 @@ __all__ = (
     'SpaceNet8',
     'Substation',
     'SustainBenchCropYield',
+    'TesseraEmbeddings',
     'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
