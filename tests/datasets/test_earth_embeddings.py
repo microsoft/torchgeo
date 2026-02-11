@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
@@ -29,9 +28,10 @@ class TestEarthEmbeddings:
     def test_len(self, dataset: EarthEmbeddings) -> None:
         assert len(dataset) == 4
 
-    def test_no_data(self, tmp_path: Path) -> None:
+    def test_no_data(self) -> None:
+        root = os.path.join('tests', 'data', 'earth_embeddings')
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EarthEmbeddings(tmp_path)
+            EarthEmbeddings(root)
 
     def test_plot(self, dataset: EarthEmbeddings) -> None:
         x = dataset[0]
