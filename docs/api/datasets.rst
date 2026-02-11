@@ -53,6 +53,7 @@ Geospatial Datasets
    datasets/nccm
    datasets/nlcd
    datasets/open-buildings
+   datasets/openaerialmap
    datasets/openstreetmap
    datasets/presto-embeddings
    datasets/prisma

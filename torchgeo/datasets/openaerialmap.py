@@ -17,7 +17,6 @@ import rasterio
 import requests
 from matplotlib.figure import Figure
 from pyproj import CRS
-from rasterio.crs import CRS as RioCRS
 from rasterio.transform import from_bounds
 
 from .geo import RasterDataset
@@ -197,7 +196,7 @@ class OpenAerialMap(RasterDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: CRS = CRS.from_epsg(4326),
         res: float | tuple[float, float] | None = None,
         bbox: tuple[float, float, float, float] | None = None,
         zoom: int = 19,
@@ -213,7 +212,7 @@ class OpenAerialMap(RasterDataset):
         Args:
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
-                (defaults to EPSG:3857)
+                (defaults to EPSG:4326)
             res: resolution of the dataset in units of CRS
                 (defaults to resolution of first file found)
             bbox: bounding box for STAC query as (xmin, ymin, xmax, ymax) in EPSG:4326.
@@ -251,10 +250,8 @@ class OpenAerialMap(RasterDataset):
                 raise ValueError(f'zoom must be between 15 and 23, got {zoom}')
             self._download()
             print('Download complete.')
-        # If 'crs' is None, it defaults to EPSG:3857 (Web Mercator), because 3857 makes logical sense for tiles and web maps.
-        super().__init__(
-            paths, crs or CRS.from_epsg(3857), res, transforms=transforms, cache=cache
-        )
+
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _download(self) -> None:
         """Download imagery from STAC API and TMS endpoints.
@@ -435,7 +432,7 @@ class OpenAerialMap(RasterDataset):
                     dataset.width,
                     dataset.height,
                 )
-                dataset.crs = RioCRS.from_epsg(4326)
+                dataset.crs = CRS.from_epsg(4326)
                 dataset.update_tags(
                     ns='rio_georeference',
                     georeferencing_applied='True',
