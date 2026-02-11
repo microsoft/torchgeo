@@ -5,7 +5,6 @@ import os
 import shutil
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -159,25 +158,29 @@ class TestOpenAerialMap:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            'features': [
-                {
-                    'id': 'test_id',
-                    'properties': {
-                        'start_datetime': '2022-01-01',
-                        'oam:platform_type': 'uav',
-                        'oam:producer_name': 'test',
-                        'gsd': 0.1,
-                        'title': 'Test Image',
-                    },
+        class MockResponse:
+            status_code = 200
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'features': [
+                        {
+                            'id': 'test_id',
+                            'properties': {
+                                'start_datetime': '2022-01-01',
+                                'oam:platform_type': 'uav',
+                                'oam:producer_name': 'test',
+                                'gsd': 0.1,
+                                'title': 'Test Image',
+                            },
+                        }
+                    ]
                 }
-            ]
-        }
+
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.post',
-            MagicMock(return_value=mock_response),
+            lambda *args, **kwargs: MockResponse(),
         )
 
         ds = OpenAerialMap(tmp_path, bbox=mock_bbox, search=True, download=False)
@@ -192,12 +195,16 @@ class TestOpenAerialMap:
         capsys: pytest.CaptureFixture[str],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {'features': []}
+        class MockResponse:
+            status_code = 200
+
+            @staticmethod
+            def json() -> dict[str, list[Any]]:
+                return {'features': []}
+
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.post',
-            MagicMock(return_value=mock_response),
+            lambda *args, **kwargs: MockResponse(),
         )
 
         OpenAerialMap(tmp_path, bbox=mock_bbox, search=True, download=False)
@@ -210,9 +217,11 @@ class TestOpenAerialMap:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        def raise_request_exception(*args: Any, **kwargs: Any) -> None:
+            raise requests.RequestException('Search failed')
+
         monkeypatch.setattr(
-            'torchgeo.datasets.openaerialmap.requests.post',
-            MagicMock(side_effect=requests.RequestException('Search failed')),
+            'torchgeo.datasets.openaerialmap.requests.post', raise_request_exception
         )
 
         with pytest.warns(UserWarning, match='STAC search failed'):
@@ -228,29 +237,40 @@ class TestOpenAerialMap:
         valid_file = next(f for f in os.listdir(src_dir) if f.endswith('.tif'))
         shutil.copy(os.path.join(src_dir, valid_file), tmp_path / valid_file)
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            'features': [
-                {
-                    'id': 'test_id',
-                    'properties': {},
-                    'assets': {'visual': {'href': 'http://example.com/image.tif'}},
+        class MockResponse:
+            status_code = 200
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'features': [
+                        {
+                            'id': 'test_id',
+                            'properties': {},
+                            'assets': {
+                                'visual': {'href': 'http://example.com/image.tif'}
+                            },
+                        }
+                    ]
                 }
-            ]
-        }
+
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.post',
-            MagicMock(return_value=mock_response),
+            lambda *args, **kwargs: MockResponse(),
         )
 
-        mock_download = MagicMock()
+        download_called = False
+
+        def mock_download(self: Any) -> None:
+            nonlocal download_called
+            download_called = True
+
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.OpenAerialMap._download', mock_download
         )
 
         OpenAerialMap(tmp_path, bbox=mock_bbox, zoom=19, download=True)
-        assert mock_download.called
+        assert download_called
 
     def test_download_no_tms(
         self,
@@ -258,12 +278,16 @@ class TestOpenAerialMap:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {'features': []}
+        class MockResponse:
+            status_code = 200
+
+            @staticmethod
+            def json() -> dict[str, list[Any]]:
+                return {'features': []}
+
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.post',
-            MagicMock(return_value=mock_response),
+            lambda *args, **kwargs: MockResponse(),
         )
 
         with pytest.warns(UserWarning, match='No imagery found'):
@@ -275,39 +299,48 @@ class TestOpenAerialMap:
     def test_download_image_id_no_bbox_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        mock_stac_response = MagicMock()
-        mock_stac_response.status_code = 200
-        mock_stac_response.json.return_value = {
-            'features': [
-                {
-                    'id': 'test_id',
-                    'collection': 'test_collection',
-                    'properties': {},
-                    'assets': {'visual': {'href': 'http://example.com/image.tif'}},
-                }
-            ]
-        }
+        class MockStacResponse:
+            status_code = 200
 
-        mock_tiles_response = MagicMock()
-        mock_tiles_response.status_code = 200
-        mock_tiles_response.json.return_value = {
-            'tilesets': [
-                {
-                    'links': [
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'features': [
                         {
-                            'rel': 'tile',
-                            'href': 'http://example.com/WebMercatorQuad/{z}/{x}/{y}',
+                            'id': 'test_id',
+                            'collection': 'test_collection',
+                            'properties': {},
+                            'assets': {
+                                'visual': {'href': 'http://example.com/image.tif'}
+                            },
                         }
                     ]
                 }
-            ]
-        }
 
-        def mock_requests_func(url: str, **_kwargs: Any) -> MagicMock:
+        class MockTilesResponse:
+            status_code = 200
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'tilesets': [
+                        {
+                            'links': [
+                                {
+                                    'rel': 'tile',
+                                    'href': 'http://example.com/WebMercatorQuad/{z}/{x}/{y}',
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+        def mock_requests_func(
+            url: str, **_kwargs: Any
+        ) -> MockStacResponse | MockTilesResponse:
             if 'search' in url:
-                return mock_stac_response
-            else:
-                return mock_tiles_response
+                return MockStacResponse()
+            return MockTilesResponse()
 
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.post', mock_requests_func
@@ -328,40 +361,56 @@ class TestOpenAerialMap:
         dataset.bbox = mock_bbox
         dataset.image_id = None
 
-        mock_post = MagicMock()
-        mock_get = MagicMock()
-        monkeypatch.setattr('torchgeo.datasets.openaerialmap.requests.post', mock_post)
-        monkeypatch.setattr('torchgeo.datasets.openaerialmap.requests.get', mock_get)
-
-        mock_post.return_value.json.return_value = {
+        post_response: dict[str, Any] = {
             'features': [
                 {'id': 'test_id', 'collection': 'openaerialmap', 'properties': {}}
             ]
         }
-        mock_get.return_value.json.return_value = {
-            'tilesets': [
-                {
-                    'links': [
+        post_exception: type[Exception] | None = None
+
+        class MockPostResponse:
+            def json(self) -> dict[str, Any]:
+                return post_response
+
+        class MockGetResponse:
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'tilesets': [
                         {
-                            'rel': 'tile',
-                            'href': 'http://api/raster/collections/openaerialmap/items/test_id/tiles/WebMercatorQuad/{z}/{x}/{y}',
+                            'links': [
+                                {
+                                    'rel': 'tile',
+                                    'href': 'http://api/raster/collections/openaerialmap/items/test_id/tiles/WebMercatorQuad/{z}/{x}/{y}',
+                                }
+                            ]
                         }
                     ]
                 }
-            ]
-        }
+
+        def mock_post(*args: Any, **kwargs: Any) -> MockPostResponse:
+            if post_exception:
+                raise post_exception('Fail')
+            return MockPostResponse()
+
+        monkeypatch.setattr('torchgeo.datasets.openaerialmap.requests.post', mock_post)
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get',
+            lambda *args, **kwargs: MockGetResponse(),
+        )
+
         result = dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
         assert result is not None
         assert 'WebMercatorQuad' in result
 
-        mock_post.return_value.json.return_value = {'features': []}
+        post_response = {'features': []}
         assert dataset._fetch_item_id() is None  # type: ignore[reportPrivateUsage]
 
-        mock_post.side_effect = requests.RequestException('Fail')
+        post_exception = requests.RequestException
         with pytest.raises(RuntimeError, match='Failed to query STAC API'):
             dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
 
-        mock_post.side_effect = ValueError('JSON error')
+        post_exception = ValueError
         with pytest.raises(RuntimeError, match='Invalid STAC API response'):
             dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
 
@@ -370,23 +419,28 @@ class TestOpenAerialMap:
     ) -> None:
         dataset.paths = tmp_path
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b'fake_tiff_data'
+        class MockResponse:
+            status_code = 200
+            content = b'fake_tiff_data'
 
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.requests.get',
-            MagicMock(return_value=mock_response),
+            lambda *args, **kwargs: MockResponse(),
         )
 
-        mock_geo = MagicMock()
-        monkeypatch.setattr(dataset, '_georeference_tile', mock_geo)
+        georef_called = False
+
+        def mock_georeference(filepath: str, tile: TileUtils.Tile) -> None:
+            nonlocal georef_called
+            georef_called = True
+
+        monkeypatch.setattr(dataset, '_georeference_tile', mock_georeference)
 
         tile = TileUtils.Tile(x=1, y=1, z=1)
         tiles_url = 'http://example.com/{z}/{x}/{y}'
         dataset._download_tiles(tiles_url, [tile])  # type: ignore[reportPrivateUsage]
 
-        assert mock_geo.called
+        assert georef_called
 
     def test_georeference_tile_success(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -395,20 +449,32 @@ class TestOpenAerialMap:
         filepath.touch()
         tile = TileUtils.Tile(x=1, y=1, z=1)
 
-        mock_ds = MagicMock()
-        mock_ds.width = 256
-        mock_ds.height = 256
-        mock_ds.transform = 'mock_transform'
-        mock_ds.crs = 'mock_crs'
+        update_tags_called = False
 
-        mock_open = MagicMock()
-        mock_open.__enter__.return_value = mock_ds
+        class MockDataset:
+            width = 256
+            height = 256
+            transform = 'mock_transform'
+            crs = 'mock_crs'
 
-        monkeypatch.setattr('rasterio.open', MagicMock(return_value=mock_open))
+            def update_tags(self, **kwargs: Any) -> None:
+                nonlocal update_tags_called
+                update_tags_called = True
+
+        class MockContextManager:
+            def __enter__(self) -> MockDataset:
+                return MockDataset()
+
+            def __exit__(self, *args: Any) -> None:
+                pass
+
+        monkeypatch.setattr(
+            'rasterio.open', lambda *args, **kwargs: MockContextManager()
+        )
 
         dataset._georeference_tile(str(filepath), tile)  # type: ignore[reportPrivateUsage]
 
-        mock_ds.update_tags.assert_called_once()
+        assert update_tags_called
 
     def test_download_single_tile_failures(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -417,11 +483,19 @@ class TestOpenAerialMap:
 
         filepath = tmp_path / 'OAM-2-2-2.tif'
 
-        mock_ds = MagicMock()
-        mock_ds.crs = MagicMock()
-        mock_open = MagicMock(
-            return_value=MagicMock(__enter__=MagicMock(return_value=mock_ds))
-        )
+        class MockDataset:
+            crs = 'mock_crs'
+
+        class MockContextManager:
+            def __enter__(self) -> MockDataset:
+                return MockDataset()
+
+            def __exit__(self, *args: Any) -> None:
+                pass
+
+        def mock_open(*args: Any, **kwargs: Any) -> MockContextManager:
+            return MockContextManager()
+
         monkeypatch.setattr('rasterio.open', mock_open)
 
         filepath.touch()
@@ -436,7 +510,10 @@ class TestOpenAerialMap:
         filepath.touch()
         tile = TileUtils.Tile(x=1, y=1, z=1)
 
-        monkeypatch.setattr('rasterio.open', MagicMock(side_effect=RasterioIOError))
+        def raise_rasterio_error(*args: Any, **kwargs: Any) -> None:
+            raise RasterioIOError
+
+        monkeypatch.setattr('rasterio.open', raise_rasterio_error)
 
         with pytest.warns(UserWarning, match='Could not georeference'):
             dataset._georeference_tile(str(filepath), tile)  # type: ignore[reportPrivateUsage]
