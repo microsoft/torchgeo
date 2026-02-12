@@ -4,7 +4,7 @@ API Reference
 Complete API documentation for all TorchGeo modules.
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 2
 
    datamodules
    datasets
