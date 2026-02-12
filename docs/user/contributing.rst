@@ -168,8 +168,7 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
 * Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
 * Create a new ``docs/api/datasets/foo.rst`` file with the dataset documentation (see existing files for the format)
-* Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
-* Add the dataset to the appropriate toctree in ``docs/api/datasets.rst``
+* Add the dataset metadata to one of ``docs/api/datasets/*.csv``
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
 
