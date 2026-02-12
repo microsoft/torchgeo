@@ -66,7 +66,7 @@ class Substation(NonGeoDataset):
         mask_2d: bool = True,
         num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
-        | None = 'concat',
+        | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
