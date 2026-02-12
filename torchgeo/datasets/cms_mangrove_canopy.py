@@ -19,7 +19,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     """CMS Global Mangrove Canopy dataset.
 
     The `CMS Global Mangrove Canopy dataset
-    <https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1665>`_
+    <https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-cms-global-map-mangrove-canopy-1665-1.3>`_
     consists of a single band map at 30m resolution of either aboveground biomass (agb),
     basal area weighted height (hba95), or maximum canopy height (hmax95).
 

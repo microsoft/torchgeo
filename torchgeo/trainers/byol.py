@@ -167,7 +167,7 @@ class BackboneWrapper(nn.Module):
         """Hook to record the activations at the projection layer.
 
         See the following docs page for more details on hooks:
-        https://pytorch.org/docs/stable/generated/torch.nn.modules.module.register_module_forward_hook.html
+        https://docs.pytorch.org/docs/stable/generated/torch.nn.modules.module.register_module_forward_hook.html
 
         Args:
             module: the calling module

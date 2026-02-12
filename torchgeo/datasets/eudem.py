@@ -28,7 +28,7 @@ class EUDEM(RasterDataset):
     * DEMs at 25 m per pixel spatial resolution (~40,000x40,0000 px)
     * vertical accuracy of +/- 7 m RMSE
     * data fused from `ASTER GDEM
-      <https://lpdaac.usgs.gov/news/nasa-and-meti-release-aster-global-dem-version-3/>`_,
+      <https://www.earthdata.nasa.gov/news/nasa-meti-release-aster-global-dem-version-3>`_,
       `SRTM <https://science.jpl.nasa.gov/projects/srtm/>`_ and Russian topomaps
 
     Dataset format:

@@ -39,7 +39,7 @@ class DigitalTyphoon(NonGeoDataset):
     covers over four decades.
 
     See `the Digital Typhoon website
-    <http://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
     for more information about the dataset.
 
     Dataset features:

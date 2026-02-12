@@ -29,7 +29,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/>`__ dataset
+    <https://sites.research.google/gr/open-buildings/>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -45,7 +45,7 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#open-buildings-download>`__.
+    <https://sites.research.google/gr/open-buildings/#open-buildings-download>`__.
     Additionally, the `meta data geometry file
     <https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson>`_
     also needs to be placed in `root` as `tiles.geojson`.

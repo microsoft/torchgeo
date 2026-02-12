@@ -33,7 +33,7 @@ class Chesapeake(RasterDataset, ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay Land Use and Land Cover (LULC) Database 2022 Edition
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    <https://www.chesapeakeconservancy.org/projects/cbp-land-use-land-cover-data-project>`_
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time

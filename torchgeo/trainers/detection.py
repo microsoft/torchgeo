@@ -68,10 +68,10 @@ class ObjectDetectionTask(BaseTask):
 
         Args:
             model: Name of the `torchvision
-                <https://pytorch.org/vision/stable/models.html#object-detection>`__
+                <https://docs.pytorch.org/vision/stable/models.html#object-detection>`__
                 model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
             backbone: Name of the `torchvision
-                <https://pytorch.org/vision/stable/models.html#classification>`__
+                <https://docs.pytorch.org/vision/stable/models.html#classification>`__
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.

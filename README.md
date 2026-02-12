@@ -1,6 +1,6 @@
 <img class="dark-light" src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
 
-TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), providing datasets, samplers, transforms, and pre-trained models specific to geospatial data.
+TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://docs.pytorch.org/vision), providing datasets, samplers, transforms, and pre-trained models specific to geospatial data.
 
 The goal of this library is to make it simple:
 
@@ -8,10 +8,10 @@ The goal of this library is to make it simple:
 2. for remote sensing experts to explore machine learning solutions.
 
 Community:
-[![slack](https://img.shields.io/badge/Slack-join-4A154B?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![slack](https://img.shields.io/badge/Slack-join-4A154B?logo=slack)](https://torchgeo.slack.com/join/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
 [![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
 [![huggingface](https://img.shields.io/badge/Hugging_Face-join-FFD21E?logo=huggingface)](https://huggingface.co/torchgeo)
-[![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/ecosystem/join)
+[![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/join-ecosystem/)
 [![youtube](https://img.shields.io/badge/YouTube-subscribe-FF0000?logo=youtube)](https://www.youtube.com/@TorchGeo)
 
 Packaging:
@@ -20,24 +20,24 @@ Packaging:
 [![spack](https://img.shields.io/spack/v/py-torchgeo)](https://packages.spack.io/package.html?name=py-torchgeo)
 
 Testing:
-[![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
+[![docs](https://app.readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
 [![style](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml)
-[![codecov](https://codecov.io/gh/torchgeo/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://codecov.io/gh/torchgeo/torchgeo)
+[![codecov](https://codecov.io/gh/torchgeo/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://app.codecov.io/gh/torchgeo/torchgeo)
 
 ## Installation
 
-The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
+The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/en/stable/):
 
 ```sh
 pip install torchgeo
 ```
 
-For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
+For [conda](https://docs.conda.io/en/latest/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/), and [YouTube channel](https://www.youtube.com/@TorchGeo).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io/en/stable/). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/), and [YouTube channel](https://www.youtube.com/@TorchGeo).
 
 <p float="left">
     <a href="https://www.youtube.com/watch?v=0HfykJa-foE">
@@ -70,7 +70,7 @@ Many remote sensing applications involve working with [_geospatial datasets_](ht
 
 <img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
 
-In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
+In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
 ```python
 landsat7 = Landsat7(paths="...", bands=["B1", ..., "B7"])
@@ -118,7 +118,7 @@ These combinations require that all queries are present in both datasets, and ca
 
 TorchGeo includes a number of [_benchmark datasets_](https://torchgeo.readthedocs.io/en/stable/api/datasets.html#non-geospatial-datasets)—datasets that include both input images and target labels. This includes datasets for tasks like image classification, regression, semantic segmentation, object detection, instance segmentation, change detection, and more.
 
-If you've used [torchvision](https://pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
+If you've used [torchvision](https://docs.pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
 
 ```python
 from torch.utils.data import DataLoader
@@ -271,4 +271,4 @@ If you use this software in your work, please cite our [paper](https://doi.org/1
 
 This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html) for more information.
 
-This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on [Slack](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw) with any additional questions or comments.
+This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on [Slack](https://torchgeo.slack.com/join/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw) with any additional questions or comments.

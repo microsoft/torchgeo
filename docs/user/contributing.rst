@@ -88,7 +88,7 @@ In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and ma
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
 * `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
-* `prettier <https://prettier.io/docs/en/>`_ for code formatting
+* `prettier <https://prettier.io/docs/>`_ for code formatting
 
 These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
 

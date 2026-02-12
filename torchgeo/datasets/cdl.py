@@ -22,7 +22,7 @@ class CDL(RasterDataset):
 
     The `Cropland Data Layer
     <https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php>`__, hosted on
-    `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
+    `CropScape <https://nassgeodata.gmu.edu/CropScape/%3B>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
     boundary, water and road layers. The Boundary Layer options provided are County,

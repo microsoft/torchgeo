@@ -4,7 +4,7 @@
 """TorchGeo pre-trained model repository configuration file.
 
 * https://pytorch.org/hub/
-* https://pytorch.org/docs/stable/hub.html
+* https://docs.pytorch.org/docs/stable/hub.html
 """
 
 from torchgeo.models import (

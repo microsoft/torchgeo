@@ -18,7 +18,7 @@ class AsterGDEM(RasterDataset):
     """Aster Global Digital Elevation Model Dataset.
 
     The `Aster Global Digital Elevation Model
-    <https://lpdaac.usgs.gov/products/astgtmv003/>`_
+    <https://www.earthdata.nasa.gov/data/catalog/lpcloud-astgtm-003>`_
     dataset is a Digital Elevation Model (DEM) on a global scale.
     The dataset can be downloaded from the
     `Earth Data website <https://search.earthdata.nasa.gov/search/>`_
