@@ -10,7 +10,6 @@ import pytest
 import rasterio
 from rasterio.transform import Affine
 
-from torchgeo.callbacks.tiled_inference import _gdal_available
 from torchgeo.callbacks.writer import GeoTIFFWriter
 
 
@@ -88,7 +87,6 @@ class TestGeoTIFFWriter:
         with pytest.raises(RuntimeError, match='Writer not opened'):
             writer.write_chunk(data, 0, 0)
 
-    @pytest.mark.skipif(not _gdal_available(), reason='GDAL not available')
     def test_finalize_with_overviews(self, tmp_path: Path) -> None:
         """Test finalize creates overviews when configured."""
         output = tmp_path / 'test_cog.tif'

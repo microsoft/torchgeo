@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -14,28 +13,6 @@ import rasterio
 import torch
 from lightning.pytorch.callbacks import Callback
 from rasterio.transform import Affine
-
-
-def _gdal_available() -> bool:
-    """Check if GDAL is available for building overviews."""
-    try:
-        from osgeo import gdal  # noqa: F401
-
-        return True
-    except ImportError:
-        try:
-            subprocess.run(
-                ['gdal', 'raster', 'overview', 'add', '--help'],
-                capture_output=True,
-                check=True,
-            )
-            return True
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            try:
-                subprocess.run(['gdaladdo', '--help'], capture_output=True, check=True)
-                return True
-            except FileNotFoundError:
-                return False
 
 
 class TiledInferenceCallback(Callback):
@@ -77,8 +54,7 @@ class TiledInferenceCallback(Callback):
             chunk_size: Chunk size for output processing (memory vs speed).
             cog_config: Optional Cloud-Optimized GeoTIFF configuration.
                 Defaults to building overviews at levels [2, 4, 8, 16, 32, 64]
-                with nearest resampling and LZW compression if GDAL is available.
-                If GDAL is not available, overviews are disabled by default.
+                with nearest resampling and LZW compression.
         """
         super().__init__()
         self.output_path = Path(output_path)
@@ -87,14 +63,12 @@ class TiledInferenceCallback(Callback):
         self.blend_method = blend_method
         self.chunk_size = chunk_size
 
-        # Only enable overviews by default if GDAL is available
+        # Default COG config with overviews (using rasterio)
         default_cog_config: dict[str, Any] = {
+            'overviews': [2, 4, 8, 16, 32, 64],
             'overview_resampling': 'nearest',
             'compress': 'lzw',
         }
-        if _gdal_available():
-            default_cog_config['overviews'] = [2, 4, 8, 16, 32, 64]
-
         self.cog_config = {**default_cog_config, **(cog_config or {})}
 
         self.temp_dir: Path | None = None

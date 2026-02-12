@@ -120,69 +120,29 @@ class GeoTIFFWriter:
             self.dataset.close()
 
     def finalize(self) -> None:
-        """Finalize COG with overviews if requested.
+        """Build overview pyramids for Cloud-Optimized GeoTIFF.
 
-        Tries GDAL Python bindings first, falls back to gdaladdo CLI.
-
-        Raises:
-            RuntimeError: If both GDAL Python API and gdaladdo fail.
+        Builds internal overviews at the specified levels using the configured
+        resampling method. Overviews enable efficient visualization at multiple
+        zoom levels without loading the full resolution image.
         """
         if self.cog_config.get('overviews'):
             overview_levels = self.cog_config['overviews']
             resampling = self.cog_config.get('overview_resampling', 'nearest')
-            compress = self.cog_config.get('compress', 'lzw')
 
-            try:
-                from osgeo import gdal
+            from rasterio.enums import Resampling
 
-                gdal.UseExceptions()
-                ds = gdal.Open(str(self.output_path), gdal.GA_Update)
-                if ds is None:
-                    raise RuntimeError(f'GDAL failed to open {self.output_path}')
-                ds.SetMetadataItem('COMPRESS_OVERVIEW', compress.upper())
-                ds.BuildOverviews(resampling, overview_levels)
-                ds = None
-            except ImportError:
-                import subprocess
+            resampling_map = {
+                'nearest': Resampling.nearest,
+                'bilinear': Resampling.bilinear,
+                'cubic': Resampling.cubic,
+                'average': Resampling.average,
+                'mode': Resampling.mode,
+            }
 
-                newer_cmd = [
-                    'gdal',
-                    'raster',
-                    'overview',
-                    'add',
-                    '-r',
-                    resampling,
-                    '--config',
-                    'COMPRESS_OVERVIEW',
-                    compress,
-                    str(self.output_path),
-                    *map(str, overview_levels),
-                ]
+            resampling_method = resampling_map.get(
+                resampling.lower(), Resampling.nearest
+            )
 
-                legacy_cmd = [
-                    'gdaladdo',
-                    '-r',
-                    resampling,
-                    '--config',
-                    'COMPRESS_OVERVIEW',
-                    compress,
-                    str(self.output_path),
-                    *map(str, overview_levels),
-                ]
-
-                try:
-                    subprocess.run(
-                        newer_cmd, check=True, capture_output=True, text=True
-                    )
-                except (FileNotFoundError, subprocess.CalledProcessError):
-                    try:
-                        subprocess.run(
-                            legacy_cmd, check=True, capture_output=True, text=True
-                        )
-                    except FileNotFoundError:
-                        raise RuntimeError(
-                            'GDAL Python bindings not available and GDAL CLI not found. '
-                            'Install GDAL or disable overviews.'
-                        )
-                    except subprocess.CalledProcessError as e:
-                        raise RuntimeError(f'gdaladdo failed: {e.stderr}') from e
+            with rasterio.open(self.output_path, 'r+') as dst:
+                dst.build_overviews(overview_levels, resampling_method)
