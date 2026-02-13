@@ -4,8 +4,6 @@
 #
 # Modified from https://github.com/nasaharvest/galileo/blob/main/single_file_galileo.py
 
-# mypy: ignore-errors
-
 """Galileo model implementation."""
 
 import collections.abc
@@ -16,7 +14,7 @@ from collections import OrderedDict
 from collections import OrderedDict as OrderedDictType
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Final, cast
 
 import numpy as np
 import torch
@@ -24,7 +22,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import Tensor, vmap
-from torch.jit import Final
 from torchvision.models._api import Weights, WeightsEnum
 
 # constants
@@ -108,21 +105,32 @@ STATIC_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
 
 
 def get_2d_sincos_pos_embed_with_resolution(
-    embed_dim, grid_size, res, cls_token=False, device='cpu'
-):
-    """grid_size: int of the grid height and width
-    res: array of size n, representing the resolution of a pixel (say, in meters),
+    embed_dim: int,
+    grid_size: int,
+    res: Tensor,
+    cls_token: bool = False,
+    device: str | torch.device = 'cpu',
+) -> Tensor:
+    """Compute 2D sine-cosine embeddings at arbitrary spatial resolutions.
 
-    Return:
-    pos_embed: [n,grid_size*grid_size, embed_dim] or [n,1+grid_size*grid_size, embed_dim] (w/ or w/o cls_token)
+    Args:
+        embed_dim: Token embedding dimension.
+        grid_size: Spatial grid size for both height and width.
+        res: Resolution scaling tensor of shape ``(n,)``.
+        cls_token: Whether to prepend a class-token embedding.
+        device: Device for the generated tensors.
+
+    Returns:
+        Positional embeddings of shape ``(n, h*w, embed_dim)`` or
+        ``(n, 1+h*w, embed_dim)`` if ``cls_token`` is enabled.
     """
     res = res.to(device)
     grid_h = torch.arange(grid_size, device=device)
     grid_w = torch.arange(grid_size, device=device)
-    grid = torch.meshgrid(
+    grid_xy = torch.meshgrid(
         grid_w, grid_h, indexing='xy'
     )  # here h goes first,direction reversed for numpy
-    grid = torch.stack(grid, dim=0)  # 2 x h x w
+    grid = torch.stack(grid_xy, dim=0)  # 2 x h x w
 
     # grid = grid.reshape([2, 1, grid_size, grid_size])
     grid = torch.einsum('chw,n->cnhw', grid, res)  # 2 x n x h x w
@@ -138,7 +146,8 @@ def get_2d_sincos_pos_embed_with_resolution(
     return pos_embed
 
 
-def get_2d_sincos_pos_embed_from_grid_torch(embed_dim, grid):
+def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor) -> Tensor:
+    """Compute 2D sine-cosine embeddings from a 2D coordinate grid."""
     assert embed_dim % 2 == 0
 
     # use half of dimensions to encode grid_h
@@ -153,11 +162,8 @@ def get_2d_sincos_pos_embed_from_grid_torch(embed_dim, grid):
     return emb
 
 
-def get_1d_sincos_pos_embed_from_grid_torch(embed_dim, pos):
-    """embed_dim: output dimension for each position
-    pos: a list of positions to be encoded: size (M,)
-    out: (M, D)
-    """
+def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tensor:
+    """Compute 1D sine-cosine embeddings for scalar positions."""
     assert embed_dim % 2 == 0
     omega = torch.arange(embed_dim // 2, device=pos.device) / embed_dim / 2.0
     omega = 1.0 / 10000**omega  # (D/2,)
@@ -172,20 +178,27 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim, pos):
     return emb
 
 
-def get_month_encoding_table(embed_dim):
-    """Sinusoid month encoding table, for 12 months indexed from 0-11"""
+def get_month_encoding_table(embed_dim: int) -> Tensor:
+    """Return sinusoidal month encodings for months indexed from 0 to 11."""
     assert embed_dim % 2 == 0
     angles = torch.arange(0, 13) / (12 / (2 * np.pi))
 
-    sin_table = torch.sin(torch.stack([angles for _ in range(embed_dim // 2)], axis=-1))
-    cos_table = torch.cos(torch.stack([angles for _ in range(embed_dim // 2)], axis=-1))
-    month_table = torch.concatenate([sin_table[:-1], cos_table[:-1]], axis=-1)
+    sin_table = torch.sin(torch.stack([angles for _ in range(embed_dim // 2)], dim=-1))
+    cos_table = torch.cos(torch.stack([angles for _ in range(embed_dim // 2)], dim=-1))
+    month_table = torch.concatenate([sin_table[:-1], cos_table[:-1]], dim=-1)
 
     return month_table  # (M, D)
 
 
-def adjust_learning_rate(optimizer, epoch, warmup_epochs, total_epochs, max_lr, min_lr):
-    """Decay the learning rate with half-cycle cosine after warmup"""
+def adjust_learning_rate(
+    optimizer: torch.optim.Optimizer,
+    epoch: int,
+    warmup_epochs: int,
+    total_epochs: int,
+    max_lr: float,
+    min_lr: float,
+) -> float:
+    """Apply warmup then cosine-decay learning-rate scheduling."""
     if epoch < warmup_epochs:
         lr = max_lr * epoch / warmup_epochs
     else:
@@ -202,25 +215,29 @@ def adjust_learning_rate(optimizer, epoch, warmup_epochs, total_epochs, max_lr, 
 
 # thanks to https://github.com/bwconrad/flexivit/ for this nice implementation
 # of the FlexiPatchEmbed module
-def to_2tuple(x: Any) -> tuple:
+def to_2tuple(x: Any) -> tuple[Any, ...]:
+    """Convert scalar input to a 2-tuple, preserving existing iterables."""
     if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
         return tuple(x)
     return tuple(itertools.repeat(x, 2))
 
 
 class FlexiPatchEmbed(nn.Module):
+    """Flexible patch embedding layer with runtime patch-size resizing."""
+
     def __init__(
         self,
         patch_size: int | tuple[int, int],
         in_chans: int = 3,
         embed_dim: int = 128,
-        norm_layer: nn.Module | None = None,
+        norm_layer: type[nn.Module] | None = None,
         bias: bool = True,
         patch_size_seq: Sequence[int] = (1, 2, 3, 4, 5, 6),
         interpolation: str = 'bicubic',
         antialias: bool = True,
     ) -> None:
-        """2D image to patch embedding w/ flexible patch sizes
+        """Convert image tensors to patch embeddings with flexible patch sizes.
+
         Extended from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/layers/patch_embed.py#L24
         by https://github.com/bwconrad/flexivit/
 
@@ -256,9 +273,9 @@ class FlexiPatchEmbed(nn.Module):
         # Pre-calculate pinvs
         self.pinvs = self._cache_pinvs()
 
-    def _cache_pinvs(self) -> dict:
-        """Pre-calculate all pinv matrices"""
-        pinvs = {}
+    def _cache_pinvs(self) -> dict[tuple[int, int], Tensor]:
+        """Precompute pseudo-inverse matrices for configured patch sizes."""
+        pinvs: dict[tuple[int, int], Tensor] = {}
         for ps in self.patch_size_seq:
             tuple_ps = to_2tuple(ps)
             pinvs[tuple_ps] = self._calculate_pinv(self.patch_size, tuple_ps)
@@ -273,16 +290,19 @@ class FlexiPatchEmbed(nn.Module):
     def _calculate_pinv(
         self, old_shape: tuple[int, int], new_shape: tuple[int, int]
     ) -> Tensor:
+        """Compute the pseudo-inverse resize matrix for kernel resampling."""
         mat = []
         for i in range(np.prod(old_shape)):
             basis_vec = torch.zeros(old_shape)
             basis_vec[np.unravel_index(i, old_shape)] = 1.0
             mat.append(self._resize(basis_vec, new_shape).reshape(-1))
         resize_matrix = torch.stack(mat)
-        return torch.linalg.pinv(resize_matrix)
+        return cast(Tensor, torch.linalg.pinv(resize_matrix))
 
-    def resize_patch_embed(self, patch_embed: Tensor, new_patch_size: tuple[int, int]):
-        """Resize patch_embed to target resolution via pseudo-inverse resizing"""
+    def resize_patch_embed(
+        self, patch_embed: Tensor, new_patch_size: tuple[int, int]
+    ) -> Tensor:
+        """Resize convolution kernels to a new patch size via pseudo-inverse."""
         # Return original kernel if no resize is necessary
         if self.patch_size == new_patch_size:
             return patch_embed
@@ -295,18 +315,19 @@ class FlexiPatchEmbed(nn.Module):
         pinv = self.pinvs[new_patch_size]
         pinv = pinv.to(patch_embed.device)
 
-        def resample_patch_embed(patch_embed: Tensor):
+        def resample_patch_embed(patch_embed: Tensor) -> Tensor:
             h, w = new_patch_size
             resampled_kernel = pinv @ patch_embed.reshape(-1)
             return rearrange(resampled_kernel, '(h w) -> h w', h=h, w=w)
 
         v_resample_patch_embed = vmap(vmap(resample_patch_embed, 0, 0), 1, 1)
 
-        return v_resample_patch_embed(patch_embed)
+        return cast(Tensor, v_resample_patch_embed(patch_embed))
 
     def forward(
         self, x: Tensor, patch_size: int | tuple[int, int] | None = None
-    ) -> Tensor | tuple[Tensor, tuple[int, int]]:
+    ) -> Tensor:
+        """Project input tensors to patch embeddings for a chosen patch size."""
         # x has input shape [b, h, w, (t), c]
         batch_size = x.shape[0]
         has_time_dimension = False
@@ -342,20 +363,23 @@ class FlexiPatchEmbed(nn.Module):
 
 
 class Attention(nn.Module):
+    """Multi-head self/cross attention used in Galileo blocks."""
+
     # https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
     fast_attn: Final[bool]
 
     def __init__(
         self,
-        dim,
-        num_heads=8,
-        qkv_bias=False,
-        qk_norm=False,
-        attn_drop=0.0,
-        proj_drop=0.0,
-        norm_layer=nn.LayerNorm,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        norm_layer: type[nn.Module] = nn.LayerNorm,
         cross_attn: bool = False,
-    ):
+    ) -> None:
+        """Initialize an attention layer."""
         super().__init__()
         assert dim % num_heads == 0, 'dim should be divisible by num_heads'
         self.num_heads = num_heads
@@ -377,7 +401,10 @@ class Attention(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, x, y=None, attn_mask=None):
+    def forward(
+        self, x: Tensor, y: Tensor | None = None, attn_mask: Tensor | None = None
+    ) -> Tensor:
+        """Run self-attention or cross-attention over input tokens."""
         B, N, C = x.shape
 
         q = self.q(x)
@@ -423,17 +450,18 @@ class Attention(nn.Module):
 
 
 class Mlp(nn.Module):
-    """MLP as used in Vision Transformer, MLP-Mixer and related networks"""
+    """MLP as used in Vision Transformer and related networks."""
 
     def __init__(
         self,
-        in_features,
-        hidden_features=None,
-        out_features=None,
-        act_layer=nn.GELU,
-        bias=True,
-        drop=0.0,
-    ):
+        in_features: int,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: type[nn.Module] = nn.GELU,
+        bias: bool = True,
+        drop: float = 0.0,
+    ) -> None:
+        """Initialize the MLP projection stack."""
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -444,7 +472,8 @@ class Mlp(nn.Module):
         self.fc2 = nn.Linear(hidden_features, out_features, bias=bias)
         self.drop2 = nn.Dropout(drop)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
+        """Run MLP layers on token embeddings."""
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop1(x)
@@ -454,16 +483,23 @@ class Mlp(nn.Module):
 
 
 class LayerScale(nn.Module):
-    def __init__(self, dim, init_values=1e-5, inplace=False):
+    """Per-channel residual scaling module."""
+
+    def __init__(
+        self, dim: int, init_values: float = 1e-5, inplace: bool = False
+    ) -> None:
+        """Initialize learnable scale parameters."""
         super().__init__()
         self.inplace = inplace
         self.gamma = nn.Parameter(init_values * torch.ones(dim))
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
+        """Scale inputs element-wise using learned coefficients."""
         return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
-def drop_path(x, drop_prob: float = 0.0, training: bool = False):
+def drop_path(x: Tensor, drop_prob: float = 0.0, training: bool = False) -> Tensor:
+    """Apply stochastic depth to an input tensor."""
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1 - drop_prob
@@ -479,30 +515,35 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False):
 class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
-    def __init__(self, drop_prob=None):
+    def __init__(self, drop_prob: float | None = None) -> None:
+        """Initialize stochastic depth drop probability."""
         super().__init__()
         self.drop_prob = drop_prob
 
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training)
+    def forward(self, x: Tensor) -> Tensor:
+        """Apply stochastic depth during training."""
+        return drop_path(x, self.drop_prob or 0.0, self.training)
 
 
 class Block(nn.Module):
+    """Transformer block with attention and MLP sub-layers."""
+
     def __init__(
         self,
-        dim,
-        num_heads,
-        mlp_ratio=4.0,
-        qkv_bias=False,
-        qk_norm=False,
-        drop=0.0,
-        attn_drop=0.0,
-        drop_path=0.0,
-        init_values=None,
-        act_layer=nn.GELU,
-        norm_layer=nn.LayerNorm,
+        dim: int,
+        num_heads: int,
+        mlp_ratio: float = 4.0,
+        qkv_bias: bool = False,
+        qk_norm: bool = False,
+        drop: float = 0.0,
+        attn_drop: float = 0.0,
+        drop_path: float = 0.0,
+        init_values: float | None = None,
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = nn.LayerNorm,
         cross_attn: bool = False,
-    ):
+    ) -> None:
+        """Initialize a transformer block."""
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
@@ -531,14 +572,18 @@ class Block(nn.Module):
             LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         )
 
-    def forward(self, x, y, attn_mask):
+    def forward(self, x: Tensor, y: Tensor | None, attn_mask: Tensor | None) -> Tensor:
+        """Apply attention and MLP updates to token embeddings."""
         x = x + self.drop_path(self.ls1(self.attn(self.norm1(x), y, attn_mask)))
         x = x + self.drop_path(self.ls2(self.mlp(self.norm2(x))))
         return x
 
 
 class ModuleListWithInit(nn.ModuleList):
-    def _init_weights(self, m):
+    """ModuleList variant with shared linear layer initialization."""
+
+    def _init_weights(self, m: nn.Module) -> None:
+        """Initialize linear layers with Xavier uniform weights."""
         if isinstance(m, nn.Linear):
             # we use xavier_uniform following official JAX ViT:
             torch.nn.init.xavier_uniform_(m.weight)
@@ -547,19 +592,22 @@ class ModuleListWithInit(nn.ModuleList):
 
 
 class GalileoBase(nn.Module):
+    """Shared tokenization and encoding utilities for Galileo models."""
+
     cross_attn: bool
 
     def __init__(
         self,
         embedding_size: int = 128,
-        depth=2,
-        mlp_ratio=2,
-        num_heads=8,
-        max_sequence_length=24,
+        depth: int = 2,
+        mlp_ratio: int = 2,
+        num_heads: int = 8,
+        max_sequence_length: int = 24,
         base_patch_size: int = 4,
         use_channel_embs: bool = True,
         drop_path: float = 0.0,
-    ):
+    ) -> None:
+        """Initialize common Galileo backbone components."""
         super().__init__()
 
         self.space_time_groups = SPACE_TIME_BANDS_GROUPS_IDX
@@ -594,7 +642,9 @@ class GalileoBase(nn.Module):
             requires_grad=False,
         )
         month_tab = get_month_encoding_table(int(embedding_size * 0.25))
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
+        self.month_embed = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
+            month_tab, freeze=True
+        )
         if use_channel_embs:
             args = {'requires_grad': True}
         else:
@@ -615,7 +665,8 @@ class GalileoBase(nn.Module):
 
         self.apply(self._init_weights)
 
-    def _init_weights(self, m):
+    def _init_weights(self, m: nn.Module) -> None:
+        """Initialize linear layers with Xavier uniform weights."""
         if isinstance(m, nn.Linear):
             # we use xavier_uniform following official JAX ViT:
             torch.nn.init.xavier_uniform_(m.weight)
@@ -633,7 +684,8 @@ class GalileoBase(nn.Module):
         sp_m: torch.Tensor,
         t_m: torch.Tensor,
         st_m: torch.Tensor,
-    ):
+    ) -> tuple[Tensor, Tensor]:
+        """Flatten token groups and concatenate their masks."""
         s_t_x = rearrange(s_t_x, 'b h w t c_g d -> b (h w t c_g) d')
         sp_x = rearrange(sp_x, 'b h w c_g d -> b (h w c_g) d')
         t_x = rearrange(t_x, 'b t c_g d -> b (t c_g) d')
@@ -657,7 +709,8 @@ class GalileoBase(nn.Module):
         sp_c_g: int,
         t_c_g: int,
         st_c_g: int,
-    ):
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Split a flattened token sequence back to grouped tensor layouts."""
         n_s_t_t = h * w * t * s_t_c_g
         n_t_t = t * t_c_g
 
@@ -678,7 +731,17 @@ class GalileoBase(nn.Module):
 
         return s_t_x, sp_x, t_x, st_x
 
-    def apply_encodings(self, s_t_x, sp_x, t_x, st_x, months, patch_size, input_res):
+    def apply_encodings(
+        self,
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        months: Tensor,
+        patch_size: int | None,
+        input_res: int,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Add channel, temporal, and spatial encodings to grouped tokens."""
         b, h, w, t, s_t_c_g, _ = s_t_x.shape
         sp_c_g, t_c_g = sp_x.shape[-2], t_x.shape[-2]
         st_c_g = st_x.shape[-2]
@@ -747,19 +810,22 @@ class GalileoBase(nn.Module):
 
 
 class Encoder(GalileoBase):
+    """Galileo encoder that projects and encodes multi-modal tokens."""
+
     cross_attn = False
 
     def __init__(
         self,
         max_patch_size: int = 8,
         embedding_size: int = 128,
-        depth=2,
-        mlp_ratio=2,
-        num_heads=8,
-        max_sequence_length=24,
+        depth: int = 2,
+        mlp_ratio: int = 2,
+        num_heads: int = 8,
+        max_sequence_length: int = 24,
         freeze_projections: bool = False,
         drop_path: float = 0.0,
-    ):
+    ) -> None:
+        """Initialize the Galileo encoder."""
         super().__init__(
             embedding_size,
             depth,
@@ -816,7 +882,8 @@ class Encoder(GalileoBase):
 
         self.apply(self._init_weights)
 
-    def _init_weights(self, m):
+    def _init_weights(self, m: nn.Module) -> None:
+        """Initialize linear layers with Xavier uniform weights."""
         if isinstance(m, nn.Linear):
             # we use xavier_uniform following official JAX ViT:
             torch.nn.init.xavier_uniform_(m.weight)
@@ -834,8 +901,10 @@ class Encoder(GalileoBase):
         t_m: torch.Tensor,
         st_m: torch.Tensor,
         patch_size: int,
-    ):
-        """Given a [B, H, W, (T), C] inputs, returns a [B, H, W, (T), C_G, D] output.
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Apply modality-specific projections to grouped input tensors.
+
+        Given a [B, H, W, (T), C] input, returns [B, H, W, (T), C_G, D] outputs.
         We assume that the spatial masks are consistent for the given patch size,
         so that if patch_size == 2 then one possible mask would be
         [0, 0, 1, 1]
@@ -933,7 +1002,8 @@ class Encoder(GalileoBase):
         )
 
     @staticmethod
-    def remove_masked_tokens(x, mask):
+    def remove_masked_tokens(x: Tensor, mask: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        """Move unmasked tokens to the front and drop trailing masked padding."""
         org_mask_dtype = mask.dtype
         mask = mask.bool()
         # https://stackoverflow.com/a/68621610/2332296
@@ -953,7 +1023,10 @@ class Encoder(GalileoBase):
         return x, indices, updated_mask.to(dtype=org_mask_dtype)
 
     @staticmethod
-    def add_removed_tokens(x, indices, mask):
+    def add_removed_tokens(
+        x: Tensor, indices: Tensor, mask: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """Restore token order after masked-token removal."""
         masked_tokens = repeat(
             torch.zeros_like(x[0, 0, :]), 'd -> b t d', b=x.shape[0], t=indices.shape[1]
         )
@@ -979,20 +1052,21 @@ class Encoder(GalileoBase):
 
     def apply_attn(
         self,
-        s_t_x,
-        sp_x,
-        t_x,
-        st_x,
-        s_t_m,
-        sp_m,
-        t_m,
-        st_m,
-        months,
-        patch_size,
-        input_res,
-        exit_after,
-        token_exit_cfg,
-    ):
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        s_t_m: Tensor,
+        sp_m: Tensor,
+        t_m: Tensor,
+        st_m: Tensor,
+        months: Tensor,
+        patch_size: int,
+        input_res: int | None,
+        exit_after: int | None,
+        token_exit_cfg: dict[str, int] | None,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Run attention blocks over projected tokens and masks."""
         if token_exit_cfg:
             exit_s_t, exit_sp, exit_t, exit_st = self.create_token_exit_ids(
                 s_t_x, sp_x, t_x, st_x, token_exit_cfg
@@ -1010,6 +1084,8 @@ class Encoder(GalileoBase):
 
         _, h, w, t, s_t_c_g, _ = s_t_x.shape
         sp_c_g, t_c_g, st_c_g = sp_x.shape[3], t_x.shape[-2], st_x.shape[-2]
+        if input_res is None:
+            input_res = BASE_GSD
         s_t_x, sp_x, t_x, st_x = self.apply_encodings(
             s_t_x, sp_x, t_x, st_x, months, patch_size, input_res
         )
@@ -1026,6 +1102,7 @@ class Encoder(GalileoBase):
         )  # new_m is shape (bsz, seq_len)
 
         if exit_ids_seq is not None:
+            assert exited_tokens is not None
             exit_ids_seq, _, _ = self.remove_masked_tokens(exit_ids_seq, m >= 1)
             # still linear projections
             exited_tokens, _, _ = self.remove_masked_tokens(exited_tokens, m >= 1)
@@ -1074,7 +1151,18 @@ class Encoder(GalileoBase):
         )
 
     @classmethod
-    def average_tokens(cls, s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m):
+    def average_tokens(
+        cls,
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        s_t_m: Tensor,
+        sp_m: Tensor,
+        t_m: Tensor,
+        st_m: Tensor,
+    ) -> Tensor:
+        """Average non-masked tokens into one embedding per sample."""
         x, m = cls.collapse_and_combine_hwtc(
             s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m
         )
@@ -1093,7 +1181,8 @@ class Encoder(GalileoBase):
         sp_m: torch.Tensor,
         t_m: torch.Tensor,
         st_m: torch.Tensor,
-    ):
+    ) -> Tensor:
+        """Average non-masked tokens independently for each spatial patch."""
         s_t_x = rearrange(s_t_x, 'b t_h t_w t c_g d -> b (t_h t_w) (t c_g) d')
         sp_x = rearrange(sp_x, 'b t_h t_w c_g d -> b (t_h t_w) c_g d')
         # repeat time tokens over space
@@ -1117,7 +1206,15 @@ class Encoder(GalileoBase):
 
         return x_for_mean.sum(dim=2) / torch.sum(1 - m, -1, keepdim=True)
 
-    def create_token_exit_ids(self, s_t_x, sp_x, t_x, st_x, token_exit_cfg):
+    def create_token_exit_ids(
+        self,
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        token_exit_cfg: dict[str, int],
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Build per-token exit-depth tensors for early-exit execution."""
         exit_s_t = torch.zeros_like(s_t_x)
         exit_sp = torch.zeros_like(sp_x)
         exit_t = torch.zeros_like(t_x)
@@ -1150,9 +1247,10 @@ class Encoder(GalileoBase):
         patch_size: int,
         input_resolution_m: int | None = BASE_GSD,
         exit_after: int | None = None,
-        token_exit_cfg: dict | None = None,
+        token_exit_cfg: dict[str, int] | None = None,
         add_layernorm_on_exit: bool = True,
-    ):
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Encode inputs and return grouped tokens with updated masks."""
         (s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m) = self.apply_linear_projection(
             s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m, patch_size
         )
@@ -1182,7 +1280,8 @@ class Encoder(GalileoBase):
         return (s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m, months)
 
     @classmethod
-    def load_from_folder(cls, folder: Path, device: torch.device):
+    def load_from_folder(cls, folder: Path, device: torch.device) -> 'Encoder':
+        """Load an encoder checkpoint and config from a local folder."""
         if not (folder / CONFIG_FILENAME).exists():
             all_files_in_folder = [f.name for f in folder.glob('*')]
             raise ValueError(
@@ -1210,20 +1309,23 @@ class Encoder(GalileoBase):
 
 
 class Decoder(GalileoBase):
+    """Galileo decoder for reconstructing masked token groups."""
+
     cross_attn = True
 
     def __init__(
         self,
         encoder_embedding_size: int = 128,
         decoder_embedding_size: int = 128,
-        depth=2,
-        mlp_ratio=2,
-        num_heads=8,
-        max_sequence_length=24,
+        depth: int = 2,
+        mlp_ratio: int = 2,
+        num_heads: int = 8,
+        max_sequence_length: int = 24,
         max_patch_size: int = 8,
         learnable_channel_embeddings: bool = False,
         output_embedding_size: int | None = None,
-    ):
+    ) -> None:
+        """Initialize the Galileo decoder."""
         super().__init__(
             decoder_embedding_size,
             depth,
@@ -1252,8 +1354,21 @@ class Decoder(GalileoBase):
         self.norm = nn.LayerNorm(decoder_embedding_size)
         self.apply(self._init_weights)
 
-    def add_masks(self, s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m):
-        def to_kept_boolean(m: torch.Tensor):
+    def add_masks(
+        self,
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        s_t_m: Tensor,
+        sp_m: Tensor,
+        t_m: Tensor,
+        st_m: Tensor,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Replace decode-target tokens with learned mask tokens."""
+
+        def to_kept_boolean(m: torch.Tensor) -> Tensor:
+            """Return a mask where 1 marks values that should be decoded."""
             # returns a mask where 1 indicates the value should be decoded
             # (i.e. was 2) and 0 elsewhere
             return (m == 2).to(dtype=m.dtype)
@@ -1283,7 +1398,10 @@ class Decoder(GalileoBase):
         return (s_t_x + s_t_m_add, sp_x + sp_m_add, t_x + t_m_add, st_x + st_m_add)
 
     @staticmethod
-    def split_x_y(tokens, mask):
+    def split_x_y(
+        tokens: Tensor, mask: Tensor
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Split concatenated tokens into query and key/value token sets."""
         org_mask_dtype = mask.dtype
         # https://stackoverflow.com/a/68621610/2332296
         # move all non-masked values to the front of their rows
@@ -1315,7 +1433,10 @@ class Decoder(GalileoBase):
         return x, y, x_mask, y_mask, indices
 
     @staticmethod
-    def combine_x_y(x, y, x_mask, y_mask, indices):
+    def combine_x_y(
+        x: Tensor, y: Tensor, x_mask: Tensor, y_mask: Tensor, indices: Tensor
+    ) -> Tensor:
+        """Reassemble split query/key-value tokens into original order."""
         # multiply by mask to zero out, then add
         B, T = indices.shape[0], indices.shape[1]
         D = x.shape[-1]
@@ -1327,20 +1448,23 @@ class Decoder(GalileoBase):
 
     def apply_attn(
         self,
-        s_t_x,
-        sp_x,
-        t_x,
-        st_x,
-        s_t_m,
-        sp_m,
-        t_m,
-        st_m,
-        months,
-        patch_size,
-        input_res,
-    ):
+        s_t_x: Tensor,
+        sp_x: Tensor,
+        t_x: Tensor,
+        st_x: Tensor,
+        s_t_m: Tensor,
+        sp_m: Tensor,
+        t_m: Tensor,
+        st_m: Tensor,
+        months: Tensor,
+        patch_size: int | None,
+        input_res: int | None,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Apply decoder attention by attending decode tokens to visible tokens."""
         _, h, w, t, s_t_c_g, _ = s_t_x.shape
         sp_c_g, t_c_g, st_c_g = sp_x.shape[3], t_x.shape[-2], st_x.shape[-2]
+        if input_res is None:
+            input_res = BASE_GSD
         s_t_x, sp_x, t_x, st_x = self.apply_encodings(
             s_t_x, sp_x, t_x, st_x, months, patch_size, input_res
         )
@@ -1374,7 +1498,8 @@ class Decoder(GalileoBase):
         months: torch.Tensor,
         patch_size: int | None = None,
         input_resolution_m: int | None = BASE_GSD,
-    ):
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        """Decode masked tokens and return reconstructed grouped outputs."""
         s_t_x = self.encoder_to_decoder_embed(self.input_norm(s_t_x))
         sp_x = self.encoder_to_decoder_embed(self.input_norm(sp_x))
         t_x = self.encoder_to_decoder_embed(self.input_norm(t_x))
