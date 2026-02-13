@@ -221,7 +221,7 @@ class GlobBiomass(RasterDataset):
         std_error_paths = df.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
         std_err_mask = self._merge_or_stack(std_error_paths, index)
 
-        mask = torch.cat((mask, std_err_mask), dim=0)
+        mask = torch.cat((mask, std_err_mask), dim=-3)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {

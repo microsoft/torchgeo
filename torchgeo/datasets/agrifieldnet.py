@@ -225,7 +225,7 @@ class AgriFieldNet(RasterDataset):
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
             data_list.append(self._merge_or_stack(band_filepaths, index))
-        image = torch.cat(data_list)
+        image = torch.cat(data_list, dim=-3)
 
         mask_filepaths = []
         for root, dirs, files in os.walk(os.path.join(self.paths, 'train_labels')):
