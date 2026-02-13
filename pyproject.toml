@@ -348,6 +348,7 @@ ignore = ["ANN401"]
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
 "tests/**" = ["D"]
+"torchgeo/models/galileo.py" = ["ANN", "D"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false
