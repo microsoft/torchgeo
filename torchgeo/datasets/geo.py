@@ -445,7 +445,11 @@ class RasterDataset(GeoDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             time_series: if True, stack data along the time series dimension
-                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
+                (typically ``[T, C, H, W]``). If False, merge data into a
+                mosaic (typically ``[C, H, W]``). For mask-style datasets
+                (``is_image=False``), single-band data may have the channel
+                dimension squeezed, resulting in shapes ``[T, H, W]`` or
+                ``[H, W]`` when ``C == 1``.
 
         Raises:
             AssertionError: If *bands* are invalid.
