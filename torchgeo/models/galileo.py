@@ -6,27 +6,18 @@
 
 """Galileo model implementation."""
 
-import collections.abc
 import itertools
-import json
 import math
-from collections import OrderedDict
-from collections import OrderedDict as OrderedDictType
-from collections.abc import Sequence
-from pathlib import Path
+from collections.abc import Iterable, Sequence
 from typing import Any, Final, cast
 
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import Tensor, vmap
 from torchvision.models._api import Weights, WeightsEnum
 
-# constants
-CONFIG_FILENAME = 'config.json'
-ENCODER_FILENAME = 'encoder.pt'
 BASE_GSD = 10
 
 # band information
@@ -66,42 +57,34 @@ SPACE_BANDS = SRTM_BANDS + DW_BANDS + WC_BANDS
 STATIC_BANDS = LANDSCAN_BANDS + LOCATION_BANDS + STATIC_DW_BANDS + STATIC_WC_BANDS
 
 
-SPACE_TIME_BANDS_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
-    {
-        'S1': [SPACE_TIME_BANDS.index(b) for b in S1_BANDS],
-        'S2_RGB': [SPACE_TIME_BANDS.index(b) for b in ['B2', 'B3', 'B4']],
-        'S2_Red_Edge': [SPACE_TIME_BANDS.index(b) for b in ['B5', 'B6', 'B7']],
-        'S2_NIR_10m': [SPACE_TIME_BANDS.index(b) for b in ['B8']],
-        'S2_NIR_20m': [SPACE_TIME_BANDS.index(b) for b in ['B8A']],
-        'S2_SWIR': [SPACE_TIME_BANDS.index(b) for b in ['B11', 'B12']],
-        'NDVI': [SPACE_TIME_BANDS.index('NDVI')],
-    }
-)
+SPACE_TIME_BANDS_GROUPS_IDX = {
+    'S1': [SPACE_TIME_BANDS.index(b) for b in S1_BANDS],
+    'S2_RGB': [SPACE_TIME_BANDS.index(b) for b in ['B2', 'B3', 'B4']],
+    'S2_Red_Edge': [SPACE_TIME_BANDS.index(b) for b in ['B5', 'B6', 'B7']],
+    'S2_NIR_10m': [SPACE_TIME_BANDS.index(b) for b in ['B8']],
+    'S2_NIR_20m': [SPACE_TIME_BANDS.index(b) for b in ['B8A']],
+    'S2_SWIR': [SPACE_TIME_BANDS.index(b) for b in ['B11', 'B12']],
+    'NDVI': [SPACE_TIME_BANDS.index('NDVI')],
+}
 
-TIME_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
-    {
-        'ERA5': [TIME_BANDS.index(b) for b in ERA5_BANDS],
-        'TC': [TIME_BANDS.index(b) for b in TC_BANDS],
-        'VIIRS': [TIME_BANDS.index(b) for b in VIIRS_BANDS],
-    }
-)
+TIME_BAND_GROUPS_IDX = {
+    'ERA5': [TIME_BANDS.index(b) for b in ERA5_BANDS],
+    'TC': [TIME_BANDS.index(b) for b in TC_BANDS],
+    'VIIRS': [TIME_BANDS.index(b) for b in VIIRS_BANDS],
+}
 
-SPACE_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
-    {
-        'SRTM': [SPACE_BANDS.index(b) for b in SRTM_BANDS],
-        'DW': [SPACE_BANDS.index(b) for b in DW_BANDS],
-        'WC': [SPACE_BANDS.index(b) for b in WC_BANDS],
-    }
-)
+SPACE_BAND_GROUPS_IDX = {
+    'SRTM': [SPACE_BANDS.index(b) for b in SRTM_BANDS],
+    'DW': [SPACE_BANDS.index(b) for b in DW_BANDS],
+    'WC': [SPACE_BANDS.index(b) for b in WC_BANDS],
+}
 
-STATIC_BAND_GROUPS_IDX: OrderedDictType[str, list[int]] = OrderedDict(
-    {
-        'LS': [STATIC_BANDS.index(b) for b in LANDSCAN_BANDS],
-        'location': [STATIC_BANDS.index(b) for b in LOCATION_BANDS],
-        'DW_static': [STATIC_BANDS.index(b) for b in STATIC_DW_BANDS],
-        'WC_static': [STATIC_BANDS.index(b) for b in STATIC_WC_BANDS],
-    }
-)
+STATIC_BAND_GROUPS_IDX = {
+    'LS': [STATIC_BANDS.index(b) for b in LANDSCAN_BANDS],
+    'location': [STATIC_BANDS.index(b) for b in LOCATION_BANDS],
+    'DW_static': [STATIC_BANDS.index(b) for b in STATIC_DW_BANDS],
+    'WC_static': [STATIC_BANDS.index(b) for b in STATIC_WC_BANDS],
+}
 
 
 def get_2d_sincos_pos_embed_with_resolution(
@@ -217,7 +200,7 @@ def adjust_learning_rate(
 # of the FlexiPatchEmbed module
 def to_2tuple(x: Any) -> tuple[Any, ...]:
     """Convert scalar input to a 2-tuple, preserving existing iterables."""
-    if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
+    if isinstance(x, Iterable) and not isinstance(x, str):
         return tuple(x)
     return tuple(itertools.repeat(x, 2))
 
@@ -282,7 +265,7 @@ class FlexiPatchEmbed(nn.Module):
         return pinvs
 
     def _resize(self, x: Tensor, shape: tuple[int, int]) -> Tensor:
-        x_resized = F.interpolate(
+        x_resized = torch.nn.functional.interpolate(
             x[None, None, ...], shape, mode=self.interpolation, antialias=self.antialias
         )
         return x_resized[0, 0, ...]
@@ -351,7 +334,9 @@ class FlexiPatchEmbed(nn.Module):
         else:
             weight = self.resize_patch_embed(self.proj.weight, patch_size)
         # Apply conv with resized weights
-        x = F.conv2d(x, weight, bias=self.proj.bias, stride=patch_size)
+        x = torch.nn.functional.conv2d(
+            x, weight, bias=self.proj.bias, stride=patch_size
+        )
 
         if has_time_dimension:
             x = rearrange(x, '(b t) c h w -> b h w t c', b=batch_size, t=num_timesteps)
@@ -365,7 +350,6 @@ class FlexiPatchEmbed(nn.Module):
 class Attention(nn.Module):
     """Multi-head self/cross attention used in Galileo blocks."""
 
-    # https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
     fast_attn: Final[bool]
 
     def __init__(
@@ -385,9 +369,7 @@ class Attention(nn.Module):
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
         self.scale = self.head_dim**-0.5
-        self.fast_attn = hasattr(
-            torch.nn.functional, 'scaled_dot_product_attention'
-        )  # FIXME
+        self.fast_attn = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
 
         self.cross_attn = cross_attn
 
@@ -426,7 +408,7 @@ class Attention(nn.Module):
         if self.fast_attn:
             if attn_mask is not None:
                 attn_mask = attn_mask[:, None, None].repeat((1, self.num_heads, N, 1))
-            x = F.scaled_dot_product_attention(
+            x = torch.nn.functional.scaled_dot_product_attention(
                 q,
                 k,
                 v,
@@ -1062,12 +1044,12 @@ class Encoder(GalileoBase):
         st_m: Tensor,
         months: Tensor,
         patch_size: int,
-        input_res: int | None,
-        exit_after: int | None,
-        token_exit_cfg: dict[str, int] | None,
+        input_res: int = BASE_GSD,
+        exit_after: int | None = None,
+        token_exit_cfg: dict[str, int] | None = None,
     ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
         """Run attention blocks over projected tokens and masks."""
-        if token_exit_cfg:
+        if token_exit_cfg is not None:
             exit_s_t, exit_sp, exit_t, exit_st = self.create_token_exit_ids(
                 s_t_x, sp_x, t_x, st_x, token_exit_cfg
             )
@@ -1084,8 +1066,6 @@ class Encoder(GalileoBase):
 
         _, h, w, t, s_t_c_g, _ = s_t_x.shape
         sp_c_g, t_c_g, st_c_g = sp_x.shape[3], t_x.shape[-2], st_x.shape[-2]
-        if input_res is None:
-            input_res = BASE_GSD
         s_t_x, sp_x, t_x, st_x = self.apply_encodings(
             s_t_x, sp_x, t_x, st_x, months, patch_size, input_res
         )
@@ -1245,7 +1225,7 @@ class Encoder(GalileoBase):
         st_m: torch.Tensor,
         months: torch.Tensor,
         patch_size: int,
-        input_resolution_m: int | None = BASE_GSD,
+        input_resolution_m: int = BASE_GSD,
         exit_after: int | None = None,
         token_exit_cfg: dict[str, int] | None = None,
         add_layernorm_on_exit: bool = True,
@@ -1279,56 +1259,75 @@ class Encoder(GalileoBase):
             st_x = self.norm(st_x)
         return (s_t_x, sp_x, t_x, st_x, s_t_m, sp_m, t_m, st_m, months)
 
-    @classmethod
-    def load_from_folder(cls, folder: Path, device: torch.device) -> 'Encoder':
-        """Load an encoder checkpoint and config from a local folder."""
-        if not (folder / CONFIG_FILENAME).exists():
-            all_files_in_folder = [f.name for f in folder.glob('*')]
-            raise ValueError(
-                f'Expected {CONFIG_FILENAME} in {folder}, found {all_files_in_folder}'
-            )
-        if not (folder / ENCODER_FILENAME).exists():
-            all_files_in_folder = [f.name for f in folder.glob('*')]
-            raise ValueError(
-                f'Expected {ENCODER_FILENAME} in {folder}, found {all_files_in_folder}'
-            )
-
-        with (folder / CONFIG_FILENAME).open('r') as f:
-            config = json.load(f)
-            model_config = config['model']
-            encoder_config = model_config['encoder']
-        encoder = cls(**encoder_config)
-
-        state_dict = torch.load(folder / ENCODER_FILENAME, map_location=device)
-        for key in list(state_dict.keys()):
-            # this cleans the state dict, which occasionally had an extra
-            # ".backbone" included in the key names
-            state_dict[key.replace('.backbone', '')] = state_dict.pop(key)
-        encoder.load_state_dict(state_dict)
-        return encoder
-
 
 class Galileo(Encoder):
     """Galileo encoder model.
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.9
     """
 
 
 class Galileo_Weights(WeightsEnum):  # type: ignore[misc]
     """Galileo model weights.
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.9
     """
 
     GALILEO_NANO = Weights(
-        url='https://raw.githubusercontent.com/nasaharvest/galileo/main/data/models/nano/encoder.pt',
+        url='https://hf.co/isaaccorley/galileo/resolve/09adbfeaffc50a4817578abca4c9e3a1723d571d/model_nano-ebaf045a.pth',
         transforms=nn.Identity(),
         meta={
-            'dataset': 'Galileo pretraining dataset',
-            'model': 'Galileo (nano)',
             'publication': 'https://arxiv.org/abs/2502.09356',
             'repo': 'https://github.com/nasaharvest/galileo',
+            'license': 'MIT',
+            'encoder_config': {
+                'embedding_size': 128,
+                'depth': 4,
+                'num_heads': 8,
+                'mlp_ratio': 4,
+                'max_sequence_length': 24,
+                'freeze_projections': False,
+                'drop_path': 0.1,
+                'max_patch_size': 8,
+            },
+        },
+    )
+    GALILEO_TINY = Weights(
+        url='https://hf.co/isaaccorley/galileo/resolve/09adbfeaffc50a4817578abca4c9e3a1723d571d/model_tiny-4f414eea.pth',
+        transforms=nn.Identity(),
+        meta={
+            'publication': 'https://arxiv.org/abs/2502.09356',
+            'repo': 'https://github.com/nasaharvest/galileo',
+            'license': 'MIT',
+            'encoder_config': {
+                'embedding_size': 192,
+                'depth': 12,
+                'num_heads': 3,
+                'mlp_ratio': 4,
+                'max_sequence_length': 24,
+                'freeze_projections': False,
+                'drop_path': 0.1,
+                'max_patch_size': 8,
+            },
+        },
+    )
+    GALILEO_BASE = Weights(
+        url='https://hf.co/isaaccorley/galileo/resolve/09adbfeaffc50a4817578abca4c9e3a1723d571d/model_base-7f15d404.pth',
+        transforms=nn.Identity(),
+        meta={
+            'publication': 'https://arxiv.org/abs/2502.09356',
+            'repo': 'https://github.com/nasaharvest/galileo',
+            'license': 'MIT',
+            'encoder_config': {
+                'embedding_size': 768,
+                'depth': 12,
+                'num_heads': 12,
+                'mlp_ratio': 4,
+                'max_sequence_length': 24,
+                'freeze_projections': False,
+                'drop_path': 0.1,
+                'max_patch_size': 8,
+            },
         },
     )
 
@@ -1342,7 +1341,7 @@ def galileo(
 
     * https://arxiv.org/abs/2502.09356
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.9
 
     Args:
         weights: Pre-trained model weights to use.
@@ -1352,11 +1351,10 @@ def galileo(
     Returns:
         A Galileo model.
     """
-    model = Galileo(*args, **kwargs)
-
     if weights:
-        model.load_state_dict(
-            weights.get_state_dict(progress=True, map_location='cpu'), strict=True
-        )
+        model = Galileo(**weights.meta['encoder_config'])
+        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+    else:
+        model = Galileo(*args, **kwargs)
 
     return model
