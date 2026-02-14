@@ -61,6 +61,10 @@ class TestSemanticSegmentation:
             'dlrsd',
             'dlrsd_no_val',
             'etci2021',
+            'flairhub_croptype',
+            'flairhub_landcover',
+            'flairhub_landcover_official_splits',
+            'flairhub_toy_landcover_official_splits',
             'ftw',
             'geonrw',
             'gid15',
@@ -97,7 +101,6 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
-
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)

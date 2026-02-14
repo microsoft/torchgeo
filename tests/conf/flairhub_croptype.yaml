@@ -1,0 +1,26 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 4 # 4 (AERIAL_RGBI)
+    num_classes: 23 # crop_type dataset_type
+    num_filters: 1
+    ignore_index: 22
+data:
+  class_path: FLAIRHUBDataModule
+  init_args:
+    batch_size: 1
+    n_test_domains: 1
+    train_val_split: 0.8
+    concatenate_modalities: true
+  dict_kwargs:
+    root: 'tests/data/flairhub'
+    download: False
+    bands: ['AERIAL_RGBI']
+    dataset_type: 'crop_type'
+    domain_years:
+      D006: ['2020']
+      D012: ['2019']
+      D032: ['2019']

@@ -1,0 +1,23 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 4 # 4 (AERIAL_RGBI)
+    num_classes: 19 # land_cover dataset_type
+    num_filters: 1
+    ignore_index: 18
+data:
+  class_path: FLAIRHUBToyDataModule
+  init_args:
+    batch_size: 1
+    n_test_domains: 1
+    train_val_split: 0.8
+    concatenate_modalities: true
+    official_splits: 'split_toy'
+  dict_kwargs:
+    root: 'tests/data/flairhub'
+    download: False
+    bands: ['AERIAL_RGBI']
+    dataset_type: 'land_cover'

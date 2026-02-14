@@ -134,6 +134,12 @@ FireRisk
 
 .. autoclass:: FireRiskDataModule
 
+FLAIR-HUB
+^^^^^^^^^
+
+.. autoclass:: FLAIRHUBDataModule
+.. autoclass:: FLAIRHUBToyDataModule
+
 GeoNRW
 ^^^^^^
 

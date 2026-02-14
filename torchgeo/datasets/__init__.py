@@ -79,6 +79,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
+from .flair import FLAIRHUB, FLAIRHUBToy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -210,6 +211,7 @@ __all__ = (
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
+    'FLAIRHUB',
     'GBIF',
     'GID15',
     'LEVIRCD',
@@ -298,6 +300,7 @@ __all__ = (
     'EuroSAT100',
     'EuroSATSpatial',
     'EverWatch',
+    'FLAIRHUBToy',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
