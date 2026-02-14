@@ -143,18 +143,28 @@ class TestFLAIRHUB:
         all_patches = cls(**common, **extra)
         assert len(all_patches) == 3
 
-    def test_plot_all_modalities(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        'dataset_type,bands,suptitle',
+        [
+            ('land_cover', None, 'All modalities'),
+            ('crop_type_2', ['AERIAL_RGBI'], 'LPIS 2 (crop_type_2)'),
+            ('crop_type_3', ['AERIAL_RGBI'], 'LPIS 3 (crop_type_3)'),
+        ],
+    )
+    def test_plot_all_modalities_and_lpis(
+        self, tmp_path: Path, dataset_type: str, bands: list[str] | None, suptitle: str
+    ) -> None:
         root = tmp_path / 'flairhub'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         dataset = FLAIRHUB(
             root=root,
             download=False,
-            bands=None,
-            dataset_type='land_cover',
+            bands=bands,
+            dataset_type=dataset_type,
             domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
         )
         x = dataset[0]
-        fig = dataset.plot(x, suptitle='All modalities')
+        fig = dataset.plot(x, suptitle=suptitle)
         assert fig is not None
         plt.close()
 
@@ -318,9 +328,10 @@ class TestFLAIRHUBToySpecific:
         if splits_present:
             gpkg_dir = toy_dir / 'GLOBAL_ALL_MTD'
             gpkg_dir.mkdir(exist_ok=True)
-            gpd.GeoDataFrame({'patch_id': [], 'split_1': []}).to_file(
-                gpkg_dir / 'GLOBAL_ALL_MTD_SPLIT.gpkg', driver='GPKG'
+            gdf = gpd.GeoDataFrame(
+                {'patch_id': [], 'split_1': []}, geometry=[], crs='EPSG:4326'
             )
+            gdf.to_file(gpkg_dir / 'GLOBAL_ALL_MTD_SPLIT.gpkg', driver='GPKG')
         else:
             shutil.rmtree(toy_dir / 'GLOBAL_ALL_MTD', ignore_errors=True)
             (toy_dir / 'GLOBAL_ALL_MTD.zip').unlink(missing_ok=True)
