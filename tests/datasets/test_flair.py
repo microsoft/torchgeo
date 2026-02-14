@@ -76,11 +76,9 @@ class TestFLAIRHUB:
         assert isinstance(x['mask'], torch.Tensor)
         assert x['mask'].dtype == torch.int64
 
-        # Check that requested modalities are present
         if 'AERIAL_RGBI' in dataset.bands:
-            assert x['AERIAL_RGBI'].shape[0] == 4  # RGBI bands
+            assert x['AERIAL_RGBI'].shape[0] == 4
         if 'SENTINEL2_TS' in dataset.bands:
-            # Sentinel-2 time series must contain 4 dimensions (bands, timepoints, height, width)
             assert x['SENTINEL2_TS'].shape == (2, 10, 10, 10)
 
     def test_len(self, dataset: FLAIRHUB | FLAIRHUBToy) -> None:
@@ -238,14 +236,13 @@ class TestFLAIRHUBSpecific:
 
         (root / 'D006-2020_AERIAL_RGBI.zip').unlink()
 
-        # Try to extract a non-existent zip
         with pytest.raises(FileNotFoundError, match='Archive not found'):
             dataset._extract('D006', '2020', 'AERIAL_RGBI')
 
     def test_ensure_splits_download(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        """ensure_splits_available triggers download when gpkg and zip missing."""
+        """_ensure_splits_available triggers download when gpkg and zip missing."""
         root = tmp_path / 'flairhub'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         gpkg_dir = root / 'GLOBAL_ALL_MTD'
@@ -255,9 +252,7 @@ class TestFLAIRHUBSpecific:
         zip_src = FLAIRHUB_TEST_DATA_DIR / 'GLOBAL_ALL_MTD.zip'
         zip_path.unlink(missing_ok=True)
 
-        def mock_download(
-            url: str, root: Path, *args: object, **kwargs: object
-        ) -> None:
+        def mock_download(url: str, root: Path) -> None:
             shutil.copy(zip_src, Path(root) / 'GLOBAL_ALL_MTD.zip')
 
         monkeypatch.setattr('torchgeo.datasets.flair.download_url', mock_download)
@@ -268,7 +263,7 @@ class TestFLAIRHUBSpecific:
             dataset_type='land_cover',
             domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
         )
-        path = dataset.ensure_splits_available()
+        path = dataset._ensure_splits_available()
         assert path.exists()
 
 
@@ -305,7 +300,6 @@ class TestFLAIRHUBToySpecific:
             bands=['AERIAL_RGBI'],
             dataset_type='land_cover',
         )
-        # Verify directory was extracted
         assert toy_dir.is_dir()
         assert dataset is not None
 
@@ -343,9 +337,9 @@ class TestFLAIRHUBToySpecific:
             dataset_type='land_cover',
         )
         if splits_present:
-            path = dataset.ensure_splits_available()
+            path = dataset._ensure_splits_available()
             assert path == toy_dir / 'GLOBAL_ALL_MTD' / 'GLOBAL_ALL_MTD_SPLIT.gpkg'
             assert path.exists()
         else:
             with pytest.raises(DatasetNotFoundError):
-                dataset.ensure_splits_available()
+                dataset._ensure_splits_available()

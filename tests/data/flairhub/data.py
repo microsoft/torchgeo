@@ -185,7 +185,6 @@ def create_toy_dataset(base_dir: Path) -> Path:
                     source_dir, toy_dir / f'{dir_year}_{modality}', dirs_exist_ok=True
                 )
 
-    # Official splits gpkg for FLAIRHUBDataModule official_splits (e.g. test_segmentation)
     gpkg_dir = toy_dir / 'GLOBAL_ALL_MTD'
     gpkg_dir.mkdir(exist_ok=True)
     official_splits_gdf = create_toy_splits_gdf()
@@ -244,11 +243,9 @@ def main() -> None:
             zip_path = create_zip_archive(modality, dir_year, base_dir)
             print(f'Created: {zip_path}')
 
-    # Create toy dataset
     toy_zip_path = create_toy_dataset(base_dir)
     print(f'Created: {toy_zip_path}')
 
-    # GLOBAL_ALL_MTD for FLAIRHUB (non-toy) ensure_splits_available; real format uses split_1
     gpkg_dir = base_dir / 'GLOBAL_ALL_MTD'
     gpkg_dir.mkdir(exist_ok=True)
     create_official_splits_gdf().to_file(

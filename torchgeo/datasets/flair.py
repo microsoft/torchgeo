@@ -83,10 +83,6 @@ class FLAIRHUB(NonGeoDataset):
     - ``AERIAL_LABEL-COSIA``: Land cover labels (19 classes)
     - ``ALL_LABEL-LPIS``: Crop type labels (23 classes)
 
-    Example domains: D004, D005, D006, D017 (multi-year), D033 (multi-year), ...
-
-    Available years: 2017, 2018, 2019, 2020, 2021, 2022
-
     Automatic download:
 
     Set ``download=True`` to automatically download requested modalities from
@@ -187,7 +183,6 @@ class FLAIRHUB(NonGeoDataset):
     # SENTINEL1_DESC_TS (Sentinel-1 DESC time series)
     sentinel1_desc_ts_bands = ('VV', 'VH')
 
-    # HuggingFace dataset URL (base for per-modality file downloads)
     download_link = 'https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data'
 
     splits = ('train', 'val', 'test')
@@ -200,8 +195,6 @@ class FLAIRHUB(NonGeoDataset):
         'split_flairchallenge',
     )
 
-    # Available domain-year combinations
-    # Format: {domain: [years]}
     # Note: Some domains have multiple years available
     _default_domain_years: ClassVar[dict[str, list[str]]] = {
         'D004': ['2021'],
@@ -276,7 +269,6 @@ class FLAIRHUB(NonGeoDataset):
         'D091': ['2021'],
     }
 
-    # Available bands/modalities (using directory suffixes directly)
     available_bands: ClassVar[list[str]] = [
         'AERIAL_RGBI',
         'SPOT_RGBI',
@@ -289,8 +281,7 @@ class FLAIRHUB(NonGeoDataset):
     ]
 
     # Note: the original dataset contains 19 classes, but the dataset paper
-    # suggests not using clear cut, ligneous and mixed as they are nearly
-    # empty
+    # suggests not using clear cut, ligneous & mixed as they are nearly empty
     cosia: ClassVar[dict[str, Any]] = {
         'classes': [
             'building',
@@ -313,7 +304,6 @@ class FLAIRHUB(NonGeoDataset):
             'mixed',
             'undefined',
         ],
-        # Define a colormap for the classes
         'cmap': ListedColormap(
             [
                 '#db0e9a',  # building
@@ -640,14 +630,11 @@ class FLAIRHUB(NonGeoDataset):
         self.download = download
         self.dataset_type = dataset_type
 
-        # Override class variable with instance variable if provided
         self.domain_years = domain_years if domain_years else self._default_domain_years
 
-        # Set bands to all available if None
         if bands is None:
             bands = list(self.available_bands)
         else:
-            # Validate band names
             invalid_bands = [b for b in bands if b not in self.available_bands]
             if invalid_bands:
                 raise ValueError(
@@ -659,7 +646,7 @@ class FLAIRHUB(NonGeoDataset):
         self._verify()
         self.files = self._load_files()
 
-    def ensure_splits_available(self) -> pathlib.Path:
+    def _ensure_splits_available(self) -> pathlib.Path:
         """Download and extract the official splits file if missing.
 
         Returns:
@@ -744,7 +731,6 @@ class FLAIRHUB(NonGeoDataset):
         """
         files_list: list[dict[str, Any]] = []
 
-        # Determine which label directory to use based on dataset type
         if self.dataset_type == 'land_cover':
             label_dir = 'AERIAL_LABEL-COSIA'
         elif self.dataset_type in ('crop_type', 'crop_type_2', 'crop_type_3'):
@@ -754,9 +740,9 @@ class FLAIRHUB(NonGeoDataset):
 
         allowed_patch_ids: set[str] | None = None
         if self.split_column is not None:
-            gpkg_path = self.ensure_splits_available()
+            gpkg_path = self._ensure_splits_available()
             gdf = gpd.read_file(gpkg_path)
-            # GeoPackage uses 'valid', API uses 'val'
+            # Dataset uses 'valid', API uses 'val'
             gpkg_split = 'valid' if self.split == 'val' else self.split
             allowed_patch_ids = set(
                 gdf.loc[gdf[self.split_column] == gpkg_split, 'patch_id'].astype(str)
@@ -812,7 +798,6 @@ class FLAIRHUB(NonGeoDataset):
         domain-year combinations that have label files.
         If any are missing, it downloads them if *download* is set to True.
         """
-        # Track which files need to be downloaded/extracted
         to_download: list[tuple[str, str, str]] = []  # (domain, year, modality)
         to_extract: list[tuple[str, str, str]] = []  # (domain, year, modality)
 
@@ -820,7 +805,7 @@ class FLAIRHUB(NonGeoDataset):
             label_modality = 'AERIAL_LABEL-COSIA'
         else:
             label_modality = 'ALL_LABEL-LPIS'
-        # Check each domain-year combination
+
         for domain, years in self.domain_years.items():
             for year in years:
                 modalities_to_check = [
@@ -834,31 +819,25 @@ class FLAIRHUB(NonGeoDataset):
                     else:
                         year_str = year
                     modality_dir = f'{domain}-{year_str}_{modality_suffix}'
-                    modality_path = (
-                        pathlib.Path(self.root) / modality_dir
-                    )  # e.g., "data/D012-2019_AERIAL_RGBI"
+                    # e.g., "data/D012-2019_AERIAL_RGBI"
+                    modality_path = pathlib.Path(self.root) / modality_dir
                     modality_zip = pathlib.Path(self.root) / f'{modality_dir}.zip'
 
-                    # Check if directory exists and has files
                     if modality_path.is_dir():
-                        # Check if directory has .tif files
                         tif_files = list(modality_path.rglob('*.tif'))
                         if tif_files:
-                            continue  # Already extracted and has files
+                            continue
 
-                    # Check if zip exists but not extracted
                     if modality_zip.is_file():
                         to_extract.append((domain, year_str, modality_suffix))
                     else:
                         to_download.append((domain, year_str, modality_suffix))
 
-        # Extract any zips that exist but haven't been extracted
         if to_extract:
             print(f'Extracting {len(to_extract)} modality archives...')
             for domain, year, modality in to_extract:
                 self._extract(domain, year, modality)
 
-        # Download any missing files
         if to_download:
             if not self.download:
                 print(
@@ -994,7 +973,6 @@ class FLAIRHUB(NonGeoDataset):
                 class_names = self.lpis_1['classes']
                 cmap = self.lpis_1['cmap']
 
-        # Convert tensor to numpy
         mask_np = mask.numpy()
 
         n_classes = len(class_names)
@@ -1026,12 +1004,10 @@ class FLAIRHUB(NonGeoDataset):
             ax: Matplotlib axes to plot on
             title: Title for the subplot
         """
-        # Convert tensor to numpy
         data_np = data.numpy()
 
         # Select RGB bands and transpose from (C, H, W) to (H, W, C) for matplotlib
-        rgb_image = data_np[:3].transpose(1, 2, 0)  # Shape: (H, W, 3)
-        # Divide by 255 to get values in [0, 1]
+        rgb_image = data_np[:3].transpose(1, 2, 0)
         rgb_image = rgb_image / 255.0
         rgb_image = np.clip(rgb_image, 0, 1)
         ax.imshow(rgb_image)
@@ -1067,7 +1043,7 @@ class FLAIRHUB(NonGeoDataset):
         dsm = data_np[0]
         dtm = data_np[1]
 
-        chm = dtm - dsm  # canopy height model in meters
+        chm = dtm - dsm
         ax.imshow(chm, cmap='gray', vmin=np.min(chm), vmax=np.max(chm))
         ax.set_title(title)
 
@@ -1106,7 +1082,7 @@ class FLAIRHUB(NonGeoDataset):
             self.sentinel2_ts_bands.index(band) for band in self.sentinel2_ts_rgb_bands
         ]
         # Select RGB bands and transpose from (C, H, W) to (H, W, C) for matplotlib
-        rgb_image = last_timepoint[rgb_indices].transpose(1, 2, 0)  # Shape: (H, W, 3)
+        rgb_image = last_timepoint[rgb_indices].transpose(1, 2, 0)
         # Clip between 0 and 3000 (reflectance 0.0 to 0.3).
         # Stretch that to 0-255 for display.
         rgb_image = np.clip(rgb_image, 0, 3000)
@@ -1196,7 +1172,6 @@ class FLAIRHUB(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # Collect all available modalities to plot
         plot_data: dict[str, dict[str, Any]] = {}
 
         plot_data['mask'] = {
@@ -1205,7 +1180,6 @@ class FLAIRHUB(NonGeoDataset):
             'title': 'mask',
         }
 
-        # Plot aerial RGBI if available
         if 'AERIAL_RGBI' in sample:
             plot_data['AERIAL_RGBI'] = {
                 'plot_type': 'aerial_rgbi',
@@ -1213,7 +1187,6 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'Aerial RGBI',
             }
 
-        # Plot SPOT RGBI if available
         if 'SPOT_RGBI' in sample:
             plot_data['SPOT_RGBI'] = {
                 'plot_type': 'spot_rgbi',
@@ -1221,7 +1194,6 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'SPOT RGBI',
             }
 
-        # Plot DEM if available
         if 'DEM_ELEV' in sample:
             plot_data['DEM_ELEV'] = {
                 'plot_type': 'dem',
@@ -1229,7 +1201,6 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'DEM Elevation',
             }
 
-        # Plot aerial RLT PAN if available
         if 'AERIAL-RLT_PAN' in sample:
             plot_data['AERIAL-RLT_PAN'] = {
                 'plot_type': 'aerial_rlt_pan',
@@ -1237,7 +1208,6 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'Aerial RLT PAN',
             }
 
-        # Plot Sentinel-2 time series if available
         if 'SENTINEL2_TS' in sample:
             plot_data['SENTINEL2_TS'] = {
                 'plot_type': 'sentinel2_ts',
@@ -1252,7 +1222,6 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'Sentinel-2 Mask SC',
             }
 
-        # Plot Sentinel-1 time series if available
         if 'SENTINEL1-ASC_TS' in sample:
             plot_data['SENTINEL1-ASC_TS'] = {
                 'plot_type': 'sentinel1_asc_ts',
@@ -1267,9 +1236,8 @@ class FLAIRHUB(NonGeoDataset):
                 'title': 'Sentinel-1 DESC Time Series',
             }
 
-        # Create figure with appropriate size
         num_plots = len(plot_data)
-        ncols = min(4, num_plots)  # Max 4 columns
+        ncols = min(4, num_plots)
         nrows = (num_plots + ncols - 1) // ncols
 
         fig, axs = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 4))
@@ -1277,7 +1245,6 @@ class FLAIRHUB(NonGeoDataset):
         for ax in axs.flat:
             ax.axis('off')
 
-        # Plot each modality
         for idx, (_, plot_info) in enumerate(plot_data.items()):
             plot_type = plot_info['plot_type']
             data = plot_info['data']
