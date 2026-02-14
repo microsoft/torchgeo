@@ -18,7 +18,7 @@ data:
   dict_kwargs:
     root: 'tests/data/flair'
     download: False
-    bands: ['AERIAL_RGBI']
+    bands: ['AERIAL_RGBI', 'SPOT_RGBI']
     dataset_type: 'crop_type'
     domain_years:
       D006: ['2020']
