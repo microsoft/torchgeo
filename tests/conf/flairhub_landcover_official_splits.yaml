@@ -17,7 +17,7 @@ data:
     concatenate_modalities: true
     official_splits: 'split_1'
   dict_kwargs:
-    root: 'tests/data/flairhub'
+    root: 'tests/data/flair'
     download: False
     bands: ['AERIAL_RGBI']
     dataset_type: 'land_cover'

@@ -17,7 +17,7 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import FLAIRHUB, DatasetNotFoundError, FLAIRHUBToy
 
-FLAIRHUB_TEST_DATA_DIR = Path('tests') / 'data' / 'flairhub'
+FLAIRHUB_TEST_DATA_DIR = Path('tests') / 'data' / 'flair'
 FLAIRHUB_DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
 FLAIRHUB_DOMAIN_YEARS_SINGLE = {'D006': ['2020']}
 
@@ -78,6 +78,8 @@ class TestFLAIRHUB:
 
         if 'AERIAL_RGBI' in dataset.bands:
             assert x['AERIAL_RGBI'].shape[0] == 4
+        if 'SPOT_RGBI' in dataset.bands:
+            assert x['SPOT_RGBI'].shape[0] == 4
         if 'SENTINEL2_TS' in dataset.bands:
             assert x['SENTINEL2_TS'].shape == (2, 10, 10, 10)
 
@@ -124,7 +126,7 @@ class TestFLAIRHUB:
                 dirs_exist_ok=True,
             )
         else:
-            root = tmp_path / 'flairhub'
+            root = tmp_path / 'flair'
             shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         kwargs: dict = {'domain_years': FLAIRHUB_DOMAIN_YEARS}
 
@@ -152,7 +154,7 @@ class TestFLAIRHUB:
     def test_plot_all_modalities_and_lpis(
         self, tmp_path: Path, dataset_type: str, bands: list[str] | None, suptitle: str
     ) -> None:
-        root = tmp_path / 'flairhub'
+        root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         dataset = FLAIRHUB(
             root=root,
@@ -169,7 +171,7 @@ class TestFLAIRHUB:
 
 class TestFLAIRHUBSpecific:
     def test_zip_exists_but_not_extracted(self, tmp_path: Path) -> None:
-        root = tmp_path / 'flairhub'
+        root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         modality_dir = root / 'D006-2020_AERIAL_RGBI'
         modality_zip = root / 'D006-2020_AERIAL_RGBI.zip'
@@ -188,7 +190,7 @@ class TestFLAIRHUBSpecific:
         assert dataset is not None
 
     def test_getitem_with_transforms(self, tmp_path: Path) -> None:
-        root = tmp_path / 'flairhub'
+        root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
 
         def custom_transform(
@@ -224,7 +226,7 @@ class TestFLAIRHUBSpecific:
         )
 
     def test_extract_file_not_found(self, tmp_path: Path) -> None:
-        root = tmp_path / 'flairhub'
+        root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         dataset = FLAIRHUB(
             root=root,
@@ -243,7 +245,7 @@ class TestFLAIRHUBSpecific:
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         """_ensure_splits_available triggers download when gpkg and zip missing."""
-        root = tmp_path / 'flairhub'
+        root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
         gpkg_dir = root / 'GLOBAL_ALL_MTD'
         if gpkg_dir.exists():

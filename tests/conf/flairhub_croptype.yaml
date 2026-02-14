@@ -16,7 +16,7 @@ data:
     train_val_split: 0.8
     concatenate_modalities: true
   dict_kwargs:
-    root: 'tests/data/flairhub'
+    root: 'tests/data/flair'
     download: False
     bands: ['AERIAL_RGBI']
     dataset_type: 'crop_type'
