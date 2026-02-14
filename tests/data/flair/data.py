@@ -96,9 +96,9 @@ MODALITIES = {
         'size': 10,
     },
     'SENTINEL2_MSK-SC': {
-        'channels': 20,
-        'dtype': np.uint8,
-        'range': (0, 2),
+        'channels': 4,  # 2 time steps * 2 bands (snow, cloud), aligned with SENTINEL2_TS
+        'dtype': np.uint16,
+        'range': (0, 100),  # probability 0-100%
         'size': 10,
     },
     'SENTINEL1-ASC_TS': {
