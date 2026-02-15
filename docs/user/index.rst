@@ -10,4 +10,3 @@ Welcome to the TorchGeo user documentation. Here you'll find guides on installat
    contributing
    glossary
    alternatives
-   changelog
