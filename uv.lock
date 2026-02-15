@@ -3669,7 +3669,6 @@ dependencies = [
     { name = "requests" },
     { name = "segmentation-models-pytorch" },
     { name = "shapely" },
-    { name = "sphinx-github-changelog" },
     { name = "timm" },
     { name = "torch" },
     { name = "torchmetrics" },
@@ -3698,6 +3697,7 @@ all = [
     { name = "ruff" },
     { name = "scipy" },
     { name = "sphinx" },
+    { name = "sphinx-github-changelog" },
     { name = "ty" },
     { name = "types-geopandas" },
     { name = "types-requests" },
@@ -3721,6 +3721,7 @@ docs = [
     { name = "nbsphinx" },
     { name = "pydata-sphinx-theme" },
     { name = "sphinx" },
+    { name = "sphinx-github-changelog" },
 ]
 models = [
     { name = "microsoft-aurora" },
@@ -3777,7 +3778,7 @@ requires-dist = [
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
     { name = "shapely", specifier = ">=2.0.2" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=5.3" },
-    { name = "sphinx-github-changelog", specifier = ">=1.7.1" },
+    { name = "sphinx-github-changelog", marker = "extra == 'docs'", specifier = ">=1.0.0" },
     { name = "timm", specifier = ">=1.0.3" },
     { name = "torch", specifier = ">=2.2" },
     { name = "torchgeo", extras = ["datasets", "docs", "models", "style", "tests"], marker = "extra == 'all'" },
