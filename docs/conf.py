@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'nbsphinx',
+    'sphinx_github_changelog',
 ]
 
 # List of patterns, relative to source directory, that match files and
@@ -183,3 +184,6 @@ suppress_warnings = ['myst.header']
 nbsphinx_execute = 'never'
 with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
+
+# sphinx-github-changelog
+sphinx_github_changelog_token = os.environ.get('GITHUB_TOKEN')

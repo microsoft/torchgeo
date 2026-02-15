@@ -3486,6 +3486,20 @@ wheels = [
 ]
 
 [[package]]
+name = "sphinx-github-changelog"
+version = "1.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docutils" },
+    { name = "requests" },
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/71/3c/11707a3da2fe3a2aed9575a76b2ee5dc8b943981a6a51f55a2a743b629fb/sphinx_github_changelog-1.7.1.tar.gz", hash = "sha256:2ec5a716fbd21edcb4f549f8e4503a7ab08a285585aaf291a7e97d79cd6467ab", size = 55142, upload-time = "2025-05-11T14:07:34.973Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/78/42/c556bdbf673f730c8518cdb95f479a2a7c97e9c461746b1878d15fa639f8/sphinx_github_changelog-1.7.1-py3-none-any.whl", hash = "sha256:5accdbdbd900287c2d6a737c322381e3f2b02053b67029006f335519a8025314", size = 11117, upload-time = "2025-05-11T14:07:33.553Z" },
+]
+
+[[package]]
 name = "sphinxcontrib-applehelp"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3655,6 +3669,7 @@ dependencies = [
     { name = "requests" },
     { name = "segmentation-models-pytorch" },
     { name = "shapely" },
+    { name = "sphinx-github-changelog" },
     { name = "timm" },
     { name = "torch" },
     { name = "torchmetrics" },
@@ -3762,6 +3777,7 @@ requires-dist = [
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
     { name = "shapely", specifier = ">=2.0.2" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=5.3" },
+    { name = "sphinx-github-changelog", specifier = ">=1.7.1" },
     { name = "timm", specifier = ">=1.0.3" },
     { name = "torch", specifier = ">=2.2" },
     { name = "torchgeo", extras = ["datasets", "docs", "models", "style", "tests"], marker = "extra == 'all'" },
