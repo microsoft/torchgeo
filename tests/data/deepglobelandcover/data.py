@@ -8,18 +8,14 @@ import shutil
 
 import numpy as np
 from PIL import Image
-from torchvision.datasets.utils import calculate_md5
 
 
-def generate_test_data(root: str, n_samples: int = 3) -> str:
+def generate_test_data(root: str, n_samples: int = 3) -> None:
     """Create test data archive for DeepGlobeLandCover dataset.
 
     Args:
         root: path to store test data
         n_samples: number of samples.
-
-    Returns:
-        md5 hash of created archive
     """
     dtype = np.uint8
     size = 2
@@ -63,9 +59,7 @@ def generate_test_data(root: str, n_samples: int = 3) -> str:
     # Create archive
     shutil.make_archive(folder_path, 'zip', folder_path)
     shutil.rmtree(folder_path)
-    return calculate_md5(f'{folder_path}.zip')
 
 
 if __name__ == '__main__':
-    md5_hash = generate_test_data(os.getcwd(), 3)
-    print(md5_hash + '\n')
+    generate_test_data(os.getcwd(), 3)

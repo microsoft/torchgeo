@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import json
 import os
 import shutil
@@ -68,14 +67,6 @@ def generate_geojson_files(base_path: str, geojson: dict[str, Any]) -> None:
                 json.dump(geojson, src)
 
 
-def compute_md5(file_path: str) -> str:
-    hash_md5 = hashlib.md5()
-    with open(file_path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
 # Generate dummy GeoJSON files for building footprints
 geojson = {
     'type': 'FeatureCollection',
@@ -137,25 +128,3 @@ for split, specs in tarball_specs.items():
             root_dir=os.path.join(dataset_id, split),
             base_dir=subdir,
         )
-
-# Compute and print MD5 checksums for the generated tarballs
-print('MD5 Checksums for Train Dataset:')
-train_tarballs = [
-    'SN1_buildings_train_AOI_1_Rio_3band.tar.gz',
-    'SN1_buildings_train_AOI_1_Rio_8band.tar.gz',
-    'SN1_buildings_train_AOI_1_Rio_geojson_buildings.tar.gz',
-]
-for tarball in train_tarballs:
-    tarball_path = os.path.join(dataset_id, 'train', tarball)
-    if os.path.exists(tarball_path):
-        print(f'{tarball}: {compute_md5(tarball_path)}')
-
-print('\nMD5 Checksums for Test Dataset:')
-test_tarballs = [
-    'SN1_buildings_test_AOI_1_Rio_3band.tar.gz',
-    'SN1_buildings_test_AOI_1_Rio_8band.tar.gz',
-]
-for tarball in test_tarballs:
-    tarball_path = os.path.join(dataset_id, 'test', tarball)
-    if os.path.exists(tarball_path):
-        print(f'{tarball}: {compute_md5(tarball_path)}')

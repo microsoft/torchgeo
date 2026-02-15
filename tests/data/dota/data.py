@@ -1,7 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 import tarfile
@@ -87,14 +86,6 @@ def create_test_data(root: Path) -> None:
                     with tarfile.open(root / tar_name, 'w:gz') as tar:
                         tar.add(src_dir, arcname=f'{split}/{type_}')
 
-            # print md5sums
-            def md5(fname: str) -> str:
-                hash_md5 = hashlib.md5()
-                with open(fname, 'rb') as f:
-                    for chunk in iter(lambda: f.read(4096), b''):
-                        hash_md5.update(chunk)
-                return hash_md5.hexdigest()
-
     print('file_info = {')
     for split in splits:
         print(f"    '{split}': {{")
@@ -104,7 +95,6 @@ def create_test_data(root: Path) -> None:
 
             for version in versions:
                 tar_name = f'dotav{version}_{type_}_{split}.tar.gz'
-                checksum = md5(tar_name)
 
                 # version 1.0 and 1.5 have the same images
                 if version == '1.5' and type_ == 'images':
@@ -116,7 +106,6 @@ def create_test_data(root: Path) -> None:
                 print(
                     f"                'filename': 'dotav{version_filename}_{type_}_{split}.tar.gz',"
                 )
-                print(f"                'md5': '{checksum}',")
                 print('            },')
 
             print('        },')

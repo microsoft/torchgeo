@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -52,8 +51,3 @@ if __name__ == '__main__':
 
     # Compress data
     shutil.make_archive(root, 'zip', '.', root)
-
-    # compute checksum
-    with open(f'{root}.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{root}.zip: {md5}')

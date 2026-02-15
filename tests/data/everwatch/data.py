@@ -5,7 +5,6 @@
 
 
 import csv
-import hashlib
 import os
 import shutil
 
@@ -85,13 +84,8 @@ def main() -> None:
     create_dummy_annotations(train_csv_path, train_image_names)
     create_dummy_annotations(test_csv_path, test_image_names)
 
-    # create zip archive and compute md5sum
+    # create zip archive
     shutil.make_archive(dataset_path, 'zip', '.', dataset_path)
-
-    # Compute checksums
-    with open(dataset_path + '.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{dataset_path}: {md5}')
 
 
 if __name__ == '__main__':

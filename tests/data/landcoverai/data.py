@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 import zipfile
@@ -121,7 +120,3 @@ with zipfile.ZipFile(zipfilename, 'w') as f:
     for file in files:
         f.write(f'output/{file}.jpg', arcname=f'output/{file}.jpg')
         f.write(f'output/{file}_m.png', arcname=f'output/{file}_m.png')
-
-# Compute checksums
-with open(zipfilename, 'rb') as f:
-    print(zipfilename, hashlib.md5(f.read()).hexdigest())

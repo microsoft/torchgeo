@@ -14,7 +14,6 @@ import rasterio
 import shapely.geometry
 from rasterio.crs import CRS
 from rasterio.transform import Affine
-from torchvision.datasets.utils import calculate_md5
 
 suffix_to_key_map = {
     'a_naip': 'naip',
@@ -212,14 +211,11 @@ def write_data(path: str, profile: dict[Any, Any], data_type: Any, vals: Any) ->
         dst.write(data)
 
 
-def generate_test_data(root: str) -> str:
-    """Creates test data archive for the EnviroAtlas dataset and returns its md5 hash.
+def generate_test_data(root: str) -> None:
+    """Creates test data archive for the EnviroAtlas dataset.
 
     Args:
         root (str): Path to store test data
-
-    Returns:
-        str: md5 hash of created archive
     """
     size = (64, 64)
     folder_path = os.path.join(root, 'enviroatlas_lotp')
@@ -294,10 +290,7 @@ def generate_test_data(root: str) -> str:
     archive_path = os.path.join(root, 'enviroatlas_lotp')
     shutil.make_archive(archive_path, 'zip', root_dir=root, base_dir='enviroatlas_lotp')
     shutil.rmtree(folder_path)
-    md5: str = calculate_md5(archive_path + '.zip')
-    return md5
 
 
 if __name__ == '__main__':
-    md5_hash = generate_test_data(os.getcwd())
-    print(md5_hash)
+    generate_test_data(os.getcwd())

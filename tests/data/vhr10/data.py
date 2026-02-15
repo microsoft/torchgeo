@@ -7,7 +7,6 @@ import shutil
 
 import numpy as np
 from PIL import Image
-from torchvision.datasets.utils import calculate_md5
 
 ANNOTATION_FILE = {'images': [], 'annotations': []}
 DIRECTORY = 'NWPU VHR-10 dataset'
@@ -66,12 +65,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
         json.dump(ANNOTATION_FILE, j)
 
     shutil.make_archive(DIRECTORY, 'zip', '.', DIRECTORY)
-    annotations_md5 = calculate_md5(ann_file)
-    archive_md5 = calculate_md5(f'{DIRECTORY}.zip')
-
-    return f'archive md5: {archive_md5}, annotation md5: {annotations_md5}'
 
 
 if __name__ == '__main__':
-    md5 = generate_test_data(os.getcwd(), 5)
-    print(md5)
+    generate_test_data(os.getcwd(), 5)
