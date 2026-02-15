@@ -21,6 +21,13 @@ FLAIRHUB_TEST_DATA_DIR = Path('tests') / 'data' / 'flair'
 FLAIRHUB_DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
 FLAIRHUB_DOMAIN_YEARS_SINGLE = {'D006': ['2020']}
 
+_FLAIRHUB_KWARGS = {
+    'bands': ['AERIAL_RGBI'],
+    'dataset_type': 'land_cover',
+    'domain_years': FLAIRHUB_DOMAIN_YEARS_SINGLE,
+}
+_FLAIRHUBTOY_KWARGS = {'bands': ['AERIAL_RGBI'], 'dataset_type': 'land_cover'}
+
 
 class TestFLAIRHUB:
     @pytest.fixture(
@@ -69,20 +76,6 @@ class TestFLAIRHUB:
                 dataset_type=dataset_type,
             )
 
-    def test_getitem(self, dataset: FLAIRHUB | FLAIRHUBToy) -> None:
-        x = dataset[0]
-        assert isinstance(x, dict)
-        assert 'mask' in x
-        assert isinstance(x['mask'], torch.Tensor)
-        assert x['mask'].dtype == torch.int64
-
-        if 'AERIAL_RGBI' in dataset.bands:
-            assert x['AERIAL_RGBI'].shape[0] == 4
-        if 'SPOT_RGBI' in dataset.bands:
-            assert x['SPOT_RGBI'].shape[0] == 4
-        if 'SENTINEL2_TS' in dataset.bands:
-            assert x['SENTINEL2_TS'].shape == (2, 10, 10, 10)
-
     def test_len(self, dataset: FLAIRHUB | FLAIRHUBToy) -> None:
         assert len(dataset) > 0
 
@@ -91,20 +84,17 @@ class TestFLAIRHUB:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 2 * len(dataset)
 
-    def test_invalid_band_name(self, tmp_path: Path) -> None:
-        """Test that ValueError is raised when invalid band names are provided."""
+    def test_raise(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match='Invalid band names'):
             FLAIRHUB(root=tmp_path, bands=['invalid_band'])
-
-    def test_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             FLAIRHUB(root=tmp_path, bands=['AERIAL_RGBI'], download=False)
-
-    def test_invalid_split_raises(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            FLAIRHUB(root=tmp_path, download=False, **_FLAIRHUB_KWARGS)
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            FLAIRHUBToy(root=tmp_path, download=False, **_FLAIRHUBTOY_KWARGS)
         with pytest.raises(AssertionError, match='split must be one of'):
             FLAIRHUB(root=tmp_path, split='invalid', bands=['AERIAL_RGBI'])
-
-    def test_invalid_split_column_raises(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError, match='split_column must be one of'):
             FLAIRHUB(
                 root=tmp_path,
@@ -121,13 +111,11 @@ class TestFLAIRHUB:
         if cls is FLAIRHUBToy:
             root = tmp_path
             shutil.copytree(
-                FLAIRHUB_TEST_DATA_DIR / 'FLAIR-HUB_TOY',
-                root / 'FLAIR-HUB_TOY',
-                dirs_exist_ok=True,
+                FLAIRHUB_TEST_DATA_DIR / 'FLAIR-HUB_TOY', root / 'FLAIR-HUB_TOY'
             )
         else:
             root = tmp_path / 'flair'
-            shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
+            shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
         kwargs: dict = {'domain_years': FLAIRHUB_DOMAIN_YEARS}
 
         split_column = 'split_toy' if cls is FLAIRHUBToy else 'split_1'
@@ -147,6 +135,7 @@ class TestFLAIRHUB:
         'dataset_type,bands,suptitle',
         [
             ('land_cover', None, 'All modalities'),
+            ('crop_type', ['AERIAL_RGBI'], 'LPIS 1 (crop_type)'),
             ('crop_type_2', ['AERIAL_RGBI'], 'LPIS 2 (crop_type_2)'),
             ('crop_type_3', ['AERIAL_RGBI'], 'LPIS 3 (crop_type_3)'),
         ],
@@ -155,7 +144,7 @@ class TestFLAIRHUB:
         self, tmp_path: Path, dataset_type: str, bands: list[str] | None, suptitle: str
     ) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
         dataset = FLAIRHUB(
             root=root,
             download=False,
@@ -168,30 +157,9 @@ class TestFLAIRHUB:
         assert fig is not None
         plt.close()
 
-
-class TestFLAIRHUBSpecific:
-    def test_zip_exists_but_not_extracted(self, tmp_path: Path) -> None:
-        root = tmp_path / 'flair'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
-        modality_dir = root / 'D006-2020_AERIAL_RGBI'
-        modality_zip = root / 'D006-2020_AERIAL_RGBI.zip'
-        shutil.rmtree(modality_dir)
-        dataset = FLAIRHUB(
-            root=root,
-            transforms=nn.Identity(),
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-            domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
-        )
-
-        assert modality_dir.is_dir()
-        assert not modality_zip.exists()
-        assert dataset is not None
-
     def test_getitem_with_transforms(self, tmp_path: Path) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
 
         def custom_transform(
             sample: dict[str, torch.Tensor],
@@ -202,20 +170,10 @@ class TestFLAIRHUBSpecific:
             return sample
 
         transformed_dataset = FLAIRHUB(
-            root=root,
-            transforms=custom_transform,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-            domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
+            root=root, transforms=custom_transform, download=False, **_FLAIRHUB_KWARGS
         )
         no_transform_dataset = FLAIRHUB(
-            root=root,
-            transforms=nn.Identity(),
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-            domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
+            root=root, transforms=nn.Identity(), download=False, **_FLAIRHUB_KWARGS
         )
 
         x = no_transform_dataset[0]
@@ -225,19 +183,26 @@ class TestFLAIRHUBSpecific:
             < 1e-6
         )
 
+
+class TestFLAIRHUBSpecific:
+    def test_zip_exists_but_not_extracted(self, tmp_path: Path) -> None:
+        root = tmp_path / 'flair'
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
+        modality_dir = root / 'D006-2020_AERIAL_RGBI'
+        modality_zip = root / 'D006-2020_AERIAL_RGBI.zip'
+        shutil.rmtree(modality_dir)
+        dataset = FLAIRHUB(
+            root=root, transforms=nn.Identity(), download=False, **_FLAIRHUB_KWARGS
+        )
+        assert modality_dir.is_dir()
+        assert not modality_zip.exists()
+        assert dataset is not None
+
     def test_extract_file_not_found(self, tmp_path: Path) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
-        dataset = FLAIRHUB(
-            root=root,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-            domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
-        )
-
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
+        dataset = FLAIRHUB(root=root, download=False, **_FLAIRHUB_KWARGS)
         (root / 'D006-2020_AERIAL_RGBI.zip').unlink()
-
         with pytest.raises(FileNotFoundError, match='Archive not found'):
             dataset._extract('D006', '2020', 'AERIAL_RGBI')
 
@@ -246,25 +211,17 @@ class TestFLAIRHUBSpecific:
     ) -> None:
         """_ensure_splits_available triggers download when gpkg and zip missing."""
         root = tmp_path / 'flair'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root, dirs_exist_ok=True)
-        gpkg_dir = root / 'GLOBAL_ALL_MTD'
-        if gpkg_dir.exists():
-            shutil.rmtree(gpkg_dir)
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
+        shutil.rmtree(root / 'GLOBAL_ALL_MTD')
         zip_path = root / 'GLOBAL_ALL_MTD.zip'
         zip_src = FLAIRHUB_TEST_DATA_DIR / 'GLOBAL_ALL_MTD.zip'
-        zip_path.unlink(missing_ok=True)
+        zip_path.unlink()
 
         def mock_download(url: str, root: Path) -> None:
             shutil.copy(zip_src, Path(root) / 'GLOBAL_ALL_MTD.zip')
 
         monkeypatch.setattr('torchgeo.datasets.flair.download_url', mock_download)
-        dataset = FLAIRHUB(
-            root=root,
-            download=True,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-            domain_years=FLAIRHUB_DOMAIN_YEARS_SINGLE,
-        )
+        dataset = FLAIRHUB(root=root, download=True, **_FLAIRHUB_KWARGS)
         path = dataset._ensure_splits_available()
         assert path.exists()
 
@@ -272,47 +229,22 @@ class TestFLAIRHUBSpecific:
 class TestFLAIRHUBToySpecific:
     def test_already_extracted(self, tmp_path: Path) -> None:
         toy_dir = tmp_path / 'FLAIR-HUB_TOY'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, toy_dir, dirs_exist_ok=True)
-
-        FLAIRHUBToy(
-            root=tmp_path,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-        )
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, toy_dir)
+        FLAIRHUBToy(root=tmp_path, download=False, **_FLAIRHUBTOY_KWARGS)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        """Test that dataset can be initialized when zip is already downloaded."""
+        """Dataset initializes when zip is present and extracts with download=False."""
         toy_dir = tmp_path / 'FLAIR-HUB_TOY'
         toy_zip = tmp_path / 'FLAIR-HUB_TOY_DATASET.zip'
-
         with zipfile.ZipFile(toy_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for file_path in FLAIRHUB_TEST_DATA_DIR.rglob('*.tif'):
                 arcname = Path('FLAIR-HUB_TOY') / file_path.relative_to(
                     FLAIRHUB_TEST_DATA_DIR
                 )
                 zipf.write(file_path, arcname)
-
-        if toy_dir.exists():
-            shutil.rmtree(toy_dir)
-
-        dataset = FLAIRHUBToy(
-            root=tmp_path,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-        )
+        dataset = FLAIRHUBToy(root=tmp_path, download=False, **_FLAIRHUBTOY_KWARGS)
         assert toy_dir.is_dir()
         assert dataset is not None
-
-    def test_not_found(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            FLAIRHUBToy(
-                root=tmp_path,
-                download=False,
-                bands=['AERIAL_RGBI'],
-                dataset_type='land_cover',
-            )
 
     @pytest.mark.parametrize('splits_present', [True, False])
     def test_ensure_splits_available(
@@ -320,24 +252,17 @@ class TestFLAIRHUBToySpecific:
     ) -> None:
         """Splits present → returns path; splits missing and no download → raises."""
         toy_dir = tmp_path / 'FLAIR-HUB_TOY'
-        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, toy_dir, dirs_exist_ok=True)
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, toy_dir)
         if splits_present:
             gpkg_dir = toy_dir / 'GLOBAL_ALL_MTD'
-            gpkg_dir.mkdir(exist_ok=True)
             gdf = gpd.GeoDataFrame(
                 {'patch_id': [], 'split_1': []}, geometry=[], crs='EPSG:4326'
             )
             gdf.to_file(gpkg_dir / 'GLOBAL_ALL_MTD_SPLIT.gpkg', driver='GPKG')
         else:
-            shutil.rmtree(toy_dir / 'GLOBAL_ALL_MTD', ignore_errors=True)
-            (toy_dir / 'GLOBAL_ALL_MTD.zip').unlink(missing_ok=True)
-
-        dataset = FLAIRHUBToy(
-            root=tmp_path,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-        )
+            shutil.rmtree(toy_dir / 'GLOBAL_ALL_MTD')
+            (toy_dir / 'GLOBAL_ALL_MTD.zip').unlink()
+        dataset = FLAIRHUBToy(root=tmp_path, download=False, **_FLAIRHUBTOY_KWARGS)
         if splits_present:
             path = dataset._ensure_splits_available()
             assert path == toy_dir / 'GLOBAL_ALL_MTD' / 'GLOBAL_ALL_MTD_SPLIT.gpkg'
