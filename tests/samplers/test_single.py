@@ -16,7 +16,7 @@ from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import GeoDataset, stack_samples
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, Sample
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
@@ -46,8 +46,8 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, index: GeoSlice) -> dict[str, GeoSlice]:
-        return {'index': index}
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        return {'bounds': self._slice_to_tensor(index)}
 
 
 class TestGeoSampler:

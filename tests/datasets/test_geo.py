@@ -33,7 +33,7 @@ from torchgeo.datasets import (
     VectorDataset,
     XarrayDataset,
 )
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, Sample
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -57,7 +57,7 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, index: GeoSlice) -> dict[str, GeoSlice]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]
@@ -68,7 +68,7 @@ class CustomGeoDataset(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        return {'index': index}
+        return {'bounds': self._slice_to_tensor(index)}
 
 
 class CustomRasterDataset(RasterDataset):
@@ -103,8 +103,8 @@ class CustomSentinelDataset(Sentinel2):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> dict[str, int]:
-        return {'index': index}
+    def __getitem__(self, index: int) -> Sample:
+        return {'index': torch.tensor(index)}
 
     def __len__(self) -> int:
         return 2
