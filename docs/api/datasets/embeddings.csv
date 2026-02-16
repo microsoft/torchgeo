@@ -1,0 +1,11 @@
+Dataset,Kind,Spatial Extent,Spatial Resolution,Temporal Extent,Temporal Resolution,Dimensions,Dtype,License
+:ref:`Clay Embeddings`,Patch,Global*,5.12 km,2018--2023*,Snapshot,768,float32,ODC-By-1.0
+:ref:`Major TOM Embeddings`,Patch,Global,2.14--3.56 km,2015--2024*,Snapshot,2048,float32,CC-BY-SA-4.0
+:ref:`Earth Index Embeddings`,Patch,Global,320 m,2024,Snapshot,384,float32,CC-BY-4.0
+:ref:`Copernicus-Embed`,Patch,Global,0.25°,2021,Annual,768,float32,CC-BY-4.0
+LGND :ref:`Clay Embeddings`,Patch,Global,256 m,2024--2025,Snapshot,1024,float32,CC-BY-4.0
+:ref:`EarthEmbeddings`,Patch,Global*,2.24--3.84 km,2015--2024*,Snapshot,256--1152,"float16, float32",CC-BY-SA-4.0
+:ref:`Presto Embeddings`,Pixel,Togo,10 m,2019--2020,Annual,128,uint16,CC-BY-4.0
+:ref:`Tessera Embeddings`,Pixel,Global,10 m,2017--2025*,Annual,128,int8 → float32,CC0-1.0
+:ref:`Google Satellite Embedding`,Pixel,Global,10 m,2017--2025,Annual,64,int8 → float64,CC-BY-4.0
+:ref:`Embedded Seamless Data`,Pixel,Global,30 m,2000--2024,Annual,12,uint16 → float32,CC-BY-4.0

@@ -1,5 +1,5 @@
 Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weights,CLI,GUI,Reprojection,STAC,Time Series
-`TorchGeo`_,PyTorch,"GDAL, h5py, laspy, NetCDF4, OpenCV, pandas, pillow, scipy, xarray","geopandas, R-tree*",Kornia,128,122,✅,❌,✅,❌,🚧
+`TorchGeo`_,PyTorch,"GDAL, h5py, laspy, NetCDF4, OpenCV, pandas, pillow, scipy, xarray","geopandas, R-tree*",Kornia,141,132,✅,❌,✅,❌,🚧
 `OTB`_,"LibSVM, OpenCV, Shark",GDAL,-,-,0,0,✅,✅,✅,❌,❌
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",-,Albumentations,27,13,✅,❌,✅,❌,🚧
 `DeepForest`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,4,❌,❌,❌,❌,❌

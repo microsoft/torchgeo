@@ -45,7 +45,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following:
 
-    * https://beta.source.coop/technoserve/cashews-benin/
+    * https://source.coop/technoserve/cashews-benin/
 
     .. note::
 

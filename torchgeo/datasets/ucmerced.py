@@ -21,7 +21,7 @@ from .utils import Path, Sample, check_integrity, download_url, extract_archive
 class UCMerced(NonGeoClassificationDataset):
     """UC Merced Land Use dataset.
 
-    The `UC Merced Land Use <http://weegee.vision.ucmerced.edu/datasets/landuse.html>`_
+    The `UC Merced Land Use <https://www.kaggle.com/datasets/abdulhasibuddin/uc-merced-land-use-dataset>`_
     dataset is a land use classification dataset of 2.1k 256x256 1ft resolution RGB
     images of urban locations around the U.S. extracted from the USGS National Map Urban
     Area Imagery collection with 21 land use classes (100 images per class).

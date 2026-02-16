@@ -6,6 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -62,6 +63,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -76,9 +78,14 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -88,7 +95,9 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -106,15 +115,16 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        download_url(self.url, self.paths, self.base_filename)
+        paths = cast(Path, self.paths)
+        download_url(self.url, paths, self.base_filename)
 
-        with open(os.path.join(self.paths, self.base_filename)) as f:
+        with open(os.path.join(paths, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content['features']:
             download_url(
                 item['properties']['Mg_px_1_download'],
-                self.paths,
+                paths,
                 item['properties']['tile_id'] + '.tif',
             )
 

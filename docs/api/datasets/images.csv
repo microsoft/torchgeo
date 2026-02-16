@@ -1,0 +1,7 @@
+Dataset,Type,Source,Size (px),Resolution (m),License
+:ref:`Airphen`,Imagery,Airphen,"1,280x960",0.047--0.09,
+:ref:`EnMAP`,Imagery,EnMAP,"1,200x1,200",30,`EnMAP Data License <https://www.enmap.org/data/resources/EnMAP_Data_License.pdf>`_
+:ref:`Landsat`,Imagery,Landsat,"8,900x8,900",30,public domain
+:ref:`NAIP`,Imagery,Aerial,"6,100x7,600",0.3--2,public domain
+:ref:`PRISMA`,Imagery,PRISMA,512x512,5--30,
+:ref:`Sentinel`,Imagery,Sentinel,"10,000x10,000",10,CC-BY-SA-3.0-IGO

@@ -10,13 +10,8 @@ from typing import Any, Literal
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import timm
-import torch
-import torch.nn as nn
 from matplotlib.figure import Figure
-from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
-from torchmetrics import MetricCollection
-from torchmetrics.classification import Accuracy, FBetaScore, JaccardIndex
 from torchvision.models._api import WeightsEnum
 from typing_extensions import deprecated
 
@@ -25,9 +20,10 @@ from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
+from .mixins import ClassificationMixin
 
 
-class ClassificationTask(BaseTask):
+class ClassificationTask(ClassificationMixin, BaseTask):
     """Image classification."""
 
     def __init__(
@@ -38,8 +34,11 @@ class ClassificationTask(BaseTask):
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
         num_labels: int | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
+        labels: list[str] | None = None,
+        pos_weight: Tensor | None = None,
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'ce',
         class_weights: Tensor | Sequence[float] | None = None,
+        ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -56,13 +55,21 @@ class ClassificationTask(BaseTask):
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
-            loss: One of 'ce', 'bce', 'jaccard', or 'focal'.
+            labels: List of class names.
+            pos_weight: A weight of positive examples and used with 'bce' loss.
+            loss: One of 'ce', 'bce', 'jaccard', 'focal', or 'dice'.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
+            ignore_index: Optional integer class index to ignore in the loss and
+                metrics.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to linear probe
                 the classifier head.
+
+        .. versionadded:: 0.9
+           The *labels*, *pos_weight*, and *ignore_index* parameters
+           and dice loss support.
 
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
@@ -109,59 +116,6 @@ class ClassificationTask(BaseTask):
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        # Handle class weights - convert to tensor if needed
-        class_weights = self.hparams['class_weights']
-        if class_weights is not None and not isinstance(class_weights, Tensor):
-            class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
-        match self.hparams['loss']:
-            case 'ce':
-                self.criterion: nn.Module = nn.CrossEntropyLoss(weight=class_weights)
-            case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss()
-            case 'jaccard':
-                self.criterion = JaccardLoss(mode=self.hparams['task'])
-            case 'focal':
-                self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.Accuracy`: The number of
-          true positives divided by the dataset size. Both overall accuracy (OA)
-          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
-          are reported. Higher values are better.
-        * :class:`~torchmetrics.JaccardIndex`: Intersection
-          over union (IoU). Uses 'macro' averaging. Higher valuers are better.
-        * :class:`~torchmetrics.FBetaScore`: F1 score.
-          The harmonic mean of precision and recall. Uses 'micro' averaging.
-          Higher values are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging gives equal weight to each class, and is useful for
-             balanced performance assessment across imbalanced classes.
-        """
-        kwargs = {
-            'task': self.hparams['task'],
-            'num_classes': self.hparams['num_classes'],
-            'num_labels': self.hparams['num_labels'],
-        }
-        metrics = MetricCollection(
-            {
-                'OverallAccuracy': Accuracy(average='micro', **kwargs),
-                'AverageAccuracy': Accuracy(average='macro', **kwargs),
-                'JaccardIndex': JaccardIndex(**kwargs),
-                'F1Score': FBetaScore(beta=1.0, average='micro', **kwargs),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
-
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
@@ -180,7 +134,6 @@ class ClassificationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -205,7 +158,6 @@ class ClassificationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -264,7 +216,6 @@ class ClassificationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()

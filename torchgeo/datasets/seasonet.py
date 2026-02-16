@@ -299,8 +299,8 @@ class SeasoNet(NonGeoDataset):
             index: index to return
 
         Returns:
-            sample at that index containing the image with shape SCxHxW
-            and the mask with shape HxW, where ``S = self.concat_seasons``
+            sample at that index containing the image with shape TxCxHxW
+            and the mask with shape HxW, where ``T = self.concat_seasons``
         """
         image = self._load_image(index)
         mask = self._load_target(index)
@@ -331,7 +331,7 @@ class SeasoNet(NonGeoDataset):
         paths = self.files.iloc[index]
         if self.concat_seasons > 1:
             paths = random.sample(paths, self.concat_seasons)
-        tensor = torch.empty(self.concat_seasons * self.channels, *self.image_size)
+        tensor = torch.empty(self.concat_seasons, self.channels, *self.image_size)
         for img_idx, path in enumerate(paths):
             bnd_idx = 0
             for band in self.bands:
@@ -342,8 +342,7 @@ class SeasoNet(NonGeoDataset):
                         resampling=Resampling.bilinear,
                     )
                 image = torch.from_numpy(array).float()
-                c = img_idx * self.channels + bnd_idx
-                tensor[c : c + image.shape[0]] = image
+                tensor[img_idx, bnd_idx : bnd_idx + image.shape[0]] = image
                 bnd_idx += image.shape[0]
         return tensor
 
@@ -440,30 +439,31 @@ class SeasoNet(NonGeoDataset):
             if b == '10m_RGB':
                 break
             start += self.band_nums[b]
-        rgb_indices = [start + s * self.channels for s in range(self.concat_seasons)]
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4.5, 5))
         fig.subplots_adjust(wspace=0.05)
-        for ax, index in enumerate(rgb_indices):
-            image = images[index : index + 3].permute(1, 2, 0).numpy()
+        for t in range(self.concat_seasons):
+            image = images[t, start : start + 3].permute(1, 2, 0).numpy()
             image = percentile_normalization(image)
-            axs[ax].imshow(image)
-            axs[ax].axis('off')
+            axs[t].imshow(image)
+            axs[t].axis('off')
             if show_titles:
-                axs[ax].set_title(f'Image {ax + 1}')
+                axs[t].set_title(f'Image {t + 1}')
 
-        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none')
-        axs[ax + 1].axis('off')
+        axs[self.concat_seasons].imshow(
+            mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none'
+        )
+        axs[self.concat_seasons].axis('off')
         if show_titles:
-            axs[ax + 1].set_title('Mask')
+            axs[self.concat_seasons].set_title('Mask')
 
         if show_predictions:
-            axs[ax + 2].imshow(
+            axs[self.concat_seasons + 1].imshow(
                 prediction, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none'
             )
-            axs[ax + 2].axis('off')
+            axs[self.concat_seasons + 1].axis('off')
             if show_titles:
-                axs[ax + 2].set_title('Prediction')
+                axs[self.concat_seasons + 1].set_title('Prediction')
 
         if show_legend:
             lgd = np.unique(mask)

@@ -84,7 +84,7 @@ class TestSeasoNet:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['image'].shape == (dataset.concat_seasons * dataset.channels, 120, 120)
+        assert x['image'].shape == (dataset.concat_seasons, dataset.channels, 120, 120)
         assert x['mask'].shape == (120, 120)
 
     def test_len(self, dataset: SeasoNet, request: SubRequest) -> None:

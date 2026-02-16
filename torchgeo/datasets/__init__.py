@@ -62,6 +62,7 @@ from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
 from .dota import DOTA
+from .earth_embeddings import EarthEmbeddings
 from .earth_index import EarthIndexEmbeddings
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
@@ -276,6 +277,7 @@ __all__ = (
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EarthEmbeddings',
     'EarthIndexEmbeddings',
     'EmbeddedSeamlessData',
     'EnMAP',

@@ -102,7 +102,7 @@ elif version_match == 'stable':
 # documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
     'collapse_navigation': False,
-    'show_nav_level': 2,
+    'show_nav_level': 1,
     'show_toc_level': 2,
     'navigation_depth': 4,
     'navbar_align': 'left',

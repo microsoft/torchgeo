@@ -6,7 +6,7 @@
 import csv
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -150,13 +150,14 @@ class EuroCrops(VectorDataset):
             return True
 
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
 
-        filepath = os.path.join(self.paths, self.hcat_fname)
+        filepath = os.path.join(paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
             return False
 
         for fname, md5 in self.zenodo_files:
-            filepath = os.path.join(self.paths, fname)
+            filepath = os.path.join(paths, fname)
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -167,14 +168,15 @@ class EuroCrops(VectorDataset):
             print('Files already downloaded and verified')
             return
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         download_url(
             self.base_url + self.hcat_fname,
-            self.paths,
+            paths,
             md5=self.hcat_md5 if self.checksum else None,
         )
         for fname, md5 in self.zenodo_files:
             download_and_extract_archive(
-                self.base_url + fname, self.paths, md5=md5 if self.checksum else None
+                self.base_url + fname, paths, md5=md5 if self.checksum else None
             )
 
     def _load_class_map(self, classes: list[str] | None) -> None:
@@ -189,8 +191,9 @@ class EuroCrops(VectorDataset):
         """
         if not classes:
             assert isinstance(self.paths, str | os.PathLike)
+            paths = cast(Path, self.paths)
             classes = []
-            filepath = os.path.join(self.paths, self.hcat_fname)
+            filepath = os.path.join(paths, self.hcat_fname)
             with open(filepath) as f:
                 reader = csv.DictReader(f)
                 for row in reader:

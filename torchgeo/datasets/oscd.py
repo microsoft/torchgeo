@@ -364,13 +364,13 @@ class OSCD100(OSCD):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
-        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
-        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
-        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/ecf6fcf15e6f20219324f9009f7509aa866b51d5/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/cac594329ee7f1a7f7781b1fe9c3d57befa50044/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/cac594329ee7f1a7f7781b1fe9c3d57befa50044/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/cac594329ee7f1a7f7781b1fe9c3d57befa50044/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/cac594329ee7f1a7f7781b1fe9c3d57befa50044/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
     md5s: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': '2e8792a3da012f7eb0440b557eef4c11',
+        'Onera Satellite Change Detection dataset - Images.zip': 'e6c3e5d9ca6003c39fcf7991f5d05f14',
         'Onera Satellite Change Detection dataset - Train Labels.zip': '4fdc210a90e2c881a553fa9c72c7d6ce',
         'Onera Satellite Change Detection dataset - Val Labels.zip': '99a38997829cc81a18b04d4afb3493ba',
         'Onera Satellite Change Detection dataset - Test Labels.zip': '5e43ae36cfe0cc83ddcbd4fcb03ace60',

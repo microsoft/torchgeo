@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -150,6 +150,7 @@ class GlobBiomass(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new GlobBiomass instance.
 
@@ -165,10 +166,15 @@ class GlobBiomass(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: If *measurement* is not valid.
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -183,7 +189,9 @@ class GlobBiomass(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -208,12 +216,12 @@ class GlobBiomass(RasterDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        mask = self._merge_files(df.filepath, index)
+        mask = self._merge_or_stack(df.filepath, index)
 
         std_error_paths = df.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
-        std_err_mask = self._merge_files(std_error_paths, index)
+        std_err_mask = self._merge_or_stack(std_error_paths, index)
 
-        mask = torch.cat((mask, std_err_mask), dim=0)
+        mask = torch.cat((mask, std_err_mask), dim=-3)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
@@ -235,7 +243,8 @@ class GlobBiomass(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)

@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -33,7 +33,7 @@ class Chesapeake(RasterDataset, ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay Land Use and Land Cover (LULC) Database 2022 Edition
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    <https://www.chesapeakeconservancy.org/projects/cbp-land-use-land-cover-data-project>`_
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time
@@ -132,6 +132,7 @@ class Chesapeake(RasterDataset, ABC):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
 
@@ -147,9 +148,14 @@ class Chesapeake(RasterDataset, ABC):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -163,7 +169,9 @@ class Chesapeake(RasterDataset, ABC):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -173,7 +181,8 @@ class Chesapeake(RasterDataset, ABC):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
 
@@ -188,14 +197,16 @@ class Chesapeake(RasterDataset, ABC):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year, md5 in self.md5s.items():
             url = self.url.format(state=self.state, year=year)
-            download_url(url, self.paths, md5=md5 if self.checksum else None)
+            download_url(url, paths, md5=md5 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        for file in glob.iglob(os.path.join(paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
     def plot(

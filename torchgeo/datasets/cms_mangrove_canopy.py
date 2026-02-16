@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -19,7 +20,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     """CMS Global Mangrove Canopy dataset.
 
     The `CMS Global Mangrove Canopy dataset
-    <https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1665>`_
+    <https://www.earthdata.nasa.gov/data/catalog/ornl-cloud-cms-global-map-mangrove-canopy-1665-1.3>`_
     consists of a single band map at 30m resolution of either aboveground biomass (agb),
     basal area weighted height (hba95), or maximum canopy height (hmax95).
 
@@ -176,6 +177,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -192,10 +194,15 @@ class CMSGlobalMangroveCanopy(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: if country or measurement arg are not str or invalid
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -219,7 +226,9 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -229,7 +238,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError('Dataset found, but corrupted.')
@@ -241,7 +251,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         extract_archive(pathname)
 
     def plot(

@@ -224,6 +224,7 @@ addopts = "-m 'not slow' --disable-socket"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control
+    'ignore:The global interpreter lock \(GIL\) has been enabled to load module:RuntimeWarning',
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
     # https://github.com/pytorch/vision/pull/5898

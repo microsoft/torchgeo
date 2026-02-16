@@ -39,7 +39,7 @@ class DigitalTyphoon(NonGeoDataset):
     covers over four decades.
 
     See `the Digital Typhoon website
-    <http://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
     for more information about the dataset.
 
     Dataset features:
@@ -410,7 +410,7 @@ class DigitalTyphoon(NonGeoDataset):
             with tarfile.open(
                 os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             ) as tar:
-                tar.extractall(path=self.root)
+                tar.extractall(path=self.root, filter='data')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

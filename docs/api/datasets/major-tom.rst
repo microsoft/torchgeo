@@ -1,7 +1,7 @@
-.. _Major TOM:
+.. _Major TOM Embeddings:
 
-Major TOM
-=========
+Major TOM Embeddings
+====================
 
 .. currentmodule:: torchgeo.datasets
 .. autoclass:: MajorTOMEmbeddings
