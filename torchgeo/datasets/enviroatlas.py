@@ -332,12 +332,12 @@ class EnviroAtlas(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
-            'image': [],
-            'mask': [],
             'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
+        images = []
+        masks = []
         if df.empty:
             raise IndexError(
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
@@ -376,23 +376,20 @@ class EnviroAtlas(GeoDataset):
                     'waterbodies',
                     'water',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in ['prior', 'prior_no_osm_no_buildings']:
                     if self.prior_as_input:
-                        sample['image'].append(data)
+                        images.append(data)
                     else:
-                        sample['mask'].append(data)
+                        masks.append(data)
                 elif layer in ['lc']:
                     data = self.raw_enviroatlas_to_idx_map[data]
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
             raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image'])
-        sample['mask'] = torch.from_numpy(sample['mask'])
+        sample['image'] = torch.from_numpy(np.concatenate(images))
+        sample['mask'] = torch.from_numpy(np.concatenate(masks))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
