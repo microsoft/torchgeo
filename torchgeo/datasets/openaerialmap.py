@@ -197,7 +197,7 @@ class OpenAerialMap(RasterDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS = CRS.from_epsg(4326),
+        crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bbox: tuple[float, float, float, float] | None = None,
         zoom: int = 19,
@@ -251,6 +251,9 @@ class OpenAerialMap(RasterDataset):
                 raise ValueError(f'zoom must be between 15 and 23, got {zoom}')
             self._download()
             print('Download complete.')
+
+        if crs is None:
+            crs = CRS.from_epsg(4326)
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
