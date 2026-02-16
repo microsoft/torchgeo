@@ -19,7 +19,7 @@ import tarfile
 import urllib.request
 import warnings
 import zipfile
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
@@ -43,7 +43,7 @@ GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
 Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
-Sample: TypeAlias = dict[str, Any]  # noqa: UP040
+Sample: TypeAlias = dict[str, Tensor]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
@@ -510,9 +510,7 @@ def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(
-    samples: Iterable[Mapping[Any, Any]],
-) -> dict[Any, list[Any]]:
+def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Tensor]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -523,7 +521,7 @@ def _list_dict_to_dict_list(
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, list[Any]] = dict()
+    collated = {}
     for sample in samples:
         for key, value in sample.items():
             if key not in collated:
@@ -532,9 +530,7 @@ def _list_dict_to_dict_list(
     return collated
 
 
-def _dict_list_to_list_dict(
-    sample: Mapping[Any, Sequence[Any]],
-) -> list[dict[Any, Any]]:
+def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Tensor]]) -> list[Sample]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -545,9 +541,7 @@ def _dict_list_to_list_dict(
 
     .. versionadded:: 0.2
     """
-    uncollated: list[dict[Any, Any]] = [
-        {} for _ in range(max(map(len, sample.values())))
-    ]
+    uncollated = [{} for _ in range(max(map(len, sample.values())))]
     for key, values in sample.items():
         for i, value in enumerate(values):
             uncollated[i][key] = value
@@ -555,8 +549,8 @@ def _dict_list_to_list_dict(
 
 
 def pad_across_batches(
-    batch: list[dict[str, Tensor]], padding_length: int, padding_value: float = 0.0
-) -> dict[str, Any]:
+    batch: list[Sample], padding_length: int, padding_value: float = 0.0
+) -> Sample:
     """Custom time-series collate fn to handle variable length sequences.
 
     Args:
@@ -565,11 +559,11 @@ def pad_across_batches(
         padding_value: value for padded elements
 
     Returns:
-        batch dict output
+        collated batch dict
 
     .. versionadded:: 0.8
     """
-    output: dict[str, Any] = {}
+    collated = {}
     images = [sample['image'] for sample in batch]
     feature_shape = images[0].shape[1:]
 
@@ -592,18 +586,18 @@ def pad_across_batches(
     if truncated > 0:
         warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
 
-    output['image'] = padded_images
+    collated['image'] = padded_images
     if 'mask' in batch[0]:
-        output['mask'] = torch.stack([sample['mask'] for sample in batch])
+        collated['mask'] = torch.stack([sample['mask'] for sample in batch])
     if 'bbox_xyxy' in batch[0]:
-        output['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
+        collated['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
     if 'label' in batch[0]:
-        output['label'] = torch.stack([sample['label'] for sample in batch])
+        collated['label'] = torch.stack([sample['label'] for sample in batch])
 
-    return output
+    return collated
 
 
-def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def stack_samples(samples: Iterable[Sample]) -> Sample:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -618,7 +612,7 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     .. versionadded:: 0.2
     """
     uncollated = _list_dict_to_dict_list(samples)
-    collated: dict[Any, Any] = {}
+    collated = {}
     for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
@@ -627,7 +621,7 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def concat_samples(samples: Iterable[Sample]) -> Sample:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -650,7 +644,7 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def merge_samples(samples: Iterable[Sample]) -> Sample:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -663,19 +657,14 @@ def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = {}
+    collated = {}
     for sample in samples:
         for key, value in sample.items():
-            if key in collated and isinstance(value, Tensor):
-                # Take the maximum so that nodata values (zeros) get replaced
-                # by data values whenever possible
-                collated[key] = torch.maximum(collated[key], value)
-            else:
-                collated[key] = value
+            collated[key] = torch.maximum(collated[key], value)
     return collated
 
 
-def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
+def unbind_samples(sample: Sample) -> list[Sample]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
@@ -689,10 +678,10 @@ def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
 
     .. versionadded:: 0.2
     """
+    uncollated = {}
     for key, values in sample.items():
-        if isinstance(values, Tensor):
-            sample[key] = torch.unbind(values)
-    return _dict_list_to_list_dict(sample)
+        uncollated[key] = torch.unbind(values)
+    return _dict_list_to_list_dict(uncollated)
 
 
 def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
