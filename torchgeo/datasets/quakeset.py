@@ -270,7 +270,7 @@ class QuakeSet(NonGeoDataset):
         if show_titles:
             title = f'Label: {label_class}'
             if 'magnitude' in sample:
-                magnitude = cast(float, sample['magnitude'].item())
+                magnitude = sample['magnitude'].item()
                 title += f' | Magnitude: {magnitude:.2f}'
             if showing_predictions:
                 title += f'\nPrediction: {prediction_class}'
