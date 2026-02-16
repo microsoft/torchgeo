@@ -198,9 +198,9 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 
-        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
-        self.model.backbone.body.conv1.weight = Parameter(weight)
-        self.model.backbone.body.conv1.in_channels = in_channels
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[invalid-assignment]
+        self.model.backbone.body.conv1.weight = Parameter(weight)  # type: ignore[invalid-assignment]
+        self.model.backbone.body.conv1.in_channels = in_channels  # type: ignore[invalid-assignment]
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.

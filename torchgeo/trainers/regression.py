@@ -106,7 +106,7 @@ class RegressionTask(BaseTask):
         if self.hparams['freeze_backbone']:
             for param in self.model.parameters():
                 param.requires_grad = False
-            for param in self.model.get_classifier().parameters():
+            for param in self.model.get_classifier().parameters():  # type: ignore[call-non-callable]
                 param.requires_grad = True
 
     def configure_losses(self) -> None:
