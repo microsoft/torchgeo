@@ -224,7 +224,8 @@ class GeoDataModule(BaseDataModule):
             self.train_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split='train', **self.kwargs
+                    split='train',  # type: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
@@ -234,7 +235,8 @@ class GeoDataModule(BaseDataModule):
             self.val_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split='val', **self.kwargs
+                    split='val',  # type: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.val_sampler = GridGeoSampler(
@@ -244,7 +246,8 @@ class GeoDataModule(BaseDataModule):
             self.test_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split='test', **self.kwargs
+                    split='test',  # type: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.test_sampler = GridGeoSampler(
@@ -376,15 +379,18 @@ class NonGeoDataModule(BaseDataModule):
         """
         if stage in ['fit']:
             self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='train', **self.kwargs
+                split='train',  # type: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='val', **self.kwargs
+                split='val',  # type: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['test']:
             self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='test', **self.kwargs
+                split='test',  # type: ignore[unknown-argument]
+                **self.kwargs,
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
