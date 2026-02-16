@@ -30,7 +30,6 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 :ref:`NCCM`,Masks,Sentinel-2,"CC-BY-4.0",-,10
 :ref:`NLCD`,Masks,Landsat,"public domain",-,30
 :ref:`Open Buildings`,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
-:ref:`OpenAerialMap`,Imagery,OpenAerialMap,CC-BY-4.0,-,0.03--50
 :ref:`OpenStreetMap`,Geometries,OpenStreetMap,ODbL-1.0,-,-
 :ref:`Presto Embeddings`,Embedding,"Sentinel 1/2, ERA5, SRTM",CC-BY-4.0,"4,096x4,096",10
 :ref:`PRISMA`,Imagery,PRISMA,-,512x512,5--30
