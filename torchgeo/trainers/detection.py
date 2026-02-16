@@ -4,7 +4,6 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -24,6 +23,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -222,7 +222,7 @@ class ObjectDetectionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss.
 
@@ -247,7 +247,7 @@ class ObjectDetectionTask(BaseTask):
         return train_loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation metrics.
 
@@ -309,7 +309,7 @@ class ObjectDetectionTask(BaseTask):
                 )  # type: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
         Args:
@@ -333,7 +333,7 @@ class ObjectDetectionTask(BaseTask):
         self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> list[dict[str, Tensor]]:
         """Compute the predicted bounding boxes.
 
