@@ -321,7 +321,7 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
-    ) -> dict[str, Tensor]:
+    ) -> dict[str, Tensor | None]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -347,6 +347,6 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
 
         return {
             'probabilities': y_hat,
-            'bounds': batch['bounds'],
-            'transform': batch['transform'],
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
         }
