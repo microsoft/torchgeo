@@ -3,187 +3,94 @@ torchgeo.datasets
 
 .. module:: torchgeo.datasets
 
-In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Base Classes`.
-
-.. _Geospatial Datasets:
-
-Geospatial Datasets
--------------------
-
-:class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
-
-.. csv-table::
-   :widths: 30 15 20 36 20 15
-   :header-rows: 1
-   :align: center
-   :file: datasets/geo_datasets.csv
-
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 0
    :hidden:
+   :glob:
 
-   datasets/aboveground-woody-biomass
-   datasets/agrifieldnet
-   datasets/airphen
-   datasets/aster-global-dem
-   datasets/canadian-building-footprints
-   datasets/chesapeake
-   datasets/copernicus-embed
-   datasets/global-building-map
-   datasets/global-mangrove-distribution
-   datasets/google-satellite-embedding
-   datasets/cropland-data-layer
-   datasets/eddmaps
-   datasets/embedded-seamless-data
-   datasets/enmap
-   datasets/enviroatlas
-   datasets/esri2020
-   datasets/eu-dem
-   datasets/eurocrops
-   datasets/gbif
-   datasets/globbiomass
-   datasets/inaturalist
-   datasets/io-bench
-   datasets/l7-irish
-   datasets/l8-biome
-   datasets/landcover-ai-geo
-   datasets/landsat
-   datasets/mmflood
-   datasets/naip
-   datasets/nccm
-   datasets/nlcd
-   datasets/open-buildings
-   datasets/openaerialmap
-   datasets/openstreetmap
-   datasets/presto-embeddings
-   datasets/prisma
-   datasets/sentinel
-   datasets/south-africa-crop-type
-   datasets/south-america-soybean
-   datasets/tessera-embeddings
+   datasets/*
 
-.. _Non-geospatial Datasets:
+TorchGeo defines several kinds of datasets for geospatial data.
 
-Non-geospatial Datasets
------------------------
+Benchmark Datasets
+------------------
 
-:class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
+Curated benchmark datasets allow for model training and evaluation. They typically provide both input images and output labels, and target a variety of downstream applications.
 
 .. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
-   :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: datasets/non_geo_datasets.csv
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   datasets/advance
-   datasets/benin-cashew-plantations
-   datasets/bigearthnet
-   datasets/biomassters
-   datasets/bright
-   datasets/cabuar
-   datasets/caffe
-   datasets/chabud
-   datasets/clay-embeddings
-   datasets/cloud-cover-detection
-   datasets/copernicus-pretrain
-   datasets/cowc
-   datasets/cropharvest
-   datasets/kenya-crop-type
-   datasets/deepglobe-land-cover
-   datasets/dfc2022
-   datasets/dior
-   datasets/digital-typhoon
-   datasets/dl4gam
-   datasets/dota
-   datasets/earth-index-embeddings
-   datasets/etci2021
-   datasets/eurosat
-   datasets/everwatch
-   datasets/fair1m
-   datasets/fields-of-the-world
-   datasets/firerisk
-   datasets/forest-damage
-   datasets/geonrw
-   datasets/gid15
-   datasets/hyspecnet11k
-   datasets/idtrees
-   datasets/inria-aerial-image-labeling
-   datasets/landcover-ai
-   datasets/levircd
-   datasets/levircd-plus
-   datasets/loveda
-   datasets/major-tom
-   datasets/mapinwild
-   datasets/mdas
-   datasets/million-aid
-   datasets/mmearth
-   datasets/nasa-marine-debris
-   datasets/oscd
-   datasets/pastis
-   datasets/patternnet
-   datasets/potsdam
-   datasets/quakeset
-   datasets/reforestree
-   datasets/resisc45
-   datasets/rwanda-field-boundary
-   datasets/satlas-pretrain
-   datasets/seasonal-contrast
-   datasets/seasonet
-   datasets/sen12ms
-   datasets/skippd
-   datasets/skyscript
-   datasets/so2sat
-   datasets/solar-plants-brazil
-   datasets/soda
-   datasets/ssl4eo
-   datasets/ssl4eo-l-benchmark
-   datasets/substation
-   datasets/sustainbench-crop-yield
-   datasets/treesatai
-   datasets/tropical-cyclone
-   datasets/uc-merced
-   datasets/usavars
-   datasets/vaihingen
-   datasets/vhr10
-   datasets/western-usa-live-fuel-moisture
-   datasets/xbd
-   datasets/zuericrop
+   :file: datasets/benchmark.csv
 
 Copernicus-Bench
-----------------
+^^^^^^^^^^^^^^^^
 
 Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream tasks hierarchically organized across preprocessing (e.g., cloud removal), base applications (e.g., land cover classification), and specialized applications (e.g., air quality estimation). This benchmark enables systematic assessment of foundation model performances across various Sentinel missions on different levels of practical applications.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, T = time series, CD = change detection, E = embedding
-   :widths: 5 15 7 15 20 12 11 12 15 13
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
    :header-rows: 1
    :align: center
    :file: datasets/copernicus_bench.csv
 
-.. toctree::
-   :maxdepth: 1
-
-   datasets/copernicus-bench
-
 SpaceNet
---------
+^^^^^^^^
 
 The `SpaceNet Dataset <https://spacenet.ai/datasets/>`_ is hosted as an Amazon Web Services (AWS) `Public Dataset <https://registry.opendata.aws/spacenet/>`_. It contains ~67,000 square km of very high-resolution imagery, >11M building footprints, and ~20,000 km of road labels to ensure that there is adequate open source data available for geospatial machine learning research. SpaceNet Challenge Dataset's have a combination of very high resolution satellite imagery and high quality corresponding labels for foundational mapping features such as building footprints or road networks.
 
-.. csv-table:: I = instance segmentation
-   :widths: 15 7 15 20 12 11 12 15 13
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
    :header-rows: 1
    :align: center
    :file: datasets/spacenet.csv
 
-.. toctree::
-   :maxdepth: 1
+Pre-Training Datasets
+---------------------
 
-   datasets/spacenet
+Pre-training datasets are designed for foundation model development, providing millions of input images with global distributions. These datasets may come with output labels for supervised pre-training, or come without output labels for self-supervised pre-training.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :header-rows: 1
+   :align: center
+   :file: datasets/pretraining.csv
+
+Embeddings Datasets
+-------------------
+
+Embeddings are low-dimensional representations generated by foundation models. There are both patch-based embeddings designed for similarity search and pixel-based embeddings designed for applications like land cover mapping.
+
+.. csv-table:: Global coverage only implies land surfaces. Temporal resolution is divided into "snapshot" for embeddings generated from a single mosaic and "annual" for embeddings generated from annual time series data. \*Product has sparse spatial or temporal coverage.
+   :header-rows: 1
+   :align: center
+   :file: datasets/embeddings.csv
+
+Image Sources
+-------------
+
+Uncurated raster imagery can be used within TorchGeo, either for inference using a pre-trained model, or for training by combination with mask labels.
+
+.. csv-table::
+   :header-rows: 1
+   :align: center
+   :file: datasets/images.csv
+
+Mask Labels
+-----------
+
+Uncurated raster and vector masks can be used within TorchGeo, typically in combination with an image source for model training.
+
+.. csv-table::
+   :header-rows: 1
+   :align: center
+   :file: datasets/masks.csv
+
+Toy Datasets
+------------
+
+Toy datasets are tiny, ~100 image datasets designed for tutorials, demos, or few-shot learning.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :header-rows: 1
+   :align: center
+   :file: datasets/toys.csv
 
 .. _Base Classes:
 
