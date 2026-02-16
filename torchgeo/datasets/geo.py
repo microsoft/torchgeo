@@ -256,7 +256,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        _crs: CRS = self.index.crs
+        _crs = cast(CRS, self.index.crs)
         return _crs
 
     @crs.setter
@@ -1240,7 +1240,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[Path], Any] | None = pil_loader,
+        loader: Callable[[str], Any] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1257,7 +1257,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,
@@ -1390,8 +1390,8 @@ class IntersectionDataset(GeoDataset):
 
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
-            datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
+            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
@@ -1541,7 +1541,7 @@ class UnionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])
+        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

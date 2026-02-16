@@ -781,7 +781,7 @@ class BigEarthNetV2(NonGeoDataset):
         """
         row = self.metadata_df.loc[index]
         id_field = 's1_name' if sensor == 's1' else 'patch_id'
-        patch_id = row[id_field]
+        patch_id = str(row[id_field])
         if sensor == 's2':
             patch_dir = '_'.join(patch_id.split('_')[0:-2])
         else:

@@ -81,7 +81,7 @@ def random_bbox_assignment(
     new_datasets = []
     for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = dataset.index.iloc[indices[offset - length : offset]]
+        ds.index = dataset.index.iloc[indices[offset - length : offset]]  # type: ignore[invalid-argument-type]
         new_datasets.append(ds)
 
     return new_datasets
@@ -166,7 +166,7 @@ def random_bbox_splitting(
                             new_geometry, geometry_remaining = geom1, geom2
                         else:
                             geometry_remaining, new_geometry = geom1, geom2
-            new_datasets[j].index.iloc[i, i_geom] = new_geometry
+            new_datasets[j].index.iloc[i, i_geom] = new_geometry  # type: ignore[invalid-assignment]
 
             fraction_remaining -= fraction
             horizontal = not horizontal

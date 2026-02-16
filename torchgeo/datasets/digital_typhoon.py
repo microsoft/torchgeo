@@ -239,7 +239,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         self.sample_sequences: list[_SampleSequenceDict] = [
             item
-            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]
+            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]  # type: ignore[no-matching-overload]
             .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
