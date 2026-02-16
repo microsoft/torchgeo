@@ -524,12 +524,12 @@ class ChesapeakeCVPR(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
-            'image': [],
-            'mask': [],
             'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
+        images = []
+        masks = []
         if df.empty:
             raise IndexError(
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
@@ -564,22 +564,19 @@ class ChesapeakeCVPR(GeoDataset):
                     'landsat-leaf-on',
                     'landsat-leaf-off',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in [
                     'lc',
                     'nlcd',
                     'buildings',
                     'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
             raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
+        sample['image'] = torch.from_numpy(np.concatenate(images))
+        sample['mask'] = torch.from_numpy(np.concatenate(masks))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
