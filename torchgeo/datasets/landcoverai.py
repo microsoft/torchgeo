@@ -8,7 +8,7 @@ import glob
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -319,7 +319,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

@@ -6,6 +6,7 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import pytest
@@ -64,25 +65,15 @@ class TestSSL4EOLBenchmark:
         assert len(dataset) == 3
 
     @pytest.mark.parametrize('product,base_class', [('nlcd', NLCD), ('cdl', CDL)])
-    def test_classes(self, product: str, base_class: RasterDataset) -> None:
+    def test_classes(
+        self, product: Literal['nlcd', 'cdl'], base_class: RasterDataset
+    ) -> None:
         root = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat')
         classes = list(base_class.cmap.keys())[:5]
         ds = SSL4EOLBenchmark(root, product=product, classes=classes)
         sample = ds[0]
         mask = sample['mask']
         assert mask.max() < len(classes)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(split='foo')
-
-    def test_invalid_sensor(self) -> None:
-        with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(sensor='foo')
-
-    def test_invalid_product(self) -> None:
-        with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(product='foo')
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):

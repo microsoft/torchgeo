@@ -60,10 +60,6 @@ class TestSEN12MS:
         with pytest.raises(IndexError):
             dataset[8]
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SEN12MS(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SEN12MS(tmp_path, checksum=True)

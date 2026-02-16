@@ -53,10 +53,6 @@ class TestPotsdam2D:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             Potsdam2D(root=tmp_path, checksum=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            Potsdam2D(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             Potsdam2D(tmp_path)

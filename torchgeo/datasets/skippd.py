@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -80,8 +80,8 @@ class SKIPPD(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'trainval',
-        task: str = 'nowcast',
+        split: Literal['trainval', 'test'] = 'trainval',
+        task: Literal['nowcast', 'forecast'] = 'nowcast',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

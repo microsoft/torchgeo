@@ -6,6 +6,7 @@
 import os
 from collections.abc import Callable
 from functools import lru_cache
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,7 +54,7 @@ class TropicalCyclone(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:

@@ -59,10 +59,6 @@ class TestVHR10:
     def test_already_downloaded(self, dataset: VHR10) -> None:
         VHR10(root=dataset.root, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            VHR10(split='train')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             VHR10(tmp_path)

@@ -64,10 +64,6 @@ class TestFieldsOfTheWorld:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             FieldsOfTheWorld(tmp_path)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            FieldsOfTheWorld(split='foo')
-
     def test_plot(self, dataset: FieldsOfTheWorld) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')

@@ -135,10 +135,6 @@ class TestSeasoNet:
         with pytest.raises(AssertionError):
             SeasoNet(grids=[42])
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SeasoNet(split='banana')
-
     def test_invalid_concat(self) -> None:
         with pytest.raises(AssertionError):
             SeasoNet(seasons={'Spring', 'Winter', 'Snow'}, concat_seasons=4)

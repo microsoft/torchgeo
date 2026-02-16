@@ -5,6 +5,7 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import pytest
@@ -37,7 +38,9 @@ class TestSKIPPD:
         SKIPPD(root=dataset.root, download=True)
 
     @pytest.mark.parametrize('task', ['nowcast', 'forecast'])
-    def test_already_downloaded(self, tmp_path: Path, task: str) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, task: Literal['nowcast', 'forecast']
+    ) -> None:
         pathname = os.path.join(
             'tests', 'data', 'skippd', f'2017_2019_images_pv_processed_{task}.zip'
         )
@@ -59,10 +62,6 @@ class TestSKIPPD:
 
     def test_len(self, dataset: SKIPPD) -> None:
         assert len(dataset) == 3
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SKIPPD(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

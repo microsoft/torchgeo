@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -187,7 +187,7 @@ class VHR10(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'positive',
+        split: Literal['positive', 'negative'] = 'positive',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

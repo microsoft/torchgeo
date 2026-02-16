@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,8 +88,8 @@ class USAVars(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        labels: Sequence[str] = ALL_LABELS,
+        split: Literal['train', 'val', 'test'] = 'train',
+        labels: Sequence[Literal['treecover', 'elevation', 'population']] = ALL_LABELS,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

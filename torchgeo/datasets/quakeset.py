@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,7 +71,7 @@ class QuakeSet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

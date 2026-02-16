@@ -59,10 +59,6 @@ class TestMapInWild:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 2
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            MapInWild(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             MapInWild(root=tmp_path)

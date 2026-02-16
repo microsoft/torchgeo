@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Sequence
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,8 +62,8 @@ class BioMassters(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        sensors: Sequence[str] = ['S1', 'S2'],
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.

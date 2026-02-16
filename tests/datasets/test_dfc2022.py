@@ -57,10 +57,6 @@ class TestDFC2022:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             DFC2022(root=tmp_path, checksum=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            DFC2022(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             DFC2022(tmp_path)

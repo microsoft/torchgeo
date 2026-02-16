@@ -6,7 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import rasterio as rio
 import torch
@@ -126,8 +126,8 @@ class TreeSatAI(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        sensors: Sequence[str] = all_sensors,
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['aerial', 's1', 's2']] = all_sensors,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

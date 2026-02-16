@@ -112,10 +112,6 @@ class TestLandCoverAI:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LandCoverAI(tmp_path)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LandCoverAI(split='foo')
-
     def test_plot(self, dataset: LandCoverAI) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
