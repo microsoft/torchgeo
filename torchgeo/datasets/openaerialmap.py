@@ -182,6 +182,7 @@ class OpenAerialMap(RasterDataset):
     If you use this dataset in your research, please cite OpenAerialMap:
 
     * https://openaerialmap.org/
+
     .. versionadded:: 0.9
     """
 
