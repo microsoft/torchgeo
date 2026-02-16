@@ -137,6 +137,17 @@ class TestOpenAerialMap:
         dataset.plot(x, suptitle='Test')
         plt.close()
 
+    def test_plot_no_titles(self, dataset: OpenAerialMap) -> None:
+        x = dataset[dataset.bounds]
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
+    def test_plot_float_normalization(self, dataset: OpenAerialMap) -> None:
+        x = dataset[dataset.bounds]
+        x['image'] = x['image'].float() * 255.0
+        dataset.plot(x)
+        plt.close()
+
     def test_init_validation(self) -> None:
         with pytest.raises(
             ValueError, match='bbox must be provided when download=True'
@@ -290,6 +301,247 @@ class TestOpenAerialMap:
         with pytest.raises(RuntimeError, match='Invalid STAC API response'):
             dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
 
+    def test_fetch_item_id_with_image_id(
+        self, dataset: OpenAerialMap, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        dataset.bbox = None
+        dataset.image_id = 'specific-image-id'
+
+        class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self) -> dict[str, Any]:
+                return {
+                    'features': [
+                        {
+                            'id': 'specific-image-id',
+                            'collection': 'oam',
+                            'properties': {},
+                        }
+                    ]
+                }
+
+        class MockGetResponse:
+            @staticmethod
+            def raise_for_status() -> None:
+                pass
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'tilesets': [
+                        {
+                            'links': [
+                                {
+                                    'rel': 'tile',
+                                    'href': 'http://api/tiles/WebMercatorQuad/{z}/{x}/{y}',
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post',
+            lambda *args, **kwargs: MockPostResponse(),
+        )
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get',
+            lambda *args, **kwargs: MockGetResponse(),
+        )
+
+        result = dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+        assert result is not None
+
+    def test_fetch_item_id_missing_ids(
+        self,
+        dataset: OpenAerialMap,
+        mock_bbox: tuple[float, float, float, float],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        dataset.bbox = mock_bbox
+        dataset.image_id = None
+
+        class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self) -> dict[str, Any]:
+                return {
+                    'features': [{'id': None, 'collection': None, 'properties': {}}]
+                }
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post',
+            lambda *args, **kwargs: MockPostResponse(),
+        )
+
+        assert dataset._fetch_item_id() is None  # type: ignore[reportPrivateUsage]
+
+    def test_fetch_item_id_get_failure(
+        self,
+        dataset: OpenAerialMap,
+        mock_bbox: tuple[float, float, float, float],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        dataset.bbox = mock_bbox
+        dataset.image_id = None
+
+        class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self) -> dict[str, Any]:
+                return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
+
+        def mock_get_fail(*args: Any, **kwargs: Any) -> None:
+            raise requests.RequestException('GET failed')
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post',
+            lambda *args, **kwargs: MockPostResponse(),
+        )
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get', mock_get_fail
+        )
+
+        with pytest.raises(RuntimeError, match='Failed to query tiles endpoint'):
+            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+
+    def test_fetch_item_id_no_webmercator(
+        self,
+        dataset: OpenAerialMap,
+        mock_bbox: tuple[float, float, float, float],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        dataset.bbox = mock_bbox
+        dataset.image_id = None
+
+        class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self) -> dict[str, Any]:
+                return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
+
+        class MockGetResponse:
+            @staticmethod
+            def raise_for_status() -> None:
+                pass
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'tilesets': [
+                        {'links': [{'rel': 'tile', 'href': 'http://api/tiles/Other'}]}
+                    ]
+                }
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post',
+            lambda *args, **kwargs: MockPostResponse(),
+        )
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get',
+            lambda *args, **kwargs: MockGetResponse(),
+        )
+
+        with pytest.raises(RuntimeError, match='WebMercatorQuad tileset not found'):
+            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+
+    def test_download_existing_tiles(self, dataset: OpenAerialMap) -> None:
+        # dataset fixture points to tests/data/openaerialmap which has .tif files
+        dataset.bbox = (85.51678, 27.63134, 85.52323, 27.63744)
+        dataset.zoom = 19
+        dataset._download()  # type: ignore[reportPrivateUsage]
+
+    def test_download_full_flow(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        src_dir = os.path.join('tests', 'data', 'openaerialmap')
+        for f in os.listdir(src_dir):
+            if f.endswith('.tif'):
+                shutil.copy(os.path.join(src_dir, f), tmp_path / f)
+
+        mock_bbox = (85.51678, 27.63134, 85.52323, 27.63744)
+
+        class MockPostResponse:
+            def raise_for_status(self) -> None:
+                pass
+
+            def json(self) -> dict[str, Any]:
+                return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
+
+        class MockGetResponse:
+            status_code = 200
+            content = b'fake'
+
+            @staticmethod
+            def raise_for_status() -> None:
+                pass
+
+            @staticmethod
+            def json() -> dict[str, Any]:
+                return {
+                    'tilesets': [
+                        {
+                            'links': [
+                                {
+                                    'rel': 'tile',
+                                    'href': 'http://api/tiles/WebMercatorQuad/{z}/{x}/{y}',
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post',
+            lambda *args, **kwargs: MockPostResponse(),
+        )
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get',
+            lambda *args, **kwargs: MockGetResponse(),
+        )
+
+        # Remove existing tiles so _download proceeds past the early return
+        for f in tmp_path.glob('OAM-*.tif'):
+            f.unlink()
+
+        ds = OpenAerialMap.__new__(OpenAerialMap)
+        ds.paths = tmp_path
+        ds.bbox = mock_bbox
+        ds.zoom = 19
+        ds.max_items = 1
+        ds.image_id = None
+        ds.tile_size = 256
+
+        def mock_georeference(filepath: str, tile: TileUtils.Tile) -> None:
+            pass
+
+        monkeypatch.setattr(ds, '_georeference_tile', mock_georeference)
+        ds._download()  # type: ignore[reportPrivateUsage]
+
+    def test_fetch_item_id_key_error(
+        self,
+        dataset: OpenAerialMap,
+        mock_bbox: tuple[float, float, float, float],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        dataset.bbox = mock_bbox
+        dataset.image_id = None
+
+        def mock_post_keyerror(*args: Any, **kwargs: Any) -> None:
+            raise KeyError('missing key')
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.post', mock_post_keyerror
+        )
+
+        with pytest.raises(RuntimeError, match='Invalid STAC API response'):
+            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+
     def test_download_tiles(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -357,27 +609,38 @@ class TestOpenAerialMap:
     ) -> None:
         dataset.paths = tmp_path
 
-        filepath = tmp_path / 'OAM-2-2-2.tif'
+        # HTTP non-200 status
+        class MockResponse404:
+            status_code = 404
 
-        class MockDataset:
-            crs = 'mock_crs'
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get',
+            lambda *args, **kwargs: MockResponse404(),
+        )
 
-        class MockContextManager:
-            def __enter__(self) -> MockDataset:
-                return MockDataset()
+        tile = TileUtils.Tile(x=2, y=2, z=2)
+        with pytest.warns(UserWarning, match='Failed to download tile'):
+            dataset._download_single_tile(  # type: ignore[reportPrivateUsage]
+                'http://example.com/{z}/{x}/{y}', tile
+            )
 
-            def __exit__(self, *args: Any) -> None:
-                pass
+    def test_download_single_tile_exception(
+        self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        dataset.paths = tmp_path
 
-        def mock_open(*args: Any, **kwargs: Any) -> MockContextManager:
-            return MockContextManager()
+        def mock_get_error(*args: Any, **kwargs: Any) -> None:
+            raise requests.RequestException('Connection failed')
 
-        monkeypatch.setattr('rasterio.open', mock_open)
+        monkeypatch.setattr(
+            'torchgeo.datasets.openaerialmap.requests.get', mock_get_error
+        )
 
-        filepath.touch()
-        assert filepath.exists()
-        with mock_open(str(filepath)) as ds:
-            assert ds.crs is not None
+        tile = TileUtils.Tile(x=2, y=2, z=2)
+        with pytest.warns(UserWarning, match='Error downloading tile'):
+            dataset._download_single_tile(  # type: ignore[reportPrivateUsage]
+                'http://example.com/{z}/{x}/{y}', tile
+            )
 
     def test_georeference_tile_error(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
