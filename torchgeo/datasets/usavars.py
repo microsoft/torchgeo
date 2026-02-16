@@ -83,7 +83,11 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = ('treecover', 'elevation', 'population')
+    ALL_LABELS: tuple[Literal['treecover', 'elevation', 'population']] = (
+        'treecover',
+        'elevation',
+        'population',
+    )
 
     def __init__(
         self,

@@ -97,7 +97,7 @@ class OSCD(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: Literal['train', 'test'] = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
