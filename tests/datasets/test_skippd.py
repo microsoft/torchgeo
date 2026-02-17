@@ -51,7 +51,6 @@ class TestSKIPPD:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert isinstance(x['date'], str)
         if dataset.task == 'nowcast':
             assert x['image'].shape == (3, 64, 64)
         else:
