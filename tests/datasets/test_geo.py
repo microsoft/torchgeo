@@ -18,6 +18,7 @@ from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
+from torch import Tensor
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -117,7 +118,9 @@ class TestGeoDataset:
 
     def test_getitem(self, dataset: GeoDataset) -> None:
         index = (slice(0, 1, 1), slice(2, 3, 1), slice(MINT, MAXT, 1))
-        assert dataset[index] == {'index': index}
+        sample = dataset[index]
+        assert isinstance(sample, dict)
+        assert isinstance(sample['bounds'], Tensor)
 
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
