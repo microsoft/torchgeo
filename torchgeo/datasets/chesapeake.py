@@ -575,8 +575,8 @@ class ChesapeakeCVPR(GeoDataset):
         else:
             raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = torch.from_numpy(np.concatenate(images))
-        sample['mask'] = torch.from_numpy(np.concatenate(masks))
+        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
+        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
