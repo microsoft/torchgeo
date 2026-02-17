@@ -312,6 +312,7 @@ class TestSemanticSegmentationTask:
         result = task.predict_step(batch, 0)
 
         probabilities = result['probabilities']
+        assert probabilities
         assert probabilities.shape == (batch_size, num_classes, height, width)
 
     def test_predict_step_preserves_metadata(self) -> None:
