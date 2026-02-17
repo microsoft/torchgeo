@@ -98,7 +98,7 @@ class TreeSatAI(NonGeoDataset):
     )
 
     # https://zenodo.org/records/6780578/files/220629_doc_TreeSatAI_benchmark_archive.pdf
-    all_sensors: tuple[Literal['aerial', 's1', 's2']] = ('aerial', 's1', 's2')
+    all_sensors: tuple[Literal['aerial', 's1', 's2'], ...] = ('aerial', 's1', 's2')
     all_bands: ClassVar[dict[str, list[str]]] = {
         'aerial': ['IR', 'G', 'B', 'R'],
         's1': ['VV', 'VH', 'VV/VH'],

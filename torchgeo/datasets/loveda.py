@@ -176,7 +176,7 @@ class LoveDA(NonGeoDataset):
         return len(self.files)
 
     def _load_files(
-        self, scene_paths: str, split: Literal['train', 'val', 'test']
+        self, scene_paths: list[str], split: Literal['train', 'val', 'test']
     ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
