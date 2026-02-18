@@ -16,7 +16,6 @@ def generate_test_data(paths: str) -> None:
 
     Args:
         paths: path to store test data
-        n_samples: number of samples.
     """
     dtype = np.uint8
     dtype_max = np.iinfo(dtype).max

@@ -18,7 +18,7 @@ def write_data(path: str, img: np.ndarray) -> None:
     img.save(path)
 
 
-def generate_test_data(root: str, n_imgs: int = 3) -> str:
+def generate_test_data(root: str, n_imgs: int = 3) -> None:
     folder_path = os.path.join(root, DIRECTORY)
     pos_img_dir = os.path.join(folder_path, 'positive image set')
     neg_img_dir = os.path.join(folder_path, 'negative image set')
