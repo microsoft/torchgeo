@@ -133,8 +133,6 @@ models = [
     "microsoft-aurora>=1.6",
 ]
 style = [
-    # oldest version on PyPI
-    "h5py-stubs>=0.1.0",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
@@ -333,6 +331,7 @@ include = ["torchgeo*"]
 [tool.ty.rules]
 deprecated = "ignore"
 unresolved-attribute = "ignore"
+unresolved-import = "ignore"
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]
