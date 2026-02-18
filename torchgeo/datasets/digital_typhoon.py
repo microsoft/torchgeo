@@ -356,8 +356,8 @@ class DigitalTyphoon(NonGeoDataset):
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
-                feature_dict[feature] = (  # type: ignore[index]
-                    feature_dict[feature] - mean  # type: ignore[index]
+                feature_dict[feature] = (
+                    feature_dict[feature] - mean
                 ) / self.target_std[feature]
         return feature_dict
 

@@ -115,7 +115,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
     #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
     #: Users should instead use the intersection or union operator.
-    __add__ = None  # type: ignore[assignment]
+    __add__ = None
 
     def _disambiguate_slice(self, index: GeoSlice) -> tuple[slice, slice, slice]:
         """Disambiguate a partial spatiotemporal slice.
@@ -1229,7 +1229,7 @@ class NonGeoDataset(Dataset[Sample], abc.ABC):
     size: {len(self)}"""
 
 
-class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
+class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
     """Abstract base class for classification datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips which

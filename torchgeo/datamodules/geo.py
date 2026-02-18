@@ -223,7 +223,7 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit']:
             self.train_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
+                self.dataset_class(
                     split='train',  # type: ignore[unknown-argument]
                     **self.kwargs,
                 ),
@@ -234,7 +234,7 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit', 'validate']:
             self.val_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
+                self.dataset_class(
                     split='val',  # type: ignore[unknown-argument]
                     **self.kwargs,
                 ),
@@ -245,7 +245,7 @@ class GeoDataModule(BaseDataModule):
         if stage in ['test']:
             self.test_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
+                self.dataset_class(
                     split='test',  # type: ignore[unknown-argument]
                     **self.kwargs,
                 ),
@@ -378,17 +378,17 @@ class NonGeoDataModule(BaseDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit']:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.train_dataset = self.dataset_class(
                 split='train',  # type: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['fit', 'validate']:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.val_dataset = self.dataset_class(
                 split='val',  # type: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['test']:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.test_dataset = self.dataset_class(
                 split='test',  # type: ignore[unknown-argument]
                 **self.kwargs,
             )

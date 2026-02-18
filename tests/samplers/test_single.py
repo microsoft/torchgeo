@@ -65,7 +65,7 @@ class TestGeoSampler:
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoSampler(dataset)  # type: ignore[abstract]
+            GeoSampler(dataset)
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])

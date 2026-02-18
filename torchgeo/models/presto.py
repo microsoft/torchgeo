@@ -210,7 +210,7 @@ class Encoder(nn.Module):
         month_tab = get_month_encoding_table(
             d_hid=month_embedding_size, device=self.pos_embed.device
         )
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)  # type: ignore[no-untyped-call]
+        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
         self.channel_embed = nn.Embedding(
             num_embeddings=len(self.band_groups) + 1,
             embedding_dim=channel_embedding_size,
@@ -497,7 +497,7 @@ class Decoder(nn.Module):
         month_tab = get_month_encoding_table(
             d_hid=int(remaining_embeddings) // 2, device=self.pos_embed.device
         )
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)  # type: ignore[no-untyped-call]
+        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
 
         self.initialize_weights()
 
@@ -795,7 +795,7 @@ class Presto(nn.Module):
         return reconstructed_inputs, dw_output
 
 
-class Presto_Weights(WeightsEnum):  # type: ignore[misc]
+class Presto_Weights(WeightsEnum):
     """Presto weights.
 
     .. versionadded:: 0.9

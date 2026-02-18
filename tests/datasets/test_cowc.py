@@ -18,7 +18,7 @@ from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFound
 class TestCOWC:
     def test_not_implemented(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            COWC()  # type: ignore[abstract]
+            COWC()
 
 
 class TestCOWCCounting:

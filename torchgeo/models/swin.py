@@ -45,7 +45,7 @@ _satlas_landsat_transforms = nn.Sequential(
 )
 
 
-class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
+class Swin_V2_T_Weights(WeightsEnum):
     """Swin Transformer v2 Tiny weights.
 
     For `torchvision <https://github.com/pytorch/vision>`_
@@ -107,7 +107,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
+class Swin_V2_B_Weights(WeightsEnum):
     """Swin Transformer v2 Base weights.
 
     For `torchvision <https://github.com/pytorch/vision>`_
@@ -247,7 +247,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
+class SwinBackbone_Weights(WeightsEnum):
     """SwinBackbone weights parent class.
 
     These weights contain the encoder weights and optionally the backbone layernorm

@@ -22,7 +22,7 @@ from torchgeo.models import (
 class TestResNet18:
     @pytest.fixture(params=[*ResNet18_Weights])
     def weights(self, request: SubRequest) -> ResNet18_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -39,7 +39,7 @@ class TestResNet18:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_resnet(self) -> None:
         resnet18()
@@ -76,7 +76,7 @@ class TestResNet18:
 class TestResNet50:
     @pytest.fixture(params=[*ResNet50_Weights])
     def weights(self, request: SubRequest) -> ResNet50_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -93,7 +93,7 @@ class TestResNet50:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_resnet(self) -> None:
         resnet50()
@@ -130,7 +130,7 @@ class TestResNet50:
 class TestResNet152:
     @pytest.fixture(params=[*ResNet152_Weights])
     def weights(self, request: SubRequest) -> ResNet152_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -147,7 +147,7 @@ class TestResNet152:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_resnet(self) -> None:
         resnet152()

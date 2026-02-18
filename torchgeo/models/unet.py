@@ -23,7 +23,7 @@ _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
 
-class Unet_Weights(WeightsEnum):  # type: ignore[misc]
+class Unet_Weights(WeightsEnum):
     """U-Net weights.
 
     For `smp <https://github.com/qubvel-org/segmentation_models.pytorch>`_

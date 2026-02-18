@@ -14,7 +14,7 @@ from torchgeo.models import Tessera, Tessera_Weights, tessera
 class TestTessera:
     @pytest.fixture(params=[*Tessera_Weights])
     def weights(self, request: SubRequest) -> Tessera_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -25,7 +25,7 @@ class TestTessera:
         model = Tessera()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     @pytest.fixture
     def mocked_weights_s2(
@@ -36,7 +36,7 @@ class TestTessera:
         model = Tessera()
         torch.save(model.s2_backbone.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     @pytest.fixture
     def mocked_weights_s1(
@@ -47,7 +47,7 @@ class TestTessera:
         model = Tessera()
         torch.save(model.s1_backbone.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_tessera(self) -> None:
         batch_size = 2

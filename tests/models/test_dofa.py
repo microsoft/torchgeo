@@ -77,7 +77,7 @@ class TestDOFASmall16:
 class TestDOFABase16:
     @pytest.fixture(params=[*DOFABase16_Weights])
     def weights(self, request: SubRequest) -> DOFABase16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -88,7 +88,7 @@ class TestDOFABase16:
         model = dofa_base_patch16_224()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_dofa(self) -> None:
         model = dofa_base_patch16_224()
@@ -122,7 +122,7 @@ class TestDOFABase16:
 class TestDOFALarge16:
     @pytest.fixture(params=[*DOFALarge16_Weights])
     def weights(self, request: SubRequest) -> DOFALarge16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -133,7 +133,7 @@ class TestDOFALarge16:
         model = dofa_large_patch16_224()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_dofa(self) -> None:
         model = dofa_large_patch16_224()

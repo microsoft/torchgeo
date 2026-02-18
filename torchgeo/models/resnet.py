@@ -173,7 +173,7 @@ _ssl4eo_l_transforms = nn.Sequential(
 )
 
 
-class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
+class ResNet18_Weights(WeightsEnum):
     """ResNet-18 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -365,7 +365,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
+class ResNet50_Weights(WeightsEnum):
     """ResNet-50 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -801,7 +801,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
+class ResNet152_Weights(WeightsEnum):
     """ResNet-152 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_

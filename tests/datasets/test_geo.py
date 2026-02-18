@@ -193,7 +193,7 @@ class TestGeoDataset:
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoDataset()  # type: ignore[abstract]
+            GeoDataset()
 
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
@@ -586,10 +586,7 @@ class TestVectorDataset:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
 
     def test_getitem_obj_det(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'object_detection'
@@ -606,10 +603,7 @@ class TestVectorDataset:
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
@@ -620,10 +614,7 @@ class TestVectorDataset:
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
 
     def test_getitem_parquet_obj_det(
         self, dataset_parquet: CustomVectorParquetDataset
@@ -644,10 +635,7 @@ class TestVectorDataset:
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
@@ -661,8 +649,7 @@ class TestVectorDataset:
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
+            x['mask'].unique(), torch.tensor([0, 1, 2, 3], dtype=torch.uint8)
         )
 
     def test_getitem_multilabel_obj_det(self, multilabel: CustomVectorDataset) -> None:
@@ -682,24 +669,21 @@ class TestVectorDataset:
         assert isinstance(x['label'], torch.Tensor)
         assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
         dataset.task = 'object_detection'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
 
         dataset.task = 'instance_segmentation'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
@@ -773,7 +757,7 @@ class TestNonGeoDataset:
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            NonGeoDataset()  # type: ignore[abstract]
+            NonGeoDataset()
 
 
 class TestNonGeoClassificationDataset:

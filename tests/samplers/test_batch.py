@@ -79,7 +79,7 @@ class TestBatchGeoSampler:
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            BatchGeoSampler(dataset)  # type: ignore[abstract]
+            BatchGeoSampler(dataset)
 
 
 class TestRandomBatchGeoSampler:

@@ -120,7 +120,7 @@ class TestCopernicusFM:
 class TestCopernicusFMBase:
     @pytest.fixture(params=[*CopernicusFM_Base_Weights])
     def weights(self, request: SubRequest) -> CopernicusFM_Base_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -131,7 +131,7 @@ class TestCopernicusFMBase:
         model = copernicusfm_base()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_copernicusfm_spectral(self) -> None:
         model = copernicusfm_base()
