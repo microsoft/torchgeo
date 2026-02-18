@@ -141,6 +141,8 @@ style = [
     "ruff>=0.9",
     # ty 0.0.2+ required for stable release
     "ty>=0.0.2",
+    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
+    "types-geopandas>=0.13",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
