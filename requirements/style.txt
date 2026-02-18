@@ -1,4 +1,5 @@
 # style
+h5py-stubs==0.1.2
 pandas-stubs==2.3.3.260113
 ruff==0.15.1
 ty==0.0.17
