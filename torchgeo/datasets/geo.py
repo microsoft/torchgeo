@@ -1598,9 +1598,8 @@ class UnionDataset(GeoDataset):
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
-
-        # type: ignore[invalid-assignment]
-        self.index = pd.concat([dataset1.index, dataset2.index])
+        
+        self.index = pd.concat([dataset1.index, dataset2.index]) # type: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
