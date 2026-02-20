@@ -26,7 +26,8 @@ import rasterio.merge
 import rasterio.warp
 import shapely
 import torch
-from geopandas import GeoDataFrame, GeoSeries
+from geopandas import GeoDataFrame
+from shapely.geometry.base import BaseGeometry
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
@@ -1030,7 +1031,7 @@ class VectorDataset(GeoDataset):
 
     def _semantic_segmentation_sample(
         self,
-        shapes: list[tuple[GeoSeries, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1046,7 +1047,7 @@ class VectorDataset(GeoDataset):
 
     def _object_detection_sample(
         self,
-        shapes: list[tuple[GeoSeries, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1078,7 +1079,7 @@ class VectorDataset(GeoDataset):
 
     def _instance_segmentation_sample(
         self,
-        shapes: list[tuple[GeoSeries, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1129,7 +1130,7 @@ class VectorDataset(GeoDataset):
 
     def prepare_sample(
         self,
-        shapes: list[tuple[GeoSeries, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1598,8 +1599,8 @@ class UnionDataset(GeoDataset):
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
-        
-        self.index = pd.concat([dataset1.index, dataset2.index]) # type: ignore[invalid-assignment]
+
+        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
