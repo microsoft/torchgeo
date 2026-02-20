@@ -1,6 +1,6 @@
 # style
 pandas-stubs==2.3.3.260113
-ruff==0.15.1
+ruff==0.15.2
 ty==0.0.17
 types-geopandas==1.1.2.20260120
 types-requests==2.32.4.20260107
