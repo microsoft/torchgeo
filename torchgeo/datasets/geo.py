@@ -1195,7 +1195,7 @@ class VectorDataset(GeoDataset):
                 return self._instance_segmentation_sample(
                     shapes, width, height, transform
                 )
-            
+
         raise ValueError(f'Invalid task: {self.task!r}')
 
     def __getitem__(self, index: GeoSlice) -> Sample:
@@ -1211,7 +1211,7 @@ class VectorDataset(GeoDataset):
             IndexError: If *index* is not found in the dataset.
         """
         x, y, t = self._disambiguate_slice(index)
-        interval = pd.Interval(t.start, t.stop) 
+        interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]
         df = df.iloc[:: t.step]
         df = df.cx[x.start : x.stop, y.start : y.stop]

@@ -582,7 +582,7 @@ class TestVectorDataset:
             CustomVectorDataset(dataset.paths, task='invalid-task')  # type: ignore[arg-type]
 
     def test_getitem_invalid_task(self, dataset: CustomVectorDataset) -> None:
-        dataset.task = "invalid-task"
+        dataset.task = 'invalid-task'
         with pytest.raises(ValueError, match='Invalid task:'):
             dataset[dataset.bounds]
 
