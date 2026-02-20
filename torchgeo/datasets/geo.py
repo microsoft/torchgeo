@@ -27,12 +27,12 @@ import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
-from shapely.geometry.base import BaseGeometry
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
+from shapely.geometry.base import BaseGeometry
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1036,6 +1036,17 @@ class VectorDataset(GeoDataset):
         height: float,
         transform: Affine,
     ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including rasterized mask for input shapes.
+        """
         if shapes:
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(round(height), round(width)), transform=transform
@@ -1052,6 +1063,17 @@ class VectorDataset(GeoDataset):
         height: float,
         transform: Affine,
     ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including bounding box coordinates and labels for input shapes
+        """
         if shapes:
             label_list = []
             box_list = []
@@ -1084,6 +1106,17 @@ class VectorDataset(GeoDataset):
         height: float,
         transform: Affine,
     ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including rasterized mask, boundind boxes and labels for input shapes.
+        """
         if shapes:
             label_list = []
             box_list = []
