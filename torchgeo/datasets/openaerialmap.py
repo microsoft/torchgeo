@@ -183,7 +183,7 @@ class OpenAerialMap(RasterDataset):
 
     * https://openaerialmap.org/
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     _stac_url: ClassVar[str] = 'https://api.imagery.hotosm.org/stac'
