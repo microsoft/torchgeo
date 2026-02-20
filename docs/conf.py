@@ -55,7 +55,9 @@ needs_sphinx = '5.3'
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
+    ('py:func', 'einops.rearrange'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
+    ('py:class', 'kornia.augmentation._2d.geometric.base.GeometricAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
@@ -66,6 +68,9 @@ nitpick_ignore = [
     ('py:class', 'timm.models.resnet.ResNet'),
     ('py:class', 'timm.models.vision_transformer.VisionTransformer'),
     ('py:class', 'torch.optim.lr_scheduler.LRScheduler'),
+    ('py:class', 'torchmetrics.MeanAbsoluteError'),
+    ('py:class', 'torchmetrics.MeanSquaredError'),
+    ('py:class', 'torchmetrics.detection.mean_ap.MeanAveragePrecision'),
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
