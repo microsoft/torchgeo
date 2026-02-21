@@ -29,6 +29,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/copernicus-fm
    models/croma
    models/dofa
+   models/dofa-clip
    models/earthloc
    models/farseg
    models/fcn

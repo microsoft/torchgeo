@@ -15,39 +15,50 @@ import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 from torch import Tensor, vmap
+import torchvision.transforms.v2 as T
 from torchvision.models._api import Weights, WeightsEnum
 
-PRETRAINING_NORMALIZING_DICT = {
-    'space_time': {
+NORMALIZATION_STATS = {
+    'static': {
         'mean': [
-            -11.728724389184965,
-            -18.85558188024017,
-            1395.3408730676722,
-            1338.4026921784578,
-            1343.09883810357,
-            1543.8607982512297,
-            2186.2022069512263,
-            2525.0932853316694,
-            2410.3377187373408,
-            2750.2854646886753,
-            2234.911100061487,
-            1474.5311266077113,
-            0.2892116502999044,
+            188.20315880851746,
+            0.2804946561574936,
+            0.11371652073860168,
+            0.058778801321983334,
+            0.10474256777763366,
+            0.2396918488264084,
+            0.08152248692512512,
+            0.04248040814399719,
+            0.11303179881572724,
+            0.17326324067115784,
+            0.06998309404850006,
+            0.12122812910079957,
+            0.04671641788482666,
+            10.98456594619751,
+            1.0968475807189941,
+            1.6947754135131836,
+            0.03320046615600586,
+            1.3602827312469483,
         ],
         'std': [
-            4.887145774840316,
-            5.730270320384293,
-            917.7041440370853,
-            913.2988423581528,
-            1092.678723527555,
-            1047.2206083460424,
-            1048.0101611156767,
-            1143.6903026819996,
-            1098.979177731649,
-            1204.472755085893,
-            1145.9774063078878,
-            980.2429840007796,
-            0.2720939024500081,
+            1154.5919128300602,
+            0.5276998078079327,
+            0.7021637331734328,
+            0.36528892213195063,
+            0.17470213191865785,
+            0.20411195416718833,
+            0.0660782470089761,
+            0.03380702424871257,
+            0.09809195568521663,
+            0.11292471052124119,
+            0.09720748930233268,
+            0.12912217763726777,
+            0.0399973913151906,
+            23.725471823867462,
+            5.715238079725388,
+            9.030481416228302,
+            0.9950220242487364,
+            7.754429123862099,
         ],
     },
     'space': {
@@ -106,118 +117,107 @@ PRETRAINING_NORMALIZING_DICT = {
             7.513020170832818,
         ],
     },
-    'static': {
+    'space_time': {
         'mean': [
-            188.20315880851746,
-            0.2804946561574936,
-            0.11371652073860168,
-            0.058778801321983334,
-            0.10474256777763366,
-            0.2396918488264084,
-            0.08152248692512512,
-            0.04248040814399719,
-            0.11303179881572724,
-            0.17326324067115784,
-            0.06998309404850006,
-            0.12122812910079957,
-            0.04671641788482666,
-            10.98456594619751,
-            1.0968475807189941,
-            1.6947754135131836,
-            0.03320046615600586,
-            1.3602827312469483,
+            -11.728724389184965,
+            -18.85558188024017,
+            1395.3408730676722,
+            1338.4026921784578,
+            1343.09883810357,
+            1543.8607982512297,
+            2186.2022069512263,
+            2525.0932853316694,
+            2410.3377187373408,
+            2750.2854646886753,
+            2234.911100061487,
+            1474.5311266077113,
+            0.2892116502999044,
         ],
         'std': [
-            1154.5919128300602,
-            0.5276998078079327,
-            0.7021637331734328,
-            0.36528892213195063,
-            0.17470213191865785,
-            0.20411195416718833,
-            0.0660782470089761,
-            0.03380702424871257,
-            0.09809195568521663,
-            0.11292471052124119,
-            0.09720748930233268,
-            0.12912217763726777,
-            0.0399973913151906,
-            23.725471823867462,
-            5.715238079725388,
-            9.030481416228302,
-            0.9950220242487364,
-            7.754429123862099,
+            4.887145774840316,
+            5.730270320384293,
+            917.7041440370853,
+            913.2988423581528,
+            1092.678723527555,
+            1047.2206083460424,
+            1048.0101611156767,
+            1143.6903026819996,
+            1098.979177731649,
+            1204.472755085893,
+            1145.9774063078878,
+            980.2429840007796,
+            0.2720939024500081,
         ],
     },
 }
 
+BANDS: dict[str, Sequence[str]] = {
+    's1': ('VV', 'VH'),
+    's2': ('B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'),
+    'era5': ('temperature_2m', 'total_precipitation_sum'),
+    'tc': ('def', 'soil', 'aet'),
+    'viirs': ('avg_rad',),
+    'srtm': ('elevation', 'slope'),
+    'dw': (
+        'DW_water',
+        'DW_trees',
+        'DW_grass',
+        'DW_flooded_vegetation',
+        'DW_crops',
+        'DW_shrub_and_scrub',
+        'DW_built',
+        'DW_bare',
+        'DW_snow_and_ice',
+    ),
+    'wc': (
+        'WC_temporarycrops',
+        'WC_maize',
+        'WC_wintercereals',
+        'WC_springcereals',
+        'WC_irrigation',
+    ),
+    'landscan': ('b1',),
+    'location': ('x', 'y', 'z'),
+}
+BANDS.update({
+    'static_dw': [f'{x}_static' for x in BANDS['dw']],
+    'static_wc': [f'{x}_static' for x in BANDS['wc']],
+})
+BANDS.update({
+    'static': BANDS['landscan'] + BANDS['location'] + BANDS['static_dw'] + BANDS['static_wc'],
+    'space': BANDS['srtm'] + BANDS['dw'] + BANDS['wc'],
+    'time': BANDS['era5'] + BANDS['tc'] + BANDS['viirs'],
+    'space_time': BANDS['s1'] + BANDS['s2'] + ['NDVI'],
+})
+
+BAND_GROUPS_INDICES = {
+    'STATIC': {
+        'LS': [BANDS['static'].index(b) for b in BANDS['landscan']],
+        'location': [BANDS['static'].index(b) for b in BANDS['location']],
+        'DW_static': [BANDS['static'].index(b) for b in BANDS['static_dw']],
+        'WC_static': [BANDS['static'].index(b) for b in BANDS['static_wc']],
+    },
+    'SPACE': {
+        'SRTM': [BANDS['space'].index(b) for b in BANDS['srtm']],
+        'DW': [BANDS['space'].index(b) for b in BANDS['dw']],
+        'WC': [BANDS['space'].index(b) for b in BANDS['wc']],
+    },
+    'TIME': {
+        'ERA5': [BANDS['time'].index(b) for b in BANDS['era5']],
+        'TC': [BANDS['time'].index(b) for b in BANDS['tc']],
+        'VIIRS': [BANDS['time'].index(b) for b in BANDS['viirs']],
+    },
+    'SPACE_TIME': {
+        'S1': [BANDS['space_time'].index(b) for b in BANDS['s1']],
+        'S2_RGB': [BANDS['space_time'].index(b) for b in ['B2', 'B3', 'B4']],
+        'S2_Red_Edge': [BANDS['space_time'].index(b) for b in ['B5', 'B6', 'B7']],
+        'S2_NIR_10m': [BANDS['space_time'].index(b) for b in ['B8']],
+        'S2_NIR_20m': [BANDS['space_time'].index(b) for b in ['B8A']],
+        'S2_SWIR': [BANDS['space_time'].index(b) for b in ['B11', 'B12']],
+        'NDVI': [BANDS['space_time'].index('NDVI')],
+    },
+}
 BASE_GSD = 10
-DEFAULT_MONTH = 5
-
-# band information
-S1_BANDS = ['VV', 'VH']
-S2_BANDS = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12']
-ERA5_BANDS = ['temperature_2m', 'total_precipitation_sum']
-TC_BANDS = ['def', 'soil', 'aet']
-VIIRS_BANDS = ['avg_rad']
-SRTM_BANDS = ['elevation', 'slope']
-DW_BANDS = [
-    'DW_water',
-    'DW_trees',
-    'DW_grass',
-    'DW_flooded_vegetation',
-    'DW_crops',
-    'DW_shrub_and_scrub',
-    'DW_built',
-    'DW_bare',
-    'DW_snow_and_ice',
-]
-WC_BANDS = [
-    'WC_temporarycrops',
-    'WC_maize',
-    'WC_wintercereals',
-    'WC_springcereals',
-    'WC_irrigation',
-]
-STATIC_DW_BANDS = [f'{x}_static' for x in DW_BANDS]
-STATIC_WC_BANDS = [f'{x}_static' for x in WC_BANDS]
-
-LANDSCAN_BANDS = ['b1']
-LOCATION_BANDS = ['x', 'y', 'z']
-
-SPACE_TIME_BANDS = S1_BANDS + S2_BANDS + ['NDVI']
-TIME_BANDS = ERA5_BANDS + TC_BANDS + VIIRS_BANDS
-SPACE_BANDS = SRTM_BANDS + DW_BANDS + WC_BANDS
-STATIC_BANDS = LANDSCAN_BANDS + LOCATION_BANDS + STATIC_DW_BANDS + STATIC_WC_BANDS
-
-
-SPACE_TIME_BANDS_GROUPS_IDX = {
-    'S1': [SPACE_TIME_BANDS.index(b) for b in S1_BANDS],
-    'S2_RGB': [SPACE_TIME_BANDS.index(b) for b in ['B2', 'B3', 'B4']],
-    'S2_Red_Edge': [SPACE_TIME_BANDS.index(b) for b in ['B5', 'B6', 'B7']],
-    'S2_NIR_10m': [SPACE_TIME_BANDS.index(b) for b in ['B8']],
-    'S2_NIR_20m': [SPACE_TIME_BANDS.index(b) for b in ['B8A']],
-    'S2_SWIR': [SPACE_TIME_BANDS.index(b) for b in ['B11', 'B12']],
-    'NDVI': [SPACE_TIME_BANDS.index('NDVI')],
-}
-
-TIME_BAND_GROUPS_IDX = {
-    'ERA5': [TIME_BANDS.index(b) for b in ERA5_BANDS],
-    'TC': [TIME_BANDS.index(b) for b in TC_BANDS],
-    'VIIRS': [TIME_BANDS.index(b) for b in VIIRS_BANDS],
-}
-
-SPACE_BAND_GROUPS_IDX = {
-    'SRTM': [SPACE_BANDS.index(b) for b in SRTM_BANDS],
-    'DW': [SPACE_BANDS.index(b) for b in DW_BANDS],
-    'WC': [SPACE_BANDS.index(b) for b in WC_BANDS],
-}
-
-STATIC_BAND_GROUPS_IDX = {
-    'LS': [STATIC_BANDS.index(b) for b in LANDSCAN_BANDS],
-    'location': [STATIC_BANDS.index(b) for b in LOCATION_BANDS],
-    'DW_static': [STATIC_BANDS.index(b) for b in STATIC_DW_BANDS],
-    'WC_static': [STATIC_BANDS.index(b) for b in STATIC_WC_BANDS],
-}
 
 
 def to_cartesian(lat: Tensor, lon: Tensor) -> Tensor:
@@ -241,197 +241,229 @@ def to_cartesian(lat: Tensor, lon: Tensor) -> Tensor:
     z = torch.sin(lat)
     return torch.stack([x, y, z], dim=-1)
 
+class NormalizeInputs(nn.Module):
+    def __init__(self, default_month: int = 5) -> None:
+        super().__init__()
+        self.default_month = default_month
+        self.normalization = NORMALIZATION
+        self.normalize = nn.ModuleDict({
+            'space_time': T.Normalize(
+                mean=normalization['space_time']['mean'],
+                std=normalization['space_time']['std'],
+                inplace=True
+            ),
+            'space': T.Normalize(
+                mean=normalization['space']['mean'],
+                std=normalization['space']['std'],
+                inplace=True
+            ),
+            'time': T.Normalize(
+                mean=normalization['time']['mean'],
+                std=normalization['time']['std'],
+                inplace=True
+            ),
+            'static': T.Normalize(
+                mean=normalization['static']['mean'],
+                std=normalization['static']['std'],
+                inplace=True
+            ),
+        }
 
-def _normalize_input(x: Tensor, key: str, channel_indices: list[int]) -> Tensor:
-    """Normalize a provided input tensor over its last dimension.
+    def normalize(x: Tensor, key: str, channel_indices: list[int]) -> Tensor:
+        """Normalize a provided input tensor over its last dimension.
 
-    Args:
-        x: Input tensor with channel dimension last.
-        key: Normalization key in ``PRETRAINING_NORMALIZING_DICT``.
-        channel_indices: Channel indices in the full modality tensor.
+        Args:
+            x: Input tensor with channel dimension last.
+            key: Normalization key in ``NORMALIZATION``.
+            channel_indices: Channel indices in the full modality tensor.
 
-    Returns:
-        Normalized tensor with the same shape as ``x``.
-    """
-    stats = PRETRAINING_NORMALIZING_DICT[key]
-    mean = torch.tensor(
-        [stats['mean'][idx] for idx in channel_indices], device=x.device, dtype=x.dtype
-    )
-    std = torch.tensor(
-        [stats['std'][idx] for idx in channel_indices], device=x.device, dtype=x.dtype
-    )
-    return (x - mean) / std
+        Returns:
+            Normalized tensor with the same shape as ``x``.
+        """
+        stats = NORMALIZATION[key]
+        mean = torch.tensor(
+            [stats['mean'][idx] for idx in channel_indices], device=x.device, dtype=x.dtype
+        )
+        std = torch.tensor(
+            [stats['std'][idx] for idx in channel_indices], device=x.device, dtype=x.dtype
+        )
+        return (x - mean) / std
 
+    def forward(
+        s1: torch.Tensor | None = None,  # [H, W, T, C]
+        s2: torch.Tensor | None = None,  # [H, W, T, C]
+        era5: torch.Tensor | None = None,  # [T, C]
+        tc: torch.Tensor | None = None,  # [T, C]
+        viirs: torch.Tensor | None = None,  # [T, C]
+        srtm: torch.Tensor | None = None,  # [H, W, C]
+        dw: torch.Tensor | None = None,  # [H, W, C]
+        wc: torch.Tensor | None = None,  # [H, W, C]
+        landscan: torch.Tensor | None = None,  # [C]
+        latlon: torch.Tensor | None = None,  # [C]
+        months: torch.Tensor | None = None,  # [T]
+        normalize: bool = False,
+    ) -> dict[str, Tensor]:
+        """Construct Galileo inputs and binary masks from modality tensors.
 
-def construct_inputs(
-    s1: torch.Tensor | None = None,  # [H, W, T, D]
-    s2: torch.Tensor | None = None,  # [H, W, T, D]
-    era5: torch.Tensor | None = None,  # [T, D]
-    tc: torch.Tensor | None = None,  # [T, D]
-    viirs: torch.Tensor | None = None,  # [T, D]
-    srtm: torch.Tensor | None = None,  # [H, W, D]
-    dw: torch.Tensor | None = None,  # [H, W, D]
-    wc: torch.Tensor | None = None,  # [H, W, D]
-    landscan: torch.Tensor | None = None,  # [D]
-    latlon: torch.Tensor | None = None,  # [D]
-    months: torch.Tensor | None = None,  # [T]
-    normalize: bool = False,
-) -> dict[str, Tensor]:
-    """Construct Galileo inputs and binary masks from modality tensors.
+        Args:
+            s1: Sentinel-1 tensor of shape ``[H, W, T, 2]``.
+            s2: Sentinel-2 tensor of shape ``[H, W, T, 10]``.
+            era5: ERA5 tensor of shape ``[T, 2]``.
+            tc: TerraClimate tensor of shape ``[T, 3]``.
+            viirs: VIIRS tensor of shape ``[T, 1]``.
+            srtm: SRTM tensor of shape ``[H, W, 2]``.
+            dw: Dynamic World tensor of shape ``[H, W, 9]``.
+            wc: WorldCereal tensor of shape ``[H, W, 5]``.
+            landscan: LandScan tensor of shape ``[1]``.
+            latlon: Latitude/longitude tensor of shape ``[2]`` in EPSG:4326.
+            months: Month indices of shape ``[T]``.
+            normalize: Whether to apply mean/std normalization per modality group.
 
-    Args:
-        s1: Sentinel-1 tensor of shape ``[H, W, T, 2]``.
-        s2: Sentinel-2 tensor of shape ``[H, W, T, 10]``.
-        era5: ERA5 tensor of shape ``[T, 2]``.
-        tc: TerraClimate tensor of shape ``[T, 3]``.
-        viirs: VIIRS tensor of shape ``[T, 1]``.
-        srtm: SRTM tensor of shape ``[H, W, 2]``.
-        dw: Dynamic World tensor of shape ``[H, W, 9]``.
-        wc: WorldCereal tensor of shape ``[H, W, 5]``.
-        landscan: LandScan tensor of shape ``[1]``.
-        latlon: Latitude/longitude tensor of shape ``[2]`` in EPSG:4326.
-        months: Month indices of shape ``[T]``.
-        normalize: Whether to apply mean/std normalization per modality group.
+        Returns:
+            Dictionary with keys matching :meth:`Encoder.forward` modality/mask inputs.
+        """
+        # Reshape from 
+        if s1 is not None:
+            s1 = rearrange("t c h w -> h w t c", s1)
+        if s2 is not None:
+            s2 = rearrange("t c h w -> h w t c", s2)
 
-    Returns:
-        Dictionary with keys matching :meth:`Encoder.forward` modality/mask inputs.
-    """
-    space_time_inputs = [s1, s2]
-    time_inputs = [era5, tc, viirs]
-    space_inputs = [srtm, dw, wc]
-    static_inputs = [landscan, latlon]
-    devices = [
-        x.device
-        for x in space_time_inputs + time_inputs + space_inputs + static_inputs
-        if x is not None
-    ]
+        space_time_inputs = [s1, s2]
+        time_inputs = [era5, tc, viirs]
+        space_inputs = [srtm, dw, wc]
+        static_inputs = [landscan, latlon]
+        devices = [
+            x.device
+            for x in space_time_inputs + time_inputs + space_inputs + static_inputs
+            if x is not None
+        ]
 
-    if len(devices) == 0:
-        raise ValueError('At least one input must be not None')
-    if not all(devices[0] == device for device in devices):
-        raise ValueError('Received tensors on multiple devices')
-    device = devices[0]
+        if len(devices) == 0:
+            raise ValueError('At least one input must be not None')
+        if not all(devices[0] == device for device in devices):
+            raise ValueError('Received tensors on multiple devices')
+        device = devices[0]
 
-    # first, check all the input shapes are consistent
-    timesteps_list = [x.shape[2] for x in space_time_inputs if x is not None] + [
-        x.shape[1] for x in time_inputs if x is not None
-    ]
-    height_list = [x.shape[0] for x in space_time_inputs if x is not None] + [
-        x.shape[0] for x in space_inputs if x is not None
-    ]
-    width_list = [x.shape[1] for x in space_time_inputs if x is not None] + [
-        x.shape[1] for x in space_inputs if x is not None
-    ]
+        # first, check all the input shapes are consistent
+        timesteps_list = [x.shape[2] for x in space_time_inputs if x is not None] + [
+            x.shape[1] for x in time_inputs if x is not None
+        ]
+        height_list = [x.shape[0] for x in space_time_inputs if x is not None] + [
+            x.shape[0] for x in space_inputs if x is not None
+        ]
+        width_list = [x.shape[1] for x in space_time_inputs if x is not None] + [
+            x.shape[1] for x in space_inputs if x is not None
+        ]
 
-    if len(timesteps_list) > 0:
-        if not all(timesteps_list[0] == timestep for timestep in timesteps_list):
-            raise ValueError('Inconsistent number of timesteps per input')
-        t = timesteps_list[0]
-    else:
-        t = 1
+        if len(timesteps_list) > 0:
+            if not all(timesteps_list[0] == timestep for timestep in timesteps_list):
+                raise ValueError('Inconsistent number of timesteps per input')
+            t = timesteps_list[0]
+        else:
+            t = 1
 
-    if len(height_list) > 0:
-        if not all(height_list[0] == height for height in height_list):
-            raise ValueError('Inconsistent heights per input')
-        if not all(width_list[0] == width for width in width_list):
-            raise ValueError('Inconsistent widths per input')
-        h = height_list[0]
-        w = width_list[0]
-    else:
-        h, w = 1, 1
+        if len(height_list) > 0:
+            if not all(height_list[0] == height for height in height_list):
+                raise ValueError('Inconsistent heights per input')
+            if not all(width_list[0] == width for width in width_list):
+                raise ValueError('Inconsistent widths per input')
+            h = height_list[0]
+            w = width_list[0]
+        else:
+            h, w = 1, 1
 
-    # now, we can construct our empty input tensors. By default, everything is masked
-    s_t_x = torch.zeros(
-        (h, w, t, len(SPACE_TIME_BANDS)), dtype=torch.float, device=device
-    )
-    s_t_m = torch.ones(
-        (h, w, t, len(SPACE_TIME_BANDS_GROUPS_IDX)), dtype=torch.float, device=device
-    )
-    sp_x = torch.zeros((h, w, len(SPACE_BANDS)), dtype=torch.float, device=device)
-    sp_m = torch.ones(
-        (h, w, len(SPACE_BAND_GROUPS_IDX)), dtype=torch.float, device=device
-    )
-    t_x = torch.zeros((t, len(TIME_BANDS)), dtype=torch.float, device=device)
-    t_m = torch.ones((t, len(TIME_BAND_GROUPS_IDX)), dtype=torch.float, device=device)
-    st_x = torch.zeros((len(STATIC_BANDS)), dtype=torch.float, device=device)
-    st_m = torch.ones((len(STATIC_BAND_GROUPS_IDX)), dtype=torch.float, device=device)
+        # now, we can construct our empty input tensors. By default, everything is masked
+        s_t_x = torch.zeros(
+            (h, w, t, len(BANDS['space_time'])), dtype=torch.float, device=device
+        )
+        s_t_m = torch.ones(
+            (h, w, t, len(BAND_GROUPS_IDX['space_time'])), dtype=torch.float, device=device
+        )
+        sp_x = torch.zeros((h, w, len(BANDS['space'])), dtype=torch.float, device=device)
+        sp_m = torch.ones(
+            (h, w, len(BAND_GROUPS_IDX['space'])), dtype=torch.float, device=device
+        )
+        t_x = torch.zeros((t, len(BANDS['time'])), dtype=torch.float, device=device)
+        t_m = torch.ones((t, len(BAND_GROUPS_IDX['time'])), dtype=torch.float, device=device)
+        st_x = torch.zeros((len(BANDS['static'])), dtype=torch.float, device=device)
+        st_m = torch.ones((len(BAND_GROUPS_IDX['static'])), dtype=torch.float, device=device)
 
-    for x, bands_list, group_key in zip([s1, s2], [S1_BANDS, S2_BANDS], ['S1', 'S2']):
-        if x is not None:
-            indices = [
-                idx for idx, val in enumerate(SPACE_TIME_BANDS) if val in bands_list
-            ]
-            groups_idx = [
-                idx
-                for idx, key in enumerate(SPACE_TIME_BANDS_GROUPS_IDX)
-                if group_key in key
-            ]
-            if normalize:
-                x = _normalize_input(x, 'space_time', indices)
-            s_t_x[:, :, :, indices] = x
-            s_t_m[:, :, :, groups_idx] = 0
+        for x, bands_list, group_key in zip([s1, s2], [BANDS['s1'], BANDS['s2']], ['s1', 's2']):
+            if x is not None:
+                indices = [
+                    idx for idx, val in enumerate(BANDS['space_time']) if val in bands_list
+                ]
+                groups_idx = [
+                    idx
+                    for idx, key in enumerate(BAND_GROUPS_IDX['space_time'])
+                    if group_key in key
+                ]
+                if normalize:
+                    x = _normalize_input(x, 'space_time', indices)
+                s_t_x[:, :, :, indices] = x
+                s_t_m[:, :, :, groups_idx] = 0
 
-    for x, bands_list, group_key in zip(
-        [srtm, dw, wc], [SRTM_BANDS, DW_BANDS, WC_BANDS], ['SRTM', 'DW', 'WC']
-    ):
-        if x is not None:
-            indices = [idx for idx, val in enumerate(SPACE_BANDS) if val in bands_list]
-            groups_idx = [
-                idx for idx, key in enumerate(SPACE_BAND_GROUPS_IDX) if group_key in key
-            ]
-            if normalize:
-                x = _normalize_input(x, 'space', indices)
-            sp_x[:, :, indices] = x
-            sp_m[:, :, groups_idx] = 0
+        for x, bands_list, group_key in zip(
+            [srtm, dw, wc], [SRTM_BANDS, DW_BANDS, WC_BANDS], ['SRTM', 'DW', 'WC']
+        ):
+            if x is not None:
+                indices = [idx for idx, val in enumerate(BANDS['space']) if val in bands_list]
+                groups_idx = [
+                    idx for idx, key in enumerate(SPACE_BAND_GROUPS_IDX) if group_key in key
+                ]
+                if normalize:
+                    x = _normalize_input(x, 'space', indices)
+                sp_x[:, :, indices] = x
+                sp_m[:, :, groups_idx] = 0
 
-    for x, bands_list, group_key in zip(
-        [era5, tc, viirs], [ERA5_BANDS, TC_BANDS, VIIRS_BANDS], ['ERA5', 'TC', 'VIIRS']
-    ):
-        if x is not None:
-            indices = [idx for idx, val in enumerate(TIME_BANDS) if val in bands_list]
-            groups_idx = [
-                idx for idx, key in enumerate(TIME_BAND_GROUPS_IDX) if group_key in key
-            ]
-            if normalize:
-                x = _normalize_input(x, 'time', indices)
-            t_x[:, indices] = x
-            t_m[:, groups_idx] = 0
+        for x, bands_list, group_key in zip(
+            [era5, tc, viirs], [ERA5_BANDS, TC_BANDS, VIIRS_BANDS], ['ERA5', 'TC', 'VIIRS']
+        ):
+            if x is not None:
+                indices = [idx for idx, val in enumerate(BANDS['time']) if val in bands_list]
+                groups_idx = [
+                    idx for idx, key in enumerate(TIME_BAND_GROUPS_IDX) if group_key in key
+                ]
+                if normalize:
+                    x = _normalize_input(x, 'time', indices)
+                t_x[:, indices] = x
+                t_m[:, groups_idx] = 0
 
-    for x, bands_list, group_key in zip(
-        [landscan, latlon], [LANDSCAN_BANDS, LOCATION_BANDS], ['LS', 'location']
-    ):
-        if x is not None:
-            if group_key == 'location':
-                # transform latlon to cartesian
-                x = to_cartesian(x[0], x[1])
-            indices = [idx for idx, val in enumerate(STATIC_BANDS) if val in bands_list]
-            groups_idx = [
-                idx
-                for idx, key in enumerate(STATIC_BAND_GROUPS_IDX)
-                if group_key in key
-            ]
-            if normalize:
-                x = _normalize_input(x, 'static', indices)
-            st_x[indices] = x
-            st_m[groups_idx] = 0
+        for x, bands_list, group_key in zip(
+            [landscan, latlon], [LANDSCAN_BANDS, LOCATION_BANDS], ['LS', 'location']
+        ):
+            if x is not None:
+                if group_key == 'location':
+                    # transform latlon to cartesian
+                    x = to_cartesian(x[0], x[1])
+                indices = [idx for idx, val in enumerate(BANDS['static']) if val in bands_list]
+                groups_idx = [
+                    idx
+                    for idx, key in enumerate(STATIC_BAND_GROUPS_IDX)
+                    if group_key in key
+                ]
+                if normalize:
+                    x = _normalize_input(x, 'static', indices)
+                st_x[indices] = x
+                st_m[groups_idx] = 0
 
-    if months is None:
-        months = torch.ones((t,), dtype=torch.long, device=device) * DEFAULT_MONTH
-    else:
-        if months.shape[0] != t:
-            raise ValueError('Incorrect number of input months')
+        if months is None:
+            months = torch.ones((t,), dtype=torch.long, device=device) * self.default_month
+        else:
+            if months.shape[0] != t:
+                raise ValueError('Incorrect number of input months')
 
-    return {
-        'space_time_x': s_t_x,
-        'space_time_mask': s_t_m,
-        'space_x': sp_x,
-        'space_mask': sp_m,
-        'time_x': t_x,
-        'time_mask': t_m,
-        'static_x': st_x,
-        'static_mask': st_m,
-        'months': months,
-    }
+        return {
+            'space_time_x': s_t_x,
+            'space_time_mask': s_t_m,
+            'space_x': sp_x,
+            'space_mask': sp_m,
+            'time_x': t_x,
+            'time_mask': t_m,
+            'static_x': st_x,
+            'static_mask': st_m,
+            'months': months,
+        }
 
 
 def get_2d_sincos_pos_embed_with_resolution(
@@ -2012,14 +2044,14 @@ class Encoder(GalileoBase):
 class Galileo(Encoder):
     """Galileo encoder model.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
 
 class Galileo_Weights(WeightsEnum):  # type: ignore[misc]
     """Galileo model weights.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     GALILEO_NANO = Weights(
@@ -2090,7 +2122,7 @@ def galileo(
 
     * https://arxiv.org/abs/2502.09356
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
 
     Args:
         weights: Pre-trained model weights to use.

@@ -27,6 +27,7 @@ from .dofa import (
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
+from .dofa_clip import DOFA_CLIP_Base16_Weights, dofa_clip_base_patch16_224
 from .earthloc import EarthLoc_Weights, earthloc
 from .galileo import Galileo_Weights, galileo
 from .panopticon import Panopticon_Weights, panopticon_vitb14
@@ -76,6 +77,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'croma_base': croma_base,
     'croma_large': croma_large,
     'dofa_base_patch16_224': dofa_base_patch16_224,
+    'dofa_clip_base_patch16_224': dofa_clip_base_patch16_224,
     'dofa_huge_patch14_224': dofa_huge_patch14_224,
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
@@ -109,6 +111,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
     dofa_base_patch16_224: DOFABase16_Weights,
+    dofa_clip_base_patch16_224: DOFA_CLIP_Base16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
     galileo: Galileo_Weights,
@@ -137,6 +140,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
+    'dofa_clip_base_patch16_224': DOFA_CLIP_Base16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
     'galileo': Galileo_Weights,

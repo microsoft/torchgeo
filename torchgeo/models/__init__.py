@@ -20,6 +20,7 @@ from .dofa import (
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
+from .dofa_clip import DOFA_CLIP, DOFA_CLIP_Base16_Weights, dofa_clip_base_patch16_224
 from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
@@ -73,6 +74,7 @@ __all__ = (
     'BTC',
     'CROMA',
     'DOFA',
+    'DOFA_CLIP',
     'FCN',
     'LTAE',
     'MOSAIKS',
@@ -89,6 +91,7 @@ __all__ = (
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
+    'DOFA_CLIP_Base16_Weights',
     'EarthLoc',
     'EarthLoc_Weights',
     'FCSiamConc',
@@ -127,6 +130,7 @@ __all__ = (
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
+    'dofa_clip_base_patch16_224',
     'dofa_huge_patch14_224',
     'dofa_large_patch16_224',
     'dofa_small_patch16_224',
