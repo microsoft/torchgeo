@@ -11,7 +11,7 @@ from packaging.version import InvalidVersion, Version
 
 def parse_requirements(reqs: list[str], extra: str | None = None) -> dict[str, Version]:
     deps: dict[str, Version] = {}
-    env = default_environment()
+    env = dict(default_environment())
     env['extra'] = extra or ''
 
     for requirement in reqs:
@@ -60,6 +60,8 @@ def test_min_requirements(pyproject: dict[str, Version]) -> None:
     for extra in data['optional-dependencies']:
         if extra in {'all', 'docs', 'style'}:
             continue
-        expected.update(parse_requirements(data['optional-dependencies'][extra], extra=extra))
+        expected.update(
+            parse_requirements(data['optional-dependencies'][extra], extra=extra)
+        )
 
     assert set(pyproject) == expected
