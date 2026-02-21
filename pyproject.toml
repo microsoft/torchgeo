@@ -92,8 +92,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
-    # h5py 3.10+ required for Python 3.12 wheels
-    "h5py>=3.10",
+    # h5py pinned for pre-3.14 due to wheel support constraints
+    "h5py==3.14.0; python_version<'3.14'",
     # laspy 2.5.3+ required for wheels
     "laspy>=2.5.3",
     # netcdf4 1.6.5+ required for Python 3.12 wheels

@@ -31,11 +31,6 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             uv.lock
-      - name: Install HDF5 build dependencies
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14t'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev pkg-config
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
