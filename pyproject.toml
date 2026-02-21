@@ -129,6 +129,10 @@ docs = [
     "sphinx>=5.3",
 ]
 models = [
+    # fme 2026.1+ required for ACE2 stepper API
+    "fme>=2026.1",
+    # huggingface-hub required for ACE2 checkpoint downloads
+    "huggingface-hub>=0.27",
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
 ]

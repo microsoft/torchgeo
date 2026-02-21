@@ -6,3 +6,5 @@ Aurora_Weights.HRES_T0_AURORA,HRES-T0,MWF,`link <https://github.com/microsoft/au
 Aurora_Weights.HRES_T0_HIGH_RES_AURORA,HRES-T0,MWF,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
 Aurora_Weights.HRES_CAMS_AIR_POLLUTION_AURORA,HRES-CAMS,MWF,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
 Aurora_Weights.HRES_WAM0_WAVE_AURORA,HRES-WAM0,MWF,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
+ACE2_Weights.ACE2_ERA5,ERA5,DS,`link <https://github.com/ai2cm/ace>`__,`link <https://arxiv.org/abs/2310.02074>`__,"Apache-2.0"
+ACE2_Weights.ACE2_EAMv3,EAMv3,DS,`link <https://github.com/ai2cm/ace>`__,`link <https://arxiv.org/abs/2310.02074>`__,"Apache-2.0"

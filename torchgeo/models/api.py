@@ -16,6 +16,7 @@ from typing import Any
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
+from .ace2 import ACE2_Weights, ace2_climate_emulator
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -70,6 +71,7 @@ from .vit import (
 )
 
 _model: dict[str, Callable[..., nn.Module]] = {
+    'ace2_climate_emulator': ace2_climate_emulator,
     'aurora_swin_unet': aurora_swin_unet,
     'copernicusfm_base': copernicusfm_base,
     'croma_base': croma_base,
@@ -102,6 +104,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
 }
 
 _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ignore[invalid-assignment]
+    ace2_climate_emulator: ACE2_Weights,
     aurora_swin_unet: Aurora_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
@@ -129,6 +132,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     vit_huge_patch14_224: ViTHuge14_Weights,
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
+    'ace2_climate_emulator': ACE2_Weights,
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,

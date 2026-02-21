@@ -8,6 +8,7 @@
 """
 
 from torchgeo.models import (
+    ace2_climate_emulator,
     aurora_swin_unet,
     convlstm,
     copernicusfm_base,
@@ -40,6 +41,7 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'ace2_climate_emulator',
     'aurora_swin_unet',
     'convlstm',
     'copernicusfm_base',
@@ -72,6 +74,7 @@ __all__ = (
 )
 
 dependencies = [
+    'fme',
     'kornia',
     'microsoft-aurora',
     'segmentation_models_pytorch',

@@ -35,6 +35,7 @@ webdataset==0.2.4
 xarray==0.17.0
 
 # models
+fme==2026.1.0
 microsoft-aurora==1.6.0
 
 # tests

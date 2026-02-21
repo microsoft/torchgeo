@@ -1,2 +1,3 @@
 # models
+fme==2026.1.1
 microsoft-aurora==1.8.0
