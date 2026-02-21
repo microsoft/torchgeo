@@ -24,11 +24,10 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/datasets.txt
-            requirements/tests.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install .[datasets,tests]
+        run: uv sync --locked --extra datasets --extra tests
       - name: List dependencies
         run: uv pip list
       - name: Run integration checks
@@ -51,11 +50,12 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/docs.txt
-            requirements/tests.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
+        run: |
+          uv sync --locked --extra docs --extra tests
+          uv pip install planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
         run: uv pip list
       - name: Run notebook checks

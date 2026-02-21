@@ -26,9 +26,10 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/style.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv run pip install -r requirements/style.txt
+        run: uv sync --locked --extra style
       - name: List dependencies
         run: uv pip list
       - name: Run ruff checks
@@ -49,13 +50,10 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/datasets.txt
-            requirements/models.txt
-            requirements/tests.txt
-            requirements/style.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
+        run: uv sync --locked --extra datasets --extra models --extra style --extra tests
       - name: List dependencies
         run: uv pip list
       - name: Run ty checks

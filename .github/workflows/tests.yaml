@@ -29,12 +29,10 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/datasets.txt
-            requirements/models.txt
-            requirements/tests.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
+        run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
         run: uv pip list
       - name: Run checks
@@ -58,9 +56,9 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/min-reqs.old
+            pyproject.toml
       - name: Install dependencies
-        run: uv pip install -r requirements/min-reqs.old
+        run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: List installed dependencies
         run: uv pip list
       - name: Run checks
@@ -84,10 +82,10 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/tests.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/tests.txt
+        run: uv sync --locked --extra tests
       - name: List installed dependencies
         run: uv pip list
       - name: Run checks

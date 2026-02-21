@@ -28,11 +28,12 @@ jobs:
           enable-cache: true
           activate-environment: true
           cache-dependency-glob: |
-            requirements/required.txt
-            requirements/docs.txt
-            requirements/tests.txt
+            pyproject.toml
+            uv.lock
       - name: Install dependencies
-        run: uv pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
+        run: |
+          uv sync --locked --extra docs --extra tests
+          uv pip install planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
         run: uv pip list
       - name: Run notebook checks
