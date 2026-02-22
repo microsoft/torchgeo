@@ -3763,7 +3763,6 @@ all = [
     { name = "ruff" },
     { name = "scikit-image" },
     { name = "scipy" },
-    { name = "setuptools" },
     { name = "sphinx" },
     { name = "ty" },
     { name = "types-geopandas" },
@@ -3788,10 +3787,8 @@ datasets = [
 docs = [
     { name = "ipywidgets" },
     { name = "myst-parser" },
-    { name = "nbmake" },
     { name = "nbsphinx" },
     { name = "pydata-sphinx-theme" },
-    { name = "setuptools" },
     { name = "sphinx" },
 ]
 models = [
@@ -3806,6 +3803,7 @@ style = [
     { name = "types-shapely" },
 ]
 tests = [
+    { name = "nbmake" },
     { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -3816,7 +3814,7 @@ tests = [
 requires-dist = [
     { name = "einops", specifier = ">=0.3" },
     { name = "geopandas", specifier = ">=0.13" },
-    { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = "==3.14.0" },
+    { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=3.10,<3.15" },
     { name = "ipywidgets", marker = "extra == 'docs'", specifier = ">=7" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.35" },
     { name = "kornia", specifier = ">=0.8.2" },
@@ -3826,7 +3824,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.7.3" },
     { name = "microsoft-aurora", marker = "extra == 'models'", specifier = ">=1.6" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=0.18.0" },
-    { name = "nbmake", marker = "extra == 'docs'", specifier = ">=1.3.3" },
+    { name = "nbmake", marker = "extra == 'tests'", specifier = ">=1.4.5" },
     { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.8.5" },
     { name = "netcdf4", marker = "extra == 'datasets'", specifier = ">=1.6.5" },
     { name = "numpy", specifier = ">=1.26" },
@@ -3848,7 +3846,6 @@ requires-dist = [
     { name = "scikit-image", marker = "extra == 'datasets'", specifier = ">=0.22" },
     { name = "scipy", marker = "extra == 'datasets'", specifier = ">=1.11.2" },
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
-    { name = "setuptools", marker = "extra == 'docs'", specifier = ">=77.0.1,<81" },
     { name = "shapely", specifier = ">=2.0.2" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=5.3" },
     { name = "timm", specifier = ">=1.0.3" },
