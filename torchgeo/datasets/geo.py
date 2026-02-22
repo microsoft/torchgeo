@@ -30,9 +30,9 @@ from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
-from rasterio.transform import Affine
+from rasterio import Affine
 from rasterio.vrt import WarpedVRT
-from shapely.geometry.base import BaseGeometry
+from shapely import Geometry
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1031,7 +1031,7 @@ class VectorDataset(GeoDataset):
 
     def _semantic_segmentation_sample(
         self,
-        shapes: list[tuple[BaseGeometry, np.int32]],
+        shapes: list[tuple[Geometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1058,7 +1058,7 @@ class VectorDataset(GeoDataset):
 
     def _object_detection_sample(
         self,
-        shapes: list[tuple[BaseGeometry, np.int32]],
+        shapes: list[tuple[Geometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1101,7 +1101,7 @@ class VectorDataset(GeoDataset):
 
     def _instance_segmentation_sample(
         self,
-        shapes: list[tuple[BaseGeometry, np.int32]],
+        shapes: list[tuple[Geometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1163,7 +1163,7 @@ class VectorDataset(GeoDataset):
 
     def prepare_sample(
         self,
-        shapes: list[tuple[BaseGeometry, np.int32]],
+        shapes: list[tuple[Geometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
