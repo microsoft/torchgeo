@@ -28,9 +28,9 @@ import shapely
 import torch
 from geopandas import GeoDataFrame
 from pyproj import CRS
+from rasterio import Affine
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
-from rasterio import Affine
 from rasterio.vrt import WarpedVRT
 from shapely import Geometry
 from torch import Tensor
