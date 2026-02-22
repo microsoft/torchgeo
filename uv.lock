@@ -3813,7 +3813,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "einops", specifier = ">=0.3" },
-    { name = "geopandas", specifier = ">=0.13" },
+    { name = "geopandas", specifier = ">=1.0" },
     { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=3.10,<3.15" },
     { name = "ipywidgets", marker = "extra == 'docs'", specifier = ">=7" },
     { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.35" },
@@ -3854,7 +3854,7 @@ requires-dist = [
     { name = "torchmetrics", specifier = ">=1.2" },
     { name = "torchvision", specifier = ">=0.17" },
     { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.2" },
-    { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=0.13" },
+    { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
     { name = "types-requests", marker = "extra == 'style'", specifier = ">=2.25" },
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
     { name = "typing-extensions", specifier = ">=4.8" },

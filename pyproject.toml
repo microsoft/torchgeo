@@ -38,8 +38,8 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
-    "geopandas>=0.13",
+    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
+    "geopandas>=1.0",
     # jsonargparse 4.35+ required for Python 3.12.8+ support
     "jsonargparse[signatures]>=4.35",
     # kornia 0.8.2+ required for fix to VideoSequential
@@ -139,8 +139,8 @@ style = [
     "ruff>=0.9",
     # ty 0.0.2+ required for stable release
     "ty>=0.0.2",
-    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
-    "types-geopandas>=0.13",
+    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
+    "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
