@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -278,9 +278,7 @@ class ZueriCrop(NonGeoDataset):
         ncols = 2
         image, mask = sample['image'][time_step, rgb_indices], sample['mask']
 
-        image = torch.tensor(
-            percentile_normalization(image.numpy()) * 255, dtype=torch.uint8
-        )
+        image = (quantile_normalization(image) * 255).byte()
 
         mask = torch.argmax(mask, dim=0)
 

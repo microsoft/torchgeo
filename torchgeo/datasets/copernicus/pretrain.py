@@ -7,13 +7,13 @@ import random
 from collections.abc import Iterator
 from typing import Any, ClassVar
 
-import numpy as np
+import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from torch.utils.data import IterableDataset
 
-from ..utils import Sample, lazy_import, percentile_normalization
+from ..utils import Sample, lazy_import, quantile_normalization
 
 
 class CopernicusPretrain(IterableDataset[Sample]):
@@ -191,45 +191,45 @@ class CopernicusPretrain(IterableDataset[Sample]):
         """
         fig, ax = plt.subplots(nrows=2, ncols=4)
 
-        image = sample['s1_grd.pth'].numpy()
+        image = sample['s1_grd.pth']
         vv = image[0]
         vh = image[1]
-        image = np.stack([vv, vh, (vv + vh) / 2], axis=-1)
-        image = percentile_normalization(image)
+        image = torch.stack([vv, vh, (vv + vh) / 2], dim=-1)
+        image = quantile_normalization(image)
         ax[0, 0].imshow(image)
         ax[0, 0].axis('off')
 
         rgb_bands = [3, 2, 1]
-        image = sample['s2_toa.pth'].numpy()[rgb_bands]
+        image = sample['s2_toa.pth'][rgb_bands].float()
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         ax[0, 1].imshow(image)
         ax[0, 1].axis('off')
 
         rgb_bands = [7, 5, 3]
-        image = sample['s3_olci.pth'].numpy()[rgb_bands]
+        image = sample['s3_olci.pth'][rgb_bands]
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         ax[0, 2].imshow(image)
         ax[0, 2].axis('off')
 
-        image = sample['dem.pth'].numpy()
+        image = sample['dem.pth']
         ax[0, 3].imshow(image, cmap='terrain')
         ax[0, 3].axis('off')
 
-        image = sample['s5p_co.pth'].numpy()[0]
+        image = sample['s5p_co.pth'][0]
         ax[1, 0].imshow(image, cmap='Wistia')
         ax[1, 0].axis('off')
 
-        image = sample['s5p_no2.pth'].numpy()[0]
+        image = sample['s5p_no2.pth'][0]
         ax[1, 1].imshow(image, cmap='Wistia')
         ax[1, 1].axis('off')
 
-        image = sample['s5p_o3.pth'].numpy()[0]
+        image = sample['s5p_o3.pth'][0]
         ax[1, 2].imshow(image, cmap='Wistia')
         ax[1, 2].axis('off')
 
-        image = sample['s5p_so2.pth'].numpy()[0]
+        image = sample['s5p_so2.pth'][0]
         ax[1, 3].imshow(image, cmap='Wistia')
         ax[1, 3].axis('off')
 

@@ -773,37 +773,29 @@ def rgb_to_mask(
     return mask
 
 
-def percentile_normalization(
-    img: np.typing.NDArray[np.int_],
-    lower: float = 2,
-    upper: float = 98,
-    axis: int | Sequence[int] | None = None,
-) -> np.typing.NDArray[np.int_]:
-    """Applies percentile normalization to an input image.
-
-    Specifically, this will rescale the values in the input such that values <= the
-    lower percentile value will be 0 and values >= the upper percentile value will be 1.
-    Using the 2nd and 98th percentile usually results in good visualizations.
+def quantile_normalization(
+    img: Tensor,
+    lower: float | Tensor = 0.02,
+    upper: float | Tensor = 0.98,
+    dim: int | None = None,
+) -> Tensor:
+    """Normalize and clip an input image to a specific quantile range.
 
     Args:
-        img: image to normalize
-        lower: lower percentile in range [0,100]
-        upper: upper percentile in range [0,100]
-        axis: Axis or axes along which the percentiles are computed. The default
-            is to compute the percentile(s) along a flattened version of the array.
+        img: Image to normalize.
+        lower: Lower quantile in range [0, 1].
+        upper: Upper quantile in range [0, 1].
+        dim: Dimension to reduce.
 
     Returns:
-        normalized version of ``img``
+        A normalized image.
 
-    .. versionadded:: 0.2
+    .. versionadded:: 0.10
     """
-    assert lower < upper
-    lower_percentile = np.percentile(img, lower, axis=axis)
-    upper_percentile = np.percentile(img, upper, axis=axis)
-    img_normalized: np.typing.NDArray[np.int_] = np.clip(
-        (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
-    )
-    return img_normalized
+    lower = torch.quantile(img, lower, dim, interpolation='higher')
+    upper = torch.quantile(img, upper, dim, interpolation='lower')
+    img = (img - lower) / (upper - lower + 1e-5)
+    return torch.clamp(img, 0, 1)
 
 
 def path_is_vsi(path: Path) -> bool:

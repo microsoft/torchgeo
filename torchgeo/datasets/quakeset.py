@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class QuakeSet(NonGeoDataset):
@@ -236,19 +236,19 @@ class QuakeSet(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample['image'].permute((1, 2, 0)).numpy()
+        image = sample['image'].permute((1, 2, 0))
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
         # Create false color image for image1
-        vv = percentile_normalization(image[..., 0]) + 1e-16
-        vh = percentile_normalization(image[..., 1]) + 1e-16
-        fci1 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        vv = quantile_normalization(image[..., 0]) + 1e-16
+        vh = quantile_normalization(image[..., 1]) + 1e-16
+        fci1 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         # Create false color image for image2
-        vv = percentile_normalization(image[..., 2]) + 1e-16
-        vh = percentile_normalization(image[..., 3]) + 1e-16
-        fci2 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        vv = quantile_normalization(image[..., 2]) + 1e-16
+        vh = quantile_normalization(image[..., 3]) + 1e-16
+        fci2 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:

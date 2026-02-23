@@ -28,7 +28,7 @@ from torchgeo.datasets.utils import (
     lazy_import,
     merge_samples,
     pad_across_batches,
-    percentile_normalization,
+    quantile_normalization,
     stack_samples,
     unbind_samples,
     which,
@@ -542,10 +542,9 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
         assert subdir.cwd() == subdir
 
 
-def test_percentile_normalization() -> None:
-    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
-
-    img = percentile_normalization(img, 2, 98)
+def test_quantile_normalization() -> None:
+    img = torch.rand(3, 16, 16)
+    img = quantile_normalization(img)
     assert img.min() == 0
     assert img.max() == 1
 

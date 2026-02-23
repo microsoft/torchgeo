@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_and_extract_archive, percentile_normalization
+from .utils import Path, Sample, download_and_extract_archive, quantile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -149,11 +149,11 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         ncols = 3
 
-        image1 = sample['image'][0].permute(1, 2, 0).numpy()
-        image1 = percentile_normalization(image1, axis=(0, 1))
+        image1 = sample['image'][0].permute(1, 2, 0)
+        image1 = quantile_normalization(image1)
 
-        image2 = sample['image'][1].permute(1, 2, 0).numpy()
-        image2 = percentile_normalization(image2, axis=(0, 1))
+        image2 = sample['image'][1].permute(1, 2, 0)
+        image2 = quantile_normalization(image2)
 
         if 'prediction' in sample:
             ncols += 1

@@ -7,6 +7,7 @@ import os
 from collections.abc import Sequence
 from typing import Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, percentile_normalization
+from .utils import Path, Sample, quantile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -243,26 +244,24 @@ class BioMassters(NonGeoDataset):
 
         fig, axs = plt.subplots(1, ncols=ncols, figsize=(5 * ncols, 10))
         for idx, sens in enumerate(self.sensors):
-            img = sample[f'image_{sens}'].numpy()
+            img = sample[f'image_{sens}'].float()
             if self.as_time_series:
                 # plot last time step
                 img = img[-1, ...]
             if sens == 'S2':
                 img = img[[2, 1, 0], ...]
-                img = percentile_normalization(img.transpose(1, 2, 0))
+                img = quantile_normalization(einops.rearrange(img, 'c h w -> h w c'))
             else:
                 co_polarization = img[0]  # transmit == receive
                 cross_polarization = img[1]  # transmit != receive
                 ratio = co_polarization / cross_polarization
 
                 # https://gis.stackexchange.com/a/400780/123758
-                co_polarization = np.clip(co_polarization / 0.3, a_min=0, a_max=1)
-                cross_polarization = np.clip(
-                    cross_polarization / 0.05, a_min=0, a_max=1
-                )
-                ratio = np.clip(ratio / 25, a_min=0, a_max=1)
+                co_polarization = torch.clamp(co_polarization / 0.3, 0, 1)
+                cross_polarization = torch.clamp(cross_polarization / 0.05, 0, 1)
+                ratio = torch.clamp(ratio / 25, 0, 1)
 
-                img = np.stack((co_polarization, cross_polarization, ratio), axis=-1)
+                img = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
 
             axs[idx].imshow(img)
             axs[idx].axis('off')

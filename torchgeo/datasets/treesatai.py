@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class TreeSatAI(NonGeoDataset):
@@ -252,10 +252,10 @@ class TreeSatAI(NonGeoDataset):
         fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False)
 
         for i, sensor in enumerate(self.sensors):
-            image = sample[f'image_{sensor}'].cpu().numpy()
+            image = sample[f'image_{sensor}']
             bands = [self.all_bands[sensor].index(b) for b in self.rgb_bands[sensor]]
             image = rearrange(image[bands], 'c h w -> h w c')
-            image = percentile_normalization(image)
+            image = quantile_normalization(image)
             ax[0, i].imshow(image)
             ax[0, i].axis('off')
 
@@ -285,7 +285,7 @@ class TreeSatAI(NonGeoDataset):
             Class names and percentages sorted by percentage.
         """
         labels: list[tuple[str, float]] = []
-        for i, pct in enumerate(multilabel.cpu().numpy()):
+        for i, pct in enumerate(multilabel):
             if pct > 0.001:
                 labels.append((self.classes[i], pct))
 

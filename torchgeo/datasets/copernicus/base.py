@@ -30,7 +30,7 @@ from ..utils import (
     disambiguate_timestamp,
     download_and_extract_archive,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -239,9 +239,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 raise RGBBandsMissingError()
 
         # Static -> time series
-        images = sample['image'].numpy()
+        images = sample['image']
         if sample['image'].dim() == 3:
-            images = np.expand_dims(images, axis=0)
+            images = torch.unsqueeze(images, dim=0)
 
         ncols = len(images)
         if 'mask' in sample:
@@ -275,10 +275,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             # SAR
             vv = images[:, 0]
             vh = images[:, 1]
-            images = np.stack([vv, vh, (vv + vh) / 2], axis=1)
-            images = percentile_normalization(images)
+            images = torch.stack([vv, vh, (vv + vh) / 2], dim=1)
+            images = quantile_normalization(images)
 
-        images = percentile_normalization(images)
+        images = quantile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
             ax[0, i].imshow(images[i])

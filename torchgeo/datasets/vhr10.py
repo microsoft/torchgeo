@@ -24,7 +24,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     lazy_import,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -387,7 +387,7 @@ class VHR10(NonGeoDataset):
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0))
 
         if self.split == 'negative':
             fig, axs = plt.subplots(squeeze=False)
@@ -401,8 +401,8 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        boxes = sample['bbox_xyxy'].cpu().numpy()
-        labels = sample['label'].cpu().numpy()
+        boxes = sample['bbox_xyxy']
+        labels = sample['label']
         if 'mask' in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
 
@@ -414,10 +414,10 @@ class VHR10(NonGeoDataset):
         if show_predictions:
             show_pred_boxes = False
             show_pred_masks = False
-            prediction_label = sample['prediction_label'].numpy()
-            prediction_score = sample['prediction_score'].numpy()
+            prediction_label = sample['prediction_label']
+            prediction_score = sample['prediction_score']
             if 'prediction_bbox_xyxy' in sample:
-                prediction_bbox_xyxy = sample['prediction_bbox_xyxy'].numpy()
+                prediction_bbox_xyxy = sample['prediction_bbox_xyxy']
                 show_pred_boxes = True
             if 'prediction_mask' in sample:
                 prediction_mask = sample['prediction_mask'].numpy()

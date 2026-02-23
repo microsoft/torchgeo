@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, lazy_import, percentile_normalization
+from .utils import Path, Sample, lazy_import, quantile_normalization
 
 
 class MMEarth(NonGeoDataset):
@@ -681,35 +681,35 @@ class MMEarth(NonGeoDataset):
             modalities_name = key.split('_', 1)[1]
             match modalities_name:
                 case 'sentinel2':
-                    norm_img = percentile_normalization(val[[3, 2, 1]].numpy())
+                    norm_img = quantile_normalization(val[[3, 2, 1]])
                     images.append(rearrange(norm_img, 'c h w -> h w c'))
 
                     titles.append('Sentinel-2 RGB')
                 case 'esa_worldcover':
-                    tensor_np = val.squeeze().numpy()
-                    rgb_image = np.zeros(
-                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    tensor = val.squeeze()
+                    rgb_image = torch.zeros(
+                        (tensor.shape[0], tensor.shape[1], 3), dtype=torch.uint8
                     )
                     for value, color in color_map[modalities_name].items():
-                        mask = tensor_np == value
-                        rgb_image[mask] = color
+                        mask = tensor == value
+                        rgb_image[mask] = torch.tensor(color, dtype=torch.uint8)
 
                     images.append(rgb_image)
                     titles.append(modalities_name.replace('_', ' ').title())
                 case 'dynamic_world':
-                    tensor_np = val.squeeze().numpy()
-                    rgb_image = np.zeros(
-                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    tensor = val.squeeze()
+                    rgb_image = torch.zeros(
+                        (tensor.shape[0], tensor.shape[1], 3), dtype=torch.uint8
                     )
                     for value, color in color_map[modalities_name].items():
-                        mask = tensor_np == value
-                        rgb_image[mask] = color
+                        mask = tensor == value
+                        rgb_image[mask] = torch.tensor(color, dtype=torch.uint8)
 
                     images.append(rgb_image)
                     titles.append(modalities_name.replace('_', ' ').title())
                 case _:
-                    band_val = val[0].numpy()
-                    norm_img = percentile_normalization(band_val)
+                    band_val = val[0]
+                    norm_img = quantile_normalization(band_val)
                     images.append(norm_img)
 
                     modalities_name = key.split('_', 1)[1]
