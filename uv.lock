@@ -1004,7 +1004,7 @@ name = "h5py"
 version = "3.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5d/57/dfb3c5c3f1bf5f5ef2e59a22dec4ff1f3d7408b55bfcefcfb0ea69ef21c6/h5py-3.14.0.tar.gz", hash = "sha256:2372116b2e0d5d3e5e705b7f663f7c8d96fa79a4052d250484ef91d24d6a08f4", size = 424323, upload-time = "2025-06-06T14:06:15.01Z" }
 wheels = [
@@ -3819,7 +3819,7 @@ requires-dist = [
     { name = "kornia", specifier = ">=0.8.2" },
     { name = "laspy", marker = "extra == 'datasets'", specifier = ">=2.5.3" },
     { name = "lightly", specifier = ">=1.4.5,!=1.4.26" },
-    { name = "lightning", specifier = ">=2.4,!=2.5.0,!=2.5.5,!=2.5.6" },
+    { name = "lightning", specifier = ">=2,!=2.3.*,!=2.5.0,!=2.5.5,!=2.5.6" },
     { name = "matplotlib", specifier = ">=3.7.3" },
     { name = "microsoft-aurora", marker = "extra == 'models'", specifier = ">=1.6" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=0.18.0" },
