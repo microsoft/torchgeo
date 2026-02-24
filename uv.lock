@@ -25,6 +25,47 @@ wheels = [
 ]
 
 [[package]]
+name = "adbc-driver-manager"
+version = "1.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/77/b6ffd112a67d133810d0027e9de4408a6e63e0e1c438f5866cc28eb3c213/adbc_driver_manager-1.10.0.tar.gz", hash = "sha256:f04407cf2f99bfde13dea0e136d87219c8a16678d43e322744dbd84cdd8eaac2", size = 208204, upload-time = "2026-01-09T07:13:45.803Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/54/deedd6a3fd222ed80ee3441371fdfbd315014a090fe7faf068b1463af7ec/adbc_driver_manager-1.10.0-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:0f8133130271aff2744a5f706bdb7ec91aab14c19d6db45edd9ccd70e08d778b", size = 532164, upload-time = "2026-01-09T07:12:11.698Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/05/0d65aa46491924beff32507aa39956eea68522095b2d67af0ad0461730df/adbc_driver_manager-1.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a8862ed1825df0bbaf9ab4353addd06e1dc4d53f708fb1f4be1fb86e1d91d3f4", size = 509565, upload-time = "2026-01-09T07:12:13.756Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/a1/60cf47f45d09db6d2d0a83fb58307cccf0d6e3f63f007ee5f5b1ef893471/adbc_driver_manager-1.10.0-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:24fca9fd6435ad4cfa1f3e125add6b964bb8be2102b518cf2e096e317cbc66bd", size = 3100269, upload-time = "2026-01-09T07:12:16.035Z" },
+    { url = "https://files.pythonhosted.org/packages/93/32/6ca400dc7aaf885d823b37884e40832ccf970df043f5d2817f5eb651f3bc/adbc_driver_manager-1.10.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:b112890d3c214380857852eaac40d09e66bd77ce3b75406094f2e48452e57bbd", size = 3130371, upload-time = "2026-01-09T07:12:18.295Z" },
+    { url = "https://files.pythonhosted.org/packages/92/0f/629132ae0f317755d22138df0c23ce448c98f2848bdf06e846d72ea0e10e/adbc_driver_manager-1.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:189d78787d4d77a25f946b9b96139320d53e24ecb43f39a7fb21873c5f9ce874", size = 706573, upload-time = "2026-01-09T07:12:20.003Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/da/121d46b2ddf87f7589ca52ca92585b12618ab8493d9980546e42976b1225/adbc_driver_manager-1.10.0-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:dfba1775474e2ecf8af7486fccd6471811f2e5d02c2dc25c0e3e955a7e9a0e15", size = 529587, upload-time = "2026-01-09T07:12:21.546Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/9c/6f9929b53cd578bef06b8d000e0ab829b982bcf5b22a6c99acfbad2aab34/adbc_driver_manager-1.10.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:94cc8b279c90c66f60a499996651340c17eb40d2fd7ad22e1fe73969ab4db1ee", size = 507669, upload-time = "2026-01-09T07:12:22.88Z" },
+    { url = "https://files.pythonhosted.org/packages/52/7b/2c076500e60cac3c2761eeecc82afed42af22d3a65cf3cd8d8034ffd75ad/adbc_driver_manager-1.10.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:ae24386989dfa055a09c800d13d5278d5d0399aee2548f071f414e6b8af63fc8", size = 3093831, upload-time = "2026-01-09T07:12:25.15Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/7d/3e131221995aef7edfd4dd0b09f14b7e51772d28eb362a0e6c3b8301a22a/adbc_driver_manager-1.10.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:97e06da4235dabbd29244c8bd83f769c8995c25abed5d0c2ee2d95ec76d48b8a", size = 3116517, upload-time = "2026-01-09T07:12:26.902Z" },
+    { url = "https://files.pythonhosted.org/packages/97/c2/2ed6c856dd56bbc0a45aaab67f6b1f0a846296f20d5ad625a3c5e7084e4f/adbc_driver_manager-1.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:564a95617bda8907a0ad0a8bc8fea0c2cf951cea747c0d750a4b1740c828b1ef", size = 705122, upload-time = "2026-01-09T07:12:35.999Z" },
+    { url = "https://files.pythonhosted.org/packages/36/f5/0e6518feac552081f523dbd886670ebb8210b065bdf97ea1e6af7113f1b5/adbc_driver_manager-1.10.0-cp313-cp313t-macosx_10_15_x86_64.whl", hash = "sha256:fcb5fc9dbf737341eaa28ca2c529c8432dc24aa282cad5a68fc31e5ddd9373fe", size = 546640, upload-time = "2026-01-09T07:12:28.115Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/40/e79cce0101eaf482519d39d69811983f084aeb4f2c1d76f9e98301f41f39/adbc_driver_manager-1.10.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:fd42acb06a5bb5683b583ebad320f31f9e403f5395e6272e44aab0e379349aeb", size = 526724, upload-time = "2026-01-09T07:12:29.637Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/b6/5149308e6a5f38f4995ee4d0d809ed57f7d2c86eb0c358eff3445cf64fca/adbc_driver_manager-1.10.0-cp313-cp313t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:3e05838151ce926f38b2cfe016a2007af9e20148fb7bfa9025524a319f1f0aca", size = 3149413, upload-time = "2026-01-09T07:12:31.814Z" },
+    { url = "https://files.pythonhosted.org/packages/74/92/ab9b0f3e90b9140f48dc812b81be3ec54191908281f78c2142094098633e/adbc_driver_manager-1.10.0-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:71d78d7dec6b0a69023408931c13c326f3226d6977526c605afde417f883e0ed", size = 3137409, upload-time = "2026-01-09T07:12:33.845Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/1a/3d3e1da53e7a06fdbe9d3a4baf3fb603a8c44d38b7898c7cf2fdd39f5b0b/adbc_driver_manager-1.10.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:7ae144f60c1167c049af3fe7ee9231502b49eb6b7eed3c0f441e001cef841c8c", size = 530253, upload-time = "2026-01-09T07:12:37.73Z" },
+    { url = "https://files.pythonhosted.org/packages/16/07/67239506bfe9e52904e97f4908911393a751430bce123ccd35e947564f08/adbc_driver_manager-1.10.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:e0ef746fe4579238f690bd5907c631f7c2e79a6e681c79871bf30f4552de0203", size = 510023, upload-time = "2026-01-09T07:12:40.172Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/c6/2a480611bc4959fc8227f941a76a2deb3c43900a1e94588fde04bdf43ca2/adbc_driver_manager-1.10.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:8404b88bbce61c0133fa1cd3fa292cef631d36811028d9fd297c1abc1c6f357f", size = 3084610, upload-time = "2026-01-09T07:12:42.563Z" },
+    { url = "https://files.pythonhosted.org/packages/94/83/dd3adedf868d5a1a35268f3fa9a4c497083e3464d1919b2486eda60561e5/adbc_driver_manager-1.10.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:13123311a6ef468a211a4c8b48bbb60bbbf56283ad56d403bdffb2b087d70e0c", size = 3099721, upload-time = "2026-01-09T07:12:44.824Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/1c/787c51fac725e5763e79ce4e22a4b067a8ad97330d915501a89c7e5bfded/adbc_driver_manager-1.10.0-cp314-cp314-win_amd64.whl", hash = "sha256:0ccb5a1e387ed68ac044b7de674185e2f14cffe636294a453e55f22b70bdc709", size = 723075, upload-time = "2026-01-09T07:12:55.237Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/56/b103f90a2cedc61dc17065dfcfc6d3f4ab0ebac4c6ad739334be03daaf89/adbc_driver_manager-1.10.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:fb2d02dfdeb2f8c63f168ca04c48395545a56b91b70027b42913dfa48401bcca", size = 547043, upload-time = "2026-01-09T07:12:46.199Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/58/ae2ac9dee3fae5c4fe8a04513c8386257aa3e6e332a1e2697f4f11525b01/adbc_driver_manager-1.10.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:d1af42749bb377341e2d4ae5f2d7884e61607f69dd0ba555251917d7e570af6a", size = 527444, upload-time = "2026-01-09T07:12:47.895Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/25/5d44c86e150664a6a2d1cd9ad1f79e80ad7953783342c5ac81b70d9d1513/adbc_driver_manager-1.10.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:3e2119add50c528601a1089fe6da63d7d3e41c611db85ced053a70fc1b9b100d", size = 3149149, upload-time = "2026-01-09T07:12:49.923Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/ec/e835243c6590397f7c8e4041effeec7e5929f54aa28456364c1fb10e3c11/adbc_driver_manager-1.10.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:8d26bc156f0b7d8429572e7ea52830f73049de1626ae44778a915f5a88fd591b", size = 3139215, upload-time = "2026-01-09T07:12:52.046Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/32/5925fbaa8368ca943e6776c9d08b5b9e5e093069f7c84b74c690bfbde734/adbc_driver_manager-1.10.0-cp314-cp314t-win_amd64.whl", hash = "sha256:c9233443ad140ba12ddc719a4e8dab485e6bbdc9ebbd3babbc88d5b50133960c", size = 763620, upload-time = "2026-01-09T07:12:53.315Z" },
+]
+
+[package.optional-dependencies]
+dbapi = [
+    { name = "pandas" },
+    { name = "pyarrow" },
+]
+
+[[package]]
 name = "aenum"
 version = "3.1.16"
 source = { registry = "https://pypi.org/simple" }
@@ -193,6 +234,47 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/96/f0/5eb65b2bb0d09ac6776f2eb54adee6abe8228ea05b20a5ad0e4945de8aac/anyio-4.12.1.tar.gz", hash = "sha256:41cfcc3a4c85d3f05c932da7c26d0201ac36f72abd4435ba90d0464a3ffed703", size = 228685, upload-time = "2026-01-06T11:45:21.246Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/38/0e/27be9fdef66e72d64c0cdc3cc2823101b80585f8119b5c112c2e8f5f7dab/anyio-4.12.1-py3-none-any.whl", hash = "sha256:d405828884fc140aa80a3c667b8beed277f1dfedec42ba031bd6ac3db606ab6c", size = 113592, upload-time = "2026-01-06T11:45:19.497Z" },
+]
+
+[[package]]
+name = "apache-sedona"
+version = "1.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "shapely" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bd/10/59513c39bd3af6454c242f256d3b2ad41d4ab6ba2d361872b01646a4a0ac/apache_sedona-1.8.1.tar.gz", hash = "sha256:f6c7a1fd3ff392eea55e3e5ca269b035b1286017d61f129cf4bcf7f0f3faad31", size = 170200, upload-time = "2026-01-09T06:16:30.499Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/fe/be90b1416e6f324e3077dcad924f9283de96458ee2d0e0260b385bb7f197/apache_sedona-1.8.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:36f73d55f6f3f458699fd7bd2cc99a603862463abab1000ac7784ce869d3deac", size = 288700, upload-time = "2026-01-09T06:15:39.155Z" },
+    { url = "https://files.pythonhosted.org/packages/71/d4/db750e6bc53f8a222bf3ef96bf8ffb6cb98046c5ce420f306ee78828b136/apache_sedona-1.8.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:af6aa8699fde6a82b3feed1acfbdd8aa021288facbaa938c894be874956216de", size = 288952, upload-time = "2026-01-09T06:15:40.755Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/b8/21a49dc6fbf9b712f4b9628683a1af006a884b4194826c03385a256cc3eb/apache_sedona-1.8.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:477df57f0986236457ea2d883851b9eb62cb139a66fde99e0fbb45b65c63cb54", size = 332535, upload-time = "2026-01-09T06:15:42.271Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/bc/f875f126d230177dafffade844ecf7830e67e35e23870f5522fe93fa1ba5/apache_sedona-1.8.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d0853a40da14e636581e99dc4f36af9fe5ae220da762464d183daa62d5b7bc0d", size = 331891, upload-time = "2026-01-09T06:15:43.761Z" },
+    { url = "https://files.pythonhosted.org/packages/78/f7/2ae451f8fc887a79e024635e24541929f89b02526006b83cf1e4725857cd/apache_sedona-1.8.1-cp312-cp312-win_amd64.whl", hash = "sha256:47b2a3b89981bc04944604642b6c56d3cd19b5e2f08e4c16c6a1d0e8de2a4ea7", size = 286916, upload-time = "2026-01-09T06:15:45.411Z" },
+    { url = "https://files.pythonhosted.org/packages/13/99/d4fb874a4857a3eadae00beb278cbb1e9269c450a9ee3bbe4acb920ee9ea/apache_sedona-1.8.1-cp312-cp312-win_arm64.whl", hash = "sha256:32527389e528b6eae062881309245fbb243936374367bf4a4eadfe486feff2b8", size = 284767, upload-time = "2026-01-09T06:15:46.701Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/5c/91af34e4fdeeb37840f912d865ab4320a2e1b71381a824a04a1d45cfa6b4/apache_sedona-1.8.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:22a1e6bbb3fbcd446ec1e205058f085ce5628d2f1d97ec3afd0fc38e2dd65471", size = 288704, upload-time = "2026-01-09T06:15:48.306Z" },
+    { url = "https://files.pythonhosted.org/packages/36/f9/566f1508dcda0d9382f6fb3d6e6870fa3aa03f49e525865544926ecd2ec7/apache_sedona-1.8.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:e0c00c96a2cf85afa145e16820da7cc69365d356300a2d02521d2968d4daa81f", size = 288951, upload-time = "2026-01-09T06:15:49.744Z" },
+    { url = "https://files.pythonhosted.org/packages/08/46/14d938978de3cbbf5ca132cabc5f60c5811a1623721619afa9fcf53a7bf7/apache_sedona-1.8.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1b9008793bf3bb8336e51aad84fa4625dd6f838674fa8e81d04e1c8eded4c578", size = 332579, upload-time = "2026-01-09T06:15:51.226Z" },
+    { url = "https://files.pythonhosted.org/packages/61/bb/21d97ea53bca82f82748ba636fedde557e30e0ddfd822b0124c0babc2f3b/apache_sedona-1.8.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cb33b1f60e1a114d19bd50146520223d64c47bda2112c151197a2d288b9ac5be", size = 331902, upload-time = "2026-01-09T06:15:52.725Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/85/8031cebaa443c705c799b3d6390aee73416a4ac8ad4ea0d37f21130431f5/apache_sedona-1.8.1-cp313-cp313-win_amd64.whl", hash = "sha256:913727c2d1cad099d9c43487aecf268c699d3ca5806dca4561bd9624f634ebda", size = 286918, upload-time = "2026-01-09T06:15:53.993Z" },
+    { url = "https://files.pythonhosted.org/packages/34/20/39816924001630230670df59d9ae4f45fd177723569855a10db95fe9415e/apache_sedona-1.8.1-cp313-cp313-win_arm64.whl", hash = "sha256:80ff5b2e94360ba8f80a225290341f85b8b478a49b38c99b3159a1bd7a287537", size = 284760, upload-time = "2026-01-09T06:15:55.274Z" },
+    { url = "https://files.pythonhosted.org/packages/54/9a/c203e859a3d89134a6200ea0252d566129f895f96f4bcb7e5784c72d70fd/apache_sedona-1.8.1-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:8f94ca8ddb90f692231124a212d5f101e41931119ba071cb9b0131aef113572b", size = 288785, upload-time = "2026-01-09T06:15:56.927Z" },
+    { url = "https://files.pythonhosted.org/packages/39/34/2af7d7d1e981d6271630d35fd3841bca25a3fccf34ff91b2e2d8e33feae4/apache_sedona-1.8.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:a8a4eb797afc53c450a2b02b6752eb24bf35f097a64dfc233b85e5d34dea0c08", size = 288962, upload-time = "2026-01-09T06:15:58.163Z" },
+    { url = "https://files.pythonhosted.org/packages/94/5f/ceb9799102a1ef8661ed9e8284b90af21e7993b3c06fd7627c789f3d5e24/apache_sedona-1.8.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:880ab7e304071e847b84b55f0dab18cc45c38a6cad8c1b41717d45ece67b5322", size = 332578, upload-time = "2026-01-09T06:15:59.573Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/fd/1acc038ffe451279ffe403983d31e3e7b2c4f986d5c341c2be4e08669e85/apache_sedona-1.8.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d2f91145ee7501f428b50ac2e60d5271564c7050fb34948e94ff3be8d06a7efc", size = 331868, upload-time = "2026-01-09T06:16:01.513Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/e5/2bb4494e94c5dd55d72bbe60df59980689f110a2c28c52531458f4f54fec/apache_sedona-1.8.1-cp314-cp314-win_amd64.whl", hash = "sha256:e2ef75bf8bdecf693ed24a0628ffa9ab7534880b37c687acdff37504664d28e4", size = 287024, upload-time = "2026-01-09T06:16:02.788Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/25/9a6006f7361a071e09e6cfd1d669770b6f9e0e51814ed955fa27ed109127/apache_sedona-1.8.1-cp314-cp314-win_arm64.whl", hash = "sha256:dc07c0581959f41bf12af2b674ce6a219c91fdc3632479a2fbedba5674e1dae8", size = 284743, upload-time = "2026-01-09T06:16:04.286Z" },
+    { url = "https://files.pythonhosted.org/packages/70/2d/e756a4b31548ba24042e11c332eb90b387c11dc4fd8cfbe8a36ec60b0f17/apache_sedona-1.8.1-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:1b3dc43c324740ea28ad06f386993daf9779ab1e00b844bac02359f1b4237536", size = 288860, upload-time = "2026-01-09T06:16:05.917Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/0a/770197239011dbfb807034b4bdb6d85882a6ad9cdb9b3a991fc6fa4eb172/apache_sedona-1.8.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:8230fa06dbac56ffb3eb100920a23e113c674a74beb7f17ed50f390dd0173fee", size = 289014, upload-time = "2026-01-09T06:16:07.593Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/97/8e463c44da60afeacb4d827b2b87365b0e2e0d57275cb1a044465b1752c6/apache_sedona-1.8.1-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:628751595c95dcb4b133794604ed59a9b0edbfa63f3187b2632a1d40fde23d57", size = 334553, upload-time = "2026-01-09T06:16:08.849Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/93/0c79ddc92db1e7f27d92b8f59842afa4ebadfecf3cbf2f7986bc32c96155/apache_sedona-1.8.1-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8f1fef2267a31a0c70a85256d7305307e37a3203cef3258c85d6cc3da9d39be9", size = 333507, upload-time = "2026-01-09T06:16:10.278Z" },
+    { url = "https://files.pythonhosted.org/packages/62/01/48870d1e9fa2e9add368555c9afcb52e741b367098edeadcc47590217373/apache_sedona-1.8.1-cp314-cp314t-win_amd64.whl", hash = "sha256:c258f4236633a25e1a6054cb257064f234e4e813adff44a20e88409fe4f028ec", size = 287175, upload-time = "2026-01-09T06:16:12.011Z" },
+    { url = "https://files.pythonhosted.org/packages/94/10/7489a18bc6a34c89a15f7d0defc82e1850222e4ed8732299b1a3d64879a2/apache_sedona-1.8.1-cp314-cp314t-win_arm64.whl", hash = "sha256:60a8413c0bddc12ebb3c12149510636ca464501b41708a541cca38844384180b", size = 284890, upload-time = "2026-01-09T06:16:13.573Z" },
+]
+
+[package.optional-dependencies]
+db = [
+    { name = "sedonadb", extra = ["geopandas"] },
 ]
 
 [[package]]
@@ -971,6 +1053,73 @@ wheels = [
 [package.optional-dependencies]
 http = [
     { name = "aiohttp" },
+]
+
+[[package]]
+name = "geoarrow-c"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/28/fe727122e139df3ebca696d9ed2c4eae43ae916a3d6beb92fe7f845f8337/geoarrow_c-0.3.1.tar.gz", hash = "sha256:a488794aab6631f5c54c3f77fcff734b2dda162e2ef74cd22fff6989d7aed89d", size = 299004, upload-time = "2025-10-10T03:04:30.772Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/3c/5b2ada5b6166495ad1fd1f93127a6ad313833a25c38f98bab0c9b4acc95d/geoarrow_c-0.3.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:49b0cf15d73223138fae38b6f8426897c3352006d2b4216be55d5c38383fb5d5", size = 574941, upload-time = "2025-10-10T03:05:37.628Z" },
+    { url = "https://files.pythonhosted.org/packages/66/ec/ffd43f0671a5c7d46776afe4a3d15d21a04206339df3054ef676b3c36fbf/geoarrow_c-0.3.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:d0bab5f31ad17e7c6baaf2a7a0e65b67011e1b008daf4bd4ecbf9172085f0a20", size = 560325, upload-time = "2025-10-10T03:05:29.035Z" },
+    { url = "https://files.pythonhosted.org/packages/74/05/c28749e651921e469d22c06c694b3e42dac5605228ac1c34add3371bb4ba/geoarrow_c-0.3.1-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0700091e9bbb0ffdee37e5ac59ef2a38aab5683e33df14f99a7bfec487dd12f1", size = 1910515, upload-time = "2025-10-10T03:04:48.188Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/c8/71f5632a1912551e0f1a04280c7a14fa6378f01b3fe849d78bb3817226a2/geoarrow_c-0.3.1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3aa9370ac8bb295fc192c70f499502e8ae419b335fbe29ecb344a2a368f3afb1", size = 1949508, upload-time = "2025-10-10T03:05:11.23Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/e4/e7a4de01e1ac1cbcf8e20f4747182a5c2d8655a0532c1e3eada1182904b1/geoarrow_c-0.3.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:434536677f328923ea9be366824abe6fd177881eb46ebcf7cca4d7b73546cf0c", size = 2846395, upload-time = "2025-10-10T03:04:49.857Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/c8/f62fbad76e8baf7209b8f20fa849457a7b493639f5b0ec4343b69ebcf554/geoarrow_c-0.3.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:08d48af947d76a983c6cbaf05587c106d81149fad63c18ac644b72c599e70711", size = 2947165, upload-time = "2025-10-10T03:05:12.321Z" },
+    { url = "https://files.pythonhosted.org/packages/14/8a/dda4390f01ebc29a8a4b2190f132e9e251afecdb12afe1c0143f3525b0b2/geoarrow_c-0.3.1-cp312-cp312-win32.whl", hash = "sha256:bee0205900f3b88f6a3e833ab08007b654298840bd9e4e39f6aa1595cf294f1e", size = 430547, upload-time = "2025-10-10T03:06:02.895Z" },
+    { url = "https://files.pythonhosted.org/packages/36/1f/63d7d5491f1dc81e6c793276b898b983824faa6167616ed4130477d4629e/geoarrow_c-0.3.1-cp312-cp312-win_amd64.whl", hash = "sha256:b9101c94ee44687f2c62ce3cc55acef99bb032b0653e17ab12c83f3505f8b4b9", size = 451193, upload-time = "2025-10-10T03:05:46.211Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/fb/a153ad1381899459442b46c028819bc945837459bc8d7e0847c74bd375d9/geoarrow_c-0.3.1-cp312-cp312-win_arm64.whl", hash = "sha256:be77085242d5db5f85271da15a1aa5adc84c30e198691af04490b4fa91f09a8b", size = 424403, upload-time = "2025-10-10T03:05:55.602Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/66/f408e4c5cea55d056657ff3a8ae46ca1c9f47adb4d4edeffaacbdccd940d/geoarrow_c-0.3.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:105ce761cf7e59b335ebff256f7d65ae7ddedda587bc1c5a63191169f14a18ef", size = 576484, upload-time = "2025-10-10T03:05:38.585Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/ba/d3a5e04f9ebd511dd5e269af2b4227463b7327a17a817267d64fadbfe662/geoarrow_c-0.3.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:ea64cb38ae2af47973a28c7d36ac089f35dcf2916765511aace63fc2c868f39a", size = 566953, upload-time = "2025-10-10T03:05:29.998Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/24/9b956c023046f7c082347d57de6d11683d713b4b4a6edf92b364f551da1f/geoarrow_c-0.3.1-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e5849c656a8ab8359215befbaaf197a0e2eddfa3b030ee11f49a58c985c4c59c", size = 1955242, upload-time = "2025-10-10T03:04:51.061Z" },
+    { url = "https://files.pythonhosted.org/packages/01/b0/7226069e909fb54c9b799ea6f5ff97c500c689311bd0b81eabf22f5c6eec/geoarrow_c-0.3.1-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3b2b90b22caf3756e63f7038a4277368865e3541101872ba73e38cebd462c790", size = 1995358, upload-time = "2025-10-10T03:05:13.477Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/0d/01d32c9b57f86fdb38aca62ec29c24c02c324982d7fa8108e38744ec460f/geoarrow_c-0.3.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:a1f544cf77a724f7853a0bb167640915a458dbce802dc0869f3f40968f2022cf", size = 2884255, upload-time = "2025-10-10T03:04:52.2Z" },
+    { url = "https://files.pythonhosted.org/packages/88/d1/51e16079cb33cb2271717391585f95002930a2886e7f43127f9a1b644711/geoarrow_c-0.3.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:15b1b920b01532903bc11a1fac351cb93d12b6965a97b365f2c88e1667ef488d", size = 2988622, upload-time = "2025-10-10T03:05:14.751Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/79/f57f8f8971770285d62d5d76afe42bca248a25304fbc4733bac58d14ab0e/geoarrow_c-0.3.1-cp313-cp313-win32.whl", hash = "sha256:1664774a1540721ab42ac3131a9e0941e6394ba4f82e408f7ce27800cbd1aed2", size = 431565, upload-time = "2025-10-10T03:06:03.778Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/de/2b53a0c1a3b7641f2662a69089a0bb15fd7e7d25b04a92d2330a73a4de96/geoarrow_c-0.3.1-cp313-cp313-win_amd64.whl", hash = "sha256:dd13290d9fab82e7c6470da6ec6ee0f4a2e1d05a6b4050650c71f5bfb2b023e9", size = 455825, upload-time = "2025-10-10T03:05:47.245Z" },
+    { url = "https://files.pythonhosted.org/packages/53/e1/1b99b2252163fc68197fd0514087569ca610a75e0926716a4c591803822a/geoarrow_c-0.3.1-cp313-cp313-win_arm64.whl", hash = "sha256:ab4511159b0405c1b094b631c259ad07a16b4f1a3b84d453999e9dc60c302397", size = 427610, upload-time = "2025-10-10T03:05:56.549Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/e9/36e6cfeeb1713c1f1b409e81065a2011a4a1c618cebc663153cedae47e0a/geoarrow_c-0.3.1-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:8204245dd903f99fcd2f9309c1103392d1150735a2221f02575b07a5c66fa285", size = 577089, upload-time = "2025-10-10T03:05:39.69Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/f1/b6aae1316d28a44b9604a66cc4f3a7b38f0f1e7ef86e68e1e6a7c7e13ea7/geoarrow_c-0.3.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:4a69d707e21d7d2acdbd61eb11df7b052ce1b6c08cd92793c329342d4e501ce7", size = 567589, upload-time = "2025-10-10T03:05:30.965Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/a3/0d68cb5eff8e18bfdf8b6a624678e36ed4c47b2a32d5a27d48e0f130e7e0/geoarrow_c-0.3.1-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:80060160896849351f998b77b536853e91cc8eaddc13fedd5785b2459f9ce0a0", size = 1953668, upload-time = "2025-10-10T03:04:53.838Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/56/f12733a85737688a74029fd598a15e5f97fff999210d395fd25e3d70ae58/geoarrow_c-0.3.1-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:1c566c80aec907de482f9b87095b6f026a69538ff37cf701a7efbcaee6ba5389", size = 1988200, upload-time = "2025-10-10T03:05:16.355Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/b5/1529f5d8cc892790c3524252f6961e0887a6116a9c8b1f8c4f6441c5b95f/geoarrow_c-0.3.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:775615b2e77d7615ca23ac37f3a00ae11696eed3bb2a1e153a5cc094c662799f", size = 2883956, upload-time = "2025-10-10T03:04:55.185Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/0d/d269507838d049ffb090108d2000c4638f9a27606fdaee74ff6d6b400b29/geoarrow_c-0.3.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:ec1f29501d9d28c2642b0f84b2a1b958e3332375ebf1c6f2d7cb1b3876daa500", size = 2982956, upload-time = "2025-10-10T03:05:17.633Z" },
+    { url = "https://files.pythonhosted.org/packages/09/46/d1fc8d114ca713d9f25b0a130fa1e2a5f250b75680020cf63c610044a7eb/geoarrow_c-0.3.1-cp314-cp314-win32.whl", hash = "sha256:e3a310a06edebb7289785cdab19a9e64a11150644d3b657c23125aafe404f0d4", size = 436258, upload-time = "2025-10-10T03:06:04.953Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/48/33c41748a4f7dd461745b7fbedb19e81f773771144d851e12ff12b2fc546/geoarrow_c-0.3.1-cp314-cp314-win_amd64.whl", hash = "sha256:86f87599950abe7412a85a20fd5a045a859e7bb8f69d9376ccaa3c3a7cbf293a", size = 460679, upload-time = "2025-10-10T03:05:48.491Z" },
+    { url = "https://files.pythonhosted.org/packages/87/21/c7d14179893f83c76b528276aeeefc5f6ed3409ea0ef723d8e157840dd8d/geoarrow_c-0.3.1-cp314-cp314-win_arm64.whl", hash = "sha256:6502ab08968f427e94e267ae223020c0c5eb7a09db00885e349a6fab3fe632c6", size = 433657, upload-time = "2025-10-10T03:05:57.449Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/87/96bda2d65fa1da8a27f11f56bfd5d99f335829ab9892149a68acc04bf04e/geoarrow_c-0.3.1-cp314-cp314t-macosx_10_13_x86_64.whl", hash = "sha256:9bafb69791a1ca78273b0f69ab7358d1ec90e5fa80b20816fb8b7228c107bf42", size = 584495, upload-time = "2025-10-10T03:05:40.686Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/a8/772aa9c0df3e285d14eb4ae1c47d310b4c2dcc8ad96225f16841d86613c3/geoarrow_c-0.3.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:dcf61d7b35999c3fbde3152a3774ba5b6633dbcbe7fc40fea385a96ff3b5f42a", size = 576697, upload-time = "2025-10-10T03:05:31.987Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/ad/8b10f728f2b0467c9859b1170dcc4c460350f935bb6600842d7bbd51b377/geoarrow_c-0.3.1-cp314-cp314t-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:24da8395d5b298f2071f54497d876645daad5bee78fcf627bee746dc425cba2b", size = 1992239, upload-time = "2025-10-10T03:04:56.306Z" },
+    { url = "https://files.pythonhosted.org/packages/73/69/521cf08fa59d1d492b9906b7d43238bbb0b50e9d5a119b94af6ce89cfc3c/geoarrow_c-0.3.1-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:82350f13e1a31d1d4825fb65e6efb8d1b0368c17ddf5145d81049c532e3a1198", size = 1988446, upload-time = "2025-10-10T03:05:18.901Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/56/abee559124e989d9f60101aedb8385e13bc808ffaabdb711ee77f27bbf7a/geoarrow_c-0.3.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:0eb54b4d6ecddfdfdf726fefbed477b64b006873523c014d73b7d3b37818592c", size = 2901820, upload-time = "2025-10-10T03:04:57.524Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/39/dab9032f617c5e6bec8a1bfe2037fd26853576c958c75af2aacfc76bb7ac/geoarrow_c-0.3.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:aa17482255471b2d954866588480aa5a494d41fc3f8e00a8ab6f25d25b06157d", size = 2975926, upload-time = "2025-10-10T03:05:20.669Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/60/ce8fbc75f1d6dab9faccbd002bb11eaa2d584df948bc33a4abca15df6aa3/geoarrow_c-0.3.1-cp314-cp314t-win32.whl", hash = "sha256:dea8b9e16699909725e80c214ca4b4968b4c512213816876fae9e56087cf1f57", size = 452711, upload-time = "2025-10-10T03:06:06.012Z" },
+    { url = "https://files.pythonhosted.org/packages/91/2d/fb9923dcb9f04f8ee4479ca9e1c601e1327cdeb63cc67c25d0bf3c1465df/geoarrow_c-0.3.1-cp314-cp314t-win_amd64.whl", hash = "sha256:3394440734affd699dfa766eeaec1e53d76d0fe1ece5f5ee3c80e06a0e647abf", size = 482826, upload-time = "2025-10-10T03:05:49.903Z" },
+    { url = "https://files.pythonhosted.org/packages/65/c4/c96e10f0e26ec59fe89470686486f6ef75d13b8de4ee423cefd9b4ae8823/geoarrow_c-0.3.1-cp314-cp314t-win_arm64.whl", hash = "sha256:430a177b6a2145f0bcf7e39d575f2e01352608054f848e53198bfda7f59e59fb", size = 442172, upload-time = "2025-10-10T03:05:58.508Z" },
+]
+
+[[package]]
+name = "geoarrow-pyarrow"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "geoarrow-c" },
+    { name = "geoarrow-types" },
+    { name = "pyarrow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d1/e0/ff8430e5e1049e310c35f335cf7e14682bfeafeb773f48c5a7425359a4ba/geoarrow_pyarrow-0.2.0.tar.gz", hash = "sha256:5c981f5cae26fa6cdfb6f9b83fb490d36bf0fe6f6fa360c4c8983e0a8a457926", size = 33488, upload-time = "2025-05-27T03:51:45.071Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/d2/f47453e6aefb69acdde7af8b0efb3fe28c82e7c37650b0ce1ad61ab847e5/geoarrow_pyarrow-0.2.0-py3-none-any.whl", hash = "sha256:dcc1d4684e11771c3f59ba18e71fa7cc6d7cb8fd01db7bdc73ffb88c66cd0446", size = 25600, upload-time = "2025-05-27T03:51:44.113Z" },
+]
+
+[[package]]
+name = "geoarrow-types"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/97/fa35f5d13a803b8f16e59c1f18f06607b9df5683c08bd7cd7a48a29ce988/geoarrow_types-0.3.0.tar.gz", hash = "sha256:82243e4be88b268fa978ae5bba6c6680c3556735e795965b2fe3e6fbfea9f9ee", size = 23708, upload-time = "2025-05-27T03:39:39.979Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/16/e37cb1b0894c9cf3f9b1c50ebcfab56a0d9fe7c3b6f97d5680a7eb27ca08/geoarrow_types-0.3.0-py3-none-any.whl", hash = "sha256:439df6101632080442beccc7393cac54d6c7f6965da897554349e94d2492f613", size = 19025, upload-time = "2025-05-27T03:39:38.652Z" },
 ]
 
 [[package]]
@@ -3397,6 +3546,36 @@ wheels = [
 ]
 
 [[package]]
+name = "sedonadb"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/d4/66475c279e4c96f301b183a91c13aea0c25cc728936f69ea845a1afff2d0/sedonadb-0.2.0-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:08cf6c38291aaa52b14894c34e64033bdefca27fde7ead3f8768090bfe8408f7", size = 46647555, upload-time = "2025-12-04T22:53:40.166Z" },
+    { url = "https://files.pythonhosted.org/packages/db/42/51259bb31a97a37861d6af9a38436a5136feb712a323cd77cf475306a2fd/sedonadb-0.2.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:e760cc7bc4b594b8596e2c33c9bb92a3bfac0893155ee6334b036ab4f9c25539", size = 52919275, upload-time = "2025-12-04T22:52:46.372Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/37/d7bc678c4a033799302cd5b618cf2bed65fa88c6d8e310a42e2725a71093/sedonadb-0.2.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:1b1b82762cadd5b8dba5c25da2a09c9a04b26412fcd09e98a43c1bc09a579e53", size = 53924239, upload-time = "2025-12-04T22:53:12.658Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/0d/2ce8650d24d6e777f51af4837c91cdcc3465fe66ff6baefe52c7472081c7/sedonadb-0.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:ccac6deb1aa75867e7608449b430feac3e6d4081a4699549fd742794c8e24e23", size = 46614656, upload-time = "2025-12-04T22:54:03.866Z" },
+    { url = "https://files.pythonhosted.org/packages/51/e9/7dd7b0e762a7e2dda41f5c17f375dd0362943fff273c3fbb618c091bab2c/sedonadb-0.2.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:4d9239613eade75e213419acaceb434dd6c99fa8a495992744793a08eaf5f0f5", size = 46647786, upload-time = "2025-12-04T22:53:43.685Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/c0/f7e9044c8d79e47abbf785ef20ea1b5cae66ed37fbf49765aa58752c3020/sedonadb-0.2.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:cf481232b56dbb97e98f3ca805771f93260c5c96649896dc1451188a3abd3a4c", size = 52918628, upload-time = "2025-12-04T22:52:50.051Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/31/cb40eea9624dc20933c8b6d3da7a53b2761ba87b3dfc9d62e3328d0b1d1f/sedonadb-0.2.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:bd93ebb3922ddf98a44095ad1be464293a44d6318446c26ba22cd391993ca8de", size = 53923582, upload-time = "2025-12-04T22:53:16.954Z" },
+    { url = "https://files.pythonhosted.org/packages/10/62/33617731156d7f9d21a14433cb98b9ea8c04ad1b647e43a89ef1815a3ba0/sedonadb-0.2.0-cp313-cp313-win_amd64.whl", hash = "sha256:ee652df7b684e202a63123e4baac8aec529fd59168fae1e664659325e613b256", size = 46611707, upload-time = "2025-12-04T22:54:07.258Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/5b/165c2a1343c0a412e49671910f777e837f9fd609bcec550bc65b52e8d24a/sedonadb-0.2.0-cp314-cp314-macosx_12_0_arm64.whl", hash = "sha256:096fb391307f9b4a2979bae165e80734195a2218f7d09d374ffe1ea7ae33905c", size = 46628969, upload-time = "2025-12-04T22:53:46.98Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/4f/29bb29798384c7fbd089447f0db4e313a7b521fe2c99404793fedda4064c/sedonadb-0.2.0-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:33a52d3d84fe18fa7c58f5eec6c74e516e58eb2af01be8db29712fc4123c353f", size = 52926223, upload-time = "2025-12-04T22:52:53.394Z" },
+    { url = "https://files.pythonhosted.org/packages/67/2b/235bd983d41e449f67a52f9c97114c0b593b85455c81d1fba81410603e5c/sedonadb-0.2.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:ea6e95f700bbe52d4b076d328cf748a711b4c5739b54faf0917d97c8d7f93f6b", size = 53927158, upload-time = "2025-12-04T22:53:21.14Z" },
+    { url = "https://files.pythonhosted.org/packages/27/8f/e77265d1f675ae6d0cb31b317ca45e6e1f57b18e66cfecc823d9c3568517/sedonadb-0.2.0-cp314-cp314-win_amd64.whl", hash = "sha256:6a5001dc1cbde3cb848be856b50f0ca84140298b32c763a1ccedec77c2471882", size = 46605258, upload-time = "2025-12-04T22:54:10.92Z" },
+    { url = "https://files.pythonhosted.org/packages/20/f8/c7cf73b755c96bcee80c12ba5bc82b4368fac4a53655bfab17c4c76b4198/sedonadb-0.2.0-cp314-cp314t-macosx_12_0_arm64.whl", hash = "sha256:3d8438f3ee41a2701ad579a43e17faab8d77073110d1bb6925903b160c94672d", size = 46635721, upload-time = "2025-12-04T22:53:50.42Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/2a/3aaf02774924f75aaca6b6f64c20aaa4efa6b47f8a6477110bbcdd5d826e/sedonadb-0.2.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:1e91abcb057a5b077d633a76609257319019eb9a08f81a8c6a2cd17e98004ae3", size = 52927394, upload-time = "2025-12-04T22:52:57.046Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/b1/344c92775cc6eae7aaf91a45668c52922e834ddc5a13d43a2495a57e8f6c/sedonadb-0.2.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:ac55e72a41cf6f24de7c3b949999f015e471213c4aa18a2b36ec2fcaa19ba2b2", size = 53907475, upload-time = "2025-12-04T22:53:25.197Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/81/d8ec149e25d6cb948dc782568d1a8486226d5db9045e28ae8384d416ba3d/sedonadb-0.2.0-cp314-cp314t-win_amd64.whl", hash = "sha256:c17118238718256c3c23b250022dde3c042946e5102bfc2b70a5d09eed1f8029", size = 46604711, upload-time = "2025-12-04T22:54:14.848Z" },
+]
+
+[package.optional-dependencies]
+geopandas = [
+    { name = "adbc-driver-manager", extra = ["dbapi"] },
+    { name = "geoarrow-pyarrow" },
+    { name = "geopandas" },
+]
+
+[[package]]
 name = "segmentation-models-pytorch"
 version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3741,6 +3920,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "apache-sedona", extra = ["db"] },
     { name = "h5py", marker = "python_full_version < '3.14'" },
     { name = "ipywidgets" },
     { name = "laspy" },
@@ -3771,6 +3951,7 @@ all = [
     { name = "xarray" },
 ]
 datasets = [
+    { name = "apache-sedona", extra = ["db"] },
     { name = "h5py", marker = "python_full_version < '3.14'" },
     { name = "laspy" },
     { name = "netcdf4" },
@@ -3811,6 +3992,7 @@ tests = [
 
 [package.metadata]
 requires-dist = [
+    { name = "apache-sedona", extras = ["db"], marker = "extra == 'datasets'", specifier = ">=1.8.0" },
     { name = "einops", specifier = ">=0.3" },
     { name = "geopandas", specifier = ">=1.0" },
     { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=3.10,<3.15" },

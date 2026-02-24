@@ -90,6 +90,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
+    # apache-sedona[db] 1.8.0 required for sedona.db support
+    "apache-sedona[db]>=1.8.0",
     # h5py 3.10+ required for Python 3.12 wheels
     # h5py 3.15+ is incompatible with netcdf4 wheels; no h5py on Python 3.14+
     "h5py>=3.10,<3.15; python_version<'3.14'",

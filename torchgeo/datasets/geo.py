@@ -31,6 +31,7 @@ from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from shapely import Geometry
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1027,17 +1028,14 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, index: GeoSlice) -> Sample:
-        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+    def filter_index(self, index: GeoSlice) -> list[tuple[Geometry, np.int32]]:
+        """Filter the index to the given query.
 
         Args:
             index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            Sample of input, target, and/or metadata at that index.
-
-        Raises:
-            IndexError: If *index* is not found in the dataset.
+            list of tuples of (geometry, label)
         """
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
@@ -1072,6 +1070,23 @@ class VectorDataset(GeoDataset):
 
             shapes.extend(list(zip(src.geometry, labels)))
 
+        return shapes
+
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *index* is not found in the dataset.
+        """
+        shapes = self.filter_index(index)
+        x, y, _ = self._disambiguate_slice(index)
+
         # Rasterize geometries
         width = (x.stop - x.start) / x.step
         height = (y.stop - y.start) / y.step
@@ -1092,8 +1107,7 @@ class VectorDataset(GeoDataset):
                     label_list = []
                     box_list = []
                     for s in shapes:
-                        shape = shapely.geometry.shape(s[0])
-                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = convert_poly_coords(s[0], transform, inverse=True)
                         p = shapely.clip_by_rect(p, 0, 0, width, height)
 
                         # Get labels
@@ -1111,8 +1125,7 @@ class VectorDataset(GeoDataset):
                     box_list = []
                     mask_list = []
                     for i, s in enumerate(shapes):
-                        shape = shapely.geometry.shape(s[0])
-                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = convert_poly_coords(s[0], transform, inverse=True)
                         p = shapely.clip_by_rect(p, 0, 0, width, height)
 
                         # Get labels

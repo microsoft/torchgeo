@@ -143,6 +143,7 @@ from .rwanda_field_boundary import RwandaFieldBoundary
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
+from .sedonadb import SedonaDBDataset
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
@@ -343,6 +344,7 @@ __all__ = (
     'SatlasPretrain',
     'SeasoNet',
     'SeasonalContrastS2',
+    'SedonaDBDataset',
     'Sentinel',
     'Sentinel1',
     'Sentinel2',
