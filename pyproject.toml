@@ -201,8 +201,8 @@ filterwarnings = [
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning",
-    # Lightning warns us about using the CPU when GPU is available
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
+    # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
     # Lightning warns us if TensorBoard is not installed
     "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
