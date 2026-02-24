@@ -79,7 +79,11 @@ class SedonaDBDataset(VectorDataset):
                 if self.layer is not None:
                     options['layer'] = str(self.layer)
                 source_df = sd.read_pyogrio(filepath, options=options)
-                src_crs = gpd.read_file(filepath, layer=self.layer).crs
+                geometry_column_indices = df.schema.geometry_column_indices
+                if len(geometry_column_indices) != 1:
+                    raise ValueError("Source must have exactly one geometry column")
+                src_crs_obj = df.schema.field(geometry_column_indices[0]).type.crs
+                src_crs = pyproj.CRS(src_crs_obj)
 
             src_crs = pyproj.CRS.from_user_input(src_crs or self.crs)
             transformer = pyproj.Transformer.from_crs(self.crs, src_crs, always_xy=True)
