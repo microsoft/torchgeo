@@ -387,7 +387,7 @@ class VHR10(NonGeoDataset):
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
-        image = quantile_normalization(sample['image'].permute(1, 2, 0))
+        image = quantile_normalization(sample['image'].permute(1, 2, 0).float())
 
         if self.split == 'negative':
             fig, axs = plt.subplots(squeeze=False)
