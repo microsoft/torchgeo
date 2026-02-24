@@ -91,9 +91,7 @@ class SedonaDBDataset(VectorDataset):
             (maxx, maxy) = transformer.transform(x.stop, y.stop)
             query_wkt = shapely.to_wkt(shapely.box(minx, miny, maxx, maxy))
             src_crs_json = src_crs.to_json().replace("'", "''")
-            geometry_col = (
-                'wkb_geometry' if 'wkb_geometry' in source_df.columns else 'geometry'
-            )
+            geometry_col = source_df.schema.field(geometry_column_indices[0]).name
 
             source_df.to_view('temp_df', overwrite=True)
             label_select = f'temp_df.{self.label_name},' if self.label_name else ''
