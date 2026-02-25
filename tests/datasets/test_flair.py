@@ -22,6 +22,7 @@ FLAIRHUB_TEST_DATA_DIR = Path('tests') / 'data' / 'flair'
 FLAIRHUB_DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
 FLAIRHUB_DOMAIN_YEARS_SINGLE = {'D006': ['2020']}
 
+
 class _FLAIRHUBKwargs(TypedDict):
     bands: list[str]
     dataset_type: Literal['land_cover', 'crop_type', 'crop_type_2', 'crop_type_3']
@@ -130,9 +131,7 @@ class TestFLAIRHUB:
     def test_plot_all_modalities_and_lpis(
         self,
         tmp_path: Path,
-        dataset_type: Literal[
-            'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
-        ],
+        dataset_type: Literal['land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'],
         bands: list[str] | None,
         suptitle: str,
     ) -> None:
@@ -263,10 +262,7 @@ class TestFLAIRHUBToySpecific:
         assert len(filtered) == 1
 
         all_patches = FLAIRHUBToy(
-            root=root,
-            download=False,
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
+            root=root, download=False, bands=['AERIAL_RGBI'], dataset_type='land_cover'
         )
         assert len(all_patches) == 3
 
