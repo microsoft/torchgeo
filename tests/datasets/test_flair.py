@@ -5,6 +5,7 @@ import shutil
 import zipfile
 from itertools import product
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -21,12 +22,26 @@ FLAIRHUB_TEST_DATA_DIR = Path('tests') / 'data' / 'flair'
 FLAIRHUB_DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
 FLAIRHUB_DOMAIN_YEARS_SINGLE = {'D006': ['2020']}
 
-_FLAIRHUB_KWARGS = {
+class _FLAIRHUBKwargs(TypedDict):
+    bands: list[str]
+    dataset_type: Literal['land_cover', 'crop_type', 'crop_type_2', 'crop_type_3']
+    domain_years: dict[str, list[str]]
+
+
+class _FLAIRHUBToyKwargs(TypedDict):
+    bands: list[str]
+    dataset_type: Literal['land_cover', 'crop_type']
+
+
+_FLAIRHUB_KWARGS: _FLAIRHUBKwargs = {
     'bands': ['AERIAL_RGBI'],
     'dataset_type': 'land_cover',
     'domain_years': FLAIRHUB_DOMAIN_YEARS_SINGLE,
 }
-_FLAIRHUBTOY_KWARGS = {'bands': ['AERIAL_RGBI'], 'dataset_type': 'land_cover'}
+_FLAIRHUBTOY_KWARGS: _FLAIRHUBToyKwargs = {
+    'bands': ['AERIAL_RGBI'],
+    'dataset_type': 'land_cover',
+}
 
 
 class TestFLAIRHUB:
@@ -103,34 +118,6 @@ class TestFLAIRHUB:
                 bands=['AERIAL_RGBI'],
             )
 
-    @pytest.mark.parametrize('cls', [FLAIRHUB, FLAIRHUBToy])
-    def test_split_filters_and_default_loads_all(
-        self, tmp_path: Path, cls: type[FLAIRHUB] | type[FLAIRHUBToy]
-    ) -> None:
-        """With split_column set, only that split is loaded; with default, all patches."""
-        if cls is FLAIRHUBToy:
-            root = tmp_path
-            shutil.copytree(
-                FLAIRHUB_TEST_DATA_DIR / 'FLAIR-HUB_TOY', root / 'FLAIR-HUB_TOY'
-            )
-        else:
-            root = tmp_path / 'flair'
-            shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
-        kwargs: dict = {'domain_years': FLAIRHUB_DOMAIN_YEARS}
-
-        split_column = 'split_toy' if cls is FLAIRHUBToy else 'split_1'
-        common = {
-            'root': root,
-            'download': False,
-            'bands': ['AERIAL_RGBI'],
-            'dataset_type': 'land_cover',
-        }
-        extra = kwargs if cls is FLAIRHUB else {}
-        filtered = cls(**common, split='train', split_column=split_column, **extra)
-        assert len(filtered) == 1
-        all_patches = cls(**common, **extra)
-        assert len(all_patches) == 3
-
     @pytest.mark.parametrize(
         'dataset_type,bands,suptitle',
         [
@@ -141,7 +128,13 @@ class TestFLAIRHUB:
         ],
     )
     def test_plot_all_modalities_and_lpis(
-        self, tmp_path: Path, dataset_type: str, bands: list[str] | None, suptitle: str
+        self,
+        tmp_path: Path,
+        dataset_type: Literal[
+            'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
+        ],
+        bands: list[str] | None,
+        suptitle: str,
     ) -> None:
         root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
@@ -185,6 +178,31 @@ class TestFLAIRHUB:
 
 
 class TestFLAIRHUBSpecific:
+    def test_split_filters_and_default_loads_all(self, tmp_path: Path) -> None:
+        """With split_column set, only that split is loaded; with default, all patches."""
+        root = tmp_path / 'flair'
+        shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
+
+        filtered = FLAIRHUB(
+            root=root,
+            download=False,
+            bands=['AERIAL_RGBI'],
+            dataset_type='land_cover',
+            split='train',
+            split_column='split_1',
+            domain_years=FLAIRHUB_DOMAIN_YEARS,
+        )
+        assert len(filtered) == 1
+
+        all_patches = FLAIRHUB(
+            root=root,
+            download=False,
+            bands=['AERIAL_RGBI'],
+            dataset_type='land_cover',
+            domain_years=FLAIRHUB_DOMAIN_YEARS,
+        )
+        assert len(all_patches) == 3
+
     def test_zip_exists_but_not_extracted(self, tmp_path: Path) -> None:
         root = tmp_path / 'flair'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, root)
@@ -227,6 +245,31 @@ class TestFLAIRHUBSpecific:
 
 
 class TestFLAIRHUBToySpecific:
+    def test_split_filters_and_default_loads_all(self, tmp_path: Path) -> None:
+        """With split_column set, only that split is loaded; with default, all patches."""
+        root = tmp_path
+        shutil.copytree(
+            FLAIRHUB_TEST_DATA_DIR / 'FLAIR-HUB_TOY', root / 'FLAIR-HUB_TOY'
+        )
+
+        filtered = FLAIRHUBToy(
+            root=root,
+            download=False,
+            bands=['AERIAL_RGBI'],
+            dataset_type='land_cover',
+            split='train',
+            split_column='split_toy',
+        )
+        assert len(filtered) == 1
+
+        all_patches = FLAIRHUBToy(
+            root=root,
+            download=False,
+            bands=['AERIAL_RGBI'],
+            dataset_type='land_cover',
+        )
+        assert len(all_patches) == 3
+
     def test_already_extracted(self, tmp_path: Path) -> None:
         toy_dir = tmp_path / 'FLAIR-HUB_TOY'
         shutil.copytree(FLAIRHUB_TEST_DATA_DIR, toy_dir)
