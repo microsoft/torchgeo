@@ -143,7 +143,7 @@ class FLAIRHUB(NonGeoDataset):
 
     - https://arxiv.org/abs/2506.07080
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     # AERIAL_RGBI
@@ -1325,6 +1325,8 @@ class FLAIRHUBToy(FLAIRHUB):
         See Also:
             :class:`~torchgeo.datasets.FLAIRHUB`: Full dataset class for
                 production use.
+
+        .. versionadded:: 0.10.0
         """
         self.root_folder = pathlib.Path(root)
         modified_root = self.root_folder / 'FLAIR-HUB_TOY'

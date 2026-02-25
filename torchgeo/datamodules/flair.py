@@ -58,7 +58,7 @@ class FLAIRHUBDataModule(NonGeoDataModule):
     ``https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data/GLOBAL_ALL_MTD.zip``
     in the file ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10.0
     """
 
     def __init__(
@@ -281,7 +281,7 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
     ``https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data/GLOBAL_ALL_MTD.zip``
     in the file ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10.0
     """
 
     def __init__(
