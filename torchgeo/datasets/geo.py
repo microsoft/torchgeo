@@ -28,9 +28,11 @@ import shapely
 import torch
 from geopandas import GeoDataFrame
 from pyproj import CRS
+from rasterio import Affine
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from shapely import Geometry
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1027,6 +1029,175 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
+    def _semantic_segmentation_sample(
+        self,
+        shapes: list[tuple[Geometry, np.int32]],
+        width: float,
+        height: float,
+        transform: Affine,
+    ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including rasterized mask for input shapes.
+        """
+        if shapes:
+            masks = rasterio.features.rasterize(
+                shapes, out_shape=(round(height), round(width)), transform=transform
+            )
+        else:
+            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+
+        return {'mask': array_to_tensor(masks).to(self.dtype)}
+
+    def _object_detection_sample(
+        self,
+        shapes: list[tuple[Geometry, np.int32]],
+        width: float,
+        height: float,
+        transform: Affine,
+    ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including bounding box coordinates and labels for input shapes
+        """
+        if shapes:
+            label_list = []
+            box_list = []
+            for s in shapes:
+                shape = shapely.geometry.shape(s[0])
+                p = convert_poly_coords(shape, transform, inverse=True)
+                p = shapely.clip_by_rect(p, 0, 0, width, height)
+
+                # Get labels
+                label_list.append(s[1])
+
+                # xmin, ymin, xmax, ymax format
+                box_list.append(p.bounds)
+
+            labels = np.array(label_list).astype(np.int32)
+            boxes_xyxy = np.array(box_list).astype(np.float32)
+        else:
+            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
+            labels = np.empty((0,), dtype=np.int32)
+
+        return {
+            'bbox_xyxy': torch.from_numpy(boxes_xyxy),
+            'label': torch.from_numpy(labels),
+        }
+
+    def _instance_segmentation_sample(
+        self,
+        shapes: list[tuple[Geometry, np.int32]],
+        width: float,
+        height: float,
+        transform: Affine,
+    ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample including rasterized mask, boundind boxes and labels for input shapes.
+        """
+        if shapes:
+            label_list = []
+            box_list = []
+            mask_list = []
+            for i, s in enumerate(shapes):
+                shape = shapely.geometry.shape(s[0])
+                p = convert_poly_coords(shape, transform, inverse=True)
+                p = shapely.clip_by_rect(p, 0, 0, width, height)
+
+                # Get labels
+                label_list.append(s[1])
+
+                # xmin, ymin, xmax, ymax format
+                box_list.append(p.bounds)
+
+                mask = rasterio.features.rasterize(
+                    [(s[0], i + 1)],
+                    out_shape=(round(height), round(width)),
+                    transform=transform,
+                )
+                mask_list.append(mask)
+
+            labels = np.array(label_list).astype(np.int32)
+            boxes_xyxy = np.array(box_list).astype(np.float32)
+            masks = np.array(mask_list)
+
+            obj_ids = np.unique(masks)
+
+            # first id is the background, so remove it
+            obj_ids = obj_ids[1:]
+
+            # convert (H, W) mask a set of binary masks
+            masks = (masks == obj_ids[:, None, None]).astype(np.uint8)
+        else:
+            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
+            labels = np.empty((0,), dtype=np.int32)
+
+        return {
+            'mask': array_to_tensor(masks),
+            'bbox_xyxy': torch.from_numpy(boxes_xyxy),
+            'label': torch.from_numpy(labels),
+        }
+
+    def prepare_sample(
+        self,
+        shapes: list[tuple[Geometry, np.int32]],
+        width: float,
+        height: float,
+        transform: Affine,
+    ) -> Sample:
+        """Computes the sample dict matching the given shapes.
+
+        Args:
+            shapes: List of shapes and associated labels.
+            width: Width of the patch
+            height: Height of the patch
+            transform: Rasterio transform associated with the patch
+
+        Returns:
+            Sample of input, target, and/or metadata for those shapes.
+
+        Raises:
+            ValueError: If the *dataset.task* is invalid
+        """
+        match self.task:
+            case 'semantic_segmentation':
+                return self._semantic_segmentation_sample(
+                    shapes, width, height, transform
+                )
+
+            case 'object_detection':
+                return self._object_detection_sample(shapes, width, height, transform)
+
+            case 'instance_segmentation':
+                return self._instance_segmentation_sample(
+                    shapes, width, height, transform
+                )
+
+        raise ValueError(f'Invalid task: {self.task!r}')
+
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
@@ -1078,93 +1249,17 @@ class VectorDataset(GeoDataset):
         transform = rasterio.transform.from_bounds(
             x.start, y.start, x.stop, y.stop, width, height
         )
-        if shapes:
-            match self.task:
-                case 'semantic_segmentation':
-                    masks = rasterio.features.rasterize(
-                        shapes,
-                        out_shape=(round(height), round(width)),
-                        transform=transform,
-                    )
 
-                case 'object_detection':
-                    # Get boxes for object detection or instance segmentation
-                    label_list = []
-                    box_list = []
-                    for s in shapes:
-                        shape = shapely.geometry.shape(s[0])
-                        p = convert_poly_coords(shape, transform, inverse=True)
-                        p = shapely.clip_by_rect(p, 0, 0, width, height)
-
-                        # Get labels
-                        label_list.append(s[1])
-
-                        # xmin, ymin, xmax, ymax format
-                        box_list.append(p.bounds)
-
-                    labels = np.array(label_list).astype(np.int32)
-                    boxes_xyxy = np.array(box_list).astype(np.float32)
-
-                case 'instance_segmentation':
-                    # Get boxes for object detection or instance segmentation
-                    label_list = []
-                    box_list = []
-                    mask_list = []
-                    for i, s in enumerate(shapes):
-                        shape = shapely.geometry.shape(s[0])
-                        p = convert_poly_coords(shape, transform, inverse=True)
-                        p = shapely.clip_by_rect(p, 0, 0, width, height)
-
-                        # Get labels
-                        label_list.append(s[1])
-
-                        # xmin, ymin, xmax, ymax format
-                        box_list.append(p.bounds)
-
-                        mask = rasterio.features.rasterize(
-                            [(s[0], i + 1)],
-                            out_shape=(round(height), round(width)),
-                            transform=transform,
-                        )
-                        mask_list.append(mask)
-
-                    labels = np.array(label_list).astype(np.int32)
-                    boxes_xyxy = np.array(box_list).astype(np.float32)
-                    masks = np.array(mask_list)
-
-                    obj_ids = np.unique(masks)
-
-                    # first id is the background, so remove it
-                    obj_ids = obj_ids[1:]
-
-                    # convert (H, W) mask a set of binary masks
-                    masks = (masks == obj_ids[:, None, None]).astype(np.uint8)
-        else:
-            # If no features are found in this key, return an empty mask
-            # with the default fill value and dtype used by rasterize
-            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
-            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
-            labels = np.empty((0,), dtype=np.int32)
+        sample = self.prepare_sample(shapes, width, height, transform)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: Sample = {
-            'bounds': self._slice_to_tensor(index),
-            'transform': torch.tensor(transform),
-        }
 
-        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        match self.task:
-            case 'semantic_segmentation':
-                sample['mask'] = array_to_tensor(masks).to(self.dtype)
-
-            case 'object_detection':
-                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
-                sample['label'] = torch.from_numpy(labels)
-
-            case 'instance_segmentation':
-                sample['mask'] = array_to_tensor(masks)
-                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
-                sample['label'] = torch.from_numpy(labels)
+        sample.update(
+            {
+                'bounds': self._slice_to_tensor(index),
+                'transform': torch.tensor(transform),
+            }
+        )
 
         if self.transforms is not None:
             sample = self.transforms(sample)
