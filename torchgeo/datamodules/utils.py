@@ -5,7 +5,6 @@
 
 import math
 from collections.abc import Iterable
-from typing import Any
 
 import numpy as np
 import torch
@@ -45,7 +44,7 @@ def collate_fn_detection(batch: list[Sample]) -> Sample:
 
 
 def group_shuffle_split(
-    groups: Iterable[Any],
+    groups: Iterable[object],
     train_size: float | None = None,
     test_size: float | None = None,
     random_state: int | None = None,
