@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,7 +30,7 @@ from .utils import (
 class Potsdam2D(NonGeoDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
-    The `Potsdam <https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`__
+    The `Potsdam <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
     files to create the train/test sets used in the challenge. The dataset can be
@@ -125,7 +125,7 @@ class Potsdam2D(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:

@@ -7,7 +7,7 @@ import os
 import shutil
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -116,7 +116,7 @@ class MapInWild(NonGeoDataset):
         self,
         root: Path = 'data',
         modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
-        split: str = 'train',
+        split: Literal['train', 'validation', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

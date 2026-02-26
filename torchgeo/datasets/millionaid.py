@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -191,8 +191,8 @@ class MillionAID(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        task: str = 'multi-class',
-        split: str = 'train',
+        task: Literal['multi-class', 'multi-label'] = 'multi-class',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:

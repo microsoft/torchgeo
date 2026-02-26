@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -194,8 +194,8 @@ class So2Sat(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        version: str = '2',
-        split: str = 'train',
+        version: Literal['2', '3_random', '3_block', '3_culture_10'] = '2',
+        split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,

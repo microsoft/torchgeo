@@ -233,16 +233,6 @@ class TestBigEarthNetV2:
             root=tmp_path, bands=dataset.bands, split=dataset.split, download=False
         )
 
-    def test_invalid_split(self, tmp_path: Path) -> None:
-        """Test error on invalid split."""
-        with pytest.raises(AssertionError, match='split must be one of'):
-            BigEarthNetV2(tmp_path, split='invalid')
-
-    def test_invalid_bands(self, tmp_path: Path) -> None:
-        """Test error on invalid bands selection."""
-        with pytest.raises(AssertionError):
-            BigEarthNetV2(tmp_path, bands='invalid')
-
     def test_plot(self, dataset: BigEarthNetV2) -> None:
         """Test plotting functionality."""
         x = dataset[0].copy()

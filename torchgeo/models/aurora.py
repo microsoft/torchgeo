@@ -33,7 +33,7 @@ _aurora_meta = {
 }
 
 
-class Aurora_Weights(WeightsEnum):  # type: ignore[misc]
+class Aurora_Weights(WeightsEnum):
     """Aurora weights.
 
     If you use this model in your research, please cite the following paper:

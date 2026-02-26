@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import csv
-import hashlib
 import os
 import zipfile
 
@@ -67,11 +66,3 @@ if __name__ == '__main__':
 
     # create csv metadata file
     create_csv(csvname)
-
-    # Compute checksums
-    with open(zipfilename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{zipfilename}: {md5}')
-    with open(csvname, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{csvname}: {md5}')

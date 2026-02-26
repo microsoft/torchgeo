@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -50,9 +49,3 @@ if __name__ == '__main__':
     create_file(os.path.join(dir, tif_name), dtype='int8', num_channels=1)
 
     shutil.make_archive(dir, 'zip', base_dir=dir)
-
-    # Compute checksums
-    zipfilename = dir + '.zip'
-    with open(zipfilename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{zipfilename}: {md5}')

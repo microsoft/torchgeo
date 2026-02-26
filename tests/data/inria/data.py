@@ -10,7 +10,6 @@ import numpy as np
 import rasterio as rio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
-from torchvision.datasets.utils import calculate_md5
 
 
 def write_data(
@@ -31,16 +30,12 @@ def write_data(
             dst.write(img, i)
 
 
-def generate_test_data(root: str, n_samples: int = 2) -> str:
-    """Creates test data archive for InriaAerialImageLabeling dataset and
-    returns its md5 hash.
+def generate_test_data(root: str, n_samples: int = 2) -> None:
+    """Creates test data archive for InriaAerialImageLabeling dataset.
 
     Args:
         root (str): Path to store test data
         n_samples (int, optional): Number of samples. Defaults to 2.
-
-    Returns:
-        str: md5 hash of created archive
     """
     dtype = np.dtype('uint8')
     size = (8, 8)
@@ -81,9 +76,7 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
     shutil.make_archive(
         archive_path, 'zip', root_dir=root, base_dir='AerialImageDataset'
     )
-    return calculate_md5(f'{archive_path}.zip')
 
 
 if __name__ == '__main__':
-    md5_hash = generate_test_data(os.getcwd(), 7)
-    print(md5_hash)
+    generate_test_data(os.getcwd(), 7)

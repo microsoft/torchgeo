@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,12 +29,12 @@ from .utils import (
 class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www.isprs.org/education/benchmarks/UrbanSemLab/semantic-labeling.aspx>`__
+    The `Vaihingen <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/2d-sem-label-vaihingen.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
     train/test sets used in the challenge. The dataset can be downloaded from
-    `here <https://www.isprs.org/education/benchmarks/UrbanSemLab/default.aspx>`__.
+    `here <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/default.aspx>`__.
     Note, the server contains additional data for 3D Semantic Labeling which
     are currently not supported.
 
@@ -124,7 +124,7 @@ class Vaihingen2D(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:

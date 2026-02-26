@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Sequence
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,7 +49,7 @@ class BioMassters(NonGeoDataset):
     * https://nascetti-a.github.io/BioMasster/
 
     .. note::
-        This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://hf.co/datasets/torchgeo/biomassters>`_.
+        This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://huggingface.co/datasets/torchgeo/biomassters>`_.
 
     .. versionadded:: 0.5
     """
@@ -61,8 +62,8 @@ class BioMassters(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        sensors: Sequence[str] = ['S1', 'S2'],
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.

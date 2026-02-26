@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -89,7 +90,7 @@ class GID15(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -154,7 +155,9 @@ class GID15(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
+    def _load_files(
+        self, root: Path, split: Literal['train', 'val', 'test']
+    ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

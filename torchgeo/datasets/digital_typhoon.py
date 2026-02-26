@@ -39,7 +39,7 @@ class DigitalTyphoon(NonGeoDataset):
     covers over four decades.
 
     See `the Digital Typhoon website
-    <http://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
     for more information about the dataset.
 
     Dataset features:
@@ -239,7 +239,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         self.sample_sequences: list[_SampleSequenceDict] = [
             item
-            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]
+            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]  # type: ignore[no-matching-overload]
             .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
@@ -356,8 +356,8 @@ class DigitalTyphoon(NonGeoDataset):
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
-                feature_dict[feature] = (  # type: ignore[index]
-                    feature_dict[feature] - mean  # type: ignore[index]
+                feature_dict[feature] = (
+                    feature_dict[feature] - mean
                 ) / self.target_std[feature]
         return feature_dict
 
@@ -410,7 +410,7 @@ class DigitalTyphoon(NonGeoDataset):
             with tarfile.open(
                 os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             ) as tar:
-                tar.extractall(path=self.root)
+                tar.extractall(path=self.root, filter='data')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

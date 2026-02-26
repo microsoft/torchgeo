@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -75,6 +76,7 @@ class Esri2020(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -90,9 +92,14 @@ class Esri2020(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -103,7 +110,9 @@ class Esri2020(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -113,7 +122,8 @@ class Esri2020(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
             return
@@ -129,12 +139,14 @@ class Esri2020(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
+        paths = cast(Path, self.paths)
+        download_url(self.url, paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        extract_archive(os.path.join(self.paths, self.zipfile))
+        paths = cast(Path, self.paths)
+        extract_archive(os.path.join(paths, self.zipfile))
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

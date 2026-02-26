@@ -617,10 +617,13 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated: dict[Any, Any] = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
+        else:
+            collated[key] = value
     return collated
 
 
@@ -637,8 +640,9 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
         else:
@@ -720,7 +724,7 @@ def draw_semantic_segmentation_masks(
     image: Tensor,
     mask: Tensor,
     alpha: float = 0.5,
-    colors: Sequence[str | tuple[int, int, int]] | None = None,
+    colors: list[str | tuple[int, int, int]] | str | tuple[int, int, int] | None = None,
 ) -> np.typing.NDArray[np.uint8]:
     """Overlay a semantic segmentation mask onto an image.
 

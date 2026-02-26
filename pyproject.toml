@@ -38,8 +38,8 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # geopandas 0.13+ required for GeoDataFrame.get_coordinates()
-    "geopandas>=0.13",
+    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
+    "geopandas>=1.0",
     # jsonargparse 4.35+ required for Python 3.12.8+ support
     "jsonargparse[signatures]>=4.35",
     # kornia 0.8.2+ required for fix to VideoSequential
@@ -49,14 +49,12 @@ dependencies = [
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/torchgeo/torchgeo/issues/1824
     "lightly>=1.4.5,!=1.4.26",
-    # lightning 2+ required for LightningCLI args + sys.argv support
-    # lightning 2.3 contains known bugs related to YAML parsing
-    # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
+    # lightning 2.4+ required for fastapi and pydantic v2 support in lightning
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
     # lightning 2.5.5-2.5.6 contain known bugs related to checkpoint loading
     # https://github.com/torchgeo/torchgeo/issues/2995
-    "lightning>=2,!=2.3.*,!=2.5.0,!=2.5.5,!=2.5.6",
+    "lightning>=2.4,!=2.5.0,!=2.5.5,!=2.5.6",
     # matplotlib 3.7.3+ required for Python 3.12 wheels
     "matplotlib>=3.7.3",
     # numpy 1.26+ required for Python 3.12 wheels
@@ -93,7 +91,8 @@ dynamic = ["version"]
 [project.optional-dependencies]
 datasets = [
     # h5py 3.10+ required for Python 3.12 wheels
-    "h5py>=3.10",
+    # h5py 3.15+ is incompatible with netcdf4 wheels; no h5py on Python 3.14+
+    "h5py>=3.10,<3.15; python_version<'3.14'",
     # laspy 2.5.3+ required for wheels
     "laspy>=2.5.3",
     # netcdf4 1.6.5+ required for Python 3.12 wheels
@@ -133,20 +132,22 @@ models = [
     "microsoft-aurora>=1.6",
 ]
 style = [
-    # mypy 1.16+ required for exclude_gitignore configuration
-    "mypy>=1.16",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
+    # ty 0.0.2+ required for stable release
+    "ty>=0.0.2",
+    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
+    "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
     "types-shapely>=2.0.2",
 ]
 tests = [
-    # nbmake 1.3.3+ required for variable mocking
-    "nbmake>=1.3.3",
+    # nbmake 1.4.5+ removes pkg_resources dependency
+    "nbmake>=1.4.5",
     # packaging 21+ required by scikit-image
     "packaging>=21",
     # pytest 7.3.2+ required for Python 3.12 support
@@ -178,107 +179,18 @@ exclude_also = [
 ]
 show_missing = true
 
-# https://mypy.readthedocs.io/en/stable/config_file.html
-[tool.mypy]
-# Import discovery
-packages = ["torchgeo", "tests"]
-exclude = ["^tests/data"]
-exclude_gitignore = true
-ignore_missing_imports = true
-disable_error_code = "import-untyped"
-
-# Disallow dynamic typing (TODO: work in progress)
-disallow_any_unimported = false
-disallow_any_expr = false
-disallow_any_decorated = false
-disallow_any_explicit = false
-disallow_any_generics = true
-disallow_subclassing_any = true
-
-# Untyped definitions and calls
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_decorators = true
-
-# Configuring warnings
-warn_redundant_casts = true
-warn_unused_ignores = false  # remove if/when we drop ty
-warn_no_return = true
-warn_return_any = true
-warn_unreachable = true
-
-# Miscellaneous strictness flags
-strict_equality = true
-strict = true
-
-# Configuring error messages
-pretty = true
-
-# Miscellaneous
-warn_unused_configs = true
-
 [tool.pytest.ini_options]
 # Skip slow tests by default
 addopts = "-m 'not slow' --disable-socket"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control
-    # https://github.com/Cadene/pretrained-models.pytorch/issues/221
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
-    # https://github.com/pytorch/vision/pull/5898
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
-    # https://github.com/huggingface/pytorch-image-models/pull/1256
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
-    # https://github.com/pytorch/pytorch/issues/72906
-    # https://github.com/pytorch/pytorch/pull/69823
-    "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning",
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
-    # https://github.com/Lightning-AI/torchmetrics/issues/2121
-    # https://github.com/Lightning-AI/torchmetrics/pull/2137
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
+    # https://github.com/pytorch/pytorch/issues/153607
+    'ignore:The global interpreter lock \(GIL\) has been enabled to load module:RuntimeWarning',
     # https://github.com/Lightning-AI/pytorch-lightning/issues/21326
-    'ignore:`isinstance\(treespec, LeafSpec\)` is deprecated, use `isinstance\(treespec, TreeSpec\) and treespec.is_leaf\(\)` instead.',
-    # https://github.com/Lightning-AI/pytorch-lightning/issues/13256
-    # https://github.com/Lightning-AI/pytorch-lightning/pull/13261
-    "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
-    # https://github.com/Lightning-AI/pytorch-lightning/issues/13989
-    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
-    # https://github.com/Lightning-AI/pytorch-lightning/issues/14594
-    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
-    # https://github.com/rasterio/rasterio/issues/1742
-    # https://github.com/rasterio/rasterio/pull/1753
-    "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
-    # https://github.com/pytorch/pytorch/issues/60053
-    # https://github.com/pytorch/pytorch/pull/60059
-    "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
-    # https://github.com/tensorflow/tensorboard/issues/5798
-    "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
-    # https://github.com/treebeardtech/nbmake/issues/68
-    'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    'ignore:`isinstance\(treespec, LeafSpec\)` is deprecated, use `isinstance\(treespec, TreeSpec\) and treespec.is_leaf\(\)` instead.:FutureWarning',
     # https://github.com/pytorch/pytorch/pull/24929
     "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning",
-    # https://github.com/scikit-image/scikit-image/issues/6663
-    # https://github.com/scikit-image/scikit-image/pull/6637
-    "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
-    # https://github.com/lanpa/tensorboardX/pull/677
-    "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
-    # https://github.com/Lightning-AI/lightning/issues/16756
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
-    "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
-    "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
-    "ignore:`ModuleAvailableCache` is a special case of `RequirementCache`.:DeprecationWarning:lightning.fabric.plugins.environments.xla",
-    # https://github.com/pytorch/pytorch/issues/110549
-    "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
-    # https://github.com/rr-/docstring_parser/pull/82
-    "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
-    # https://github.com/kornia/kornia/pull/2967
-    "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
-    # https://github.com/kornia/kornia/pull/2981
-    "ignore:torch.is_autocast_cpu_enabled\\(\\) is deprecated.:DeprecationWarning:kornia.utils.helpers",
-    # https://github.com/pytorch/pytorch/pull/129239
-    "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
@@ -286,35 +198,21 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/issues/12618
     "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
     "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
-    # https://github.com/pydantic/pydantic/pull/11377
-    "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
-    # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
-    "ignore::DeprecationWarning:jsonargparse.*",
-    # https://github.com/geopandas/geopandas/pull/3453
-    "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
     "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
     # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
-    "ignore:MPS available but not used.:UserWarning",
     # Lightning warns us if TensorBoard is not installed
     "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
     # https://github.com/Lightning-AI/lightning/issues/18545
     "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
-    # https://github.com/kornia/kornia/pull/1663
-    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning",
-    # https://github.com/pytorch/pytorch/pull/111576
-    "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
 
     # Unexpected warnings, worth investigating
-    # https://github.com/pytest-dev/pytest/issues/11461
-    "ignore::pytest.PytestUnraisableExceptionWarning",
     # https://github.com/shapely/shapely/issues/2215
-    "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning:shapely",
-    "ignore:invalid value encountered in oriented_envelope:RuntimeWarning:shapely",
+    "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning",
+    "ignore:invalid value encountered in oriented_envelope:RuntimeWarning",
 ]
 markers = [
     "slow: marks tests as slow",
@@ -367,11 +265,8 @@ include = ["torchgeo*"]
 
 [tool.ty.rules]
 deprecated = "ignore"
-possibly-missing-attribute = "ignore"
 unresolved-attribute = "ignore"
 unresolved-import = "ignore"
-unresolved-reference = "ignore"
-unused-ignore-comment = "ignore"  # remove if/when we drop mypy
 
 [tool.ty.src]
 include = ["torchgeo", "tests"]

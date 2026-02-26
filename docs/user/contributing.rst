@@ -87,8 +87,8 @@ Linters
 In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a few linting tools:
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
-* `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
-* `prettier <https://prettier.io/docs/en/>`_ for code formatting
+* `ty <https://docs.astral.sh/ty/>`_ for static type analysis
+* `prettier <https://prettier.io/docs/>`_ for config file formatting
 
 These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
 
@@ -98,14 +98,14 @@ These tools should be used from the root of the project to ensure that our confi
    $ ruff check
 
 
-Mypy won't fix your code for you, but will warn you about potential issues with your code:
+Ty won't fix your code for you, but will warn you about potential issues with your code:
 
 .. code-block:: console
 
-   $ mypy
+   $ ty check
 
 
-If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
+If you've never used ty before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
 
 Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages.
 
@@ -167,8 +167,8 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add an import alias to this dataset in ``torchgeo/datasets/__init__.py``
 * Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
 * Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
-* Add the dataset to ``docs/api/datasets.rst``
-* Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
+* Create a new ``docs/api/datasets/foo.rst`` file with the dataset documentation (see existing files for the format)
+* Add the dataset metadata to one of ``docs/api/datasets/*.csv``
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
 

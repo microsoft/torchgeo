@@ -183,7 +183,7 @@ def interpolate_pos_embed(
     return state_dict
 
 
-class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class ScaleMAELarge16_Weights(WeightsEnum):
     """Scale-MAE Large patch size 16 weights.
 
     .. versionadded:: 0.6
@@ -240,7 +240,7 @@ def scalemae_large_patch16(
         state_dict = weights.get_state_dict(progress=True)
 
         if 'img_size' in kwargs and weights.meta['img_size'] != kwargs['img_size']:
-            state_dict = interpolate_pos_embed(model, state_dict)
+            state_dict = interpolate_pos_embed(model, state_dict)  # type: ignore[invalid-argument-type]
 
         model.load_state_dict(state_dict, strict=False)
 

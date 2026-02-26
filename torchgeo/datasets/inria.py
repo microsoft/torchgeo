@@ -7,6 +7,7 @@ import glob
 import os
 import re
 from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,7 +66,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:

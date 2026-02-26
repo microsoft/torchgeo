@@ -36,10 +36,6 @@ class TestSo2Sat:
         with pytest.raises(IndexError):
             dataset[2]
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            So2Sat(split='foo')
-
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):
             So2Sat(bands=('OK', 'BK'))

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,7 +26,7 @@ class CloudCoverDetection(NonGeoDataset):
     This training dataset was generated as part of a `crowdsourcing competition
     <https://www.drivendata.org/competitions/83/cloud-cover/>`_ on DrivenData.org, and
     later on was validated using a team of expert annotators. See `this website
-    <https://beta.source.coop/radiantearth/cloud-cover-detection-challenge/>`__
+    <https://source.coop/radiantearth/cloud-cover-detection-challenge>`__
     for dataset details.
 
     The dataset consists of Sentinel-2 satellite imagery and corresponding cloudy
@@ -63,7 +63,7 @@ class CloudCoverDetection(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,

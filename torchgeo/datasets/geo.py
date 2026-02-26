@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -115,7 +115,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
     #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
     #: Users should instead use the intersection or union operator.
-    __add__ = None  # type: ignore[assignment]
+    __add__ = None
 
     def _disambiguate_slice(self, index: GeoSlice) -> tuple[slice, slice, slice]:
         """Disambiguate a partial spatiotemporal slice.
@@ -143,6 +143,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         geoslice = tuple(out)
         assert len(geoslice) == 3
+        geoslice = cast(tuple[slice, slice, slice], geoslice)
         return geoslice
 
     def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
@@ -255,7 +256,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        _crs: CRS = self.index.crs
+        _crs = cast(CRS, self.index.crs)
         return _crs
 
     @crs.setter
@@ -310,7 +311,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         """
         # Make iterable
         if isinstance(self.paths, str | os.PathLike):
-            paths: Iterable[Path] = [self.paths]
+            paths: Iterable[Path] = [cast(Path, self.paths)]
         else:
             paths = self.paths
 
@@ -430,6 +431,7 @@ class RasterDataset(GeoDataset):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new RasterDataset instance.
 
@@ -443,10 +445,19 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                (typically ``[T, C, H, W]``). If False, merge data into a
+                mosaic (typically ``[C, H, W]``). For mask-style datasets
+                (``is_image=False``), single-band data may have the channel
+                dimension squeezed, resulting in shapes ``[T, H, W]`` or
+                ``[H, W]`` when ``C == 1``.
 
         Raises:
             AssertionError: If *bands* are invalid.
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -455,6 +466,7 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.transforms = transforms
         self.cache = cache
+        self.time_series = time_series
 
         if self.all_bands:
             assert set(self.bands) <= set(self.all_bands)
@@ -467,22 +479,20 @@ class RasterDataset(GeoDataset):
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
+                vrt = None
                 try:
-                    with rasterio.open(filepath) as src:
-                        # See if file has a color map
-                        if len(self.cmap) == 0:
-                            try:
-                                self.cmap = src.colormap(1)  # type: ignore[misc]
-                            except ValueError:
-                                pass
-
-                        if crs is None:
-                            crs = src.crs
-
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
-                            if res is None:
-                                res = vrt.res
+                    vrt = self._load_warp_file(filepath=filepath, crs=crs)
+                    # See if file has a color map
+                    if len(self.cmap) == 0:
+                        try:
+                            self.cmap = vrt.colormap(1)  # type: ignore[misc]
+                        except ValueError:
+                            pass
+                    if crs is None:
+                        crs = vrt.crs
+                    geometries.append(shapely.box(*vrt.bounds))
+                    if res is None:
+                        res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -490,6 +500,9 @@ class RasterDataset(GeoDataset):
                     filepaths.append(filepath)
                     mint, maxt = self._filepath_to_timestamp(filepath)
                     datetimes.append((mint, maxt))
+                finally:
+                    if vrt is not None:
+                        vrt.close()
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -549,10 +562,10 @@ class RasterDataset(GeoDataset):
                 for filepath in df.filepath:
                     filepath = self._update_filepath(band, filepath)
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, index))
-            data = torch.cat(data_list)
+                data_list.append(self._merge_or_stack(band_filepaths, index))
+            data = torch.cat(data_list, dim=-3)
         else:
-            data = self._merge_files(df.filepath, index, self.band_indexes)
+            data = self._merge_or_stack(df.filepath, index, self.band_indexes)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
@@ -564,7 +577,7 @@ class RasterDataset(GeoDataset):
         if self.is_image:
             sample['image'] = data
         else:
-            sample['mask'] = data.squeeze(0)
+            sample['mask'] = data.squeeze(-3)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -618,13 +631,16 @@ class RasterDataset(GeoDataset):
         filepath = os.path.join(directory, filename)
         return filepath
 
-    def _merge_files(
+    def _merge_or_stack(
         self,
         filepaths: Sequence[str],
         index: GeoSlice,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
-        """Load and merge one or more files.
+        """Load and combine one or more files.
+
+        If *time_series* is True, files are stacked into a [T, C, H, W] shape.
+        If *time_series* is False, files are merged into a [C, H, W] mosaic.
 
         Args:
             filepaths: one or more files to load and merge
@@ -640,11 +656,18 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
-        bounds = (x.start, y.start, x.stop, y.stop)
-        res = (x.step, y.step)
-        dest, _ = rasterio.merge.merge(
-            vrt_fhs, bounds, res, indexes=band_indexes, resampling=self.resampling
-        )
+        kwargs = {
+            'bounds': (x.start, y.start, x.stop, y.stop),
+            'res': (x.step, y.step),
+            'indexes': band_indexes,
+            'resampling': self.resampling,
+        }
+
+        if self.time_series:
+            dest = np.stack([rasterio.merge.merge([fh], **kwargs)[0] for fh in vrt_fhs])
+        else:
+            dest = rasterio.merge.merge(vrt_fhs, **kwargs)[0]
+
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
         tensor = array_to_tensor(dest)
         return tensor
@@ -661,28 +684,37 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: Path) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path, crs: CRS | None = None) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
 
         Args:
             filepath: file to load and warp
+            crs: Optionally specify which CRS to reproject to. This is used in __init__
+                as self.index.crs is not defined at this point.
 
         Returns:
             file handle of warped VRT
         """
         src = rasterio.open(filepath)
+
+        if crs is None:
+            try:
+                crs = self.crs
+            except AttributeError:
+                crs = src.crs
+
         left = min(src.bounds.left, src.bounds.right)
         bottom = min(src.bounds.bottom, src.bounds.top)
         right = max(src.bounds.left, src.bounds.right)
         top = max(src.bounds.bottom, src.bounds.top)
         transform, width, height = rasterio.warp.calculate_default_transform(
-            src.crs, self.crs, src.width, src.height, left, bottom, right, top
+            src.crs, crs, src.width, src.height, left, bottom, right, top
         )
 
         # Only warp if necessary
-        if src.crs != self.crs or src.transform != transform:
+        if src.crs != crs or src.transform != transform:
             vrt = WarpedVRT(
-                src, crs=self.crs, transform=transform, height=height, width=width
+                src, crs=crs, transform=transform, height=height, width=width
             )
             src.close()
             return vrt
@@ -1197,7 +1229,7 @@ class NonGeoDataset(Dataset[Sample], abc.ABC):
     size: {len(self)}"""
 
 
-class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
+class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
     """Abstract base class for classification datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips which
@@ -1208,7 +1240,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[Path], Any] | None = pil_loader,
+        loader: Callable[[str], Any] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1225,15 +1257,15 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,
             is_valid_file=is_valid_file,
         )
 
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -1247,8 +1279,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         image, label = self._load_image(index)
         sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 
@@ -1358,8 +1390,8 @@ class IntersectionDataset(GeoDataset):
 
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
-            datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
+            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
@@ -1509,7 +1541,7 @@ class UnionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])
+        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

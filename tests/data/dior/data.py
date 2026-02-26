@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 import xml.etree.ElementTree as ET
@@ -148,10 +147,6 @@ def create_dataset() -> None:
             os.path.join(dirname, 'trainval'),
         )
 
-        with open(archive_path, 'rb') as archive_file:
-            md5 = hashlib.md5(archive_file.read()).hexdigest()
-        print(f'{archive_name}: {md5}')
-
     archive_name = 'Images_test.zip'
     archive_path = os.path.join(root, archive_name)
 
@@ -161,10 +156,6 @@ def create_dataset() -> None:
         os.path.join(root, 'Images', '..'),
         os.path.join('Images', 'test'),
     )
-
-    with open(archive_path, 'rb') as archive_file:
-        md5 = hashlib.md5(archive_file.read()).hexdigest()
-    print(f'{archive_name}: {md5}')
 
 
 if __name__ == '__main__':

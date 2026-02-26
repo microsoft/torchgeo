@@ -4,7 +4,7 @@
 """TorchGeo pre-trained model repository configuration file.
 
 * https://pytorch.org/hub/
-* https://pytorch.org/docs/stable/hub.html
+* https://docs.pytorch.org/docs/stable/hub.html
 """
 
 from torchgeo.models import (
@@ -18,6 +18,7 @@ from torchgeo.models import (
     earthloc,
     ltae,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
@@ -49,6 +50,7 @@ __all__ = (
     'earthloc',
     'ltae',
     'panopticon_vitb14',
+    'presto',
     'resnet18',
     'resnet50',
     'resnet152',

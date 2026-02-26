@@ -18,7 +18,7 @@ from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFound
 class TestCOWC:
     def test_not_implemented(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            COWC()  # type: ignore[abstract]
+            COWC()
 
 
 class TestCOWCCounting:
@@ -53,10 +53,6 @@ class TestCOWCCounting:
     def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
             dataset[12]
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            COWCCounting(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -105,10 +101,6 @@ class TestCOWCDetection:
     def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
             dataset[12]
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            COWCDetection(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

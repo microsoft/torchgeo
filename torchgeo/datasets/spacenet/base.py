@@ -10,7 +10,7 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from json.decoder import JSONDecodeError
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -105,7 +105,7 @@ class SpaceNet(NonGeoDataset, ABC):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,

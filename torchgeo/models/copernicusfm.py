@@ -720,7 +720,7 @@ class CopernicusFM(nn.Module):
         return x
 
 
-class CopernicusFM_Base_Weights(WeightsEnum):  # type: ignore[misc]
+class CopernicusFM_Base_Weights(WeightsEnum):
     """Copernicus-FM-base weights."""
 
     CopernicusFM_ViT = Weights(

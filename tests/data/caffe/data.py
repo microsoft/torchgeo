@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -64,17 +63,4 @@ for split in splits:
         create_sar_images(split, filename.replace('_zones_', '_'))
         create_front_images(split, filename.replace('_zones_', '_front_'))
 
-# zip and compute md5
 shutil.make_archive(root_dir, 'zip', '.', root_dir)
-
-
-def md5(fname: str) -> str:
-    hash_md5 = hashlib.md5()
-    with open(fname, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
-md5sum = md5('caffe.zip')
-print(f'MD5 checksum: {md5sum}')

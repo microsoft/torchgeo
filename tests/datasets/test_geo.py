@@ -18,6 +18,7 @@ from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
+from torch import Tensor
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -33,7 +34,7 @@ from torchgeo.datasets import (
     VectorDataset,
     XarrayDataset,
 )
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, Sample
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -57,7 +58,7 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, index: GeoSlice) -> dict[str, GeoSlice]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]
@@ -68,7 +69,7 @@ class CustomGeoDataset(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        return {'index': index}
+        return {'bounds': self._slice_to_tensor(index)}
 
 
 class CustomRasterDataset(RasterDataset):
@@ -103,8 +104,8 @@ class CustomSentinelDataset(Sentinel2):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> dict[str, int]:
-        return {'index': index}
+    def __getitem__(self, index: int) -> Sample:
+        return {'index': torch.tensor(index)}
 
     def __len__(self) -> int:
         return 2
@@ -117,7 +118,9 @@ class TestGeoDataset:
 
     def test_getitem(self, dataset: GeoDataset) -> None:
         index = (slice(0, 1, 1), slice(2, 3, 1), slice(MINT, MAXT, 1))
-        assert dataset[index] == {'index': index}
+        sample = dataset[index]
+        assert isinstance(sample, dict)
+        assert isinstance(sample['bounds'], Tensor)
 
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
@@ -190,7 +193,7 @@ class TestGeoDataset:
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoDataset()  # type: ignore[abstract]
+            GeoDataset()
 
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
@@ -334,32 +337,6 @@ class TestRasterDataset:
         'R10m',
     )
 
-    @pytest.fixture(params=zip([['R', 'G', 'B'], None], [True, False]))
-    def naip(self, request: SubRequest) -> NAIP:
-        bands = request.param[0]
-        crs = CRS.from_epsg(4087)
-        transforms = nn.Identity()
-        cache = request.param[1]
-        return NAIP(
-            self.naip_dir, crs=crs, bands=bands, transforms=transforms, cache=cache
-        )
-
-    @pytest.fixture(
-        params=zip(
-            [
-                ['B04', 'B03', 'B02'],
-                ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'],
-            ],
-            [True, False],
-        )
-    )
-    def sentinel(self, request: SubRequest) -> Sentinel2:
-        root = os.path.join('tests', 'data', 'sentinel2')
-        bands = request.param[0]
-        transforms = nn.Identity()
-        cache = request.param[1]
-        return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
-
     @pytest.mark.parametrize(
         'paths',
         [
@@ -376,7 +353,7 @@ class TestRasterDataset:
             {naip_dir, os.path.join(naip_dir, 'm_3807511_ne_18_060_20181104.tif')},
         ],
     )
-    def test_files(self, paths: str | Iterable[str]) -> None:
+    def test_files_single(self, paths: str | Iterable[str]) -> None:
         assert len(NAIP(paths).files) == 2
 
     @pytest.mark.parametrize(
@@ -414,23 +391,56 @@ class TestRasterDataset:
     def test_files_separate(self, paths: str | Iterable[str]) -> None:
         assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
-    def test_getitem_single_file(self, naip: NAIP) -> None:
-        x = naip[naip.bounds]
+    @pytest.mark.parametrize('bands', [('R', 'G', 'B'), None])
+    @pytest.mark.parametrize('cache', [True, False])
+    @pytest.mark.parametrize('time_series', [True, False])
+    @pytest.mark.parametrize('is_image', [True, False])
+    def test_getitem_single(
+        self, bands: tuple[str] | None, cache: bool, time_series: bool, is_image: bool
+    ) -> None:
+        paths = self.naip_dir
+        transforms = nn.Identity()
+        ds = NAIP(paths, None, None, bands, transforms, cache, time_series)
+        ds.is_image = is_image
+        x = ds[ds.bounds]
+        key = 'image' if is_image else 'mask'
+        expected_ndim = 4 if time_series else 3
         assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
-        assert len(naip.bands) == x['image'].shape[0]
+        assert isinstance(x[key], torch.Tensor)
+        assert x[key].ndim == expected_ndim
+        assert x[key].shape[-3] == len(ds.bands)
 
-    def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
-        x = sentinel[sentinel.bounds]
+    @pytest.mark.parametrize(
+        'bands',
+        [
+            ('B04', 'B03', 'B02'),
+            ('B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'),
+        ],
+    )
+    @pytest.mark.parametrize('cache', [True, False])
+    @pytest.mark.parametrize('time_series', [True, False])
+    @pytest.mark.parametrize('is_image', [True, False])
+    def test_getitem_separate(
+        self, bands: tuple[str], cache: bool, time_series: bool, is_image: bool
+    ) -> None:
+        paths = os.path.join('tests', 'data', 'sentinel2')
+        transforms = nn.Identity()
+        ds = Sentinel2(paths, None, None, bands, transforms, cache, time_series)
+        ds.is_image = is_image
+        x = ds[ds.bounds]
+        key = 'image' if is_image else 'mask'
+        expected_ndim = 4 if time_series else 3
         assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
-        assert len(sentinel.bands) == x['image'].shape[0]
+        assert isinstance(x[key], torch.Tensor)
+        assert x[key].ndim == expected_ndim
+        assert x[key].shape[-3] == len(ds.bands)
 
-    def test_reprojection(self, naip: NAIP) -> None:
-        naip2 = NAIP(naip.paths, crs=CRS.from_epsg(4326))
-        assert naip.crs != naip2.crs
-        assert not math.isclose(naip.res[0], naip2.res[0])
-        assert not math.isclose(naip.res[1], naip2.res[1])
+    def test_reprojection(self) -> None:
+        naip1 = NAIP(self.naip_dir, crs=CRS.from_epsg(4087))
+        naip2 = NAIP(self.naip_dir, crs=CRS.from_epsg(4326))
+        assert naip1.crs != naip2.crs
+        assert not math.isclose(naip1.res[0], naip2.res[0])
+        assert not math.isclose(naip1.res[1], naip2.res[1])
 
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
@@ -457,11 +467,12 @@ class TestRasterDataset:
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
-    def test_invalid_index(self, sentinel: Sentinel2) -> None:
+    def test_invalid_index(self) -> None:
+        ds = Sentinel2(os.path.join('tests', 'data', 'sentinel2'))
         with pytest.raises(
             IndexError, match=r'index: .* not found in dataset with bounds: .*'
         ):
-            sentinel[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+            ds[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -575,10 +586,7 @@ class TestVectorDataset:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
 
     def test_getitem_obj_det(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'object_detection'
@@ -595,10 +603,7 @@ class TestVectorDataset:
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
@@ -609,10 +614,7 @@ class TestVectorDataset:
         x = dataset_parquet[dataset_parquet.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
 
     def test_getitem_parquet_obj_det(
         self, dataset_parquet: CustomVectorParquetDataset
@@ -633,10 +635,7 @@ class TestVectorDataset:
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
@@ -650,8 +649,7 @@ class TestVectorDataset:
         assert isinstance(x, dict)
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
+            x['mask'].unique(), torch.tensor([0, 1, 2, 3], dtype=torch.uint8)
         )
 
     def test_getitem_multilabel_obj_det(self, multilabel: CustomVectorDataset) -> None:
@@ -671,24 +669,21 @@ class TestVectorDataset:
         assert isinstance(x['label'], torch.Tensor)
         assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
         assert isinstance(x['mask'], torch.Tensor)
-        assert torch.equal(
-            x['mask'].unique(),  # type: ignore[no-untyped-call]
-            torch.tensor([0, 1], dtype=torch.uint8),
-        )
+        assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
         assert len(x['label']) == x['mask'].shape[0]
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
         dataset.task = 'object_detection'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
 
         dataset.task = 'instance_segmentation'
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
@@ -762,7 +757,7 @@ class TestNonGeoDataset:
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            NonGeoDataset()  # type: ignore[abstract]
+            NonGeoDataset()
 
 
 class TestNonGeoClassificationDataset:

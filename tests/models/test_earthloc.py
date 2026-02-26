@@ -14,7 +14,7 @@ from torchgeo.models import EarthLoc_Weights, earthloc
 class TestEarthLoc:
     @pytest.fixture(params=[*EarthLoc_Weights])
     def weights(self, request: SubRequest) -> EarthLoc_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -31,7 +31,7 @@ class TestEarthLoc:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     @torch.inference_mode()
     def test_earthloc(self) -> None:

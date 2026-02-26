@@ -84,7 +84,7 @@ class CopernicusBenchDFC2020S2(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index]
+        file = str(self.files[index])
         image_path = os.path.join(
             self.root, self.directory, 's2', file.replace('dfc', 's2')
         )

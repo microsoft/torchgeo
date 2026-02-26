@@ -23,7 +23,7 @@ class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type Competition dataset.
 
     The `CV4A Kenya Crop Type Competition
-    <https://beta.source.coop/repositories/radiantearth/african-crops-kenya-02/>`__
+    <https://source.coop/radiantearth/african-crops-kenya-02>`__
     dataset was produced as part of the Crop Type Detection competition at the
     Computer Vision for Agriculture (CV4A) Workshop at the ICLR 2020 conference.
     The objective of the competition was to create a machine learning model to

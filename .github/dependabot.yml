@@ -9,8 +9,8 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
-  - package-ecosystem: 'pip'
-    directory: '/requirements'
+  - package-ecosystem: 'uv'
+    directory: '/'
     schedule:
       interval: 'daily'
     groups:
