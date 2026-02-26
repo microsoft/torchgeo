@@ -10,6 +10,7 @@ from typing import cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
 from torch import Tensor
@@ -264,7 +265,7 @@ class EuroCrops(VectorDataset):
             cmap = plt.get_cmap('viridis')
             image = cmap(array / len(self.class_map))
             image[array == 0] = 0
-            return image.from_numpy()
+            return torch.from_numpy(image)
 
         if showing_prediction:
             axs[0].imshow(apply_cmap(mask), interpolation='none')
