@@ -10,7 +10,7 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from json.decoder import JSONDecodeError
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -247,7 +247,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return sample
 
-    def _image_id(self, path: str) -> list[Any]:
+    def _image_id(self, path: str) -> list[int | str]:
         """Return the image ID.
 
         Args:
@@ -256,7 +256,7 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             A list of integers.
         """
-        keys: list[Any] = []
+        keys: list[int | str] = []
         if match := re.search(self.file_regex, path):
             for key in match.group(1).split('_'):
                 try:
