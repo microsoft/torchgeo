@@ -34,9 +34,9 @@ def convert_coco_poly_to_mask(
     """Convert coco polygons to mask tensor.
 
     Args:
-        segmentations (List[int]): polygon coordinates
-        height (int): image height
-        width (int): image width
+        segmentations: polygon coordinates
+        height: image height
+        width: image width
 
     Returns:
         Tensor: Mask tensor
