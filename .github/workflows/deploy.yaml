@@ -11,7 +11,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.2
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.3.0
+        uses: astral-sh/setup-uv@v7.3.1
         with:
           python-version: '3.14'
           activate-environment: true
