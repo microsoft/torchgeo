@@ -72,6 +72,11 @@ class HabitAlp2(GeoDataset):
     * 23 habitat classes for semantic segmentation
     * Three temporal periods: 2003, 2013, 2020
 
+    .. note::
+       The 2020 epoch is intended as a held-out test period in the original dataset.
+       No official train/val/test split is provided — use the ``year`` argument to
+       select epochs manually.
+
     Dataset format:
 
     * images are multi-band GeoTIFFs
@@ -535,6 +540,11 @@ class HabitAlp2CD(GeoDataset):
     * LiDAR-derived terrain layers (DTM, DSM, nDSM, slope, aspect, etc.)
     * Binary change detection masks
     * Two temporal pairs: 2003→2013 and 2013→2020
+
+    .. note::
+       The 2013→2020 pair is intended as a held-out test pair in the original dataset.
+       No official train/val/test split is provided — use the ``pair`` argument to
+       select pairs manually.
 
     Dataset format:
 
