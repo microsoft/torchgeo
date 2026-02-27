@@ -73,7 +73,11 @@ class HabitAlp2DataModule(GeoDataModule):
             )
         else:
             self.train_aug = K.AugmentationSequential(
-                K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+                K.VideoSequential(
+                    K.Normalize(mean=self.mean, std=self.std),
+                    K.RandomHorizontalFlip(p=0.5),
+                    K.RandomVerticalFlip(p=0.5),
+                ),
                 data_keys=None,
                 keepdim=True,
             )
@@ -107,30 +111,3 @@ class HabitAlp2DataModule(GeoDataModule):
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
-
-    def on_after_batch_transfer(
-        self, batch: dict[str, Any], dataloader_idx: int
-    ) -> dict[str, Any]:
-        """Apply augmentations after batch transfer to device.
-
-        For change detection, handles mask separately since VideoSequential
-        only works with image tensor (T, C, H, W).
-
-        Args:
-            batch: A batch of data.
-            dataloader_idx: Index of the dataloader.
-
-        Returns:
-            Augmented batch.
-        """
-        if self.task == 'segmentation':
-            return super().on_after_batch_transfer(batch, dataloader_idx)
-
-        if self.trainer:
-            aug = self.train_aug if self.trainer.training else self.aug
-            if aug is not None:
-                mask = batch.pop('mask')
-                batch = aug(batch)
-                batch['mask'] = mask
-
-        return batch
