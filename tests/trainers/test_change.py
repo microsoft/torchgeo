@@ -64,6 +64,7 @@ class TestChangeDetectionTask:
             'bright',
             'cabuar',
             'chabud',
+            'habitalp2_cd',
             'levircd',
             'levircdplus',
             'oscd',

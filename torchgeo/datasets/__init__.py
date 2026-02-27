@@ -95,6 +95,7 @@ from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .gse import GoogleSatelliteEmbedding
+from .habitalp import HabitAlp2, HabitAlp2CD
 from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
@@ -295,6 +296,8 @@ __all__ = (
     'GlobBiomass',
     'GlobalBuildingMap',
     'GoogleSatelliteEmbedding',
+    'HabitAlp2',
+    'HabitAlp2CD',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',

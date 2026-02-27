@@ -1,0 +1,20 @@
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    num_filters: 1
+    task: 'multiclass'
+    num_classes: 9
+data:
+  class_path: HabitAlp2DataModule
+  init_args:
+    batch_size: 1
+    patch_size: 16
+    length: 1
+    task: 'change_detection'
+  dict_kwargs:
+    root: 'tests/data/habitalp'
+    pair: '2013_2020'
