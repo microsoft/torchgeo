@@ -52,12 +52,6 @@ class HabitAlp2Mask(RasterDataset):
     is_image = False
 
 
-class HabitAlp2ChangeMask(RasterDataset):
-    """Change detection mask component for HabitAlp2 dataset."""
-
-    is_image = False
-
-
 class HabitAlp2(GeoDataset):
     """HabitAlp2 dataset for semantic segmentation.
 
@@ -375,31 +369,6 @@ class HabitAlp2(GeoDataset):
 
         return tuple(available)
 
-    def _get_file_paths(self) -> list[str]:
-        """Get the paths to files based on selected bands.
-
-        Returns:
-            list of file paths
-        """
-        paths = []
-        year_files = self.data_files[self.year]
-
-        needs_rgb = any(b in ['R', 'G', 'B'] for b in self.bands)
-        needs_cir = 'NIR' in self.bands
-
-        if needs_rgb and 'rgb' in year_files:
-            paths.append(os.path.join(self.root, year_files['rgb']))
-
-        if needs_cir and 'cir' in year_files:
-            paths.append(os.path.join(self.root, year_files['cir']))
-
-        for band in self.terrain_bands:
-            if band in self.bands and band in year_files:
-                paths.append(os.path.join(self.root, year_files[band]))
-
-        paths.append(os.path.join(self.root, self.mask_files[self.year]))
-        return paths
-
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve image and mask indexed by query.
 
@@ -424,11 +393,19 @@ class HabitAlp2(GeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        paths_to_check = self._get_file_paths()
+        year_files = self.data_files[self.year]
+        paths = []
 
-        exists = [os.path.exists(p) for p in paths_to_check]
+        if any(b in ('R', 'G', 'B') for b in self.bands) and 'rgb' in year_files:
+            paths.append(os.path.join(self.root, year_files['rgb']))
+        if 'NIR' in self.bands and 'cir' in year_files:
+            paths.append(os.path.join(self.root, year_files['cir']))
+        for band in self.terrain_bands:
+            if band in self.bands and band in year_files:
+                paths.append(os.path.join(self.root, year_files[band]))
+        paths.append(os.path.join(self.root, self.mask_files[self.year]))
 
-        if all(exists):
+        if all(os.path.exists(p) for p in paths):
             return
 
         if not self.download:
@@ -679,7 +656,7 @@ class HabitAlp2CD(GeoDataset):
                 raise DatasetNotFoundError(self)
             self._download_change_mask()
 
-        self.mask_ds = HabitAlp2ChangeMask(mask_path, crs=crs, res=res, cache=cache)
+        self.mask_ds = HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
 
         # Intersect all three
         self.dataset = self.ds1.dataset & self.ds2.dataset & self.mask_ds
