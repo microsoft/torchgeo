@@ -509,13 +509,13 @@ class HabitAlp2CD(GeoDataset):
     covering approximately 154 km² with 30,241 annotated polygons.
 
     This class provides access to the change detection task, with bi-temporal image
-    pairs and binary change masks.
+    pairs and either binary or multiclass change masks.
 
     Dataset features:
 
     * RGB and CIR aerial orthophotos
     * LiDAR-derived terrain layers (DTM, DSM, nDSM, slope, aspect, etc.)
-    * Binary change detection masks
+    * Change detection masks with 9 change classes (0=no change, 1-8=change types)
     * Two temporal pairs: 2003→2013 and 2013→2020
 
     .. note::
@@ -526,7 +526,7 @@ class HabitAlp2CD(GeoDataset):
     Dataset format:
 
     * images are multi-band GeoTIFFs
-    * masks are single-band GeoTIFFs with 0=no change, 1=change
+    * masks are single-band GeoTIFFs with class IDs 0-8 (binary task binarizes to 0/1)
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -538,28 +538,29 @@ class HabitAlp2CD(GeoDataset):
     url = HabitAlp2.url
 
     valid_pairs: ClassVar[tuple[str, ...]] = ('2003_2013', '2013_2020')
+    valid_tasks: ClassVar[tuple[str, ...]] = ('binary', 'multiclass')
 
     all_bands: ClassVar[tuple[str, ...]] = HabitAlp2.all_bands
     rgb_bands: ClassVar[tuple[str, ...]] = HabitAlp2.rgb_bands
     terrain_bands: ClassVar[tuple[str, ...]] = HabitAlp2.terrain_bands
     data_files: ClassVar[dict[str, dict[str, str]]] = HabitAlp2.data_files
 
-    classes: ClassVar[tuple[str, ...]] = (
-        'Class 0',
-        'Class 1',
-        'Class 2',
-        'Class 3',
-        'Class 4',
-        'Class 5',
-        'Class 6',
-        'Class 7',
-        'Class 8',
-    )
-
     change_mask_files: ClassVar[dict[str, str]] = {
         '2003_2013': 'labels/habitalp_change_2003_2013.tif',
         '2013_2020': 'labels/habitalp_change_2013_2020.tif',
     }
+
+    multiclass_classes: ClassVar[tuple[str, ...]] = (
+        'No change',
+        'Change class 1',
+        'Change class 2',
+        'Change class 3',
+        'Change class 4',
+        'Change class 5',
+        'Change class 6',
+        'Change class 7',
+        'Change class 8',
+    )
 
     colormap: ClassVar[tuple[str, ...]] = ('blue',)
 
@@ -569,6 +570,7 @@ class HabitAlp2CD(GeoDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         pair: str = '2013_2020',
+        task: str = 'binary',
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -582,6 +584,8 @@ class HabitAlp2CD(GeoDataset):
             crs: :term:`CRS` to warp to (defaults to CRS of first file found)
             res: resolution in units of CRS (defaults to resolution of first file)
             pair: one of "2003_2013" or "2013_2020"
+            task: one of "binary" (mask binarized to 0/1) or "multiclass" (mask with
+                original 0-8 change class IDs)
             bands: bands to load (defaults to RGB only)
             transforms: a function/transform that takes input sample and returns
                 a transformed version
@@ -590,7 +594,7 @@ class HabitAlp2CD(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``pair`` or ``bands`` arguments are invalid
+            AssertionError: if ``pair``, ``task``, or ``bands`` arguments are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
 
         Note:
@@ -602,16 +606,23 @@ class HabitAlp2CD(GeoDataset):
         if '_' not in pair and len(pair) == 8 and pair.isdigit():
             pair = f'{pair[:4]}_{pair[4:]}'
         assert pair in self.valid_pairs, f'pair must be one of {self.valid_pairs}'
+        assert task in self.valid_tasks, f'task must be one of {self.valid_tasks}'
 
         super().__init__()
 
         self.root = root
         self.pair = pair
+        self.task = task
         self.download = download
         self.checksum = checksum
         self.transforms = transforms
 
         self.year1, self.year2 = pair.split('_')
+
+        if task == 'binary':
+            self.classes: tuple[str, ...] = ('no change', 'change')
+        else:
+            self.classes = self.multiclass_classes
 
         # Determine available bands (intersection of both years)
         available_bands = self._get_available_bands()
@@ -649,18 +660,14 @@ class HabitAlp2CD(GeoDataset):
             checksum=checksum,
         )
 
-        # Verify and load change mask
         mask_path = os.path.join(root, self.change_mask_files[pair])
         if not os.path.exists(mask_path):
             if not download:
                 raise DatasetNotFoundError(self)
             self._download_change_mask()
-
         self.mask_ds = HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
 
-        # Intersect all three
         self.dataset = self.ds1.dataset & self.ds2.dataset & self.mask_ds
-
         self._res = self.dataset.res
         self.index = self.dataset.index
 
@@ -695,7 +702,9 @@ class HabitAlp2CD(GeoDataset):
                 to index
 
         Returns:
-            sample containing image (T, C, H, W) and mask (1, H, W) at that index
+            sample containing image (2, C, H, W) and mask (1, H, W); for
+            ``task="binary"`` mask values are 0/1, for ``task="multiclass"``
+            mask values are 0-8 change class IDs
 
         Raises:
             IndexError: if query is not found in the index
@@ -704,15 +713,10 @@ class HabitAlp2CD(GeoDataset):
         sample2 = self.ds2[query]
         mask_sample = self.mask_ds[query]
 
-        image1 = sample1['image'].float()
-        image2 = sample2['image'].float()
-        image = torch.stack([image1, image2], dim=0)
-
-        mask = mask_sample['mask'].long()
-        if mask.ndim == 2:
-            mask = mask.unsqueeze(0)
-        elif mask.ndim == 3 and mask.shape[0] != 1:
-            mask = mask[:1]
+        image = torch.stack([sample1['image'].float(), sample2['image'].float()], dim=0)
+        mask = mask_sample['mask'].long().unsqueeze(0)
+        if self.task == 'binary':
+            mask = (mask > 0).long()
 
         sample = mask_sample | {'image': image, 'mask': mask}
 
@@ -744,43 +748,53 @@ class HabitAlp2CD(GeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            alpha: opacity with which to render change mask overlay
+            alpha: opacity with which to render change mask overlay (binary task only)
 
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        ncols = 2
 
-        def get_rgb_image(img: Tensor) -> 'np.typing.NDArray[np.uint8]':
-            rgb_img = img[:3].float().numpy()
-            rgb_img = np.transpose(rgb_img, (1, 2, 0))
-            rgb_img = percentile_normalization(rgb_img, axis=(0, 1))
-            rgb_img = np.clip(rgb_img, 0, 1)
-            rgb_img = (rgb_img * 255).astype(np.uint8)
-            return rgb_img
+        def get_rgb(img: Tensor) -> 'np.typing.NDArray[np.float64]':
+            arr = img[:3].float().numpy()
+            arr = np.transpose(arr, (1, 2, 0))
+            arr = percentile_normalization(arr, axis=(0, 1))
+            return np.clip(arr, 0, 1)
 
         def get_masked(img: Tensor, mask: Tensor) -> 'np.typing.NDArray[np.uint8]':
-            rgb_img = get_rgb_image(img)
+            rgb = (get_rgb(img) * 255).astype(np.uint8)
             array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
-                torch.from_numpy(np.transpose(rgb_img, (2, 0, 1))),
+                torch.from_numpy(np.transpose(rgb, (2, 0, 1))),
                 mask.squeeze(0),
                 alpha=alpha,
                 colors=list(self.colormap),
             )
             return array
 
-        image1 = get_masked(sample['image'][0], sample['mask'])
-        image2 = get_masked(sample['image'][1], sample['mask'])
+        if self.task == 'binary':
+            fig, axs = plt.subplots(ncols=2, figsize=(10, 5))
+            axs[0].imshow(get_masked(sample['image'][0], sample['mask']))
+            axs[1].imshow(get_masked(sample['image'][1], sample['mask']))
+            if show_titles:
+                axs[0].set_title(f'Pre change ({self.year1})')
+                axs[1].set_title(f'Post change ({self.year2})')
+        else:
+            fig, axs = plt.subplots(ncols=3, figsize=(15, 5))
+            axs[0].imshow(get_rgb(sample['image'][0]))
+            axs[1].imshow(get_rgb(sample['image'][1]))
+            axs[2].imshow(
+                sample['mask'].squeeze(0).numpy(),
+                vmin=0,
+                vmax=8,
+                cmap='tab10',
+                interpolation='none',
+            )
+            if show_titles:
+                axs[0].set_title(f'Image ({self.year1})')
+                axs[1].set_title(f'Image ({self.year2})')
+                axs[2].set_title('Change mask')
 
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 5, 5))
-        axs[0].imshow(image1)
-        axs[0].axis('off')
-        axs[1].imshow(image2)
-        axs[1].axis('off')
-
-        if show_titles:
-            axs[0].set_title(f'Pre change ({self.year1})')
-            axs[1].set_title(f'Post change ({self.year2})')
+        for ax in axs:
+            ax.axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

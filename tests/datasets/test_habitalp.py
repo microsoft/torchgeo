@@ -106,7 +106,23 @@ class TestHabitAlp2CD:
         assert x['image'].ndim == 4
         assert x['image'].shape[0] == 2
         assert x['mask'].ndim == 3
+
+    def test_getitem_multiclass(self, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'data_2020', 'labels']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        dataset = HabitAlp2CD(tmp_path, task='multiclass')
+        x = dataset[dataset.bounds]
+        assert x['mask'].ndim == 3
         assert x['mask'].shape[0] == 1
+
+    def test_plot_multiclass(self, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'data_2020', 'labels']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        dataset = HabitAlp2CD(tmp_path, task='multiclass')
+        dataset.plot(dataset[dataset.bounds], suptitle='Test')
+        plt.close()
 
     def test_len(self, dataset: HabitAlp2CD) -> None:
         assert len(dataset) >= 1
@@ -138,6 +154,10 @@ class TestHabitAlp2CD:
     def test_invalid_pair(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError, match='pair must be one of'):
             HabitAlp2CD(tmp_path, pair='2003_2020')
+
+    def test_invalid_task(self, tmp_path: Path) -> None:
+        with pytest.raises(AssertionError, match='task must be one of'):
+            HabitAlp2CD(tmp_path, task='segmentation')
 
     def test_invalid_bands(self, tmp_path: Path) -> None:
         src = os.path.join('tests', 'data', 'habitalp')
