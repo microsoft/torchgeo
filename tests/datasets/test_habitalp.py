@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -24,30 +22,15 @@ from torchgeo.datasets import (
 
 
 class TestHabitAlp2:
-    @pytest.fixture(
-        params=product(
-            ['2003', '2013', '2020'],
-            [None, ('R', 'G', 'B'), ('R', 'G', 'B', 'NIR'), ('R', 'G', 'B', 'ndsm')],
-        )
-    )
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> HabitAlp2:
-        year, bands = request.param
-
-        if year == '2003':
-            if bands is not None and any(b not in ['R', 'G', 'B'] for b in bands):
-                pytest.skip('2003 only has RGB bands')
-
+    @pytest.fixture(params=['2003', '2013', '2020'])
+    def dataset(self, tmp_path: Path, request: SubRequest) -> HabitAlp2:
         src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'data_2013', 'data_2020', 'labels']:
             src_folder = os.path.join(src, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
-
-        root = tmp_path
-        return HabitAlp2(root, year=year, bands=bands, transforms=nn.Identity())
+        return HabitAlp2(tmp_path, year=request.param, transforms=nn.Identity())
 
     def test_getitem(self, dataset: HabitAlp2) -> None:
         x = dataset[dataset.bounds]
@@ -79,9 +62,6 @@ class TestHabitAlp2:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle='Test')
         plt.close()
-
-    def test_plot_prediction(self, dataset: HabitAlp2) -> None:
-        x = dataset[dataset.bounds]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -101,35 +81,20 @@ class TestHabitAlp2:
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
-
         with pytest.raises(AssertionError, match='not available for year'):
             HabitAlp2(tmp_path, year='2003', bands=('NIR',))
 
 
 class TestHabitAlp2CD:
-    @pytest.fixture(
-        params=product(
-            ['2003_2013', '2013_2020'], [None, ('R', 'G', 'B'), ('R', 'G', 'B', 'NIR')]
-        )
-    )
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> HabitAlp2CD:
-        pair, bands = request.param
-
-        if pair == '2003_2013':
-            if bands is not None and 'NIR' in bands:
-                pytest.skip('2003_2013 pair only supports RGB bands')
-
+    @pytest.fixture(params=['2003_2013', '2013_2020'])
+    def dataset(self, tmp_path: Path, request: SubRequest) -> HabitAlp2CD:
         src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'data_2013', 'data_2020', 'labels']:
             src_folder = os.path.join(src, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
-
-        root = tmp_path
-        return HabitAlp2CD(root, pair=pair, bands=bands, transforms=nn.Identity())
+        return HabitAlp2CD(tmp_path, pair=request.param, transforms=nn.Identity())
 
     def test_getitem(self, dataset: HabitAlp2CD) -> None:
         x = dataset[dataset.bounds]
@@ -181,6 +146,5 @@ class TestHabitAlp2CD:
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
-
         with pytest.raises(AssertionError, match='not available for pair'):
             HabitAlp2CD(tmp_path, pair='2003_2013', bands=('NIR',))
