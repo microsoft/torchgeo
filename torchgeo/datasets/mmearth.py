@@ -11,6 +11,7 @@ from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from einops import rearrange
 from matplotlib.figure import Figure
@@ -356,8 +357,10 @@ class MMEarth(NonGeoDataset):
             index: index to return
 
         Returns:
-            dictionary containing the modalities and metadata
-            of the sample
+            dictionary containing the modalities and metadata of the sample
+
+        .. versionchanged:: 0.10
+           Removed *avail_bands* metadata, cast all other metadata to Tensor.
         """
         ds_index = self.indices[index]
 
@@ -452,14 +455,13 @@ class MMEarth(NonGeoDataset):
                 modality_name = self.modality_category_name.get(modality, '') + modality
                 sample[modality_name] = tensor
 
-            # add the sensor and bands actually available
-            sample['avail_bands'] = intersection_dict
-
             # add additional metadata to the sample
-            sample['lat'] = tile_info['lat']
-            sample['lon'] = tile_info['lon']
-            sample['date'] = tile_info['S2_DATE']
-            sample['tile_id'] = name
+            sample['lat'] = torch.tensor(tile_info['lat'])
+            sample['lon'] = torch.tensor(tile_info['lon'])
+            sample['date'] = torch.tensor(
+                pd.Timestamp(tile_info['S2_DATE']).timestamp()
+            )
+            sample['tile_id'] = torch.tensor(int(name))
 
         return sample
 
@@ -675,7 +677,6 @@ class MMEarth(NonGeoDataset):
             'image_canopy_height_eth',
         ]
 
-        avail_bands_dict = dict(sample['avail_bands'])
         for key in keys_to_plot:
             val = sample[key]
             modalities_name = key.split('_', 1)[1]
@@ -713,10 +714,7 @@ class MMEarth(NonGeoDataset):
                     images.append(norm_img)
 
                     modalities_name = key.split('_', 1)[1]
-                    band_name = avail_bands_dict[modalities_name][0]
-                    titles.append(
-                        (modalities_name.replace('_', ' ').title()) + ' ' + band_name
-                    )
+                    titles.append(modalities_name.replace('_', ' ').title())
         fig, ax = plt.subplots(1, 6, figsize=(12, 4))
 
         for i, (image, title) in enumerate(zip(images, titles)):

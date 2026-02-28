@@ -263,9 +263,9 @@ class SwinBackbone_Weights(WeightsEnum):
         """Get the state dict for this model from provided url, optionally including backbone layernorm weights.
 
         Args:
-            include_norms (bool): Whether to also return backbone layernorm weights.
-            *args (Any): anything passed to WeightsEnum get_state_dict.
-            **kwargs (Any): anything passed to WeightsEnum get_state_dict.
+            include_norms: Whether to also return backbone layernorm weights.
+            *args: anything passed to WeightsEnum get_state_dict.
+            **kwargs: anything passed to WeightsEnum get_state_dict.
 
         Returns:
             dict with state dict only if include_norms is False,
