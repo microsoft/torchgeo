@@ -22,13 +22,20 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
+DATA_DIR = os.path.join('tests', 'data', 'habitalp')
+
+
+def _copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
+    dst = os.path.join(str(root), filename)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copy(url, dst)
+
 
 class TestHabitAlp2:
     @pytest.fixture(params=['2003', '2013', '2020'])
     def dataset(self, tmp_path: Path, request: SubRequest) -> HabitAlp2:
-        src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'data_2013', 'data_2020', 'labels']:
-            src_folder = os.path.join(src, folder)
+            src_folder = os.path.join(DATA_DIR, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
@@ -77,52 +84,28 @@ class TestHabitAlp2:
             HabitAlp2(tmp_path, year='1999')
 
     def test_invalid_bands(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'labels']:
-            src_folder = os.path.join(src, folder)
+            src_folder = os.path.join(DATA_DIR, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
         with pytest.raises(AssertionError, match='not available for year'):
             HabitAlp2(tmp_path, year='2003', bands=('NIR',))
 
-    def test_terrain_bands(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
-        for folder in ['data_2013', 'labels']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
-        HabitAlp2(tmp_path, year='2013', bands=('R', 'dtm'))
-
-    def test_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
-        monkeypatch.setattr(HabitAlp2, 'url', src + '/')
-
-        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
-            dst = os.path.join(str(root), filename)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copy(url, dst)
-
-        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
-        HabitAlp2(tmp_path, download=True, year='2013', bands=('R', 'dtm'))
-
-    def test_download_cir(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
-        monkeypatch.setattr(HabitAlp2, 'url', src + '/')
-
-        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
-            dst = os.path.join(str(root), filename)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copy(url, dst)
-
-        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
-        HabitAlp2(tmp_path, download=True, year='2013', bands=('NIR', 'dtm'))
+    @pytest.mark.parametrize('bands', [('R', 'dtm'), ('NIR', 'dtm')])
+    def test_download(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, bands: tuple[str, ...]
+    ) -> None:
+        monkeypatch.setattr(HabitAlp2, 'url', DATA_DIR + '/')
+        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', _copy_file)
+        HabitAlp2(tmp_path, download=True, year='2013', bands=bands)
 
 
 class TestHabitAlp2CD:
     @pytest.fixture(params=['2003_2013', '2013_2020'])
     def dataset(self, tmp_path: Path, request: SubRequest) -> HabitAlp2CD:
-        src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'data_2013', 'data_2020', 'labels']:
-            src_folder = os.path.join(src, folder)
+            src_folder = os.path.join(DATA_DIR, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
@@ -139,21 +122,23 @@ class TestHabitAlp2CD:
         assert x['image'].shape[0] == 2
         assert x['mask'].ndim == 3
 
-    def test_getitem_multiclass(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
+    @pytest.fixture
+    def multiclass_dataset(self, tmp_path: Path) -> HabitAlp2CD:
         for folder in ['data_2013', 'data_2020', 'labels']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
-        dataset = HabitAlp2CD(tmp_path, task='multiclass')
-        x = dataset[dataset.bounds]
+            shutil.copytree(
+                os.path.join(DATA_DIR, folder), os.path.join(tmp_path, folder)
+            )
+        return HabitAlp2CD(tmp_path, task='multiclass')
+
+    def test_getitem_multiclass(self, multiclass_dataset: HabitAlp2CD) -> None:
+        x = multiclass_dataset[multiclass_dataset.bounds]
         assert x['mask'].ndim == 3
         assert x['mask'].shape[0] == 1
 
-    def test_plot_multiclass(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
-        for folder in ['data_2013', 'data_2020', 'labels']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
-        dataset = HabitAlp2CD(tmp_path, task='multiclass')
-        dataset.plot(dataset[dataset.bounds], suptitle='Test')
+    def test_plot_multiclass(self, multiclass_dataset: HabitAlp2CD) -> None:
+        multiclass_dataset.plot(
+            multiclass_dataset[multiclass_dataset.bounds], suptitle='Test'
+        )
         plt.close()
 
     def test_len(self, dataset: HabitAlp2CD) -> None:
@@ -192,51 +177,41 @@ class TestHabitAlp2CD:
             HabitAlp2CD(tmp_path, task='segmentation')
 
     def test_invalid_bands(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2003', 'data_2013', 'labels']:
-            src_folder = os.path.join(src, folder)
+            src_folder = os.path.join(DATA_DIR, folder)
             dst_folder = os.path.join(tmp_path, folder)
             if os.path.exists(src_folder):
                 shutil.copytree(src_folder, dst_folder)
         with pytest.raises(AssertionError, match='not available for pair'):
             HabitAlp2CD(tmp_path, pair='2003_2013', bands=('NIR',))
 
-    def test_not_downloaded_change_mask(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
+    def _setup_cd_without_change_mask(self, tmp_path: Path) -> None:
         for folder in ['data_2013', 'data_2020']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+            shutil.copytree(
+                os.path.join(DATA_DIR, folder), os.path.join(tmp_path, folder)
+            )
         os.makedirs(os.path.join(tmp_path, 'labels'))
         for f in ['classes_2013.tif', 'classes_2020.tif']:
             shutil.copy(
-                os.path.join(src, 'labels', f), os.path.join(tmp_path, 'labels', f)
+                os.path.join(DATA_DIR, 'labels', f), os.path.join(tmp_path, 'labels', f)
             )
+
+    def test_not_downloaded_change_mask(self, tmp_path: Path) -> None:
+        self._setup_cd_without_change_mask(tmp_path)
         with pytest.raises(DatasetNotFoundError):
             HabitAlp2CD(tmp_path, pair='2013_2020')
 
     def test_pair_as_integer(self, tmp_path: Path) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
         for folder in ['data_2013', 'data_2020', 'labels']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+            shutil.copytree(
+                os.path.join(DATA_DIR, folder), os.path.join(tmp_path, folder)
+            )
         HabitAlp2CD(tmp_path, pair='20132020')
 
     def test_download_change_mask(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        src = os.path.join('tests', 'data', 'habitalp')
-        for folder in ['data_2013', 'data_2020']:
-            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
-        os.makedirs(os.path.join(tmp_path, 'labels'))
-        for f in ['classes_2013.tif', 'classes_2020.tif']:
-            shutil.copy(
-                os.path.join(src, 'labels', f), os.path.join(tmp_path, 'labels', f)
-            )
-
-        monkeypatch.setattr(HabitAlp2CD, 'url', src + '/')
-
-        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
-            dst = os.path.join(str(root), filename)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copy(url, dst)
-
-        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
+        self._setup_cd_without_change_mask(tmp_path)
+        monkeypatch.setattr(HabitAlp2CD, 'url', DATA_DIR + '/')
+        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', _copy_file)
         HabitAlp2CD(tmp_path, pair='2013_2020', download=True)
