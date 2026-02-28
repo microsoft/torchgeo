@@ -19,11 +19,11 @@ from .geo import GeoDataset, RasterDataset
 from .utils import (
     GeoSlice,
     Path,
+    Sample,
     download_url,
     draw_semantic_segmentation_masks,
     percentile_normalization,
 )
-
 
 # These are private implementation helpers. RasterDataset's `separate_files`
 # mechanism assumes all band files share the same directory, which is not the
@@ -320,20 +320,20 @@ class HabitAlp2(GeoDataset):
 
         return tuple(available)
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
-        """Retrieve image and mask indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve image and mask indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates
                 to index
 
         Returns:
             sample containing image and mask at that index
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: if index is not found in the index
         """
-        sample = self.dataset[query]
+        sample = self.dataset[index]
         sample['image'] = sample['image'].float()
         sample['mask'] = sample['mask'].long().squeeze(0)
 
@@ -430,7 +430,13 @@ class HabitAlp2(GeoDataset):
 
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(mask, vmin=0, vmax=23, cmap=plt.colormaps.get_cmap('tab20').resampled(24), interpolation='none')
+        axs[1].imshow(
+            mask,
+            vmin=0,
+            vmax=23,
+            cmap=plt.colormaps.get_cmap('tab20').resampled(24),
+            interpolation='none',
+        )
         axs[1].axis('off')
 
         if show_titles:
@@ -440,7 +446,11 @@ class HabitAlp2(GeoDataset):
         if showing_predictions:
             prediction = sample['prediction'].numpy()
             axs[2].imshow(
-                prediction, vmin=0, vmax=23, cmap=plt.colormaps.get_cmap('tab20').resampled(24), interpolation='none'
+                prediction,
+                vmin=0,
+                vmax=23,
+                cmap=plt.colormaps.get_cmap('tab20').resampled(24),
+                interpolation='none',
             )
             axs[2].axis('off')
             if show_titles:
@@ -647,11 +657,11 @@ class HabitAlp2CD(GeoDataset):
 
         return tuple(set(bands1) & set(bands2))
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
-        """Retrieve bi-temporal image pair and change mask indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve bi-temporal image pair and change mask indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates
                 to index
 
         Returns:
@@ -660,11 +670,11 @@ class HabitAlp2CD(GeoDataset):
             mask values are 0-8 change class IDs
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: if index is not found in the index
         """
-        sample1 = self.ds1[query]
-        sample2 = self.ds2[query]
-        mask_sample = self.mask_ds[query]
+        sample1 = self.ds1[index]
+        sample2 = self.ds2[index]
+        mask_sample = self.mask_ds[index]
 
         image = torch.stack([sample1['image'].float(), sample2['image'].float()], dim=0)
         mask = mask_sample['mask'].long().unsqueeze(0)
@@ -711,7 +721,7 @@ class HabitAlp2CD(GeoDataset):
             arr = img[:3].float().numpy()
             arr = np.transpose(arr, (1, 2, 0))
             arr = percentile_normalization(arr, axis=(0, 1))
-            return np.clip(arr, 0, 1)
+            return np.clip(arr, 0, 1).astype(np.float64)
 
         def get_masked(img: Tensor, mask: Tensor) -> 'np.typing.NDArray[np.uint8]':
             rgb = (get_rgb(img) * 255).astype(np.uint8)
