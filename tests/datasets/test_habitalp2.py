@@ -4,6 +4,7 @@
 import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -11,6 +12,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -83,6 +85,36 @@ class TestHabitAlp2:
                 shutil.copytree(src_folder, dst_folder)
         with pytest.raises(AssertionError, match='not available for year'):
             HabitAlp2(tmp_path, year='2003', bands=('NIR',))
+
+    def test_terrain_bands(self, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'labels']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        HabitAlp2(tmp_path, year='2013', bands=('R', 'dtm'))
+
+    def test_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        monkeypatch.setattr(HabitAlp2, 'url', src + '/')
+
+        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
+            dst = os.path.join(str(root), filename)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy(url, dst)
+
+        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
+        HabitAlp2(tmp_path, download=True, year='2013', bands=('R', 'dtm'))
+
+    def test_download_cir(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        monkeypatch.setattr(HabitAlp2, 'url', src + '/')
+
+        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
+            dst = os.path.join(str(root), filename)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy(url, dst)
+
+        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
+        HabitAlp2(tmp_path, download=True, year='2013', bands=('NIR', 'dtm'))
 
 
 class TestHabitAlp2CD:
@@ -168,3 +200,43 @@ class TestHabitAlp2CD:
                 shutil.copytree(src_folder, dst_folder)
         with pytest.raises(AssertionError, match='not available for pair'):
             HabitAlp2CD(tmp_path, pair='2003_2013', bands=('NIR',))
+
+    def test_not_downloaded_change_mask(self, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'data_2020']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        os.makedirs(os.path.join(tmp_path, 'labels'))
+        for f in ['classes_2013.tif', 'classes_2020.tif']:
+            shutil.copy(
+                os.path.join(src, 'labels', f), os.path.join(tmp_path, 'labels', f)
+            )
+        with pytest.raises(DatasetNotFoundError):
+            HabitAlp2CD(tmp_path, pair='2013_2020')
+
+    def test_pair_as_integer(self, tmp_path: Path) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'data_2020', 'labels']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        HabitAlp2CD(tmp_path, pair='20132020')
+
+    def test_download_change_mask(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        src = os.path.join('tests', 'data', 'habitalp')
+        for folder in ['data_2013', 'data_2020']:
+            shutil.copytree(os.path.join(src, folder), os.path.join(tmp_path, folder))
+        os.makedirs(os.path.join(tmp_path, 'labels'))
+        for f in ['classes_2013.tif', 'classes_2020.tif']:
+            shutil.copy(
+                os.path.join(src, 'labels', f), os.path.join(tmp_path, 'labels', f)
+            )
+
+        monkeypatch.setattr(HabitAlp2CD, 'url', src + '/')
+
+        def copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
+            dst = os.path.join(str(root), filename)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy(url, dst)
+
+        monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', copy_file)
+        HabitAlp2CD(tmp_path, pair='2013_2020', download=True)
