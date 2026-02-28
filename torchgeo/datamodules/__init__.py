@@ -23,7 +23,7 @@ from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
-from .habitalp import HabitAlp2DataModule
+from .habitalp2 import HabitAlp2DataModule
 from .hyspecnet import HySpecNet11kDataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
