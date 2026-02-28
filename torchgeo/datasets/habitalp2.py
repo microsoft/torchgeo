@@ -10,7 +10,6 @@ from typing import Any, ClassVar
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 from torch import Tensor
@@ -26,27 +25,34 @@ from .utils import (
 )
 
 
-class HabitAlp2RGB(RasterDataset):
+# These are private implementation helpers. RasterDataset's `separate_files`
+# mechanism assumes all band files share the same directory, which is not the
+# case here (RGB, CIR, per-band terrain, and mask files span different
+# subdirectories). We therefore compose separate RasterDataset instances and
+# intersect them with the & operator.
+
+
+class _HabitAlp2RGB(RasterDataset):
     """RGB imagery component for HabitAlp2 dataset."""
 
     is_image = True
     all_bands = ('R', 'G', 'B')
 
 
-class HabitAlp2CIR(RasterDataset):
+class _HabitAlp2CIR(RasterDataset):
     """CIR (NIR, R, G) imagery component for HabitAlp2 dataset."""
 
     is_image = True
     all_bands = ('NIR', 'R', 'G')
 
 
-class HabitAlp2Terrain(RasterDataset):
+class _HabitAlp2Terrain(RasterDataset):
     """Single-band terrain layer component for HabitAlp2 dataset."""
 
     is_image = True
 
 
-class HabitAlp2Mask(RasterDataset):
+class _HabitAlp2Mask(RasterDataset):
     """Mask component for HabitAlp2 dataset."""
 
     is_image = False
@@ -75,32 +81,6 @@ class HabitAlp2(GeoDataset):
 
     * images are multi-band GeoTIFFs
     * masks are single-band GeoTIFFs with class IDs 1-23
-
-    Dataset classes:
-
-    1. Waterbody
-    2. Gravel bank, shoal, fluviatile
-    3. Erosion area, gully
-    4. Debris-covered areas
-    5. Rock
-    6. Young coniferous (growth, thicket)
-    7. Young broad-leaved (growth, thicket)
-    8. Coniferous pole timber CC<80
-    9. Coniferous pole timber CC>=80
-    10. Broad-leaved pole timber
-    11. Coniferous mature forest CC<80
-    12. Coniferous mature forest CC>=80
-    13. Broad-leaved mature forest CC<80
-    14. Broad-leaved mature forest CC>=80
-    15. Old coniferous forest CC<80
-    16. Old coniferous forest CC>=80
-    17. Old broad-leaved forest CC<80
-    18. Old broad-leaved forest CC>=80
-    19. Clearcut areas
-    20. Mountain dwarf forest (Krummholz)
-    21. Grassland, buffer strip
-    22. Alpine grassland, heath
-    23. Low importance/small extent
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -218,33 +198,6 @@ class HabitAlp2(GeoDataset):
         'Low importance/small extent',
     )
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (0, 119, 190, 255),
-        2: (194, 178, 128, 255),
-        3: (139, 90, 43, 255),
-        4: (128, 128, 128, 255),
-        5: (105, 105, 105, 255),
-        6: (144, 238, 144, 255),
-        7: (50, 205, 50, 255),
-        8: (34, 139, 34, 255),
-        9: (0, 100, 0, 255),
-        10: (107, 142, 35, 255),
-        11: (85, 107, 47, 255),
-        12: (0, 128, 0, 255),
-        13: (46, 139, 87, 255),
-        14: (60, 179, 113, 255),
-        15: (32, 178, 170, 255),
-        16: (0, 139, 139, 255),
-        17: (72, 61, 139, 255),
-        18: (75, 0, 130, 255),
-        19: (255, 165, 0, 255),
-        20: (154, 205, 50, 255),
-        21: (255, 255, 0, 255),
-        22: (240, 230, 140, 255),
-        23: (192, 192, 192, 255),
-    }
-
     def __init__(
         self,
         root: Path = 'data',
@@ -261,7 +214,9 @@ class HabitAlp2(GeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`CRS` to warp to (defaults to CRS of first file found)
+            crs: :term:`CRS` to warp to (passed through to internal RasterDataset
+                instances; HabitAlp2 extends GeoDataset directly so crs/res must
+                be forwarded explicitly)
             res: resolution in units of CRS (defaults to resolution of first file)
             year: one of "2003", "2013", or "2020"
             bands: bands to load (defaults to RGB only for 2003, RGB+NIR for 2013/2020)
@@ -313,12 +268,12 @@ class HabitAlp2(GeoDataset):
 
         if needs_rgb and 'rgb' in year_files:
             rgb_path = os.path.join(root, year_files['rgb'])
-            rgb_ds = HabitAlp2RGB(rgb_path, crs=crs, res=res, cache=cache)
+            rgb_ds = _HabitAlp2RGB(rgb_path, crs=crs, res=res, cache=cache)
             image_datasets.append(rgb_ds)
 
         if needs_cir and 'cir' in year_files:
             cir_path = os.path.join(root, year_files['cir'])
-            cir_ds = HabitAlp2CIR(
+            cir_ds = _HabitAlp2CIR(
                 cir_path, crs=crs, res=res, bands=('NIR',), cache=cache
             )
             image_datasets.append(cir_ds)
@@ -326,7 +281,7 @@ class HabitAlp2(GeoDataset):
         for band in self.terrain_bands:
             if band in self.bands and band in year_files:
                 terrain_path = os.path.join(root, year_files[band])
-                terrain_ds = HabitAlp2Terrain(
+                terrain_ds = _HabitAlp2Terrain(
                     terrain_path, crs=crs, res=res, cache=cache
                 )
                 image_datasets.append(terrain_ds)
@@ -335,16 +290,12 @@ class HabitAlp2(GeoDataset):
         for ds in image_datasets[1:]:
             image_ds = image_ds & ds
 
-        mask_ds = HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
+        mask_ds = _HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
 
         self.dataset = image_ds & mask_ds
 
         self._res = self.dataset.res
         self.index = self.dataset.index
-
-        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4))
-        lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
-        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
     def _get_available_bands(self, year: str) -> tuple[str, ...]:
         """Get available bands for a given year.
@@ -479,7 +430,7 @@ class HabitAlp2(GeoDataset):
 
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(mask, vmin=0, vmax=23, cmap=self._lc_cmap, interpolation='none')
+        axs[1].imshow(mask, vmin=0, vmax=23, cmap=plt.colormaps.get_cmap('tab20').resampled(24), interpolation='none')
         axs[1].axis('off')
 
         if show_titles:
@@ -489,7 +440,7 @@ class HabitAlp2(GeoDataset):
         if showing_predictions:
             prediction = sample['prediction'].numpy()
             axs[2].imshow(
-                prediction, vmin=0, vmax=23, cmap=self._lc_cmap, interpolation='none'
+                prediction, vmin=0, vmax=23, cmap=plt.colormaps.get_cmap('tab20').resampled(24), interpolation='none'
             )
             axs[2].axis('off')
             if show_titles:
@@ -552,14 +503,14 @@ class HabitAlp2CD(GeoDataset):
 
     multiclass_classes: ClassVar[tuple[str, ...]] = (
         'No change',
-        'Change class 1',
-        'Change class 2',
-        'Change class 3',
-        'Change class 4',
-        'Change class 5',
-        'Change class 6',
-        'Change class 7',
-        'Change class 8',
+        'Mature Tree Density Loss',
+        'Clearcut Loss',
+        'Forest Density Gain',
+        'Other Transition',
+        'Forest Stage Progression',
+        'Early Forest Establishment',
+        'Forest Setback Young Loss',
+        'Old Growth Density Loss',
     )
 
     colormap: ClassVar[tuple[str, ...]] = ('blue',)
@@ -581,7 +532,9 @@ class HabitAlp2CD(GeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`CRS` to warp to (defaults to CRS of first file found)
+            crs: :term:`CRS` to warp to (passed through to internal RasterDataset
+                instances; HabitAlp2CD extends GeoDataset directly so crs/res must
+                be forwarded explicitly)
             res: resolution in units of CRS (defaults to resolution of first file)
             pair: one of "2003_2013" or "2013_2020"
             task: one of "binary" (mask binarized to 0/1) or "multiclass" (mask with
@@ -665,7 +618,7 @@ class HabitAlp2CD(GeoDataset):
             if not download:
                 raise DatasetNotFoundError(self)
             self._download_change_mask()
-        self.mask_ds = HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
+        self.mask_ds = _HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
 
         self.dataset = self.ds1.dataset & self.ds2.dataset & self.mask_ds
         self._res = self.dataset.res
