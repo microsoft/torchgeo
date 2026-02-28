@@ -186,4 +186,4 @@ with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
 
 # sphinx-github-changelog
-sphinx_github_changelog_token = os.environ.get('SPHINX_CHANGELOG_TOKEN')
+sphinx_github_changelog_token = os.environ.get('SPHINX_GITHUB_CHANGELOG_TOKEN')
