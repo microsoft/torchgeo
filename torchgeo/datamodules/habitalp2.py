@@ -73,11 +73,7 @@ class HabitAlp2DataModule(GeoDataModule):
             )
         else:
             self.train_aug = K.AugmentationSequential(
-                K.VideoSequential(
-                    K.Normalize(mean=self.mean, std=self.std),
-                    K.RandomHorizontalFlip(p=0.5),
-                    K.RandomVerticalFlip(p=0.5),
-                ),
+                K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
                 data_keys=None,
                 keepdim=True,
             )
