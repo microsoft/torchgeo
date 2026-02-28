@@ -58,3 +58,16 @@ class TestHabitAlp2DataModule:
     def test_invalid_task(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError, match='segmentation'):
             HabitAlp2DataModule(root=tmp_path, task='invalid')
+
+    def test_setup_fit(self, datamodule_seg: HabitAlp2DataModule) -> None:
+        datamodule_seg.setup('fit')
+        assert datamodule_seg.train_dataset is not None
+        assert datamodule_seg.val_dataset is not None
+
+    def test_setup_validate(self, datamodule_seg: HabitAlp2DataModule) -> None:
+        datamodule_seg.setup('validate')
+        assert datamodule_seg.val_dataset is not None
+
+    def test_setup_test(self, datamodule_seg: HabitAlp2DataModule) -> None:
+        datamodule_seg.setup('test')
+        assert datamodule_seg.test_dataset is not None
