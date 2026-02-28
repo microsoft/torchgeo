@@ -266,12 +266,12 @@ class HabitAlp2(GeoDataset):
 
         image_datasets: list[GeoDataset] = []
 
-        if needs_rgb and 'rgb' in year_files:
+        if needs_rgb:
             rgb_path = os.path.join(root, year_files['rgb'])
             rgb_ds = _HabitAlp2RGB(rgb_path, crs=crs, res=res, cache=cache)
             image_datasets.append(rgb_ds)
 
-        if needs_cir and 'cir' in year_files:
+        if needs_cir:
             cir_path = os.path.join(root, year_files['cir'])
             cir_ds = _HabitAlp2CIR(
                 cir_path, crs=crs, res=res, bands=('NIR',), cache=cache
@@ -279,7 +279,7 @@ class HabitAlp2(GeoDataset):
             image_datasets.append(cir_ds)
 
         for band in self.terrain_bands:
-            if band in self.bands and band in year_files:
+            if band in self.bands:
                 terrain_path = os.path.join(root, year_files[band])
                 terrain_ds = _HabitAlp2Terrain(
                     terrain_path, crs=crs, res=res, cache=cache
