@@ -18,6 +18,8 @@ build:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
       - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --locked --extra docs
+    pre_build:
+      - 'echo "Token present: ${SPHINX_GITHUB_CHANGELOG_TOKEN:+yes}"'
 
 # Configuration for Sphinx documentation
 sphinx:
