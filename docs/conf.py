@@ -187,3 +187,7 @@ with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
 
 # sphinx-github-changelog
 sphinx_github_changelog_token = os.environ.get('SPHINX_GITHUB_CHANGELOG_TOKEN')
+if not sphinx_github_changelog_token:
+    print("WARNING: SPHINX_GITHUB_CHANGELOG_TOKEN not found in environment")
+else:
+    print(f"Token found: {sphinx_github_changelog_token[:4]}...")
