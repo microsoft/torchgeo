@@ -11,6 +11,7 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
@@ -161,6 +162,8 @@ class RegressionTask(BaseTask):
             The loss tensor.
         """
         x = batch['image']
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
@@ -185,6 +188,8 @@ class RegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
@@ -205,12 +210,25 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = K.AugmentationSequential(
-                K.Denormalize(datamodule.mean, datamodule.std),
-                data_keys=None,
-                keepdim=True,
-            )
-            batch = aug(batch)
+            
+            if batch['image'].ndim == 5:
+                B, T, C, H, W = batch['image'].shape
+                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
+
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['image'] = rearrange(batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C)
+            else:
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
             if self.target_key == 'mask':
                 y = y.squeeze(dim=1)
                 y_hat = y_hat.squeeze(dim=1)
@@ -241,6 +259,8 @@ class RegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
@@ -266,6 +286,8 @@ class RegressionTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat: Tensor = self(x)
         return y_hat
 

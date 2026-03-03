@@ -57,7 +57,7 @@ class TestSKIPPD:
         if dataset.task == 'nowcast':
             assert x['image'].shape == (3, 64, 64)
         else:
-            assert x['image'].shape == (48, 64, 64)
+            assert x['image'].shape == (16, 3, 64, 64)
 
     def test_len(self, dataset: SKIPPD) -> None:
         assert len(dataset) == 3
