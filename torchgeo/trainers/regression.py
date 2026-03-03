@@ -212,7 +212,7 @@ class RegressionTask(BaseTask):
             datamodule = self.trainer.datamodule
             
             if batch['image'].ndim == 5:
-                B, T, C, H, W = batch['image'].shape
+                _, T, C, _, _ = batch['image'].shape
                 batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
 
                 aug = K.AugmentationSequential(
