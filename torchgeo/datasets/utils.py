@@ -530,7 +530,7 @@ def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Any]]:
     return collated
 
 
-def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Tensor]]) -> list[Sample]:
+def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Any]]) -> list[Sample]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
