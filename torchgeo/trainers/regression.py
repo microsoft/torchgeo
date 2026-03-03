@@ -210,7 +210,7 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            
+
             if batch['image'].ndim == 5:
                 _, T, C, _, _ = batch['image'].shape
                 batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
@@ -221,7 +221,9 @@ class RegressionTask(BaseTask):
                     keepdim=True,
                 )
                 batch = aug(batch)
-                batch['image'] = rearrange(batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C)
+                batch['image'] = rearrange(
+                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
+                )
             else:
                 aug = K.AugmentationSequential(
                     K.Denormalize(datamodule.mean, datamodule.std),
