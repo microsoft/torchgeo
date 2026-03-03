@@ -549,7 +549,7 @@ def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Tensor]]) -> list[Samp
 
 
 def pad_across_batches(
-    batch: Iterable[Sample], padding_length: int, padding_value: float = 0.0
+    batch: Sequence[Sample], padding_length: int, padding_value: float = 0.0
 ) -> Sample:
     """Custom time-series collate fn to handle variable length sequences.
 
