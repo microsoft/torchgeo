@@ -43,7 +43,7 @@ GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
 Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
-Sample: TypeAlias = dict[str, Tensor]  # noqa: UP040
+Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
@@ -510,7 +510,7 @@ def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Tensor]]:
+def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -549,7 +549,7 @@ def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Tensor]]) -> list[Samp
 
 
 def pad_across_batches(
-    batch: list[Sample], padding_length: int, padding_value: float = 0.0
+    batch: Iterable[Sample], padding_length: int, padding_value: float = 0.0
 ) -> Sample:
     """Custom time-series collate fn to handle variable length sequences.
 
@@ -660,7 +660,12 @@ def merge_samples(samples: Iterable[Sample]) -> Sample:
     collated = {}
     for sample in samples:
         for key, value in sample.items():
-            collated[key] = torch.maximum(collated[key], value)
+            if key in collated and isinstance(value, Tensor):
+                # Take the maximum so that nodata values (zeros) get replaced
+                # by data values whenever possible
+                collated[key] = torch.maximum(collated[key], value)
+            else:
+                collated[key] = value
     return collated
 
 
@@ -680,7 +685,10 @@ def unbind_samples(sample: Sample) -> list[Sample]:
     """
     uncollated = {}
     for key, values in sample.items():
-        uncollated[key] = torch.unbind(values)
+        if isinstance(values, Tensor):
+            uncollated[key] = torch.unbind(values)
+        else:
+            uncollated[key] = values
     return _dict_list_to_list_dict(uncollated)
 
 
