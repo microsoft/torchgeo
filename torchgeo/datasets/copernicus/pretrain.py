@@ -30,8 +30,9 @@ class CopernicusPretrain(IterableDataset[Sample]):
     Pytorch DataLoader. Note: it is recommended to further use webdataset.WebLoader
     (a wrapper on DataLoader) for more features in data loading.
 
-    The full dataset has varying number of modalities, S1/2 local patches, and
-    timestamps for different grids. For simplicity, the current dataset class provides
+    The full dataset has a varying number of modalities, S1/2 local patches, and
+    timestamps for different grids. It also contains metadata including the filenames
+    all images are derived from. For simplicity, the current dataset class provides
     a minimum example:
 
     - only use grids with all modalities (220k)
