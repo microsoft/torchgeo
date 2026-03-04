@@ -63,7 +63,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: Sample) -> dict[str, Any]:
+    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -242,17 +242,14 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: Sample = {
-            'image': self._load_image(id_),
-            'label': self._load_target(id_),
-        }
+        coco_sample = {'image': self._load_image(id_), 'label': self._load_target(id_)}
+        sample = {'image': coco_sample['image']}
 
-        if sample['label']['annotations']:
-            sample = self.coco_convert(sample)
-            sample['class'] = sample['label']['labels']
-            sample['bbox_xyxy'] = sample['label']['boxes']
-            sample['mask'] = sample['label']['masks']
-            sample['label'] = sample.pop('class')
+        if coco_sample['label']['annotations']:
+            coco_sample = self.coco_convert(coco_sample)
+            sample['bbox_xyxy'] = coco_sample['label']['boxes']
+            sample['mask'] = coco_sample['label']['masks']
+            sample['label'] = coco_sample['label']['labels']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
