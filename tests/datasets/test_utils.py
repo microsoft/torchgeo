@@ -28,6 +28,7 @@ from torchgeo.datasets.utils import (
     lazy_import,
     merge_samples,
     pad_across_batches,
+    percentile_normalization,
     quantile_normalization,
     stack_samples,
     unbind_samples,
@@ -540,6 +541,15 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
     with working_dir(str(subdir), create=True):
         assert subdir.cwd() == subdir
+
+
+def test_percentile_normalization() -> None:
+    img = np.array([[1, 2], [98, 100]])
+    match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
+    with pytest.warns(DeprecationWarning, match=match):
+        img = percentile_normalization(img, 2, 98)
+    assert img.min() == 0
+    assert img.max() == 1
 
 
 def test_quantile_normalization() -> None:

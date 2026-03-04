@@ -773,6 +773,41 @@ def rgb_to_mask(
     return mask
 
 
+@deprecated('Use torchgeo.datasets.utils.quantile_normalization instead')
+def percentile_normalization(
+    img: np.typing.NDArray[np.int_],
+    lower: float = 2,
+    upper: float = 98,
+    axis: int | Sequence[int] | None = None,
+) -> np.typing.NDArray[np.int_]:
+    """Applies percentile normalization to an input image.
+
+    Specifically, this will rescale the values in the input such that values <= the
+    lower percentile value will be 0 and values >= the upper percentile value will be 1.
+    Using the 2nd and 98th percentile usually results in good visualizations.
+
+    Args:
+        img: image to normalize
+        lower: lower percentile in range [0,100]
+        upper: upper percentile in range [0,100]
+        axis: Axis or axes along which the percentiles are computed. The default
+            is to compute the percentile(s) along a flattened version of the array.
+
+    Returns:
+        normalized version of ``img``
+
+    .. versionadded:: 0.2
+    .. versiondeprecated:: 0.10
+    """
+    assert lower < upper
+    lower_percentile = np.percentile(img, lower, axis=axis)
+    upper_percentile = np.percentile(img, upper, axis=axis)
+    img_normalized = np.clip(
+        (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
+    )
+    return img_normalized
+
+
 def quantile_normalization(
     img: Tensor,
     lower: float | Tensor = 0.02,
