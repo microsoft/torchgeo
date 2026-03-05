@@ -46,6 +46,10 @@ def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
         collated['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
     if 'label' in batch[0]:
         collated['label'] = [sample['label'] for sample in batch]
+    elif 'bbox_xyxy' in batch[0]:
+        collated['label'] = [
+            torch.tensor([1] * len(sample['bbox_xyxy'])) for sample in batch
+        ]
     if 'mask' in batch[0]:
         collated['mask'] = [sample['mask'] for sample in batch]
     return collated
