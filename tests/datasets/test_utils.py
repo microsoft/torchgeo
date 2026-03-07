@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+import numpy.typing
 import pandas as pd
 import pytest
 import torch
