@@ -7,7 +7,6 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -563,8 +562,8 @@ def test_quantile_normalization() -> None:
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
+def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+    array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)
