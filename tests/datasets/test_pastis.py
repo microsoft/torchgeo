@@ -5,7 +5,6 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -33,10 +32,9 @@ class TestPASTIS:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
         base_class: type[PASTIS] = request.param[0]
-        params: dict[str, Any] = request.param[1]
+        params: dict[str, str] = request.param[1]
 
         root = tmp_path
-        folds = params['folds']
         bands = params['bands']
         mode = params['mode']
         transforms = nn.Identity()
@@ -45,7 +43,7 @@ class TestPASTIS:
         monkeypatch.setattr(base_class, 'url', url)
         return base_class(
             root=root,
-            folds=folds,
+            folds=(1, 2),
             bands=bands,
             mode=mode,
             transforms=transforms,
