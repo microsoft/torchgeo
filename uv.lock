@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14' and platform_machine == 'ARM64' and sys_platform == 'win32'",
@@ -3852,7 +3852,7 @@ requires-dist = [
     { name = "torchgeo", extras = ["datasets", "docs", "models", "style", "tests"], marker = "extra == 'all'" },
     { name = "torchmetrics", specifier = ">=1.2" },
     { name = "torchvision", specifier = ">=0.17" },
-    { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.2" },
+    { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.21" },
     { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
     { name = "types-requests", marker = "extra == 'style'", specifier = ">=2.25" },
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
