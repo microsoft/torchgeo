@@ -18,6 +18,7 @@ from typing import ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pyproj
 import rasterio
@@ -1241,7 +1242,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[str], Image | np.typing.NDArray[np.int_]] = pil_loader,
+        loader: Callable[[str], Image | npt.NDArray[np.int_]] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1303,7 +1304,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
             the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: np.typing.NDArray[np.int_] = np.array(img)
+        array: npt.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
