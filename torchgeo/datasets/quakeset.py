@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal, cast
+from typing import ClassVar, Literal, TypedDict, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +16,16 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
+
+
+class Metadata(TypedDict):
+    """Sample metadata."""
+
+    key: str
+    patch: str
+    images: tuple[str, str]
+    label: int
+    magnitude: float
 
 
 class QuakeSet(NonGeoDataset):
@@ -132,7 +142,7 @@ class QuakeSet(NonGeoDataset):
         """
         return len(self.data)
 
-    def _load_data(self) -> list[dict[str, Any]]:
+    def _load_data(self) -> list[Metadata]:
         """Return the metadata for a given split.
 
         Returns:
