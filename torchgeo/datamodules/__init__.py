@@ -15,6 +15,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .digital_typhoon import DigitalTyphoonDataModule
+from .dlrsd import DLRSDDataModule, DLRSDMultilabelDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
@@ -76,6 +77,8 @@ __all__ = (
     'ChesapeakeCVPRDataModule',
     'CloudCoverDetectionDataModule',
     'DeepGlobeLandCoverDataModule',
+    'DLRSDDataModule',
+    'DLRSDMultilabelDataModule',
     'DigitalTyphoonDataModule',
     'ETCI2021DataModule',
     'EuroSAT100DataModule',
