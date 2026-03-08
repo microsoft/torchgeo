@@ -1242,7 +1242,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[str], Image | npt.NDArray[np.int_]] = pil_loader,
+        loader: Callable[[str], Image | npt.NDArray] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.

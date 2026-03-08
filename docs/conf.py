@@ -162,6 +162,7 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pillow': ('https://pillow.readthedocs.io/en/stable/', None),
     'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
