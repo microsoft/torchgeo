@@ -7,10 +7,11 @@ import json
 import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
-from typing import Any, ClassVar, cast
+from typing import ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import torch
 from einops import rearrange
@@ -20,6 +21,17 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import Path, Sample, lazy_import, quantile_normalization
+
+
+class TileInfo(TypedDict):
+    """A single element in tile_info.json."""
+
+    S2_DATE: str
+    S2_type: str
+    CRS: str
+    lat: float
+    lon: float
+    BANDS: dict[str, list[str]]
 
 
 class MMEarth(NonGeoDataset):
@@ -268,9 +280,7 @@ class MMEarth(NonGeoDataset):
         with open(
             os.path.join(self.root, self.filenames[self.subset], self.splits_filename)
         ) as f:
-            split_indices: dict[str, list[int]] = json.load(f)
-
-        return split_indices[self.split]
+            return json.load(f)[self.split]
 
     def _load_normalization_stats(self) -> dict[str, dict[str, float]]:
         """Load normalization statistics for each band.
@@ -283,11 +293,9 @@ class MMEarth(NonGeoDataset):
                 self.root, self.filenames[self.subset], self.band_stats_filename
             )
         ) as f:
-            band_stats = json.load(f)
+            return json.load(f)
 
-        return cast(dict[str, dict[str, float]], band_stats)
-
-    def _load_tile_info(self) -> dict[str, dict[str, str]]:
+    def _load_tile_info(self) -> dict[str, TileInfo]:
         """Load tile information.
 
         Returns:
@@ -298,9 +306,7 @@ class MMEarth(NonGeoDataset):
                 self.root, self.filenames[self.subset], self.tile_info_filename
             )
         ) as f:
-            tile_info = json.load(f)
-
-        return cast(dict[str, dict[str, str]], tile_info)
+            return json.load(f)
 
     def _validate_modalities(self, modalities: Sequence[str]) -> None:
         """Validate list of modalities.
@@ -374,7 +380,7 @@ class MMEarth(NonGeoDataset):
         return sample
 
     def get_sample_specific_band_names(
-        self, tile_info: dict[str, Any]
+        self, tile_info: TileInfo
     ) -> dict[str, list[str]]:
         """Retrieve the sample specific band names.
 
@@ -401,7 +407,7 @@ class MMEarth(NonGeoDataset):
 
         return specific_modality_bands
 
-    def get_intersection_dict(self, tile_info: dict[str, Any]) -> dict[str, list[str]]:
+    def get_intersection_dict(self, tile_info: TileInfo) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
@@ -425,7 +431,7 @@ class MMEarth(NonGeoDataset):
 
         return intersection_dict
 
-    def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
+    def _retrieve_sample(self, ds_index: int) -> Sample:
         """Retrieve a sample from the dataset.
 
         Args:
@@ -442,7 +448,7 @@ class MMEarth(NonGeoDataset):
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            tile_info: dict[str, Any] = self.tile_info[name]
+            tile_info = self.tile_info[name]
             # need to find the intersection of requested and available bands
             intersection_dict = self.get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
@@ -495,11 +501,7 @@ class MMEarth(NonGeoDataset):
         return indices
 
     def _preprocess_modality(
-        self,
-        data: 'np.typing.NDArray[Any]',
-        modality: str,
-        tile_info: dict[str, Any],
-        bands: list[str],
+        self, data: npt.NDArray, modality: str, tile_info: TileInfo, bands: list[str]
     ) -> Tensor:
         """Preprocess a single modality.
 
@@ -578,8 +580,8 @@ class MMEarth(NonGeoDataset):
         return tensor
 
     def _normalize_modality(
-        self, data: 'np.typing.NDArray[Any]', modality: str, bands: list[str]
-    ) -> 'np.typing.NDArray[np.float64]':
+        self, data: npt.NDArray, modality: str, bands: list[str]
+    ) -> npt.NDArray[np.float64]:
         """Normalize a single modality.
 
         Args:
