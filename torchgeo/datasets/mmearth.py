@@ -379,7 +379,7 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def get_sample_specific_band_names(
+    def _get_sample_specific_band_names(
         self, tile_info: TileInfo
     ) -> dict[str, list[str]]:
         """Retrieve the sample specific band names.
@@ -407,7 +407,7 @@ class MMEarth(NonGeoDataset):
 
         return specific_modality_bands
 
-    def get_intersection_dict(self, tile_info: TileInfo) -> dict[str, list[str]]:
+    def _get_intersection_dict(self, tile_info: TileInfo) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
@@ -416,7 +416,7 @@ class MMEarth(NonGeoDataset):
         Returns:
             Dictionary with intersected keys and lists.
         """
-        sample_specific_band_names = self.get_sample_specific_band_names(tile_info)
+        sample_specific_band_names = self._get_sample_specific_band_names(tile_info)
         # used the chosen modality bands to get the intersection with available bands
         intersection_dict = {}
         for modality in self.all_modalities:
@@ -450,7 +450,7 @@ class MMEarth(NonGeoDataset):
             name = f['metadata'][ds_index][0].decode('utf-8')
             tile_info = self.tile_info[name]
             # need to find the intersection of requested and available bands
-            intersection_dict = self.get_intersection_dict(tile_info)
+            intersection_dict = self._get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
                 if 'sentinel1' in modality:
                     data = f['sentinel1'][ds_index][:]
