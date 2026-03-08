@@ -48,6 +48,12 @@ class TestDLRSD:
         shutil.rmtree(os.path.join(tmp_path, dataset.directory))
         DLRSD(tmp_path)
 
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(os.path.join(tmp_path, 'DLRSD.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            DLRSD(root=tmp_path, checksum=True)
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             DLRSD(tmp_path)
@@ -96,6 +102,12 @@ class TestDLRSDMultilabel:
     ) -> None:
         shutil.rmtree(os.path.join(tmp_path, dataset.directory))
         DLRSDMultilabel(tmp_path)
+
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(os.path.join(tmp_path, 'DLRSD.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            DLRSDMultilabel(root=tmp_path, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

@@ -17,7 +17,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, draw_semantic_segmentation_masks, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_url,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+)
 
 
 class DLRSD(NonGeoDataset):
@@ -214,7 +220,9 @@ class DLRSD(NonGeoDataset):
             return
 
         filepath = os.path.join(self.root, self.filename)
-        if os.path.exists(filepath):
+        if os.path.isfile(filepath):
+            if self.checksum and not check_integrity(filepath, self.md5):
+                raise RuntimeError('Dataset found, but corrupted.')
             self._extract()
             return
 
@@ -480,7 +488,9 @@ class DLRSDMultilabel(NonGeoDataset):
             return
 
         filepath = os.path.join(self.root, self.filename)
-        if os.path.exists(filepath):
+        if os.path.isfile(filepath):
+            if self.checksum and not check_integrity(filepath, self.md5):
+                raise RuntimeError('Dataset found, but corrupted.')
             self._extract()
             return
 
