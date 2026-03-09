@@ -206,7 +206,7 @@ class OpenAerialMap(RasterDataset):
         cache: bool = True,
         download: bool = False,
         image_id: str | None = None,
-        tile_size: Literal[256, 512] = 256,
+        tile_size: Literal[256, 512, 768, 1024] = 256,
     ) -> None:
         """Initialize a new OpenAerialMap dataset instance.
 
@@ -229,8 +229,9 @@ class OpenAerialMap(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download imagery from STAC API based on bbox
             image_id: optional STAC item ID to download specific imagery
-            tile_size: size of the tiles to download (supported : 256 , 512 );
-                Do verify they exists in the remote image source.
+            tile_size: size of the tiles to download 
+                (supported : 256 , 512, 768, 1024); Do verify they exists 
+                in the remote image source as resolution of each image varies.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and download=False.
@@ -263,7 +264,7 @@ class OpenAerialMap(RasterDataset):
         This method:
         1. Queries STAC API for imagery items within bbox or by ID
         2. Extracts TMS URLs from STAC items
-        3. Calculates mercantile tiles for the bbox at specified zoom
+        3. Calculates tiles for the bbox at specified zoom
         4. Downloads tiles asynchronously with proper georeferencing
         """
         root = cast(str | os.PathLike[str], self.paths)
