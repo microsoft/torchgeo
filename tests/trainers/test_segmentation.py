@@ -56,6 +56,7 @@ class TestSemanticSegmentationTask:
             'cloud_cover',
             'deepglobelandcover',
             'dlrsd',
+            'dlrsd_no_val',
             'etci2021',
             'ftw',
             'geonrw',

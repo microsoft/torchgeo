@@ -77,6 +77,7 @@ class TestClassificationTask:
             'bigearthnet_s1',
             'bigearthnet_s2',
             'dlrsd_multilabel',
+            'dlrsd_multilabel_no_val',
             'eurosat',
             'eurosat100',
             'eurosatspatial',
