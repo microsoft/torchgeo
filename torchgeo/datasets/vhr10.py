@@ -280,7 +280,7 @@ class VHR10(NonGeoDataset):
 
         cm = plt.get_cmap('gist_rainbow')
         ncols = 2 if 'prediction_label' in sample else 1
-        fig, axs = plt.subplots(ncols=ncols, squeeze=False)
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
 
         # Image
         image = einops.rearrange(sample['image'], 'c h w -> h w c')
@@ -328,12 +328,17 @@ class VHR10(NonGeoDataset):
                 if show_feats in {'masks', 'both'}:
                     mask = masks[i]
                     alpha = mask * mask_alpha
-                    axs[0, 0].imshow(mask, alpha=alpha)
+                    mask = mask * class_num
+                    axs[0, 0].imshow(mask, cmap=cm, vmin=0, vmax=10, alpha=alpha)
 
             if show_titles:
                 axs[0, 0].set_title('Ground Truth')
 
         if 'prediction_label' in sample:
+            # Image
+            axs[0, 1].imshow(image)
+            axs[0, 1].axis('off')
+
             scores = sample['prediction_score']
             labels = sample['prediction_label']
             boxes = sample['prediction_bbox_xyxy']
@@ -378,7 +383,8 @@ class VHR10(NonGeoDataset):
                 if show_feats in {'masks', 'both'}:
                     mask = masks[i]
                     alpha = mask * mask_alpha
-                    axs[0, 1].imshow(mask, alpha=alpha)
+                    mask = mask * class_num
+                    axs[0, 1].imshow(mask, cmap=cm, vmin=0, vmax=10, alpha=alpha)
 
             if show_titles:
                 axs[0, 1].set_title('Prediction')
