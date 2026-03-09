@@ -68,7 +68,7 @@ class DLRSD(NonGeoDataset):
     .. versionadded:: 0.9
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/main/'
+    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
 
     filename = 'DLRSD.zip'
     md5 = '2df826d636fb68bf36c0250ae62a9161'
@@ -344,7 +344,7 @@ class DLRSDMultilabel(NonGeoDataset):
     .. versionadded:: 0.9
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/main/'
+    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
 
     filename = 'DLRSD.zip'
     md5 = '2df826d636fb68bf36c0250ae62a9161'
