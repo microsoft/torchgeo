@@ -18,7 +18,7 @@ class DLRSDDataModule(NonGeoDataModule):
 
     Uses random train/val/test splits.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     std = torch.tensor(255)
@@ -92,7 +92,7 @@ class DLRSDMultilabelDataModule(NonGeoDataModule):
 
     Uses random train/val/test splits.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     std = torch.tensor(255)

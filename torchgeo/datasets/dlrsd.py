@@ -65,7 +65,7 @@ class DLRSD(NonGeoDataset):
 
     * https://doi.org/10.3390/rs10060964
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
@@ -341,7 +341,7 @@ class DLRSDMultilabel(NonGeoDataset):
     * https://doi.org/10.3390/rs10060964
     * https://doi.org/10.1109/TGRS.2017.2760909
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
