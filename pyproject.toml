@@ -19,7 +19,7 @@ authors = [
 maintainers = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
     {name = "Caleb Robinson", email = "Caleb.Robinson@microsoft.com"},
-    {name = "Isaac Corley", email = "isaac.corley@my.utsa.edu"},
+    {name = "Isaac Corley", email = "isaac.corley@proton.me"},
     {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
     {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
 ]
