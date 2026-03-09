@@ -326,9 +326,7 @@ class SentinelKilnDB(NonGeoDataset):
             )
         else:
             download_url(
-                url=self.url.format(self.split),
-                root=self.root,
-                filename=filename,
+                url=self.url.format(self.split), root=self.root, filename=filename
             )
 
     def plot(
