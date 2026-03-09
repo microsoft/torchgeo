@@ -8,6 +8,7 @@ import random
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
@@ -18,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -252,9 +253,9 @@ class SeasonalContrastS2(NonGeoDataset):
 
         indices = torch.tensor(rgb_indices)
         for i in range(self.seasons):
-            image = sample['image'][indices + i * len(self.bands)].numpy()
-            image = np.rollaxis(image, 0, 3)
-            image = percentile_normalization(image, 0, 100)
+            image = sample['image'][indices + i * len(self.bands)]
+            image = einops.rearrange(image, 'c h w -> h w c')
+            image = quantile_normalization(image, 0, 1)
 
             axes[i].imshow(image)
             axes[i].axis('off')

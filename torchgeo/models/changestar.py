@@ -3,6 +3,8 @@
 
 """ChangeStar implementations."""
 
+from typing import Literal
+
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -104,7 +106,7 @@ class ChangeStar(Module):
         dense_feature_extractor: Module,
         seg_classifier: Module,
         changemixin: ChangeMixin,
-        inference_mode: str = 't1t2',
+        inference_mode: Literal['t1t2', 't2t1', 'mean'] = 't1t2',
     ) -> None:
         """Initializes a new ChangeStar model.
 
@@ -123,9 +125,6 @@ class ChangeStar(Module):
         self.dense_feature_extractor = dense_feature_extractor
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin
-
-        if inference_mode not in ['t1t2', 't2t1', 'mean']:
-            raise ValueError(f'Unknown inference_mode: {inference_mode}')
         self.inference_mode = inference_mode
 
     def forward(self, x: Tensor) -> dict[str, Tensor]:
@@ -153,18 +152,19 @@ class ChangeStar(Module):
         results: dict[str, Tensor] = {}
         if not self.training:
             results.update({'bi_seg_logit': bi_seg_logit})
-            if self.inference_mode == 't1t2':
-                results.update({'change_prob': c12.sigmoid()})
-            elif self.inference_mode == 't2t1':
-                results.update({'change_prob': c21.sigmoid()})
-            elif self.inference_mode == 'mean':
-                results.update(
-                    {
-                        'change_prob': torch.stack([c12, c21], dim=0)
-                        .sigmoid_()
-                        .mean(dim=0)
-                    }
-                )
+            match self.inference_mode:
+                case 't1t2':
+                    results.update({'change_prob': c12.sigmoid()})
+                case 't2t1':
+                    results.update({'change_prob': c21.sigmoid()})
+                case 'mean':
+                    results.update(
+                        {
+                            'change_prob': torch.stack([c12, c21], dim=0)
+                            .sigmoid_()
+                            .mean(dim=0)
+                        }
+                    )
         else:
             results.update(
                 {

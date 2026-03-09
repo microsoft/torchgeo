@@ -215,7 +215,7 @@ def generate_test_data(root: str) -> None:
     """Creates test data archive for the EnviroAtlas dataset.
 
     Args:
-        root (str): Path to store test data
+        root: Path to store test data
     """
     size = (64, 64)
     folder_path = os.path.join(root, 'enviroatlas_lotp')

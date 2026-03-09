@@ -14,10 +14,11 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal, cast
+from typing import ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pyproj
 import rasterio
@@ -27,6 +28,7 @@ import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
+from PIL.Image import Image
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
@@ -1240,7 +1242,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[str], Any] = pil_loader,
+        loader: Callable[[str], Image | npt.NDArray[np.generic]] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1302,7 +1304,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
             the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: np.typing.NDArray[np.int_] = np.array(img)
+        array: npt.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
@@ -1337,9 +1339,7 @@ class IntersectionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         spatial_only: bool = False,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = concat_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
@@ -1505,9 +1505,7 @@ class UnionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = merge_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.

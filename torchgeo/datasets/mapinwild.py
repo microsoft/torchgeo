@@ -25,7 +25,7 @@ from .utils import (
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -379,7 +379,7 @@ class MapInWild(NonGeoDataset):
                 img = img[:, :, 0]
 
             if not 'esa_wc':
-                img = percentile_normalization(img)
+                img = quantile_normalization(img)
 
             ax.imshow(img)
             if show_titles:

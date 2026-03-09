@@ -7,13 +7,14 @@ import random
 from collections.abc import Iterator
 from typing import Any, ClassVar
 
-import numpy as np
+import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
+from torch import Tensor
 from torch.utils.data import IterableDataset
 
-from ..utils import Sample, lazy_import, percentile_normalization
+from ..utils import Sample, lazy_import, quantile_normalization
 
 
 class CopernicusPretrain(IterableDataset[Sample]):
@@ -29,16 +30,16 @@ class CopernicusPretrain(IterableDataset[Sample]):
     Pytorch DataLoader. Note: it is recommended to further use webdataset.WebLoader
     (a wrapper on DataLoader) for more features in data loading.
 
-    The full dataset has varying number of modalities, S1/2 local patches, and
-    timestamps for different grids. For simplicity, the current dataset class provides
+    The full dataset has a varying number of modalities, S1/2 local patches, and
+    timestamps for different grids. It also contains metadata including the filenames
+    all images are derived from. For simplicity, the current dataset class provides
     a minimum example:
 
     - only use grids with all modalities (220k)
     - sample one local patch for S1 and S2
     - sample one timestamp for each modality
 
-    Therefore, each sample contains 8 tensors (S1, S2, S3, S5P NO2/CO/SO2/O3, DEM) and
-    a JSON metadata.
+    Therefore, each sample contains 8 tensors (S1, S2, S3, S5P NO2/CO/SO2/O3, DEM).
 
     Example:
 
@@ -104,18 +105,38 @@ class CopernicusPretrain(IterableDataset[Sample]):
             wds.WebDataset(*args, **kwargs)
             .shuffle(10)  # shuffle individual samples before batching
             .decode()  # decode binary data
+            .map(self._drop_metadata)  # remove non-Tensor metadata
             .select(self._has_all_modalities)  # select samples with all modalities
             .map(self._sample_one_local_patch)  # sample one local patch for S1 and S2
             .map(self._sample_one_time_stamp)  # sample one timestamp for all modalities
         )
 
-    def __iter__(self) -> Iterator[dict[str, Any]]:
-        """Iterate over images and metadata in the dataset.
+    def __iter__(self) -> Iterator[Sample]:
+        """Iterate over images in the dataset.
 
         Yields:
-            sample of images and metadata
+            sample of images
+
+        .. versionchanged:: 0.10
+           Removed *json* metadata.
         """
         return iter(self.dataset)
+
+    def _drop_metadata(self, sample: dict[str, object]) -> Sample:
+        """Mapping function: remove all non-Tensor metadata.
+
+        Args:
+            sample: A single sample from the dataset.
+
+        Returns:
+            The same sample with only Tensor images.
+        """
+        new_sample = {}
+        for key, value in sample.items():
+            if isinstance(value, Tensor):
+                new_sample[key] = value
+
+        return new_sample
 
     def _has_all_modalities(self, sample: Sample) -> bool:
         """Selection function: filter samples with all required modalities.
@@ -135,11 +156,10 @@ class CopernicusPretrain(IterableDataset[Sample]):
             's5p_o3.pth',
             's5p_so2.pth',
             'dem.pth',
-            'json',
         ]
         return all(key in sample for key in required_keys)
 
-    def _sample_one_local_patch(self, sample: Sample) -> dict[str, Any]:
+    def _sample_one_local_patch(self, sample: Sample) -> Sample:
         """Mapping function: randomly select one local patch for S1 and S2.
 
         Args:
@@ -149,14 +169,11 @@ class CopernicusPretrain(IterableDataset[Sample]):
             The same sample with only a single patch for S1 and S2.
         """
         s1, s2 = sample['s1_grd.pth'], sample['s2_toa.pth']
-        meta_s1, meta_s2 = sample['json']['s1_grd'], sample['json']['s2_toa']
-
         idx = random.randint(0, s1.shape[0] - 1)
         sample['s1_grd.pth'], sample['s2_toa.pth'] = s1[idx], s2[idx]
-        sample['json']['s1_grd'], sample['json']['s2_toa'] = meta_s1[idx], meta_s2[idx]
         return sample
 
-    def _sample_one_time_stamp(self, sample: Sample) -> dict[str, Any]:
+    def _sample_one_time_stamp(self, sample: Sample) -> Sample:
         """Mapping function: randomly select one timestamp for all modalities.
 
         Args:
@@ -169,11 +186,7 @@ class CopernicusPretrain(IterableDataset[Sample]):
             if key.endswith('.pth') and key != 'dem.pth':
                 idx = random.randint(0, sample[key].shape[0] - 1)
                 sample[key] = sample[key][idx]
-                sample['json'][key.replace('.pth', '')] = sample['json'][
-                    key.replace('.pth', '')
-                ][idx]
 
-        sample['json']['dem'] = sample['json']['dem'][0]
         return sample
 
     def plot(
@@ -191,45 +204,45 @@ class CopernicusPretrain(IterableDataset[Sample]):
         """
         fig, ax = plt.subplots(nrows=2, ncols=4)
 
-        image = sample['s1_grd.pth'].numpy()
+        image = sample['s1_grd.pth']
         vv = image[0]
         vh = image[1]
-        image = np.stack([vv, vh, (vv + vh) / 2], axis=-1)
-        image = percentile_normalization(image)
+        image = torch.stack([vv, vh, (vv + vh) / 2], dim=-1)
+        image = quantile_normalization(image)
         ax[0, 0].imshow(image)
         ax[0, 0].axis('off')
 
         rgb_bands = [3, 2, 1]
-        image = sample['s2_toa.pth'].numpy()[rgb_bands]
+        image = sample['s2_toa.pth'][rgb_bands].float()
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         ax[0, 1].imshow(image)
         ax[0, 1].axis('off')
 
         rgb_bands = [7, 5, 3]
-        image = sample['s3_olci.pth'].numpy()[rgb_bands]
+        image = sample['s3_olci.pth'][rgb_bands]
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         ax[0, 2].imshow(image)
         ax[0, 2].axis('off')
 
-        image = sample['dem.pth'].numpy()
+        image = sample['dem.pth']
         ax[0, 3].imshow(image, cmap='terrain')
         ax[0, 3].axis('off')
 
-        image = sample['s5p_co.pth'].numpy()[0]
+        image = sample['s5p_co.pth'][0]
         ax[1, 0].imshow(image, cmap='Wistia')
         ax[1, 0].axis('off')
 
-        image = sample['s5p_no2.pth'].numpy()[0]
+        image = sample['s5p_no2.pth'][0]
         ax[1, 1].imshow(image, cmap='Wistia')
         ax[1, 1].axis('off')
 
-        image = sample['s5p_o3.pth'].numpy()[0]
+        image = sample['s5p_o3.pth'][0]
         ax[1, 2].imshow(image, cmap='Wistia')
         ax[1, 2].axis('off')
 
-        image = sample['s5p_so2.pth'].numpy()[0]
+        image = sample['s5p_so2.pth'][0]
         ax[1, 3].imshow(image, cmap='Wistia')
         ax[1, 3].axis('off')
 

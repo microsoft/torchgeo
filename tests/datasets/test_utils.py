@@ -7,9 +7,9 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import numpy as np
+import numpy.typing
 import pandas as pd
 import pytest
 import torch
@@ -29,6 +29,7 @@ from torchgeo.datasets.utils import (
     merge_samples,
     pad_across_batches,
     percentile_normalization,
+    quantile_normalization,
     stack_samples,
     unbind_samples,
     which,
@@ -543,9 +544,17 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
 
 def test_percentile_normalization() -> None:
-    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
+    img = np.array([[1, 2], [98, 100]])
+    match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
+    with pytest.warns(DeprecationWarning, match=match):
+        img = percentile_normalization(img, 2, 98)
+    assert img.min() == 0
+    assert img.max() == 1
 
-    img = percentile_normalization(img, 2, 98)
+
+def test_quantile_normalization() -> None:
+    img = torch.rand(3, 16, 16)
+    img = quantile_normalization(img)
     assert img.min() == 0
     assert img.max() == 1
 
@@ -554,8 +563,8 @@ def test_percentile_normalization() -> None:
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
+def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+    array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)

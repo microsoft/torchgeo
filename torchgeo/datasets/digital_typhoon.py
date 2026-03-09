@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -425,9 +425,9 @@ class DigitalTyphoon(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample['image'].numpy(), sample['label'].numpy()
+        image, label = sample['image'], sample['label']
 
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         image = einops.rearrange(image, 'c h w -> h w c')
 
         showing_predictions = 'prediction' in sample

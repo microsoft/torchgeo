@@ -24,7 +24,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     lazy_import,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -34,9 +34,9 @@ def convert_coco_poly_to_mask(
     """Convert coco polygons to mask tensor.
 
     Args:
-        segmentations (List[int]): polygon coordinates
-        height (int): image height
-        width (int): image width
+        segmentations: polygon coordinates
+        height: image height
+        width: image width
 
     Returns:
         Tensor: Mask tensor
@@ -63,7 +63,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: Sample) -> dict[str, Any]:
+    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -242,17 +242,14 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: Sample = {
-            'image': self._load_image(id_),
-            'label': self._load_target(id_),
-        }
+        coco_sample = {'image': self._load_image(id_), 'label': self._load_target(id_)}
+        sample = {'image': coco_sample['image']}
 
-        if sample['label']['annotations']:
-            sample = self.coco_convert(sample)
-            sample['class'] = sample['label']['labels']
-            sample['bbox_xyxy'] = sample['label']['boxes']
-            sample['mask'] = sample['label']['masks']
-            sample['label'] = sample.pop('class')
+        if coco_sample['label']['annotations']:
+            coco_sample = self.coco_convert(coco_sample)
+            sample['bbox_xyxy'] = coco_sample['label']['boxes']
+            sample['mask'] = coco_sample['label']['masks']
+            sample['label'] = coco_sample['label']['labels']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -387,7 +384,7 @@ class VHR10(NonGeoDataset):
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0).float())
 
         if self.split == 'negative':
             fig, axs = plt.subplots(squeeze=False)
@@ -401,8 +398,8 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        boxes = sample['bbox_xyxy'].cpu().numpy()
-        labels = sample['label'].cpu().numpy()
+        boxes = sample['bbox_xyxy']
+        labels = sample['label']
         if 'mask' in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
 
@@ -414,10 +411,10 @@ class VHR10(NonGeoDataset):
         if show_predictions:
             show_pred_boxes = False
             show_pred_masks = False
-            prediction_label = sample['prediction_label'].numpy()
-            prediction_score = sample['prediction_score'].numpy()
+            prediction_label = sample['prediction_label']
+            prediction_score = sample['prediction_score']
             if 'prediction_bbox_xyxy' in sample:
-                prediction_bbox_xyxy = sample['prediction_bbox_xyxy'].numpy()
+                prediction_bbox_xyxy = sample['prediction_bbox_xyxy']
                 show_pred_boxes = True
             if 'prediction_mask' in sample:
                 prediction_mask = sample['prediction_mask'].numpy()
