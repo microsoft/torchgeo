@@ -144,7 +144,7 @@ style = [
 tests = [
     # nbmake 1.4.5+ removes pkg_resources dependency
     "nbmake>=1.4.5",
-    # packaging 21+ required by scikit-image?
+    # packaging 21+ required by sphinx
     "packaging>=21",
     # pytest 7.3.2+ required for Python 3.12 support
     "pytest>=7.3.2",
