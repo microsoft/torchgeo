@@ -168,10 +168,8 @@ class VHR10(NonGeoDataset):
                     labels.append(annotation['category_id'])
 
                     # Convert box format
-                    bbox = annotation['bbox']  # [x1, y1, w, h]
-                    bbox[2] += bbox[0]
-                    bbox[3] += bbox[1]
-                    boxes.append(bbox)  # [x1, y1, x2, y2]
+                    x1, y1, w, h = annotation['bbox']
+                    boxes.append([x1, y1, x1 + w, y1 + h])
 
                     # Rasterize segmentation mask
                     segmentation = annotation['segmentation']  # [[x1, y1, x2, y2, ...]]
