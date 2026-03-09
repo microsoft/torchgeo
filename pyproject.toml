@@ -99,14 +99,10 @@ datasets = [
     "netcdf4>=1.6.5",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
-    # pycocotools 2.0.8+ required for Python 3.12 wheels
-    "pycocotools>=2.0.8",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "requests>=2.25",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
-    # scikit-image 0.22+ required for Python 3.12 wheels
-    "scikit-image>=0.22",
     # scipy 1.11.2+ required for Python 3.12 wheels
     "scipy>=1.11.2",
     # webdataset 0.2.4+ required for PyTorch tuple seed support
@@ -148,7 +144,7 @@ style = [
 tests = [
     # nbmake 1.4.5+ removes pkg_resources dependency
     "nbmake>=1.4.5",
-    # packaging 21+ required by scikit-image
+    # packaging 21+ required by scikit-image?
     "packaging>=21",
     # pytest 7.3.2+ required for Python 3.12 support
     "pytest>=7.3.2",

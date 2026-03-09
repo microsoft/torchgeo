@@ -14,8 +14,6 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
-pytest.importorskip('pycocotools')
-
 
 class TestVHR10:
     @pytest.fixture(params=['positive', 'negative'])
@@ -44,7 +42,7 @@ class TestVHR10:
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == 'positive':
-            assert len(dataset) == 5
+            assert len(dataset) == 650
         elif dataset.split == 'negative':
             assert len(dataset) == 150
 
@@ -52,7 +50,7 @@ class TestVHR10:
         ds = dataset + dataset
         assert isinstance(ds, ConcatDataset)
         if dataset.split == 'positive':
-            assert len(ds) == 10
+            assert len(ds) == 1300
         elif dataset.split == 'negative':
             assert len(ds) == 300
 
@@ -64,7 +62,6 @@ class TestVHR10:
             VHR10(tmp_path)
 
     def test_plot(self, dataset: VHR10) -> None:
-        pytest.importorskip('skimage', minversion='0.22')
         x = dataset[1].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()

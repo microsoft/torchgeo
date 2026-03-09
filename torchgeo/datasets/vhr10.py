@@ -3,17 +3,20 @@
 
 """NWPU VHR-10 dataset."""
 
+import json
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
+import rasterio.features
 import torch
-from matplotlib import patches
 from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 from PIL import Image
-from torch import Tensor
+from shapely import Polygon
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -23,95 +26,8 @@ from .utils import (
     check_integrity,
     download_and_extract_archive,
     download_url,
-    lazy_import,
     quantile_normalization,
 )
-
-
-def convert_coco_poly_to_mask(
-    segmentations: list[int], height: int, width: int
-) -> Tensor:
-    """Convert coco polygons to mask tensor.
-
-    Args:
-        segmentations: polygon coordinates
-        height: image height
-        width: image width
-
-    Returns:
-        Tensor: Mask tensor
-
-    Raises:
-        DependencyNotFoundError: If pycocotools is not installed.
-    """
-    pycocotools = lazy_import('pycocotools')
-    masks = []
-    for polygons in segmentations:
-        rles = pycocotools.mask.frPyObjects(polygons, height, width)
-        mask = pycocotools.mask.decode(rles)
-        mask = torch.as_tensor(mask, dtype=torch.uint8)
-        mask = mask.any(dim=2)
-        masks.append(mask)
-    masks_tensor = torch.stack(masks, dim=0)
-    return masks_tensor
-
-
-class ConvertCocoAnnotations:
-    """Callable for converting the boxes, masks and labels into tensors.
-
-    This is a modified version of ConvertCocoPolysToMask() from torchvision found in
-    https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
-    """
-
-    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
-
-        Args:
-            sample: Sample
-
-        Returns:
-            Processed sample
-        """
-        image = sample['image']
-        _, h, w = image.size()
-        target = sample['label']
-
-        image_id = target['image_id']
-        image_id = torch.tensor([image_id])
-
-        anno = target['annotations']
-
-        anno = [obj for obj in anno if obj['iscrowd'] == 0]
-
-        bboxes = [obj['bbox'] for obj in anno]
-        # guard against no boxes via resizing
-        boxes = torch.as_tensor(bboxes, dtype=torch.float32).reshape(-1, 4)
-        boxes[:, 2:] += boxes[:, :2]
-        boxes[:, 0::2].clamp_(min=0, max=w)
-        boxes[:, 1::2].clamp_(min=0, max=h)
-
-        categories = [obj['category_id'] for obj in anno]
-        classes = torch.tensor(categories, dtype=torch.int64)
-
-        segmentations = [obj['segmentation'] for obj in anno]
-
-        masks = convert_coco_poly_to_mask(segmentations, h, w)
-
-        keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
-        boxes = boxes[keep]
-        classes = classes[keep]
-
-        target = {'boxes': boxes, 'labels': classes, 'image_id': image_id}
-        if masks.nelement() > 0:
-            masks = masks[keep]
-            target['masks'] = masks
-
-        # for conversion to coco api
-        area = torch.tensor([obj['area'] for obj in anno])
-        iscrowd = torch.tensor([obj['iscrowd'] for obj in anno])
-        target['area'] = area
-        target['iscrowd'] = iscrowd
-        return {'image': image, 'label': target}
 
 
 class VHR10(NonGeoDataset):
@@ -150,13 +66,6 @@ class VHR10(NonGeoDataset):
     * https://doi.org/10.1016/j.isprsjprs.2014.10.002
     * https://doi.org/10.1109/IGARSS.2019.8898573
     * https://doi.org/10.3390/rs12060989
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
-         ``annotations.json`` file for the "positive" image set
     """
 
     image_meta: ClassVar[dict[str, str]] = {
@@ -173,7 +82,7 @@ class VHR10(NonGeoDataset):
     categories = (
         'background',
         'airplane',
-        'ships',
+        'ship',
         'storage tank',
         'baseball diamond',
         'tennis court',
@@ -205,8 +114,6 @@ class VHR10(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            DependencyNotFoundError: if ``split="positive"`` and pycocotools is
-                not installed.
         """
         assert split in ['positive', 'negative']
 
@@ -222,14 +129,9 @@ class VHR10(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         if split == 'positive':
-            pc = lazy_import('pycocotools.coco')
-            self.coco = pc.COCO(
-                os.path.join(
-                    self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']
-                )
-            )
-            self.coco_convert = ConvertCocoAnnotations()
-            self.ids = list(sorted(self.coco.imgs.keys()))
+            path = os.path.join(self.root, 'NWPU VHR-10 dataset', 'annotations.json')
+            with open(path) as f:
+                self.annotations = json.load(f)
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -240,16 +142,49 @@ class VHR10(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        id_ = index % len(self) + 1
+        sample = {}
 
-        coco_sample = {'image': self._load_image(id_), 'label': self._load_target(id_)}
-        sample = {'image': coco_sample['image']}
+        # Both 'positive' and 'negative' splits have an image
+        path = os.path.join(
+            self.root,
+            'NWPU VHR-10 dataset',
+            f'{self.split} image set',
+            f'{index + 1:03d}.jpg',
+        )
+        with Image.open(path) as f:
+            tensor = torch.from_numpy(np.array(f)).float()
+            tensor = einops.rearrange(tensor, 'h w c -> c h w')
+            sample['image'] = tensor
 
-        if coco_sample['label']['annotations']:
-            coco_sample = self.coco_convert(coco_sample)
-            sample['bbox_xyxy'] = coco_sample['label']['boxes']
-            sample['mask'] = coco_sample['label']['masks']
-            sample['label'] = coco_sample['label']['labels']
+        # Only 'positive' split has target labels
+        if self.split == 'positive':
+            _, height, width = tensor.shape
+
+            labels = []
+            boxes = []
+            masks = []
+            for annotation in self.annotations['annotations']:
+                if annotation['image_id'] == index:
+                    labels.append(annotation['category_id'])
+
+                    # Convert box format
+                    bbox = annotation['bbox']  # [x1, y1, w, h]
+                    bbox[2] += bbox[0]
+                    bbox[3] += bbox[1]
+                    boxes.append(bbox)  # [x1, y1, x2, y2]
+
+                    # Rasterize segmentation mask
+                    segmentation = annotation['segmentation']  # [[x1, y1, x2, y2, ...]]
+                    xs = segmentation[0][::2]  # [x1, x2, ...]
+                    ys = segmentation[0][1::2]  # [y1, y2, ...]
+                    coords = list(zip(xs, ys))  # [(x1, y1), (x2, y2), ...]
+                    shapes = [(Polygon(coords), 1)]
+                    mask = rasterio.features.rasterize(shapes, (height, width))
+                    masks.append(torch.from_numpy(mask))
+
+            sample['label'] = torch.tensor(labels)
+            sample['bbox_xyxy'] = torch.tensor(boxes)
+            sample['mask'] = torch.stack(masks)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -263,50 +198,9 @@ class VHR10(NonGeoDataset):
             length of the dataset
         """
         if self.split == 'positive':
-            return len(self.ids)
+            return 650
         else:
             return 150
-
-    def _load_image(self, id_: int) -> Tensor:
-        """Load a single image.
-
-        Args:
-            id_: unique ID of the image
-
-        Returns:
-            the image
-        """
-        filename = os.path.join(
-            self.root,
-            'NWPU VHR-10 dataset',
-            self.split + ' image set',
-            f'{id_:03d}.jpg',
-        )
-        with Image.open(filename) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img)
-            tensor = torch.from_numpy(array)
-            tensor = tensor.float()
-            # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
-            return tensor
-
-    def _load_target(self, id_: int) -> dict[str, Any]:
-        """Load the annotations for a single image.
-
-        Args:
-            id_: unique ID of the image
-
-        Returns:
-            the annotations
-        """
-        # Images in the "negative" image set have no annotations
-        annot = []
-        if self.split == 'positive':
-            annot = self.coco.loadAnns(self.coco.getAnnIds(id_ - 1))
-
-        target = dict(image_id=id_, annotations=annot)
-
-        return target
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
@@ -360,7 +254,7 @@ class VHR10(NonGeoDataset):
         sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
-        show_feats: str | None = 'both',
+        show_feats: Literal['boxes', 'masks', 'both'] = 'both',
         box_alpha: float = 0.7,
         mask_alpha: float = 0.7,
     ) -> Figure:
@@ -379,111 +273,84 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``show_feats`` argument is invalid
-            DependencyNotFoundError: If plotting masks and scikit-image is not installed.
 
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
-        image = quantile_normalization(sample['image'].permute(1, 2, 0).float())
 
-        if self.split == 'negative':
-            fig, axs = plt.subplots(squeeze=False)
-            axs[0, 0].imshow(image)
-            axs[0, 0].axis('off')
+        cm = plt.get_cmap('gist_rainbow')
+        ncols = 2 if 'prediction_label' in sample else 1
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False)
 
-            if suptitle is not None:
-                plt.suptitle(suptitle)
-            return fig
-
-        if show_feats != 'boxes':
-            skimage = lazy_import('skimage')
-
-        boxes = sample['bbox_xyxy']
-        labels = sample['label']
-        if 'mask' in sample:
-            masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
-
-        n_gt = len(boxes)
-
-        ncols = 1
-        show_predictions = 'prediction_label' in sample
-
-        if show_predictions:
-            show_pred_boxes = False
-            show_pred_masks = False
-            prediction_label = sample['prediction_label']
-            prediction_score = sample['prediction_score']
-            if 'prediction_bbox_xyxy' in sample:
-                prediction_bbox_xyxy = sample['prediction_bbox_xyxy']
-                show_pred_boxes = True
-            if 'prediction_mask' in sample:
-                prediction_mask = sample['prediction_mask'].numpy()
-                show_pred_masks = True
-
-            n_pred = len(prediction_label)
-            ncols += 1
-
-        # Display image
-        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 13))
+        # Image
+        image = einops.rearrange(sample['image'], 'c h w -> h w c')
+        image = quantile_normalization(image)
         axs[0, 0].imshow(image)
         axs[0, 0].axis('off')
 
-        cm = plt.get_cmap('gist_rainbow')
-        for i in range(n_gt):
-            class_num = labels[i]
-            color = cm(class_num / len(self.categories))
+        if 'label' in sample:
+            labels = sample['label']
+            boxes = sample['bbox_xyxy']
+            masks = sample['mask']
+            for i in range(len(labels)):
+                class_num = labels[i]
+                color = cm(class_num / len(self.categories))
 
-            # Add bounding boxes
-            x1, y1, x2, y2 = boxes[i]
-            if show_feats in {'boxes', 'both'}:
-                r = patches.Rectangle(
-                    (x1, y1),
-                    x2 - x1,
-                    y2 - y1,
-                    linewidth=2,
-                    alpha=box_alpha,
-                    linestyle='dashed',
-                    edgecolor=color,
-                    facecolor='none',
-                )
-                axs[0, 0].add_patch(r)
-
-            # Add labels
-            label = self.categories[class_num]
-            caption = label
-            axs[0, 0].text(
-                x1, y1 - 8, caption, color='white', size=11, backgroundcolor='none'
-            )
-
-            # Add masks
-            if show_feats in {'masks', 'both'} and 'mask' in sample:
-                mask = masks[i]
-                contours = skimage.measure.find_contours(mask, 0.5)
-                for verts in contours:
-                    verts = np.fliplr(verts)
-                    p = patches.Polygon(
-                        verts, facecolor=color, alpha=mask_alpha, edgecolor='white'
+                # Boxes
+                if show_feats in {'boxes', 'both'}:
+                    # Add rectangle
+                    x1, y1, x2, y2 = boxes[i]
+                    r = Rectangle(
+                        (x1, y1),
+                        x2 - x1,
+                        y2 - y1,
+                        linewidth=2,
+                        alpha=box_alpha,
+                        linestyle='dashed',
+                        edgecolor=color,
+                        facecolor='none',
                     )
-                    axs[0, 0].add_patch(p)
+                    axs[0, 0].add_patch(r)
+
+                    # Add label
+                    label = self.categories[class_num]
+                    caption = label
+                    axs[0, 0].text(
+                        x1,
+                        y1 - 8,
+                        caption,
+                        color='white',
+                        size=11,
+                        backgroundcolor='none',
+                    )
+
+                # Masks
+                if show_feats in {'masks', 'both'}:
+                    mask = masks[i]
+                    alpha = mask * mask_alpha
+                    axs[0, 0].imshow(mask, alpha=alpha)
 
             if show_titles:
                 axs[0, 0].set_title('Ground Truth')
 
-        if show_predictions:
-            axs[0, 1].imshow(image)
-            axs[0, 1].axis('off')
-            for i in range(n_pred):
-                score = prediction_score[i]
+        if 'prediction_label' in sample:
+            scores = sample['prediction_score']
+            labels = sample['prediction_label']
+            boxes = sample['prediction_bbox_xyxy']
+            masks = sample['prediction_mask']
+            for i in range(len(labels)):
+                score = scores[i]
                 if score < 0.5:
                     continue
 
-                class_num = prediction_label[i]
+                class_num = labels[i]
                 color = cm(class_num / len(self.categories))
 
-                if show_pred_boxes:
-                    # Add bounding boxes
-                    x1, y1, x2, y2 = prediction_bbox_xyxy[i]
-                    r = patches.Rectangle(
+                # Boxes
+                if show_feats in {'boxes', 'both'}:
+                    # Add rectangle
+                    x1, y1, x2, y2 = boxes[i]
+                    r = Rectangle(
                         (x1, y1),
                         x2 - x1,
                         y2 - y1,
@@ -495,7 +362,7 @@ class VHR10(NonGeoDataset):
                     )
                     axs[0, 1].add_patch(r)
 
-                    # Add labels
+                    # Add label
                     label = self.categories[class_num]
                     caption = f'{label} {score:.3f}'
                     axs[0, 1].text(
@@ -507,23 +374,18 @@ class VHR10(NonGeoDataset):
                         backgroundcolor='none',
                     )
 
-                # Add masks
-                if show_pred_masks:
-                    mask = prediction_mask[i]
-                    contours = skimage.measure.find_contours(mask, 0.5)
-                    for verts in contours:
-                        verts = np.fliplr(verts)
-                        p = patches.Polygon(
-                            verts, facecolor=color, alpha=mask_alpha, edgecolor='white'
-                        )
-                        axs[0, 1].add_patch(p)
+                # Masks
+                if show_feats in {'masks', 'both'}:
+                    mask = masks[i]
+                    alpha = mask * mask_alpha
+                    axs[0, 1].imshow(mask, alpha=alpha)
 
             if show_titles:
                 axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
-            plt.suptitle(suptitle)
+            fig.suptitle(suptitle)
 
-        plt.tight_layout()
+        fig.tight_layout()
 
         return fig

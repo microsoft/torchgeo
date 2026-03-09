@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import bz2
-import collections
 import contextlib
 import hashlib
 import importlib
@@ -901,9 +900,6 @@ def lazy_import(name: str) -> Any:
     except ModuleNotFoundError:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
-        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'skimage': 'scikit-image'}
-        name = module_to_pypi[name]
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:
 
