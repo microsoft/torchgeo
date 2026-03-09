@@ -336,8 +336,8 @@ class TestBoundingBox:
 
 def test_check_integrity() -> None:
     fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     assert check_integrity(fpath)
     assert check_integrity(fpath, md5=md5)
@@ -370,8 +370,8 @@ def test_extract_archive(from_path: str, tmp_path: Path) -> None:
 
 def test_download_url(tmp_path: Path) -> None:
     url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     download_url(url, tmp_path)
     download_url(url, tmp_path, md5=md5)
@@ -383,8 +383,8 @@ def test_download_url(tmp_path: Path) -> None:
 
 def test_download_and_extract_archive(tmp_path: Path) -> None:
     url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     download_and_extract_archive(url, tmp_path)
     download_and_extract_archive(url, tmp_path, md5=md5)
