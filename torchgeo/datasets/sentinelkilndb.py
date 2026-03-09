@@ -19,20 +19,19 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, percentile_normalization
+from .utils import Path, Sample, download_url, quantile_normalization
 
 
 class _FileInfo(TypedDict):
     filename: str
-    md5: str | None
+    sha256: str | None
 
 
 class SentinelKilnDB(NonGeoDataset):
     """SentinelKilnDB brick kiln detection dataset.
 
-    *SentinelKilnDB: A Large-Scale Dataset and Benchmark for OBB Brick Kiln Detection in South Asia Using Satellite Imagery*
+    *SentinelKilnDB: A Large-Scale Dataset and Benchmark for OBB Brick Kiln Detection in South Asia Using Satellite Imagery.*
     Accepted at NeurIPS 2025.
-
 
     `SentinelKilnDB <https://huggingface.co/datasets/SustainabilityLabIITGN/SentinelKilnDB>`__
     is a dataset for brick kiln detection using Sentinel-2 satellite imagery from
@@ -63,20 +62,29 @@ class SentinelKilnDB(NonGeoDataset):
 
        * `pyarrow <https://pypi.org/project/pyarrow/>`_: to load parquet files
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.10
     """
 
-    url = 'https://huggingface.co/datasets/SustainabilityLabIITGN/SentinelKilnDB/resolve/refs%2Fconvert%2Fparquet/default/{}/0000.parquet'
+    url = 'https://huggingface.co/datasets/SustainabilityLabIITGN/SentinelKilnDB/resolve/main/{0}/{0}.parquet'
 
     file_info: ClassVar[dict[str, _FileInfo]] = {
-        'train': {'filename': 'train.parquet', 'md5': None},
-        'validation': {'filename': 'validation.parquet', 'md5': None},
-        'test': {'filename': 'test.parquet', 'md5': None},
+        'train': {
+            'filename': 'train.parquet',
+            'sha256': '90107b0e4e922f3d84c2996acd2bb371f36dbbd3cdd9b305057bd44e9a62c484',
+        },
+        'val': {
+            'filename': 'val.parquet',
+            'sha256': 'e8f92d816ebc88391d0bc6532a7bef775e242951f1d267553720fedd6f7be57e',
+        },
+        'test': {
+            'filename': 'test.parquet',
+            'sha256': '8a26ecf01f00ca45cffb741fbe4e8067ef601f6e33fb6905931d1f87c181cd4d',
+        },
     }
 
     classes = ('CFCBK', 'FCBK', 'Zigzag')
 
-    valid_splits = ('train', 'validation', 'test')
+    valid_splits = ('train', 'val', 'test')
     valid_orientations = ('horizontal', 'oriented')
 
     # Fixed image size for this dataset
@@ -85,7 +93,7 @@ class SentinelKilnDB(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: Literal['train', 'validation', 'test'] = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         bbox_orientation: Literal['horizontal', 'oriented'] = 'horizontal',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -95,7 +103,7 @@ class SentinelKilnDB(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: split of the dataset to use, one of ['train', 'validation', 'test']
+            split: split of the dataset to use, one of ['train', 'val', 'test']
             bbox_orientation: bounding box orientation, one of ['horizontal', 'oriented'],
                 where horizontal returns xyxy format and oriented returns
                 x1y1x2y2x3y3x4y4 format
@@ -306,10 +314,13 @@ class SentinelKilnDB(NonGeoDataset):
         os.makedirs(self.root, exist_ok=True)
 
         filename = self.file_info[self.split]['filename']
-        md5 = self.file_info[self.split]['md5'] if self.checksum else None
+        sha256 = self.file_info[self.split]['sha256'] if self.checksum else None
 
         download_url(
-            url=self.url.format(self.split), root=self.root, filename=filename, md5=md5
+            url=self.url.format(self.split),
+            root=self.root,
+            filename=filename,
+            sha256=sha256,
         )
 
     def plot(
@@ -330,7 +341,7 @@ class SentinelKilnDB(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0)).numpy()
         if self.bbox_orientation == 'horizontal':
             boxes = sample['bbox_xyxy'].cpu().numpy()
         else:

@@ -19,7 +19,7 @@ pytest.importorskip('pyarrow')
 
 class TestSentinelKilnDB:
     @pytest.fixture(
-        params=product(['train', 'validation', 'test'], ['horizontal', 'oriented'])
+        params=product(['train', 'val', 'test'], ['horizontal', 'oriented'])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -48,8 +48,8 @@ class TestSentinelKilnDB:
             assert isinstance(x['image'], torch.Tensor)
             assert isinstance(x['labels'], torch.Tensor)
 
-            # Check image shape (3 channels, 128x128)
-            assert x['image'].shape == (3, 128, 128)
+            # Check image shape (3 channels, 32x32 for test data)
+            assert x['image'].shape == (3, 32, 32)
 
             if dataset.bbox_orientation == 'oriented':
                 bbox_key = 'bbox'

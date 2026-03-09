@@ -3,7 +3,6 @@
 
 """Script to create test data for SentinelKilnDB dataset."""
 
-import hashlib
 import io
 import os
 from pathlib import Path
@@ -13,7 +12,7 @@ import pandas as pd
 from PIL import Image
 
 
-def create_dummy_image_bytes(size: tuple[int, int] = (128, 128)) -> bytes:
+def create_dummy_image_bytes(size: tuple[int, int] = (32, 32)) -> bytes:
     """Create a dummy RGB image and return as PNG bytes."""
     img = np.random.randint(0, 255, (*size, 3), dtype=np.uint8)
     pil_img = Image.fromarray(img, mode='RGB')
@@ -74,8 +73,8 @@ def create_yolo_obb_label(num_boxes: int, num_classes: int = 3) -> np.ndarray:
 
 def create_test_data(root: Path) -> None:
     """Create SentinelKilnDB test dataset with parquet files."""
-    splits = ['train', 'validation', 'test']
-    samples_per_split = {'train': 4, 'validation': 2, 'test': 2}
+    splits = ['train', 'val', 'test']
+    samples_per_split = {'train': 4, 'val': 2, 'test': 2}
 
     np.random.seed(42)
 
@@ -115,11 +114,6 @@ def create_test_data(root: Path) -> None:
         parquet_path = root / f'{split}.parquet'
         df.to_parquet(parquet_path)
         print(f'Created {parquet_path}')
-
-        # Calculate MD5
-        with open(parquet_path, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'  MD5: {md5}')
 
 
 if __name__ == '__main__':
