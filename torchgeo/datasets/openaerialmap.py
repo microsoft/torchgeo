@@ -229,8 +229,8 @@ class OpenAerialMap(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download imagery from STAC API based on bbox
             image_id: optional STAC item ID to download specific imagery
-            tile_size: size of the tiles to download 
-                (supported : 256 , 512, 768, 1024); Do verify they exists 
+            tile_size: size of the tiles to download
+                (supported : 256 , 512, 768, 1024); Do verify they exists
                 in the remote image source as resolution of each image varies.
 
         Raises:
