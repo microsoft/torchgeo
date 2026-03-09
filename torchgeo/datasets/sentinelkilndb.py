@@ -314,14 +314,22 @@ class SentinelKilnDB(NonGeoDataset):
         os.makedirs(self.root, exist_ok=True)
 
         filename = self.file_info[self.split]['filename']
-        sha256 = self.file_info[self.split]['sha256'] if self.checksum else None
 
-        download_url(
-            url=self.url.format(self.split),
-            root=self.root,
-            filename=filename,
-            sha256=sha256,
-        )
+        if self.checksum:
+            sha256 = self.file_info[self.split]['sha256']
+            assert sha256 is not None
+            download_url(
+                url=self.url.format(self.split),
+                root=self.root,
+                filename=filename,
+                sha256=sha256,
+            )
+        else:
+            download_url(
+                url=self.url.format(self.split),
+                root=self.root,
+                filename=filename,
+            )
 
     def plot(
         self,
