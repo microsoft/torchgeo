@@ -5,13 +5,14 @@
 
 import json
 import os
+from collections import defaultdict
 from collections.abc import Callable
 from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
 import numpy as np
-import rasterio.features
+from rasterio.features import rasterize
 import torch
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
@@ -115,7 +116,7 @@ class VHR10(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in ['positive', 'negative']
+        assert split in {'positive', 'negative'}
 
         self.root = root
         self.split = split
@@ -131,7 +132,32 @@ class VHR10(NonGeoDataset):
         if split == 'positive':
             path = os.path.join(self.root, 'NWPU VHR-10 dataset', 'annotations.json')
             with open(path) as f:
-                self.annotations = json.load(f)
+                annotations = json.load(f)
+
+                # Gather image shapes
+                out_shapes = []
+                for image in annotations['images']:
+                    out_shapes.append((image['height'], image['width']))
+
+                self.labels = defaultdict(list)
+                self.boxes = defaultdict(list)
+                self.masks = defaultdict(list)
+                for annotation in annotations['annotations']:
+                    i = annotation['image_id']
+                    self.labels[i].append(annotation['category_id'])
+
+                    # Convert box format
+                    x1, y1, w, h = annotation['bbox']
+                    self.boxes[i].append([x1, y1, x1 + w, y1 + h])
+
+                    # Rasterize segmentation mask
+                    segmentation = annotation['segmentation']  # [[x1, y1, x2, y2, ...]]
+                    xs = segmentation[0][::2]  # [x1, x2, ...]
+                    ys = segmentation[0][1::2]  # [y1, y2, ...]
+                    coords = list(zip(xs, ys))  # [(x1, y1), (x2, y2), ...]
+                    shapes = [(Polygon(coords), 1)]
+                    mask = rasterize(shapes, out_shapes[i], dtype=np.uint8)
+                    self.masks[i].append(torch.from_numpy(mask))
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -145,12 +171,9 @@ class VHR10(NonGeoDataset):
         sample = {}
 
         # Both 'positive' and 'negative' splits have an image
-        path = os.path.join(
-            self.root,
-            'NWPU VHR-10 dataset',
-            f'{self.split} image set',
-            f'{index + 1:03d}.jpg',
-        )
+        split = f'{self.split} image set'
+        file = f'{index + 1:03d}.jpg'
+        path = os.path.join(self.root, 'NWPU VHR-10 dataset', split, file)
         with Image.open(path) as f:
             tensor = torch.from_numpy(np.array(f)).float()
             tensor = einops.rearrange(tensor, 'h w c -> c h w')
@@ -158,31 +181,9 @@ class VHR10(NonGeoDataset):
 
         # Only 'positive' split has target labels
         if self.split == 'positive':
-            _, height, width = tensor.shape
-
-            labels = []
-            boxes = []
-            masks = []
-            for annotation in self.annotations['annotations']:
-                if annotation['image_id'] == index:
-                    labels.append(annotation['category_id'])
-
-                    # Convert box format
-                    x1, y1, w, h = annotation['bbox']
-                    boxes.append([x1, y1, x1 + w, y1 + h])
-
-                    # Rasterize segmentation mask
-                    segmentation = annotation['segmentation']  # [[x1, y1, x2, y2, ...]]
-                    xs = segmentation[0][::2]  # [x1, x2, ...]
-                    ys = segmentation[0][1::2]  # [y1, y2, ...]
-                    coords = list(zip(xs, ys))  # [(x1, y1), (x2, y2), ...]
-                    shapes = [(Polygon(coords), 1)]
-                    mask = rasterio.features.rasterize(shapes, (height, width))
-                    masks.append(torch.from_numpy(mask))
-
-            sample['label'] = torch.tensor(labels)
-            sample['bbox_xyxy'] = torch.tensor(boxes)
-            sample['mask'] = torch.stack(masks)
+            sample['label'] = torch.tensor(self.labels[index])
+            sample['bbox_xyxy'] = torch.tensor(self.boxes[index])
+            sample['mask'] = torch.stack(self.masks[index])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
