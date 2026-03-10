@@ -55,6 +55,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`SSL4EO-L Benchmark`,S,Lansat & CDL,25K,134,264x264,30,MSI,CC0-1.0
 :ref:`SSL4EO-L Benchmark`,S,Lansat & NLCD,25K,17,264x264,30,MSI,CC0-1.0
 :ref:`SeasoNet`,S,Sentinel-2,"1,759,830",33,120x120,10,MSI,CC-BY-4.0
+:ref:`SentinelKilnDB`,OD,Sentinel-2,"114,400",3,128x128,10,RGB,CC-BY-NC-4.0
 :ref:`So2Sat`,C,Sentinel-1/2,"400,673",17,32x32,10,"SAR, MSI",CC-BY-4.0
 :ref:`Solar Plants Brazil`,S,Aerial,"272",2,256x256,10,"RGB + NIR",CC-BY-NC-4.0
 :ref:`South Africa Crop Type`,S,Sentinel-2,,10,"256x256",10,MSI,CC-BY-4.0
