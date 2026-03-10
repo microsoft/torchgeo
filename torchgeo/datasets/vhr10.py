@@ -12,11 +12,11 @@ from typing import ClassVar, Literal
 import einops
 import matplotlib.pyplot as plt
 import numpy as np
-from rasterio.features import rasterize
 import torch
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 from PIL import Image
+from rasterio.features import rasterize
 from shapely import Polygon
 
 from .errors import DatasetNotFoundError
