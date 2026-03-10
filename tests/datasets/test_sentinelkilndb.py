@@ -78,6 +78,11 @@ class TestSentinelKilnDB:
     def test_already_downloaded(self, dataset: SentinelKilnDB) -> None:
         SentinelKilnDB(root=dataset.root, split=dataset.split, download=True)
 
+    def test_checksum(self, dataset: SentinelKilnDB) -> None:
+        SentinelKilnDB(
+            root=dataset.root, split=dataset.split, download=True, checksum=True
+        )
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SentinelKilnDB(tmp_path)
