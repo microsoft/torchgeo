@@ -32,7 +32,7 @@ from rasterio import Affine
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
-from shapely import Geometry
+from shapely.geometry.base import BaseGeometry
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1031,7 +1031,7 @@ class VectorDataset(GeoDataset):
 
     def _semantic_segmentation_sample(
         self,
-        shapes: list[tuple[Geometry, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1058,7 +1058,7 @@ class VectorDataset(GeoDataset):
 
     def _object_detection_sample(
         self,
-        shapes: list[tuple[Geometry, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1078,8 +1078,7 @@ class VectorDataset(GeoDataset):
             label_list = []
             box_list = []
             for s in shapes:
-                shape = shapely.geometry.shape(s[0])
-                p = convert_poly_coords(shape, transform, inverse=True)
+                p = convert_poly_coords(s[0], transform, inverse=True)
                 p = shapely.clip_by_rect(p, 0, 0, width, height)
 
                 # Get labels
@@ -1101,7 +1100,7 @@ class VectorDataset(GeoDataset):
 
     def _instance_segmentation_sample(
         self,
-        shapes: list[tuple[Geometry, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1122,8 +1121,7 @@ class VectorDataset(GeoDataset):
             box_list = []
             mask_list = []
             for i, s in enumerate(shapes):
-                shape = shapely.geometry.shape(s[0])
-                p = convert_poly_coords(shape, transform, inverse=True)
+                p = convert_poly_coords(s[0], transform, inverse=True)
                 p = shapely.clip_by_rect(p, 0, 0, width, height)
 
                 # Get labels
@@ -1163,7 +1161,7 @@ class VectorDataset(GeoDataset):
 
     def prepare_sample(
         self,
-        shapes: list[tuple[Geometry, np.int32]],
+        shapes: list[tuple[BaseGeometry, np.int32]],
         width: float,
         height: float,
         transform: Affine,
@@ -1241,7 +1239,12 @@ class VectorDataset(GeoDataset):
                 [self.get_label(row) for _, row in src.iterrows()]
             ).astype(np.int32)
 
-            shapes.extend(list(zip(src.geometry, labels)))
+            shapes.extend(
+                [
+                    (shapely.geometry.shape(geom), label)
+                    for geom, label in zip(src.geometry, labels)
+                ]
+            )
 
         # Rasterize geometries
         width = (x.stop - x.start) / x.step
