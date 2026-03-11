@@ -11,7 +11,7 @@ import re
 import time
 import warnings
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypedDict
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -28,6 +28,13 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
 from .utils import Path, Sample
+
+
+class OSMClassConfig(TypedDict):
+    """Type definition for OpenStreetMap class configuration."""
+
+    name: str
+    selector: list[dict[str, str | list[str]]]
 
 
 class OpenStreetMap(VectorDataset):
@@ -85,7 +92,7 @@ class OpenStreetMap(VectorDataset):
     def __init__(
         self,
         bbox: tuple[float, float, float, float],
-        classes: list[dict[str, str | list[dict[str, str | list[str]]]]],
+        classes: list[OSMClassConfig],
         paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
@@ -137,7 +144,7 @@ class OpenStreetMap(VectorDataset):
         # Check for empty classes after initialization
         self._check_empty_classes()
 
-    def _validate_classes(self, classes: list[dict[str, str | list[dict[str, str | list[str]]]]]) -> None:
+    def _validate_classes(self, classes: list[OSMClassConfig]) -> None:
         """Validate classes configuration.
 
         Args:
@@ -195,10 +202,7 @@ class OpenStreetMap(VectorDataset):
 
         queries = []
         for class_def in self.classes:
-            selectors = class_def['selector']
-            assert isinstance(selectors, list)
-            for selector in selectors:
-                assert isinstance(selector, dict)
+            for selector in class_def['selector']:
                 for tag, values in selector.items():
                     if values == '*':
                         # Tag exists, any value
@@ -360,10 +364,7 @@ class OpenStreetMap(VectorDataset):
         props = feature.get('properties', {})
 
         for class_idx, class_def in enumerate(self.classes):
-            selectors = class_def['selector']
-            assert isinstance(selectors, list)
-            for selector in selectors:
-                assert isinstance(selector, dict)
+            for selector in class_def['selector']:
                 if self._feature_matches_selector(props, selector):
                     return class_idx + 1
 
@@ -483,7 +484,6 @@ class OpenStreetMap(VectorDataset):
             class_idx = int(label - 1)
             if class_idx < len(self.classes):
                 class_name = self.classes[class_idx]['name']
-                assert isinstance(class_name, str)
                 color = colors[int(label) % len(colors)]
                 legend_handles.append(
                     mpatches.Patch(color=color, label=class_name.title())
