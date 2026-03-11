@@ -11,7 +11,7 @@ import re
 import time
 import warnings
 from collections.abc import Callable
-from typing import Any, ClassVar, TypedDict
+from typing import Any, ClassVar
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -28,13 +28,6 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
 from .utils import Path, Sample
-
-
-class _ClassConfig(TypedDict):
-    """Type definition for OpenStreetMap class configuration."""
-
-    name: str
-    selector: list[dict[str, str | list[str]]]
 
 
 class OpenStreetMap(VectorDataset):
@@ -92,7 +85,7 @@ class OpenStreetMap(VectorDataset):
     def __init__(
         self,
         bbox: tuple[float, float, float, float],
-        classes: list[_ClassConfig],
+        classes: list[dict[str, str | list[dict[str, str | list[str]]]]],
         paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
@@ -102,7 +95,7 @@ class OpenStreetMap(VectorDataset):
 
         Args:
             bbox: bounding box for initial data fetch as (xmin, ymin, xmax, ymax) in EPSG:4326
-            classes: list of _ClassConfig dicts defining feature classes. Each dict must have:
+            classes: list of dicts defining feature classes. Each dict must have:
                 - 'name' (str): class name
                 - 'selector' (list[dict[str, str | list[str]]]): list of OSM tag filters
                 Features get labels 1-N based on class order, with first match taking priority.
@@ -144,7 +137,7 @@ class OpenStreetMap(VectorDataset):
         # Check for empty classes after initialization
         self._check_empty_classes()
 
-    def _validate_classes(self, classes: list[_ClassConfig]) -> None:
+    def _validate_classes(self, classes: list[dict[str, str | list[dict[str, str | list[str]]]]]) -> None:
         """Validate classes configuration.
 
         Args:
@@ -202,7 +195,10 @@ class OpenStreetMap(VectorDataset):
 
         queries = []
         for class_def in self.classes:
-            for selector in class_def['selector']:
+            selectors = class_def['selector']
+            assert isinstance(selectors, list)
+            for selector in selectors:
+                assert isinstance(selector, dict)
                 for tag, values in selector.items():
                     if values == '*':
                         # Tag exists, any value
@@ -364,7 +360,10 @@ class OpenStreetMap(VectorDataset):
         props = feature.get('properties', {})
 
         for class_idx, class_def in enumerate(self.classes):
-            for selector in class_def['selector']:
+            selectors = class_def['selector']
+            assert isinstance(selectors, list)
+            for selector in selectors:
+                assert isinstance(selector, dict)
                 if self._feature_matches_selector(props, selector):
                     return class_idx + 1
 
@@ -484,6 +483,7 @@ class OpenStreetMap(VectorDataset):
             class_idx = int(label - 1)
             if class_idx < len(self.classes):
                 class_name = self.classes[class_idx]['name']
+                assert isinstance(class_name, str)
                 color = colors[int(label) % len(colors)]
                 legend_handles.append(
                     mpatches.Patch(color=color, label=class_name.title())
