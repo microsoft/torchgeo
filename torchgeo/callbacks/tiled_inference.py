@@ -128,33 +128,33 @@ class TiledInferenceCallback(Callback):
             batch_idx: Batch index.
             dataloader_idx: Dataloader index.
         """
-        logits = outputs['logits']
+        probabilities = outputs['probabilities']
         bounds = outputs.get('bounds')
         transforms = outputs.get('transform')
 
         if bounds is None:
             raise ValueError(
-                'batch["bounds"] is None. Ensure you are using PR #3138 changes.'
+                'outputs["bounds"] is None; ensure predict_step returns bounds metadata.'
             )
         if transforms is None:
             raise ValueError(
-                'batch["transform"] is None. Ensure you are using PR #3140 changes.'
+                'outputs["transform"] is None; ensure predict_step returns transform metadata.'
             )
 
         if self.num_classes is None:
-            self.num_classes = logits.shape[1]
+            self.num_classes = probabilities.shape[1]
 
-        batch_size = logits.shape[0]
+        batch_size = probabilities.shape[0]
         for i in range(batch_size):
-            patch_id = batch_idx * batch_size + i
-            patch_logits = logits[i].cpu().clone()
+            patch_id = len(self.patch_metadata)
+            patch_probabilities = probabilities[i].cpu().clone()
             bounds_tensor = bounds[i].cpu().clone()
             transform_tensor = transforms[i].cpu().clone()
 
             assert self.temp_dir is not None
             patch_path = self.temp_dir / f'patch_{patch_id:06d}.tif'
-            num_classes = patch_logits.shape[0]
-            class_predictions = patch_logits.argmax(dim=0)
+            num_classes = patch_probabilities.shape[0]
+            class_predictions = patch_probabilities.argmax(dim=0)
             one_hot = (
                 torch.nn.functional.one_hot(
                     class_predictions.long(), num_classes=num_classes
@@ -207,19 +207,20 @@ class TiledInferenceCallback(Callback):
             raise ValueError('No patches to merge')
 
         assert self.num_classes is not None
-        weighted_merge(
-            patch_metadata=self.patch_metadata,
-            num_classes=self.num_classes,
-            overlap=self.overlap,
-            delta=self.delta,
-            blend_method=self.blend_method,
-            crs=self.crs,
-            output_path=self.output_path,
-            chunk_size=self.chunk_size,
-            cog_config=self.cog_config,
-            dataset_bounds=self.dataset_bounds,
-            dataset_res=self.dataset_res,
-        )
-
-        if self.temp_dir is not None and self.temp_dir.exists():
-            shutil.rmtree(self.temp_dir)
+        try:
+            weighted_merge(
+                patch_metadata=self.patch_metadata,
+                num_classes=self.num_classes,
+                overlap=self.overlap,
+                delta=self.delta,
+                blend_method=self.blend_method,
+                crs=self.crs,
+                output_path=self.output_path,
+                chunk_size=self.chunk_size,
+                cog_config=self.cog_config,
+                dataset_bounds=self.dataset_bounds,
+                dataset_res=self.dataset_res,
+            )
+        finally:
+            if self.temp_dir is not None and self.temp_dir.exists():
+                shutil.rmtree(self.temp_dir)
