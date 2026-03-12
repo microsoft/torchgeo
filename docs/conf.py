@@ -69,6 +69,10 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    # Internal pandas types not exposed in public docs
+    ('py:class', 'pandas._libs.interval.Interval'),
+    ('py:class', 'pandas._libs.tslibs.timedeltas.Timedelta'),
+    ('py:class', 'pandas.core.series.Series'),
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
     ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
