@@ -105,7 +105,7 @@ class GeoTIFFWriter:
             raise RuntimeError('Writer not opened. Use with statement.')
 
         h, w = data.shape
-        window = Window(x_offset, y_offset, w, h)
+        window = Window(x_offset, y_offset, w, h)  # type: ignore[too-many-positional-arguments]
         self.dataset.write(data, 1, window=window)
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
