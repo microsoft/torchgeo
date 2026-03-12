@@ -204,6 +204,11 @@ def get_blend_mask(
     h_crop = h - top - bottom
     w_crop = w - left - right
 
+    if h_crop <= 0 or w_crop <= 0:
+        raise ValueError('delta crops away the entire patch')
+    if overlap > min(h_crop, w_crop):
+        raise ValueError('overlap exceeds cropped patch dimensions')
+
     if method == 'cosine':
         y = np.ones(h_crop, dtype=np.float32)
         if overlap > 0:
@@ -402,7 +407,8 @@ def weighted_merge(
         tuple[int, int, int, int], np.typing.NDArray[np.floating[Any]]
     ] = {}
 
-    assert output_path is not None
+    if output_path is None:
+        raise ValueError('output_path is required')
     writer = GeoTIFFWriter(
         output_path=output_path,
         width=output_shape[1],
