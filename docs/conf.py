@@ -70,6 +70,7 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose
+    ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
     ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
