@@ -286,20 +286,20 @@ class TestOpenAerialMap:
             lambda *args, **kwargs: MockGetResponse(),
         )
 
-        result = dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+        result = dataset._fetch_item_id()
         assert result is not None
         assert 'WebMercatorQuad' in result
 
         post_response = {'features': []}
-        assert dataset._fetch_item_id() is None  # type: ignore[reportPrivateUsage]
+        assert dataset._fetch_item_id() is None
 
         post_exception = requests.RequestException
         with pytest.raises(RuntimeError, match='Failed to query STAC API'):
-            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+            dataset._fetch_item_id()
 
         post_exception = ValueError
         with pytest.raises(RuntimeError, match='Invalid STAC API response'):
-            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+            dataset._fetch_item_id()
 
     def test_fetch_item_id_with_image_id(
         self, dataset: OpenAerialMap, monkeypatch: pytest.MonkeyPatch
@@ -351,7 +351,7 @@ class TestOpenAerialMap:
             lambda *args, **kwargs: MockGetResponse(),
         )
 
-        result = dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+        result = dataset._fetch_item_id()
         assert result is not None
 
     def test_fetch_item_id_missing_ids(
@@ -377,7 +377,7 @@ class TestOpenAerialMap:
             lambda *args, **kwargs: MockPostResponse(),
         )
 
-        assert dataset._fetch_item_id() is None  # type: ignore[reportPrivateUsage]
+        assert dataset._fetch_item_id() is None
 
     def test_fetch_item_id_get_failure(
         self,
@@ -407,7 +407,7 @@ class TestOpenAerialMap:
         )
 
         with pytest.raises(RuntimeError, match='Failed to query tiles endpoint'):
-            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+            dataset._fetch_item_id()
 
     def test_fetch_item_id_no_webmercator(
         self,
@@ -448,13 +448,13 @@ class TestOpenAerialMap:
         )
 
         with pytest.raises(RuntimeError, match='WebMercatorQuad tileset not found'):
-            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+            dataset._fetch_item_id()
 
     def test_download_existing_tiles(self, dataset: OpenAerialMap) -> None:
         # dataset fixture points to tests/data/openaerialmap which has .tif files
         dataset.bbox = (85.51678, 27.63134, 85.52323, 27.63744)
         dataset.zoom = 19
-        dataset._download()  # type: ignore[reportPrivateUsage]
+        dataset._download()
 
     def test_download_full_flow(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -521,7 +521,7 @@ class TestOpenAerialMap:
             pass
 
         monkeypatch.setattr(ds, '_georeference_tile', mock_georeference)
-        ds._download()  # type: ignore[reportPrivateUsage]
+        ds._download()
 
     def test_fetch_item_id_key_error(
         self,
@@ -540,7 +540,7 @@ class TestOpenAerialMap:
         )
 
         with pytest.raises(RuntimeError, match='Invalid STAC API response'):
-            dataset._fetch_item_id()  # type: ignore[reportPrivateUsage]
+            dataset._fetch_item_id()
 
     def test_download_tiles(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -566,7 +566,7 @@ class TestOpenAerialMap:
 
         tile = TileUtils.Tile(x=1, y=1, z=1)
         tiles_url = 'http://example.com/{z}/{x}/{y}'
-        dataset._download_tiles(tiles_url, [tile])  # type: ignore[reportPrivateUsage]
+        dataset._download_tiles(tiles_url, [tile])
 
         assert georef_called
 
@@ -600,7 +600,7 @@ class TestOpenAerialMap:
             'rasterio.open', lambda *args, **kwargs: MockContextManager()
         )
 
-        dataset._georeference_tile(str(filepath), tile)  # type: ignore[reportPrivateUsage]
+        dataset._georeference_tile(str(filepath), tile)
 
         assert update_tags_called
 
@@ -620,9 +620,7 @@ class TestOpenAerialMap:
 
         tile = TileUtils.Tile(x=2, y=2, z=2)
         with pytest.warns(UserWarning, match='Failed to download tile'):
-            dataset._download_single_tile(  # type: ignore[reportPrivateUsage]
-                'http://example.com/{z}/{x}/{y}', tile
-            )
+            dataset._download_single_tile('http://example.com/{z}/{x}/{y}', tile)
 
     def test_download_single_tile_exception(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -638,9 +636,7 @@ class TestOpenAerialMap:
 
         tile = TileUtils.Tile(x=2, y=2, z=2)
         with pytest.warns(UserWarning, match='Error downloading tile'):
-            dataset._download_single_tile(  # type: ignore[reportPrivateUsage]
-                'http://example.com/{z}/{x}/{y}', tile
-            )
+            dataset._download_single_tile('http://example.com/{z}/{x}/{y}', tile)
 
     def test_georeference_tile_error(
         self, dataset: OpenAerialMap, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -655,4 +651,4 @@ class TestOpenAerialMap:
         monkeypatch.setattr('rasterio.open', raise_rasterio_error)
 
         with pytest.warns(UserWarning, match='Could not georeference'):
-            dataset._georeference_tile(str(filepath), tile)  # type: ignore[reportPrivateUsage]
+            dataset._georeference_tile(str(filepath), tile)
