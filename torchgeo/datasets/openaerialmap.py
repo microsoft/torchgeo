@@ -186,8 +186,8 @@ class OpenAerialMap(RasterDataset):
     .. versionadded:: 0.10
     """
 
-    _stac_url: ClassVar[str] = 'https://api.imagery.hotosm.org/stac'
-    _tiles_url: ClassVar[str] = 'https://api.imagery.hotosm.org/raster'
+    _stac_url = 'https://api.imagery.hotosm.org/stac'
+    _tiles_url = 'https://api.imagery.hotosm.org/raster'
 
     filename_glob = 'OAM-*.tif'
 
