@@ -122,8 +122,8 @@ docs = [
     # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
     # https://github.com/sphinx-doc/sphinx/pull/10887
     "sphinx>=5.3",
-    # sphinx-github-changelog 1.0+ required for viewing release notes in docs
-    "sphinx-github-changelog>=1.0.0",
+    # sphinx-github-changelog 1.1+ required for Sphinx 4+ compatibility
+    "sphinx-github-changelog>=1.1.0",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support

@@ -3778,7 +3778,7 @@ requires-dist = [
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
     { name = "shapely", specifier = ">=2.0.2" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=5.3" },
-    { name = "sphinx-github-changelog", marker = "extra == 'docs'", specifier = ">=1.0.0" },
+    { name = "sphinx-github-changelog", marker = "extra == 'docs'", specifier = ">=1.1.0" },
     { name = "timm", specifier = ">=1.0.3" },
     { name = "torch", specifier = ">=2.2" },
     { name = "torchgeo", extras = ["datasets", "docs", "models", "style", "tests"], marker = "extra == 'all'" },
