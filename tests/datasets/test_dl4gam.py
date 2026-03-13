@@ -88,10 +88,6 @@ class TestDL4GAMAlps:
         shutil.copyfile(fp_splits, Path(str(tmp_path), fp_splits.name))
         DL4GAMAlps(root=str(tmp_path), download=False)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            DL4GAMAlps(split='foo')
-
     def test_plot(self, dataset: DL4GAMAlps) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()

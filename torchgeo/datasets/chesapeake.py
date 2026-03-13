@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -429,13 +429,13 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, Any]] = {
+    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ).transform,
+        ),
         'epsg:26918': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ).transform,
+        ),
     }
 
     def __init__(
@@ -524,12 +524,12 @@ class ChesapeakeCVPR(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
-            'image': [],
-            'mask': [],
             'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
+        images = []
+        masks = []
         if df.empty:
             raise IndexError(
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
@@ -548,7 +548,7 @@ class ChesapeakeCVPR(GeoDataset):
 
                     if query_geom_transformed is None:
                         query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs], query_box
+                            self.p_transformers[dst_crs].transform, query_box
                         ).envelope
                         query_geom_transformed = shapely.geometry.mapping(
                             query_box_transformed
@@ -564,22 +564,19 @@ class ChesapeakeCVPR(GeoDataset):
                     'landsat-leaf-on',
                     'landsat-leaf-off',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in [
                     'lc',
                     'nlcd',
                     'buildings',
                     'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
             raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
+        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
+        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)

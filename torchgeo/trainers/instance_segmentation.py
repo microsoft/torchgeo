@@ -3,8 +3,6 @@
 
 """Trainers for instance segmentation."""
 
-from typing import Any
-
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
@@ -19,6 +17,7 @@ from torchvision.models.detection import maskrcnn_resnet50_fpn
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -125,7 +124,7 @@ class InstanceSegmentationTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss.
 
@@ -149,7 +148,7 @@ class InstanceSegmentationTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation metrics.
 
@@ -212,7 +211,7 @@ class InstanceSegmentationTask(BaseTask):
                 )  # type: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
         Args:
@@ -238,7 +237,7 @@ class InstanceSegmentationTask(BaseTask):
         self.log_dict(metrics, batch_size=len(x))
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> list[dict[str, Tensor]]:
         """Compute the predicted masks.
 

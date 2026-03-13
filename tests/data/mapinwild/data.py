@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -89,7 +88,6 @@ dict_all = {
     's2_temp': ['s2_temporal_subset_part1', 's2_temporal_subset_part2'],
 }
 
-md5s = {}
 keys = count.keys()
 modality_download_list = list(count.keys())
 
@@ -147,13 +145,6 @@ for i, source in zip(keys, modality_download_list):
     # Compress data
     shutil.make_archive(directory, 'zip', root_dir=root, base_dir=source)
 
-    # Compute checksums
-    with open(directory + '.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{directory}: {md5}')
-        name = i + '.zip'
-        md5s[name] = md5
-
 tvt_split = pd.DataFrame(
     [['1', '2', '3'], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
     index=['0', '1', '2'],
@@ -161,6 +152,3 @@ tvt_split = pd.DataFrame(
 )
 tvt_split.dropna()
 tvt_split.to_csv(os.path.join(folder_path, 'split_IDs.csv'))
-
-with open(os.path.join(folder_path, 'split_IDs.csv'), 'rb') as f:
-    csv_md5 = hashlib.md5(f.read()).hexdigest()

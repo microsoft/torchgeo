@@ -62,10 +62,6 @@ class TestVaihingen2D:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             Vaihingen2D(root=tmp_path, checksum=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            Vaihingen2D(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             Vaihingen2D(tmp_path)

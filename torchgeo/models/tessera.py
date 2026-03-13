@@ -287,7 +287,7 @@ class Tessera(nn.Module):
         return output
 
 
-class Tessera_Weights(WeightsEnum):  # type: ignore[misc]
+class Tessera_Weights(WeightsEnum):
     """Tessera model weights.
 
     .. versionadded:: 0.9

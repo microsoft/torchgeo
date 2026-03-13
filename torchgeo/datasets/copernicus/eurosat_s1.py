@@ -54,7 +54,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index].replace('.jpg', '.tif')
+        file = str(self.files[index].replace('.jpg', '.tif'))
         classname = file.split('_')[0]
         path = os.path.join(self.root, self.directory, 'all_imgs', classname, file)
         sample = self._load_image(path)

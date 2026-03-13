@@ -26,7 +26,7 @@ dependencies:
   - changed-files:
       - any-glob-to-any-file:
           - 'pyproject.toml'
-          - 'requirements/**'
+          - 'uv.lock'
           - '.github/dependabot.yml'
 documentation:
   - changed-files:

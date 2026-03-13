@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -112,9 +112,9 @@ class SSL4EOLBenchmark(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        sensor: str = 'oli_sr',
-        product: str = 'cdl',
-        split: str = 'train',
+        sensor: Literal['etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'] = 'oli_sr',
+        product: Literal['cdl', 'nlcd'] = 'cdl',
+        split: Literal['train', 'val', 'test'] = 'train',
         classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,

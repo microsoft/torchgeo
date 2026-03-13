@@ -5,10 +5,11 @@
 
 import math
 from collections.abc import Iterable
-from typing import Any
+from typing import NotRequired, TypedDict
 
 import numpy as np
 import torch
+from torch import Tensor
 
 from ..datasets.utils import Sample
 
@@ -18,34 +19,44 @@ class MisconfigurationException(Exception):
     """Exception used to inform users of misuse with Lightning."""
 
 
-def collate_fn_detection(batch: list[Sample]) -> Sample:
+class DetectionSample(TypedDict):
+    """Sample for object detection and instance segmentation."""
+
+    image: Tensor
+    bbox_xyxy: NotRequired[list[Tensor]]
+    label: NotRequired[list[Tensor]]
+    mask: NotRequired[list[Tensor]]
+
+
+def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
     """Custom collate fn for object detection and instance segmentation.
 
     Args:
         batch: list of sample dicts return by dataset
 
     Returns:
-        batch dict output
+        collatted batch dict
 
     .. versionadded:: 0.6
     """
-    output: Sample = {}
-    output['image'] = torch.stack([sample['image'] for sample in batch])
-    output['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
-    if 'label' in batch[0].keys():
-        output['label'] = [sample['label'] for sample in batch]
-    else:
-        output['label'] = [
+    collated: DetectionSample = {
+        'image': torch.stack([sample['image'] for sample in batch])
+    }
+    if 'bbox_xyxy' in batch[0]:
+        collated['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
+    if 'label' in batch[0]:
+        collated['label'] = [sample['label'] for sample in batch]
+    elif 'bbox_xyxy' in batch[0]:
+        collated['label'] = [
             torch.tensor([1] * len(sample['bbox_xyxy'])) for sample in batch
         ]
-
     if 'mask' in batch[0]:
-        output['mask'] = [sample['mask'] for sample in batch]
-    return output
+        collated['mask'] = [sample['mask'] for sample in batch]
+    return collated
 
 
 def group_shuffle_split(
-    groups: Iterable[Any],
+    groups: Iterable[object],
     train_size: float | None = None,
     test_size: float | None = None,
     random_state: int | None = None,

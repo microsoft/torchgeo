@@ -17,6 +17,7 @@ from typing_extensions import deprecated
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -113,11 +114,11 @@ class ClassificationTask(ClassificationMixin, BaseTask):
         if self.hparams['freeze_backbone']:
             for param in self.model.parameters():
                 param.requires_grad = False
-            for param in self.model.get_classifier().parameters():
+            for param in self.model.get_classifier().parameters():  # type: ignore[call-non-callable]
                 param.requires_grad = True
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -144,7 +145,7 @@ class ClassificationTask(ClassificationMixin, BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -203,7 +204,7 @@ class ClassificationTask(ClassificationMixin, BaseTask):
                 )  # type: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -224,7 +225,7 @@ class ClassificationTask(ClassificationMixin, BaseTask):
         self.log('test_loss', loss, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 

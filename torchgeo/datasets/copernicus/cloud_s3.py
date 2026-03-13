@@ -150,7 +150,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index]
+        file = str(self.files[index])
         image_path = os.path.join(self.root, self.directory, 's3_olci', file)
         mask_path = os.path.join(self.root, self.directory, f'cloud_{self.mode}', file)
         sample = self._load_image(image_path) | self._load_mask(mask_path)

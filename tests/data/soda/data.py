@@ -1,7 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import json
 import os
 import shutil
@@ -145,14 +144,6 @@ def create_dataset() -> None:
 
         # Create archive preserving directory structure
         shutil.make_archive(os.path.splitext(archive_path)[0], 'zip', root, dirname)
-
-        # compute md5 hash
-        md5 = hashlib.md5()
-        with open(archive_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b''):
-                md5.update(chunk)
-        md5sum = md5.hexdigest()
-        print(f'MD5 hash of {archive_path}: {md5sum}')
 
 
 if __name__ == '__main__':

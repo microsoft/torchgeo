@@ -4,6 +4,7 @@
 import os
 import shutil
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import pytest
@@ -25,7 +26,11 @@ class TestSustainBenchCropYield:
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         split = request.param
-        countries = ['argentina', 'brazil', 'usa']
+        countries: list[Literal['argentina', 'brazil', 'usa']] = [
+            'argentina',
+            'brazil',
+            'usa',
+        ]
         transforms = nn.Identity()
         return SustainBenchCropYield(root, split, countries, transforms, download=True)
 
@@ -52,10 +57,6 @@ class TestSustainBenchCropYield:
 
     def test_len(self, dataset: SustainBenchCropYield) -> None:
         assert len(dataset) == len(dataset.countries) * 3
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SustainBenchCropYield(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

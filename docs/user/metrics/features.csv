@@ -2,7 +2,7 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `TorchGeo`_,PyTorch,"GDAL, h5py, laspy, NetCDF4, OpenCV, pandas, pillow, scipy, xarray","geopandas, R-tree*",Kornia,141,132,✅,❌,✅,❌,🚧
 `OTB`_,"LibSVM, OpenCV, Shark",GDAL,-,-,0,0,✅,✅,✅,❌,❌
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",-,Albumentations,27,13,✅,❌,✅,❌,🚧
-`DeepForest`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,4,❌,❌,❌,❌,❌
+`DeepForest`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy",R-tree,"Kornia, Albumentations*",0,4,✅,❌,❌,❌,❌
 `Raster Vision`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy, xarray",STAC,Albumentations,0,6,✅,❌,✅,✅,🚧
 `samgeo`_,PyTorch,"GDAL, OpenCV, pandas, xarray",geopandas,numpy,0,0,❌,✅,✅,❌,❌
 `spopt`_,scikit-learn,pandas,shapely,numpy,0,0,❌,❌,✅,❌,❌

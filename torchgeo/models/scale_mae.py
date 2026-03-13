@@ -183,7 +183,7 @@ def interpolate_pos_embed(
     return state_dict
 
 
-class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class ScaleMAELarge16_Weights(WeightsEnum):
     """Scale-MAE Large patch size 16 weights.
 
     .. versionadded:: 0.6

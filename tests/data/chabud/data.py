@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import random
 
@@ -62,8 +61,3 @@ with h5py.File(filename, 'w') as f:
         sample.create_dataset('pre_fire', data=data)
         sample.create_dataset('post_fire', data=data)
         sample.create_dataset('mask', data=gt)
-
-# Compute checksums
-with open(filename, 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'md5: {md5}')

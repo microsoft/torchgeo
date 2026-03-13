@@ -69,10 +69,6 @@ class TestxBD:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             xBD(root=tmp_path, checksum=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            xBD(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             xBD(tmp_path)

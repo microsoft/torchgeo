@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import Literal, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -68,7 +68,7 @@ class FireRisk(NonGeoClassificationDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

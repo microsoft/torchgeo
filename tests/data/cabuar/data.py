@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import random
 
@@ -61,9 +60,3 @@ for filename, uri, fold in zip(files, uris, folds):
         sample.create_dataset('pre_fire', data=data)
         sample.create_dataset('post_fire', data=data)
         sample.create_dataset('mask', data=gt)
-
-# Compute checksums
-for filename in filenames:
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{filename} md5: {md5}')

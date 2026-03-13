@@ -63,14 +63,6 @@ class TestLoveDA:
         print(dataset.root)
         LoveDA(root=dataset.root, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LoveDA(split='foo')
-
-    def test_invalid_scene(self) -> None:
-        with pytest.raises(AssertionError):
-            LoveDA(scene=['garden'])
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LoveDA(tmp_path)

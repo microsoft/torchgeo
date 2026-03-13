@@ -390,7 +390,7 @@ class DOFA(nn.Module):
 _dofa_transforms = nn.Sequential(T.CenterCrop((224, 224)))
 
 
-class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFABase16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) base patch size 16 weights.
 
     .. versionadded:: 0.6
@@ -409,7 +409,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFALarge16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) large patch size 16 weights.
 
     .. versionadded:: 0.6

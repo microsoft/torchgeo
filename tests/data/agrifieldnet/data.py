@@ -11,15 +11,11 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 
-def generate_test_data(paths: str) -> str:
+def generate_test_data(paths: str) -> None:
     """Create test data archive for AgriFieldNet dataset.
 
     Args:
         paths: path to store test data
-        n_samples: number of samples.
-
-    Returns:
-        md5 hash of created archive
     """
     dtype = np.uint8
     dtype_max = np.iinfo(dtype).max

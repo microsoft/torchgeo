@@ -14,10 +14,11 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal, cast
+from typing import ClassVar, Literal, cast
 
 import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pyproj
 import rasterio
@@ -27,6 +28,7 @@ import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
+from PIL.Image import Image
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
@@ -115,7 +117,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
     #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
     #: Users should instead use the intersection or union operator.
-    __add__ = None  # type: ignore[assignment]
+    __add__ = None
 
     def _disambiguate_slice(self, index: GeoSlice) -> tuple[slice, slice, slice]:
         """Disambiguate a partial spatiotemporal slice.
@@ -256,7 +258,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        _crs: CRS = self.index.crs
+        _crs = cast(CRS, self.index.crs)
         return _crs
 
     @crs.setter
@@ -1229,7 +1231,7 @@ class NonGeoDataset(Dataset[Sample], abc.ABC):
     size: {len(self)}"""
 
 
-class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[misc]
+class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
     """Abstract base class for classification datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips which
@@ -1240,7 +1242,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[Path], Any] | None = pil_loader,
+        loader: Callable[[str], Image | npt.NDArray[np.generic]] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1257,7 +1259,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,
@@ -1302,7 +1304,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: np.typing.NDArray[np.int_] = np.array(img)
+        array: npt.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
@@ -1337,9 +1339,7 @@ class IntersectionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         spatial_only: bool = False,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = concat_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
@@ -1390,8 +1390,8 @@ class IntersectionDataset(GeoDataset):
 
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
-            datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
+            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
@@ -1505,9 +1505,7 @@ class UnionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = merge_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
@@ -1541,7 +1539,7 @@ class UnionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])
+        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

@@ -467,7 +467,7 @@ class Panopticon(torch.nn.Module):
         return out
 
 
-class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
+class Panopticon_Weights(WeightsEnum):
     """Panopticon weights.
 
     .. versionadded:: 0.7

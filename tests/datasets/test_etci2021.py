@@ -62,10 +62,6 @@ class TestETCI2021:
     def test_already_downloaded(self, dataset: ETCI2021) -> None:
         ETCI2021(root=dataset.root, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            ETCI2021(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ETCI2021(tmp_path)

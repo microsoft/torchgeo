@@ -43,10 +43,6 @@ class TestDeepGlobeLandCover:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             DeepGlobeLandCover(root=tmp_path, checksum=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            DeepGlobeLandCover(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             DeepGlobeLandCover(tmp_path)

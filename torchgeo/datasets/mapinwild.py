@@ -7,7 +7,7 @@ import os
 import shutil
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +25,7 @@ from .utils import (
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -116,7 +116,7 @@ class MapInWild(NonGeoDataset):
         self,
         root: Path = 'data',
         modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
-        split: str = 'train',
+        split: Literal['train', 'validation', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -379,7 +379,7 @@ class MapInWild(NonGeoDataset):
                 img = img[:, :, 0]
 
             if not 'esa_wc':
-                img = percentile_normalization(img)
+                img = quantile_normalization(img)
 
             ax.imshow(img)
             if show_titles:

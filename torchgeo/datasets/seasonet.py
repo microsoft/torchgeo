@@ -6,7 +6,7 @@
 import os
 import random
 from collections.abc import Callable, Collection, Iterable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -214,7 +214,7 @@ class SeasoNet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
@@ -443,8 +443,8 @@ class SeasoNet(NonGeoDataset):
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4.5, 5))
         fig.subplots_adjust(wspace=0.05)
         for t in range(self.concat_seasons):
-            image = images[t, start : start + 3].permute(1, 2, 0).numpy()
-            image = percentile_normalization(image)
+            image = images[t, start : start + 3].permute(1, 2, 0)
+            image = quantile_normalization(image)
             axs[t].imshow(image)
             axs[t].axis('off')
             if show_titles:

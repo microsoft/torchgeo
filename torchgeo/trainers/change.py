@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -17,6 +17,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
@@ -198,7 +199,7 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
-    def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
+    def _shared_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
         """Compute the loss and additional metrics for the given stage.
 
         Args:
@@ -275,7 +276,7 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
 
         return loss
 
-    def training_step(self, batch: Any, batch_idx: int) -> Tensor:
+    def training_step(self, batch: Sample, batch_idx: int) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
@@ -288,7 +289,7 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
         loss = self._shared_step(batch, batch_idx, 'train')
         return loss
 
-    def validation_step(self, batch: Any, batch_idx: int) -> None:
+    def validation_step(self, batch: Sample, batch_idx: int) -> None:
         """Compute the validation loss and additional metrics.
 
         Args:
@@ -297,7 +298,7 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
         """
         self._shared_step(batch, batch_idx, 'val')
 
-    def test_step(self, batch: Any, batch_idx: int) -> None:
+    def test_step(self, batch: Sample, batch_idx: int) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -307,7 +308,7 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
         self._shared_step(batch, batch_idx, 'test')
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 

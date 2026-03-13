@@ -54,10 +54,6 @@ class TestGeoNRW:
         )
         GeoNRW(root=str(tmp_path))
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            GeoNRW(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GeoNRW(tmp_path)

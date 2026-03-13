@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import glob
-import hashlib
 import os
 import shutil
 
@@ -85,9 +84,3 @@ with open('test_split.txt', 'w') as f:
 
 # Compress data
 shutil.make_archive(data_dir, 'zip', '.', data_dir)
-
-# Compute checksums
-filename = f'{data_dir}.zip'
-with open(filename, 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(repr(filename) + ': ' + repr(md5) + ',')

@@ -129,7 +129,7 @@ class MMFlood(IntersectionDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
         transforms: Callable[[Sample], Sample] | None = None,

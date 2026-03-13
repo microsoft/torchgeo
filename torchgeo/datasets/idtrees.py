@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast, overload
+from typing import Any, ClassVar, Literal, cast, overload
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -155,8 +155,8 @@ class IDTReeS(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        task: str = 'task1',
+        split: Literal['train', 'test'] = 'train',
+        task: Literal['task1', 'task2'] = 'task1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

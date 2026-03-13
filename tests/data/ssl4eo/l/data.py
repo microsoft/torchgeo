@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -163,9 +162,3 @@ if __name__ == '__main__':
                 paths.append(split)
 
         os.remove(path)
-
-        # Compute checksums
-        for path in paths:
-            with open(path, 'rb') as f:
-                md5 = hashlib.md5(f.read()).hexdigest()
-                print(path, md5)

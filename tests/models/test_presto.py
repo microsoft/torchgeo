@@ -44,7 +44,7 @@ class TestPresto:
 
     @pytest.fixture(params=[*Presto_Weights])
     def weights(self, request: SubRequest) -> Presto_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -55,7 +55,7 @@ class TestPresto:
         model = Presto()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_presto(
         self, inputs: tuple[torch.Tensor, torch.Tensor, torch.Tensor]

@@ -5,8 +5,9 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar, Literal, cast
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -14,7 +15,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, check_integrity, lazy_import, percentile_normalization
+from .utils import Path, Sample, check_integrity, lazy_import, quantile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -194,8 +195,8 @@ class So2Sat(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        version: str = '2',
-        split: str = 'train',
+        version: Literal['2', '3_random', '3_block', '3_culture_10'] = '2',
+        split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
@@ -359,9 +360,9 @@ class So2Sat(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
-        image = np.rollaxis(image, 0, 3)
-        image = percentile_normalization(image, 0, 100)
+        image = sample['image'][rgb_indices]
+        image = einops.rearrange(image, 'c h w -> h w c')
+        image = quantile_normalization(image, 0, 1)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]

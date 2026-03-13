@@ -6,7 +6,6 @@
 import bz2
 import csv
 import glob
-import hashlib
 import os
 import random
 import shutil
@@ -38,7 +37,6 @@ for site in sites:
 
 i = 1
 data_list = {'train': [], 'test': []}
-image_md5s = []
 for site in sites:
     # Create images
     for split in ['test', 'train', 'train']:
@@ -59,11 +57,6 @@ for site in sites:
     bad_filename = shutil.make_archive(filename.replace('.tbz', ''), 'bztar', '.', site)
     os.rename(bad_filename, filename)
 
-    # Compute checksums
-    with open(filename, 'rb') as f:
-        image_md5s.append(hashlib.md5(f.read()).hexdigest())
-
-label_md5s = []
 for split in ['train', 'test']:
     # Create labels
     filename = f'COWC_{split}_list_{SUFFIX}.txt'
@@ -75,11 +68,3 @@ for split in ['train', 'test']:
     with open(filename, 'rb') as src:
         with bz2.open(filename + '.bz2', 'wb') as dst:
             dst.write(src.read())
-
-    # Compute checksums
-    with open(filename + '.bz2', 'rb') as f:
-        label_md5s.append(hashlib.md5(f.read()).hexdigest())
-
-md5s = label_md5s + image_md5s
-for md5 in md5s:
-    print(repr(md5) + ',')

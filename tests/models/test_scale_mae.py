@@ -14,7 +14,7 @@ from torchgeo.models import ScaleMAELarge16_Weights, scalemae_large_patch16
 class TestScaleMAE:
     @pytest.fixture(params=[*ScaleMAELarge16_Weights])
     def weights(self, request: SubRequest) -> ScaleMAELarge16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -25,7 +25,7 @@ class TestScaleMAE:
         model = scalemae_large_patch16()
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_scalemae(self) -> None:
         scalemae_large_patch16()

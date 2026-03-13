@@ -57,7 +57,7 @@ class CustomGeoDataset(GeoDataset):
         self.res = (1, 1)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
-        return {'index': index}
+        return {'bounds': self._slice_to_tensor(index)}
 
 
 @pytest.mark.parametrize(

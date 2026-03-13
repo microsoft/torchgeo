@@ -6,7 +6,7 @@
 import os
 from collections.abc import Callable
 from glob import glob
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib
 import matplotlib.cm
@@ -164,7 +164,7 @@ class GeoNRW(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

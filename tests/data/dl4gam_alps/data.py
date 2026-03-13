@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import shutil
 from pathlib import Path
 
@@ -131,13 +130,3 @@ if __name__ == '__main__':
     # archive the datasets
     for fp_dir in [fp_dir_ds_small, fp_dir_ds_large]:
         shutil.make_archive(str(fp_dir), 'gztar', fp_dir)
-
-    # compute checksums
-    for fp in [
-        fp_dir_ds_small.with_suffix('.tar.gz'),
-        fp_dir_ds_large.with_suffix('.tar.gz'),
-        fp_splits,
-    ]:
-        with open(fp, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'md5 for {fp}: {md5}')
