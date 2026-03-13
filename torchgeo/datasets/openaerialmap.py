@@ -10,7 +10,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, ClassVar, Literal, cast
+from typing import Any, Literal, cast
 
 import matplotlib.pyplot as plt
 import rasterio
