@@ -86,10 +86,10 @@ class HabitAlp2(GeoDataset):
 
     * https://doi.org/10.48550/arXiv.2511.00073
 
-    .. versionadded:: 0.9.1
+    .. versionadded:: 0.10
     """
 
-    url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/main/'
+    url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/df01fe8ae22df182e7bf1c2e3e713dcfd92c0c81/'
 
     valid_years: ClassVar[tuple[str, ...]] = ('2003', '2013', '2020')
 
@@ -493,7 +493,7 @@ class HabitAlp2CD(GeoDataset):
 
     * https://doi.org/10.48550/arXiv.2511.00073
 
-    .. versionadded:: 0.9.1
+    .. versionadded:: 0.10
     """
 
     url = HabitAlp2.url
