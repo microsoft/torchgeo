@@ -10,4 +10,3 @@
    user/index
    tutorials/index
    api/index
-   changelog
