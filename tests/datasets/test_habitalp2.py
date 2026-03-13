@@ -163,6 +163,9 @@ class TestHabitAlp2CD:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle='Test')
         plt.close()
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
+        plt.close()
 
     def test_invalid_query(self, dataset: HabitAlp2CD) -> None:
         with pytest.raises(IndexError, match=r'not found in .* with bounds:'):
