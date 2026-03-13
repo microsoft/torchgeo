@@ -4,7 +4,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import NotRequired, TypedDict
 
 import matplotlib.pyplot as plt
 import pytest
@@ -20,6 +20,34 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 from torchgeo.datasets.openaerialmap import TileUtils
+
+
+class VisualAsset(TypedDict):
+    href: str
+
+
+class StacFeature(TypedDict):
+    id: str | None
+    properties: dict[str, object]
+    collection: NotRequired[str | None]
+    assets: NotRequired[dict[str, VisualAsset]]
+
+
+class StacSearchResponse(TypedDict):
+    features: list[StacFeature]
+
+
+class TileLink(TypedDict):
+    rel: str
+    href: str
+
+
+class Tileset(TypedDict):
+    links: list[TileLink]
+
+
+class TilesResponse(TypedDict):
+    tilesets: list[Tileset]
 
 
 class TestTileUtils:
@@ -175,7 +203,7 @@ class TestOpenAerialMap:
             status_code = 200
 
             @staticmethod
-            def json() -> dict[str, Any]:
+            def json() -> StacSearchResponse:
                 return {
                     'features': [
                         {
@@ -195,9 +223,10 @@ class TestOpenAerialMap:
 
         download_called = False
 
-        def mock_download(self: Any) -> None:
+        def mock_download(self: object) -> bool:
             nonlocal download_called
             download_called = True
+            return True
 
         monkeypatch.setattr(
             'torchgeo.datasets.openaerialmap.OpenAerialMap._download', mock_download
@@ -220,7 +249,7 @@ class TestOpenAerialMap:
                 pass
 
             @staticmethod
-            def json() -> dict[str, list[Any]]:
+            def json() -> StacSearchResponse:
                 return {'features': []}
 
         monkeypatch.setattr(
@@ -241,7 +270,7 @@ class TestOpenAerialMap:
         dataset.bbox = mock_bbox
         dataset.image_id = None
 
-        post_response: dict[str, Any] = {
+        post_response: StacSearchResponse = {
             'features': [
                 {'id': 'test_id', 'collection': 'openaerialmap', 'properties': {}}
             ]
@@ -252,7 +281,7 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return post_response
 
         class MockGetResponse:
@@ -261,7 +290,7 @@ class TestOpenAerialMap:
                 pass
 
             @staticmethod
-            def json() -> dict[str, Any]:
+            def json() -> TilesResponse:
                 return {
                     'tilesets': [
                         {
@@ -275,7 +304,7 @@ class TestOpenAerialMap:
                     ]
                 }
 
-        def mock_post(*args: Any, **kwargs: Any) -> MockPostResponse:
+        def mock_post(*args: object, **kwargs: object) -> MockPostResponse:
             if post_exception:
                 raise post_exception('Fail')
             return MockPostResponse()
@@ -311,7 +340,7 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return {
                     'features': [
                         {
@@ -328,7 +357,7 @@ class TestOpenAerialMap:
                 pass
 
             @staticmethod
-            def json() -> dict[str, Any]:
+            def json() -> TilesResponse:
                 return {
                     'tilesets': [
                         {
@@ -367,7 +396,7 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return {
                     'features': [{'id': None, 'collection': None, 'properties': {}}]
                 }
@@ -392,10 +421,10 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
 
-        def mock_get_fail(*args: Any, **kwargs: Any) -> None:
+        def mock_get_fail(*args: object, **kwargs: object) -> None:
             raise requests.RequestException('GET failed')
 
         monkeypatch.setattr(
@@ -422,7 +451,7 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
 
         class MockGetResponse:
@@ -431,7 +460,7 @@ class TestOpenAerialMap:
                 pass
 
             @staticmethod
-            def json() -> dict[str, Any]:
+            def json() -> TilesResponse:
                 return {
                     'tilesets': [
                         {'links': [{'rel': 'tile', 'href': 'http://api/tiles/Other'}]}
@@ -470,7 +499,7 @@ class TestOpenAerialMap:
             def raise_for_status(self) -> None:
                 pass
 
-            def json(self) -> dict[str, Any]:
+            def json(self) -> StacSearchResponse:
                 return {'features': [{'id': 'x', 'collection': 'c', 'properties': {}}]}
 
         class MockGetResponse:
@@ -482,7 +511,7 @@ class TestOpenAerialMap:
                 pass
 
             @staticmethod
-            def json() -> dict[str, Any]:
+            def json() -> TilesResponse:
                 return {
                     'tilesets': [
                         {
@@ -506,8 +535,8 @@ class TestOpenAerialMap:
         )
 
         # Remove existing tiles so _download proceeds past the early return
-        for f in tmp_path.glob('OAM-*.tif'):
-            f.unlink()
+        for tile_file in tmp_path.glob('OAM-*.tif'):
+            tile_file.unlink()
 
         ds = OpenAerialMap.__new__(OpenAerialMap)
         ds.paths = tmp_path
@@ -532,7 +561,7 @@ class TestOpenAerialMap:
         dataset.bbox = mock_bbox
         dataset.image_id = None
 
-        def mock_post_keyerror(*args: Any, **kwargs: Any) -> None:
+        def mock_post_keyerror(*args: object, **kwargs: object) -> None:
             raise KeyError('missing key')
 
         monkeypatch.setattr(
@@ -585,7 +614,7 @@ class TestOpenAerialMap:
             transform = 'mock_transform'
             crs = 'mock_crs'
 
-            def update_tags(self, **kwargs: Any) -> None:
+            def update_tags(self, **kwargs: object) -> None:
                 nonlocal update_tags_called
                 update_tags_called = True
 
@@ -593,7 +622,7 @@ class TestOpenAerialMap:
             def __enter__(self) -> MockDataset:
                 return MockDataset()
 
-            def __exit__(self, *args: Any) -> None:
+            def __exit__(self, *args: object) -> None:
                 pass
 
         monkeypatch.setattr(
@@ -627,7 +656,7 @@ class TestOpenAerialMap:
     ) -> None:
         dataset.paths = tmp_path
 
-        def mock_get_error(*args: Any, **kwargs: Any) -> None:
+        def mock_get_error(*args: object, **kwargs: object) -> None:
             raise requests.RequestException('Connection failed')
 
         monkeypatch.setattr(
@@ -645,7 +674,7 @@ class TestOpenAerialMap:
         filepath.touch()
         tile = TileUtils.Tile(x=1, y=1, z=1)
 
-        def raise_rasterio_error(*args: Any, **kwargs: Any) -> None:
+        def raise_rasterio_error(*args: object, **kwargs: object) -> None:
             raise RasterioIOError
 
         monkeypatch.setattr('rasterio.open', raise_rasterio_error)

@@ -10,7 +10,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Literal, cast
+from typing import Literal, NotRequired, TypedDict, cast
 
 import matplotlib.pyplot as plt
 import rasterio
@@ -144,6 +144,14 @@ class TileUtils:
                     yield cls.Tile(x, y, zoom)
 
 
+class StacSearchParams(TypedDict):
+    """Typed payload for STAC search request parameters."""
+
+    limit: int
+    ids: NotRequired[list[str]]
+    bbox: NotRequired[list[float]]
+
+
 class OpenAerialMap(RasterDataset):
     """OpenAerialMap dataset.
 
@@ -250,15 +258,15 @@ class OpenAerialMap(RasterDataset):
                 raise ValueError('bbox must be provided when download=True')
             if not 15 <= zoom <= 23:
                 raise ValueError(f'zoom must be between 15 and 23, got {zoom}')
-            self._download()
-            print('Download complete.')
+            if self._download():
+                print('Download complete.')
 
         if crs is None:
             crs = CRS.from_epsg(4326)
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def _download(self) -> None:
+    def _download(self) -> bool:
         """Download imagery from STAC API and TMS endpoints.
 
         This method:
@@ -266,6 +274,10 @@ class OpenAerialMap(RasterDataset):
         2. Extracts TMS URLs from STAC items
         3. Calculates tiles for the bbox at specified zoom
         4. Downloads tiles asynchronously with proper georeferencing
+
+        Returns:
+            True if download is attempted, False if skipped due to missing imagery
+            or existing local tiles.
         """
         root = cast(str | os.PathLike[str], self.paths)
 
@@ -275,7 +287,7 @@ class OpenAerialMap(RasterDataset):
         existing = glob.glob(os.path.join(root, self.filename_glob))
         if existing:
             print(f'Found {len(existing)} existing tiles, skipping download.')
-            return
+            return False
 
         result = self._fetch_item_id()
         if not result:
@@ -285,7 +297,7 @@ class OpenAerialMap(RasterDataset):
                 UserWarning,
                 stacklevel=2,
             )
-            return
+            return False
 
         assert self.bbox is not None
         west, south, east, north = self.bbox
@@ -293,6 +305,7 @@ class OpenAerialMap(RasterDataset):
             TileUtils.tiles(west, south, east, north, self.zoom, truncate=True)
         )
         self._download_tiles(result, tiles)
+        return True
 
     def _fetch_item_id(self) -> str | None:
         """Query STAC API and extract tiles URL.
@@ -302,7 +315,7 @@ class OpenAerialMap(RasterDataset):
         Returns:
             tiles_url_template, or None if not found
         """
-        params: dict[str, Any] = {'limit': self.max_items}
+        params: StacSearchParams = {'limit': self.max_items}
 
         if self.image_id:
             params['ids'] = [self.image_id]
