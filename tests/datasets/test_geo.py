@@ -28,6 +28,7 @@ from torchgeo.datasets import (
     IntersectionDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
+    PixelDatasetWrapper,
     RasterDataset,
     Sentinel2,
     UnionDataset,
@@ -1248,3 +1249,97 @@ class TestUnionDataset:
             IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
+
+
+class CustomPixelGeoDataset(GeoDataset):
+    """Minimal dataset that returns dicts with 'image' [C,H,W] and 'mask'."""
+
+    def __init__(self, samples: list[dict[str, torch.Tensor]]) -> None:
+        self._samples = samples
+
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
+        return self._samples[idx]
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+
+class TestPixelDatasetWrapper:
+    def test_ok_1x1(self) -> None:
+        img = torch.tensor([[[1.0]], [[2.0]]], dtype=torch.float32)
+        mask = torch.tensor([[7]], dtype=torch.long)
+        ds = CustomPixelGeoDataset([{'image': img, 'mask': mask}])
+
+        w = PixelDatasetWrapper(ds)
+        out = w[0]
+
+        assert set(out.keys()) == {'pixel', 'label'}
+        assert torch.equal(out['pixel'], torch.tensor([1.0, 2.0]))
+        assert out['label'] == 7
+
+    def test_warns_and_top_left_when_not_1x1(self) -> None:
+        img = torch.tensor([[[42.0, 9.0], [8.0, 7.0]]], dtype=torch.float32).repeat(
+            3, 1, 1
+        )
+        mask = torch.tensor([[5, 6], [6, 6]], dtype=torch.long)
+        ds = CustomPixelGeoDataset([{'image': img, 'mask': mask}])
+
+        w = PixelDatasetWrapper(ds)
+        with pytest.warns(UserWarning, match=r'Expected pixel-sized patch'):
+            out = w[0]
+
+        # Top-left is used
+        assert torch.all(out['pixel'] == torch.tensor([42.0, 42.0, 42.0]))
+        assert out['label'] == 5
+
+    def test_ignore_index_skips_and_succeeds(self) -> None:
+        # First sample ignored, second valid; exercises recursive skip with attempts+1
+        img1 = torch.tensor([[[5.0]]], dtype=torch.float32)
+        img2 = torch.tensor([[[3.0]]], dtype=torch.float32)
+        m1 = torch.tensor([[255]], dtype=torch.long)
+        m2 = torch.tensor([[2]], dtype=torch.long)
+        ds = CustomPixelGeoDataset(
+            [{'image': img1, 'mask': m1}, {'image': img2, 'mask': m2}]
+        )
+
+        # max_attempts=None -> limit == len(ds)
+        w = PixelDatasetWrapper(ds, ignore_index=255, max_attempts=None)
+        out = w[0]
+
+        assert torch.equal(out['pixel'], torch.tensor([3.0]))
+        assert out['label'] == 2
+
+    def test_raises_when_all_ignored(self) -> None:
+        img = torch.randn(1, 1, 1)
+        samples = [
+            {'image': img, 'mask': torch.tensor([[255]], dtype=torch.long)}
+            for _ in range(3)
+        ]
+        ds = CustomPixelGeoDataset(samples)
+
+        w = PixelDatasetWrapper(ds, ignore_index=255, max_attempts=None)  # == len(ds)
+        with pytest.raises(RuntimeError, match=r'Failed to find non-ignored label'):
+            _ = w[0]
+
+    def test_len_passthrough(self) -> None:
+        ds = CustomPixelGeoDataset(
+            [
+                {
+                    'image': torch.randn(1, 1, 1),
+                    'mask': torch.zeros(1, 1, dtype=torch.long),
+                }
+            ]
+        )
+        w = PixelDatasetWrapper(ds)
+        assert len(w) == 1
+
+    def test_3d_mask_uses_first_channel(self) -> None:
+        img = torch.randn(2, 1, 1)
+        mask3d = torch.tensor([[[5]]], dtype=torch.long)  # [1,1,1]
+
+        ds = CustomPixelGeoDataset([{'image': img, 'mask': mask3d}])
+
+        w = PixelDatasetWrapper(ds)
+        out = w[0]
+
+        assert out['label'] == 5

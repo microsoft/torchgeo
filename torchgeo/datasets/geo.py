@@ -1623,3 +1623,61 @@ class UnionDataset(GeoDataset):
         """
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
+
+
+class PixelDatasetWrapper(Dataset):
+    """Wrap a GeoDataset to return pixel samples instead of patches."""
+
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        ignore_index: int | None = None,
+        max_attempts: int | None = 64,
+    ) -> None:
+        """Initialize a new :class:`PixelDatasetWrapper` instance.
+
+        Args:
+            dataset: the dataset to wrap.
+            ignore_index: label index to ignore.
+            max_attempts: maximum number of attempts to find a non-ignored label before raising an error. If None, try up to len(dataset) times.
+        """
+        self.dataset = dataset
+        self.ignore_index = ignore_index
+        self.max_attempts = max_attempts
+
+    def __getitem__(self, index, attempts: int = 0):
+        limit = (
+            self.max_attempts if self.max_attempts is not None else len(self.dataset)
+        )
+        if attempts >= limit:
+            raise RuntimeError(
+                f'Failed to find non-ignored label after {limit} attempts '
+                f'(ignore_index={self.ignore_index}).'
+            )
+
+        sample = self.dataset[index]
+        image = sample['image']
+        mask = sample['mask']
+
+        if mask.ndim == 3:
+            mask = mask[0]
+
+        _, H, W = image.shape
+
+        if H != 1 or W != 1:
+            warnings.warn(
+                f'Expected pixel-sized patch (1x1) but received ({H}x{W}). '
+                'Using top-left pixel.',
+                UserWarning,
+            )
+
+        pixel = image[:, 0, 0]
+        label = mask[0, 0]
+
+        if self.ignore_index is not None and label == self.ignore_index:
+            return self.__getitem__((index + 1) % len(self.dataset), attempts + 1)
+
+        return {'pixel': pixel, 'label': label}
+
+    def __len__(self):
+        return len(self.dataset)
