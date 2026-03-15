@@ -19,7 +19,7 @@ from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
 from torch import Tensor
-from torch.utils.data import ConcatDataset
+from torch.utils.data import ConcatDataset, Dataset
 
 from torchgeo.datasets import (
     NAIP,
@@ -1251,14 +1251,30 @@ class TestUnionDataset:
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
-class CustomPixelGeoDataset(GeoDataset):
+class CustomPixelGeoDataset(Dataset):
     """Minimal dataset that returns dicts with 'image' [C,H,W] and 'mask'."""
 
     def __init__(self, samples: list[dict[str, torch.Tensor]]) -> None:
         self._samples = samples
 
-    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:  # type: ignore[operator]
         return self._samples[idx]
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+
+class CustomPixelGeoSliceDataset(Dataset):
+    """Minimal dataset that accepts a GeoSlice and returns image/mask dicts."""
+
+    def __init__(self, samples: list[dict[str, torch.Tensor]]) -> None:
+        self._samples = samples
+        self._call_count = 0
+
+    def __getitem__(self, index: GeoSlice) -> dict[str, torch.Tensor]:
+        sample = self._samples[self._call_count % len(self._samples)]
+        self._call_count += 1
+        return sample
 
     def __len__(self) -> int:
         return len(self._samples)
@@ -1343,3 +1359,50 @@ class TestPixelDatasetWrapper:
         out = w[0]
 
         assert out['label'] == 5
+
+
+class TestPixelDatasetWrapperGeoSlice:
+    def test_geoslice_with_sampler_retries(self) -> None:
+        ignored_img = torch.tensor([[[0.0]]], dtype=torch.float32)
+        valid_img = torch.tensor([[[1.0]]], dtype=torch.float32)
+        ignored_mask = torch.tensor([[255]], dtype=torch.long)
+        valid_mask = torch.tensor([[1]], dtype=torch.long)
+
+        # First call (attempt=0) returns ignored, second call (retry) returns valid
+        ds = CustomPixelGeoSliceDataset(
+            [
+                {'image': ignored_img, 'mask': ignored_mask},
+                {'image': valid_img, 'mask': valid_mask},
+            ]
+        )
+
+        # Sampler yields a new GeoSlice for the retry
+        t = pd.Timestamp('2021-01-01')
+        retry_slice = (slice(0.0, 1.0, 1.0), slice(0.0, 1.0, 1.0), slice(t, t, 1))
+        mock_sampler = [retry_slice]  # one retry is enough
+
+        w = PixelDatasetWrapper(
+            ds, sampler=mock_sampler, ignore_index=255, max_attempts=2
+        )
+
+        # index is a GeoSlice (not int), so retries must go through the sampler
+        initial_slice = (slice(0.0, 1.0, 1.0), slice(0.0, 1.0, 1.0), slice(t, t, 1))
+        out = w[initial_slice]
+
+        assert out['label'] == 1
+        assert torch.equal(out['pixel'], torch.tensor([1.0]))
+
+    def test_geoslice_without_sampler_raises(self) -> None:
+        ignored_img = torch.tensor([[[0.0]]], dtype=torch.float32)
+        ignored_mask = torch.tensor([[255]], dtype=torch.long)
+
+        ds = CustomPixelGeoSliceDataset([{'image': ignored_img, 'mask': ignored_mask}])
+
+        # No sampler provided — retry of a GeoSlice must raise error
+        w = PixelDatasetWrapper(ds, sampler=None, ignore_index=255, max_attempts=2)
+
+        t = pd.Timestamp('2021-01-01')
+        initial_slice = (slice(0.0, 1.0, 1.0), slice(0.0, 1.0, 1.0), slice(t, t, 1))
+
+        with pytest.raises(RuntimeError, match='A sampler must be provided'):
+            w[initial_slice]
