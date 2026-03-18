@@ -20,10 +20,11 @@ from .utils import Path, Sample
 class ClayEmbeddings(NonGeoDataset):
     """Clay Embeddings dataset.
 
-    Supports both:
+    Supports:
 
-    * `Clay v0 embeddings <https://source.coop/clay/clay-model-v0-embeddings>`_
-    * `Clay v1.5 embeddings <https://source.coop/clay/lgnd-clay-v1-5-sentinel-2-l2a>`_
+    * `Clay v0 Sentinel embeddings <https://source.coop/clay/clay-model-v0-embeddings>`_
+    * `Clay v1.5 NAIP embeddings <https://source.coop/clay/clay-v1-5-naip-2>`_
+    * `Clay v1.5 Sentinel embeddings <https://source.coop/clay/lgnd-clay-v1-5-sentinel-2-l2a>`_
 
     See https://clay-foundation.github.io/model/ for details.
 
@@ -70,16 +71,18 @@ class ClayEmbeddings(NonGeoDataset):
         """
         row = self.data.iloc[index]
         centroid = shapely.centroid(row['geometry'])
-        key = 'date' if 'date' in row else 'datetime'
-        date = pd.Timestamp(row[key])
         key = 'embedding' if 'embedding' in row else 'embeddings'
 
         sample = {
             'embedding': torch.tensor(row[key]),
             'x': torch.tensor(centroid.x),
             'y': torch.tensor(centroid.y),
-            't': torch.tensor(date.timestamp()),
         }
+
+        if 'date' in row:
+            sample['t'] = torch.tensor(pd.Timestamp(row['date']).timestamp())
+        elif 'datetime' in row:
+            sample['t'] = torch.tensor(pd.Timestamp(row['datetime']).timestamp())
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -102,8 +105,9 @@ class ClayEmbeddings(NonGeoDataset):
         if show_titles:
             x = sample['x'].item()
             y = sample['y'].item()
-            t = pd.Timestamp.fromtimestamp(sample['t'].item())
-            ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
+            if 't' in sample:
+                t = pd.Timestamp.fromtimestamp(sample['t'].item())
+                ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
 
         fig.tight_layout()
         return fig
