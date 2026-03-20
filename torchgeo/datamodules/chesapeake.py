@@ -54,7 +54,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.ChesapeakeCVPR`.
 
         Raises:
-            ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
+            AssertionError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
@@ -68,11 +68,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         )
 
         assert class_set in [5, 7]
-        if use_prior_labels and class_set == 7:
-            raise ValueError(
-                'The pre-generated prior labels are only valid for the 5'
-                + ' class set of labels'
-            )
+        msg = 'The pre-generated prior labels are only valid for the 5 class set of labels'
+        assert not (use_prior_labels and class_set == 7), msg
 
         self.train_splits = train_splits
         self.val_splits = val_splits

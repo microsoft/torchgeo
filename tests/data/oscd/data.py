@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -18,6 +17,7 @@ np.random.seed(0)
 directories = [
     'Onera Satellite Change Detection dataset - Images',
     'Onera Satellite Change Detection dataset - Train Labels',
+    'Onera Satellite Change Detection dataset - Val Labels',
     'Onera Satellite Change Detection dataset - Test Labels',
 ]
 bands = [
@@ -45,7 +45,9 @@ for directory in directories:
     if os.path.exists(directory):
         shutil.rmtree(directory)
 
-for i, (count, split) in enumerate([(BATCH * 2, 'train'), (BATCH, 'test')]):
+split_to_dir = {'train': 1, 'val': 2, 'test': 3}
+splits = [('train', BATCH * 2), ('val', BATCH), ('test', BATCH)]
+for split, count in splits:
     for j in range(count):
         subdir = f'{split}{j}'
 
@@ -70,7 +72,7 @@ for i, (count, split) in enumerate([(BATCH * 2, 'train'), (BATCH, 'test')]):
                 f.write(f'{key}: {value}\n')
 
         # Create labels
-        directory = os.path.join(directories[i + 1], subdir, 'cm')
+        directory = os.path.join(directories[split_to_dir[split]], subdir, 'cm')
         os.makedirs(directory)
         filename = os.path.join(directory, 'cm.png')
         arr = np.random.randint(np.iinfo(np.uint8).max, size=size, dtype=np.uint8)
@@ -80,9 +82,3 @@ for i, (count, split) in enumerate([(BATCH * 2, 'train'), (BATCH, 'test')]):
 for directory in directories:
     # Compress data
     shutil.make_archive(directory, 'zip', '.', directory)
-
-    # Compute checksums
-    filename = f'{directory}.zip'
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(repr(filename) + ': ' + repr(md5) + ',')

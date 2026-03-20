@@ -2,7 +2,6 @@
 
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
-import hashlib
 import os
 
 import numpy as np
@@ -42,9 +41,3 @@ def create_file(path: str, dtype: str) -> None:
 if __name__ == '__main__':
     for file in files:
         create_file(os.path.join(os.getcwd(), file), dtype='int8')
-
-    # Compute checksums
-    for file in files:
-        with open(file, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{file}: {md5}')

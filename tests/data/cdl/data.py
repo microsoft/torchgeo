@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import random
 import shutil
@@ -73,8 +72,3 @@ if __name__ == '__main__':
 
         # Compress data
         shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', dir)
-
-        # Compute checksums
-        with open(filename, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{filename}: {md5}')

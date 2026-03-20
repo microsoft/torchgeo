@@ -382,8 +382,8 @@ class BaseTransformer(nn.Module):
             relative_position_bias: whether to use relative position bias.
         """
         for self_attn, ffn in self.layers:  # type: ignore[misc]
-            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
-            x = ffn(x) + x  # type: ignore[has-type]
+            x = self_attn(x, relative_position_bias) + x
+            x = ffn(x) + x
 
         x = self.norm_out(x) if self.final_norm else x
         return x
@@ -441,10 +441,10 @@ class BaseTransformerCrossAttn(nn.Module):
         Returns:
             Output tensor.
         """
-        for self_attn, cross_attn, ffn in self.layers:  # type: ignore[misc]
-            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
-            x = cross_attn(x, context, relative_position_bias) + x  # type: ignore[has-type]
-            x = ffn(x) + x  # type: ignore[has-type]
+        for self_attn, cross_attn, ffn in self.layers:  # type: ignore[non-iterable]
+            x = self_attn(x, relative_position_bias) + x
+            x = cross_attn(x, context, relative_position_bias) + x
+            x = ffn(x) + x
 
         x = self.norm_out(x)
         return x
@@ -497,7 +497,7 @@ class ViT(nn.Module):
         return imgs
 
 
-class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
+class CROMABase_Weights(WeightsEnum):
     """CROMA base model weights.
 
     .. versionadded:: 0.7
@@ -516,7 +516,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class CROMALarge_Weights(WeightsEnum):  # type: ignore[misc]
+class CROMALarge_Weights(WeightsEnum):
     """CROMA large model weights.
 
     .. versionadded:: 0.7

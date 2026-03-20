@@ -69,6 +69,9 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    # Internal type aliases we don't yet want to expose
+    ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
+    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -102,7 +105,7 @@ elif version_match == 'stable':
 # documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
     'collapse_navigation': False,
-    'show_nav_level': 2,
+    'show_nav_level': 1,
     'show_toc_level': 2,
     'navigation_depth': 4,
     'navbar_align': 'left',
@@ -126,8 +129,8 @@ html_theme_options = {
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
-        'image_light': os.path.join('..', 'logo', 'logo-color.svg'),
-        'image_dark': os.path.join('..', 'logo', 'logo-color.svg'),
+        'image_light': os.path.join('_static', 'logo', 'logo-color.svg'),
+        'image_dark': os.path.join('_static', 'logo', 'logo-color.svg'),
     },
     'switcher': {'json_url': json_url, 'version_match': version_match},
     'navbar_start': ['navbar-logo', 'version-switcher'],
@@ -135,7 +138,7 @@ html_theme_options = {
     'navbar_end': ['theme-switcher', 'navbar-icon-links'],
 }
 
-html_favicon = os.path.join('..', 'logo', 'favicon.ico')
+html_favicon = os.path.join('_static', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
 html_css_files = ['custom.css']
@@ -160,6 +163,7 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pillow': ('https://pillow.readthedocs.io/en/stable/', None),
     'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),

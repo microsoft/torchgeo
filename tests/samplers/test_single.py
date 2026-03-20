@@ -16,7 +16,7 @@ from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import GeoDataset, stack_samples
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, Sample
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
@@ -46,8 +46,8 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, index: GeoSlice) -> dict[str, GeoSlice]:
-        return {'index': index}
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        return {'bounds': self._slice_to_tensor(index)}
 
 
 class TestGeoSampler:
@@ -65,7 +65,7 @@ class TestGeoSampler:
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoSampler(dataset)  # type: ignore[abstract]
+            GeoSampler(dataset)
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -200,7 +200,7 @@ class TestGridGeoSampler:
             assert math.isclose(y.stop - y.start, sampler.size[0])
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        bounds = sampler.index.total_bounds
+        bounds = tuple(sampler.index.total_bounds)
         rows, cols = tile_to_chips(bounds, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length

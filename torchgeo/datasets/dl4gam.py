@@ -5,7 +5,7 @@
 
 import pathlib
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -143,9 +143,9 @@ class DL4GAMAlps(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         cv_iter: int = 1,
-        version: str = 'small',
+        version: Literal['small', 'large'] = 'small',
         bands: Sequence[str] = rgb_nir_swir_bands,
         extra_features: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -340,7 +340,7 @@ class DL4GAMAlps(NonGeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`DL4GAMAlps.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             clip_extrema: flag indicating whether to clip the lowest/highest 2.5% of the

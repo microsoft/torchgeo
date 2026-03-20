@@ -12,60 +12,52 @@ defaults:
   run:
     shell: bash
 jobs:
-  mypy:
-    name: mypy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v6.0.2
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.2.0
-        with:
-          python-version: '3.14'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.3
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
-      - name: Run mypy checks
-        run: mypy
   ruff:
     name: ruff
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
         uses: actions/checkout@v6.0.2
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.2.0
+      - name: Set up uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7.6.0
         with:
           python-version: '3.14'
-      - name: Cache dependencies
-        uses: actions/cache@v5.0.3
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/style.txt') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/style.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --extra style
+      - name: List dependencies
+        run: uv pip list
       - name: Run ruff checks
         run: |
           ruff check --output-format=github --no-fix .
           ruff format --diff
+  ty:
+    name: ty
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        id: setup-uv
+        uses: astral-sh/setup-uv@v7.6.0
+        with:
+          python-version: '3.14'
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --extra datasets --extra models --extra style --extra tests
+      - name: List dependencies
+        run: uv pip list
+      - name: Run ty checks
+        run: ty check --output-format=github
   prettier:
     name: prettier
     runs-on: ubuntu-latest
@@ -73,7 +65,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.2
       - name: Set up nodejs
-        uses: actions/setup-node@v6.2.0
+        uses: actions/setup-node@v6.3.0
         with:
           node-version: '20'
           cache: 'npm'

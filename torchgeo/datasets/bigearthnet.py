@@ -8,7 +8,7 @@ import json
 import os
 import textwrap
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -273,8 +273,8 @@ class BigEarthNet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        bands: str = 'all',
+        split: Literal['train', 'val', 'test'] = 'train',
+        bands: Literal['s1', 's2', 'all'] = 'all',
         num_classes: int = 19,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -384,7 +384,7 @@ class BigEarthNet(NonGeoDataset):
             paths = glob.glob(os.path.join(folder, '*.tif'))
             paths = sorted(paths, key=sort_sentinel2_bands)
 
-        return paths
+        return paths  # type: ignore[invalid-return-type]
 
     def _load_image(self, index: int) -> Tensor:
         """Load a single image.
@@ -690,8 +690,8 @@ class BigEarthNetV2(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        bands: str = 'all',
+        split: Literal['train', 'val', 'test'] = 'train',
+        bands: Literal['s1', 's2', 'all'] = 'all',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -781,7 +781,7 @@ class BigEarthNetV2(NonGeoDataset):
         """
         row = self.metadata_df.loc[index]
         id_field = 's1_name' if sensor == 's1' else 'patch_id'
-        patch_id = row[id_field]
+        patch_id = str(row[id_field])
         if sensor == 's2':
             patch_dir = '_'.join(patch_id.split('_')[0:-2])
         else:
@@ -894,7 +894,12 @@ class BigEarthNetV2(NonGeoDataset):
             for fname, md5 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
-                    download_url(self.url.format(fname), self.root, md5)
+                    download_url(
+                        self.url.format(fname),
+                        self.root,
+                        filename=fname,
+                        md5=md5 if self.checksum else None,
+                    )
 
     def _extract(self) -> None:
         """Extract the tarball parts.

@@ -7,7 +7,7 @@ import glob
 import os
 import textwrap
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -84,7 +84,7 @@ class CaFFe(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -242,7 +242,7 @@ class CaFFe(NonGeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`CaFFe.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

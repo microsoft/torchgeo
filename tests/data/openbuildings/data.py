@@ -5,7 +5,6 @@
 
 import csv
 import gzip
-import hashlib
 import json
 import os
 import shutil
@@ -90,11 +89,6 @@ if __name__ == '__main__':
     with open(csvname, 'rb') as f_in:
         with gzip.open(zipfilename, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
-
-    # Compute checksums
-    with open(zipfilename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{zipfilename}: {md5}')
 
     # remove csv file
     os.remove(csvname)

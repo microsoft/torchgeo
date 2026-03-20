@@ -1,0 +1,7 @@
+.. _DFC2022:
+
+DFC2022
+=======
+
+.. currentmodule:: torchgeo.datasets
+.. autoclass:: DFC2022

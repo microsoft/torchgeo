@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import json
 import os
 import shutil
@@ -142,12 +141,3 @@ if __name__ == '__main__':
     # compress data
     source_dir = os.path.join(directory, 'features')
     shutil.make_archive(source_dir, 'gztar', directory, 'features')
-
-    # compute checksum
-    with open(label_path, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{label_path}: {md5}')
-
-    with open(os.path.join(directory, 'features.tar.gz'), 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'zipped features: {md5}')

@@ -6,7 +6,6 @@ import shutil
 from typing import Any
 
 import pytest
-import torchvision.datasets.utils
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
@@ -21,7 +20,6 @@ def copy(url: str, root: Path, *args: Any, **kwargs: Any) -> None:
 
 @pytest.fixture(autouse=True)
 def download_url(monkeypatch: MonkeyPatch, request: SubRequest) -> None:
-    monkeypatch.setattr(torchvision.datasets.utils, 'download_url', copy)
     monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', copy)
     _, filename = os.path.split(request.path)
     module = filename[5:-3]

@@ -396,3 +396,17 @@ class PASTIS(NonGeoDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class PASTIS100(PASTIS):
+    """Subset of PASTIS-R containing only 100 time-series.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    .. versionadded:: 0.9
+    """
+
+    directory = 'PASTIS-R'
+    filename = 'PASTIS-R.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/acd0180e834e40934b79c0121f606d4f8ca3299d/PASTIS-R.zip'
+    md5 = '6b4a428bd27cdbc2abda44973ba42892'

@@ -20,9 +20,13 @@ from .utils import Path, Sample
 class ClayEmbeddings(NonGeoDataset):
     """Clay Embeddings dataset.
 
-    `Embeddings <https://source.coop/clay/clay-model-v0-embeddings>`__
-    for all the training data used to create Clay Model V0. See
-    https://clay-foundation.github.io/model/ for details.
+    Supports:
+
+    * `Clay v0 Sentinel embeddings <https://source.coop/clay/clay-model-v0-embeddings>`_
+    * `Clay v1.5 NAIP embeddings <https://source.coop/clay/clay-v1-5-naip-2>`_
+    * `Clay v1.5 Sentinel embeddings <https://source.coop/clay/lgnd-clay-v1-5-sentinel-2-l2a>`_
+
+    See https://clay-foundation.github.io/model/ for details.
 
     .. versionadded:: 0.9
     """
@@ -67,14 +71,18 @@ class ClayEmbeddings(NonGeoDataset):
         """
         row = self.data.iloc[index]
         centroid = shapely.centroid(row['geometry'])
-        date = pd.Timestamp(row['date'])
+        key = 'embedding' if 'embedding' in row else 'embeddings'
 
         sample = {
-            'embedding': torch.tensor(row['embeddings']),
+            'embedding': torch.tensor(row[key]),
             'x': torch.tensor(centroid.x),
             'y': torch.tensor(centroid.y),
-            't': torch.tensor(date.timestamp()),
         }
+
+        if 'date' in row:
+            sample['t'] = torch.tensor(pd.Timestamp(row['date']).timestamp())
+        elif 'datetime' in row:
+            sample['t'] = torch.tensor(pd.Timestamp(row['datetime']).timestamp())
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -97,9 +105,9 @@ class ClayEmbeddings(NonGeoDataset):
         if show_titles:
             x = sample['x'].item()
             y = sample['y'].item()
-            t = pd.Timestamp.fromtimestamp(sample['t'].item())
-            date = t.strftime('%Y-%m-%d')
-            ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {date}')
+            if 't' in sample:
+                t = pd.Timestamp.fromtimestamp(sample['t'].item())
+                ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
 
         fig.tight_layout()
         return fig

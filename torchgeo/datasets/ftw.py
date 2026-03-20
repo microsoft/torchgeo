@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ from .utils import (
 class FieldsOfTheWorld(NonGeoDataset):
     """Fields Of The World dataset.
 
-    The `Fields Of The World <https://beta.source.coop/repositories/kerner-lab/fields-of-the-world/>`__
+    The `Fields Of The World <https://source.coop/kerner-lab/fields-of-the-world>`__
     datataset is a semantic and instance segmentation dataset for delineating field
     boundaries.
 
@@ -125,8 +125,8 @@ class FieldsOfTheWorld(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        target: str = '2-class',
+        split: Literal['train', 'val', 'test'] = 'train',
+        target: Literal['2-class', '3-class', 'instance'] = '2-class',
         countries: str | Sequence[str] = ['austria'],
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,

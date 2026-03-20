@@ -25,7 +25,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     (mass of water in vegetation) and remotely sensed variables
     in the western United States. It contains 2615 datapoints and 138
     variables. For more details see the
-    `dataset page <https://beta.source.coop/stanford/sar-moisture-conent/>`_.
+    `dataset page <https://source.coop/stanford/sar-moisture-conent>`_.
 
     Dataset Format:
 

@@ -14,26 +14,16 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import OSCD, DatasetNotFoundError, RGBBandsMissingError
+from torchgeo.datasets import OSCD, OSCD100, DatasetNotFoundError, RGBBandsMissingError
 
 
 class TestOSCD:
-    @pytest.fixture(params=zip([OSCD.all_bands, OSCD.rgb_bands], ['train', 'test']))
+    @pytest.fixture(
+        params=zip([OSCD, OSCD100], [OSCD.all_bands, OSCD.rgb_bands], ['train', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
-        md5s = {
-            'Onera Satellite Change Detection dataset - Images.zip': (
-                'fb4e3f54c3a31fd3f21f98cad4ddfb74'
-            ),
-            'Onera Satellite Change Detection dataset - Train Labels.zip': (
-                'ca526434a60e9abdf97d528dc29e9f13'
-            ),
-            'Onera Satellite Change Detection dataset - Test Labels.zip': (
-                'ca0ba73ba66d06fa4903e269ef12eb50'
-            ),
-        }
-        monkeypatch.setattr(OSCD, 'md5s', md5s)
         urls = {
             'Onera Satellite Change Detection dataset - Images.zip': os.path.join(
                 'tests',
@@ -54,14 +44,9 @@ class TestOSCD:
                 'Onera Satellite Change Detection dataset - Test Labels.zip',
             ),
         }
-        monkeypatch.setattr(OSCD, 'urls', urls)
-
-        bands, split = request.param
-        root = tmp_path
-        transforms = nn.Identity()
-        return OSCD(
-            root, split, bands, transforms=transforms, download=True, checksum=True
-        )
+        cls, bands, split = request.param
+        monkeypatch.setattr(cls, 'urls', urls)
+        return cls(tmp_path, split, bands, transforms=nn.Identity(), download=True)
 
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
@@ -87,7 +72,7 @@ class TestOSCD:
         assert isinstance(ds, ConcatDataset)
 
     def test_already_extracted(self, dataset: OSCD) -> None:
-        OSCD(root=dataset.root, download=True)
+        type(dataset)(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'oscd', '*Onera*.zip')
@@ -105,7 +90,7 @@ class TestOSCD:
         plt.close()
 
     def test_failed_plot(self, dataset: OSCD) -> None:
-        single_band_dataset = OSCD(root=dataset.root, bands=('B01',))
+        single_band_dataset = type(dataset)(root=dataset.root, bands=('B01',))
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):

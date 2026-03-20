@@ -9,7 +9,7 @@ Datasets, samplers, transforms, and pre-trained models for geospatial data.
 pip install -e ".[all]"
 
 # Lint (run from repo root)
-ruff format && ruff check && mypy && prettier --write .
+ruff format && ruff check && ty check && prettier --write .
 
 # Test
 pytest --cov=torchgeo tests/                                                        # all (skip slow)
@@ -43,10 +43,11 @@ tests/{data/<dataset>/,datasets/,...}
 - Imports: isort order (stdlib → third-party → local)
 - Local imports (`from .utils`) in `torchgeo/`; absolute (`from torchgeo`) in `tests/`
 
-### Type Hints (strict mypy)
+### Type Hints (ty)
 
 - All functions require full annotations
 - Union: `X | Y` (not `Union[X, Y]`)
+- Treat `Path` as `type Path = str | os.PathLike[str]` when imported from `torchgeo.datasets.utils`
 - Avoid `Any`; use `Sequence` for parameters, `list`/`tuple` for return values
 - Prefer built-in types (`list`, `dict`, `tuple`) over `typing.List`, etc.
 - `type: ignore` only for external lib issues

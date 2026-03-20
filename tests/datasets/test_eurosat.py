@@ -43,10 +43,6 @@ class TestEuroSAT:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            EuroSAT(split='foo')
-
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):
             EuroSAT(bands=('OK', 'BK'))

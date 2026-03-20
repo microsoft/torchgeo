@@ -1,6 +1,0 @@
-# docs
-ipywidgets==8.1.8
-myst-parser==5.0.0
-nbsphinx==0.9.8
-pydata-sphinx-theme==0.16.1
-sphinx==9.1.0

@@ -27,6 +27,7 @@ from .fcsiam import FCSiamConc, FCSiamDiff
 from .galileo import GalileoEncoder, GalileoWeights, galileo
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
+from .presto import Presto, Presto_Weights, presto
 from .rcf import MOSAIKS, RCF
 from .resnet import (
     ResNet18_Weights,
@@ -97,6 +98,8 @@ __all__ = (
     'GalileoWeights',
     'Panopticon',
     'Panopticon_Weights',
+    'Presto',
+    'Presto_Weights',
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
@@ -134,6 +137,7 @@ __all__ = (
     'get_weight',
     'list_models',
     'panopticon_vitb14',
+    'presto',
     'resnet18',
     'resnet50',
     'resnet152',

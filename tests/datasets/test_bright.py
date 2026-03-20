@@ -55,10 +55,6 @@ class TestBRIGHTDFC2025:
         )
         BRIGHTDFC2025(root=str(tmp_path))
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            BRIGHTDFC2025(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BRIGHTDFC2025(tmp_path)

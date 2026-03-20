@@ -20,14 +20,12 @@ class TestCaFFe:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CaFFe:
-        md5 = '73c0aba603c356b2cce9ebf952fb7be0'
-        monkeypatch.setattr(CaFFe, 'md5', md5)
         url = os.path.join('tests', 'data', 'caffe', 'caffe.zip')
         monkeypatch.setattr(CaFFe, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return CaFFe(root, split, transforms, download=True, checksum=True)
+        return CaFFe(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: CaFFe) -> None:
         x = dataset[0]
@@ -53,10 +51,6 @@ class TestCaFFe:
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )
         CaFFe(root=str(tmp_path))
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            CaFFe(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

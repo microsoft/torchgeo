@@ -10,8 +10,9 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from json.decoder import JSONDecodeError
-from typing import Any, ClassVar
+from typing import ClassVar, Literal
 
+import einops
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,7 +32,7 @@ from ..utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
     which,
 )
 
@@ -105,7 +106,7 @@ class SpaceNet(NonGeoDataset, ABC):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,
@@ -247,7 +248,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return sample
 
-    def _image_id(self, path: str) -> list[Any]:
+    def _image_id(self, path: str) -> list[int | str]:
         """Return the image ID.
 
         Args:
@@ -256,7 +257,7 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             A list of integers.
         """
-        keys: list[Any] = []
+        keys: list[int | str] = []
         if match := re.search(self.file_regex, path):
             for key in match.group(1).split('_'):
                 try:
@@ -359,19 +360,19 @@ class SpaceNet(NonGeoDataset, ABC):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 8, 8))

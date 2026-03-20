@@ -23,7 +23,7 @@ _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
 
-class Unet_Weights(WeightsEnum):  # type: ignore[misc]
+class Unet_Weights(WeightsEnum):
     """U-Net weights.
 
     For `smp <https://github.com/qubvel-org/segmentation_models.pytorch>`_
@@ -137,6 +137,51 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'license': 'non-commercial',
         },
     )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB3 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb3_ccby-aa82bfe9.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b3',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB5 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb5_ccby-a3aaa8b6.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b5',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
+    SENTINEL2_FTW_PRUE_CCBY_EFNETB7 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb7_ccby-da5ad55e.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b7',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'CC-BY-4.0',
+        },
+    )
     OAM_RGB_RESNET50_TCD = Weights(
         url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
@@ -171,6 +216,24 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'input_shape': (3, 1024, 1024),
             'resolution': 0.1,
             'license': 'CC-BY-NC-4.0',
+        },
+    )
+    NAIP_RGBN_RESNET18_CHESAPEAKERSC = Weights(
+        url='https://hf.co/isaaccorley/chesapeakersc/resolve/fe3dc77a9edfe95fde49b0318fb047c1fc6dd195/unet-resnet18-6c2e3984.pth',
+        transforms=T.Normalize(mean=[0.0], std=[255.0], inplace=True),
+        meta={
+            'dataset': 'ChesapeakeRSC',
+            'in_chans': 4,
+            'num_classes': 2,
+            'model': 'U-Net',
+            'encoder': 'resnet18',
+            'publication': 'https://arxiv.org/abs/2401.06762',
+            'repo': 'https://github.com/isaaccorley/ChesapeakeRSC',
+            'bands': ('R', 'G', 'B', 'N'),
+            'classes': ('background', 'road'),
+            'input_shape': (4, 512, 512),
+            'resolution': 1.0,
+            'license': 'MIT',
         },
     )
 
@@ -221,8 +284,8 @@ def unet(
             )
         # Random initialize segmentation head for new task
         else:
-            del state_dict['segmentation_head.0.weight']
-            del state_dict['segmentation_head.0.bias']
+            del state_dict['segmentation_head.0.weight']  # type: ignore[not-subscriptable]
+            del state_dict['segmentation_head.0.bias']  # type: ignore[not-subscriptable]
             missing_keys, unexpected_keys = model.load_state_dict(
                 state_dict, strict=False
             )

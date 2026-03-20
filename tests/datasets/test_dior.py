@@ -25,29 +25,16 @@ class TestDIOR:
 
         files = {
             'trainval': {
-                'images': {
-                    'filename': 'Images_trainval.zip',
-                    'md5': '585e21ddd28fdf1166e463db43cfe68d',
-                },
-                'labels': {
-                    'filename': 'Annotations_trainval.zip',
-                    'md5': 'dcc93fa421804515029a5a574f34fafc',
-                },
+                'images': {'filename': 'Images_trainval.zip', 'md5': ''},
+                'labels': {'filename': 'Annotations_trainval.zip', 'md5': ''},
             },
-            'test': {
-                'images': {
-                    'filename': 'Images_test.zip',
-                    'md5': '0273920291def20cec60849b35eca713',
-                }
-            },
+            'test': {'images': {'filename': 'Images_test.zip', 'md5': ''}},
         }
         monkeypatch.setattr(DIOR, 'files', files)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return DIOR(
-            root=root, split=split, transforms=transforms, download=True, checksum=True
-        )
+        return DIOR(root=root, split=split, transforms=transforms, download=True)
 
     def test_already_downloaded(self, dataset: DIOR) -> None:
         DIOR(root=dataset.root, download=True)

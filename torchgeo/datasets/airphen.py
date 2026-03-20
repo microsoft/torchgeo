@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Sample, percentile_normalization
+from .utils import Sample, quantile_normalization
 
 
 class Airphen(RasterDataset):
@@ -65,7 +65,7 @@ class Airphen(RasterDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
-        image = percentile_normalization(image, axis=(0, 1))
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
         ax.imshow(image)

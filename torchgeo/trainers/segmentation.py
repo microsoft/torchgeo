@@ -5,27 +5,26 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
+from .mixins import ClassificationMixin
 
 
-class SemanticSegmentationTask(BaseTask):
+class SemanticSegmentationTask(ClassificationMixin, BaseTask):
     """Semantic Segmentation."""
 
     def __init__(
@@ -39,8 +38,10 @@ class SemanticSegmentationTask(BaseTask):
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
         num_labels: int | None = None,
+        labels: list[str] | None = None,
         num_filters: int = 3,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
+        pos_weight: Tensor | None = None,
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'ce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -64,9 +65,11 @@ class SemanticSegmentationTask(BaseTask):
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            labels: List of class names.
             num_filters: Number of filters. Only applicable when model='fcn'.
+            pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'bce', 'jaccard', and 'focal' loss.
+                'ce', 'bce', 'jaccard', 'focal', and 'dice' loss.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -77,6 +80,9 @@ class SemanticSegmentationTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
+
+        .. versionadded:: 0.9
+           The *labels* and *pos_weight* parameters and dice loss support.
 
         .. versionadded:: 0.8
            Time series, DPT, Segformer, and UPerNet support.
@@ -192,71 +198,8 @@ class SemanticSegmentationTask(BaseTask):
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        ignore_index: int | None = self.hparams['ignore_index']
-        class_weights = self.hparams['class_weights']
-        if class_weights is not None and not isinstance(class_weights, Tensor):
-            class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
-        match self.hparams['loss']:
-            case 'ce':
-                ignore_value = -1000 if ignore_index is None else ignore_index
-                self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=class_weights
-                )
-            case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss()
-            case 'jaccard':
-                # JaccardLoss requires a list of classes to use instead of a class
-                # index to ignore.
-                classes = [
-                    i for i in range(self.hparams['num_classes']) if i != ignore_index
-                ]
-
-                self.criterion = smp.losses.JaccardLoss(
-                    mode=self.hparams['task'], classes=classes
-                )
-            case 'focal':
-                self.criterion = smp.losses.FocalLoss(
-                    mode=self.hparams['task'],
-                    ignore_index=ignore_index,
-                    normalized=True,
-                )
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.Accuracy`: Overall accuracy
-          (OA) using 'micro' averaging. The number of true positives divided by the
-          dataset size. Higher values are better.
-        * :class:`~torchmetrics.JaccardIndex`: Intersection
-          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
-             for balanced performance assessment across imbalanced classes.
-        """
-        kwargs = {
-            'task': self.hparams['task'],
-            'num_classes': self.hparams['num_classes'],
-            'num_labels': self.hparams['num_labels'],
-            'ignore_index': self.hparams['ignore_index'],
-        }
-        metrics = MetricCollection(
-            [
-                Accuracy(multidim_average='global', average='micro', **kwargs),
-                JaccardIndex(average='micro', **kwargs),
-            ]
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
-
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -273,7 +216,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -284,7 +226,7 @@ class SemanticSegmentationTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -298,7 +240,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -358,7 +299,7 @@ class SemanticSegmentationTask(BaseTask):
                 )  # type: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -371,7 +312,6 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x).squeeze(1)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -380,8 +320,8 @@ class SemanticSegmentationTask(BaseTask):
         self.log('test_loss', loss, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> dict[str, Tensor | None]:
         """Compute the predicted class probabilities.
 
         Args:
@@ -390,7 +330,11 @@ class SemanticSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Dictionary with 'probabilities', 'bounds', and 'transform' keys.
+
+        .. versionchanged:: 0.9
+           Changed return type from Tensor to dict with probabilities, bounds,
+           and transform keys.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
@@ -401,4 +345,8 @@ class SemanticSegmentationTask(BaseTask):
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
-        return y_hat
+        return {
+            'probabilities': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
+        }

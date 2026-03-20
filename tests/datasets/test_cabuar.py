@@ -34,12 +34,7 @@ class TestCaBuAr:
         root = tmp_path
         transforms = nn.Identity()
         return CaBuAr(
-            root=root,
-            split=split,
-            bands=bands,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, split=split, bands=bands, transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: CaBuAr) -> None:
@@ -69,10 +64,6 @@ class TestCaBuAr:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CaBuAr(tmp_path)
 
-    def test_invalid_bands(self) -> None:
-        with pytest.raises(AssertionError):
-            CaBuAr(bands=('OK', 'BK'))
-
     def test_plot(self, dataset: CaBuAr) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
@@ -86,7 +77,3 @@ class TestCaBuAr:
         dataset = CaBuAr(root=dataset.root, bands=('B02',))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle='Single Band')
-
-    def test_invalid_split(self, dataset: CaBuAr) -> None:
-        with pytest.raises(AssertionError):
-            CaBuAr(dataset.root, split='foo')

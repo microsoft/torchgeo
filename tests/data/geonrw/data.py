@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 import tarfile
@@ -57,14 +56,6 @@ def create_tarball(output_filename: str, source_dirs: list[str]) -> None:
             tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 
-def calculate_md5(filename: str) -> str:
-    hash_md5 = hashlib.md5()
-    with open(filename, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
 # Main function
 def main() -> None:
     train_cities = TRAIN_CITIES
@@ -78,9 +69,6 @@ def main() -> None:
 
     tarball_name = 'nrw_dataset.tar.gz'
     create_tarball(tarball_name, train_cities + test_cities)
-
-    md5sum = calculate_md5(tarball_name)
-    print(f'MD5 checksum: {md5sum}')
 
 
 if __name__ == '__main__':

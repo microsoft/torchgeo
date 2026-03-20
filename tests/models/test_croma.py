@@ -55,7 +55,7 @@ class TestCROMA:
 class TestCROMABase:
     @pytest.fixture(params=[*CROMABase_Weights])
     def weights(self, request: SubRequest) -> CROMABase_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -66,7 +66,7 @@ class TestCROMABase:
         model = croma_base()
         save_model(model, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_croma(self) -> None:
         croma_base()
@@ -82,7 +82,7 @@ class TestCROMABase:
 class TestCROMALarge:
     @pytest.fixture(params=[*CROMALarge_Weights])
     def weights(self, request: SubRequest) -> CROMALarge_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -93,7 +93,7 @@ class TestCROMALarge:
         model = croma_large()
         save_model(model, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_croma(self) -> None:
         croma_large()

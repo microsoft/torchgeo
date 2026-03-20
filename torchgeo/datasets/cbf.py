@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -107,8 +108,9 @@ class CanadianBuildingFootprints(VectorDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
-            filepath = os.path.join(self.paths, prov_terr + '.zip')
+            filepath = os.path.join(paths, prov_terr + '.zip')
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -119,11 +121,10 @@ class CanadianBuildingFootprints(VectorDataset):
             print('Files already downloaded and verified')
             return
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             download_and_extract_archive(
-                self.url + prov_terr + '.zip',
-                self.paths,
-                md5=md5 if self.checksum else None,
+                self.url + prov_terr + '.zip', paths, md5=md5 if self.checksum else None
             )
 
     def plot(

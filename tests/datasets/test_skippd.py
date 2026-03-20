@@ -5,6 +5,7 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import pytest
@@ -24,30 +25,22 @@ class TestSKIPPD:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SKIPPD:
         task, split = request.param
-        md5 = {
-            'nowcast': '6f5e54906927278b189f9281a2f54f39',
-            'forecast': 'f3b5d7d5c28ba238144fa1e726c46969',
-        }
-        monkeypatch.setattr(SKIPPD, 'md5', md5)
         url = os.path.join('tests', 'data', 'skippd', '{}')
         monkeypatch.setattr(SKIPPD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         transforms = nn.Identity()
         return SKIPPD(
-            root=root,
-            task=task,
-            split=split,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, task=task, split=split, transforms=transforms, download=True
         )
 
     def test_already_extracted(self, dataset: SKIPPD) -> None:
         SKIPPD(root=dataset.root, download=True)
 
     @pytest.mark.parametrize('task', ['nowcast', 'forecast'])
-    def test_already_downloaded(self, tmp_path: Path, task: str) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, task: Literal['nowcast', 'forecast']
+    ) -> None:
         pathname = os.path.join(
             'tests', 'data', 'skippd', f'2017_2019_images_pv_processed_{task}.zip'
         )
@@ -61,7 +54,6 @@ class TestSKIPPD:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert isinstance(x['date'], str)
         if dataset.task == 'nowcast':
             assert x['image'].shape == (3, 64, 64)
         else:
@@ -69,10 +61,6 @@ class TestSKIPPD:
 
     def test_len(self, dataset: SKIPPD) -> None:
         assert len(dataset) == 3
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SKIPPD(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

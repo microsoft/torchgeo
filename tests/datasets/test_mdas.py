@@ -44,8 +44,6 @@ class TestMDAS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> MDAS:
-        md5 = '99e1744ca6f19aa19a3aa23a2bbf7bef'
-        monkeypatch.setattr(MDAS, 'md5', md5)
         url = os.path.join('tests', 'data', 'mdas', 'Augsburg_data_4_publication.zip')
         monkeypatch.setattr(MDAS, 'url', url)
 
@@ -62,7 +60,6 @@ class TestMDAS:
             modalities=modalities,
             transforms=transforms,
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: MDAS) -> None:

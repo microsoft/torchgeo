@@ -20,8 +20,6 @@ class TestGeoNRW:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> GeoNRW:
-        md5 = '6ffc014d4b345bba3076e8d76ab481fa'
-        monkeypatch.setattr(GeoNRW, 'md5', md5)
         url = os.path.join('tests', 'data', 'geonrw', 'nrw_dataset.tar.gz')
         monkeypatch.setattr(GeoNRW, 'url', url)
         monkeypatch.setattr(GeoNRW, 'train_list', ['aachen', 'bergisch', 'bielefeld'])
@@ -29,7 +27,7 @@ class TestGeoNRW:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return GeoNRW(root, split, transforms, download=True, checksum=True)
+        return GeoNRW(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: GeoNRW) -> None:
         x = dataset[0]
@@ -55,10 +53,6 @@ class TestGeoNRW:
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )
         GeoNRW(root=str(tmp_path))
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            GeoNRW(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

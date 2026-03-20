@@ -19,6 +19,7 @@ from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
 
 from torchgeo.datasets import DatasetNotFoundError, OpenStreetMap
+from torchgeo.datasets.openstreetmap import OSMClassConfig
 
 
 class TestOpenStreetMap:
@@ -26,7 +27,9 @@ class TestOpenStreetMap:
     def dataset(self) -> OpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         return OpenStreetMap(bbox=bbox, classes=classes, paths=root, download=False)
 
     @pytest.fixture
@@ -61,7 +64,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         # Use a different bbox that won't have test data
         bbox = (0.0, 0.0, 0.001, 0.001)
-        classes = [{'name': 'buildings', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'buildings', 'selector': [{'building': '*'}]}
+        ]
         with pytest.raises(DatasetNotFoundError):
             OpenStreetMap(bbox=bbox, classes=classes, paths=root, download=False)
 
@@ -82,7 +87,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Test custom selector combinations in classes
-        classes = [
+        classes: list[OSMClassConfig] = [
             {
                 'name': 'mixed_features',
                 'selector': [{'building': '*'}, {'leisure': 'park'}],
@@ -95,7 +100,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, classes=classes, paths=root)
         query = dataset._build_overpass_query()
         assert 'wr["building"]' in query
@@ -107,7 +114,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
         filename = dataset._get_data_filename()
         assert filename.suffix == '.geojson'
@@ -127,7 +136,9 @@ class TestOpenStreetMap:
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
         # Use dataset bounds for querying
         sample = dataset[dataset.bounds]
@@ -199,7 +210,9 @@ class TestOpenStreetMap:
             OpenStreetMap
         )  # Create instance without __init__
         dataset.bbox = bbox
-        dataset.classes = [{'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}]
+        dataset.classes: list[OSMClassConfig] = [
+            {'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}
+        ]
         dataset.root = pathlib.Path(root)
         assert not dataset._check_integrity()
 
@@ -210,7 +223,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Test query with multiple selectors in one class
-        classes = [
+        classes: list[OSMClassConfig] = [
             {'name': 'mixed', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
         ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
@@ -224,7 +237,7 @@ class TestOpenStreetMap:
     ) -> None:
         """Test Overpass query generation with list values in selectors."""
         # Create a dataset with list values in selector
-        classes = [
+        classes: list[OSMClassConfig] = [
             {'name': 'roads', 'selector': [{'highway': ['primary', 'secondary']}]}
         ]
 
@@ -246,7 +259,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Reset class variable for test
@@ -265,7 +280,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Mock OSM API response with different element types
@@ -307,7 +324,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Empty response
@@ -402,7 +421,9 @@ class TestOpenStreetMap:
         monkeypatch.setattr(OpenStreetMap, '_check_integrity', lambda _: True)
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
 
         # Get proper sample from dataset
@@ -452,7 +473,9 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
 
         # Create dataset which should trigger download (covers lines 216-239)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         with pytest.warns(UserWarning, match='Class .* has no geometries'):
             dataset = OpenStreetMap(
                 bbox=bbox, paths=root, classes=classes, download=True
@@ -486,7 +509,9 @@ class TestOpenStreetMap:
         # Direct call to _download_data
         dataset = OpenStreetMap.__new__(OpenStreetMap)
         dataset.bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        dataset.classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        dataset.classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset.root = tmp_path
 
         with pytest.raises(ValueError, match='No features found in the specified area'):
@@ -501,7 +526,9 @@ class TestOpenStreetMap:
             48.971 + unique_offset,
         )
         root = os.path.join('tests', 'data', 'openstreetmap')
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
 
         with pytest.raises(ValueError, match='No features found in the specified area'):
             OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=True)
@@ -530,7 +557,9 @@ class TestOpenStreetMap:
         # Should raise RuntimeError when all endpoints fail (covers line 251)
         monkeypatch.setattr(OpenStreetMap, '_rate_limit', lambda _: None)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         with pytest.raises(RuntimeError, match='All Overpass API endpoints failed'):
             OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=True)
 
@@ -644,7 +673,9 @@ class TestOpenStreetMap:
         """Test feature matching logic."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Test wildcard match
@@ -686,7 +717,9 @@ class TestOpenStreetMap:
         """Test feature matching with JSON string properties (from GeoDataFrame)."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Test with JSON string properties (as might come from GeoDataFrame)
@@ -846,7 +879,9 @@ class TestOpenStreetMap:
         """Test feature matching with JSON decode error fallback."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Test with invalid JSON string properties (should fallback to original props)
@@ -871,7 +906,9 @@ class TestOpenStreetMap:
         )
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Get proper sample from dataset with bounds
@@ -894,7 +931,9 @@ class TestOpenStreetMap:
         )
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        classes: list[OSMClassConfig] = [
+            {'name': 'building', 'selector': [{'building': '*'}]}
+        ]
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
 
         # Get sample and add prediction

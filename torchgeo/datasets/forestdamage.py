@@ -39,7 +39,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """
     et = ElementTree.parse(path)
     element = et.getroot()
-    filename = element.find('filename').text  # type: ignore[union-attr]
+    filename = element.find('filename').text
     labels, bboxes = [], []
     for obj in element.findall('object'):
         bndbox = obj.find('bndbox')

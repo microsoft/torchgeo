@@ -67,6 +67,7 @@ class TestChangeDetectionTask:
             'levircd',
             'levircdplus',
             'oscd',
+            'oscd100',
             'oscd_multiclass',
             'oscd_multiclass_focal',
             'oscd_multiclass_jaccard',

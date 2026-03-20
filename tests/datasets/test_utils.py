@@ -7,9 +7,9 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import numpy as np
+import numpy.typing
 import pandas as pd
 import pytest
 import torch
@@ -19,13 +19,17 @@ from torchgeo.datasets.utils import (
     Executable,
     Sample,
     array_to_tensor,
+    check_integrity,
     concat_samples,
     disambiguate_timestamp,
+    download_and_extract_archive,
+    download_url,
     extract_archive,
     lazy_import,
     merge_samples,
     pad_across_batches,
     percentile_normalization,
+    quantile_normalization,
     stack_samples,
     unbind_samples,
     which,
@@ -330,6 +334,22 @@ class TestBoundingBox:
             BoundingBox(0, 1, 2, 3, MAXT, MINT)
 
 
+def test_check_integrity() -> None:
+    fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+
+    assert check_integrity(fpath)
+    assert check_integrity(fpath, md5=md5)
+    assert check_integrity(fpath, sha256=sha256)
+
+    assert not check_integrity(fpath + '2')
+    assert not check_integrity(fpath + '2', md5=md5)
+    assert not check_integrity(fpath + '2', sha256=sha256)
+    assert not check_integrity(fpath, md5=md5 + '2')
+    assert not check_integrity(fpath, sha256=sha256 + '2')
+
+
 @pytest.mark.parametrize(
     'from_path',
     [
@@ -346,6 +366,29 @@ def test_extract_archive(from_path: str, tmp_path: Path) -> None:
     shutil.copy(from_path, tmp_path)
     from_path = os.path.join(tmp_path, os.path.basename(from_path))
     extract_archive(from_path, tmp_path, remove_finished=True)
+
+
+def test_download_url(tmp_path: Path) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+
+    download_url(url, tmp_path)
+    download_url(url, tmp_path, md5=md5)
+    download_url(url, tmp_path, sha256=sha256)
+
+    with pytest.raises(RuntimeError, match=r'Downloaded file .* is corrupted'):
+        download_url(url, tmp_path, md5=md5 + '2')
+
+
+def test_download_and_extract_archive(tmp_path: Path) -> None:
+    url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+
+    download_and_extract_archive(url, tmp_path)
+    download_and_extract_archive(url, tmp_path, md5=md5)
+    download_and_extract_archive(url, tmp_path, sha256=sha256)
 
 
 @pytest.mark.parametrize(
@@ -450,7 +493,10 @@ class TestCollateFunctionsMatchingKeys:
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     def samples(self) -> list[Sample]:
-        return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
+        return [
+            {'image': torch.tensor([1, 2, 0])},
+            {'mask': torch.tensor([0, 0, 3]), 'other': 5},
+        ]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
         sample = stack_samples(samples)
@@ -498,9 +544,17 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
 
 def test_percentile_normalization() -> None:
-    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
+    img = np.array([[1, 2], [98, 100]])
+    match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
+    with pytest.warns(DeprecationWarning, match=match):
+        img = percentile_normalization(img, 2, 98)
+    assert img.min() == 0
+    assert img.max() == 1
 
-    img = percentile_normalization(img, 2, 98)
+
+def test_quantile_normalization() -> None:
+    img = torch.rand(3, 16, 16)
+    img = quantile_normalization(img)
     assert img.min() == 0
     assert img.max() == 1
 
@@ -509,8 +563,8 @@ def test_percentile_normalization() -> None:
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
+def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+    array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)

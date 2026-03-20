@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,7 +24,7 @@ from .utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -145,7 +145,7 @@ class DFC2022(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -310,10 +310,10 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image_arr = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0)
 
-        dem = sample['image'][-1].numpy()
-        dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
+        dem = sample['image'][-1]
+        dem = quantile_normalization(dem, lower=0, upper=1)
 
         showing_mask = 'mask' in sample
         showing_prediction = 'prediction' in sample
@@ -321,10 +321,10 @@ class DFC2022(NonGeoDataset):
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
         if showing_prediction:
-            pred = sample['prediction'].numpy()
+            pred = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))

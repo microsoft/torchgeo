@@ -81,7 +81,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        pid = self.files[index]
+        pid = str(self.files[index])
         match self.mode:
             case 'annual':
                 file = '2021-01-01_2021-12-31.tif'

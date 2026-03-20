@@ -33,7 +33,7 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
         self,
         dataset: GeoDataset,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,  # type: ignore[type-arg]
+        toi: pd.Interval | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -93,7 +93,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int | None = None,
         roi: Polygon | None = None,
-        toi: pd.Interval | None = None,  # type: ignore[type-arg]
+        toi: pd.Interval | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:

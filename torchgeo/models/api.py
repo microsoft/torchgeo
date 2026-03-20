@@ -6,7 +6,7 @@
 See the following references for design details:
 
 * https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
-* https://pytorch.org/vision/stable/models.html
+* https://docs.pytorch.org/vision/stable/models.html
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """
 
@@ -30,6 +30,7 @@ from .dofa import (
 from .earthloc import EarthLoc_Weights, earthloc
 from .galileo import GalileoWeights, galileo
 from .panopticon import Panopticon_Weights, panopticon_vitb14
+from .presto import Presto_Weights, presto
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -81,6 +82,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'earthloc': earthloc,
     'galileo': galileo,
     'panopticon_vitb14': panopticon_vitb14,
+    'presto': presto,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
@@ -111,6 +113,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     earthloc: EarthLoc_Weights,
     galileo: GalileoWeights,
     panopticon_vitb14: Panopticon_Weights,
+    presto: Presto_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
@@ -138,6 +141,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ig
     'earthloc': EarthLoc_Weights,
     'galileo': GalileoWeights,
     'panopticon_vitb14': Panopticon_Weights,
+    'presto': Presto_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,

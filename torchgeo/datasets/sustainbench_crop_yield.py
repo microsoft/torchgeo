@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,8 +59,8 @@ class SustainBenchCropYield(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        countries: list[str] = ['usa'],
+        split: Literal['train', 'dev', 'test'] = 'train',
+        countries: list[Literal['usa', 'brazil', 'argentina']] = ['usa'],
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
