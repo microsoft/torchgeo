@@ -18,6 +18,8 @@ build:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
       - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --locked --extra docs
+    post_build:
+      - python docs/fix_changelog_images.py
 
 # Configuration for Sphinx documentation
 sphinx:
