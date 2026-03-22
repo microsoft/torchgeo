@@ -25,13 +25,7 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
 
 
 class TestMAETask:
-    @pytest.mark.parametrize(
-        'name',
-        [
-            'ssl4eo_s12_mae_1',
-            'ssl4eo_s12_mae_2',
-        ],
-    )
+    @pytest.mark.parametrize('name', ['ssl4eo_s12_mae_1', 'ssl4eo_s12_mae_2'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:

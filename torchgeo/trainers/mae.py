@@ -2,16 +2,12 @@
 # Licensed under the MIT License.
 
 """MAE trainer for self-supervised learning (SSL)."""
+
 from typing import Any
 
 import torch
 from lightly.models import utils
-
-try:
-    from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
-except ImportError:
-    from lightly.models import MAEDecoderTIMM, MaskedVisionTransformerTIMM
-
+from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
 from lightly.transforms.mae_transform import MAETransform
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from timm.models import VisionTransformer, create_model
@@ -41,7 +37,7 @@ class MAETask(BaseTask):
 
     def __init__(
         self,
-        model: str = "vit_base_patch32_224",
+        model: str = 'vit_base_patch32_224',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         transform: nn.Module | None = None,
@@ -66,14 +62,15 @@ class MAETask(BaseTask):
             weight_decay: Weight decay for the AdamW optimizer.
             mask_ratio: The ratio of tokens to mask during training. Typically 0.75 is a good choice.
         """
-        self.transform = transform if transform is not None else MAETransform(
-            normalize=False)
+        self.transform = (
+            transform if transform is not None else MAETransform(normalize=False)
+        )  # type: ignore
         self.weights = weights
         super().__init__()
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
-        self.criterion = nn.MSELoss(reduction="none")
+        self.criterion = nn.MSELoss(reduction='none')
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -82,10 +79,12 @@ class MAETask(BaseTask):
         in_channels: int = self.hparams['in_channels']
 
         vit = create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True)
+            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
+        )
         if not isinstance(vit, VisionTransformer):
             raise ValueError(
-                f"Model {model} is not a ViT architecture, which is required for MAE training.")
+                f'Model {model} is not a ViT architecture, which is required for MAE training.'
+            )
 
         # Load weights
         if weights and weights is not True:
@@ -94,9 +93,8 @@ class MAETask(BaseTask):
             # elif os.path.exists(weights):
             #    _, state_dict = extract_backbone(weights)
             else:
-                state_dict = get_weight(weights).get_state_dict(
-                    progress=True)
-            load_state_dict(vit, state_dict)
+                state_dict = get_weight(weights).get_state_dict(progress=True)
+            load_state_dict(vit, state_dict)  # type: ignore[invalid-argument-type]
 
         self.patch_size = vit.patch_embed.patch_size[0]
 
@@ -123,7 +121,10 @@ class MAETask(BaseTask):
             Optimizer and learning rate scheduler.
         """
         optim = torch.optim.AdamW(
-            self.parameters(), lr=self.hparams["lr"], weight_decay=self.hparams["weight_decay"], betas=(0.9, 0.95)
+            self.parameters(),
+            lr=self.hparams['lr'],
+            weight_decay=self.hparams['weight_decay'],
+            betas=(0.9, 0.95),
         )
         max_epochs = 800
         if self.trainer and self.trainer.max_epochs is not None:
@@ -134,15 +135,19 @@ class MAETask(BaseTask):
             lr_min=0,
             warmup_t=40,
             warmup_lr_init=0,
-            cycle_limit=1
+            cycle_limit=1,
         )
-        return [optim], [scheduler]
+        return [optim], [scheduler]  # type: ignore
 
-    def lr_scheduler_step(self, scheduler: torch.optim.lr_scheduler.LRScheduler, metric: Any | None) -> None:
+    def lr_scheduler_step(
+        self, scheduler: torch.optim.lr_scheduler.LRScheduler, metric: Any | None
+    ) -> None:
         """Step the learning rate scheduler."""
         scheduler.step(epoch=self.current_epoch)
 
-    def forward_decoder(self, x_encoded: torch.Tensor, idx_keep: torch.Tensor, idx_mask: torch.Tensor) -> torch.Tensor:
+    def forward_decoder(
+        self, x_encoded: torch.Tensor, idx_keep: torch.Tensor, idx_mask: torch.Tensor
+    ) -> torch.Tensor:
         """Forward pass through the MAE decoder.
 
         Args:
@@ -158,9 +163,7 @@ class MAETask(BaseTask):
         x_masked = utils.repeat_token(
             self.decoder.mask_token, (batch_size, self.sequence_length)
         )
-        x_masked = utils.set_at_index(
-            x_masked, idx_keep, x_decode.type_as(x_masked)
-        )
+        x_masked = utils.set_at_index(x_masked, idx_keep, x_decode.type_as(x_masked))
         # decoder forward pass
         x_decoded = self.decoder.decode(x_masked)
         # predict pixel values for masked tokens
@@ -168,7 +171,9 @@ class MAETask(BaseTask):
         x_pred = self.decoder.predict(x_pred)
         return x_pred
 
-    def training_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> torch.Tensor:
+    def training_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> torch.Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
@@ -179,9 +184,9 @@ class MAETask(BaseTask):
         Returns:
             The loss tensor.
         """
-        print(batch["image"].shape)
+        print(batch['image'].shape)
         with torch.no_grad():
-            views = self.transform(batch["image"].float())
+            views = self.transform(batch['image'].float())
         print(views[0].shape)
         images = views[0]  # views contains only a single view
         print(images.shape)
@@ -204,30 +209,21 @@ class MAETask(BaseTask):
         loss = self.criterion(x_pred, target)
 
         # per-sample loss for std logging
-        loss_per_sample = self.criterion(
-            x_pred, target
-        )
-        loss_per_sample = loss_per_sample.mean(
-            dim=list(range(1, loss_per_sample.ndim))
-        )
+        loss_per_sample = self.criterion(x_pred, target)
+        loss_per_sample = loss_per_sample.mean(dim=list(range(1, loss_per_sample.ndim)))
         loss = loss_per_sample.mean()
 
         psnr = -10.0 * torch.log10(loss.detach().clamp(min=1e-10))
 
-        self.log("train_loss", loss, on_step=True, on_epoch=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True)
         # Near-zero std indicates that the model is learning uniformly across samples.
-        self.log(
-            "train_loss_std",
-            loss_per_sample.std(),
-            on_step=True,
-            on_epoch=False,
-        )
+        self.log('train_loss_std', loss_per_sample.std(), on_step=True, on_epoch=False)
         # Near-zero means that the model is predicting a constant value, which is a common failure mode for MAE training.
-        self.log("pred_std", x_pred.std(), on_step=True, on_epoch=False)
+        self.log('pred_std', x_pred.std(), on_step=True, on_epoch=False)
         # If this is very low, the model is getting "easy" patches (smooth background) and the loss won't be meaningful.
-        self.log("target_std", target.std(), on_step=True, on_epoch=False)
+        self.log('target_std', target.std(), on_step=True, on_epoch=False)
         # PSNR is a common metric for image reconstruction quality. Higher is better, and values above ~30 indicate good reconstruction.
-        self.log("psnr", psnr, on_step=False, on_epoch=True)
+        self.log('psnr', psnr, on_step=False, on_epoch=True)
 
         return loss
 
