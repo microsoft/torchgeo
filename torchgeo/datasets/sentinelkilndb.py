@@ -65,7 +65,7 @@ class SentinelKilnDB(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://huggingface.co/datasets/SustainabilityLabIITGN/SentinelKilnDB/resolve/main/{0}/{0}.parquet'
+    url = 'https://hf.co/datasets/SustainabilityLabIITGN/SentinelKilnDB/resolve/a467e64329b486fadf236cde2db8a2bbf85fec6c/{0}/{0}.parquet'
 
     file_info: ClassVar[dict[str, _FileInfo]] = {
         'train': {
@@ -314,20 +314,14 @@ class SentinelKilnDB(NonGeoDataset):
         os.makedirs(self.root, exist_ok=True)
 
         filename = self.file_info[self.split]['filename']
+        sha256 = self.file_info[self.split]['sha256'] if self.checksum else None
 
-        if self.checksum:
-            sha256 = self.file_info[self.split]['sha256']
-            assert sha256 is not None
-            download_url(
-                url=self.url.format(self.split),
-                root=self.root,
-                filename=filename,
-                sha256=sha256,
-            )
-        else:
-            download_url(
-                url=self.url.format(self.split), root=self.root, filename=filename
-            )
+        download_url(
+            url=self.url.format(self.split),
+            root=self.root,
+            filename=filename,
+            sha256=sha256,
+        )
 
     def plot(
         self,
@@ -380,14 +374,15 @@ class SentinelKilnDB(NonGeoDataset):
                 )
                 ax.add_patch(rect)
                 # Add label above box
-                ax.text(
-                    x1,
-                    y1 - 2,
-                    label,
-                    color='white',
-                    fontsize=6,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
-                )
+                if show_titles:
+                    ax.text(
+                        x1,
+                        y1 - 2,
+                        label,
+                        color='white',
+                        fontsize=6,
+                        bbox=dict(facecolor=color, alpha=box_alpha),
+                    )
             else:
                 # Oriented box: [x1,y1,x2,y2,x3,y3,x4,y4]
                 vertices = box.reshape(4, 2)
@@ -401,20 +396,21 @@ class SentinelKilnDB(NonGeoDataset):
                 )
                 ax.add_patch(polygon)
                 # Add label at centroid
-                centroid_x = vertices[:, 0].mean()
-                centroid_y = vertices[:, 1].mean()
-                ax.text(
-                    centroid_x,
-                    centroid_y,
-                    label,
-                    color='white',
-                    fontsize=6,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
-                    ha='center',
-                    va='center',
-                )
+                if show_titles:
+                    centroid_x = vertices[:, 0].mean()
+                    centroid_y = vertices[:, 1].mean()
+                    ax.text(
+                        centroid_x,
+                        centroid_y,
+                        label,
+                        color='white',
+                        fontsize=6,
+                        bbox=dict(facecolor=color, alpha=box_alpha),
+                        ha='center',
+                        va='center',
+                    )
 
-        if suptitle is not None:
+        if show_titles and suptitle is not None:
             plt.suptitle(suptitle)
 
         return fig
