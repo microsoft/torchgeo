@@ -2,12 +2,16 @@
 # Licensed under the MIT License.
 
 """MAE trainer for self-supervised learning (SSL)."""
-import os
 from typing import Any
 
 import torch
 from lightly.models import utils
-from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
+
+try:
+    from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
+except ImportError:
+    from lightly.models import MAEDecoderTIMM, MaskedVisionTransformerTIMM
+
 from lightly.transforms.mae_transform import MAETransform
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from timm.models import VisionTransformer, create_model
@@ -18,7 +22,7 @@ from torchvision.models._api import WeightsEnum
 from ..datasets.utils import Sample
 from ..models import get_weight
 from .base import BaseTask
-from .utils import extract_backbone, load_state_dict
+from .utils import load_state_dict
 
 
 class MAETask(BaseTask):
