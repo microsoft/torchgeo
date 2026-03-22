@@ -319,10 +319,7 @@ class SentinelKilnDB(NonGeoDataset):
             kwargs['sha256'] = self.file_info[self.split]['sha256']
 
         download_url(
-            url=self.url.format(self.split),
-            root=self.root,
-            filename=filename,
-            **kwargs,
+            url=self.url.format(self.split), root=self.root, filename=filename, **kwargs
         )
 
     def plot(
