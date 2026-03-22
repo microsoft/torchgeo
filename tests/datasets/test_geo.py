@@ -509,6 +509,20 @@ class TestRasterDataset:
         sample = ds[ds.bounds]
         assert torch.all(sample['image'] == 1)
 
+    def test_gcps_no_affine_transform(self) -> None:
+        root = os.path.join('tests', 'data', 'raster_no_affine', 'gcps_true')
+        ds = RasterDataset(root)
+        sample = ds[ds.bounds]
+        assert torch.all(sample['image'] == 1)
+
+    def test_no_gcps_no_affine_transform(self) -> None:
+        root = os.path.join('tests', 'data', 'raster_no_affine', 'gcps_false')
+        with pytest.raises(
+            ValueError,
+            match=r'.*: dataset has no usable affine CRS/transform and no GCP CRS.',
+        ):
+            RasterDataset(root)
+
 
 class TestXarrayDataset:
     pytest.importorskip('rioxarray', minversion='0.14.1')
