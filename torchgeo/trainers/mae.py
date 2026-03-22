@@ -5,12 +5,13 @@
 
 from typing import Any
 
+import timm
 import torch
 from lightly.models import utils
 from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
 from lightly.transforms.mae_transform import MAETransform
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
-from timm.models import VisionTransformer, create_model
+from timm.models import VisionTransformer
 from timm.scheduler.cosine_lr import CosineLRScheduler
 from torch import nn
 from torchvision.models._api import WeightsEnum
@@ -34,6 +35,8 @@ class MAETask(BaseTask):
     * https://arxiv.org/abs/2111.06377
 
     """
+
+    ignore = ('transform', 'weights')
 
     def __init__(
         self,
@@ -63,8 +66,8 @@ class MAETask(BaseTask):
             mask_ratio: The ratio of tokens to mask during training. Typically 0.75 is a good choice.
         """
         self.transform = (
-            transform if transform is not None else MAETransform(normalize=False)
-        )  # type: ignore
+            transform if transform is not None else MAETransform(normalize=False)  # type: ignore
+        )
         self.weights = weights
         super().__init__()
 
@@ -78,7 +81,7 @@ class MAETask(BaseTask):
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
 
-        vit = create_model(
+        vit = timm.create_model(
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
         if not isinstance(vit, VisionTransformer):
@@ -137,7 +140,13 @@ class MAETask(BaseTask):
             warmup_lr_init=0,
             cycle_limit=1,
         )
-        return [optim], [scheduler]  # type: ignore
+        return {
+            'optimizer': optim,
+            'lr_scheduler': {
+                'scheduler': scheduler,  # type: ignore
+                'interval': 'epoch',
+            },
+        }
 
     def lr_scheduler_step(
         self, scheduler: torch.optim.lr_scheduler.LRScheduler, metric: Any | None
@@ -145,19 +154,21 @@ class MAETask(BaseTask):
         """Step the learning rate scheduler."""
         scheduler.step(epoch=self.current_epoch)
 
-    def forward_decoder(
-        self, x_encoded: torch.Tensor, idx_keep: torch.Tensor, idx_mask: torch.Tensor
+    def forward(
+        self, images: torch.Tensor, idx_keep: torch.Tensor, idx_mask: torch.Tensor
     ) -> torch.Tensor:
-        """Forward pass through the MAE decoder.
+        """Forward pass through MAE encoder and decoder.
 
         Args:
-            x_encoded: The encoded tokens from the backbone, with shape (B, N_keep, D).
+            images: The input images, with shape (B, in_channels, H, W).
             idx_keep: The indices of the tokens that were kept (not masked), with shape (B, N_keep).
             idx_mask: The indices of the tokens that were masked, with shape (B, N_mask).
 
         Returns:
             The predicted pixel values for the masked tokens, with shape (B, N_mask, patch_size*patch_size*in_channels).
         """
+        # Encode the visible tokens with the MAE encoder
+        x_encoded = self.backbone.encode(images=images, idx_keep=idx_keep)
         batch_size = x_encoded.shape[0]
         x_decode = self.decoder.embed(x_encoded)
         x_masked = utils.repeat_token(
@@ -184,29 +195,20 @@ class MAETask(BaseTask):
         Returns:
             The loss tensor.
         """
-        print(batch['image'].shape)
         with torch.no_grad():
             views = self.transform(batch['image'].float())
-        print(views[0].shape)
         images = views[0]  # views contains only a single view
-        print(images.shape)
         batch_size = images.shape[0]
         idx_keep, idx_mask = utils.random_token_mask(
             size=(batch_size, self.sequence_length),
             mask_ratio=self.hparams['mask_ratio'],
             device=images.device,
         )
-        x_encoded = self.backbone.encode(images=images, idx_keep=idx_keep)
-        x_pred = self.forward_decoder(
-            x_encoded=x_encoded, idx_keep=idx_keep, idx_mask=idx_mask
-        )
-
+        x_pred = self.forward(images, idx_keep, idx_mask)
         # get image patches for masked tokens
         patches = utils.patchify(images, self.patch_size)
         # must adjust idx_mask for missing class token
         target = utils.get_at_index(patches, idx_mask - 1)
-
-        loss = self.criterion(x_pred, target)
 
         # per-sample loss for std logging
         loss_per_sample = self.criterion(x_pred, target)
@@ -215,15 +217,33 @@ class MAETask(BaseTask):
 
         psnr = -10.0 * torch.log10(loss.detach().clamp(min=1e-10))
 
-        self.log('train_loss', loss, on_step=True, on_epoch=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, batch_size=batch_size)
         # Near-zero std indicates that the model is learning uniformly across samples.
-        self.log('train_loss_std', loss_per_sample.std(), on_step=True, on_epoch=False)
+        self.log(
+            'train_loss_std',
+            loss_per_sample.std(),
+            on_step=True,
+            on_epoch=False,
+            batch_size=batch_size,
+        )
         # Near-zero means that the model is predicting a constant value, which is a common failure mode for MAE training.
-        self.log('pred_std', x_pred.std(), on_step=True, on_epoch=False)
+        self.log(
+            'pred_std',
+            x_pred.std(),
+            on_step=True,
+            on_epoch=False,
+            batch_size=batch_size,
+        )
         # If this is very low, the model is getting "easy" patches (smooth background) and the loss won't be meaningful.
-        self.log('target_std', target.std(), on_step=True, on_epoch=False)
+        self.log(
+            'target_std',
+            target.std(),
+            on_step=True,
+            on_epoch=False,
+            batch_size=batch_size,
+        )
         # PSNR is a common metric for image reconstruction quality. Higher is better, and values above ~30 indicate good reconstruction.
-        self.log('psnr', psnr, on_step=False, on_epoch=True)
+        self.log('psnr', psnr, on_step=False, on_epoch=True, batch_size=batch_size)
 
         return loss
 

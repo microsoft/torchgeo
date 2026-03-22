@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 from pytest import MonkeyPatch
+from timm.models import VisionTransformer
 from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
@@ -17,11 +18,10 @@ from torchgeo.main import main
 from torchgeo.models import ViTSmall16_Weights
 from torchgeo.trainers import MAETask
 
-from .test_classification import ClassificationTestModel
-
 
 def create_model(*args: Any, **kwargs: Any) -> Module:
-    return ClassificationTestModel(**kwargs)
+    kwargs.pop('pretrained', None)
+    return VisionTransformer(depth=1, **kwargs)
 
 
 class TestMAETask:
