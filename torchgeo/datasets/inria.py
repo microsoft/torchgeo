@@ -9,6 +9,7 @@ import re
 from collections.abc import Callable
 from typing import Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -23,7 +24,7 @@ from .utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -212,19 +213,19 @@ class InriaAerialImageLabeling(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))

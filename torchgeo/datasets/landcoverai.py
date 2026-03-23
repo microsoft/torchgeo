@@ -8,7 +8,7 @@ import glob
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,20 +120,6 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, index: Any) -> Sample:
-        """Retrieve image, mask and metadata indexed by index.
-
-        Args:
-            index: coordinates or an index
-
-        Returns:
-            sample of image, mask and metadata at that index
-
-        Raises:
-            IndexError: if index is not found in the dataset
-        """
-
-    @abc.abstractmethod
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
 
@@ -151,7 +137,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
+            sample: a sample returned by `__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

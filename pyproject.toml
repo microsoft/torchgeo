@@ -19,7 +19,7 @@ authors = [
 maintainers = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
     {name = "Caleb Robinson", email = "Caleb.Robinson@microsoft.com"},
-    {name = "Isaac Corley", email = "isaac.corley@my.utsa.edu"},
+    {name = "Isaac Corley", email = "isaac.corley@proton.me"},
     {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
     {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
 ]
@@ -70,6 +70,8 @@ dependencies = [
     # rasterio 1.4.0-1.4.2 lack support for merging WarpedVRT objects
     # https://github.com/rasterio/rasterio/issues/3196
     "rasterio>=1.4.3",
+    # requests 2.25+ required for urllib3 with Python 3.12 support
+    "requests>=2.25",
     # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
     "segmentation-models-pytorch>=0.5",
     # shapely 2.0.2+ required for Python 3.12 wheels
@@ -99,14 +101,8 @@ datasets = [
     "netcdf4>=1.6.5",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
-    # pycocotools 2.0.8+ required for Python 3.12 wheels
-    "pycocotools>=2.0.8",
-    # requests 2.25+ required for urllib3 with Python 3.12 support
-    "requests>=2.25",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
-    # scikit-image 0.22+ required for Python 3.12 wheels
-    "scikit-image>=0.22",
     # scipy 1.11.2+ required for Python 3.12 wheels
     "scipy>=1.11.2",
     # webdataset 0.2.4+ required for PyTorch tuple seed support
@@ -136,8 +132,8 @@ style = [
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.2+ required for stable release
-    "ty>=0.0.2",
+    # ty 0.0.21+ required for a couple new rules that catch both real bugs and false positives
+    "ty>=0.0.21",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support
@@ -148,7 +144,7 @@ style = [
 tests = [
     # nbmake 1.4.5+ removes pkg_resources dependency
     "nbmake>=1.4.5",
-    # packaging 21+ required by scikit-image
+    # packaging 21+ required by sphinx
     "packaging>=21",
     # pytest 7.3.2+ required for Python 3.12 support
     "pytest>=7.3.2",

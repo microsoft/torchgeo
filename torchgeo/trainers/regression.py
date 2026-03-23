@@ -137,7 +137,8 @@ class RegressionTask(BaseTask):
           Lower values are better.
         """
         metrics = MetricCollection(
-            {
+            # https://github.com/astral-sh/ty/issues/2985
+            {  # type: ignore[invalid-argument-type]
                 'RMSE': MeanSquaredError(squared=False),
                 'MSE': MeanSquaredError(squared=True),
                 'MAE': MeanAbsoluteError(),

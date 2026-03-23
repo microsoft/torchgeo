@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class CaBuAr(NonGeoDataset):
@@ -264,11 +264,11 @@ class CaBuAr(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample['mask'].numpy()[0]
-        image_pre = sample['image'][0][rgb_indices].numpy()
-        image_post = sample['image'][1][rgb_indices].numpy()
-        image_pre = percentile_normalization(image_pre)
-        image_post = percentile_normalization(image_post)
+        mask = sample['mask'][0]
+        image_pre = sample['image'][0][rgb_indices]
+        image_post = sample['image'][1][rgb_indices]
+        image_pre = quantile_normalization(image_pre)
+        image_post = quantile_normalization(image_post)
 
         ncols = 3
 

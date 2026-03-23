@@ -34,8 +34,8 @@ def generate_test_data(root: str, n_samples: int = 2) -> None:
     """Creates test data archive for InriaAerialImageLabeling dataset.
 
     Args:
-        root (str): Path to store test data
-        n_samples (int, optional): Number of samples. Defaults to 2.
+        root: Path to store test data
+        n_samples: Number of samples. Defaults to 2.
     """
     dtype = np.dtype('uint8')
     size = (8, 8)

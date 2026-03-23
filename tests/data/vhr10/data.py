@@ -52,7 +52,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> None:
             'category_id': 1,
             'area': 4.0,
             'bbox': [4, 4, 2, 2],
-            'segmentation': [[1, 1, 2, 2, 3, 3, 4, 5, 5]],
+            'segmentation': [[1, 1, 2, 2, 3, 3, 4, 4, 5, 5]],
             'iscrowd': 0,
         }
         ANNOTATION_FILE['annotations'].append(annot)

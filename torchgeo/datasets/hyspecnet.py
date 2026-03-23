@@ -23,7 +23,7 @@ from .utils import (
     disambiguate_timestamp,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -214,9 +214,9 @@ class HySpecNet11k(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample['image'][rgb_indices].cpu().numpy()
+        image = sample['image'][rgb_indices]
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots()
         ax.imshow(image)

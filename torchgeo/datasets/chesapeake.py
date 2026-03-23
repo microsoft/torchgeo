@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -429,13 +429,13 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, Any]] = {
+    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ).transform,
+        ),
         'epsg:26918': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ).transform,
+        ),
     }
 
     def __init__(
@@ -548,7 +548,7 @@ class ChesapeakeCVPR(GeoDataset):
 
                     if query_geom_transformed is None:
                         query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs], query_box
+                            self.p_transformers[dst_crs].transform, query_box
                         ).envelope
                         query_geom_transformed = shapely.geometry.mapping(
                             query_box_transformed

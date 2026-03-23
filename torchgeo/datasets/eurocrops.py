@@ -6,13 +6,14 @@
 import csv
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import cast
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
+from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
@@ -258,14 +259,13 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(
-            arr: 'np.typing.NDArray[Any]',
-        ) -> 'np.typing.NDArray[np.float64]':
-            # Color 0 as black, while applying default color map for the class indices.
+        def apply_cmap(tensor: Tensor) -> Tensor:
+            """Color 0 as black, while applying default color map for the class indices."""
+            array = tensor.numpy()
             cmap = plt.get_cmap('viridis')
-            im: np.typing.NDArray[np.float64] = cmap(arr / len(self.class_map))
-            im[arr == 0] = 0
-            return im
+            image = cmap(array / len(self.class_map))
+            image[array == 0] = 0
+            return torch.from_numpy(image)
 
         if showing_prediction:
             axs[0].imshow(apply_cmap(mask), interpolation='none')

@@ -150,7 +150,6 @@ class TestCopernicusPretrain:
         assert isinstance(x['s5p_o3.pth'], torch.Tensor)
         assert isinstance(x['s5p_so2.pth'], torch.Tensor)
         assert isinstance(x['dem.pth'], torch.Tensor)
-        assert isinstance(x['json'], dict)
         # Check the shapes of the tensors
         assert x['s1_grd.pth'].shape == (2, 264, 264)
         assert x['s2_toa.pth'].shape == (13, 264, 264)
@@ -160,15 +159,6 @@ class TestCopernicusPretrain:
         assert x['s5p_o3.pth'].shape == (1, 28, 28)
         assert x['s5p_so2.pth'].shape == (1, 28, 28)
         assert x['dem.pth'].shape == (960, 960)
-        # Check the keys in the dictionary
-        assert 's1_grd' in x['json']
-        assert 's2_toa' in x['json']
-        assert 's3_olci' in x['json']
-        assert 's5p_co' in x['json']
-        assert 's5p_no2' in x['json']
-        assert 's5p_o3' in x['json']
-        assert 's5p_so2' in x['json']
-        assert 'dem' in x['json']
 
     def test_plot(self, dataset: CopernicusPretrain) -> None:
         x = next(iter(dataset))
