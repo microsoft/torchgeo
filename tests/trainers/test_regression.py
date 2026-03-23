@@ -19,7 +19,11 @@ from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataM
 from torchgeo.datasets import RGBBandsMissingError, TropicalCyclone
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
+from torchgeo.trainers import (
+    PixelwiseRegressionTask,
+    RegressionTask,
+    VideoPixelwiseRegressionTask,
+)
 
 from .test_classification import ClassificationTestModel
 
@@ -369,3 +373,80 @@ class TestPixelwiseRegressionTask:
 
     def test_vit_backbone(self) -> None:
         PixelwiseRegressionTask(model='dpt', backbone='tu-vit_base_patch16_224')
+
+
+class TestVideoPixelwiseRegressionTask:
+    @staticmethod
+    def _create_video_model(**kwargs: Any) -> VideoPixelwiseRegressionTask:
+        model = VideoPixelwiseRegressionTask(
+            convlstm_hidden_dim=8, convlstm_num_layers=1, **kwargs
+        )
+        model.log = lambda *args, **kwargs: None  # type: ignore[method-assign]
+        model.log_dict = lambda *args, **kwargs: None  # type: ignore[method-assign]
+        return model
+
+    def test_video_forward_defaults_to_convlstm(self) -> None:
+        model = VideoPixelwiseRegressionTask(in_channels=3)
+        y_hat = model(torch.randn(2, 7, 3, 16, 16))
+        assert y_hat.shape == (2, 1, 16, 16)
+
+    def test_video_forward_multiple_outputs(self) -> None:
+        model = VideoPixelwiseRegressionTask(in_channels=3, num_outputs=2)
+        y_hat = model(torch.randn(2, 7, 3, 16, 16))
+        assert y_hat.shape == (2, 2, 16, 16)
+
+    def test_unsupported_video_model(self) -> None:
+        with pytest.raises(
+            ValueError, match="VideoPixelwiseRegressionTask only supports 'convlstm'"
+        ):
+            VideoPixelwiseRegressionTask(model='unet', in_channels=3)
+
+    @pytest.mark.parametrize(
+        ('loss', 'expected_type'), [('mse', nn.MSELoss), ('mae', nn.L1Loss)]
+    )
+    def test_loss_selection(self, loss: str, expected_type: type[nn.Module]) -> None:
+        model = self._create_video_model(in_channels=3, loss=loss)
+        assert isinstance(model.criterion, expected_type)
+
+    def test_invalid_loss(self) -> None:
+        match = "Loss type 'invalid_loss' is not valid."
+        with pytest.raises(ValueError, match=match):
+            VideoPixelwiseRegressionTask(in_channels=3, loss='invalid_loss')
+
+    def test_convlstm_timeseries_forward_and_steps(self) -> None:
+        model = self._create_video_model(
+            model='convlstm', in_channels=10, num_outputs=1
+        )
+        batch = {
+            'image': torch.randn(2, 7, 10, 16, 16),
+            'mask': torch.randn(2, 16, 16),
+            'length': torch.tensor([7, 5]),
+        }
+        y_hat = model(batch['image'], lengths=batch['length'])
+        assert y_hat.shape == (2, 1, 16, 16)
+
+        y_hat_no_lengths = model(batch['image'])
+        y_hat_last_step = model(batch['image'], lengths=torch.tensor([7, 7]))
+        torch.testing.assert_close(y_hat_no_lengths, y_hat_last_step)
+
+        y_hat_clamped = model(batch['image'], lengths=torch.tensor([9.0, 12.0]))
+        torch.testing.assert_close(y_hat_no_lengths, y_hat_clamped)
+
+        train_loss = model.training_step(batch, 0)
+        assert train_loss.ndim == 0
+        assert model.validation_step(batch, 0) is None
+        assert model.test_step(batch, 0) is None
+
+        predictions = model.predict_step(batch, 0)
+        assert predictions.shape == (2, 1, 16, 16)
+
+    def test_multichannel_targets(self) -> None:
+        model = self._create_video_model(in_channels=3, num_outputs=2)
+        batch = {
+            'image': torch.randn(2, 4, 3, 16, 16),
+            'mask': torch.randn(2, 2, 16, 16),
+            'length': torch.tensor([4, 3]),
+        }
+
+        train_loss = model.training_step(batch, 0)
+        assert train_loss.ndim == 0
