@@ -3,23 +3,35 @@
 
 """MAE trainer for self-supervised learning (SSL)."""
 
-from typing import Any
-
 import timm
 import torch
+from kornia import augmentation as K
 from lightly.models import utils
 from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
-from lightly.transforms.mae_transform import MAETransform
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from timm.models import VisionTransformer
-from timm.scheduler.cosine_lr import CosineLRScheduler
 from torch import nn
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import Sample
 from ..models import get_weight
 from .base import BaseTask
 from .utils import load_state_dict
+
+
+def mae_augmentation(size: int = 224) -> K.AugmentationSequential:
+    """Get the default MAE augmentations as a Kornia AugmentationSequential module."""
+    return K.AugmentationSequential(
+        K.RandomResizedCrop(
+            size=(size, size),
+            scale=(0.2, 1.0),
+            ratio=(3 / 4, 4 / 3),
+            resample='bicubic',
+        ),
+        K.RandomHorizontalFlip(p=0.5),
+        data_keys=['input'],
+    )
 
 
 class MAETask(BaseTask):
@@ -50,6 +62,7 @@ class MAETask(BaseTask):
         decoder_depth: int = 1,
         weight_decay: float = 0.05,
         mask_ratio: float = 0.75,
+        size: int = 224,
     ) -> None:
         """Initialize the MAE task.
 
@@ -64,12 +77,11 @@ class MAETask(BaseTask):
             decoder_depth: Number of layers in the MAE decoder. Typically 1-4 layers is sufficient for good performance.
             weight_decay: Weight decay for the AdamW optimizer.
             mask_ratio: The ratio of tokens to mask during training. Typically 0.75 is a good choice.
+            size: The input image size (height and width) after augmentation. Must match the input size expected by the ViT model.
         """
-        self.transform = (
-            transform if transform is not None else MAETransform(normalize=False)  # type: ignore
-        )
         self.weights = weights
         super().__init__()
+        self.transform = transform if transform is not None else mae_augmentation(size)
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
@@ -130,29 +142,18 @@ class MAETask(BaseTask):
             betas=(0.9, 0.95),
         )
         max_epochs = 800
+        warmup_epochs = 40
         if self.trainer and self.trainer.max_epochs is not None:
             max_epochs = self.trainer.max_epochs
-        scheduler = CosineLRScheduler(
-            optim,
-            t_initial=max_epochs,
-            lr_min=0,
-            warmup_t=40,
-            warmup_lr_init=0,
-            cycle_limit=1,
-        )
+        # Cosine annealing with linear warmup.
+        warmup = LinearLR(optim, 1e-8, 1, total_iters=warmup_epochs)
+        cosine = CosineAnnealingLR(optim, T_max=max_epochs - warmup_epochs, eta_min=0)
+        scheduler = SequentialLR(optim, [warmup, cosine], milestones=[warmup_epochs])
+
         return {
             'optimizer': optim,
-            'lr_scheduler': {
-                'scheduler': scheduler,  # type: ignore
-                'interval': 'epoch',
-            },
+            'lr_scheduler': {'scheduler': scheduler, 'interval': 'epoch'},
         }
-
-    def lr_scheduler_step(
-        self, scheduler: torch.optim.lr_scheduler.LRScheduler, metric: Any | None
-    ) -> None:
-        """Step the learning rate scheduler."""
-        scheduler.step(epoch=self.current_epoch)
 
     def forward(
         self, images: torch.Tensor, idx_keep: torch.Tensor, idx_mask: torch.Tensor
@@ -196,8 +197,7 @@ class MAETask(BaseTask):
             The loss tensor.
         """
         with torch.no_grad():
-            views = self.transform(batch['image'].float())
-        images = views[0]  # views contains only a single view
+            images = self.transform(batch['image'].float())
         batch_size = images.shape[0]
         idx_keep, idx_mask = utils.random_token_mask(
             size=(batch_size, self.sequence_length),

@@ -13,7 +13,7 @@ from timm.models import VisionTransformer
 from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.datasets import SSL4EOS12
 from torchgeo.main import main
 from torchgeo.models import ViTSmall16_Weights
 from torchgeo.trainers import MAETask
@@ -30,9 +30,6 @@ class TestMAETask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
-
-        if name.startswith('seco'):
-            monkeypatch.setattr(SeasonalContrastS2, '__len__', lambda self: 2)
 
         if name.startswith('ssl4eo_s12'):
             monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
