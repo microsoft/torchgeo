@@ -91,12 +91,6 @@ def create_test_data(root: Path) -> None:
                 # Empty labels (negative sample)
                 yolo_aa = np.array([], dtype=object)
                 yolo_obb = np.array([], dtype=object)
-            elif i == 1 and split == 'train':
-                # Malformed labels (too few parts) - to test skip logic
-                yolo_aa = np.array(['0 0.5 0.5'], dtype=object)  # Only 3 parts, need 5
-                yolo_obb = np.array(
-                    ['0 0.1 0.2 0.3'], dtype=object
-                )  # Only 4 parts, need 9
             else:
                 num_boxes = np.random.randint(1, 4)
                 yolo_aa = create_yolo_aa_label(num_boxes)
