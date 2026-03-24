@@ -226,9 +226,6 @@ class SentinelKilnDB(NonGeoDataset):
 
         for line in label_array:
             parts = line.strip().split()
-            if len(parts) < 5:
-                continue
-
             class_id = int(parts[0])
             x_center = float(parts[1]) * self.image_size
             y_center = float(parts[2]) * self.image_size
@@ -278,9 +275,6 @@ class SentinelKilnDB(NonGeoDataset):
 
         for line in label_array:
             parts = line.strip().split()
-            if len(parts) < 9:
-                continue
-
             class_id = int(parts[0])
             coords = [float(p) * self.image_size for p in parts[1:9]]
 
