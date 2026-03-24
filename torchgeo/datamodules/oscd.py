@@ -46,6 +46,39 @@ STD = {
 }
 
 
+MEAN100 = {
+    'B01': 1699.1854248046875,
+    'B02': 1519.08349609375,
+    'B03': 1481.2452392578125,
+    'B04': 1542.990234375,
+    'B05': 1708.63134765625,
+    'B06': 2195.550048828125,
+    'B07': 2444.430419921875,
+    'B08': 2349.7373046875,
+    'B8A': 2592.41845703125,
+    'B09': 815.1251831054688,
+    'B10': 16.794158935546875,
+    'B11': 2331.2841796875,
+    'B12': 1734.558837890625,
+}
+
+STD100 = {
+    'B01': 361.23687744140625,
+    'B02': 517.9739379882812,
+    'B03': 668.9505004882812,
+    'B04': 953.0056762695312,
+    'B05': 899.5523071289062,
+    'B06': 812.8031616210938,
+    'B07': 859.7351684570312,
+    'B08': 868.78369140625,
+    'B8A': 898.2400512695312,
+    'B09': 382.8373718261719,
+    'B10': 8.891886711120605,
+    'B11': 1158.5733642578125,
+    'B12': 1069.1888427734375,
+}
+
+
 class OSCDDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
@@ -142,8 +175,8 @@ class OSCD100DataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
 
         self.bands = kwargs.get('bands', OSCD.all_bands)
-        self.mean = torch.tensor([MEAN[b] for b in self.bands])
-        self.std = torch.tensor([STD[b] for b in self.bands])
+        self.mean = torch.tensor([MEAN100[b] for b in self.bands])
+        self.std = torch.tensor([STD100[b] for b in self.bands])
 
         self.aug = K.AugmentationSequential(
             K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
