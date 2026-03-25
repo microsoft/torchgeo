@@ -29,6 +29,12 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git commit -m "descriptive commit message"
    $ git push
 
+For developers using `uv <https://docs.astral.sh/uv/>`_, you can sync the project dependencies with:
+
+.. code-block:: console
+
+   $ uv sync
+
 
 For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/torchgeo/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
