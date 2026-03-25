@@ -47,16 +47,16 @@ class PatternNetDataModule(NonGeoDataModule):
         self.test_split_pct = test_split_pct
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size=(256, 256)),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
+            K.Resize(size=(256, 256)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            K.Resize(size=(256, 256)),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )

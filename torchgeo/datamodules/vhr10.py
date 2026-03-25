@@ -52,10 +52,10 @@ class VHR10DataModule(NonGeoDataModule):
         self.collate_fn = collate_fn_detection
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(),
-            K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
             K.RandomVerticalFlip(),
+            K.Normalize(mean=self.mean, std=self.std),
+            K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
             data_keys=None,
             keepdim=True,
         )
