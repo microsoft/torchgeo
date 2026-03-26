@@ -3,7 +3,6 @@
 
 """Additional branch coverage tests for sampler utilities."""
 
-import pytest
 from torchgeo.samplers.utils import _to_tuple
 
 
