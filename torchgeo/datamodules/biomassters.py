@@ -59,10 +59,7 @@ class _BioMasstersSpatioTemporalRegressionDataset(NonGeoDataset):
         self.split = split
         self.sensors = tuple(sensors)
         self.dataset = BioMassters(
-            root=root,
-            split=split,
-            sensors=self.sensors,
-            as_time_series=True,
+            root=root, split=split, sensors=self.sensors, as_time_series=True
         )
         self.sample_groups = [
             sample_df.copy()
