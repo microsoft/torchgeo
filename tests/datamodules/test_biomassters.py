@@ -95,9 +95,7 @@ class TestBioMasstersDataModule:
         fit_datamodule.plot(sample)
         plt.close()
 
-    def test_plot_with_prediction(
-        self, fit_datamodule: BioMasstersDataModule
-    ) -> None:
+    def test_plot_with_prediction(self, fit_datamodule: BioMasstersDataModule) -> None:
         fit_datamodule.setup('fit')
         assert fit_datamodule.val_dataset is not None
         sample = fit_datamodule.val_dataset[0]
