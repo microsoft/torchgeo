@@ -94,3 +94,21 @@ class TestBioMasstersDataModule:
         sample = fit_datamodule.val_dataset[0]
         fit_datamodule.plot(sample)
         plt.close()
+
+    def test_plot_with_prediction(
+        self, fit_datamodule: BioMasstersDataModule
+    ) -> None:
+        fit_datamodule.setup('fit')
+        assert fit_datamodule.val_dataset is not None
+        sample = fit_datamodule.val_dataset[0]
+        sample['prediction'] = sample['mask']
+        fit_datamodule.plot(sample)
+        plt.close()
+
+    def test_plot_invalid_image_shape(
+        self, fit_datamodule: BioMasstersDataModule
+    ) -> None:
+        fit_datamodule.setup('fit')
+        assert fit_datamodule.val_dataset is not None
+        with pytest.raises(ValueError, match=r'Expected image tensor with shape'):
+            fit_datamodule.val_dataset.dataset.plot({'image': torch.zeros(15, 32, 32)})
