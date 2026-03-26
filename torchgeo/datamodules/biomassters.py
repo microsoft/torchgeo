@@ -216,7 +216,9 @@ class BioMasstersDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit', 'validate', 'test']:
-            self.dataset = self.dataset_class(split='train', **self.kwargs)
+            self.dataset = _BioMasstersSpatioTemporalRegressionDataset(
+                split='train', **self.kwargs
+            )
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset, self.test_dataset = random_split(
                 self.dataset,
@@ -229,4 +231,6 @@ class BioMasstersDataModule(NonGeoDataModule):
             )
 
         if stage in ['predict']:
-            self.predict_dataset = self.dataset_class(split='test', **self.kwargs)
+            self.predict_dataset = _BioMasstersSpatioTemporalRegressionDataset(
+                split='test', **self.kwargs
+            )
