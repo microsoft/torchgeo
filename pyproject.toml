@@ -70,6 +70,8 @@ dependencies = [
     # rasterio 1.4.0-1.4.2 lack support for merging WarpedVRT objects
     # https://github.com/rasterio/rasterio/issues/3196
     "rasterio>=1.4.3",
+    # requests 2.25+ required for urllib3 with Python 3.12 support
+    "requests>=2.25",
     # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
     "segmentation-models-pytorch>=0.5",
     # shapely 2.0.2+ required for Python 3.12 wheels
@@ -99,8 +101,6 @@ datasets = [
     "netcdf4>=1.6.5",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
-    # requests 2.25+ required for urllib3 with Python 3.12 support
-    "requests>=2.25",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
     # scipy 1.11.2+ required for Python 3.12 wheels
