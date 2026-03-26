@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Trainers for video regression."""
+"""Trainers for spatiotemporal regression."""
 
 from typing import Literal, cast
 
@@ -73,8 +73,8 @@ class _ConvLSTMRegression(nn.Module):
         return cast(Tensor, self.head(features))
 
 
-class VideoPixelwiseRegressionTask(BaseTask):
-    """Pixelwise regression for video inputs."""
+class SpatioTemporalPixelwiseRegressionTask(BaseTask):
+    """Pixelwise regression for spatiotemporal inputs."""
 
     target_key = 'mask'
 
@@ -91,7 +91,7 @@ class VideoPixelwiseRegressionTask(BaseTask):
         convlstm_num_layers: int = 1,
         convlstm_head_kernel_size: int = 1,
     ) -> None:
-        """Initialize a new VideoPixelwiseRegressionTask instance.
+        """Initialize a new SpatioTemporalPixelwiseRegressionTask instance.
 
         Args:
             model: Video model name. Only ``'convlstm'`` is currently supported.
@@ -148,7 +148,7 @@ class VideoPixelwiseRegressionTask(BaseTask):
             case _:
                 raise ValueError(
                     f"Model type '{model}' is not supported. "
-                    'Currently, VideoPixelwiseRegressionTask only supports '
+                    'Currently, SpatioTemporalPixelwiseRegressionTask only supports '
                     "'convlstm'."
                 )
 

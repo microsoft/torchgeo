@@ -15,7 +15,7 @@ from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
-from .video_regression import VideoPixelwiseRegressionTask
+from .spatiotemporal_regression import SpatioTemporalPixelwiseRegressionTask
 
 __all__ = (
     'BYOLTask',
@@ -32,5 +32,5 @@ __all__ = (
     'RegressionTask',
     'SemanticSegmentationTask',
     'SimCLRTask',
-    'VideoPixelwiseRegressionTask',
+    'SpatioTemporalPixelwiseRegressionTask',
 )

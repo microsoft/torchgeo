@@ -22,7 +22,7 @@ from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import (
     PixelwiseRegressionTask,
     RegressionTask,
-    VideoPixelwiseRegressionTask,
+    SpatioTemporalPixelwiseRegressionTask,
 )
 
 from .test_classification import ClassificationTestModel
@@ -375,10 +375,10 @@ class TestPixelwiseRegressionTask:
         PixelwiseRegressionTask(model='dpt', backbone='tu-vit_base_patch16_224')
 
 
-class TestVideoPixelwiseRegressionTask:
+class TestSpatioTemporalPixelwiseRegressionTask:
     @staticmethod
-    def _create_video_model(**kwargs: Any) -> VideoPixelwiseRegressionTask:
-        model = VideoPixelwiseRegressionTask(
+    def _create_video_model(**kwargs: Any) -> SpatioTemporalPixelwiseRegressionTask:
+        model = SpatioTemporalPixelwiseRegressionTask(
             convlstm_hidden_dim=8, convlstm_num_layers=1, **kwargs
         )
         model.log = lambda *args, **kwargs: None  # type: ignore[method-assign]
@@ -386,20 +386,21 @@ class TestVideoPixelwiseRegressionTask:
         return model
 
     def test_video_forward_defaults_to_convlstm(self) -> None:
-        model = VideoPixelwiseRegressionTask(in_channels=3)
+        model = SpatioTemporalPixelwiseRegressionTask(in_channels=3)
         y_hat = model(torch.randn(2, 7, 3, 16, 16))
         assert y_hat.shape == (2, 1, 16, 16)
 
     def test_video_forward_multiple_outputs(self) -> None:
-        model = VideoPixelwiseRegressionTask(in_channels=3, num_outputs=2)
+        model = SpatioTemporalPixelwiseRegressionTask(in_channels=3, num_outputs=2)
         y_hat = model(torch.randn(2, 7, 3, 16, 16))
         assert y_hat.shape == (2, 2, 16, 16)
 
     def test_unsupported_video_model(self) -> None:
         with pytest.raises(
-            ValueError, match="VideoPixelwiseRegressionTask only supports 'convlstm'"
+            ValueError,
+            match="SpatioTemporalPixelwiseRegressionTask only supports 'convlstm'",
         ):
-            VideoPixelwiseRegressionTask(model='unet', in_channels=3)
+            SpatioTemporalPixelwiseRegressionTask(model='unet', in_channels=3)
 
     @pytest.mark.parametrize(
         ('loss', 'expected_type'), [('mse', nn.MSELoss), ('mae', nn.L1Loss)]
@@ -411,7 +412,7 @@ class TestVideoPixelwiseRegressionTask:
     def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            VideoPixelwiseRegressionTask(in_channels=3, loss='invalid_loss')
+            SpatioTemporalPixelwiseRegressionTask(in_channels=3, loss='invalid_loss')
 
     def test_convlstm_timeseries_forward_and_steps(self) -> None:
         model = self._create_video_model(
