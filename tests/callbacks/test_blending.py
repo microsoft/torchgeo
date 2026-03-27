@@ -1,10 +1,9 @@
-# Copyright (c) TorchGeo Contributors
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Tests for blending utilities."""
 
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pytest
@@ -23,7 +22,7 @@ from torchgeo.callbacks.blending import (
 
 
 def _save_test_patch(
-    path: Path, logits: torch.Tensor, transform: list[float], crs: Any = 'EPSG:32631'
+    path: Path, logits: torch.Tensor, transform: list[float], crs: str = 'EPSG:32631'
 ) -> None:
     """Save test patch as GeoTIFF with one-hot encoded predictions.
 

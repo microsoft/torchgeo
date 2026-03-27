@@ -1,4 +1,4 @@
-# Copyright (c) TorchGeo Contributors
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Tiled inference callback for semantic segmentation."""
@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import rasterio
 import torch
+from lightning import Trainer
+from lightning.pytorch import LightningModule
 from lightning.pytorch.callbacks import Callback
 from rasterio.transform import Affine
 
@@ -32,7 +34,7 @@ class TiledInferenceCallback(Callback):
         trainer = Trainer(callbacks=[callback])
         trainer.predict(task, datamodule)
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     def __init__(
@@ -40,7 +42,7 @@ class TiledInferenceCallback(Callback):
         output_path: str | Path,
         overlap: int = 32,
         delta: int = 8,
-        blend_method: str = 'cosine',  # TODO: Get rid of linear
+        blend_method: Literal['cosine', 'linear'] = 'cosine',
         chunk_size: int = 4096,
         cog_config: dict[str, Any] | None = None,
     ) -> None:
@@ -78,7 +80,7 @@ class TiledInferenceCallback(Callback):
         self.dataset_bounds: tuple[float, float, float, float] | None = None
         self.dataset_res: float | None = None
 
-    def on_predict_start(self, trainer: Any, pl_module: Any) -> None:
+    def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Initialize state at start of prediction.
 
         Args:
@@ -111,8 +113,8 @@ class TiledInferenceCallback(Callback):
 
     def on_predict_batch_end(
         self,
-        trainer: Any,
-        pl_module: Any,
+        trainer: Trainer,
+        pl_module: LightningModule,
         outputs: dict[str, Any],
         batch: dict[str, Any],
         batch_idx: int,
@@ -194,7 +196,9 @@ class TiledInferenceCallback(Callback):
                 }
             )
 
-    def on_predict_epoch_end(self, trainer: Any, pl_module: Any) -> None:
+    def on_predict_epoch_end(
+        self, trainer: Trainer, pl_module: LightningModule
+    ) -> None:
         """Merge patches and write GeoTIFF.
 
         Args:
