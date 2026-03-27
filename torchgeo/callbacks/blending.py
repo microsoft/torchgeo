@@ -7,12 +7,23 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 import rasterio
 from rasterio.transform import Affine
 from tqdm import tqdm
+
+
+class PatchMetadata(TypedDict):
+    """Metadata for a single prediction patch."""
+
+    patch_id: int
+    file: Path
+    geo_bbox: tuple[float, float, float, float]
+    transform: list[float]
+    bbox: NotRequired[tuple[int, int, int, int]]
+    edge_deltas: NotRequired[tuple[int, int, int, int]]
 
 
 def _get_edge_deltas(
@@ -52,7 +63,7 @@ def _get_edge_deltas(
 
 
 def _reconstruct_scene_from_patches(
-    patch_metadata: list[dict[str, Any]], patch_size: tuple[int, int], delta: int = 0
+    patch_metadata: list[PatchMetadata], patch_size: tuple[int, int], delta: int = 0
 ) -> tuple[tuple[int, int], Affine]:
     """Reconstruct scene-level transform and shape from per-patch transforms.
 
@@ -248,13 +259,11 @@ def get_blend_mask(
     else:
         raise ValueError(f'Unknown blend method: {method}')
 
-    mask += 1e-6
-
     return mask
 
 
 def _build_grid_index(
-    patch_metadata: list[dict[str, Any]], grid_size: int
+    patch_metadata: list[PatchMetadata], grid_size: int
 ) -> dict[tuple[int, int], list[int]]:
     """Build simple grid-based spatial index for fast patch lookup.
 
@@ -287,13 +296,13 @@ def _build_grid_index(
 
 def _query_grid_index(
     grid: dict[tuple[int, int], list[int]],
-    patch_metadata: list[dict[str, Any]],
+    patch_metadata: list[PatchMetadata],
     chunk_y: int,
     chunk_x: int,
     chunk_h: int,
     chunk_w: int,
     grid_size: int,
-) -> list[dict[str, Any]]:
+) -> list[PatchMetadata]:
     """Query grid index for patches overlapping chunk.
 
     Args:
@@ -323,7 +332,7 @@ def _query_grid_index(
 
 
 def weighted_merge(
-    patch_metadata: list[dict[str, Any]],
+    patch_metadata: list[PatchMetadata],
     num_classes: int,
     overlap: int,
     delta: int,

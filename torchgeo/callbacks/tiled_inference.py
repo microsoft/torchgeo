@@ -16,6 +16,8 @@ from lightning.pytorch import LightningModule
 from lightning.pytorch.callbacks import Callback
 from rasterio.transform import Affine
 
+from torchgeo.callbacks.blending import PatchMetadata
+
 
 class TiledInferenceCallback(Callback):
     r"""Callback for tiled inference with weighted blending.
@@ -151,7 +153,7 @@ class TiledInferenceCallback(Callback):
         self.cog_config = {**default_cog_config, **(cog_config or {})}
 
         self.temp_dir: Path | None = None
-        self.patch_metadata: list[dict[str, Any]] = []
+        self.patch_metadata: list[PatchMetadata] = []
         self.num_classes: int | None = None
         self.crs: Any = None
         self.dataset_bounds: tuple[float, float, float, float] | None = None
