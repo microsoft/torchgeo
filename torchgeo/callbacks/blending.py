@@ -354,7 +354,9 @@ def weighted_merge(
         num_classes: Number of classes.
         overlap: Overlap in pixels.
         delta: Pixels to crop from edges.
-        blend_method: 'cosine' or 'linear'.
+        blend_method: 'cosine' or 'linear'. Cosine blending uses a Hann window
+            weight mask to reduce edge artifacts, as recommended by
+            https://doi.org/10.1371/journal.pone.0229839.
         crs: Coordinate reference system.
         output_path: Where to save GeoTIFF.
         chunk_size: Size of chunks for processing.

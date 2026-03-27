@@ -113,6 +113,10 @@ class TiledInferenceCallback(Callback):
         trainer = Trainer(callbacks=[callback])
         trainer.predict(task, datamodule)
 
+    References:
+        * https://doi.org/10.48550/arXiv.1805.12219
+        * https://doi.org/10.1371/journal.pone.0229839
+
     .. versionadded:: 0.10
     """
 
