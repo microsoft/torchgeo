@@ -6,10 +6,23 @@
 Relates to: https://github.com/microsoft/torchgeo/pull/3549
 """
 
+
 import pytest
+from torch.utils.data import Dataset
 
 from torchgeo.datamodules.geo import BaseDataModule
 from torchgeo.datamodules.utils import MisconfigurationException
+from torchgeo.datasets.utils import Sample
+
+
+class DummyDataset(Dataset[Sample]):
+    """Minimal dataset for testing."""
+
+    def __len__(self) -> int:
+        return 0
+
+    def __getitem__(self, index: int) -> Sample:
+        return {}
 
 
 class ConcreteDataModule(BaseDataModule):
@@ -18,30 +31,28 @@ class ConcreteDataModule(BaseDataModule):
     def setup(self, stage: str) -> None:
         """No-op setup."""
 
-    dataset_class = None  # type: ignore[assignment]
-
 
 def test_valid_attribute_returns_first_valid() -> None:
     """Test that _valid_attribute returns the first non-None, non-empty attribute."""
-    dm = ConcreteDataModule(dataset='dummy')
-    dm.attr1 = None  # type: ignore[attr-defined]
-    dm.attr2 = [1, 2, 3]  # type: ignore[attr-defined]
+    dm = ConcreteDataModule(dataset_class=DummyDataset)
+    dm.__dict__['attr1'] = None
+    dm.__dict__['attr2'] = [1, 2, 3]
     result = dm._valid_attribute('attr1', 'attr2')
     assert result == [1, 2, 3]
 
 
 def test_valid_attribute_raises_when_empty() -> None:
     """Test that _valid_attribute raises when attribute is empty."""
-    dm = ConcreteDataModule(dataset='dummy')
-    dm.attr1 = []  # type: ignore[attr-defined]
+    dm = ConcreteDataModule(dataset_class=DummyDataset)
+    dm.__dict__['attr1'] = []
     with pytest.raises(MisconfigurationException, match='has length 0'):
         dm._valid_attribute('attr1')
 
 
 def test_valid_attribute_raises_when_all_none() -> None:
     """Test that _valid_attribute raises when all attributes are None."""
-    dm = ConcreteDataModule(dataset='dummy')
-    dm.attr1 = None  # type: ignore[attr-defined]
-    dm.attr2 = None  # type: ignore[attr-defined]
+    dm = ConcreteDataModule(dataset_class=DummyDataset)
+    dm.__dict__['attr1'] = None
+    dm.__dict__['attr2'] = None
     with pytest.raises(MisconfigurationException, match='setup must define'):
         dm._valid_attribute('attr1', 'attr2')
