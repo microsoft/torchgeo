@@ -6,7 +6,6 @@
 Relates to: https://github.com/microsoft/torchgeo/pull/3549
 """
 
-
 import pytest
 from torch.utils.data import Dataset
 
