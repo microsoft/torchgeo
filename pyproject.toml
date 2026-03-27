@@ -81,7 +81,7 @@ dependencies = [
     # torch 2.2+ required for Python 3.12 wheels
     "torch>=2.2",
     # torchmetrics 1.2+ required for average argument in mAP metric
-    "torchmetrics>=1.2",
+    "torchmetrics[detection]>=1.2",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
     # typing-extensions 4.8+ required by torch 2.2
