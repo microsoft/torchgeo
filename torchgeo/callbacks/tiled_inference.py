@@ -18,10 +18,87 @@ from rasterio.transform import Affine
 
 
 class TiledInferenceCallback(Callback):
-    """Callback for tiled inference with weighted blending.
+    r"""Callback for tiled inference with weighted blending.
 
-    Saves patch predictions to temporary files during prediction,
-    then merges with weighted blending and writes GeoTIFF output.
+    Enables large-area inference by splitting a scene into overlapping patches,
+    running predictions on each, and stitching results into a single
+    Cloud-Optimized GeoTIFF.
+
+    .. code-block:: text
+
+        ┌─────────────────────────────────────────────────────────────────────────┐
+        │                         PREDICTION LIFECYCLE                            │
+        ├─────────────────────────────────────────────────────────────────────────┤
+        │                                                                         │
+        │  ┌───────────────────────────────────────────────────────────────────┐  │
+        │  │  Phase 1: on_predict_start()                                      │  │
+        │  │                                                                   │  │
+        │  │  - Disables Lightning's prediction storage (memory leak fix)      │  │
+        │  │  - Introspects datamodule.predict_dataset for CRS, bounds, res    │  │
+        │  │  - Creates temp directory for patch files                         │  │
+        │  └───────────────────────────────────────────────────────────────────┘  │
+        │                              │                                          │
+        │                              ▼                                          │
+        │  ┌───────────────────────────────────────────────────────────────────┐  │
+        │  │  Phase 2: on_predict_batch_end()    (called per batch)            │  │
+        │  │                                                                   │  │
+        │  │  For each sample in the batch:                                    │  │
+        │  │    1. Extract probabilities, bounds, transform from predict_step  │  │
+        │  │    2. Convert softmax → argmax → one-hot (float32 → uint8)        │  │
+        │  │    3. Write as georeferenced GeoTIFF to temp dir                  │  │
+        │  │    4. Collect metadata: patch_id, file path, geo_bbox, transform  │  │
+        │  │                                                                   │  │
+        │  │  Temp patch layout:                                               │  │
+        │  │    .tmp_predictions/                                              │  │
+        │  │      patch_000000.tif   <- one-hot uint8, LZW compressed          │  │
+        │  │      patch_000001.tif      with affine transform + CRS            │  │
+        │  │      ...                                                          │  │
+        │  └───────────────────────────────────────────────────────────────────┘  │
+        │                              │                                          │
+        │                              ▼                                          │
+        │  ┌───────────────────────────────────────────────────────────────────┐  │
+        │  │  Phase 3: on_predict_epoch_end()                                  │  │
+        │  │                                                                   │  │
+        │  │  weighted_merge():                                                │  │
+        │  │    1. Reconstruct scene geometry                                  │  │
+        │  │       - Use dataset_bounds/res if available                       │  │
+        │  │       - Otherwise infer from patch transforms                     │  │
+        │  │                                                                   │  │
+        │  │    2. Build grid spatial index over all patches                   │  │
+        │  │       ┌─────┬─────┬─────┐                                         │  │
+        │  │       │ p0  │ p1  │ p2  │  Grid cells map to patch lists          │  │
+        │  │       ├─────┼─────┼─────┤  for O(1) lookup per chunk              │  │
+        │  │       │ p3  │ p4  │ p5  │                                         │  │
+        │  │       └─────┴─────┴─────┘                                         │  │
+        │  │                                                                   │  │
+        │  │    3. Process output in chunks (default 4096 x 4096 px):          │  │
+        │  │       For each chunk:                                             │  │
+        │  │         a. Query spatial index → overlapping patches              │  │
+        │  │         b. Read each patch from disk                              │  │
+        │  │         c. Apply edge-aware delta cropping:                       │  │
+        │  │            - Interior edges: crop delta px (remove artifacts)     │  │
+        │  │            - Scene boundary edges: crop 0 (preserve coverage)     │  │
+        │  │         d. Generate blend mask (cosine or linear ramp):           │  │
+        │  │                                                                   │  │
+        │  │            1.0 ┤  ╭────────────────╮                              │  │
+        │  │                │ /                  \   <- cosine ramp in overlap  │  │
+        │  │            0.0 ┤/                    \                            │  │
+        │  │                └──┬──────────────┬──┘                             │  │
+        │  │                overlap        overlap                             │  │
+        │  │                                                                   │  │
+        │  │         e. Accumulate: output += patch x mask; weights += mask    │  │
+        │  │         f. Normalize: output /= weights                           │  │
+        │  │         g. Argmax → uint8 class labels                            │  │
+        │  │         h. Write chunk to output via GeoTIFFWriter                │  │
+        │  │                                                                   │  │
+        │  │    4. GeoTIFFWriter.finalize()                                    │  │
+        │  │       - Build COG overviews [2, 4, 8, 16, 32, 64]                 │  │
+        │  │                                                                   │  │
+        │  │    5. Clean up temp directory                                     │  │
+        │  └───────────────────────────────────────────────────────────────────┘  │
+        │                                                                         │
+        │  Output: Cloud-Optimized GeoTIFF with class labels, CRS, overviews      │
+        └─────────────────────────────────────────────────────────────────────────┘
 
     Example::
 
