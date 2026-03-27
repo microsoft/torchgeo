@@ -341,7 +341,6 @@ class VHR10(NonGeoDataset):
             scores = sample['prediction_score']
             labels = sample['prediction_label']
             boxes = sample['prediction_bbox_xyxy']
-            masks = sample['prediction_mask']
             for i in range(len(labels)):
                 score = scores[i]
                 if score < 0.5:
@@ -379,7 +378,8 @@ class VHR10(NonGeoDataset):
                     )
 
                 # Masks
-                if show_feats in {'masks', 'both'}:
+                if 'prediction_mask' in sample and show_feats in {'masks', 'both'}:
+                    masks = sample['prediction_mask']
                     mask = masks[i]
                     alpha = mask * mask_alpha
                     mask = mask * class_num
@@ -390,7 +390,5 @@ class VHR10(NonGeoDataset):
 
         if suptitle is not None:
             fig.suptitle(suptitle)
-
-        fig.tight_layout()
 
         return fig

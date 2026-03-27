@@ -291,10 +291,6 @@ class ObjectDetectionTask(BaseTask):
             batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
             sample = unbind_samples(batch)[0]
-            # Convert image to uint8 for plotting
-            if torch.is_floating_point(sample['image']):
-                sample['image'] *= 255
-                sample['image'] = sample['image'].to(torch.uint8)
 
             fig: Figure | None = None
             try:
