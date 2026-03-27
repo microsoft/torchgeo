@@ -22,6 +22,7 @@ index = [
     'OTBTF',
     'GeoDeep',
     'torchange',
+    'EVer',
 ]
 
 # Sort by date of first commit (update_timeline.py)
@@ -64,6 +65,7 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
+    'EVer': ('Z-Zheng', 'ever'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
