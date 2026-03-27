@@ -337,7 +337,7 @@ def weighted_merge(
     overlap: int,
     delta: int,
     blend_method: str = 'cosine',
-    crs: Any = None,
+    crs: str | None = None,
     output_path: str | Path | None = None,
     chunk_size: int = 4096,
     cog_config: dict[str, Any] | None = None,

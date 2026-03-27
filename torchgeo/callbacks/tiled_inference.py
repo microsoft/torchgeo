@@ -155,7 +155,7 @@ class TiledInferenceCallback(Callback):
         self.temp_dir: Path | None = None
         self.patch_metadata: list[PatchMetadata] = []
         self.num_classes: int | None = None
-        self.crs: Any = None
+        self.crs: str | None = None
         self.dataset_bounds: tuple[float, float, float, float] | None = None
         self.dataset_res: float | None = None
 
