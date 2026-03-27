@@ -364,8 +364,7 @@ class TestExtentMismatch:
                 )
 
         shape, transform = _reconstruct_scene_from_patches(
-            meta,
-            (patch_size, patch_size),  # type: ignore[arg-type]
+            meta, (patch_size, patch_size)
         )
 
         expected_width = 2 * stride + patch_size
@@ -527,7 +526,7 @@ class TestDatasetBoundsMode:
         expected_class = 1
 
         dataset_bounds = (0.0, 0.0, 128.0, 128.0)
-        dataset_res = 1.0
+        dataset_res = (1.0, 1.0)
 
         patch_metadata = []
         for row in range(2):
@@ -583,7 +582,7 @@ class TestDatasetBoundsMode:
         expected_class = 1
 
         dataset_bounds = (0.0, 0.0, 96.0, 96.0)
-        dataset_res = 1.0
+        dataset_res = (1.0, 1.0)
 
         patch_metadata = []
         for row in range(2):

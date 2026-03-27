@@ -157,7 +157,7 @@ class TiledInferenceCallback(Callback):
         self.num_classes: int | None = None
         self.crs: str | None = None
         self.dataset_bounds: tuple[float, float, float, float] | None = None
-        self.dataset_res: float | None = None
+        self.dataset_res: tuple[float, float] | None = None
 
     def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         """Initialize state at start of prediction.
@@ -166,6 +166,12 @@ class TiledInferenceCallback(Callback):
             trainer: PyTorch Lightning trainer.
             pl_module: PyTorch Lightning module.
         """
+        self.patch_metadata = []
+        self.num_classes = None
+        self.crs = None
+        self.dataset_bounds = None
+        self.dataset_res = None
+
         if hasattr(trainer, 'predict_loop'):
             trainer.predict_loop.return_predictions = False
 
@@ -188,7 +194,6 @@ class TiledInferenceCallback(Callback):
 
         self.temp_dir = self.output_path.parent / f'.tmp_{self.output_path.stem}'
         self.temp_dir.mkdir(exist_ok=True, parents=True)
-        self.patch_metadata = []
 
     def on_predict_batch_end(
         self,

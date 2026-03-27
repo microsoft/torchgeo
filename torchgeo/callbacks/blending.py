@@ -342,7 +342,7 @@ def weighted_merge(
     chunk_size: int = 4096,
     cog_config: dict[str, Any] | None = None,
     dataset_bounds: tuple[float, float, float, float] | None = None,
-    dataset_res: float | None = None,
+    dataset_res: tuple[float, float] | None = None,
 ) -> None:
     """Merge patches from disk with weighted blending.
 
@@ -360,7 +360,7 @@ def weighted_merge(
         chunk_size: Size of chunks for processing.
         cog_config: COG configuration.
         dataset_bounds: Original dataset bounds (minx, miny, maxx, maxy).
-        dataset_res: Original dataset resolution.
+        dataset_res: Original dataset resolution as (xres, yres).
 
 
     """
@@ -371,11 +371,11 @@ def weighted_merge(
 
     if dataset_bounds is not None and dataset_res is not None:
         minx, miny, maxx, maxy = dataset_bounds
-        res = dataset_res[0] if not isinstance(dataset_res, float) else dataset_res
-        output_width = round((maxx - minx) / res)
-        output_height = round((maxy - miny) / res)
+        x_res_ds, y_res_ds = dataset_res
+        output_width = round((maxx - minx) / x_res_ds)
+        output_height = round((maxy - miny) / y_res_ds)
         output_shape = (output_height, output_width)
-        scene_transform = Affine(res, 0, minx, 0, -res, maxy)
+        scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
         scene_bounds = dataset_bounds
 
         first_transform = patch_metadata[0]['transform']
