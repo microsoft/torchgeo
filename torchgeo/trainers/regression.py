@@ -100,13 +100,13 @@ class RegressionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(self.model, state_dict)  # type: ignore[invalid-argument-type]
+            utils.load_state_dict(self.model, state_dict)  # ty: ignore[invalid-argument-type]
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams['freeze_backbone']:
             for param in self.model.parameters():
                 param.requires_grad = False
-            for param in self.model.get_classifier().parameters():  # type: ignore[call-non-callable]
+            for param in self.model.get_classifier().parameters():  # ty: ignore[call-non-callable]
                 param.requires_grad = True
 
     def configure_losses(self) -> None:
@@ -138,7 +138,7 @@ class RegressionTask(BaseTask):
         """
         metrics = MetricCollection(
             # https://github.com/astral-sh/ty/issues/2985
-            {  # type: ignore[invalid-argument-type]
+            {
                 'RMSE': MeanSquaredError(squared=False),
                 'MSE': MeanSquaredError(squared=True),
                 'MAE': MeanAbsoluteError(),
@@ -230,7 +230,7 @@ class RegressionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # type: ignore[call-non-callable]
+                )  # ty: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:

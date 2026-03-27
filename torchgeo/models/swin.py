@@ -472,9 +472,9 @@ def swin_b(
         model: SwinTransformer = torchvision.models.SwinTransformer(*args, **kwargs)
 
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels  # type: ignore[not-subscriptable]
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # same as for swinv2
-        model.features[0][0] = torch.nn.Conv2d(  # type: ignore[invalid-assignment]
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(

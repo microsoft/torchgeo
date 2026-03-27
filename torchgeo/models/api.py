@@ -101,7 +101,9 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
 }
 
-_model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {  # type:ignore[invalid-assignment]
+_model_weights: dict[
+    str | Callable[..., nn.Module], WeightsEnum
+] = {  # ty :ignore[invalid-assignment]
     aurora_swin_unet: Aurora_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
@@ -206,7 +208,7 @@ def get_weight(name: str) -> WeightsEnum:
     """
     for weight_name, weight_enum in _model_weights.items():
         if isinstance(weight_name, str):
-            for sub_weight_enum in weight_enum:  # type: ignore[non-iterable]
+            for sub_weight_enum in weight_enum:  # ty: ignore[not-iterable]
                 if name == str(sub_weight_enum):
                     return sub_weight_enum
 

@@ -198,9 +198,9 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 
-        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[invalid-assignment]
-        self.model.backbone.body.conv1.weight = Parameter(weight)  # type: ignore[invalid-assignment]
-        self.model.backbone.body.conv1.in_channels = in_channels  # type: ignore[invalid-assignment]
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # ty: ignore[invalid-argument-type]
+        self.model.backbone.body.conv1.weight = Parameter(weight)  # ty: ignore[invalid-assignment]
+        self.model.backbone.body.conv1.in_channels = in_channels  # ty: ignore[invalid-assignment]
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -306,7 +306,7 @@ class ObjectDetectionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # type: ignore[call-non-callable]
+                )  # ty: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:

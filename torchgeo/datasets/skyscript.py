@@ -110,7 +110,7 @@ class SkyScript(NonGeoDataset):
         """
         return len(self.captions)
 
-    def __getitem__(self, index: int) -> CaptionSample:  # type: ignore[invalid-method-override]
+    def __getitem__(self, index: int) -> CaptionSample:  # ty: ignore[invalid-method-override]
         """Return an index within the dataset.
 
         Args:

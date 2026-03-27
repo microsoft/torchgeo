@@ -488,7 +488,7 @@ class RasterDataset(GeoDataset):
                     # See if file has a color map
                     if len(self.cmap) == 0:
                         try:
-                            self.cmap = vrt.colormap(1)  # type: ignore[misc]
+                            self.cmap = vrt.colormap(1)  # ty: ignore[invalid-attribute-access]
                         except ValueError:
                             pass
                     if crs is None:
@@ -1622,7 +1622,7 @@ class UnionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
+        self.index = pd.concat([dataset1.index, dataset2.index])  # ty: ignore[invalid-assignment]
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

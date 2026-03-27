@@ -147,8 +147,8 @@ class TestSwin_B:
             stochastic_depth_prob=0.5,
         )
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels  # type: ignore[not-subscriptable]
-        model.features[0][0] = torch.nn.Conv2d(  # type: ignore[invalid-assignment]
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         torch.save({'state_dict': model.state_dict()}, path)

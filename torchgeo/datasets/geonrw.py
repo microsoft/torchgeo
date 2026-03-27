@@ -324,7 +324,7 @@ class GeoNRW(NonGeoDataset):
 
         # show classes in legend
         if show_titles:
-            patches = [matplotlib.patches.Patch(color=c) for c in self.colormap.colors]  # type: ignore
+            patches = [matplotlib.patches.Patch(color=c) for c in self.colormap.colors]  # ty: ignore
             axs[2].legend(
                 patches, self.classes, loc='center left', bbox_to_anchor=(1, 0.5)
             )

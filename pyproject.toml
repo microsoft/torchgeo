@@ -132,8 +132,8 @@ style = [
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.21+ required for a couple new rules that catch both real bugs and false positives
-    "ty>=0.0.21",
+    # ty 0.0.25+ required for the following bug fix: https://github.com/astral-sh/ty/issues/2985
+    "ty>=0.0.25",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support
