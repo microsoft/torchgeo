@@ -39,7 +39,12 @@ See the ``pyproject.toml`` for a complete list of options. See the `pip document
 uv
 --
 
-`uv <https://docs.astral.sh/uv/>`_ is an extremely fast Python package manager written in Rust. uv supports the same interface as pip while being significantly faster:
+`uv <https://docs.astral.sh/uv/>`_ is an extremely fast Python package manager written in Rust.
+
+Adding TorchGeo as a dependency (pip-based)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To add TorchGeo as a dependency to your project, use ``uv pip install``:
 
 .. code-block:: console
 
@@ -51,21 +56,34 @@ For development versions or local checkouts:
 
    $ uv pip install git+https://github.com/torchgeo/torchgeo.git
 
+Optional dependencies can be installed using the same syntax as pip:
+
+.. code-block:: console
+
+   $ uv pip install torchgeo[datasets,models]
+
+Developing TorchGeo (uv-native)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For developers working on TorchGeo itself, use ``uv add --editable``:
+
+.. code-block:: console
+
+   $ uv add --editable git+https://github.com/torchgeo/torchgeo.git
+
 or from a local git checkout:
 
 .. code-block:: console
 
    $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
-   $ uv pip install .
+   $ uv add --editable .
 
-Optional dependencies can be installed using the same syntax as pip:
+To sync dependencies after making changes, run:
 
 .. code-block:: console
 
-   $ uv pip install torchgeo[datasets,models]
-   $ uv pip install torchgeo[style,tests]
-   $ uv pip install torchgeo[all]
+   $ uv sync
 
 See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
 
