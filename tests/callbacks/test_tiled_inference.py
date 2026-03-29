@@ -65,7 +65,7 @@ class TestTiledInferenceCallback:
         callback.crs = 'EPSG:32631'
 
         outputs = {
-            'logits': torch.randn(2, 5, 64, 64),
+            'probabilities': torch.randn(2, 5, 64, 64),
             'bounds': torch.tensor(
                 [
                     [0.0, 64.0, 1.0, 0.0, 64.0, 1.0, 0.0, 1.0, 1.0],
@@ -97,7 +97,7 @@ class TestTiledInferenceCallback:
         callback.temp_dir.mkdir()
 
         outputs = {
-            'logits': torch.randn(2, 5, 64, 64),
+            'probabilities': torch.randn(2, 5, 64, 64),
             'bounds': None,
             'transform': torch.randn(2, 6),
         }
@@ -113,7 +113,7 @@ class TestTiledInferenceCallback:
         callback.temp_dir.mkdir()
 
         outputs = {
-            'logits': torch.randn(2, 5, 64, 64),
+            'probabilities': torch.randn(2, 5, 64, 64),
             'bounds': torch.randn(2, 9),
             'transform': None,
         }

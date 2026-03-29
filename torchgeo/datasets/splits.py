@@ -283,9 +283,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
 
 def time_series_split(
     dataset: GeoDataset,
-    lengths: Sequence[float]
-    | Sequence[pd.Timedelta]
-    | Sequence[pd.Interval[pd.Timestamp]],
+    lengths: Sequence[float] | Sequence[pd.Timedelta] | Sequence[pd.Interval],
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -321,7 +319,7 @@ def time_series_split(
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast('Sequence[pd.Interval[pd.Timestamp]]', lengths)
+    lengths = cast(Sequence[pd.Interval], lengths)
 
     _totalt = pd.Timedelta(0)
     new_datasets = []
@@ -340,8 +338,8 @@ def time_series_split(
             )
 
         for other in lengths:
-            left = other.left  # type: ignore[union-attr]
-            right = other.right  # type: ignore[union-attr]
+            left = other.left
+            right = other.right
             if start < left < end or start < right < end:
                 raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
