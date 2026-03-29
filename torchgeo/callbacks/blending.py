@@ -473,7 +473,10 @@ def weighted_merge(
                 patch_col_start = bbox[0]
                 patch_row_start = bbox[1]
 
-                current_patch_h, current_patch_w = patch_data.shape[1], patch_data.shape[2]
+                current_patch_h, current_patch_w = (
+                    patch_data.shape[1],
+                    patch_data.shape[2],
+                )
 
                 overlap_col_start = max(0, patch_col_start - chunk_x)
                 overlap_row_start = max(0, patch_row_start - chunk_y)

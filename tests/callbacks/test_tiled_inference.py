@@ -4,12 +4,18 @@
 """Tests for tiled inference callback."""
 
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 import pytest
 import rasterio
 import torch
+from lightning import LightningDataModule, LightningModule, Trainer
+from torch.utils.data import DataLoader
 
 from torchgeo.callbacks import TiledInferenceCallback
+from torchgeo.datasets import RasterDataset
+from torchgeo.samplers import GridGeoSampler
 
 
 class TestTiledInferenceCallback:
@@ -226,3 +232,162 @@ class TestTiledInferenceCallback:
         callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]
 
         assert MockTrainer.predict_loop.return_predictions is False
+
+
+class _TinySegTask(LightningModule):
+    """Minimal segmentation task for integration tests."""
+
+    def __init__(self, in_channels: int = 3, num_classes: int = 2) -> None:
+        super().__init__()
+        self.model = torch.nn.Conv2d(in_channels, num_classes, 1)
+
+    def predict_step(
+        self, batch: dict[str, Any], batch_idx: int, dataloader_idx: int = 0
+    ) -> dict[str, Any]:
+        x = batch['image']
+        y_hat = self.model(x).softmax(dim=1)
+        return {
+            'probabilities': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
+        }
+
+
+class _PredictDataModule(LightningDataModule):
+    """Minimal data module wiring a RasterDataset + GridGeoSampler for prediction."""
+
+    def __init__(
+        self, dataset_dir: Path, patch_size: int, stride: int, batch_size: int = 4
+    ) -> None:
+        super().__init__()
+        self.predict_dataset = RasterDataset(paths=dataset_dir)
+        self._sampler = GridGeoSampler(
+            self.predict_dataset, size=patch_size, stride=stride
+        )
+        self._batch_size = batch_size
+
+    def predict_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.predict_dataset, batch_size=self._batch_size, sampler=self._sampler
+        )
+
+
+class TestTiledInferenceIntegration:
+    """End-to-end integration tests for TiledInferenceCallback."""
+
+    @pytest.fixture
+    def synthetic_raster(self, tmp_path: Path) -> Path:
+        """128x128, 3-band float32 GeoTIFF in EPSG:32631 at 1 m/px resolution."""
+        scene_dir = tmp_path / 'scene'
+        scene_dir.mkdir()
+        raster_path = scene_dir / 'scene.tif'
+        transform = rasterio.transform.from_origin(500000.0, 5000128.0, 1.0, 1.0)
+        rng = np.random.default_rng(42)
+        data = rng.uniform(0, 1, (3, 128, 128)).astype(np.float32)
+        with rasterio.open(
+            raster_path,
+            'w',
+            driver='GTiff',
+            height=128,
+            width=128,
+            count=3,
+            dtype='float32',
+            crs='EPSG:32631',
+            transform=transform,
+        ) as dst:
+            dst.write(data)
+        return scene_dir
+
+    def test_produces_valid_geotiff(
+        self, synthetic_raster: Path, tmp_path: Path
+    ) -> None:
+        """Full predict loop writes a valid, georeferenced uint8 GeoTIFF."""
+        patch_size = 64
+        overlap = 16
+        delta = 8
+        stride = patch_size - 2 * overlap  # 32 px
+
+        output_path = tmp_path / 'out' / 'prediction.tif'
+        output_path.parent.mkdir()
+
+        callback = TiledInferenceCallback(
+            output_path=output_path, overlap=overlap, delta=delta, blend_method='cosine'
+        )
+        task = _TinySegTask(in_channels=3, num_classes=2)
+        dm = _PredictDataModule(synthetic_raster, patch_size=patch_size, stride=stride)
+
+        trainer = Trainer(
+            callbacks=[callback],
+            accelerator='cpu',
+            devices=1,
+            logger=False,
+            enable_checkpointing=False,
+            enable_progress_bar=False,
+        )
+        trainer.predict(task, datamodule=dm)
+
+        assert output_path.exists(), 'output GeoTIFF not created'
+
+        temp_dir = output_path.parent / f'.tmp_{output_path.stem}'
+        assert not temp_dir.exists(), 'temp dir not cleaned up after predict'
+
+        with rasterio.open(output_path) as src:
+            assert src.crs.to_epsg() == 32631
+            out_data = src.read(1)
+            assert out_data.dtype == np.uint8
+            assert set(np.unique(out_data)).issubset({0, 1})
+            b = src.bounds
+            # output should lie within the input scene bounds (500000..500128, 5000000..5000128)
+            assert b.left >= 500000.0 - 1.0
+            assert b.right <= 500128.0 + 1.0
+            assert b.bottom >= 5000000.0 - 1.0
+            assert b.top <= 5000128.0 + 1.0
+
+    def test_return_predictions_disabled(
+        self, synthetic_raster: Path, tmp_path: Path
+    ) -> None:
+        """on_predict_start disables Lightning's prediction storage."""
+        patch_size = 64
+        stride = 32
+
+        callback = TiledInferenceCallback(
+            output_path=tmp_path / 'pred.tif', overlap=16, delta=8
+        )
+        task = _TinySegTask()
+        dm = _PredictDataModule(synthetic_raster, patch_size=patch_size, stride=stride)
+
+        trainer = Trainer(
+            callbacks=[callback],
+            accelerator='cpu',
+            devices=1,
+            logger=False,
+            enable_checkpointing=False,
+            enable_progress_bar=False,
+        )
+        trainer.predict(task, datamodule=dm)
+
+        assert trainer.predict_loop.return_predictions is False
+
+    def test_crs_propagated_from_dataset(
+        self, synthetic_raster: Path, tmp_path: Path
+    ) -> None:
+        """CRS read from predict_dataset flows through to the output file."""
+        callback = TiledInferenceCallback(
+            output_path=tmp_path / 'pred_crs.tif', overlap=16, delta=8
+        )
+        task = _TinySegTask()
+        dm = _PredictDataModule(synthetic_raster, patch_size=64, stride=32)
+
+        trainer = Trainer(
+            callbacks=[callback],
+            accelerator='cpu',
+            devices=1,
+            logger=False,
+            enable_checkpointing=False,
+            enable_progress_bar=False,
+        )
+        trainer.predict(task, datamodule=dm)
+
+        assert callback.crs is not None
+        with rasterio.open(tmp_path / 'pred_crs.tif') as src:
+            assert src.crs.to_epsg() == 32631
