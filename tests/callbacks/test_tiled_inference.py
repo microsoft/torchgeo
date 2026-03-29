@@ -187,7 +187,7 @@ class TestTiledInferenceCallback:
 
         class MockInnerDataset:
             crs = 'EPSG:32631'
-            res = 1.0
+            res = (1.0, 1.0)
             index = MockIndex()
 
         class MockOuterDataset:
@@ -202,7 +202,7 @@ class TestTiledInferenceCallback:
         callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]
 
         assert callback.crs == 'EPSG:32631'
-        assert callback.dataset_res == 1.0
+        assert callback.dataset_res == (1.0, 1.0)
         assert callback.dataset_bounds == (0.0, 0.0, 100.0, 100.0)
 
     def test_on_predict_start_disables_prediction_storage(
