@@ -56,7 +56,7 @@ class TestTiledInferenceCallback:
         class MockTrainer:
             datamodule = MockDatamodule()
 
-        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]
+        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert callback.temp_dir is not None
         assert callback.temp_dir.exists()
@@ -82,7 +82,7 @@ class TestTiledInferenceCallback:
         }
         batch: dict[str, torch.Tensor] = {}
 
-        callback.on_predict_batch_end(None, None, outputs, batch, 0)  # type: ignore[arg-type]
+        callback.on_predict_batch_end(None, None, outputs, batch, 0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert len(callback.patch_metadata) == 2
         assert (callback.temp_dir / 'patch_000000.tif').exists()
@@ -109,7 +109,7 @@ class TestTiledInferenceCallback:
         }
 
         with pytest.raises(ValueError, match=r'bounds.*is None'):
-            callback.on_predict_batch_end(None, None, outputs, {}, 0)  # type: ignore[arg-type]
+            callback.on_predict_batch_end(None, None, outputs, {}, 0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
     def test_on_predict_batch_end_missing_transform_raises(
         self, callback: TiledInferenceCallback, tmp_path: Path
@@ -125,7 +125,7 @@ class TestTiledInferenceCallback:
         }
 
         with pytest.raises(ValueError, match=r'transform.*is None'):
-            callback.on_predict_batch_end(None, None, outputs, {}, 0)  # type: ignore[arg-type]
+            callback.on_predict_batch_end(None, None, outputs, {}, 0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
     def test_on_predict_epoch_end_cleanup(
         self, callback: TiledInferenceCallback, tmp_path: Path
@@ -168,7 +168,7 @@ class TestTiledInferenceCallback:
             }
         ]
 
-        callback.on_predict_epoch_end(None, None)  # type: ignore[arg-type]
+        callback.on_predict_epoch_end(None, None)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert not callback.temp_dir.exists()
         assert callback.output_path.exists()
@@ -178,7 +178,7 @@ class TestTiledInferenceCallback:
     ) -> None:
         """Test error when no patches collected."""
         with pytest.raises(ValueError, match='No patches to merge'):
-            callback.on_predict_epoch_end(None, None)  # type: ignore[arg-type]
+            callback.on_predict_epoch_end(None, None)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
     def test_on_predict_start_nested_dataset(
         self, callback: TiledInferenceCallback, tmp_path: Path
@@ -205,7 +205,7 @@ class TestTiledInferenceCallback:
         class MockTrainer:
             datamodule = MockDatamodule()
 
-        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]
+        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert callback.crs == 'EPSG:32631'
         assert callback.dataset_res == (1.0, 1.0)
@@ -229,7 +229,7 @@ class TestTiledInferenceCallback:
             predict_loop = MockPredictLoop()
             datamodule = MockDatamodule()
 
-        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]
+        callback.on_predict_start(MockTrainer(), None)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert MockTrainer.predict_loop.return_predictions is False
 

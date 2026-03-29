@@ -67,7 +67,7 @@ class TestReconstructSceneFromPatches:
             }
         ]
 
-        shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]
+        shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (64, 64)
         assert transform == Affine(10.0, 0, 0, 0, -10.0, 1000)
@@ -88,7 +88,7 @@ class TestReconstructSceneFromPatches:
             },
         ]
 
-        shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]
+        shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (64, 96)
         assert transform == Affine(1.0, 0, 100.0, 0, -1.0, 200.0)
@@ -111,7 +111,7 @@ class TestReconstructSceneFromPatches:
         ]
 
         with pytest.raises(ValueError, match='Inconsistent resolutions'):
-            _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]
+            _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
     def test_empty_metadata_raises(self) -> None:
         """Test error on empty patch_metadata."""
@@ -264,11 +264,11 @@ class TestGridIndexing:
             {'patch_id': 1, 'bbox': (200, 200, 264, 264)},
         ]
         grid_size = 128
-        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]
+        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         results = _query_grid_index(
             grid,
-            meta,  # type: ignore[arg-type]
+            meta,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             chunk_y=0,
             chunk_x=0,
             chunk_h=64,
@@ -287,11 +287,11 @@ class TestGridIndexing:
             {'patch_id': 2, 'bbox': (200, 200, 264, 264)},
         ]
         grid_size = 128
-        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]
+        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         results = _query_grid_index(
             grid,
-            meta,  # type: ignore[arg-type]
+            meta,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             chunk_y=0,
             chunk_x=0,
             chunk_h=100,
@@ -315,11 +315,11 @@ class TestGridIndexing:
             {'patch_id': 1, 'bbox': (96, 96, 128, 128)},
         ]
         grid_size = 128
-        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]
+        grid = _build_grid_index(meta, grid_size)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         results = _query_grid_index(
             grid,
-            meta,  # type: ignore[arg-type]
+            meta,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             chunk_y=0,
             chunk_x=0,
             chunk_h=64,
@@ -666,7 +666,7 @@ class TestSinglePatchScene:
 
         output_path = tmp_path / 'single_patch_output.tif'
         weighted_merge(
-            patch_metadata=patch_metadata,  # type: ignore[arg-type]
+            patch_metadata=patch_metadata,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             num_classes=num_classes,
             overlap=0,
             delta=delta,
