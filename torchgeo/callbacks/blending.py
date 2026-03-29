@@ -450,14 +450,14 @@ def weighted_merge(
             )
             for meta in overlapping:
                 with rasterio.open(meta['file']) as src:
-                    logits = src.read().astype(np.float32)
+                    patch_data = src.read().astype(np.float32)
 
                 edge_deltas = meta.get('edge_deltas', (delta, delta, delta, delta))
                 top, bottom, left, right = edge_deltas
 
                 bottom_slice = -bottom if bottom > 0 else None
                 right_slice = -right if right > 0 else None
-                logits = logits[:, top:bottom_slice, left:right_slice]
+                patch_data = patch_data[:, top:bottom_slice, left:right_slice]
 
                 if edge_deltas not in mask_cache:
                     mask_cache[edge_deltas] = get_blend_mask(
@@ -473,7 +473,7 @@ def weighted_merge(
                 patch_col_start = bbox[0]
                 patch_row_start = bbox[1]
 
-                current_patch_h, current_patch_w = logits.shape[1], logits.shape[2]
+                current_patch_h, current_patch_w = patch_data.shape[1], patch_data.shape[2]
 
                 overlap_col_start = max(0, patch_col_start - chunk_x)
                 overlap_row_start = max(0, patch_row_start - chunk_y)
@@ -499,7 +499,7 @@ def weighted_merge(
                     overlap_row_end - overlap_row_start
                 )
 
-                patch_region = logits[
+                patch_region = patch_data[
                     :,
                     patch_row_start_local:patch_row_end_local,
                     patch_col_start_local:patch_col_end_local,
