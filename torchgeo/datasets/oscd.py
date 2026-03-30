@@ -318,7 +318,10 @@ class OSCD(NonGeoDataset):
         image2 = to_rgb(sample['image'][1])
         mask = sample['mask'][0]
 
-        fig, axs = plt.subplots(1, ncols, figsize=(ncols * 5, 10))
+        h, w = image1.shape[:2]
+        fig, axs = plt.subplots(
+            1, ncols, figsize=(ncols * 5, 5 * h / w), layout='constrained'
+        )
         axs[0].imshow(image1)
         axs[1].imshow(image2)
         axs[2].imshow(mask, cmap='gray', interpolation='none', vmin=0, vmax=1)
