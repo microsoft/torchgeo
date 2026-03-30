@@ -25,11 +25,14 @@ html {
   padding: 8px 16px;
   margin-bottom: 16px;
   border-left: 4px solid #d0d7de;
-  background-color: #f6f8fa;
 }
 
-.markdown-alert > :first-child { margin-top: 0; }
-.markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-alert > :first-child {
+  margin-top: 0;
+}
+.markdown-alert > :last-child {
+  margin-bottom: 0;
+}
 
 .markdown-alert-title {
   display: flex;
@@ -43,37 +46,83 @@ html {
   margin-right: 8px;
 }
 
-/* Note - Blue */
-.markdown-alert-note {
+/* Light mode alert colors */
+html[data-theme='light'] .markdown-alert {
+  background-color: #f6f8fa;
+}
+html[data-theme='light'] .markdown-alert-note {
   border-left-color: #0969da;
   background-color: #ddf4ff;
 }
-.markdown-alert-note .markdown-alert-title { color: #0969da; }
-
-/* Tip - Green */
-.markdown-alert-tip {
+html[data-theme='light'] .markdown-alert-note .markdown-alert-title {
+  color: #0969da;
+}
+html[data-theme='light'] .markdown-alert-tip {
   border-left-color: #1a7f37;
   background-color: #dafbe1;
 }
-.markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
-
-/* Important - Purple */
-.markdown-alert-important {
+html[data-theme='light'] .markdown-alert-tip .markdown-alert-title {
+  color: #1a7f37;
+}
+html[data-theme='light'] .markdown-alert-important {
   border-left-color: #8250df;
   background-color: #fbefff;
 }
-.markdown-alert-important .markdown-alert-title { color: #8250df; }
-
-/* Warning - Yellow */
-.markdown-alert-warning {
+html[data-theme='light'] .markdown-alert-important .markdown-alert-title {
+  color: #8250df;
+}
+html[data-theme='light'] .markdown-alert-warning {
   border-left-color: #9a6700;
   background-color: #fff8c5;
 }
-.markdown-alert-warning .markdown-alert-title { color: #9a6700; }
-
-/* Caution - Red */
-.markdown-alert-caution {
+html[data-theme='light'] .markdown-alert-warning .markdown-alert-title {
+  color: #9a6700;
+}
+html[data-theme='light'] .markdown-alert-caution {
   border-left-color: #cf222e;
   background-color: #ffebe9;
 }
-.markdown-alert-caution .markdown-alert-title { color: #cf222e; }
+html[data-theme='light'] .markdown-alert-caution .markdown-alert-title {
+  color: #cf222e;
+}
+
+/* Dark mode alert colors */
+html[data-theme='dark'] .markdown-alert {
+  background-color: #161b22;
+  border-left-color: #30363d;
+}
+html[data-theme='dark'] .markdown-alert-note {
+  border-left-color: #388bfd;
+  background-color: #121d2f;
+}
+html[data-theme='dark'] .markdown-alert-note .markdown-alert-title {
+  color: #58a6ff;
+}
+html[data-theme='dark'] .markdown-alert-tip {
+  border-left-color: #3fb950;
+  background-color: #12261e;
+}
+html[data-theme='dark'] .markdown-alert-tip .markdown-alert-title {
+  color: #3fb950;
+}
+html[data-theme='dark'] .markdown-alert-important {
+  border-left-color: #a371f7;
+  background-color: #1f1b2e;
+}
+html[data-theme='dark'] .markdown-alert-important .markdown-alert-title {
+  color: #a371f7;
+}
+html[data-theme='dark'] .markdown-alert-warning {
+  border-left-color: #d29922;
+  background-color: #272115;
+}
+html[data-theme='dark'] .markdown-alert-warning .markdown-alert-title {
+  color: #d29922;
+}
+html[data-theme='dark'] .markdown-alert-caution {
+  border-left-color: #f85149;
+  background-color: #2d1619;
+}
+html[data-theme='dark'] .markdown-alert-caution .markdown-alert-title {
+  color: #f85149;
+}
