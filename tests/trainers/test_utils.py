@@ -96,10 +96,7 @@ def test_load_state_dict_unequal_classes(
     ],
 )
 def test_reinit_initial_conv_layer(
-    keep_rgb_weights: bool,
-    bias: bool,
-    new_stride: int | None,
-    new_padding: int | None,
+    keep_rgb_weights: bool, bias: bool, new_stride: int | None, new_padding: int | None
 ) -> None:
     conv_layer = nn.Conv2d(3, 5, kernel_size=3, stride=2, padding=1, bias=bias)
     initial_weights = conv_layer.weight.data.clone()
