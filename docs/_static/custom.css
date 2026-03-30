@@ -19,3 +19,61 @@ html {
 .nboutput .prompt {
   display: none;
 }
+
+/* GitHub Markdown Alert Styling for Changelog */
+.markdown-alert {
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-left: 4px solid #d0d7de;
+  background-color: #f6f8fa;
+}
+
+.markdown-alert > :first-child { margin-top: 0; }
+.markdown-alert > :last-child { margin-bottom: 0; }
+
+.markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.markdown-alert-title svg {
+  margin-right: 8px;
+}
+
+/* Note - Blue */
+.markdown-alert-note {
+  border-left-color: #0969da;
+  background-color: #ddf4ff;
+}
+.markdown-alert-note .markdown-alert-title { color: #0969da; }
+
+/* Tip - Green */
+.markdown-alert-tip {
+  border-left-color: #1a7f37;
+  background-color: #dafbe1;
+}
+.markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
+
+/* Important - Purple */
+.markdown-alert-important {
+  border-left-color: #8250df;
+  background-color: #fbefff;
+}
+.markdown-alert-important .markdown-alert-title { color: #8250df; }
+
+/* Warning - Yellow */
+.markdown-alert-warning {
+  border-left-color: #9a6700;
+  background-color: #fff8c5;
+}
+.markdown-alert-warning .markdown-alert-title { color: #9a6700; }
+
+/* Caution - Red */
+.markdown-alert-caution {
+  border-left-color: #cf222e;
+  background-color: #ffebe9;
+}
+.markdown-alert-caution .markdown-alert-title { color: #cf222e; }
