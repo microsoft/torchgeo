@@ -123,4 +123,5 @@ name_to_conda = {
     'GeoAI': 'geoai',
     'TerraTorch': 'terratorch',
     'torchange': 'torchange',
+    'EVer': 'ever-beta',
 }
