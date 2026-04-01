@@ -1,5 +1,7 @@
 """Tests for Copernicus datamodules."""
 
+import shutil
+from pathlib import Path
 from typing import cast
 
 import kornia.augmentation as K
@@ -70,3 +72,36 @@ def test_time_series_uses_video_sequential() -> None:
     assert isinstance(normalize_layers[0], K.Normalize)
 
     assert aug.same_on_batch is True
+
+
+def test_time_series_collate_pads_variable_sequence_lengths(tmp_path: Path) -> None:
+    src_root = Path('tests/data/copernicus/l3_biomass_s3')
+    dst_root = tmp_path / 'l3_biomass_s3'
+    shutil.copytree(src_root, dst_root)
+
+    path = (
+        dst_root
+        / 'biomass_s3'
+        / 's3_olci'
+        / 'S32E141_ESACCI-BIOMASS-L4-AGB-MERGED-100m-2020-fv4.0_01_05'
+        / 'S3A_20210119T033546_20210119T033846.tif'
+    )
+    path.unlink()
+
+    datamodule = CopernicusBenchBiomassS3DataModule(
+        root=str(dst_root),
+        batch_size=2,
+        num_workers=0,
+        mode='time-series',
+        bands=BANDS,
+    )
+    datamodule.setup('validate')
+
+    batch = next(iter(datamodule.val_dataloader()))
+
+    assert batch['image'].shape == (2, 2, len(BANDS), *TARGET_SIZE)
+    assert batch['mask'].shape == (2, *TARGET_SIZE)
+    assert batch['time'].shape == (2, 2)
+    assert batch['lat'].shape == (2, 2)
+    assert batch['lon'].shape == (2, 2)
+    assert sorted((batch['time'] != 0).sum(dim=1).tolist()) == [1, 2]
