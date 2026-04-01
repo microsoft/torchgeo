@@ -70,13 +70,13 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
 
         resize_transform = K.AugmentationSequential(
             K.Resize(
-                size=TARGET_SIZE, resample=Resample.BILINEAR.name, align_corners=False
+                size=TARGET_SIZE, resample=Resample.BILINEAR, align_corners=False
             ),
             data_keys=None,
             keepdim=True,
             extra_args={
                 DataKey.MASK: {
-                    'resample': Resample.BILINEAR.name,
+                    'resample': Resample.BILINEAR,
                     'align_corners': None,
                 }
             },
