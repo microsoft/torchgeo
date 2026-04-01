@@ -120,6 +120,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
                     msg = f'No Sentinel-3 samples found for {pid}.'
                     raise FileNotFoundError(msg)
 
+                # stack_samples requires a consistent spatial shape across timestamps.
                 max_h = max(sample['image'].shape[-2] for sample in samples)
                 max_w = max(sample['image'].shape[-1] for sample in samples)
                 if any(
@@ -134,6 +135,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
                         pad_h = max_h - h
                         pad_w = max_w - w
                         if pad_h or pad_w:
+                            # Pad only bottom/right so existing pixels keep their origin.
                             padded_image = F.pad(image, (0, pad_w, 0, pad_h))
                             sample_dict = sample_dict.copy()
                             sample_dict['image'] = padded_image
