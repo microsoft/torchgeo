@@ -55,9 +55,8 @@ def _collate_time_series_batch(
         values = [sample[key] for sample in batch]
         value = values[0]
 
-        is_time_series_tensor = (
-            value.ndim > 0
-            and all(item.shape[0] == length for item, length in zip(values, lengths))
+        is_time_series_tensor = value.ndim > 0 and all(
+            item.shape[0] == length for item, length in zip(values, lengths)
         )
         if is_time_series_tensor:
             padded = value.new_zeros((batch_size, max_length, *value.shape[1:]))
@@ -97,16 +96,11 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
         self.std = torch.reciprocal(scale_factors)
 
         resize_transform = K.AugmentationSequential(
-            K.Resize(
-                size=TARGET_SIZE, resample=Resample.BILINEAR, align_corners=False
-            ),
+            K.Resize(size=TARGET_SIZE, resample=Resample.BILINEAR, align_corners=False),
             data_keys=None,
             keepdim=True,
             extra_args={
-                DataKey.MASK: {
-                    'resample': Resample.BILINEAR,
-                    'align_corners': None,
-                }
+                DataKey.MASK: {'resample': Resample.BILINEAR, 'align_corners': None}
             },
         )
         existing_transform = cast(

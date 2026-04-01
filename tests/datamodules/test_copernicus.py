@@ -89,11 +89,7 @@ def test_time_series_collate_pads_variable_sequence_lengths(tmp_path: Path) -> N
     path.unlink()
 
     datamodule = CopernicusBenchBiomassS3DataModule(
-        root=str(dst_root),
-        batch_size=2,
-        num_workers=0,
-        mode='time-series',
-        bands=BANDS,
+        root=str(dst_root), batch_size=2, num_workers=0, mode='time-series', bands=BANDS
     )
     datamodule.setup('validate')
 
