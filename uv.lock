@@ -2776,7 +2776,7 @@ wheels = [
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.16.1"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "accessible-pygments" },
@@ -2787,9 +2787,9 @@ dependencies = [
     { name = "sphinx" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/20/bb50f9de3a6de69e6abd6b087b52fa2418a0418b19597601605f855ad044/pydata_sphinx_theme-0.16.1.tar.gz", hash = "sha256:a08b7f0b7f70387219dc659bff0893a7554d5eb39b59d3b8ef37b8401b7642d7", size = 2412693, upload-time = "2024-12-17T10:53:39.537Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/bb/4a97aaa840b26601d6d04deca1389c35025336428706a4a732051187fbd3/pydata_sphinx_theme-0.17.0.tar.gz", hash = "sha256:529c5631582cb3328cf4814fb9eb80611d1704c854406d282a75c9c86e3a1955", size = 4990605, upload-time = "2026-04-03T13:02:20.091Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/0d/8ba33fa83a7dcde13eb3c1c2a0c1cc29950a048bfed6d9b0d8b6bd710b4c/pydata_sphinx_theme-0.16.1-py3-none-any.whl", hash = "sha256:225331e8ac4b32682c18fcac5a57a6f717c4e632cea5dd0e247b55155faeccde", size = 6723264, upload-time = "2024-12-17T10:53:35.645Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/b7/a2bae25aae3568fe9f17040b31f9c190b4c5d86856d8869d0a30364a2567/pydata_sphinx_theme-0.17.0-py3-none-any.whl", hash = "sha256:cec5c92f41f4a11541b6df8210c446b4aa9c3badb7fcf2db7893405b786d5c99", size = 6820685, upload-time = "2026-04-03T13:02:18.09Z" },
 ]
 
 [[package]]
