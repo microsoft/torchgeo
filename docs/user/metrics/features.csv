@@ -17,4 +17,5 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `Myria3D`_,PyTorch,"h5py, numpy",PDAL,PyTorch,0,0,🚧,❌,❌,❌,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
 `GeoDeep`_,ONNX,GDAL,-,-,0,7,✅,❌,✅,❌,❌
+`SR4RS`_,TensorFlow,"OTBTF, GDAL",-,-,0,1,✅,❌,❌,❌,❌
 `torchange`_,PyTorch,"Apache Arrow, skimage",-,Albumentations,8,8,❌,❌,❌,❌,✅

@@ -21,6 +21,7 @@ index = [
     'Myria3D',
     'OTBTF',
     'GeoDeep',
+    'SR4RS',
     'torchange',
 ]
 
@@ -64,6 +65,7 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
+    'SR4RS': ('remicres', 'sr4rs'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
@@ -89,6 +91,7 @@ hardcoded_coverage = {
     'GeoDeep': 0,
     'GeoTessera': 15,
     'torchange': 0,
+    'SR4RS': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',
