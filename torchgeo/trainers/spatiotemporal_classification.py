@@ -48,18 +48,11 @@ class _ConvLSTMClassifier(nn.Module):
             nn.Flatten(), nn.Dropout(dropout), nn.Linear(feat_dim, num_outputs)
         )
 
-    def forward(self, x: Tensor, lengths: Tensor | None = None) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         layer_output_list, _ = self.backbone(x)
         layer_output = layer_output_list[-1]
 
-        if lengths is None:
-            features = layer_output[:, -1]
-        else:
-            idx = lengths.to(device=layer_output.device, dtype=torch.long) - 1
-            idx = idx.clamp(min=0, max=layer_output.size(1) - 1)
-            batch_idx = torch.arange(layer_output.size(0), device=idx.device)
-            features = layer_output[batch_idx, idx]
-
+        features = layer_output[:, -1]
         pooled = self.pool(features)  # (B, C, 1, 1)
         logits = self.classifier(pooled)  # (B, num_outputs)
         return logits
@@ -116,17 +109,16 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
         """
         super().__init__()
 
-    def forward(self, x: Tensor, lengths: Tensor | None = None) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
             x: Input tensor of shape (B, T, C, H, W).
-            lengths: Optional sequence lengths (B,) before padding/truncation.
 
         Returns:
             Output tensor of shape (B, num_outputs, H, W).
         """
-        return self.model(x, lengths=lengths)
+        return self.model(x)
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -204,44 +196,6 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
 
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
-
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, 'datamodule')
-            and isinstance(self.trainer.datamodule, BaseDataModule)
-            and self.logger
-            and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
-        ):
-            datamodule = self.trainer.datamodule
-            aug = K.AugmentationSequential(
-                K.Denormalize(datamodule.mean, datamodule.std),
-                data_keys=None,
-                keepdim=True,
-            )
-            batch = aug(batch)
-            match self.hparams['task']:
-                case 'binary' | 'multilabel':
-                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
-                case 'multiclass':
-                    batch['prediction'] = y_hat.argmax(dim=1)
-
-            for key in ['image', 'label', 'prediction']:
-                batch[key] = batch[key].cpu()
-            sample = unbind_samples(batch)[0]
-
-            fig: Figure | None = None
-            try:
-                fig = datamodule.plot(sample)
-            except RGBBandsMissingError:
-                pass
-
-            if fig:
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # ty: ignore[call-non-callable]
-                plt.close()
 
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.

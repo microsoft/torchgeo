@@ -10,6 +10,7 @@ from typing import ClassVar, Literal, TypedDict, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -199,16 +200,12 @@ class QuakeSet(NonGeoDataset):
 
         with h5py.File(self.filepath) as f:
             pre_array = f[key][patch][images[0]][:]
-            pre_array = np.nan_to_num(pre_array, nan=0)
             post_array = f[key][patch][images[1]][:]
-            post_array = np.nan_to_num(post_array, nan=0)
-            array = np.concatenate([pre_array, post_array], axis=-1)
-            array = array.astype(np.float32)
 
-        tensor = torch.from_numpy(array)
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
-        return tensor
+        # Convert from TxHxWxC to TxCxHxW
+        array = rearrange([pre_array, post_array], 't h w c -> t c h w')
+        array = np.nan_to_num(array, nan=0)
+        return torch.from_numpy(array)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -246,18 +243,18 @@ class QuakeSet(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample['image'].permute((1, 2, 0))
+        image = sample['image']
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
         # Create false color image for image1
-        vv = quantile_normalization(image[..., 0]) + 1e-16
-        vh = quantile_normalization(image[..., 1]) + 1e-16
+        vv = quantile_normalization(image[0, 0]) + 1e-16
+        vh = quantile_normalization(image[0, 1]) + 1e-16
         fci1 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         # Create false color image for image2
-        vv = quantile_normalization(image[..., 2]) + 1e-16
-        vh = quantile_normalization(image[..., 3]) + 1e-16
+        vv = quantile_normalization(image[1, 0]) + 1e-16
+        vh = quantile_normalization(image[1, 1]) + 1e-16
         fci2 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         showing_predictions = 'prediction' in sample
