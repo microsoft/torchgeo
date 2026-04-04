@@ -17,6 +17,7 @@ index = [
     'srai',
     'ML4Floods',
     'GeoTessera',
+    'AIDE',
     'scikit-eo',
     'Myria3D',
     'OTBTF',
@@ -89,6 +90,7 @@ hardcoded_coverage = {
     'GeoDeep': 0,
     'GeoTessera': 15,
     'torchange': 0,
+    'AIDE': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',
