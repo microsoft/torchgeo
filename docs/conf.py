@@ -220,7 +220,9 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         return None
 
     # Make path relative to the repo root
-    sourcefile = os.path.relpath(sourcefile, start=os.path.join(os.path.dirname(__file__), '..'))
+    sourcefile = os.path.relpath(
+        sourcefile, start=os.path.join(os.path.dirname(__file__), '..')
+    )
 
     lineend = lineno + source.count('\n') - 1
     return (
