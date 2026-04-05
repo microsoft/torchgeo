@@ -345,7 +345,7 @@ class BYOLTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(backbone, state_dict)  # ty: ignore[invalid-argument-type]
+            utils.load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
