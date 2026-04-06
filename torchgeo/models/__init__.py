@@ -24,6 +24,7 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .galileo import GalileoEncoder, GalileoWeights, galileo
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
@@ -93,6 +94,8 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'GalileoEncoder',
+    'GalileoWeights',
     'Panopticon',
     'Panopticon_Weights',
     'Presto',
@@ -128,6 +131,7 @@ __all__ = (
     'dofa_large_patch16_224',
     'dofa_small_patch16_224',
     'earthloc',
+    'galileo',
     'get_model',
     'get_model_weights',
     'get_weight',
