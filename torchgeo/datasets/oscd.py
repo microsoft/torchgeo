@@ -5,6 +5,7 @@
 
 import glob
 import os
+import warnings
 from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
@@ -286,7 +287,11 @@ class OSCD(NonGeoDataset):
             extract_archive(zipfile)
 
     def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        alpha: float | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -294,6 +299,7 @@ class OSCD(NonGeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+            alpha: deprecated, has no effect
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -301,6 +307,13 @@ class OSCD(NonGeoDataset):
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
+        if alpha is not None:
+            warnings.warn(
+                'The alpha parameter is deprecated and has no effect.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         try:
             rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
