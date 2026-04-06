@@ -226,6 +226,6 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
 
     lineend = lineno + source.count('\n') - 1
     return (
-        f'https://github.com/microsoft/torchgeo/blob/main/{sourcefile}'
+        f'https://github.com/torchgeo/torchgeo/blob/main/{sourcefile}'
         f'#L{lineno}-L{lineend}'
     )
