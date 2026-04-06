@@ -13,7 +13,7 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `GeoAI`_,PyTorch,"GDAL, xarray",geopandas,Albumentations,0,6,❌,✅,✅,✅,❌
 `ML4Floods`_,PyTorch,pandas,geopandas,Albumentations,0,0,❌,❌,✅,❌,🚧
 `GeoTessera`_,scikit-learn,GDAL,-,geopandas,0,0,✅,❌,✅,❌,❌
-`AIDE`_,PyTorch,pillow,-,-,0,0,❌,✅,❌,❌,❌
+`AIDE`_,PyTorch,pillow,-,torchvision,0,0,❌,✅,❌,❌,❌
 `scikit-eo`_,"scikit-learn, TensorFlow","GDAL, pandas, scipy",geopandas,numpy,0,0,❌,❌,❌,❌,🚧
 `Myria3D`_,PyTorch,"h5py, numpy",PDAL,PyTorch,0,0,🚧,❌,❌,❌,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
