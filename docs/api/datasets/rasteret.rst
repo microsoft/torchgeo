@@ -119,7 +119,7 @@ time-series temporal filtering and overlapping-record mosaicking.
 2. **CRS override timing**
 
    Pass ``crs=...`` when constructing ``RasteretDataset``. Published
-   Rasteret ``0.3.6+`` delegates bind read-time CRS at construction, so
+   Rasteret ``0.3.7+`` delegates bind read-time CRS at construction, so
    post-init ``dataset.crs = ...`` is not supported here.
 
 3. **Multi-CRS default behavior**
