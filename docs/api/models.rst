@@ -33,6 +33,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/farseg
    models/fcn
    models/mosaiks
+   models/olmoearth
    models/panopticon
    models/resnet
    models/scale-mae

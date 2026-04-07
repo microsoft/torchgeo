@@ -28,6 +28,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -79,6 +80,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
+    'olmoearth_v1': olmoearth_v1,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
     'resnet18': resnet18,
@@ -111,6 +113,7 @@ _model_weights: dict[
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
+    olmoearth_v1: OlmoEarthV1_Weights,
     panopticon_vitb14: Panopticon_Weights,
     presto: Presto_Weights,
     resnet18: ResNet18_Weights,
@@ -138,6 +141,7 @@ _model_weights: dict[
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
+    'olmoearth_v1': OlmoEarthV1_Weights,
     'panopticon_vitb14': Panopticon_Weights,
     'presto': Presto_Weights,
     'resnet18': ResNet18_Weights,

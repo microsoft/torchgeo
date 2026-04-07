@@ -128,6 +128,8 @@ docs = [
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
+    # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
+    "olmoearth-pretrain-minimal>=0.0.2",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
