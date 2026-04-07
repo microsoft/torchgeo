@@ -46,8 +46,8 @@ Quick Start
 How Users Get A Collection
 --------------------------
 
-Rasteret starts from a ``Collection`` because scene discovery and read
-planning depend on collection metadata and cached COG layout metadata rather
+Rasteret starts from a ``Collection`` which helps in images discovery and read
+planning based on COG metadata and other properties of image level properties rather
 than file-path globbing.
 
 Common entry points are:
