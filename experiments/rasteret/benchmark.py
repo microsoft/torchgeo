@@ -19,12 +19,22 @@ import math
 import os
 import platform
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-WORKSPACE = Path(os.environ.get('RASTERET_WORKSPACE', str(Path.home() / 'rasteret_workspace'))).expanduser()
+import rasteret
+from pyproj import CRS
+from torch.utils.data import DataLoader
+
+from torchgeo.datasets import RasterDataset, RasteretDataset, stack_samples
+from torchgeo.samplers import GridGeoSampler, RandomGeoSampler
+
+WORKSPACE = Path(
+    os.environ.get('RASTERET_WORKSPACE', str(Path.home() / 'rasteret_workspace'))
+).expanduser()
 DEFAULT_COLLECTION = 'bangalore'
 GDAL_ENV = {
     'GDAL_DISABLE_READDIR_ON_OPEN': 'EMPTY_DIR',
@@ -43,7 +53,7 @@ BUILD_PRESETS: dict[str, dict[str, Any]] = {
 }
 
 
-def resolve_collection(path: str, workspace: Path) -> str | None:
+def _resolve_collection(path: str, workspace: Path) -> str | None:
     candidate = Path(path).expanduser()
     if candidate.exists():
         return str(candidate)
@@ -52,10 +62,9 @@ def resolve_collection(path: str, workspace: Path) -> str | None:
     return str(candidate) if candidate.exists() else None
 
 
-def ensure_collection(path: str, workspace: Path) -> str | None:
+def _ensure_collection(path: str, workspace: Path) -> str | None:
     preset = BUILD_PRESETS.get(path)
     if preset is not None:
-        import rasteret
         collection = rasteret.build(
             preset['dataset'],
             name=preset['name'],
@@ -66,16 +75,21 @@ def ensure_collection(path: str, workspace: Path) -> str | None:
         built_path = workspace / f'{collection.name}_stac'
         if built_path.exists():
             return str(built_path)
-        return resolve_collection(collection.name, workspace)
+        return _resolve_collection(collection.name, workspace)
 
-    resolved = resolve_collection(path, workspace)
+    resolved = _resolve_collection(path, workspace)
     if resolved is not None:
         return resolved
     return None
 
 
-def env_meta() -> dict[str, str]:
-    meta = {'timestamp': datetime.now(UTC).isoformat(), 'os': platform.system(), 'arch': platform.machine(), 'python': platform.python_version()}
+def _env_meta() -> dict[str, str]:
+    meta = {
+        'timestamp': datetime.now(UTC).isoformat(),
+        'os': platform.system(),
+        'arch': platform.machine(),
+        'python': platform.python_version(),
+    }
     for name in ('rasteret', 'torchgeo', 'rasterio'):
         try:
             module = __import__(name)
@@ -85,14 +99,16 @@ def env_meta() -> dict[str, str]:
     return meta
 
 
-def scene_paths(collection: Any, band: str) -> list[str]:
+def _scene_paths(collection: Any, band: str) -> list[str]:
     from rasteret.constants import BandRegistry
 
     mapping = BandRegistry.get(collection.data_source)
     asset_key = mapping.get(band, band) if isinstance(mapping, dict) else band
-    assets = collection.dataset.to_table(columns=['assets']).column('assets').to_pylist()
+    assets = (
+        collection.dataset.to_table(columns=['assets']).column('assets').to_pylist()
+    )
     paths = [
-        f"/vsicurl/{asset['href']}"
+        f'/vsicurl/{asset["href"]}'
         for row in assets
         if isinstance(row, dict)
         for asset in [row.get(asset_key) or row.get(band)]
@@ -103,8 +119,12 @@ def scene_paths(collection: Any, band: str) -> list[str]:
     return paths
 
 
-def target_epsg(collection: Any) -> int:
-    values = collection.dataset.to_table(columns=['proj:epsg']).column('proj:epsg').to_pylist()
+def _target_epsg(collection: Any) -> int:
+    values = (
+        collection.dataset.to_table(columns=['proj:epsg'])
+        .column('proj:epsg')
+        .to_pylist()
+    )
     epsgs = sorted({int(value) for value in values if value is not None})
     if not epsgs:
         raise ValueError('collection has no valid proj:epsg values')
@@ -116,7 +136,7 @@ def target_epsg(collection: Any) -> int:
     return epsgs[0]
 
 
-def target_resolution(collection: Any, band: str) -> tuple[float, float]:
+def _target_resolution(collection: Any, band: str) -> tuple[float, float]:
     from rasteret.core.utils import normalize_transform
 
     column = f'{band}_metadata'
@@ -132,14 +152,14 @@ def target_resolution(collection: Any, band: str) -> tuple[float, float]:
     raise ValueError(f'collection has no valid transform metadata for band {band}')
 
 
-def same_resolution(left: tuple[float, float], right: tuple[float, float]) -> bool:
-    return math.isclose(left[0], right[0], rel_tol=1e-9, abs_tol=1e-12) and math.isclose(
-        left[1], right[1], rel_tol=1e-9, abs_tol=1e-12
-    )
+def _same_resolution(left: tuple[float, float], right: tuple[float, float]) -> bool:
+    return math.isclose(
+        left[0], right[0], rel_tol=1e-9, abs_tol=1e-12
+    ) and math.isclose(left[1], right[1], rel_tol=1e-9, abs_tol=1e-12)
 
 
 @contextmanager
-def gdal_env() -> Any:
+def _gdal_env() -> Iterator[None]:
     old = {key: os.environ.get(key) for key in GDAL_ENV}
     os.environ.update(GDAL_ENV)
     try:
@@ -152,28 +172,38 @@ def gdal_env() -> Any:
                 os.environ[key] = value
 
 
-def make_batch(ds: Any, sampler_name: str, chip_size: int, batch_size: int) -> tuple[Any, list[int]]:
-    from torch.utils.data import DataLoader
-    from torchgeo.datasets import stack_samples
-    from torchgeo.samplers import GridGeoSampler, RandomGeoSampler
-
+def _make_batch(
+    ds: Any, sampler_name: str, chip_size: int, batch_size: int
+) -> tuple[Any, list[int]]:
     if sampler_name == 'random':
         sampler = RandomGeoSampler(ds, size=chip_size, length=batch_size)
     else:
         sampler = GridGeoSampler(ds, size=chip_size, stride=max(chip_size // 2, 1))
 
-    batch = next(iter(DataLoader(ds, sampler=sampler, batch_size=batch_size, num_workers=0, collate_fn=stack_samples)))
+    batch = next(
+        iter(
+            DataLoader(
+                ds,
+                sampler=sampler,
+                batch_size=batch_size,
+                num_workers=0,
+                collate_fn=stack_samples,
+            )
+        )
+    )
     key = 'image' if 'image' in batch else 'mask'
     return batch, [int(v) for v in batch[key].shape]
 
 
-def time_first_batch(ds: Any, sampler_name: str, chip_size: int, batch_size: int) -> tuple[float, list[int]]:
+def _time_first_batch(
+    ds: Any, sampler_name: str, chip_size: int, batch_size: int
+) -> tuple[float, list[int]]:
     t0 = time.perf_counter()
-    _batch, shape = make_batch(ds, sampler_name, chip_size, batch_size)
+    _batch, shape = _make_batch(ds, sampler_name, chip_size, batch_size)
     return (time.perf_counter() - t0) * 1000, shape
 
 
-def benchmark_pair(
+def _benchmark_pair(
     collection_path: str,
     band: str,
     sampler_name: str,
@@ -181,16 +211,12 @@ def benchmark_pair(
     batch_size: int,
     time_series: bool,
 ) -> dict[str, Any]:
-    import rasteret
-    from pyproj import CRS
-    from torchgeo.datasets import RasterDataset, RasteretDataset
-
     collection = rasteret.load(collection_path)
     if band not in set(collection.bands):
         raise ValueError(f'band {band} not found in {Path(collection_path).name}')
 
-    crs = CRS.from_epsg(target_epsg(collection))
-    res = target_resolution(collection, band)
+    crs = CRS.from_epsg(_target_epsg(collection))
+    res = _target_resolution(collection, band)
     mode = 'timeseries' if time_series else 'spatial'
     print(
         f'{mode}/{sampler_name}: {Path(collection_path).name} '
@@ -199,36 +225,36 @@ def benchmark_pair(
 
     t0 = time.perf_counter()
     rasteret_ds = RasteretDataset(
-        collection=collection,
-        bands=[band],
-        crs=crs,
-        res=res,
-        time_series=time_series,
+        collection=collection, bands=[band], crs=crs, res=res, time_series=time_series
     )
     rasteret_init = (time.perf_counter() - t0) * 1000
     rasteret_res = tuple(float(value) for value in rasteret_ds.res)
-    if not same_resolution(rasteret_res, res):
+    if not _same_resolution(rasteret_res, res):
         raise ValueError(f'RasteretDataset used {rasteret_res}, expected {res}')
     try:
-        rasteret_read, rasteret_shape = time_first_batch(rasteret_ds, sampler_name, chip_size, batch_size)
+        rasteret_read, rasteret_shape = _time_first_batch(
+            rasteret_ds, sampler_name, chip_size, batch_size
+        )
     finally:
         close = getattr(rasteret_ds, 'close', None)
         if callable(close):
             close()
 
-    with gdal_env():
+    with _gdal_env():
         t0 = time.perf_counter()
         torchgeo_ds = RasterDataset(
-            paths=scene_paths(collection, band),
+            paths=_scene_paths(collection, band),
             crs=crs,
             res=res,
             time_series=time_series,
         )
         torchgeo_init = (time.perf_counter() - t0) * 1000
         torchgeo_res = tuple(float(value) for value in torchgeo_ds.res)
-        if not same_resolution(torchgeo_res, res):
+        if not _same_resolution(torchgeo_res, res):
             raise ValueError(f'RasterDataset used {torchgeo_res}, expected {res}')
-        torchgeo_read, torchgeo_shape = time_first_batch(torchgeo_ds, sampler_name, chip_size, batch_size)
+        torchgeo_read, torchgeo_shape = _time_first_batch(
+            torchgeo_ds, sampler_name, chip_size, batch_size
+        )
 
     if rasteret_shape != torchgeo_shape:
         raise ValueError(
@@ -239,8 +265,13 @@ def benchmark_pair(
     speedup_read = torchgeo_read / rasteret_read
     speedup_total = (torchgeo_init + torchgeo_read) / (rasteret_init + rasteret_read)
 
-    print(f'  Rasteret: init={rasteret_init:.0f}ms first_batch={rasteret_read:.0f}ms shape={rasteret_shape}')
-    print(f'  TorchGeo: init={torchgeo_init:.0f}ms first_batch={torchgeo_read:.0f}ms shape={torchgeo_shape}')
+    print(
+        f'  Rasteret: init={rasteret_init:.0f}ms '
+        f'first_batch={rasteret_read:.0f}ms shape={rasteret_shape}'
+    )
+    print(
+        f'  TorchGeo: init={torchgeo_init:.0f}ms first_batch={torchgeo_read:.0f}ms shape={torchgeo_shape}'
+    )
     print(f'  speedup: first_batch={speedup_read:.1f}x total={speedup_total:.1f}x')
 
     return {
@@ -251,21 +282,32 @@ def benchmark_pair(
         'chip_size': chip_size,
         'batch_size': batch_size,
         'resolution': [round(res[0], 12), round(res[1], 12)],
-        'rasteret': {'init_ms': round(rasteret_init, 1), 'first_batch_ms': round(rasteret_read, 1), 'sample_shape': rasteret_shape},
-        'torchgeo_native': {'init_ms': round(torchgeo_init, 1), 'first_batch_ms': round(torchgeo_read, 1), 'sample_shape': torchgeo_shape},
+        'rasteret': {
+            'init_ms': round(rasteret_init, 1),
+            'first_batch_ms': round(rasteret_read, 1),
+            'sample_shape': rasteret_shape,
+        },
+        'torchgeo_native': {
+            'init_ms': round(torchgeo_init, 1),
+            'first_batch_ms': round(torchgeo_read, 1),
+            'sample_shape': torchgeo_shape,
+        },
         'speedup_first_batch': round(speedup_read, 2),
         'speedup_total': round(speedup_total, 2),
     }
 
 
 def main() -> None:
+    """Run the Rasteret versus native TorchGeo benchmark."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         '--collection',
         default=DEFAULT_COLLECTION,
         help='Benchmark preset, collection path, or workspace-relative collection name.',
     )
-    parser.add_argument('--mode', choices=['spatial', 'timeseries', 'both'], default='both')
+    parser.add_argument(
+        '--mode', choices=['spatial', 'timeseries', 'both'], default='both'
+    )
     parser.add_argument('--sampler', choices=['random', 'grid', 'both'], default='both')
     parser.add_argument('--band', default='B04')
     parser.add_argument('--chip-size', type=int, default=256)
@@ -274,12 +316,19 @@ def main() -> None:
     parser.add_argument('--output', type=str)
     args = parser.parse_args()
 
-    collection_path = ensure_collection(args.collection, Path(args.workspace).expanduser())
+    collection_path = _ensure_collection(
+        args.collection, Path(args.workspace).expanduser()
+    )
     if collection_path is None:
         parser.error(f'collection not found: {args.collection}')
 
-    meta = env_meta()
-    print(f"environment: python={meta.get('python', '?')} torchgeo={meta.get('torchgeo', '?')} rasteret={meta.get('rasteret', '?')} rasterio={meta.get('rasterio', '?')}")
+    meta = _env_meta()
+    print(
+        f'environment: python={meta.get("python", "?")} '
+        f'torchgeo={meta.get("torchgeo", "?")} '
+        f'rasteret={meta.get("rasteret", "?")} '
+        f'rasterio={meta.get("rasterio", "?")}'
+    )
 
     samplers = ['random', 'grid'] if args.sampler == 'both' else [args.sampler]
     modes = [False, True] if args.mode == 'both' else [args.mode == 'timeseries']
@@ -287,7 +336,7 @@ def main() -> None:
     for time_series in modes:
         for sampler_name in samplers:
             key = f'{"timeseries" if time_series else "spatial"}_{sampler_name}'
-            results['runs'][key] = benchmark_pair(
+            results['runs'][key] = _benchmark_pair(
                 collection_path,
                 args.band,
                 sampler_name,
@@ -298,7 +347,9 @@ def main() -> None:
 
     print('\nsummary:')
     for key, run in results['runs'].items():
-        print(f"  {key}: first_batch={run['speedup_first_batch']:.1f}x total={run['speedup_total']:.1f}x")
+        print(
+            f'  {key}: first_batch={run["speedup_first_batch"]:.1f}x total={run["speedup_total"]:.1f}x'
+        )
     if args.output:
         Path(args.output).write_text(json.dumps(results, indent=2))
         print(f'saved: {args.output}')

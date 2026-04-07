@@ -3,23 +3,25 @@
 
 import pickle
 from datetime import UTC, datetime
-from types import SimpleNamespace
-from typing import Any
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, create_autospec
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.dataset as pads
 import pytest
 import shapely
 import torch
 from pyproj import CRS
 
+pa = pytest.importorskip('pyarrow')
+pads = pytest.importorskip('pyarrow.dataset')
 pytest.importorskip('rasteret')
 
-from rasteret import Collection
+if TYPE_CHECKING:
+    from rasteret import Collection
+
+Collection = import_module('rasteret').Collection
 
 
 class _DummyRasteretGeoDataset:
@@ -66,9 +68,13 @@ class _DummyRasteretGeoDataset:
         self.closed = True
 
 
-class _NoEPSG:
-    def to_epsg(self) -> None:
-        return None
+def _non_epsg_crs() -> CRS:
+    """Create a valid CRS object that is not EPSG-resolvable."""
+    return CRS.from_wkt(
+        'ENGCRS["foo",EDATUM["Unknown"],CS[Cartesian,2],'
+        'AXIS["x",east,ORDER[1]],AXIS["y",north,ORDER[2]],'
+        'LENGTHUNIT["metre",1]]'
+    )
 
 
 def _band_metadata(
@@ -155,11 +161,7 @@ class TestRasteretDataset:
         from torchgeo.datasets import RasteretDataset
 
         with pytest.raises(ValueError, match='EPSG'):
-            RasteretDataset(
-                collection=collection,
-                bands=['B04'],
-                crs=_NoEPSG(),  # type: ignore[arg-type]
-            )
+            RasteretDataset(collection=collection, bands=['B04'], crs=_non_epsg_crs())
 
     def test_init_requires_collection_adapter(self) -> None:
         """Collection must implement to_torchgeo_dataset."""
