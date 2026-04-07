@@ -4,14 +4,14 @@
 """Air Quality dataset."""
 
 import os
-from typing import Any
 
 import pandas as pd
 import torch
+from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class AirQuality(NonGeoDataset):
@@ -73,7 +73,7 @@ class AirQuality(NonGeoDataset):
         """
         return len(self.data) - (self.num_past_steps + self.num_future_steps)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -88,19 +88,10 @@ class AirQuality(NonGeoDataset):
             + self.num_past_steps
             + self.num_future_steps
         ]
-        past_targets = torch.tensor(past_targets.values, dtype=torch.float32)
-        future_targets = torch.tensor(future_targets.values, dtype=torch.float32)
-
-        mean = past_targets.mean(dim=0, keepdim=True)
-        std = past_targets.std(dim=0, keepdim=True)
-        past_targets_normalized = (past_targets - mean) / (std + 1e-12)
-        future_targets_normalized = (future_targets - mean) / (std + 1e-12)
 
         return {
-            'past_targets': past_targets_normalized,
-            'future_targets': future_targets_normalized,
-            'mean': mean,
-            'std': std,
+            'past_targets': torch.tensor(past_targets.values, dtype=torch.float32),
+            'future_targets': torch.tensor(future_targets.values, dtype=torch.float32),
         }
 
     def _load_data(self) -> pd.DataFrame:
@@ -109,14 +100,63 @@ class AirQuality(NonGeoDataset):
         Returns:
             Dataframe containing the data.
         """
-        # Check if the file already exists
         pathname = os.path.join(self.root, self.data_file_name)
         if os.path.exists(pathname):
-            return pd.read_csv(pathname)
-
-        # Check if the user requested to download the dataset
-        if not self.download:
+            df = pd.read_csv(pathname, na_values=-200)
+        elif not self.download:
             raise DatasetNotFoundError(self)
+        else:
+            df = pd.read_csv(self.url, na_values=-200)
 
-        # Download the dataset
-        return pd.read_csv(self.url, na_values=-200)
+        # Combine Date and Time into a single numeric column
+        df['datetime'] = pd.to_datetime(
+            df['Date'] + ' ' + df['Time'],
+            format='%m/%d/%Y %H:%M:%S',  # month/day/year
+        )
+        df.drop(columns=['Date', 'Time'], inplace=True)
+
+        # Convert datetime64 to float (Unix timestamp in seconds) so it can become a Tensor
+        df['datetime'] = df['datetime'].astype('int64') / 1e9
+
+        # Drop rows with any remaining NaNs
+        df.dropna(inplace=True)
+        df.reset_index(drop=True, inplace=True)
+
+        return df
+
+    def plot(self, sample: Sample) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+
+        Returns:
+            a matplotlib Figure with the plotted sample
+        """
+        import matplotlib.pyplot as plt
+
+        past = sample['past_targets'].numpy()
+        future = sample['future_targets'].numpy()
+
+        num_features = past.shape[1]
+        fig: Figure
+        fig, axes = plt.subplots(num_features, 1, figsize=(10, 2 * num_features))
+        if num_features == 1:
+            axes = [axes]
+
+        past_steps = range(self.num_past_steps)
+        future_steps = range(
+            self.num_past_steps, self.num_past_steps + self.num_future_steps
+        )
+
+        for i, ax in enumerate(axes):
+            ax.plot(past_steps, past[:, i], label='Past', marker='o')
+            ax.plot(
+                future_steps, future[:, i], label='Future', marker='x', linestyle='--'
+            )
+            ax.set_title(f'Feature {i}')
+            ax.legend()
+            ax.set_xlabel('Time step')
+
+        plt.tight_layout()
+        return fig
