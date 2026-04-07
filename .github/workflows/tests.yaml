@@ -33,6 +33,8 @@ jobs:
             uv.lock
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
+      - name: Install Rasteret
+        run: uv pip install --upgrade 'rasteret>=0.3.6,<0.4'
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
@@ -59,6 +61,8 @@ jobs:
             pyproject.toml
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
+      - name: Install Rasteret
+        run: uv pip install --resolution lowest-direct --upgrade 'rasteret>=0.3.6,<0.4'
       - name: List installed dependencies
         run: uv tree
       - name: Run checks

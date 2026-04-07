@@ -131,6 +131,10 @@ models = [
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
     "olmoearth-pretrain-minimal>=0.0.2",
 ]
+rasteret = [
+    # rasteret 0.3.6+ required for current adapter behavior and schema contract
+    "rasteret>=0.3.6,<0.4",
+]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
