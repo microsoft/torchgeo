@@ -5,7 +5,7 @@ Rasteret
 
 .. currentmodule:: torchgeo.datasets
 
-``RasteretDataset`` is an experimental ``RasterDataset``-style entry point for
+``RasteretDataset`` is an experimental raster dataset entry point for
 Rasteret-backed collections.
 
 Scope
@@ -46,8 +46,9 @@ Quick Start
 How Users Get A Collection
 --------------------------
 
-Rasteret starts from a ``Collection`` because its read path depends on
-collection metadata and cached COG layout metadata rather than path globbing.
+Rasteret starts from a ``Collection`` because scene discovery and read
+planning depend on collection metadata and cached COG layout metadata rather
+than file-path globbing.
 
 Common entry points are:
 
@@ -58,7 +59,7 @@ Common entry points are:
 4. ``rasteret.load(...)`` for an existing shared or previously-built Rasteret
    collection.
 
-For raw local or cloud COG files that do not yet have a STAC or Parquet record
+For raw local or cloud COG files without an existing STAC or Parquet record
 table, Rasteret's current workflow is to first create a Parquet record table
 (``id``, ``datetime``, ``geometry``, ``assets``) and then run
 ``build_from_table(..., enrich_cog=True)``.
@@ -72,8 +73,9 @@ Mental Model
 
 - Native ``RasterDataset`` subclasses are usually path-first and read via
   rasterio/GDAL.
-- ``RasteretDataset`` is collection-first and delegates reads to
-  ``collection.to_torchgeo_dataset(...)``.
+- ``RasteretDataset`` is collection-first and is a TorchGeo-facing wrapper
+  over Rasteret's existing ``collection.to_torchgeo_dataset(...)``
+  integration.
 - After dataset construction, downstream TorchGeo usage is standard.
 
 TorchGeo Surface That Stays The Same
@@ -93,20 +95,20 @@ the dataset object.
 Why It Is Different
 -------------------
 
-Rasteret is not only a TorchGeo adapter. Its core abstraction is a reusable
+Rasteret is not just a TorchGeo adapter. Its core abstraction is a reusable
 ``Collection`` that can also serve xarray, NumPy, GeoPandas, and point-sampling
 workflows. TorchGeo is one consumer of that collection.
 
 That is why this integration is intentionally collection-first:
 
 - collection preparation remains in Rasteret's own public API
-- TorchGeo gains a thin experimental backend dataset
+- TorchGeo gains a thin experimental dataset entry point
 - TorchGeo does not need to absorb Rasteret's ingest, cloud, or metadata logic
 
 Remaining Differences vs Native RasterDataset
 ---------------------------------------------
 
-The current deliberate differences are:
+The main remaining differences are:
 
 Rasteret ``0.3.7+`` aligns with native ``RasterDataset`` semantics for
 time-series temporal filtering and overlapping-record mosaicking.
@@ -139,9 +141,9 @@ time-series temporal filtering and overlapping-record mosaicking.
 
 6. **Image dtype behavior**
 
-   Rasteret may preserve integer image tensors following TorchGeo's
-   ``array_to_tensor`` casting rules instead of forcing float conversion at
-   read time.
+   Rasteret follows TorchGeo's ``array_to_tensor`` integer casting rules
+   instead of unconditionally converting imagery to floating point at read
+   time.
 
 7. **``label_field``**
 
