@@ -3324,7 +3324,7 @@ wheels = [
 
 [[package]]
 name = "rasteret"
-version = "0.3.6"
+version = "0.3.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -3343,9 +3343,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/88/d2/fb4e31e53817b2c0914ddae2a2f0a6eafccc0301dc17839e5e8157816800/rasteret-0.3.6.tar.gz", hash = "sha256:0d3e33b0afd4253cf091acde5e4a75772ac40fb32f2528877a0126c58b8d83f2", size = 216188, upload-time = "2026-04-05T20:26:32.618Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/29/9e16b5d67805238779a102f7ef3f78ca07a2bae1fd677dc952b9fce52cf2/rasteret-0.3.7.tar.gz", hash = "sha256:50f18ca43261a2097bfbe22845de7770c373ab62e79c14d539fe61d0657c6878", size = 216627, upload-time = "2026-04-07T12:12:35.72Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/2f/e5887bdf8af37b6e1112f9e85cb20064b1023908cd765f2b18adf6b9556c/rasteret-0.3.6-py3-none-any.whl", hash = "sha256:b842a077e6b3129ce68cb57cc936ef1432c85c3c5cf479769117900f44fd4992", size = 170898, upload-time = "2026-04-05T20:26:30.669Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/a3/d528e4badf4d8862a74a87fb6cf2445c9fbfe1ed3d9db83d28898b6267c3/rasteret-0.3.7-py3-none-any.whl", hash = "sha256:60323ea324965326822ec28f3dfe4c80f655a0933e975d7be53b36e037cd4feb", size = 170935, upload-time = "2026-04-07T12:12:34.326Z" },
 ]
 
 [[package]]
@@ -4075,7 +4075,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=7.3.2" },
     { name = "pytest-cov", marker = "extra == 'tests'", specifier = ">=4" },
     { name = "pytest-socket", marker = "extra == 'tests'", specifier = ">=0.3.4" },
-    { name = "rasteret", marker = "extra == 'rasteret'", specifier = ">=0.3.6,<0.4" },
+    { name = "rasteret", marker = "extra == 'rasteret'", specifier = ">=0.3.7" },
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "requests", specifier = ">=2.25" },
     { name = "rioxarray", marker = "extra == 'datasets'", specifier = ">=0.14.1" },
