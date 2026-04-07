@@ -481,6 +481,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Times
 
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
+    # TODO: Check out pd.Timestamp.floor() and pd.Timestamp.ceil()
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
