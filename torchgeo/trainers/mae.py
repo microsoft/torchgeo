@@ -37,15 +37,14 @@ def mae_augmentation(size: int = 224) -> K.AugmentationSequential:
 class MAETask(BaseTask):
     """MAE: Masked Autoencoder for self-supervised learning.
 
-    Reference implementation:
+    Reference implementations:
 
     * https://github.com/facebookresearch/mae
-    * https://docs.lightly.ai/self-supervised-learning/examples/mae.html#mae
+    * https://docs.lightly.ai/self-supervised-learning/examples/mae.html
 
     If you use this code for your research, please cite the original paper:
 
     * https://arxiv.org/abs/2111.06377
-
     """
 
     ignore = ('transform', 'weights')
@@ -63,25 +62,40 @@ class MAETask(BaseTask):
         weight_decay: float = 0.05,
         mask_ratio: float = 0.75,
         size: int = 224,
+        norm_pix_loss: bool = True,
+        warmup_epochs: int = 40,
     ) -> None:
         """Initialize the MAE task.
 
         Args:
-            model: The ViT architecture to use for the encoder. Must be compatible with timm's create_model function.
-            weights: Pretrained weights to initialize the encoder with. Can be a timm WeightsEnum, a path to a checkpoint file, a string identifier for a timm weight, True to use default pretrained weights, or None for random initialization.
-            in_channels: Number of input channels in the images. Must match the in_chans argument of the ViT model.
-            transform: Optional transform to apply to the input images. If None, a default MAETransform will be used,
-            decoder_dim: The embedding dimension of the MAE decoder. Typically 512 is a good choice for ViT-Base encoders.
-            lr: _Should be 1.5e-4 * batch_size / 256.
+            model: The ViT architecture to use for the encoder. Must be compatible with
+                timm's create_model function.
+            weights: Pretrained weights to initialize the encoder with. Can be a timm
+                WeightsEnum or a string identifier for a timm weight, True to use
+                default pretrained weights, or None for random initialization.
+            in_channels: Number of input channels in the images. Must match the in_chans
+                argument of the ViT model.
+            transform: Optional transform to apply to the input images. If None, a
+                default MAE augmentation will be used.
+            decoder_dim: The embedding dimension of the MAE decoder. Typically 512 is a
+                good choice for ViT-Base encoders.
+            lr: Should typically be set to 1.5e-4 * batch_size / 256.
             decoder_num_heads: Number of attention heads in the MAE decoder.
-            decoder_depth: Number of layers in the MAE decoder. Typically 1-4 layers is sufficient for good performance.
+            decoder_depth: Number of layers in the MAE decoder. Typically 1-4 layers is
+                sufficient for good performance.
             weight_decay: Weight decay for the AdamW optimizer.
-            mask_ratio: The ratio of tokens to mask during training. Typically 0.75 is a good choice.
-            size: The input image size (height and width) after augmentation. Must match the input size expected by the ViT model.
+            mask_ratio: The ratio of tokens to mask during training. Typically 0.75 is a
+                good choice.
+            size: The input image size (height and width) after augmentation. Must match
+                the input size expected by the ViT model.
+            norm_pix_loss: If True, normalize each target patch to zero mean and unit
+                variance before computing MSE. Recommended by the original MAE paper.
+            warmup_epochs: Number of linear warmup epochs before cosine annealing.
         """
         self.weights = weights
         super().__init__()
         self.transform = transform if transform is not None else mae_augmentation(size)
+        self.warmup_epochs = warmup_epochs
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
@@ -105,13 +119,12 @@ class MAETask(BaseTask):
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
-            # elif os.path.exists(weights):
-            #    _, state_dict = extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
             load_state_dict(vit, state_dict)  # type: ignore[invalid-argument-type]
 
         self.patch_size = vit.patch_embed.patch_size[0]
+        self.num_prefix_tokens = vit.num_prefix_tokens
 
         self.backbone = MaskedVisionTransformerTIMM(vit=vit)
         self.decoder = MAEDecoderTIMM(
@@ -142,13 +155,21 @@ class MAETask(BaseTask):
             betas=(0.9, 0.95),
         )
         max_epochs = 800
-        warmup_epochs = 40
         if self.trainer and self.trainer.max_epochs is not None:
             max_epochs = self.trainer.max_epochs
+        # Ensure warmup does not exceed total number of epochs.
+        warmup_epochs = min(self.warmup_epochs, max_epochs)
         # Cosine annealing with linear warmup.
         warmup = LinearLR(optim, 1e-8, 1, total_iters=warmup_epochs)
-        cosine = CosineAnnealingLR(optim, T_max=max_epochs - warmup_epochs, eta_min=0)
-        scheduler = SequentialLR(optim, [warmup, cosine], milestones=[warmup_epochs])
+        if max_epochs > warmup_epochs:
+            cosine_T_max = max(1, max_epochs - warmup_epochs)
+            cosine = CosineAnnealingLR(optim, T_max=cosine_T_max, eta_min=0)
+            scheduler = SequentialLR(
+                optim, [warmup, cosine], milestones=[warmup_epochs]
+            )
+        else:
+            # If training for fewer epochs than the warmup, only use the warmup schedule.
+            scheduler = warmup
 
         return {
             'optimizer': optim,
@@ -162,11 +183,14 @@ class MAETask(BaseTask):
 
         Args:
             images: The input images, with shape (B, in_channels, H, W).
-            idx_keep: The indices of the tokens that were kept (not masked), with shape (B, N_keep).
-            idx_mask: The indices of the tokens that were masked, with shape (B, N_mask).
+            idx_keep: The indices of the tokens that were kept (not masked), with shape
+                (B, N_keep).
+            idx_mask: The indices of the tokens that were masked, with shape (B,
+                N_mask).
 
         Returns:
-            The predicted pixel values for the masked tokens, with shape (B, N_mask, patch_size*patch_size*in_channels).
+            The predicted pixel values for the masked tokens, with shape (B, N_mask,
+                patch_size*patch_size*in_channels).
         """
         # Encode the visible tokens with the MAE encoder
         x_encoded = self.backbone.encode(images=images, idx_keep=idx_keep)
@@ -208,8 +232,10 @@ class MAETask(BaseTask):
         # get image patches for masked tokens
         patches = utils.patchify(images, self.patch_size)
         # must adjust idx_mask for missing class token
-        target = utils.get_at_index(patches, idx_mask - 1)
-
+        target = utils.get_at_index(patches, idx_mask - self.num_prefix_tokens)
+        # Apply normalization to target patches if norm_pix_loss is True.
+        if self.hparams['norm_pix_loss']:
+            target = utils.normalize_mean_var(target, dim=-1)
         # per-sample loss for std logging
         loss_per_sample = self.criterion(x_pred, target)
         loss_per_sample = loss_per_sample.mean(dim=list(range(1, loss_per_sample.ndim)))

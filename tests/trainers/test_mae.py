@@ -51,6 +51,28 @@ class TestMAETask:
 
         main(['fit', *args])
 
+    def test_full_scheduler(self, monkeypatch: MonkeyPatch) -> None:
+        config = os.path.join('tests', 'conf', 'ssl4eo_s12_mae_1.yaml')
+        monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
+        monkeypatch.setattr(timm, 'create_model', create_model)
+
+        args = [
+            '--config',
+            config,
+            '--model.init_args.warmup_epochs',
+            '0',
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
+            'True',
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
+        ]
+
+        main(['fit', *args])
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ViTSmall16_Weights.SENTINEL2_ALL_MAE
