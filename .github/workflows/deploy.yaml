@@ -22,7 +22,7 @@ jobs:
       - name: Build project
         run: python -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: pypi-dist
           path: dist/
@@ -43,4 +43,4 @@ jobs:
           name: pypi-dist
           path: dist/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.0
