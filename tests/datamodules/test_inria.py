@@ -43,14 +43,9 @@ class TestInriaAerialImageLabelingDataModule:
         batch = next(iter(datamodule.predict_dataloader()))
         assert batch['image'].ndim == 4
 
-    def test_plot(
-        self, datamodule: InriaAerialImageLabelingDataModule
-    ) -> None:
+    def test_plot(self, datamodule: InriaAerialImageLabelingDataModule) -> None:
         datamodule.setup('fit')
         batch = next(iter(datamodule.val_dataloader()))
-        sample = {
-            'image': batch['image'][0],
-            'mask': batch['mask'][0],
-        }
+        sample = {'image': batch['image'][0], 'mask': batch['mask'][0]}
         datamodule.plot(sample)
         plt.close()
