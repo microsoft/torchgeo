@@ -49,23 +49,23 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
 
         self.train_aug = K.AugmentationSequential(
+            K.RandomCrop(self.patch_size, pad_if_needed=True),
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            K.RandomCrop(self.patch_size, pad_if_needed=True),
             data_keys=None,
             keepdim=True,
         )
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
         )
         self.predict_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
@@ -97,11 +97,11 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
 
         .. versionadded:: 0.7
         """
-        # This solves a special case where if batch_size=1 the mask won't be stacked correctly
-        if 'mask' in batch and batch['mask'].ndim == 3:
+        # Handle the edge case where a single mask is missing the batch dimension.
+        if 'mask' in batch and batch['mask'].ndim == 2:
             batch['mask'] = batch['mask'].unsqueeze(0)
             batch = super().on_after_batch_transfer(batch, dataloader_idx)
-            batch['mask'] = batch['mask'].squeeze(dim=1)
+            batch['mask'] = batch['mask'].squeeze(0)
             return batch
         else:
             return super().on_after_batch_transfer(batch, dataloader_idx)
