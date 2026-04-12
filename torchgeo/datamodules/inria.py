@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 
 from ..datasets import InriaAerialImageLabeling
-from ..datasets.utils import Sample
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
