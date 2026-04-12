@@ -86,17 +86,22 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             self.predict_dataset = InriaAerialImageLabeling(split='test', **self.kwargs)
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
-        """Apply batch augmentations to the batch after it is transferred to the device."""
+        """Apply batch augmentations to the batch after it is transferred to the device.
 
-        # Handle edge case where batch_size=1 and mask is missing batch dimension
-        if 'mask' in batch:
-            mask = batch['mask']
-            
-            # Case: single sample mask [H, W] → add batch dimension
-            if mask.ndim == 2:
-                batch['mask'] = mask.unsqueeze(0)
-                batch = super().on_after_batch_transfer(batch, dataloader_idx)
-                batch['mask'] = batch['mask'].squeeze(0)
-                return batch
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+
+        .. versionadded:: 0.7
+        """
+        # Handle the edge case where a single mask is missing the batch dimension.
+        if 'mask' in batch and batch['mask'].ndim == 2:
+            batch['mask'] = batch['mask'].unsqueeze(0)
+            batch = super().on_after_batch_transfer(batch, dataloader_idx)
+            batch['mask'] = batch['mask'].squeeze(0)
+            return batch
 
         return super().on_after_batch_transfer(batch, dataloader_idx)
