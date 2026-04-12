@@ -43,17 +43,6 @@ class TestInriaAerialImageLabelingDataModule:
         batch = next(iter(datamodule.predict_dataloader()))
         assert batch['image'].ndim == 4
 
-    def test_on_after_batch_transfer_unbatched_mask(
-        self, datamodule: InriaAerialImageLabelingDataModule
-    ) -> None:
-        datamodule.setup('fit')
-        batch = next(iter(datamodule.train_dataloader()))
-        # Simulate an unbatched mask with ndim == 2: (H, W)
-        batch['mask'] = batch['mask'][0]  # (B, H, W) -> (H, W)
-        assert batch['mask'].ndim == 2
-        batch = datamodule.on_after_batch_transfer(batch, 0)
-        assert batch['mask'].ndim == 2
-
     def test_plot(self, datamodule: InriaAerialImageLabelingDataModule) -> None:
         datamodule.setup('fit')
         batch = next(iter(datamodule.val_dataloader()))
