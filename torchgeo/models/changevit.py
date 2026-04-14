@@ -48,7 +48,7 @@ class DetailCaptureModule(Module):
             in_chans=in_channels,
         )
 
-        backbone_channels: list[int] = self.backbone.feature_info.channels()  # type: ignore[union-attr, operator]
+        backbone_channels: list[int] = self.backbone.feature_info.channels()  # ty: ignore[call-non-callable]
 
         self.proj1 = nn.Conv2d(backbone_channels[0], 64, kernel_size=1)
         self.proj2 = nn.Conv2d(backbone_channels[1], 128, kernel_size=1)
@@ -270,7 +270,7 @@ class ChangeViT(Module):
             **kwargs,
         )
 
-        embed_dim: int = self.encoder.embed_dim  # type: ignore[assignment]
+        embed_dim: int = self.encoder.embed_dim  # ty: ignore[invalid-assignment]
 
         self.detail_capture = DetailCaptureModule(
             in_channels=in_channels * 2, pretrained=pretrained

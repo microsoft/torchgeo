@@ -5,6 +5,7 @@
 
 import glob
 import os
+import warnings
 from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
@@ -22,8 +23,8 @@ from .utils import (
     Path,
     Sample,
     download_url,
-    draw_semantic_segmentation_masks,
     extract_archive,
+    quantile_normalization,
     sort_sentinel2_bands,
 )
 
@@ -73,8 +74,6 @@ class OSCD(NonGeoDataset):
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
     splits: tuple[str, ...] = ('train', 'test')
-
-    colormap = ('blue',)
 
     all_bands = (
         'B01',
@@ -186,7 +185,7 @@ class OSCD(NonGeoDataset):
             mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
             def get_image_paths(ind: int) -> list[str]:
-                return sorted(  # type: ignore[invalid-return-type]
+                return sorted(  # ty: ignore[invalid-return-type]
                     glob.glob(
                         os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
                     ),
@@ -292,7 +291,7 @@ class OSCD(NonGeoDataset):
         sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
-        alpha: float = 0.5,
+        alpha: float | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -300,7 +299,7 @@ class OSCD(NonGeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            alpha: opacity with which to render predictions on top of the imagery
+            alpha: deprecated, has no effect
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -308,39 +307,55 @@ class OSCD(NonGeoDataset):
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
-        ncols = 2
+        if alpha is not None:
+            warnings.warn(
+                'The alpha parameter is deprecated and has no effect.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         try:
             rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
             raise RGBBandsMissingError() from e
 
-        def get_masked(img: Tensor) -> 'np.typing.NDArray[np.uint8]':
-            rgb_img = img[rgb_indices].float().numpy()
-            per02 = np.percentile(rgb_img, 2)
-            per98 = np.percentile(rgb_img, 98)
-            rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
-                np.uint8
-            )
-            array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
-                torch.from_numpy(rgb_img),
-                sample['mask'][0],
-                alpha=alpha,
-                colors=list(self.colormap),
-            )
-            return array
+        def to_rgb(img: Tensor) -> Tensor:
+            rgb = img[rgb_indices].float()
+            return quantile_normalization(rgb).permute(1, 2, 0)
 
-        image1 = get_masked(sample['image'][0])
-        image2 = get_masked(sample['image'][1])
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        ncols = 3
+        if 'prediction' in sample:
+            ncols = 4
+
+        image1 = to_rgb(sample['image'][0])
+        image2 = to_rgb(sample['image'][1])
+        mask = sample['mask'][0]
+
+        h, w = image1.shape[:2]
+        fig, axs = plt.subplots(
+            1, ncols, figsize=(ncols * 5, 5 * h / w), layout='constrained'
+        )
         axs[0].imshow(image1)
-        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis('off')
+        axs[2].imshow(mask, cmap='gray', interpolation='none', vmin=0, vmax=1)
+        if ncols == 4:
+            axs[3].imshow(
+                sample['prediction'][0],
+                cmap='gray',
+                interpolation='none',
+                vmin=0,
+                vmax=1,
+            )
+
+        for ax in axs:
+            ax.axis('off')
 
         if show_titles:
-            axs[0].set_title('Pre change')
-            axs[1].set_title('Post change')
+            axs[0].set_title('Pre-change (T1)')
+            axs[1].set_title('Post-change (T2)')
+            axs[2].set_title('Ground Truth')
+            if ncols == 4:
+                axs[3].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

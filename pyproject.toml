@@ -81,7 +81,7 @@ dependencies = [
     # torch 2.2+ required for Python 3.12 wheels
     "torch>=2.2",
     # torchmetrics 1.2+ required for average argument in mAP metric
-    "torchmetrics>=1.2",
+    "torchmetrics[detection]>=1.2",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
     # typing-extensions 4.8+ required by torch 2.2
@@ -122,18 +122,22 @@ docs = [
     # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
     # https://github.com/sphinx-doc/sphinx/pull/10887
     "sphinx>=5.3",
+    # sphinx-github-changelog 1.7.2+ required for image URL fix
+    "sphinx-github-changelog>=1.7.2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
+    # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
+    "olmoearth-pretrain-minimal>=0.0.2",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.21+ required for a couple new rules that catch both real bugs and false positives
-    "ty>=0.0.21",
+    # ty 0.0.25+ required for the following bug fix: https://github.com/astral-sh/ty/issues/2985
+    "ty>=0.0.25",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support

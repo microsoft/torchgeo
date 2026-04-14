@@ -115,7 +115,7 @@ class TestTessera:
         with pytest.raises(ValueError, match='Unsupported weights'):
             # Create a mock invalid weight by using a non-existent enum value
             # This tests the else branch in tessera() function
-            tessera(weights='invalid')  # type: ignore[arg-type]
+            tessera(weights='invalid')  # ty: ignore[invalid-argument-type]
 
     @pytest.mark.slow
     def test_tessera_download(self, weights: Tessera_Weights) -> None:

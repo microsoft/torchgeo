@@ -157,6 +157,6 @@ class PositionalEncoding(nn.Module):
             Output tensor with positional encoding added
         """
         # Get positional encoding up to the sequence length
-        pe = self.pe[:, : x.size(1)]  # type: ignore[index]
+        pe = self.pe[:, : x.size(1)]  # ty: ignore[not-subscriptable]
         output: Tensor = self.dropout(x + pe)
         return output

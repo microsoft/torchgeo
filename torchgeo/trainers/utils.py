@@ -174,10 +174,10 @@ def reinit_initial_conv_layer(
     new_layer = Conv2d(
         new_in_channels,
         layer.out_channels,
-        kernel_size=layer.kernel_size,  # type: ignore[arg-type]
-        stride=updated_stride,  # type: ignore[arg-type]
-        padding=updated_padding,  # type: ignore[arg-type]
-        dilation=layer.dilation,  # type: ignore[arg-type]
+        kernel_size=layer.kernel_size,  # ty: ignore[invalid-argument-type]
+        stride=updated_stride,  # ty: ignore[invalid-argument-type]
+        padding=updated_padding,  # ty: ignore[invalid-argument-type]
+        dilation=layer.dilation,  # ty: ignore[invalid-argument-type]
         groups=layer.groups,
         bias=use_bias,
         padding_mode=layer.padding_mode,
