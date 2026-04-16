@@ -349,7 +349,7 @@ class DigitalTyphoon(NonGeoDataset):
         """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
-        feature_dict = {
+        feature_dict: dict[str, Tensor] = {
             name: torch.tensor(feature_df[name].item()).float()
             for name in self.features
         }
