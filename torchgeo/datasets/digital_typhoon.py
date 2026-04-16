@@ -349,10 +349,10 @@ class DigitalTyphoon(NonGeoDataset):
         """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
-        feature_dict = {
-            name: torch.tensor(feature_df[name].item()).float()
-            for name in self.features
-        }
+        feature_dict = {}
+        for name in self.features:
+            feature_dict[name] = torch.tensor(feature_df[name].item()).float()
+
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
