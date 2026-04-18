@@ -1,23 +1,85 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """OSCD datamodule."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import kornia.augmentation as K
-import pytorch_lightning as pl
 import torch
-from einops import repeat
-from torch.utils.data import DataLoader, Dataset
-from torch.utils.data._utils.collate import default_collate
-from torchvision.transforms import Compose, Normalize
+from torch.utils.data import random_split
 
-from ..datasets import OSCD
-from .utils import dataset_split
+from ..datasets import OSCD, OSCD100
+from ..samplers.utils import _to_tuple
+from .geo import NonGeoDataModule
+
+MEAN = {
+    'B01': 1565.696044921875,
+    'B02': 1351.3319091796875,
+    'B03': 1257.1082763671875,
+    'B04': 1254.932861328125,
+    'B05': 1388.689208984375,
+    'B06': 1827.6710205078125,
+    'B07': 2050.2744140625,
+    'B08': 1963.4619140625,
+    'B8A': 2182.680908203125,
+    'B09': 629.837646484375,
+    'B10': 14.855598449707031,
+    'B11': 1909.8394775390625,
+    'B12': 1379.6024169921875,
+}
+
+STD = {
+    'B01': 263.7977600097656,
+    'B02': 394.5567321777344,
+    'B03': 508.9673767089844,
+    'B04': 726.4053344726562,
+    'B05': 686.6111450195312,
+    'B06': 730.0204467773438,
+    'B07': 822.0133056640625,
+    'B08': 842.5917358398438,
+    'B8A': 895.7645263671875,
+    'B09': 314.8407287597656,
+    'B10': 9.417905807495117,
+    'B11': 984.9249267578125,
+    'B12': 844.7711181640625,
+}
 
 
-class OSCDDataModule(pl.LightningDataModule):
+MEAN100 = {
+    'B01': 1699.1854248046875,
+    'B02': 1519.08349609375,
+    'B03': 1481.2452392578125,
+    'B04': 1542.990234375,
+    'B05': 1708.63134765625,
+    'B06': 2195.550048828125,
+    'B07': 2444.430419921875,
+    'B08': 2349.7373046875,
+    'B8A': 2592.41845703125,
+    'B09': 815.1251831054688,
+    'B10': 16.794158935546875,
+    'B11': 2331.2841796875,
+    'B12': 1734.558837890625,
+}
+
+STD100 = {
+    'B01': 361.23687744140625,
+    'B02': 517.9739379882812,
+    'B03': 668.9505004882812,
+    'B04': 953.0056762695312,
+    'B05': 899.5523071289062,
+    'B06': 812.8031616210938,
+    'B07': 859.7351684570312,
+    'B08': 868.78369140625,
+    'B8A': 898.2400512695312,
+    'B09': 382.8373718261719,
+    'B10': 8.891886711120605,
+    'B11': 1158.5733642578125,
+    'B12': 1069.1888427734375,
+}
+
+
+class OSCDDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the OSCD dataset.
 
     Uses the train/test splits from the dataset and further splits
@@ -26,191 +88,122 @@ class OSCDDataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(  # type: ignore[attr-defined]
-        [
-            1583.0741,
-            1374.3202,
-            1294.1616,
-            1325.6158,
-            1478.7408,
-            1933.0822,
-            2166.0608,
-            2076.4868,
-            2306.0652,
-            690.9814,
-            16.2360,
-            2080.3347,
-            1524.6930,
-        ]
-    )
+    def __init__(
+        self,
+        batch_size: int = 32,
+        patch_size: tuple[int, int] | int = 64,
+        val_split_pct: float = 0.2,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new OSCDDataModule instance.
 
-    band_stds = torch.tensor(  # type: ignore[attr-defined]
-        [
-            52.1937,
-            83.4168,
-            105.6966,
-            151.1401,
-            147.4615,
-            115.9289,
-            123.1974,
-            114.6483,
-            141.4530,
-            73.2758,
-            4.8368,
-            213.4821,
-            179.4793,
-        ]
-    )
+        Args:
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.OSCD`.
+        """
+        super().__init__(OSCD, batch_size=batch_size, num_workers=num_workers, **kwargs)
+
+        self.patch_size = _to_tuple(patch_size)
+        self.val_split_pct = val_split_pct
+
+        self.bands = kwargs.get('bands', OSCD.all_bands)
+        self.mean = torch.tensor([MEAN[b] for b in self.bands])
+        self.std = torch.tensor([STD[b] for b in self.bands])
+
+        self.aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+        )
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        transforms = K.AugmentationSequential(
+            K.VideoSequential(K.RandomCrop(self.patch_size)),
+            data_keys=None,
+            keepdim=True,
+        )
+        if stage in ['fit', 'validate']:
+            self.dataset = OSCD(split='train', transforms=transforms, **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
+            )
+        if stage in ['test']:
+            self.test_dataset = OSCD(split='test', transforms=transforms, **self.kwargs)
+
+
+class OSCD100DataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the OSCD100 dataset.
+
+    Intended for tutorials and demonstrations, not benchmarking.
+
+    .. versionadded:: 0.9
+    """
 
     def __init__(
         self,
-        root_dir: str,
-        bands: str = "all",
-        train_batch_size: int = 32,
+        batch_size: int = 8,
+        patch_size: tuple[int, int] | int = 64,
         num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        patch_size: Tuple[int, int] = (64, 64),
-        num_patches_per_tile: int = 32,
-        pad_size: Tuple[int, int] = (1280, 1280),
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for OSCD based DataLoaders.
+        """Initialize a new OSCD100DataModule instance.
 
         Args:
-            root_dir: The ``root`` arugment to pass to the OSCD Dataset classes
-            bands: "rgb" or "all"
-            train_batch_size: The batch size used in the train DataLoader
-                (val_batch_size == test_batch_size == 1)
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            patch_size: Size of random patch from image and mask (height, width)
-            num_patches_per_tile: number of random patches per sample
-            pad_size: size to pad images to during val/test steps
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.OSCD100`.
         """
-        super().__init__()  # type: ignore[no-untyped-call]
-        self.root_dir = root_dir
-        self.bands = bands
-        self.train_batch_size = train_batch_size
-        self.num_workers = num_workers
-        self.val_split_pct = val_split_pct
-        self.patch_size = patch_size
-        self.num_patches_per_tile = num_patches_per_tile
-
-        if bands == "rgb":
-            self.band_means = self.band_means[[3, 2, 1], None, None]
-            self.band_stds = self.band_stds[[3, 2, 1], None, None]
-        else:
-            self.band_means = self.band_means[:, None, None]
-            self.band_stds = self.band_stds[:, None, None]
-
-        self.norm = Normalize(self.band_means, self.band_stds)
-        self.rcrop = K.AugmentationSequential(
-            K.RandomCrop(patch_size), data_keys=["input", "mask"], same_on_batch=True
+        super().__init__(
+            OSCD100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
-        self.padto = K.PadTo(pad_size)
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset."""
-        sample["image"] = sample["image"].float()
-        sample["mask"] = sample["mask"]
-        sample["image"] = self.norm(sample["image"])
-        sample["image"] = torch.flatten(  # type: ignore[attr-defined]
-            sample["image"], 0, 1
+        self.patch_size = _to_tuple(patch_size)
+
+        self.bands = kwargs.get('bands', OSCD.all_bands)
+        self.mean = torch.tensor([MEAN100[b] for b in self.bands])
+        self.std = torch.tensor([STD100[b] for b in self.bands])
+
+        self.aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
         )
-        return sample
 
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
-        This method is only called once per run.
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        OSCD(self.root_dir, split="train", bands=self.bands, checksum=False)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-        """
-
-        def n_random_crop(sample: Dict[str, Any]) -> Dict[str, Any]:
-            images, masks = [], []
-            for i in range(self.num_patches_per_tile):
-                mask = repeat(sample["mask"], "h w -> t h w", t=2).float()
-                image, mask = self.rcrop(sample["image"], mask)
-                mask = mask.squeeze()[0]
-                images.append(image.squeeze())
-                masks.append(mask.long())
-            sample["image"] = torch.stack(images)
-            sample["mask"] = torch.stack(masks)
-            return sample
-
-        def pad_to(sample: Dict[str, Any]) -> Dict[str, Any]:
-            sample["image"] = self.padto(sample["image"])[0]
-            sample["mask"] = self.padto(sample["mask"].float()).long()[0, 0]
-            return sample
-
-        train_transforms = Compose([self.preprocess, n_random_crop])
-        # for testing and validation we pad all inputs to a fixed size to avoid issues
-        # with the upsampling paths in encoder-decoder architectures
-        test_transforms = Compose([self.preprocess, pad_to])
-
-        train_dataset = OSCD(
-            self.root_dir, split="train", bands=self.bands, transforms=train_transforms
+        transforms = K.AugmentationSequential(
+            K.VideoSequential(K.RandomCrop(self.patch_size)),
+            data_keys=None,
+            keepdim=True,
         )
-
-        self.train_dataset: Dataset[Any]
-        self.val_dataset: Dataset[Any]
-
-        if self.val_split_pct > 0.0:
-            val_dataset = OSCD(
-                self.root_dir,
-                split="train",
-                bands=self.bands,
-                transforms=test_transforms,
+        if stage in ['fit']:
+            self.train_dataset = OSCD100(
+                split='train', transforms=transforms, **self.kwargs
             )
-            self.train_dataset, self.val_dataset, _ = dataset_split(
-                train_dataset, val_pct=self.val_split_pct, test_pct=0.0
+        if stage in ['fit', 'validate']:
+            self.val_dataset = OSCD100(
+                split='val', transforms=transforms, **self.kwargs
             )
-            self.val_dataset.dataset = val_dataset
-        else:
-            self.train_dataset = train_dataset
-            self.val_dataset = train_dataset
-
-        self.test_dataset = OSCD(
-            self.root_dir, split="test", bands=self.bands, transforms=test_transforms
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training."""
-
-        def collate_wrapper(batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-            r_batch: Dict[str, Any] = default_collate(  # type: ignore[no-untyped-call]
-                batch
+        if stage in ['test']:
+            self.test_dataset = OSCD100(
+                split='test', transforms=transforms, **self.kwargs
             )
-            r_batch["image"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["image"], 0, 1
-            )
-            r_batch["mask"] = torch.flatten(  # type: ignore[attr-defined]
-                r_batch["mask"], 0, 1
-            )
-            return r_batch
-
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.train_batch_size,
-            num_workers=self.num_workers,
-            collate_fn=collate_wrapper,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation."""
-        return DataLoader(
-            self.val_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing."""
-        return DataLoader(
-            self.test_dataset, batch_size=1, num_workers=self.num_workers, shuffle=False
-        )

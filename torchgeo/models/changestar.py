@@ -1,21 +1,18 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """ChangeStar implementations."""
 
-from typing import Dict, List
+from typing import Literal
 
 import torch
 import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
+from torchvision.models._api import WeightsEnum
 
 from .farseg import FarSeg
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
 
 
 class ChangeMixin(Module):
@@ -35,7 +32,7 @@ class ChangeMixin(Module):
         inner_channels: int = 16,
         num_convs: int = 4,
         scale_factor: float = 4.0,
-    ):
+    ) -> None:
         """Initializes a new ChangeMixin module.
 
         Args:
@@ -45,17 +42,17 @@ class ChangeMixin(Module):
             scale_factor: number of upsampling factor
         """
         super().__init__()
-        layers: List[Module] = [
+        layers: list[Module] = [
             nn.modules.Sequential(
                 nn.modules.Conv2d(in_channels, inner_channels, 3, 1, 1),
-                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.BatchNorm2d(inner_channels),
                 nn.modules.ReLU(True),
             )
         ]
         layers += [
             nn.modules.Sequential(
                 nn.modules.Conv2d(inner_channels, inner_channels, 3, 1, 1),
-                nn.modules.BatchNorm2d(inner_channels),  # type: ignore[no-untyped-call]
+                nn.modules.BatchNorm2d(inner_channels),
                 nn.modules.ReLU(True),
             )
             for _ in range(num_convs - 1)
@@ -68,7 +65,7 @@ class ChangeMixin(Module):
 
         self.convs = nn.modules.Sequential(*layers)
 
-    def forward(self, bi_feature: Tensor) -> List[Tensor]:
+    def forward(self, bi_feature: Tensor) -> list[Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -78,17 +75,11 @@ class ChangeMixin(Module):
             a list of bidirected output predictions
         """
         batch_size = bi_feature.size(0)
-        t1t2 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1
-        )
-        t2t1 = torch.cat(  # type: ignore[attr-defined]
-            [bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1
-        )
+        t1t2 = torch.cat([bi_feature[:, 0, :, :, :], bi_feature[:, 1, :, :, :]], dim=1)
+        t2t1 = torch.cat([bi_feature[:, 1, :, :, :], bi_feature[:, 0, :, :, :]], dim=1)
 
-        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))  # type: ignore[attr-defined]
-        c12, c21 = torch.split(
-            c1221, batch_size, dim=0
-        )  # type: ignore[no-untyped-call]
+        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
+        c12, c21 = torch.split(c1221, batch_size, dim=0)
         return [c12, c21]
 
 
@@ -115,7 +106,7 @@ class ChangeStar(Module):
         dense_feature_extractor: Module,
         seg_classifier: Module,
         changemixin: ChangeMixin,
-        inference_mode: str = "t1t2",
+        inference_mode: Literal['t1t2', 't2t1', 'mean'] = 't1t2',
     ) -> None:
         """Initializes a new ChangeStar model.
 
@@ -134,12 +125,9 @@ class ChangeStar(Module):
         self.dense_feature_extractor = dense_feature_extractor
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin
-
-        if inference_mode not in ["t1t2", "t2t1", "mean"]:
-            raise ValueError(f"Unknown inference_mode: {inference_mode}")
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -149,38 +137,39 @@ class ChangeStar(Module):
             a dictionary containing bitemporal semantic segmentation logit and binary
             change detection logit/probability
         """
-        b, t, c, h, w = x.shape
-        x = rearrange(x, "b t c h w -> (b t) c h w")
+        _, t, _, _, _ = x.shape
+        x = rearrange(x, 'b t c h w -> (b t) c h w')
         # feature extraction
         bi_feature = self.dense_feature_extractor(x)
         # semantic segmentation
         bi_seg_logit = self.seg_classifier(bi_feature)
-        bi_seg_logit = rearrange(bi_seg_logit, "(b t) c h w -> b t c h w", t=t)
+        bi_seg_logit = rearrange(bi_seg_logit, '(b t) c h w -> b t c h w', t=t)
 
-        bi_feature = rearrange(bi_feature, "(b t) c h w -> b t c h w", t=t)
+        bi_feature = rearrange(bi_feature, '(b t) c h w -> b t c h w', t=t)
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results: Dict[str, Tensor] = {}
+        results: dict[str, Tensor] = {}
         if not self.training:
-            results.update({"bi_seg_logit": bi_seg_logit})
-            if self.inference_mode == "t1t2":
-                results.update({"change_prob": c12.sigmoid()})
-            elif self.inference_mode == "t2t1":
-                results.update({"change_prob": c21.sigmoid()})
-            elif self.inference_mode == "mean":
-                results.update(
-                    {
-                        "change_prob": torch.stack([c12, c21], dim=0)
-                        .sigmoid_()
-                        .mean(dim=0)
-                    }
-                )
+            results.update({'bi_seg_logit': bi_seg_logit})
+            match self.inference_mode:
+                case 't1t2':
+                    results.update({'change_prob': c12.sigmoid()})
+                case 't2t1':
+                    results.update({'change_prob': c21.sigmoid()})
+                case 'mean':
+                    results.update(
+                        {
+                            'change_prob': torch.stack([c12, c21], dim=0)
+                            .sigmoid_()
+                            .mean(dim=0)
+                        }
+                    )
         else:
             results.update(
                 {
-                    "bi_seg_logit": bi_seg_logit,
-                    "bi_change_logit": torch.stack([c12, c21], dim=1),
+                    'bi_seg_logit': bi_seg_logit,
+                    'bi_change_logit': torch.stack([c12, c21], dim=1),
                 }
             )
         return results
@@ -198,24 +187,25 @@ class ChangeStarFarSeg(ChangeStar):
 
     def __init__(
         self,
-        backbone: str = "resnet50",
+        backbone: str = 'resnet50',
         classes: int = 1,
-        backbone_pretrained: bool = True,
+        backbone_weights: WeightsEnum | None = None,
     ) -> None:
         """Initializes a new ChangeStarFarSeg model.
 
         Args:
             backbone: name of ResNet backbone
             classes: number of output segmentation classes
-            backbone_pretrained: whether to use pretrained weight for backbone
+            backbone_weights: Pre-trained model weights to use.
+
+        .. versionadded:: 0.9
+           The *backbone_weights* parameter.
         """
         model = FarSeg(
-            backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
+            backbone=backbone, classes=classes, backbone_weights=backbone_weights
         )
         seg_classifier: Module = model.decoder.classifier
-        model.decoder.classifier = (
-            nn.modules.Identity()  # type: ignore[no-untyped-call, assignment]
-        )
+        model.decoder.classifier = nn.modules.Identity()  # ty: ignore[invalid-assignment]
 
         super().__init__(
             dense_feature_extractor=model,
@@ -223,5 +213,5 @@ class ChangeStarFarSeg(ChangeStar):
             changemixin=ChangeMixin(
                 in_channels=128 * 2, inner_channels=16, num_convs=4, scale_factor=4.0
             ),
-            inference_mode="t1t2",
+            inference_mode='t1t2',
         )

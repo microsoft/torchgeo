@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 6
+    num_classes: 17
+    num_filters: 1
+    ignore_index: 0
+data:
+  class_path: SSL4EOLBenchmarkDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/ssl4eo_benchmark_landsat'
+    sensor: 'etm_sr'
+    product: 'nlcd'

@@ -1,70 +1,51 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
-from torchgeo.datasets import EuroSAT
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
+from torchgeo.datasets import (
+    DatasetNotFoundError,
+    EuroSAT,
+    EuroSAT100,
+    EuroSATSpatial,
+    RGBBandsMissingError,
+)
 
 
 class TestEuroSAT:
-    @pytest.fixture(params=["train", "val", "test"])
+    @pytest.fixture(
+        params=product([EuroSAT, EuroSATSpatial, EuroSAT100], ['train', 'val', 'test'])
+    )
     def dataset(
-        self,
-        monkeypatch: Generator[MonkeyPatch, None, None],
-        tmp_path: Path,
-        request: SubRequest,
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            torchgeo.datasets.eurosat, "download_url", download_url
-        )
-        md5 = "aa051207b0547daba0ac6af57808d68e"
-        monkeypatch.setattr(EuroSAT, "md5", md5)  # type: ignore[attr-defined]
-        url = os.path.join("tests", "data", "eurosat", "EuroSATallBands.zip")
-        monkeypatch.setattr(EuroSAT, "url", url)  # type: ignore[attr-defined]
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            EuroSAT,
-            "split_urls",
-            {
-                "train": os.path.join("tests", "data", "eurosat", "eurosat-train.txt"),
-                "val": os.path.join("tests", "data", "eurosat", "eurosat-val.txt"),
-                "test": os.path.join("tests", "data", "eurosat", "eurosat-test.txt"),
-            },
-        )
-        monkeypatch.setattr(  # type: ignore[attr-defined]
-            EuroSAT,
-            "split_md5s",
-            {
-                "train": "4af60a00fdfdf8500572ae5360694b71",
-                "val": "4af60a00fdfdf8500572ae5360694b71",
-                "test": "4af60a00fdfdf8500572ae5360694b71",
-            },
-        )
-        root = str(tmp_path)
-        split = request.param
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        return EuroSAT(root, split, transforms, download=True, checksum=True)
+        base_class: type[EuroSAT] = request.param[0]
+        split: str = request.param[1]
+        url = os.path.join('tests', 'data', 'eurosat') + os.sep
+        monkeypatch.setattr(base_class, 'url', url)
+        transforms = nn.Identity()
+        return base_class(tmp_path, split=split, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: EuroSAT) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], torch.Tensor)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError):
+            EuroSAT(bands=('OK', 'BK'))
 
     def test_len(self, dataset: EuroSAT) -> None:
         assert len(dataset) == 2
@@ -75,28 +56,56 @@ class TestEuroSAT:
         assert len(ds) == 4
 
     def test_already_downloaded(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        EuroSAT(root=str(tmp_path), download=True)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_already_downloaded_not_extracted(
         self, dataset: EuroSAT, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=str(tmp_path))
-        EuroSAT(root=str(tmp_path), download=False)
+        shutil.copy(dataset.url + dataset.filename, tmp_path)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automaticaly download the dataset."
-        with pytest.raises(RuntimeError, match=err):
-            EuroSAT(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            EuroSAT(tmp_path)
+
+    def test_missing_images_and_zip_no_download(self, tmp_path: Path) -> None:
+        """Ensure DatasetNotFoundError is raised if images and zip are missing and download=False."""
+        split_file = tmp_path / 'eurosat-train.txt'
+        split_file.write_text('dummy.tif\n')
+        with pytest.raises(DatasetNotFoundError):
+            EuroSAT(root=tmp_path, split='train', download=False)
+
+    def test_image_folder_present_split_file_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Test that split file is downloaded if missing but image folder is present."""
+
+        image_dir = tmp_path / EuroSAT.base_dir
+        class_dir = image_dir / 'AnnualCrop'
+        class_dir.mkdir(parents=True, exist_ok=True)
+        (class_dir / 'AnnualCrop_1.tif').touch()
+        split_file = tmp_path / 'eurosat-train.txt'
+        assert not split_file.exists()
+        monkeypatch.setattr(
+            EuroSAT, 'url', os.path.join('tests', 'data', 'eurosat') + os.sep
+        )
+        EuroSAT(root=tmp_path, split='train', download=True)
+        assert split_file.exists()
 
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction"] = x["label"].clone()
+        x['prediction'] = x['label'].clone()
         dataset.plot(x)
         plt.close()
+
+    def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
+        dataset = type(dataset)(tmp_path, split=dataset.split, bands=('B03',))
+        with pytest.raises(
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
+        ):
+            dataset.plot(dataset[0], suptitle='Single Band')

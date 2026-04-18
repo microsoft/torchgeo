@@ -1,0 +1,3 @@
+filepath,title,title_multi_objects,similarity_CLIP_openai
+images4/w779523169_CH_18.jpg,"a satellite image of a beautiful house I will never be able to afford","a satellite image of a beautiful house, surrounded by a yard",0.1
+images5/w602363451_US_21.jpg,"a satellite image of the last mall in the world","a satellite image of a mall; surrounded by a parking lot",0.2

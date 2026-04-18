@@ -1,44 +1,60 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import fnmatch
 import functools
 import glob
 import os
+import pathlib
 import re
-import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, cast
+import warnings
+from collections.abc import Callable, Iterable, Sequence
+from contextlib import ExitStack
+from datetime import datetime
+from typing import ClassVar, Literal, cast
 
-import fiona
-import fiona.transform
-import matplotlib.pyplot as plt
+import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 import pyproj
 import rasterio
+import rasterio.features
 import rasterio.merge
 import shapely
 import torch
-from rasterio.crs import CRS
+from geopandas import GeoDataFrame
+from PIL.Image import Image
+from pyproj import CRS
+from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
+from rasterio.transform import Affine, array_bounds, from_gcps
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import from_bounds
-from rtree.index import Index, Property
+from rasterio.warp import calculate_default_transform
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
+from .errors import DatasetNotFoundError
+from .utils import (
+    GeoSlice,
+    Path,
+    Sample,
+    array_to_tensor,
+    concat_samples,
+    convert_poly_coords,
+    disambiguate_timestamp,
+    lazy_import,
+    merge_samples,
+    path_is_vsi,
+)
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Dataset.__module__ = "torch.utils.data"
-ImageFolder.__module__ = "torchvision.datasets"
 
-
-class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -47,14 +63,16 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     * :term:`coordinate reference system (CRS)`
     * resolution
 
-    :class:`GeoDataset` is a special class of datasets. Unlike :class:`VisionDataset`,
+    :class:`GeoDataset` is a special class of datasets. Unlike :class:`NonGeoDataset`,
     the presence of geospatial information allows two or more datasets to be combined
     based on latitude/longitude. This allows users to do things like:
 
     * Combine image and target labels and sample from both simultaneously
-      (e.g. Landsat and CDL)
+      (e.g., Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
-      (e.g. Landsat and Sentinel)
+      (e.g., Landsat and Sentinel)
+    * Combine image and other raster data (e.g., elevation, temperature, pressure)
+      and sample from both simultaneously (e.g., Landsat and Aster Global DEM)
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -66,9 +84,9 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     Users may also want to:
 
     * Combine datasets for multiple image sources and treat them as equivalent
-      (e.g. Landsat 7 and Landsat 8)
+      (e.g., Landsat 7 and Landsat 8)
     * Combine datasets for disparate geospatial locations
-      (e.g. Chesapeake NY and PA)
+      (e.g., Chesapeake NY and PA)
 
     These combinations require that all queries are present in *at least one* dataset,
     and can be combined using a :class:`UnionDataset`:
@@ -78,9 +96,16 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    #: Resolution of the dataset in units of CRS.
-    res: float
-    _crs: CRS
+    index: GeoDataFrame
+    paths: Path | Iterable[Path]
+    _res = (0.0, 0.0)
+
+    #: Glob expression used to search for files.
+    #:
+    #: This expression should be specific enough that it will not pick up files from
+    #: other datasets. It should not include a file extension, as the dataset may be in
+    #: a different file format than what it was originally downloaded as.
+    filename_glob = '*'
 
     # NOTE: according to the Python docs:
     #
@@ -93,37 +118,75 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
 
     #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
     #: Users should instead use the intersection or union operator.
-    __add__ = None  # type: ignore[assignment]
+    __add__ = None
 
-    def __init__(
-        self, transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None
-    ) -> None:
-        """Initialize a new Dataset instance.
+    def _disambiguate_slice(self, index: GeoSlice) -> tuple[slice, slice, slice]:
+        """Disambiguate a partial spatiotemporal slice.
 
         Args:
-            transforms: a function/transform that takes an input sample
-                and returns a transformed version
-        """
-        self.transforms = transforms
-
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-
-    @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            A fully resolved spatiotemporal slice.
+        """
+        out = list(self.bounds)
+
+        if isinstance(index, slice):
+            index = (index,)
+
+        # For each slice (x, y, t)...
+        for i in range(len(index)):
+            # For each component (start, stop, step)...
+            if index[i].start is not None:
+                out[i] = slice(index[i].start, out[i].stop, out[i].step)
+            if index[i].stop is not None:
+                out[i] = slice(out[i].start, index[i].stop, out[i].step)
+            if index[i].step is not None:
+                out[i] = slice(out[i].start, out[i].stop, index[i].step)
+
+        geoslice = tuple(out)
+        assert len(geoslice) == 3
+        geoslice = cast(tuple[slice, slice, slice], geoslice)
+        return geoslice
+
+    def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
+        """Tensor representation of a spatiotemporal slice.
+
+        Args:
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            A tensor version of this slice.
+        """
+        x, y, t = self._disambiguate_slice(index)
+        bounds = [
+            x.start,
+            x.stop,
+            x.step,
+            y.start,
+            y.stop,
+            y.step,
+            t.start.timestamp(),
+            t.stop.timestamp(),
+            t.step,
+        ]
+        return torch.tensor(bounds)
+
+    @abc.abstractmethod
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
 
-    def __and__(self, other: "GeoDataset") -> "IntersectionDataset":
+    def __and__(self, other: 'GeoDataset') -> 'IntersectionDataset':
         """Take the intersection of two :class:`GeoDataset`.
 
         Args:
@@ -139,7 +202,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return IntersectionDataset(self, other)
 
-    def __or__(self, other: "GeoDataset") -> "UnionDataset":
+    def __or__(self, other: 'GeoDataset') -> 'UnionDataset':
         """Take the union of two GeoDatasets.
 
         Args:
@@ -161,8 +224,7 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
         Returns:
             length of the dataset
         """
-        count: int = self.index.count(self.index.bounds)
-        return count
+        return len(self.index)
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -176,101 +238,109 @@ class GeoDataset(Dataset[Dict[str, Any]], abc.ABC):
     bbox: {self.bounds}
     size: {len(self)}"""
 
-    # NOTE: This hack should be removed once the following issue is fixed:
-    # https://github.com/Toblerity/rtree/issues/87
-
-    def __getstate__(
-        self,
-    ) -> Tuple[
-        Dict[Any, Any],
-        List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
-    ]:
-        """Define how instances are pickled.
-
-        Returns:
-            the state necessary to unpickle the instance
-        """
-        objects = self.index.intersection(self.index.bounds, objects=True)
-        tuples = [(item.id, item.bounds, item.object) for item in objects]
-        return self.__dict__, tuples
-
-    def __setstate__(
-        self,
-        state: Tuple[
-            Dict[Any, Any],
-            List[Tuple[int, Tuple[float, float, float, float, float, float], str]],
-        ],
-    ) -> None:
-        """Define how to unpickle an instance.
-
-        Args:
-            state: the state of the instance when it was pickled
-        """
-        attrs, tuples = state
-        self.__dict__.update(attrs)
-        for item in tuples:
-            self.index.insert(*item)
-
     @property
-    def bounds(self) -> BoundingBox:
+    def bounds(self) -> tuple[slice, slice, slice]:
         """Bounds of the index.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+            Bounding x, y, and t slices.
         """
-        return BoundingBox(*self.index.bounds)
+        xmin, ymin, xmax, ymax = self.index.total_bounds
+        xres, yres = self.res
+        tmin = self.index.index.left.min()
+        tmax = self.index.index.right.max()
+        tres = 1
+        return slice(xmin, xmax, xres), slice(ymin, ymax, yres), slice(tmin, tmax, tres)
 
     @property
     def crs(self) -> CRS:
-        """:term:`coordinate reference system (CRS)` for the dataset.
+        """:term:`coordinate reference system (CRS)` of the dataset.
 
         Returns:
-            the :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            The :term:`coordinate reference system (CRS)`.
         """
-        return self._crs
+        _crs = cast(CRS, self.index.crs)
+        return _crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise updates the R-tree index.
+        If ``new_crs == self.crs``, does nothing, otherwise updates the index.
 
         Args:
-            new_crs: new :term:`coordinate reference system (CRS)`
-
-        .. versionadded:: 0.2
+            new_crs: New :term:`coordinate reference system (CRS)`.
         """
-        if new_crs == self._crs:
+        if new_crs == self.crs:
             return
 
-        new_index = Index(interleaved=False, properties=Property(dimension=3))
+        print(f'Converting {self.__class__.__name__} CRS from {self.crs} to {new_crs}')
+        self.index.to_crs(new_crs, inplace=True)
 
-        project = pyproj.Transformer.from_crs(
-            pyproj.CRS(str(self._crs)), pyproj.CRS(str(new_crs)), always_xy=True
-        ).transform
-        for hit in self.index.intersection(self.index.bounds, objects=True):
-            old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
-            old_box = shapely.geometry.box(old_minx, old_miny, old_maxx, old_maxy)
-            new_box = shapely.ops.transform(project, old_box)
-            new_minx, new_miny, new_maxx, new_maxy = new_box.bounds
-            new_bounds = (new_minx, new_maxx, new_miny, new_maxy, mint, maxt)
-            new_index.insert(hit.id, new_bounds, hit.object)
+    @property
+    def res(self) -> tuple[float, float]:
+        """Resolution of the dataset in units of CRS.
 
-        self._crs = new_crs
-        self.index = new_index
+        Returns:
+            The resolution of the dataset.
+        """
+        return self._res
+
+    @res.setter
+    def res(self, new_res: float | tuple[float, float]) -> None:
+        """Change the resolution of a GeoDataset.
+
+        Args:
+            new_res: New resolution in (xres, yres) format. If a single float is provided, it is used for both
+                the x and y resolution.
+        """
+        if isinstance(new_res, int | float):
+            new_res = (new_res, new_res)
+
+        if new_res == self.res:
+            return
+
+        print(f'Converting {self.__class__.__name__} res from {self.res} to {new_res}')
+        self._res = new_res
+
+    @property
+    def files(self) -> list[str]:
+        """A list of all files in the dataset.
+
+        Returns:
+            All files in the dataset.
+
+        .. versionadded:: 0.5
+        """
+        # Make iterable
+        if isinstance(self.paths, str | os.PathLike):
+            paths: Iterable[Path] = [cast(Path, self.paths)]
+        else:
+            paths = self.paths
+
+        # Using set to remove any duplicates if directories are overlapping
+        files: set[str] = set()
+        for path in paths:
+            if os.path.isdir(path):
+                pathname = os.path.join(path, '**', self.filename_glob)
+                files |= set(glob.iglob(pathname, recursive=True))
+            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
+                str(path), f'*{self.filename_glob}'
+            ):
+                files.add(str(path))
+            elif not hasattr(self, 'download'):
+                warnings.warn(
+                    f"Could not find any relevant files for provided path '{path}'. "
+                    f'Path was ignored.',
+                    UserWarning,
+                )
+
+        # Sort the output to enforce deterministic behavior.
+        return sorted(files)
 
 
 class RasterDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files."""
-
-    #: Glob expression used to search for files.
-    #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
 
     #: Regular expression used to extract date from filename.
     #:
@@ -278,169 +348,307 @@ class RasterDataset(GeoDataset):
     #: groups. The following groups are specifically searched for by the base class:
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    #: * ``start``: used to calculate ``mint`` for ``index`` insertion
+    #: * ``stop``: used to calculate ``maxt`` for ``index`` insertion
     #:
-    #: When :attr:`separate_files`` is True, the following additional groups are
-    #: searched for to find other files:
+    #: When :attr:`~RasterDataset.separate_files` is True, the following additional
+    #: groups are searched for to find other files:
     #:
     #: * ``band``: replaced with requested band name
-    #: * ``resolution``: replaced with a glob character
-    filename_regex = ".*"
+    filename_regex = '.*'
 
     #: Date format string used to parse date from filename.
     #:
-    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
-    date_format = "%Y%m%d"
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group or
+    #: ``start`` and ``stop`` groups.
+    date_format = '%Y%m%d'
 
-    #: True if dataset contains imagery, False if dataset contains mask
+    #: Minimum timestamp if not in filename
+    mint: datetime = pd.Timestamp.min
+
+    #: Maximum timestamp if not in filename
+    maxt: datetime = pd.Timestamp.max
+
+    #: True if the dataset only contains model inputs (such as images). False if the
+    #: dataset only contains ground truth model outputs (such as segmentation masks).
+    #:
+    #: The sample returned by the dataset/data loader will use the "image" key if
+    #: *is_image* is True, otherwise it will use the "mask" key.
+    #:
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `RasterDataset` instances and combine them using an `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
     #: Names of all available bands in the dataset
-    all_bands: List[str] = []
+    all_bands: tuple[str, ...] = ()
 
     #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: List[str] = []
-
-    #: If True, stretch the image from the 2nd percentile to the 98th percentile,
-    #: used for plotting
-    stretch = False
+    rgb_bands: tuple[str, ...] = ()
 
     #: Color map for the dataset, used for plotting
-    cmap: Dict[int, Tuple[int, int, int, int]] = {}
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to float32 if :attr:`~RasterDataset.is_image` is True, else long.
+        Can be overridden for tasks like pixel-wise regression where the mask should be
+        float32 instead of long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.5
+        """
+        if self.is_image:
+            return torch.float32
+        else:
+            return torch.long
+
+    @property
+    def resampling(self) -> Resampling:
+        """Resampling algorithm used when reading input files.
+
+        Defaults to bilinear for float dtypes and nearest for int dtypes.
+
+        Returns:
+            The resampling method to use.
+
+        .. versionadded:: 0.6
+        """
+        # Based on torch.is_floating_point
+        if self.dtype in [torch.float64, torch.float32, torch.float16, torch.bfloat16]:
+            return Resampling.bilinear
+        else:
+            return Resampling.nearest
 
     def __init__(
         self,
-        root: str,
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | tuple[float, float] | None = None,
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new RasterDataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                (typically ``[T, C, H, W]``). If False, merge data into a
+                mosaic (typically ``[C, H, W]``). For mask-style datasets
+                (``is_image=False``), single-band data may have the channel
+                dimension squeezed, resulting in shapes ``[T, H, W]`` or
+                ``[H, W]`` when ``C == 1``.
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            AssertionError: If *bands* are invalid.
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        super().__init__(transforms)
-
-        self.root = root
+        self.paths = paths
+        self.bands = bands or self.all_bands
+        self.transforms = transforms
         self.cache = cache
+        self.time_series = time_series
 
-        # Populate the dataset index
-        i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
+        if self.all_bands:
+            assert set(self.bands) <= set(self.all_bands)
+
+        # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in glob.iglob(pathname, recursive=True):
+        filepaths = []
+        datetimes = []
+        geometries = []
+        for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
+                vrt = None
                 try:
-                    with rasterio.open(filepath) as src:
-                        # See if file has a color map
+                    vrt = self._load_warp_file(filepath=filepath, crs=crs)
+                    # See if file has a color map
+                    if len(self.cmap) == 0:
                         try:
-                            self.cmap = src.colormap(1)
+                            self.cmap = vrt.colormap(1)  # ty: ignore[invalid-attribute-access]
                         except ValueError:
                             pass
-
-                        if crs is None:
-                            crs = src.crs
-                        if res is None:
-                            res = src.res[0]
-
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            minx, miny, maxx, maxy = vrt.bounds
+                    if crs is None:
+                        crs = vrt.crs
+                    geometries.append(shapely.box(*vrt.bounds))
+                    if res is None:
+                        res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
                 else:
-                    mint: float = 0
-                    maxt: float = sys.maxsize
-                    if "date" in match.groupdict():
-                        date = match.group("date")
-                        mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    filepaths.append(filepath)
+                    mint, maxt = self._filepath_to_timestamp(filepath)
+                    datetimes.append((mint, maxt))
+                finally:
+                    if vrt is not None:
+                        vrt.close()
 
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
-                    i += 1
+        if len(filepaths) == 0:
+            raise DatasetNotFoundError(self)
 
-        if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+        if not self.separate_files:
+            self.band_indexes = None
+            if self.bands:
+                if self.all_bands:
+                    self.band_indexes = [
+                        self.all_bands.index(i) + 1 for i in self.bands
+                    ]
+                else:
+                    msg = (
+                        f'{self.__class__.__name__} is missing an `all_bands` '
+                        'attribute, so `bands` cannot be specified.'
+                    )
+                    raise AssertionError(msg)
 
-        self._crs = cast(CRS, crs)
-        self.res = cast(float, res)
+        if res is not None:
+            if isinstance(res, int | float):
+                res = (res, res)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+            self._res = res
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not filepaths:
+        if df.empty:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
         if self.separate_files:
-            data_list: List[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in getattr(self, "bands", self.all_bands):
+            data_list: list[Tensor] = []
+            for band in self.bands:
                 band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if "date" in match.groupdict():
-                            start = match.start("band")
-                            end = match.end("band")
-                            filename = filename[:start] + band + filename[end:]
-                        if "resolution" in match.groupdict():
-                            start = match.start("resolution")
-                            end = match.end("resolution")
-                            filename = filename[:start] + "*" + filename[end:]
-                    filepath = glob.glob(os.path.join(directory, filename))[0]
+                for filepath in df.filepath:
+                    filepath = self._update_filepath(band, filepath)
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)  # type: ignore[attr-defined]
+                data_list.append(self._merge_or_stack(band_filepaths, index))
+            data = torch.cat(data_list, dim=-3)
         else:
-            data = self._merge_files(filepaths, query)
+            data = self._merge_or_stack(df.filepath, index, self.band_indexes)
 
-        key = "image" if self.is_image else "mask"
-        sample = {key: data, "crs": self.crs, "bbox": query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
+        }
+
+        data = data.to(self.dtype)
+        if self.is_image:
+            sample['image'] = data
+        else:
+            sample['mask'] = data.squeeze(-3)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def _merge_files(self, filepaths: Sequence[str], query: BoundingBox) -> Tensor:
-        """Load and merge one or more files.
+    def _filepath_to_timestamp(self, filepath: Path) -> tuple[datetime, datetime]:
+        """Extract minimum and maximum timestamps from the filepath.
+
+        Args:
+            filepath: Full path to the file.
+
+        Returns:
+            (mint, maxt) tuple.
+        """
+        mint = self.mint
+        maxt = self.maxt
+
+        filename = os.path.basename(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'date' in match.groupdict():
+                date = match.group('date')
+                mint, maxt = disambiguate_timestamp(date, self.date_format)
+            elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                start = match.group('start')
+                stop = match.group('stop')
+                mint, _ = disambiguate_timestamp(start, self.date_format)
+                _, maxt = disambiguate_timestamp(stop, self.date_format)
+
+        return mint, maxt
+
+    def _update_filepath(self, band: str, filepath: str) -> str:
+        """Update `filepath` to point to `band`.
+
+        Args:
+            band: band to search for.
+            filepath: base filepath to use for searching.
+
+        Returns:
+            updated filepath for `band`.
+        """
+        filename = os.path.basename(filepath)
+        directory = os.path.dirname(filepath)
+        match = re.match(self.filename_regex, filename, re.VERBOSE)
+        if match:
+            if 'band' in match.groupdict():
+                start = match.start('band')
+                end = match.end('band')
+                filename = filename[:start] + band + filename[end:]
+        filepath = os.path.join(directory, filename)
+        return filepath
+
+    def _merge_or_stack(
+        self,
+        filepaths: Sequence[str],
+        index: GeoSlice,
+        band_indexes: Sequence[int] | None = None,
+    ) -> Tensor:
+        """Load and combine one or more files.
+
+        If *time_series* is True, files are stacked into a [T, C, H, W] shape.
+        If *time_series* is False, files are merged into a [C, H, W] mosaic.
 
         Args:
             filepaths: one or more files to load and merge
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            band_indexes: indexes of bands to be used
 
         Returns:
             image/mask at that index
@@ -450,24 +658,25 @@ class RasterDataset(GeoDataset):
         else:
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
-        bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        if len(vrt_fhs) == 1:
-            src = vrt_fhs[0]
-            out_width = int(round((query.maxx - query.minx) / self.res))
-            out_height = int(round((query.maxy - query.miny) / self.res))
-            out_shape = (src.count, out_height, out_width)
-            dest = src.read(
-                out_shape=out_shape, window=from_bounds(*bounds, src.transform)
-            )
-        else:
-            dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res)
-        dest = dest.astype(np.int32)
+        x, y, _ = self._disambiguate_slice(index)
+        kwargs = {
+            'bounds': (x.start, y.start, x.stop, y.stop),
+            'res': (x.step, y.step),
+            'indexes': band_indexes,
+            'resampling': self.resampling,
+        }
 
-        tensor: Tensor = torch.tensor(dest)  # type: ignore[attr-defined]
+        if self.time_series:
+            dest = np.stack([rasterio.merge.merge([fh], **kwargs)[0] for fh in vrt_fhs])
+        else:
+            dest = rasterio.merge.merge(vrt_fhs, **kwargs)[0]
+
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = array_to_tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -478,191 +687,245 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: str) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path, crs: CRS | None = None) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
+
+        If the dataset has no CRS/transform but has 4 corner GCPs, we derive an affine
+        transform from the GCPs and override src_crs/src_transform in WarpedVRT.
 
         Args:
             filepath: file to load and warp
+            crs: Optionally specify which CRS to reproject to. This is used in __init__
+                as self.index.crs is not defined at this point.
 
         Returns:
             file handle of warped VRT
+
+        Raises:
+            ValueError: If dataset has no usable affine CRS/transform and no GCP CRS.
         """
         src = rasterio.open(filepath)
 
-        # Only warp if necessary
-        if src.crs != self.crs:
-            vrt = WarpedVRT(src, crs=self.crs)
+        has_meaningful_affine = (
+            src.transform is not None and not src.transform.is_identity
+        )
+        if has_meaningful_affine:
+            src_crs, src_transform = src.crs, src.transform
+        else:
+            try:
+                src_crs, src_transform = self._compute_affine_georeferencing(src)
+            except ValueError:
+                src.close()
+                raise
+
+        try:  # Use externally chosen crs
+            dst_crs = crs or self.crs
+        except AttributeError:
+            dst_crs = src_crs
+
+        dst_transform, dst_width, dst_height, needs_warp = (
+            self._compute_affine_warp_grid(
+                src_crs, src_transform, src.width, src.height, dst_crs
+            )
+        )
+
+        if needs_warp:
+            vrt = WarpedVRT(
+                src,
+                crs=dst_crs,
+                transform=dst_transform,
+                height=dst_height,
+                width=dst_width,
+                src_crs=src_crs,
+                src_transform=src_transform,
+            )
             src.close()
             return vrt
-        else:
-            return src
+        return src
 
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
+    def _compute_affine_georeferencing(self, src: DatasetReader) -> tuple[CRS, Affine]:
+        """Computes transform from Ground Control Points.
 
         Args:
-            data: the data to plot
+            src: file handle of source dataset
+
+        Returns:
+            crs: :term:`coordinate reference system (CRS)` from GCPs
+            transform: affine transform from GCPs
 
         Raises:
-            AssertionError: if ``is_image`` is True and ``data`` has a different number
-                of channels than expected
+            ValueError: If dataset has no usable affine CRS/transform and no GCP CRS.
         """
-        array = data.squeeze().numpy()
-
-        if self.is_image:
-            bands = getattr(self, "bands", self.all_bands)
-            assert array.shape[0] == len(bands)
-
-            # Only plot RGB bands
-            if bands and self.rgb_bands:
-                indices: "np.typing.NDArray[np.int_]" = np.array(
-                    [bands.index(band) for band in self.rgb_bands]
-                )
-                array = array[indices]
-
-            # Convert from CxHxW to HxWxC
-            array = np.rollaxis(array, 0, 3)
-
-        if self.cmap:
-            # Convert from class labels to RGBA values
-            cmap: "np.typing.NDArray[np.int_]" = np.array(
-                [self.cmap[i] for i in range(len(self.cmap))]
+        gcps, gcp_crs = src.gcps
+        if not gcps or gcp_crs is None:
+            raise ValueError(
+                f'{src.name}: dataset has no usable affine CRS/transform and no GCP CRS.'
             )
-            array = cmap[array]
 
-        if self.stretch:
-            # Stretch to the range of 2nd to 98th percentile
-            per02 = np.percentile(array, 2)
-            per98 = np.percentile(array, 98)
-            array = (array - per02) / (per98 - per02)
-            array = np.clip(array, 0, 1)
+        # affine best-fit to e.g. 4 corner GCPs
+        return gcp_crs, from_gcps(gcps)
 
-        # Plot the data
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
+    def _compute_affine_warp_grid(
+        self, crs: CRS, transform: Affine, width: int, height: int, dst_crs: CRS
+    ) -> tuple[Affine, int, int, bool]:
+        """Compute the output grid (affine, width, height) for warping a raster.
+
+        Args:
+            crs: :term:`coordinate reference system (CRS)` of the datasource.
+            transform: Source affine transform or spatial model.
+            width: Source width in pixels.
+            height: Source height in pixels.
+            dst_crs: :term:`coordinate reference system (CRS)` to warp to.
+
+        Returns:
+            dst_transform: Affine of output grid.
+            dst_width: Output width in pixels.
+            dst_height: Output height in pixels.
+            needs_warp: True if the source needs to be warped.
+        """
+        # Compute bounds from the effective transform (do NOT use src.bounds here)
+        west, south, east, north = array_bounds(height, width, transform)
+
+        # Ensure that rasters with unusual orientations are correctly warped
+        left = min(west, east)
+        bottom = min(south, north)
+        right = max(west, east)
+        top = max(south, north)
+
+        # Compute destination grid suggestion
+        dst_transform, dst_width, dst_height = calculate_default_transform(
+            crs, dst_crs, width, height, left, bottom, right, top
+        )
+
+        needs_warp = (
+            (crs != dst_crs)
+            or (not transform.almost_equals(dst_transform))
+            or (width != dst_width)
+            or (height != dst_height)
+        )
+
+        return dst_transform, dst_width, dst_height, needs_warp
 
 
-class VectorDataset(GeoDataset):
-    """Abstract base class for :class:`GeoDataset` stored as vector files."""
+class XarrayDataset(GeoDataset):
+    """Abstract base class for :class:`GeoDataset` stored as raster files.
 
-    #: Glob expression used to search for files.
-    #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
+    .. warning::
+       This dataset is considered experimental and subject to change. Users are
+       encouraged to experiment with this dataset, introduce subclasses, and report
+       bugs. However, this dataset should not be used in production, as the API is
+       very likely to change in future releases.
+
+    .. versionadded:: 0.8
+    """
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: float = 0.0001,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | tuple[float, float] | None = None,
+        data_vars: Sequence[str] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new XarrayDataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
+                (defaults to the resolution of the first file found)
+            data_vars: list of data variables to load
+                (defaults to all variables of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If rioxarray is not installed.
         """
-        super().__init__(transforms)
+        lazy_import('rioxarray')
+        xr = lazy_import('xarray')
+        self.paths = paths
+        self.transforms = transforms
 
-        self.root = root
-        self.res = res
-
-        # Populate the dataset index
-        i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
-        for filepath in glob.iglob(pathname, recursive=True):
+        # Gather information about the dataset
+        filepaths = []
+        datetimes = []
+        geometries = []
+        for filepath in self.files:
             try:
-                with fiona.open(filepath) as src:
-                    if crs is None:
-                        crs = CRS.from_dict(src.crs)
+                with xr.open_dataset(filepath, decode_coords='all') as src:
+                    crs = crs or src.rio.crs or CRS.from_epsg(4326)
+                    res = res or src.rio.resolution()
+                    data_vars = data_vars or list(src.data_vars.keys())
+                    tmin = pd.Timestamp(src.time.values.min())
+                    tmax = pd.Timestamp(src.time.values.max())
 
-                    minx, miny, maxx, maxy = src.bounds
-                    (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                        src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-                    )
-            except fiona.errors.FionaValueError:
-                # Skip files that fiona is unable to read
+                    if src.rio.crs is None:
+                        warnings.warn(
+                            f"Unable to decode coordinates of '{filepath}', "
+                            f'defaulting to {crs}. Set `crs` if this is incorrect.',
+                            UserWarning,
+                        )
+                        src = src.rio.write_crs(crs)
+
+                    if src.rio.crs != crs:
+                        src = src.rio.reproject(crs)
+
+                    filepaths.append(filepath)
+                    datetimes.append((tmin, tmax))
+                    geometries.append(shapely.box(*src.rio.bounds()))
+            except (OSError, ValueError):
+                # Skip files that xarray is unable to read
                 continue
-            else:
-                mint = 0
-                maxt = sys.maxsize
-                coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(i, coords, filepath)
-                i += 1
 
-        if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{root}'"
-            )
+        if len(filepaths) == 0:
+            raise DatasetNotFoundError(self)
 
-        self._crs = crs
+        if res is not None:
+            if isinstance(res, int | float):
+                res = (res, res)
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+            self._res = res
+
+        if data_vars is not None:
+            self.data_vars = data_vars
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not filepaths:
+        if df.empty:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        shapes = []
-        for filepath in filepaths:
-            with fiona.open(filepath) as src:
-                # We need to know the bounding box of the query in the source CRS
-                (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_dict(),
-                    src.crs,
-                    [query.minx, query.maxx],
-                    [query.miny, query.maxy],
-                )
-
-                # Filter geometries to those that intersect with the bounding box
-                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                    # Warp geometries to requested CRS
-                    shape = fiona.transform.transform_geom(
-                        src.crs, self.crs.to_dict(), feature["geometry"]
-                    )
-                    shapes.append(shape)
-
-        # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
-        transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
-        )
-        masks = rasterio.features.rasterize(
-            shapes, out_shape=(int(height), int(width)), transform=transform
-        )
-
-        sample = {
-            "mask": torch.tensor(masks),  # type: ignore[attr-defined]
-            "crs": self.crs,
-            "bbox": query,
+        image = self._merge_files(df.filepath, index)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'image': image,
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:
@@ -670,30 +933,355 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def plot(self, data: Tensor) -> None:
-        """Plot a data sample.
+    def _merge_files(self, filepaths: Sequence[str], index: GeoSlice) -> Tensor:
+        """Load and merge one or more files.
 
         Args:
-            data: the data to plot
+            filepaths: one or more files to load and merge
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            image at that index
         """
-        array = data.squeeze().numpy()
+        xr = lazy_import('xarray')
+        rioxr = lazy_import('rioxarray')
+        lazy_import('rioxarray.merge')
 
-        # Plot the image
-        ax = plt.axes()
-        ax.imshow(array)
-        ax.axis("off")
-        plt.show()
-        plt.close()
+        x, y, t = self._disambiguate_slice(index)
+        bounds = (x.start, y.start, x.stop, y.stop)
+        res = (x.step, y.step)
+
+        with ExitStack() as stack:
+            datasets = []
+            for filepath in filepaths:
+                src = stack.enter_context(
+                    xr.open_dataset(filepath, decode_times=True, decode_coords='all')
+                )
+
+                if src.rio.crs is None:
+                    src = src.rio.write_crs(self.crs)
+
+                if src.rio.crs != self.crs or res != src.rio.resolution():
+                    src = src.rio.reproject(self.crs, resolution=res)
+
+                datasets.append(src)
+
+            dataset = rioxr.merge.merge_datasets(
+                datasets, bounds=bounds, res=res, nodata=0, crs=self.crs
+            )
+            dataset = dataset.sel(time=t)
+
+            # Use array_to_tensor since merge may return uint16/uint32 arrays.
+            tensors = []
+            for var in self.data_vars:
+                tensors.append(array_to_tensor(dataset[var].values))
+
+        return torch.stack(tensors)
 
 
-class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
+class VectorDataset(GeoDataset):
+    """Abstract base class for :class:`GeoDataset` stored as vector files."""
+
+    #: Regular expression used to extract date from filename.
+    #:
+    #: The expression should use named groups. The expression may contain any number of
+    #: groups. The following groups are specifically searched for by the base class:
+    #:
+    #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    filename_regex = '.*'
+
+    #: Date format string used to parse date from filename.
+    #:
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    date_format = '%Y%m%d'
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.6
+        """
+        return torch.long
+
+    def __init__(
+        self,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | tuple[float, float] = (0.0001, 0.0001),
+        transforms: Callable[[Sample], Sample] | None = None,
+        label_name: str | None = None,
+        task: Literal[
+            'object_detection', 'semantic_segmentation', 'instance_segmentation'
+        ] = 'semantic_segmentation',
+        layer: str | int | None = None,
+    ) -> None:
+        """Initialize a new VectorDataset instance.
+
+        Args:
+            paths: one or more root directories to search or files to load
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            label_name: name of the dataset property that has the label to be
+                rasterized into the mask
+            task: computer vision task the dataset is used for. Supported output types
+               `object_detection`, `semantic_segmentation`, `instance_segmentation`
+            layer: if the input is a multilayer vector dataset, such as a geopackage,
+                specify which layer to use. Can be int to specify the index of the layer,
+                str to select the layer with that name or None which opens the first layer
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found.
+            ValueError: If task is not one of allowed tasks
+
+        .. versionadded:: 0.4
+            The *label_name* parameter.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
+
+        .. versionadded:: 0.8
+           The *task* and *layer* parameters
+        """
+        self.paths = paths
+        self.transforms = transforms
+        self.label_name = label_name
+        # List of allowed tasks
+        allowed_tasks = [
+            'semantic_segmentation',
+            'object_detection',
+            'instance_segmentation',
+        ]
+        if task not in allowed_tasks:
+            raise ValueError(f'Invalid task: {task!r}. Must be one of {allowed_tasks}')
+        self.task = task
+        self.layer = layer
+        # Gather information about the dataset
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        filepaths = []
+        datetimes = []
+        geometries = []
+        for filepath in self.files:
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if match is not None:
+                try:
+                    if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                        src = gpd.read_parquet(filepath)
+                    else:
+                        src = gpd.read_file(filepath, layer=layer)
+                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    if src.crs is None:
+                        src.set_crs(crs, inplace=True)
+                    elif src.crs != crs:
+                        src.to_crs(crs, inplace=True)
+
+                    minx, miny, maxx, maxy = src.total_bounds
+                    geom = shapely.box(minx, miny, maxx, maxy)
+                    geometries.append(geom)
+                except (RuntimeError, ValueError):
+                    # Skip files that geopandas is unable to read
+                    continue
+                else:
+                    filepaths.append(filepath)
+
+                    mint = pd.Timestamp.min
+                    maxt = pd.Timestamp.max
+                    if 'date' in match.groupdict():
+                        date = match.group('date')
+                        mint, maxt = disambiguate_timestamp(date, self.date_format)
+
+                    datetimes.append((mint, maxt))
+
+        if len(filepaths) == 0:
+            raise DatasetNotFoundError(self)
+
+        if isinstance(res, int | float):
+            res = (res, res)
+
+        self._res = res
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *index* is not found in the dataset.
+        """
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
+
+        if df.empty:
+            raise IndexError(
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
+            )
+
+        shapes = []
+        for filepath in df.filepath:
+            if pathlib.Path(filepath).suffix.lower() == '.parquet':
+                src = gpd.read_parquet(filepath)
+            else:
+                src = gpd.read_file(filepath, layer=self.layer)
+
+            # We need to know the bounding box of the index in the source CRS
+            transformer = pyproj.Transformer.from_crs(self.crs, src.crs, always_xy=True)
+            (minx, miny) = transformer.transform(x.start, y.start)
+            (maxx, maxy) = transformer.transform(x.stop, y.stop)
+
+            src = src.cx[minx:maxx, miny:maxy]
+            src.to_crs(self.crs, inplace=True)
+
+            # Get label values to use for rendering each geometry
+            labels = np.array(
+                [self.get_label(row) for _, row in src.iterrows()]
+            ).astype(np.int32)
+
+            shapes.extend(list(zip(src.geometry, labels)))
+
+        # Rasterize geometries
+        width = (x.stop - x.start) / x.step
+        height = (y.stop - y.start) / y.step
+        transform = rasterio.transform.from_bounds(
+            x.start, y.start, x.stop, y.stop, width, height
+        )
+        if shapes:
+            match self.task:
+                case 'semantic_segmentation':
+                    masks = rasterio.features.rasterize(
+                        shapes,
+                        out_shape=(round(height), round(width)),
+                        transform=transform,
+                    )
+
+                case 'object_detection':
+                    # Get boxes for object detection or instance segmentation
+                    label_list = []
+                    box_list = []
+                    for s in shapes:
+                        shape = shapely.geometry.shape(s[0])
+                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = shapely.clip_by_rect(p, 0, 0, width, height)
+
+                        # Get labels
+                        label_list.append(s[1])
+
+                        # xmin, ymin, xmax, ymax format
+                        box_list.append(p.bounds)
+
+                    labels = np.array(label_list).astype(np.int32)
+                    boxes_xyxy = np.array(box_list).astype(np.float32)
+
+                case 'instance_segmentation':
+                    # Get boxes for object detection or instance segmentation
+                    label_list = []
+                    box_list = []
+                    mask_list = []
+                    for i, s in enumerate(shapes):
+                        shape = shapely.geometry.shape(s[0])
+                        p = convert_poly_coords(shape, transform, inverse=True)
+                        p = shapely.clip_by_rect(p, 0, 0, width, height)
+
+                        # Get labels
+                        label_list.append(s[1])
+
+                        # xmin, ymin, xmax, ymax format
+                        box_list.append(p.bounds)
+
+                        mask = rasterio.features.rasterize(
+                            [(s[0], i + 1)],
+                            out_shape=(round(height), round(width)),
+                            transform=transform,
+                        )
+                        mask_list.append(mask)
+
+                    labels = np.array(label_list).astype(np.int32)
+                    boxes_xyxy = np.array(box_list).astype(np.float32)
+                    masks = np.array(mask_list)
+
+                    obj_ids = np.unique(masks)
+
+                    # first id is the background, so remove it
+                    obj_ids = obj_ids[1:]
+
+                    # convert (H, W) mask a set of binary masks
+                    masks = (masks == obj_ids[:, None, None]).astype(np.uint8)
+        else:
+            # If no features are found in this key, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
+            labels = np.empty((0,), dtype=np.int32)
+
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
+        }
+
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        match self.task:
+            case 'semantic_segmentation':
+                sample['mask'] = array_to_tensor(masks).to(self.dtype)
+
+            case 'object_detection':
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
+
+            case 'instance_segmentation':
+                sample['mask'] = array_to_tensor(masks)
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def get_label(self, feature: pd.Series) -> int:
+        """Get label value to use for rendering a feature.
+
+        Args:
+            feature: the row from the GeoDataFrame from which to extract the label.
+
+        Returns:
+            the integer label, or 0 if the feature should not be rendered.
+
+        .. versionadded:: 0.6
+        .. versionchanged:: 0.8
+            The *feature* parameter changed to a :class:`pandas.Series`
+        """
+        if self.label_name:
+            return int(feature[self.label_name])
+        return 1
+
+
+class NonGeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
     """
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -722,11 +1310,11 @@ class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
         """
         return f"""\
 {self.__class__.__name__} Dataset
-    type: VisionDataset
+    type: NonGeoDataset
     size: {len(self)}"""
 
 
-class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[misc]
+class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
     """Abstract base class for classification datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips which
@@ -735,12 +1323,12 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
-        loader: Optional[Callable[[str], Any]] = pil_loader,
-        is_valid_file: Optional[Callable[[str], bool]] = None,
+        root: Path = 'data',
+        transforms: Callable[[Sample], Sample] | None = None,
+        loader: Callable[[str], Image | npt.NDArray[np.generic]] = pil_loader,
+        is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
-        """Initialize a new VisionClassificationDataset instance.
+        """Initialize a new NonGeoClassificationDataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -754,29 +1342,30 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,
             is_valid_file=is_valid_file,
         )
 
-        # Must be set after calling super().__init__()
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
             index: index to return
+
         Returns:
             data and label at that index
         """
         image, label = self._load_image(index)
-        sample = {"image": image, "label": label}
+        sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 
@@ -788,21 +1377,21 @@ class VisionClassificationDataset(VisionDataset, ImageFolder):  # type: ignore[m
         """
         return len(self.imgs)
 
-    def _load_image(self, index: int) -> Tuple[Tensor, Tensor]:
-        """Load a single image and it's class label.
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
+        """Load a single image and its class label.
 
         Args:
             index: index to return
+
         Returns:
-            the image
-            the image class label
+            the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: "np.typing.NDArray[np.int_]" = np.array(img)
-        tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+        array: npt.NDArray[np.int_] = np.array(img)
+        tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
-        label = torch.tensor(label)  # type: ignore[attr-defined]
+        label = torch.tensor(label)
         return tensor, label
 
 
@@ -812,9 +1401,11 @@ class IntersectionDataset(GeoDataset):
     This allows users to do things like:
 
     * Combine image and target labels and sample from both simultaneously
-      (e.g. Landsat and CDL)
+      (e.g., Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
-      (e.g. Landsat and Sentinel)
+      (e.g., Landsat and Sentinel)
+    * Combine image and other raster data (e.g., elevation, temperature, pressure)
+      and sample from both simultaneously (e.g., Landsat and Aster Global DEM)
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -830,80 +1421,96 @@ class IntersectionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
-        ] = concat_samples,
+        spatial_only: bool = False,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new IntersectionDataset instance.
+
+        When computing the intersection between two datasets that both contain model
+        inputs (such as images) or model outputs (such as masks), the default behavior
+        is to stack the data along the channel dimension. The *collate_fn* parameter
+        can be used to change this behavior.
 
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
+            spatial_only: if True, ignore temporal dimension when computing intersection
             collate_fn: function used to collate samples
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
 
         Raises:
+            RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.8
+           The *spatial_only* parameter.
+
+        .. versionadded:: 0.4
+           The *transforms* parameter.
         """
-        super().__init__()
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
+        self.transforms = transforms
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError("IntersectionDataset only supports GeoDatasets")
+                raise ValueError('IntersectionDataset only supports GeoDatasets')
 
-        self._crs = dataset1.crs
-        self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
 
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
+        # Spatial intersection
+        index1 = dataset1.index.reset_index()
+        index2 = dataset2.index.reset_index()
+        self.index = gpd.overlay(
+            index1, index2, how='intersection', keep_geom_type=True
+        )
+
+        if self.index.empty:
+            raise RuntimeError('Datasets have no spatial intersection')
+
+        # Temporal intersection
+        if not spatial_only:
+            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
+            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
+            mint = np.maximum(datetime_1.left, datetime_2.left)
+            maxt = np.minimum(datetime_1.right, datetime_2.right)
+            valid = maxt >= mint
+            mint = mint[valid]
+            maxt = maxt[valid]
+            self.index = self.index[valid]
+            self.index.index = pd.IntervalIndex.from_arrays(
+                mint, maxt, closed='both', name='datetime'
             )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
 
-        # Merge dataset indices into a single index
-        self._merge_dataset_indices()
+            if self.index.empty:
+                msg = 'Datasets have no temporal intersection. Use `spatial_only=True`'
+                msg += ' if you want to ignore temporal intersection'
+                raise RuntimeError(msg)
 
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from two datasets."""
-        i = 0
-        ds1, ds2 = self.datasets
-        for hit1 in ds1.index.intersection(ds1.index.bounds, objects=True):
-            for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
-                box1 = BoundingBox(*hit1.bounds)
-                box2 = BoundingBox(*hit2.bounds)
-                self.index.insert(i, tuple(box1 & box2))
-                i += 1
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of data/labels and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not within bounds of the index
+            IndexError: If *index* is not found in the dataset.
         """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
-            )
+        # All datasets are guaranteed to have a valid index
+        samples = [ds[index] for ds in self.datasets]
 
-        # All datasets are guaranteed to have a valid query
-        samples = [ds[query] for ds in self.datasets]
+        sample = self.collate_fn(samples)
 
-        return self.collate_fn(samples)
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -917,6 +1524,45 @@ class IntersectionDataset(GeoDataset):
     bbox: {self.bounds}
     size: {len(self)}"""
 
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self.datasets[0].crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self.index.to_crs(new_crs, inplace=True)
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> tuple[float, float]:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            Resolution of both datasets.
+        """
+        return self.datasets[0].res
+
+    @res.setter
+    def res(self, new_res: float | tuple[float, float]) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
+
 
 class UnionDataset(GeoDataset):
     """Dataset representing the union of two GeoDatasets.
@@ -924,9 +1570,9 @@ class UnionDataset(GeoDataset):
     This allows users to do things like:
 
     * Combine datasets for multiple image sources and treat them as equivalent
-      (e.g. Landsat 7 and Landsat 8)
+      (e.g., Landsat 7 and Landsat 8)
     * Combine datasets for disparate geospatial locations
-      (e.g. Chesapeake NY and PA)
+      (e.g., Chesapeake NY and PA)
 
     These combinations require that all queries are present in *at least one* dataset,
     and can be combined using a :class:`UnionDataset`:
@@ -942,81 +1588,73 @@ class UnionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[Dict[str, Any]]], Dict[str, Any]
-        ] = merge_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new UnionDataset instance.
+
+        When computing the union between two datasets that both contain model inputs
+        (such as images) or model outputs (such as masks), the default behavior is to
+        merge the data to create a single image/mask. The *collate_fn* parameter can be
+        used to change this behavior.
 
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
             collate_fn: function used to collate samples
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
 
         Raises:
             ValueError: if either dataset is not a :class:`GeoDataset`
+
+        .. versionadded:: 0.4
+            The *transforms* parameter.
         """
-        super().__init__()
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
+        self.transforms = transforms
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError("UnionDataset only supports GeoDatasets")
+                raise ValueError('UnionDataset only supports GeoDatasets')
 
-        self._crs = dataset1.crs
-        self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
 
-        # Force dataset2 to have the same CRS/res as dataset1
-        if dataset1.crs != dataset2.crs:
-            print(
-                f"Converting {dataset2.__class__.__name__} CRS from "
-                f"{dataset2.crs} to {dataset1.crs}"
-            )
-            dataset2.crs = dataset1.crs
-        if dataset1.res != dataset2.res:
-            print(
-                f"Converting {dataset2.__class__.__name__} resolution from "
-                f"{dataset2.res} to {dataset1.res}"
-            )
-            dataset2.res = dataset1.res
+        self.index = pd.concat([dataset1.index, dataset2.index])  # ty: ignore[invalid-assignment]
 
-        # Merge dataset indices into a single index
-        self._merge_dataset_indices()
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from two datasets."""
-        i = 0
-        for ds in self.datasets:
-            hits = ds.index.intersection(ds.index.bounds, objects=True)
-            for hit in hits:
-                self.index.insert(i, hit.bounds)
-                i += 1
-
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
-        """Retrieve image and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of data/labels and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not within bounds of the index
+            IndexError: If *index* is not found in the dataset.
         """
-        if not query.intersects(self.bounds):
-            raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
-            )
-
-        # Not all datasets are guaranteed to have a valid query
+        # Not all datasets are guaranteed to have a valid index
         samples = []
         for ds in self.datasets:
-            if ds.index.intersection(tuple(query)):
-                samples.append(ds[query])
+            try:
+                samples.append(ds[index])
+            except IndexError:
+                pass
 
-        return self.collate_fn(samples)
+        if not samples:
+            raise IndexError(
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
+            )
+
+        sample = self.collate_fn(samples)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __str__(self) -> str:
         """Return the informal string representation of the object.
@@ -1029,3 +1667,42 @@ class UnionDataset(GeoDataset):
     type: UnionDataset
     bbox: {self.bounds}
     size: {len(self)}"""
+
+    @property
+    def crs(self) -> CRS:
+        """:term:`coordinate reference system (CRS)` of both datasets.
+
+        Returns:
+            The :term:`coordinate reference system (CRS)`.
+        """
+        return self.datasets[0].crs
+
+    @crs.setter
+    def crs(self, new_crs: CRS) -> None:
+        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+
+        Args:
+            new_crs: New :term:`coordinate reference system (CRS)`.
+        """
+        self.index.to_crs(new_crs, inplace=True)
+        self.datasets[0].crs = new_crs
+        self.datasets[1].crs = new_crs
+
+    @property
+    def res(self) -> tuple[float, float]:
+        """Resolution of both datasets in units of CRS.
+
+        Returns:
+            The resolution of both datasets.
+        """
+        return self.datasets[0].res
+
+    @res.setter
+    def res(self, new_res: float | tuple[float, float]) -> None:
+        """Change the resolution of both datasets.
+
+        Args:
+            new_res: New resolution.
+        """
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res

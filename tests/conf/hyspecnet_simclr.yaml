@@ -1,0 +1,11 @@
+model:
+  class_path: SimCLRTask
+  init_args:
+    model: 'resnet18'
+    in_channels: 202
+data:
+  class_path: HySpecNet11kDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/hyspecnet'

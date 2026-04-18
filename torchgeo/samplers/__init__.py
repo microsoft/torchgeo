@@ -1,22 +1,21 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo samplers."""
 
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
-from .single import GeoSampler, GridGeoSampler, RandomGeoSampler
+from .constants import Units
+from .single import GeoSampler, GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
+from .utils import get_random_bounding_box, tile_to_chips
 
 __all__ = (
-    # Samplers
-    "GridGeoSampler",
-    "RandomGeoSampler",
-    # Batch samplers
-    "RandomBatchGeoSampler",
-    # Base classes
-    "GeoSampler",
-    "BatchGeoSampler",
+    'BatchGeoSampler',
+    'GeoSampler',
+    'GridGeoSampler',
+    'PreChippedGeoSampler',
+    'RandomBatchGeoSampler',
+    'RandomGeoSampler',
+    'Units',
+    'get_random_bounding_box',
+    'tile_to_chips',
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.samplers"

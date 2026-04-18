@@ -1,0 +1,17 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 12
+    num_classes: 10
+    num_filters: 1
+    ignore_index: 0
+data:
+  class_path: SouthAfricaCropTypeDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    paths: 'tests/data/south_africa_crop_type'

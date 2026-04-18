@@ -1,9 +1,13 @@
 # TorchGeo
 /data/
-/logs/
+/*logs/
 /output/
-*.csv
 *.pdf
+/results/
+*.aux.xml
+
+# Node stuff:
+node_modules/
 
 # Spack
 .spack-env/
@@ -86,6 +90,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/src/
 
 # PyBuilder
 target/

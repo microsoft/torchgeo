@@ -1,23 +1,34 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EuroSAT dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import VisionClassificationDataset
-from .utils import check_integrity, download_url, extract_archive, rasterio_loader
+from .errors import DatasetNotFoundError, RGBBandsMissingError
+from .geo import NonGeoClassificationDataset
+from .utils import (
+    Path,
+    Sample,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+    rasterio_loader,
+)
 
 
-class EuroSAT(VisionClassificationDataset):
+class EuroSAT(NonGeoClassificationDataset):
     """EuroSAT dataset.
 
-    The `EuroSAT <https://github.com/phelber/EuroSAT>`_ dataset is based on Sentinel-2
+    The `EuroSAT <https://github.com/phelber/EuroSAT>`__ dataset is based on Sentinel-2
     satellite images covering 13 spectral bands and consists of 10 target classes with
     a total of 27,000 labeled and geo-referenced images.
 
@@ -28,16 +39,16 @@ class EuroSAT(VisionClassificationDataset):
 
     Dataset classes:
 
-    * Industrial Buildings
-    * Residential Buildings
     * Annual Crop
-    * Permanent Crop
-    * River
-    * Sea and Lake
+    * Forest
     * Herbaceous Vegetation
     * Highway
+    * Industrial Buildings
     * Pasture
-    * Forest
+    * Permanent Crop
+    * Residential Buildings
+    * River
+    * Sea & Lake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
@@ -50,44 +61,56 @@ class EuroSAT(VisionClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "http://madm.dfki.de/files/sentinel/EuroSATallBands.zip"  # 2.0 GB download
-    filename = "EuroSATallBands.zip"
-    md5 = "5ac12b3b2557aa56e1826e981e8e200e"
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/1ce6f1bfb56db63fd91b6ecc466ea67f2509774c/'
+    filename = 'EuroSATallBands.zip'
+    md5 = '5ac12b3b2557aa56e1826e981e8e200e'
 
     # For some reason the class directories are actually nested in this directory
     base_dir = os.path.join(
-        "ds", "images", "remote_sensing", "otherDatasets", "sentinel_2", "tif"
+        'ds', 'images', 'remote_sensing', 'otherDatasets', 'sentinel_2', 'tif'
     )
 
-    splits = ["train", "val", "test"]
-    split_urls = {
-        "train": "https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt",  # noqa: E501
-        "val": "https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt",  # noqa: E501
-        "test": "https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt",  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-train.txt',
+        'val': 'eurosat-val.txt',
+        'test': 'eurosat-test.txt',
     }
-    split_md5s = {
-        "train": "908f142e73d6acdf3f482c5e80d851b1",
-        "val": "95de90f2aa998f70a3b2416bfe0687b4",
-        "test": "7ae5ab94471417b6e315763121e67c5f",
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '908f142e73d6acdf3f482c5e80d851b1',
+        'val': '95de90f2aa998f70a3b2416bfe0687b4',
+        'test': '7ae5ab94471417b6e315763121e67c5f',
     }
-    classes = [
-        "Industrial Buildings",
-        "Residential Buildings",
-        "Annual Crop",
-        "Permanent Crop",
-        "River",
-        "Sea and Lake",
-        "Herbaceous Vegetation",
-        "Highway",
-        "Pasture",
-        "Forest",
-    ]
+
+    all_band_names = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B09',
+        'B10',
+        'B11',
+        'B12',
+        'B8A',
+    )
+
+    rgb_bands = ('B04', 'B03', 'B02')
+
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
+        'all': all_band_names,
+        'rgb': rgb_bands,
+    }
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: Literal['train', 'val', 'test'] = 'train',
+        bands: Sequence[str] = BAND_SETS['all'],
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -96,26 +119,43 @@ class EuroSAT(VisionClassificationDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
+            bands: a sequence of band names to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            AssertionError: if ``split`` argument is invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.3
+           The *bands* parameter.
         """
         self.root = root
-        self.transforms = transforms
+        self.split = split
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
         self.download = download
         self.checksum = checksum
+
+        assert self.split in {'train', 'val', 'test'}
+
+        self._validate_bands(bands)
+        self.bands = bands
+        self.band_indices = Tensor(
+            [self.all_band_names.index(b) for b in bands if b in self.all_band_names]
+        ).long()
+
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"eurosat-{split}.txt"), "r") as f:
+        with open(os.path.join(self.root, self.split_filenames[split])) as f:
             for fn in f:
-                valid_fns.add(fn.strip().replace(".jpg", ".tif"))
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+                valid_fns.add(fn.strip().replace('.jpg', '.tif'))
+
+        def is_in_split(x: Path) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),
@@ -124,104 +164,164 @@ class EuroSAT(VisionClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
+    def __getitem__(self, index: int) -> Sample:
+        """Return an index within the dataset.
 
+        Args:
+            index: index to return
         Returns:
-            True if dataset files are found and/or MD5s match, else False
+            data and label at that index
         """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
-        )
-        return integrity
+        image, label = self._load_image(index)
+
+        image = torch.index_select(image, dim=0, index=self.band_indices).float()
+        sample = {'image': image, 'label': label}
+
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
+
+        return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
+        """Verify the integrity of the dataset."""
+        # Check split file
+        filename = os.path.join(self.root, self.split_filenames[self.split])
+        if not os.path.isfile(filename):
+            if self.download:
+                download_url(
+                    self.url + self.split_filenames[self.split],
+                    self.root,
+                    md5=self.split_md5s[self.split] if self.checksum else None,
+                )
+            else:
+                raise DatasetNotFoundError(self)
+
+        # Check image directory
+        directory = os.path.join(self.root, self.base_dir)
+        zipfile = os.path.join(self.root, self.filename)
+        if os.path.isdir(directory):
+            return
+        elif os.path.isfile(zipfile):
+            extract_archive(zipfile)
+        elif self.download:
+            download_and_extract_archive(
+                self.url + self.filename,
+                self.root,
+                md5=self.md5 if self.checksum else None,
+            )
+        else:
+            raise DatasetNotFoundError(self)
+
+    def _validate_bands(self, bands: Sequence[str]) -> None:
+        """Validate list of bands.
+
+        Args:
+            bands: user-provided sequence of bands to load
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            AssertionError: if ``bands`` is not a sequence
+            ValueError: if an invalid band name is provided
+
+        .. versionadded:: 0.3
         """
-        # Check if the files already exist
-        filepath = os.path.join(self.root, self.base_dir)
-        if os.path.exists(filepath):
-            return
-
-        # Check if zip file already exists (if so then extract)
-        if self._check_integrity():
-            self._extract()
-            return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
-            )
-
-        # Download and extract the dataset
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        download_url(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
-        )
-        for split in self.splits:
-            download_url(
-                self.split_urls[split],
-                self.root,
-                filename=f"eurosat-{split}.txt",
-                md5=self.split_md5s[split] if self.checksum else None,
-            )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, self.filename)
-        extract_archive(filepath)
+        assert isinstance(bands, Sequence), "'bands' must be a sequence"
+        for band in bands:
+            if band not in self.all_band_names:
+                raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3).copy()
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise RGBBandsMissingError()
+
+        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
+        image = np.rollaxis(image, 0, 3)
         image = np.clip(image / 3000, 0, 1)
 
-        label = cast(int, sample["label"].item())
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class EuroSATSpatial(EuroSAT):
+    """Overrides the default EuroSAT dataset splits.
+
+    Splits the data into training, validation, and test sets based on longitude.
+    The splits are distributed as 60%, 20%, and 20% respectively.
+
+    .. versionadded:: 0.6
+    """
+
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-spatial-train.txt',
+        'val': 'eurosat-spatial-val.txt',
+        'test': 'eurosat-spatial-test.txt',
+    }
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '7be3254be39f23ce4d4d144290c93292',
+        'val': 'acf392290050bb3df790dc8fc0ebf193',
+        'test': '5ec1733f9c16116bf0aa2d921fc613ef',
+    }
+
+
+class EuroSAT100(EuroSAT):
+    """Subset of EuroSAT containing only 100 images.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Maintains the same file structure, classes, and train-val-test split. Each class has
+    10 images (6 train, 2 val, 2 test), for a total of 100 images.
+
+    .. versionadded:: 0.5
+    """
+
+    filename = 'EuroSAT100.zip'
+    md5 = 'c21c649ba747e86eda813407ef17d596'
+
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-100-train.txt',
+        'val': 'eurosat-100-val.txt',
+        'test': 'eurosat-100-test.txt',
+    }
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '033d0c23e3a75e3fa79618b0e35fe1c7',
+        'val': '3e3f8b3c344182b8d126c4cc88f3f215',
+        'test': 'f908f151b950f270ad18e61153579794',
+    }

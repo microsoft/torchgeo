@@ -1,0 +1,15 @@
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: 'ce'
+    model: 'resnet18'
+    in_channels: 18
+    num_classes: 17
+data:
+  class_path: So2SatDataModule
+  init_args:
+    batch_size: 1
+    band_set: 'all'
+  dict_kwargs:
+    root: 'tests/data/so2sat'
+    version: '2'

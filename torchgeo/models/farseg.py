@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Foreground-Aware Relation Network (FarSeg) implementations."""
 
 import math
 from collections import OrderedDict
-from typing import List, cast
+from typing import cast
 
 import torch.nn.functional as F
 from torch import Tensor
@@ -21,19 +21,8 @@ from torch.nn.modules import (
     UpsamplingBilinear2d,
 )
 from torchvision.models import resnet
+from torchvision.models._api import WeightsEnum
 from torchvision.ops import FeaturePyramidNetwork as FPN
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-ModuleList.__module__ = "nn.ModuleList"
-Sequential.__module__ = "nn.Sequential"
-Conv2d.__module__ = "nn.Conv2d"
-BatchNorm2d.__module__ = "nn.BatchNorm2d"
-ReLU.__module__ = "nn.ReLU"
-UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
-Sigmoid.__module__ = "nn.Sigmoid"
-Identity.__module__ = "nn.Identity"
 
 
 class FarSeg(Module):
@@ -47,14 +36,14 @@ class FarSeg(Module):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2011.09766.pdf
+    * https://arxiv.org/pdf/2011.09766
     """
 
     def __init__(
         self,
-        backbone: str = "resnet50",
+        backbone: str = 'resnet50',
         classes: int = 16,
-        backbone_pretrained: bool = True,
+        backbone_weights: WeightsEnum | None = None,
     ) -> None:
         """Initialize a new FarSeg model.
 
@@ -62,16 +51,20 @@ class FarSeg(Module):
             backbone: name of ResNet backbone, one of ["resnet18", "resnet34",
                 "resnet50", "resnet101"]
             classes: number of output segmentation classes
-            backbone_pretrained: whether to use pretrained weight for backbone
+            backbone_weights: Pre-trained model weights to use.
+
+        .. versionadded:: 0.9
+           The *backbone_weights* parameter.
         """
         super().__init__()
-        if backbone in ["resnet18", "resnet34"]:
+        if backbone in ['resnet18', 'resnet34']:
             max_channels = 512
-        elif backbone in ["resnet50", "resnet101"]:
+        elif backbone in ['resnet50', 'resnet101']:
             max_channels = 2048
         else:
-            raise ValueError(f"unknown backbone: {backbone}.")
-        self.backbone = getattr(resnet, backbone)(pretrained=backbone_pretrained)
+            raise ValueError(f'unknown backbone: {backbone}.')
+
+        self.backbone = getattr(resnet, backbone)(weights=backbone_weights)
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
@@ -103,7 +96,7 @@ class FarSeg(Module):
         coarsest_features = features[-1]
         scene_embedding = F.adaptive_avg_pool2d(coarsest_features, 1)
         fpn_features = self.fpn(
-            OrderedDict({f"c{i + 2}": features[i] for i in range(4)})
+            OrderedDict({f'c{i + 2}': features[i] for i in range(4)})
         )
         features = [v for k, v in fpn_features.items()]
         features = self.fsr(scene_embedding, features)
@@ -119,7 +112,7 @@ class _FSRelation(Module):
     def __init__(
         self,
         scene_embedding_channels: int,
-        in_channels_list: List[int],
+        in_channels_list: list[int],
         out_channels: int,
     ) -> None:
         """Initialize the _FSRelation module.
@@ -147,22 +140,18 @@ class _FSRelation(Module):
         for c in in_channels_list:
             self.content_encoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
             self.feature_reencoders.append(
                 Sequential(
-                    Conv2d(c, out_channels, 1),
-                    BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
-                    ReLU(True),
+                    Conv2d(c, out_channels, 1), BatchNorm2d(out_channels), ReLU(True)
                 )
             )
 
         self.normalizer = Sigmoid()
 
-    def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
+    def forward(self, scene_feature: Tensor, features: list[Tensor]) -> list[Tensor]:
         """Forward pass of the model."""
         # [N, C, H, W]
         content_feats = [
@@ -189,7 +178,7 @@ class _LightWeightDecoder(Module):
         in_channels: int,
         out_channels: int,
         num_classes: int,
-        in_feature_output_strides: List[int] = [4, 8, 16, 32],
+        in_feature_output_strides: list[int] = [4, 8, 16, 32],
         out_feature_output_stride: int = 4,
     ) -> None:
         """Initialize the _LightWeightDecoder module.
@@ -222,11 +211,13 @@ class _LightWeightDecoder(Module):
                                 1,
                                 bias=False,
                             ),
-                            BatchNorm2d(out_channels),  # type: ignore[no-untyped-call]
+                            BatchNorm2d(out_channels),
                             ReLU(inplace=True),
-                            UpsamplingBilinear2d(scale_factor=2)
-                            if num_upsample != 0
-                            else Identity(),  # type: ignore[no-untyped-call]
+                            (
+                                UpsamplingBilinear2d(scale_factor=2)
+                                if num_upsample != 0
+                                else Identity()
+                            ),
                         )
                         for idx in range(num_layers)
                     ]
@@ -238,7 +229,7 @@ class _LightWeightDecoder(Module):
             UpsamplingBilinear2d(scale_factor=4),
         )
 
-    def forward(self, features: List[Tensor]) -> Tensor:
+    def forward(self, features: list[Tensor]) -> Tensor:
         """Forward pass of the model."""
         inner_feat_list = []
         for idx, block in enumerate(self.blocks):

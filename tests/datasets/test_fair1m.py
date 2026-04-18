@@ -1,75 +1,109 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import FAIR1M
+from torchgeo.datasets import FAIR1M, DatasetNotFoundError
 
 
 class TestFAIR1M:
-    @pytest.fixture
-    def dataset(self, monkeypatch: Generator[MonkeyPatch, None, None]) -> FAIR1M:
-        md5s = ["f278aba757de9079225db42107e09e30", "aca59017207141951b53e91795d8179e"]
-        monkeypatch.setattr(FAIR1M, "md5s", md5s)  # type: ignore[attr-defined]
-        root = os.path.join("tests", "data", "fair1m")
-        transforms = nn.Identity()  # type: ignore[attr-defined]
-        return FAIR1M(root, transforms)
+    test_root = os.path.join('tests', 'data', 'fair1m')
+
+    @pytest.fixture(params=['train', 'val', 'test'])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> FAIR1M:
+        urls = {
+            'train': (
+                os.path.join(self.test_root, 'train', 'part1', 'images.zip'),
+                os.path.join(self.test_root, 'train', 'part1', 'labelXml.zip'),
+                os.path.join(self.test_root, 'train', 'part2', 'images.zip'),
+                os.path.join(self.test_root, 'train', 'part2', 'labelXmls.zip'),
+            ),
+            'val': (
+                os.path.join(self.test_root, 'validation', 'images.zip'),
+                os.path.join(self.test_root, 'validation', 'labelXmls.zip'),
+            ),
+            'test': (
+                os.path.join(self.test_root, 'test', 'images0.zip'),
+                os.path.join(self.test_root, 'test', 'images1.zip'),
+                os.path.join(self.test_root, 'test', 'images2.zip'),
+            ),
+        }
+        monkeypatch.setattr(FAIR1M, 'urls', urls)
+        root = tmp_path
+        split = request.param
+        transforms = nn.Identity()
+        return FAIR1M(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: FAIR1M) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["boxes"], torch.Tensor)
-        assert isinstance(x["label"], torch.Tensor)
-        assert x["image"].shape[0] == 3
-        assert x["boxes"].shape[-2:] == (5, 2)
-        assert x["label"].ndim == 1
+        assert isinstance(x['image'], torch.Tensor)
+        assert x['image'].shape[0] == 3
+
+        if dataset.split != 'test':
+            assert isinstance(x['bbox_xyxy'], torch.Tensor)
+            assert isinstance(x['label'], torch.Tensor)
+            assert x['bbox_xyxy'].shape[-2:] == (5, 2)
+            assert x['label'].ndim == 1
 
     def test_len(self, dataset: FAIR1M) -> None:
-        assert len(dataset) == 4
+        if dataset.split == 'train':
+            assert len(dataset) == 8
+        else:
+            assert len(dataset) == 4
 
     def test_already_downloaded(self, dataset: FAIR1M, tmp_path: Path) -> None:
-        shutil.rmtree(str(tmp_path))
-        shutil.copytree(dataset.root, str(tmp_path))
-        FAIR1M(root=str(tmp_path))
+        FAIR1M(root=tmp_path, split=dataset.split, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: FAIR1M, tmp_path: Path
     ) -> None:
-        for filename in dataset.filenames:
-            filepath = os.path.join("tests", "data", "fair1m", filename)
-            shutil.copy(filepath, str(tmp_path))
-        FAIR1M(root=str(tmp_path), checksum=True)
+        shutil.rmtree(dataset.root)
+        for filepath, url in zip(
+            dataset.paths[dataset.split], dataset.urls[dataset.split]
+        ):
+            output = os.path.join(tmp_path, filepath)
+            os.makedirs(os.path.dirname(output), exist_ok=True)
+            shutil.copy(url, output)
 
-    def test_corrupted(self, tmp_path: Path) -> None:
-        filenames = ["images.zip", "labelXmls.zip"]
-        for filename in filenames:
-            with open(os.path.join(tmp_path, filename), "w") as f:
-                f.write("bad")
-        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            FAIR1M(root=str(tmp_path), checksum=True)
+        FAIR1M(root=tmp_path, split=dataset.split)
 
-    def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory, "
-        "specify a different `root` directory."
-        with pytest.raises(RuntimeError, match=err):
-            FAIR1M(str(tmp_path))
+    def test_corrupted(self, tmp_path: Path, dataset: FAIR1M) -> None:
+        shutil.rmtree(dataset.root)
+        for filepath, url in zip(
+            dataset.paths[dataset.split], dataset.urls[dataset.split]
+        ):
+            output = os.path.join(tmp_path, filepath)
+            os.makedirs(os.path.dirname(output), exist_ok=True)
+            shutil.copy(url, output)
+
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            FAIR1M(root=tmp_path, split=dataset.split, checksum=True)
+
+    def test_not_downloaded(self, tmp_path: Path, dataset: FAIR1M) -> None:
+        shutil.rmtree(tmp_path)
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            FAIR1M(root=tmp_path, split=dataset.split)
 
     def test_plot(self, dataset: FAIR1M) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction_boxes"] = x["boxes"].clone()
-        dataset.plot(x)
-        plt.close()
+
+        if dataset.split != 'test':
+            x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
+            dataset.plot(x)
+            plt.close()

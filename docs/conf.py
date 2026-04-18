@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Configuration file for the Sphinx documentation builder.
@@ -9,24 +9,23 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import inspect
 import os
 import sys
-
-import pytorch_sphinx_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath('..'))
 
-import torchgeo  # noqa: E402
+import torchgeo
 
 # -- Project information -----------------------------------------------------
 
-project = "torchgeo"
-copyright = "2021, Microsoft Corporation"
+project = 'torchgeo'
+copyright = 'TorchGeo Contributors'
 author = torchgeo.__author__
-version = ".".join(torchgeo.__version__.split(".")[:2])
+version = '.'.join(torchgeo.__version__.split('.')[:2])
 release = torchgeo.__version__
 
 
@@ -36,31 +35,45 @@ release = torchgeo.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.todo",
-    "sphinx.ext.viewcode",
-    "nbsphinx",
+    'myst_parser',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.linkcode',
+    'nbsphinx',
+    'sphinx_github_changelog',
 ]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build"]
+exclude_patterns = ['_build']
 
-# Sphinx 3.0+ required for:
-# autodoc_typehints_description_target = "documented"
-needs_sphinx = "4.0"
+# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
+# https://github.com/sphinx-doc/sphinx/pull/10887
+needs_sphinx = '5.3'
 
 nitpicky = True
 nitpick_ignore = [
-    # https://github.com/sphinx-doc/sphinx/issues/8127
-    ("py:class", ".."),
-    # TODO: can't figure out why this isn't found
-    ("py:class", "LightningDataModule"),
-    # Undocumented class
-    ("py:class", "torchvision.models.resnet.ResNet"),
+    # Undocumented classes
+    ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
+    ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
+    ('py:class', 'kornia.augmentation.base._AugmentationBase'),
+    ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
+    ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
+    ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
+    ('py:class', 'numpy.uint8'),
+    ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
+    ('py:class', 'timm.models.resnet.ResNet'),
+    ('py:class', 'timm.models.vision_transformer.VisionTransformer'),
+    ('py:class', 'torch.optim.lr_scheduler.LRScheduler'),
+    ('py:class', 'torchvision.models._api.WeightsEnum'),
+    ('py:class', 'torchvision.models.resnet.ResNet'),
+    ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    # Internal type aliases we don't yet want to expose
+    ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
+    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -68,88 +81,151 @@ nitpick_ignore = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "pytorch_sphinx_theme"
-html_theme_path = [pytorch_sphinx_theme.get_html_theme_path()]
+html_theme = 'pydata_sphinx_theme'
+
+# Define the version we use for matching in the version switcher.
+version_match = os.environ.get('READTHEDOCS_VERSION')
+json_url = 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json'
+
+# If READTHEDOCS_VERSION doesn't exist, we're not on RTD
+# If it is an integer, we're in a PR build and the version isn't correct.
+# If it's "latest" → change to "dev" (that's what we want the switcher to call it)
+if not version_match or version_match.isdigit() or version_match == 'latest':
+    # For local development, infer the version to match from the package.
+    if 'dev' in release or 'rc' in release:
+        version_match = 'dev'
+        # We want to keep the relative reference if we are in dev mode
+        # but we want the whole url if we are effectively in a released version
+        json_url = '_static/switcher.json'
+    else:
+        version_match = f'v{release}'
+elif version_match == 'stable':
+    version_match = f'v{release}'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
-# documentation.
+# documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
-    "collapse_navigation": False,
-    "display_version": True,
-    "logo_only": True,
-    "pytorch_project": "docs",
-    "navigation_with_keys": True,
-    "analytics_id": "UA-209075005-1",
+    'collapse_navigation': False,
+    'show_nav_level': 1,
+    'show_toc_level': 2,
+    'navigation_depth': 4,
+    'navbar_align': 'left',
+    'header_links_before_dropdown': 6,
+    'icon_links': [
+        {
+            'name': 'GitHub',
+            'url': 'https://github.com/torchgeo/torchgeo',
+            'icon': 'fa-brands fa-github',
+        },
+        {
+            'name': 'Slack',
+            'url': 'https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw',
+            'icon': 'fa-brands fa-slack',
+        },
+        {
+            'name': 'YouTube',
+            'url': 'https://www.youtube.com/@TorchGeo',
+            'icon': 'fa-brands fa-youtube',
+        },
+    ],
+    'analytics': {'google_analytics_id': 'UA-209075005-1'},
+    'logo': {
+        'image_light': os.path.join('_static', 'logo', 'logo-color.svg'),
+        'image_dark': os.path.join('_static', 'logo', 'logo-color.svg'),
+    },
+    'switcher': {'json_url': json_url, 'version_match': version_match},
+    'navbar_start': ['navbar-logo', 'version-switcher'],
+    'navbar_center': ['navbar-nav'],
+    'navbar_end': ['theme-switcher', 'navbar-icon-links'],
 }
 
-html_favicon = os.path.join("..", "logo", "favicon.ico")
+html_favicon = os.path.join('_static', 'logo', 'favicon.ico')
 
-html_static_path = ["_static"]
-html_css_files = ["workaround.css"]
+html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
 autodoc_default_options = {
-    "members": True,
-    "special-members": True,
-    "show-inheritance": True,
+    'members': True,
+    'special-members': True,
+    'show-inheritance': True,
 }
-autodoc_member_order = "bysource"
-autodoc_typehints = "description"
-autodoc_typehints_description_target = "documented"
+autodoc_member_order = 'bysource'
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
-    "matplotlib": ("https://matplotlib.org/stable/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "python": ("https://docs.python.org/3", None),
-    "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/latest/", None),
-    "rasterio": ("https://rasterio.readthedocs.io/en/latest/", None),
-    "rtree": ("https://rtree.readthedocs.io/en/latest/", None),
-    "torch": ("https://pytorch.org/docs/stable", None),
-    "torchvision": ("https://pytorch.org/vision/stable", None),
+    'einops': ('https://einops.rocks/', None),
+    'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
+    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pillow': ('https://pillow.readthedocs.io/en/stable/', None),
+    'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
+    'python': ('https://docs.python.org/3', None),
+    'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
+    'segmentation_models_pytorch': ('https://smp.readthedocs.io/en/stable/', None),
+    'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    'timm': ('https://huggingface.co/docs/timm/main/en/', None),
+    'torch': ('https://docs.pytorch.org/docs/stable/', None),
+    'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
+    'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
+# myst-parser
+suppress_warnings = ['myst.header']
+
 # nbsphinx
-nbsphinx_execute = "never"
-# TODO: branch/tag should change depending on which version of docs you look at
-# TODO: width option of image directive is broken, see:
-# https://github.com/pytorch/pytorch_sphinx_theme/issues/140
-nbsphinx_prolog = """
-{% set host = "https://colab.research.google.com" %}
-{% set repo = "microsoft/torchgeo" %}
-{% set urlpath = "docs/" ~ env.docname ~ ".ipynb" %}
-{% if "dev" in env.config.release %}
-    {% set branch = "main" %}
-{% else %}
-    {% set branch = "releases/v" ~ env.config.version %}
-{% endif %}
+nbsphinx_execute = 'never'
+with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
+    nbsphinx_prolog = f.read()
 
-.. image:: {{ host }}/assets/colab-badge.svg
-   :class: colabbadge
-   :alt: Open in Colab
-   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ urlpath }}
+# sphinx-github-changelog
+sphinx_github_changelog_token = os.environ.get('SPHINX_GITHUB_CHANGELOG_TOKEN')
 
-{% set host = "https://pccompute.westeurope.cloudapp.azure.com" %}
-{% set host = host ~ "/compute/hub/user-redirect/git-pull" %}
-{% set repo = "https%3A%2F%2Fgithub.com%2Fmicrosoft%2Ftorchgeo" %}
-{% set urlpath = "tree%2Ftorchgeo%2Fdocs%2F" %}
-{% set urlpath = urlpath ~ env.docname | replace("/", "%2F") ~ ".ipynb" %}
-{% if "dev" in env.config.release %}
-    {% set branch = "main" %}
-{% else %}
-    {% set branch = "releases%2Fv" ~ env.config.version %}
-{% endif %}
 
-.. image:: https://img.shields.io/badge/-Open%20on%20Planetary%20Computer-blue
-   :class: colabbadge
-   :alt: Open on Planetary Computer
-   :target: {{ host }}?repo={{ repo }}&urlpath={{ urlpath }}&branch={{ branch }}
-"""
+# sphinx.ext.linkcode
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """Resolve a GitHub URL for the given Python object."""
+    if domain != 'py':
+        return None
 
-# Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
-# See more information here https://github.com/spatialaudio/nbsphinx/issues/599
-# NOTE: This will likely break nbsphinx widgets
-nbsphinx_requirejs_path = ""
+    modname = info.get('module', '')
+    fullname = info.get('fullname', '')
+    if not modname:
+        return None
+
+    try:
+        mod = sys.modules.get(modname)
+        if mod is None:
+            __import__(modname)
+            mod = sys.modules[modname]
+
+        obj = mod
+        for part in fullname.split('.'):
+            obj = getattr(obj, part)
+
+        obj = inspect.unwrap(obj)
+        sourcefile = inspect.getsourcefile(obj)
+        if sourcefile is None:
+            return None
+        source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
+    except Exception:
+        return None
+
+    # Make path relative to the repo root
+    sourcefile = os.path.relpath(
+        sourcefile, start=os.path.join(os.path.dirname(__file__), '..')
+    )
+
+    lineend = lineno + source.count('\n') - 1
+    return (
+        f'https://github.com/torchgeo/torchgeo/blob/main/{sourcefile}'
+        f'#L{lineno}-L{lineend}'
+    )

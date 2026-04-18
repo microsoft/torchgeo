@@ -1,10 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Vaihingen dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from collections.abc import Callable
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,8 +14,11 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from .geo import VisionDataset
+from .errors import DatasetNotFoundError
+from .geo import NonGeoDataset
 from .utils import (
+    Path,
+    Sample,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -22,15 +26,16 @@ from .utils import (
 )
 
 
-class Vaihingen2D(VisionDataset):
+class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-vaihingen/>`_
+    The `Vaihingen <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/2d-sem-label-vaihingen.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
-    train/test sets used in the challenge. The dataset can be requested at the challenge
-    homepage. Note, the server contains additional data for 3D Semantic Labeling which
+    train/test sets used in the challenge. The dataset can be downloaded from
+    `here <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/default.aspx>`__.
+    Note, the server contains additional data for 3D Semantic Labeling which
     are currently not supported.
 
     Dataset format:
@@ -52,75 +57,75 @@ class Vaihingen2D(VisionDataset):
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     .. versionadded:: 0.2
-    """  # noqa: E501
+    """
 
-    filenames = [
-        "ISPRS_semantic_labeling_Vaihingen.zip",
-        "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip",
-    ]
-    md5s = ["462b8dca7b6fa9eaf729840f0cdfc7f3", "4802dd6326e2727a352fb735be450277"]
-    image_root = "top"
-    splits = {
-        "train": [
-            "top_mosaic_09cm_area1.tif",
-            "top_mosaic_09cm_area11.tif",
-            "top_mosaic_09cm_area13.tif",
-            "top_mosaic_09cm_area15.tif",
-            "top_mosaic_09cm_area17.tif",
-            "top_mosaic_09cm_area21.tif",
-            "top_mosaic_09cm_area23.tif",
-            "top_mosaic_09cm_area26.tif",
-            "top_mosaic_09cm_area28.tif",
-            "top_mosaic_09cm_area3.tif",
-            "top_mosaic_09cm_area30.tif",
-            "top_mosaic_09cm_area32.tif",
-            "top_mosaic_09cm_area34.tif",
-            "top_mosaic_09cm_area37.tif",
-            "top_mosaic_09cm_area5.tif",
-            "top_mosaic_09cm_area7.tif",
+    filenames = (
+        'ISPRS_semantic_labeling_Vaihingen.zip',
+        'ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip',
+    )
+    md5s = ('462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277')
+    image_root = 'top'
+    splits: ClassVar[dict[str, list[str]]] = {
+        'train': [
+            'top_mosaic_09cm_area1.tif',
+            'top_mosaic_09cm_area11.tif',
+            'top_mosaic_09cm_area13.tif',
+            'top_mosaic_09cm_area15.tif',
+            'top_mosaic_09cm_area17.tif',
+            'top_mosaic_09cm_area21.tif',
+            'top_mosaic_09cm_area23.tif',
+            'top_mosaic_09cm_area26.tif',
+            'top_mosaic_09cm_area28.tif',
+            'top_mosaic_09cm_area3.tif',
+            'top_mosaic_09cm_area30.tif',
+            'top_mosaic_09cm_area32.tif',
+            'top_mosaic_09cm_area34.tif',
+            'top_mosaic_09cm_area37.tif',
+            'top_mosaic_09cm_area5.tif',
+            'top_mosaic_09cm_area7.tif',
         ],
-        "test": [
-            "top_mosaic_09cm_area6.tif",
-            "top_mosaic_09cm_area24.tif",
-            "top_mosaic_09cm_area35.tif",
-            "top_mosaic_09cm_area16.tif",
-            "top_mosaic_09cm_area14.tif",
-            "top_mosaic_09cm_area22.tif",
-            "top_mosaic_09cm_area10.tif",
-            "top_mosaic_09cm_area4.tif",
-            "top_mosaic_09cm_area2.tif",
-            "top_mosaic_09cm_area20.tif",
-            "top_mosaic_09cm_area8.tif",
-            "top_mosaic_09cm_area31.tif",
-            "top_mosaic_09cm_area33.tif",
-            "top_mosaic_09cm_area27.tif",
-            "top_mosaic_09cm_area38.tif",
-            "top_mosaic_09cm_area12.tif",
-            "top_mosaic_09cm_area29.tif",
+        'test': [
+            'top_mosaic_09cm_area6.tif',
+            'top_mosaic_09cm_area24.tif',
+            'top_mosaic_09cm_area35.tif',
+            'top_mosaic_09cm_area16.tif',
+            'top_mosaic_09cm_area14.tif',
+            'top_mosaic_09cm_area22.tif',
+            'top_mosaic_09cm_area10.tif',
+            'top_mosaic_09cm_area4.tif',
+            'top_mosaic_09cm_area2.tif',
+            'top_mosaic_09cm_area20.tif',
+            'top_mosaic_09cm_area8.tif',
+            'top_mosaic_09cm_area31.tif',
+            'top_mosaic_09cm_area33.tif',
+            'top_mosaic_09cm_area27.tif',
+            'top_mosaic_09cm_area38.tif',
+            'top_mosaic_09cm_area12.tif',
+            'top_mosaic_09cm_area29.tif',
         ],
     }
-    classes = [
-        "Clutter/background",
-        "Impervious surfaces",
-        "Building",
-        "Low Vegetation",
-        "Tree",
-        "Car",
-    ]
-    colormap = [
+    classes = (
+        'Clutter/background',
+        'Impervious surfaces',
+        'Building',
+        'Low Vegetation',
+        'Tree',
+        'Car',
+    )
+    colormap = (
         (255, 0, 0),
         (255, 255, 255),
         (0, 0, 255),
         (0, 255, 255),
         (0, 255, 0),
         (255, 255, 0),
-    ]
+    )
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: Literal['train', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
@@ -131,6 +136,10 @@ class Vaihingen2D(VisionDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: If *split* is invalid.
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -147,7 +156,7 @@ class Vaihingen2D(VisionDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -158,7 +167,7 @@ class Vaihingen2D(VisionDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -182,12 +191,12 @@ class Vaihingen2D(VisionDataset):
         Returns:
             the image
         """
-        path = self.files[index]["image"]
+        path = self.files[index]['image']
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
+            tensor = tensor.permute((2, 0, 1)).float()
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -199,21 +208,17 @@ class Vaihingen2D(VisionDataset):
         Returns:
             the target mask
         """
-        path = self.files[index]["mask"]
+        path = self.files[index]['mask']
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.uint8] = np.array(img.convert('RGB'))
             array = rgb_to_mask(array, self.colormap)
-            tensor: Tensor = torch.from_numpy(array)  # type: ignore[attr-defined]
+            tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
-            tensor = tensor.to(torch.long)  # type: ignore[attr-defined]
+            tensor = tensor.to(torch.long)
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.image_root)):
             return
@@ -224,7 +229,7 @@ class Vaihingen2D(VisionDataset):
             filepath = os.path.join(self.root, filename)
             if os.path.isfile(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -233,17 +238,13 @@ class Vaihingen2D(VisionDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.
@@ -259,15 +260,15 @@ class Vaihingen2D(VisionDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][:3], sample["mask"], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample["image"][:3],
-                sample["prediction"],
+                sample['image'][:3],
+                sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
@@ -277,15 +278,15 @@ class Vaihingen2D(VisionDataset):
             ax0 = axs
 
         ax0.imshow(image1)
-        ax0.axis("off")
+        ax0.axis('off')
         if ncols > 1:
             ax1.imshow(image2)
-            ax1.axis("off")
+            ax1.axis('off')
 
         if show_titles:
-            ax0.set_title("Ground Truth")
+            ax0.set_title('Ground Truth')
             if ncols > 1:
-                ax1.set_title("Predictions")
+                ax1.set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

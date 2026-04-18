@@ -1,0 +1,11 @@
+Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
+:ref:`BigEarthNet`,C,Sentinel-1/2,"590,326",19--43,120x120,10,"SAR, MSI",CDLA-Permissive-1.0
+:ref:`Copernicus-Pretrain`,T,"Sentinel-1/2/3/5P, DEM",18.7M,-,"264x264 or 96x96 or 28x28 or 960x960",10--1000,"SAR, MSI, Air Pollutants, DEM",CC-BY-4.0
+:ref:`HySpecNet-11k`,-,EnMAP,11k,-,128,30,HSI,CC0-1.0
+:ref:`MMEarth`,"C, S","Aster, Sentinel, ERA5","100K--1M",,"128x128 or 64x64",10,MSI,CC-BY-4.0
+:ref:`Million-AID`,C,Google Earth,1M,51--73,,0.5--153,RGB,
+:ref:`SSL4EO`-L,T,Landsat,1M,-,264x264,30,MSI,CC0-1.0
+:ref:`SSL4EO`-S12,T,Sentinel-1/2,1M,-,264x264,10,"SAR, MSI",CC-BY-4.0
+:ref:`SatlasPretrain`,"C, R, S, I, OD","NAIP, Landsat, Sentinel",302M,137,512,0.6--30,"SAR, MSI",ESA AND CC0-1.0 AND ODbL-1.0 AND CC-BY-4.0
+:ref:`Seasonal Contrast`,T,Sentinel-2,100K--1M,-,264x264,10,MSI,CC-BY-4.0
+:ref:`SkyScript`,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",5.2M,-,100--1000,0.1--30,RGB,MIT

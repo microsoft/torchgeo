@@ -1,28 +1,44 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo transforms."""
 
+from .color import RandomGrayscale
 from .indices import (
+    AppendBNDVI,
+    AppendGBNDVI,
+    AppendGNDVI,
+    AppendGRNDVI,
     AppendNBR,
     AppendNDBI,
+    AppendNDRE,
     AppendNDSI,
     AppendNDVI,
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
+    AppendRBNDVI,
+    AppendSWI,
+    AppendTriBandNormalizedDifferenceIndex,
 )
-from .transforms import AugmentationSequential
+from .spatial import SatSlideMix
+from .temporal import Rearrange
 
 __all__ = (
-    "AppendNormalizedDifferenceIndex",
-    "AppendNBR",
-    "AppendNDBI",
-    "AppendNDSI",
-    "AppendNDVI",
-    "AppendNDWI",
-    "AugmentationSequential",
+    'AppendBNDVI',
+    'AppendGBNDVI',
+    'AppendGNDVI',
+    'AppendGRNDVI',
+    'AppendNBR',
+    'AppendNDBI',
+    'AppendNDRE',
+    'AppendNDSI',
+    'AppendNDVI',
+    'AppendNDWI',
+    'AppendNormalizedDifferenceIndex',
+    'AppendRBNDVI',
+    'AppendSWI',
+    'AppendTriBandNormalizedDifferenceIndex',
+    'RandomGrayscale',
+    'Rearrange',
+    'SatSlideMix',
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.transforms"

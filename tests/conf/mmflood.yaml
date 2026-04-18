@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 4
+    task: 'binary'
+    loss: 'bce'
+    ignore_index: 255
+data:
+  class_path: MMFloodDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/mmflood'
+    patch_size: 8
+    include_dem: True
+    include_hydro: True

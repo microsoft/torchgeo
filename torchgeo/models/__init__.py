@@ -1,28 +1,158 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo models."""
 
+from .api import get_model, get_model_weights, get_weight, list_models
+from .aurora import Aurora_Weights, aurora_swin_unet
+from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .changevit import ChangeViT
+from .convlstm import ConvLSTM
+from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
+from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
+from .dofa import (
+    DOFA,
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
+    dofa_base_patch16_224,
+    dofa_huge_patch14_224,
+    dofa_large_patch16_224,
+    dofa_small_patch16_224,
+)
+from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
-from .fccd import FCEF, FCSiamConc, FCSiamDiff
 from .fcn import FCN
-from .rcf import RCF
-from .resnet import resnet50
-
-__all__ = (
-    "ChangeMixin",
-    "ChangeStar",
-    "ChangeStarFarSeg",
-    "FarSeg",
-    "FCN",
-    "FCEF",
-    "FCSiamConc",
-    "FCSiamDiff",
-    "RCF",
-    "resnet50",
+from .fcsiam import FCSiamConc, FCSiamDiff
+from .ltae import LTAE
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
+from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
+from .presto import Presto, Presto_Weights, presto
+from .rcf import MOSAIKS, RCF
+from .resnet import (
+    ResNet18_Weights,
+    ResNet50_Weights,
+    ResNet152_Weights,
+    resnet18,
+    resnet50,
+    resnet152,
+)
+from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
+from .swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
+    Swin_V2_B_Weights,
+    Swin_V2_T_Weights,
+    SwinBackbone_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
+    swin_v2_b,
+    swin_v2_t,
+)
+from .tessera import Tessera, Tessera_Weights, tessera
+from .tilenet import TileNet, TileNet_Weights, tilenet
+from .unet import Unet_Weights, unet
+from .vit import (
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
+    ViTSmall16_Weights,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
+    vit_small_patch16_224,
 )
 
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.models"
+__all__ = (
+    'BTC',
+    'CROMA',
+    'DOFA',
+    'FCN',
+    'LTAE',
+    'MOSAIKS',
+    'RCF',
+    'Aurora_Weights',
+    'CROMABase_Weights',
+    'CROMALarge_Weights',
+    'ChangeMixin',
+    'ChangeStar',
+    'ChangeStarFarSeg',
+    'ChangeViT',
+    'ConvLSTM',
+    'CopernicusFM',
+    'CopernicusFM_Base_Weights',
+    'DOFABase16_Weights',
+    'DOFALarge16_Weights',
+    'EarthLoc',
+    'EarthLoc_Weights',
+    'FCSiamConc',
+    'FCSiamDiff',
+    'FarSeg',
+    'OlmoEarthV1_Weights',
+    'Panopticon',
+    'Panopticon_Weights',
+    'Presto',
+    'Presto_Weights',
+    'ResNet18_Weights',
+    'ResNet50_Weights',
+    'ResNet152_Weights',
+    'ScaleMAE',
+    'ScaleMAELarge16_Weights',
+    'SwinBackbone_Weights',
+    'Swin_B_Weights',
+    'Swin_S_Weights',
+    'Swin_T_Weights',
+    'Swin_V2_B_Weights',
+    'Swin_V2_T_Weights',
+    'Tessera',
+    'Tessera_Weights',
+    'TileNet',
+    'TileNet_Weights',
+    'Unet_Weights',
+    'ViTBase14_DINOv2_Weights',
+    'ViTBase16_Weights',
+    'ViTHuge14_Weights',
+    'ViTLarge16_Weights',
+    'ViTSmall14_DINOv2_Weights',
+    'ViTSmall16_Weights',
+    'aurora_swin_unet',
+    'copernicusfm_base',
+    'croma_base',
+    'croma_large',
+    'dofa_base_patch16_224',
+    'dofa_huge_patch14_224',
+    'dofa_large_patch16_224',
+    'dofa_small_patch16_224',
+    'earthloc',
+    'get_model',
+    'get_model_weights',
+    'get_weight',
+    'list_models',
+    'olmoearth_v1',
+    'panopticon_vitb14',
+    'presto',
+    'resnet18',
+    'resnet50',
+    'resnet152',
+    'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
+    'swin_v2_b',
+    'swin_v2_t',
+    'tessera',
+    'tilenet',
+    'unet',
+    'vit_base_patch14_dinov2',
+    'vit_base_patch16_224',
+    'vit_huge_patch14_224',
+    'vit_large_patch16_224',
+    'vit_small_patch14_dinov2',
+    'vit_small_patch16_224',
+)

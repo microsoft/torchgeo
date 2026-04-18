@@ -1,180 +1,351 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Regression tasks."""
+"""Trainers for regression."""
 
-from typing import Any, Dict
+import os
 
-import pytorch_lightning as pl
+import kornia.augmentation as K
+import matplotlib.pyplot as plt
+import segmentation_models_pytorch as smp
+import timm
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from matplotlib.figure import Figure
 from torch import Tensor
-from torch.nn.modules import Conv2d, Linear
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
-from torchvision import models
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
+from ..datamodules import BaseDataModule
+from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
+from ..models import FCN, get_weight
+from . import utils
+from .base import BaseTask
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Conv2d.__module__ = "nn.Conv2d"
-Linear.__module__ = "nn.Linear"
 
+class RegressionTask(BaseTask):
+    """Regression."""
 
-class RegressionTask(pl.LightningModule):
-    """LightningModule for training models on regression datasets."""
+    target_key = 'label'
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters."""
-        if self.hparams["model"] == "resnet18":
-            self.model = models.resnet18(pretrained=self.hparams["pretrained"])
-            in_features = self.model.fc.in_features
-            self.model.fc = nn.Linear(  # type: ignore[attr-defined]
-                in_features, out_features=1
-            )
-        else:
-            raise ValueError(f"Model type '{self.hparams['model']}' is not valid.")
-
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize a new LightningModule for training simple regression models.
-
-        Keyword Args:
-            model: Name of the model to use
-            learning_rate: Initial learning rate to use in the optimizer
-            learning_rate_schedule_patience: Patience parameter for the LR scheduler
-        """
-        super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
-        self.config_task()
-
-        self.train_metrics = MetricCollection(
-            {"RMSE": MeanSquaredError(squared=False), "MAE": MeanAbsoluteError()},
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
-        """Forward pass of the model."""
-        return self.model(x)
-
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step with an MSE loss.
+    def __init__(
+        self,
+        model: str = 'resnet50',
+        backbone: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
+        in_channels: int = 3,
+        num_outputs: int = 1,
+        num_filters: int = 3,
+        loss: str = 'mse',
+        lr: float = 1e-3,
+        patience: int = 10,
+        freeze_backbone: bool = False,
+        freeze_decoder: bool = False,
+    ) -> None:
+        """Initialize a new RegressionTask instance.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            model: Name of the
+                `timm <https://huggingface.co/docs/timm/reference/models>`__ or
+                `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
+            backbone: Name of the
+                `timm <https://smp.readthedocs.io/en/latest/encoders_timm.html>`__ or
+                `smp <https://smp.readthedocs.io/en/latest/encoders.html>`__ backbone
+                to use. Only applicable to PixelwiseRegressionTask.
+            weights: Initial model weights. Either a weight enum, the string
+                representation of a weight enum, True for ImageNet weights, False
+                or None for random weights, or the path to a saved model state dict.
+            in_channels: Number of input channels to model.
+            num_outputs: Number of prediction outputs.
+            num_filters: Number of filters. Only applicable when model='fcn'.
+            loss: One of 'mse' or 'mae'.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            freeze_backbone: Freeze the backbone network to linear probe
+                the regression head. Does not support FCN models.
+            freeze_decoder: Freeze the decoder network to linear probe
+                the regression head. Does not support FCN models.
+                Only applicable to PixelwiseRegressionTask.
+
+        .. versionchanged:: 0.4
+           Change regression model support from torchvision.models to timm
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* and *freeze_decoder* parameters.
+
+        .. versionchanged:: 0.5
+           *learning_rate* and *learning_rate_schedule_patience* were renamed to
+           *lr* and *patience*.
+        """
+        self.weights = weights
+        super().__init__()
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        # Create model
+        weights = self.weights
+        self.model = timm.create_model(
+            self.hparams['model'],
+            num_classes=self.hparams['num_outputs'],
+            in_chans=self.hparams['in_channels'],
+            pretrained=weights is True,
+        )
+
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
+            else:
+                state_dict = get_weight(weights).get_state_dict(progress=True)
+            utils.load_state_dict(self.model, state_dict)
+
+        # Freeze backbone and unfreeze classifier head
+        if self.hparams['freeze_backbone']:
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():  # ty: ignore[call-non-callable]
+                param.requires_grad = True
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
+
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss: str = self.hparams['loss']
+        if loss == 'mse':
+            self.criterion: nn.Module = nn.MSELoss()
+        elif loss == 'mae':
+            self.criterion = nn.L1Loss()
+        else:
+            raise ValueError(
+                f"Loss type '{loss}' is not valid. "
+                "Currently, supports 'mse' or 'mae' loss."
+            )
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
+          differences between the predicted and actual values (MSE) and its
+          square root (RMSE). Lower values are better.
+        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
+          differences between the predicted and actual values (MAE).
+          Lower values are better.
+        """
+        metrics = MetricCollection(
+            # https://github.com/astral-sh/ty/issues/2985
+            {
+                'RMSE': MeanSquaredError(squared=False),
+                'MSE': MeanSquaredError(squared=True),
+                'MAE': MeanAbsoluteError(),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
+
+    def training_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            training loss
+            The loss tensor.
         """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-
-        self.log("train_loss", loss)  # logging to TensorBoard
+        x = batch['image']
+        batch_size = x.shape[0]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
+        y_hat = self(x)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+        loss: Tensor = self.criterion(y_hat, y)
+        self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch-level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
+    def validation_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
-        """Validation step.
+        """Compute the validation loss and additional metrics.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("val_loss", loss)
+        x = batch['image']
+        batch_size = x.shape[0]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
+        y_hat = self(x)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+        loss = self.criterion(y_hat, y)
+        self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
-        if batch_idx < 10:
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, 'datamodule')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
+            and self.logger
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
+        ):
+            datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
+            if self.target_key == 'mask':
+                y = y.squeeze(dim=1)
+                y_hat = y_hat.squeeze(dim=1)
+            batch['prediction'] = y_hat
+            for key in ['image', self.target_key, 'prediction']:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Figure | None = None
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                batch["prediction"] = y_hat
-                for key in ["image", "label", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-            except AttributeError:
+            except RGBBandsMissingError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )  # ty: ignore[call-non-callable]
+                plt.close()
+
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
 
         Args:
-            outputs: list of items returned by validation_step
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
-
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["label"].view(-1, 1)
-        y_hat = self.forward(x)
-
-        loss = F.mse_loss(y_hat, y)
-        self.log("test_loss", loss)
+        x = batch['image']
+        batch_size = x.shape[0]
+        # TODO: remove .to(...) once we have a real pixelwise regression dataset
+        y = batch[self.target_key].to(torch.float)
+        y_hat = self(x)
+        if y_hat.ndim != y.ndim:
+            y = y.unsqueeze(dim=1)
+        loss = self.criterion(y_hat, y)
+        self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted regression values.
 
         Args:
-            outputs: list of items returned by test_step
-        """
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            Output predicted probabilities.
         """
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
-                ),
-                "monitor": "val_loss",
-            },
-        }
+        x = batch['image']
+        y_hat: Tensor = self(x)
+        return y_hat
+
+
+class PixelwiseRegressionTask(RegressionTask):
+    """LightningModule for pixelwise regression of images.
+
+    .. versionadded:: 0.5
+    """
+
+    target_key = 'mask'
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights = self.weights
+
+        model = self.hparams['model']
+        backbone = self.hparams['backbone']
+        in_channels = self.hparams['in_channels']
+
+        match model:
+            case 'unet':
+                self.model = smp.Unet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'deeplabv3+':
+                self.model = smp.DeepLabV3Plus(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'fcn':
+                self.model = FCN(
+                    in_channels=in_channels,
+                    classes=1,
+                    num_filters=self.hparams['num_filters'],
+                )
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+
+        if model != 'fcn':
+            if weights and weights is not True:
+                if isinstance(weights, WeightsEnum):
+                    state_dict = weights.get_state_dict(progress=True)
+                elif os.path.exists(weights):
+                    _, state_dict = utils.extract_backbone(weights)
+                else:
+                    state_dict = get_weight(weights).get_state_dict(progress=True)
+                self.model.encoder.load_state_dict(state_dict)
+
+        # Freeze backbone
+        if self.hparams.get('freeze_backbone', False) and model != 'fcn':
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hparams.get('freeze_decoder', False) and model != 'fcn':
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False

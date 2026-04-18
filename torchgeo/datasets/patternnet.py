@@ -1,22 +1,24 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
-from torch import Tensor
+from matplotlib.figure import Figure
 
-from .geo import VisionClassificationDataset
-from .utils import download_url, extract_archive
+from .errors import DatasetNotFoundError
+from .geo import NonGeoClassificationDataset
+from .utils import Path, Sample, download_url, extract_archive
 
 
-class PatternNet(VisionClassificationDataset):
+class PatternNet(NonGeoClassificationDataset):
     """PatternNet dataset.
 
-    The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`_
+    The `PatternNet <https://sites.google.com/view/zhouwx/dataset>`__
     dataset is a dataset for remote sensing scene classification and image retrieval.
 
     Dataset features:
@@ -75,15 +77,15 @@ class PatternNet(VisionClassificationDataset):
     * https://doi.org/10.1016/j.isprsjprs.2018.01.004
     """
 
-    url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
-    md5 = "96d54b3224c5350a98d55d5a7e6984ad"
-    filename = "PatternNet.zip"
-    directory = os.path.join("PatternNet", "images")
+    url = 'https://hf.co/datasets/torchgeo/PatternNet/resolve/2dbd901b00e301967a5c5146b25454f5d3455ad0/PatternNet.zip'
+    md5 = '96d54b3224c5350a98d55d5a7e6984ad'
+    filename = 'PatternNet.zip'
+    directory = os.path.join('PatternNet', 'images')
 
     def __init__(
         self,
-        root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -95,6 +97,9 @@ class PatternNet(VisionClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.download = download
@@ -103,11 +108,7 @@ class PatternNet(VisionClassificationDataset):
         super().__init__(root=os.path.join(root, self.directory), transforms=transforms)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.directory)
         if os.path.exists(filepath):
@@ -121,11 +122,7 @@ class PatternNet(VisionClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automaticaly download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -146,15 +143,12 @@ class PatternNet(VisionClassificationDataset):
         extract_archive(filepath)
 
     def plot(
-        self,
-        sample: Dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VisionClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
@@ -163,21 +157,21 @@ class PatternNet(VisionClassificationDataset):
 
         .. versionadded:: 0.2
         """
-        image, label = sample["image"], cast(int, sample["label"].item())
+        image, label = sample['image'], cast(int, sample['label'].item())
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            title = f"Label: {self.classes[label]}"
+            title = f'Label: {self.classes[label]}'
             if showing_predictions:
-                title += f"\nPrediction: {self.classes[prediction]}"
+                title += f'\nPrediction: {self.classes[prediction]}'
             ax.set_title(title)
 
         if suptitle is not None:

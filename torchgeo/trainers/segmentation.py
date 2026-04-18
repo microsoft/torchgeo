@@ -1,248 +1,352 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Segmentation tasks."""
+"""Trainers for semantic segmentation."""
 
-from typing import Any, Dict, cast
+import os
+from collections.abc import Sequence
+from typing import Literal
 
+import kornia.augmentation as K
+import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
-from pytorch_lightning.core.lightning import LightningModule
+from einops import rearrange
+from matplotlib.figure import Figure
 from torch import Tensor
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
-from ..models import FCN
+from ..datamodules import BaseDataModule
+from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
+from ..models import FCN, get_weight
+from . import utils
+from .base import BaseTask
+from .mixins import ClassificationMixin
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
+class SemanticSegmentationTask(ClassificationMixin, BaseTask):
+    """Semantic Segmentation."""
 
-class SemanticSegmentationTask(LightningModule):
-    """LightningModule for semantic segmentation of images."""
+    def __init__(
+        self,
+        model: Literal[
+            'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', 'dpt'
+        ] = 'unet',
+        backbone: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
+        in_channels: int = 3,
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
+        labels: list[str] | None = None,
+        num_filters: int = 3,
+        pos_weight: Tensor | None = None,
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'ce',
+        class_weights: Tensor | Sequence[float] | None = None,
+        ignore_index: int | None = None,
+        lr: float = 1e-3,
+        patience: int = 10,
+        freeze_backbone: bool = False,
+        freeze_decoder: bool = False,
+    ) -> None:
+        """Initialize a new SemanticSegmentationTask instance.
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        if self.hparams["segmentation_model"] == "unet":
-            self.model = smp.Unet(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
-            )
-        elif self.hparams["segmentation_model"] == "deeplabv3+":
-            self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hparams["encoder_name"],
-                encoder_weights=self.hparams["encoder_weights"],
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
-            )
-        elif self.hparams["segmentation_model"] == "fcn":
-            self.model = FCN(
-                in_channels=self.hparams["in_channels"],
-                classes=self.hparams["num_classes"],
-                num_filters=self.hparams["num_filters"],
-            )
-        else:
-            raise ValueError(
-                f"Model type '{self.hparams['segmentation_model']}' is not valid."
-            )
+        Args:
+            model: Name of the
+                `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
+            backbone: Name of the `timm
+                <https://smp.readthedocs.io/en/latest/encoders_timm.html>`__ or `smp
+                <https://smp.readthedocs.io/en/latest/encoders.html>`__ backbone to use.
+            weights: Initial model weights. Either a weight enum, the string
+                representation of a weight enum, True for ImageNet weights, False or
+                None for random weights, or the path to a saved model state dict. FCN
+                model does not support pretrained weights.
+            in_channels: Number of input channels to model.
+            task: One of 'binary', 'multiclass', or 'multilabel'.
+            num_classes: Number of prediction classes (only for ``task='multiclass'``).
+            num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            labels: List of class names.
+            num_filters: Number of filters. Only applicable when model='fcn'.
+            pos_weight: A weight of positive examples and used with 'bce' loss.
+            loss: Name of the loss function, currently supports
+                'ce', 'bce', 'jaccard', 'focal', and 'dice' loss.
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss.
+            ignore_index: Optional integer class index to ignore in the loss and
+                metrics.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            freeze_backbone: Freeze the backbone network to fine-tune the
+                decoder and segmentation head.
+            freeze_decoder: Freeze the decoder network to linear probe
+                the segmentation head.
 
-        if self.hparams["loss"] == "ce":
-            self.loss = nn.CrossEntropyLoss(  # type: ignore[attr-defined]
-                ignore_index=-1000 if self.ignore_zeros is None else 0
-            )
-        elif self.hparams["loss"] == "jaccard":
-            self.loss = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
-            )
-        elif self.hparams["loss"] == "focal":
-            self.loss = smp.losses.FocalLoss(
-                "multiclass", ignore_index=self.ignore_zeros, normalized=True
-            )
-        else:
-            raise ValueError(f"Loss type '{self.hparams['loss']}' is not valid.")
+        .. versionadded:: 0.9
+           The *labels* and *pos_weight* parameters and dice loss support.
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
+        .. versionadded:: 0.8
+           Time series, DPT, Segformer, and UPerNet support.
 
-        Keyword Args:
-            segmentation_model: Name of the segmentation model type to use
-            encoder_name: Name of the encoder model backbone to use
-            encoder_weights: None or "imagenet" to use imagenet pretrained weights in
-                the encoder model
-            in_channels: Number of channels in input image
-            num_classes: Number of semantic classes to predict
-            loss: Name of the loss function
-            ignore_zeros: Whether to ignore the "0" class value in the loss and metrics
+        .. versionadded:: 0.7
+           The *task* and *num_labels* parameters.
 
-        Raises:
-            ValueError: if kwargs arguments are invalid
+        .. versionchanged:: 0.6
+           The *ignore_index* parameter now works for jaccard loss.
+
+        .. versionadded:: 0.5
+           The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
+
+        .. versionchanged:: 0.5
+           The *weights* parameter now supports WeightEnums and checkpoint paths.
+           *learning_rate* and *learning_rate_schedule_patience* were renamed to
+           *lr* and *patience*.
+
+        .. versionchanged:: 0.4
+           *segmentation_model*, *encoder_name*, and *encoder_weights*
+           were renamed to *model*, *backbone*, and *weights*.
+
+        .. versionchanged:: 0.3
+           *ignore_zeros* was renamed to *ignore_index*.
         """
+        self.weights = weights
         super().__init__()
-        self.save_hyperparameters()  # creates `self.hparams` from kwargs
 
-        self.ignore_zeros = None if kwargs["ignore_zeros"] else 0
-
-        self.config_task()
-
-        self.train_metrics = MetricCollection(
-            [
-                Accuracy(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
-                ),
-                JaccardIndex(
-                    num_classes=self.hparams["num_classes"],
-                    ignore_index=self.ignore_zeros,
-                ),
-            ],
-            prefix="train_",
-        )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
-
-    def forward(self, x: Tensor) -> Any:  # type: ignore[override]
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
-            x: tensor of data to run through the model
+            x: Input tensor of shape (B, C, H, W) or (B, T, C, H, W).
 
         Returns:
-            output from the model
+            Output tensor of shape (B, num_classes, H, W).
         """
-        return self.model(x)
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+        x = self.model(x)
+        return x
 
-    def training_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> Tensor:
-        """Training step - reports average accuracy and average JaccardIndex.
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        model: str = self.hparams['model']
+        backbone: str = self.hparams['backbone']
+        weights = self.weights
+        in_channels: int = self.hparams['in_channels']
+        num_classes: int = (
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
+        )
+        num_filters: int = self.hparams['num_filters']
 
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-
-        Returns:
-            training loss
-        """
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        # by default, the train step logs every `log_every_n_steps` steps where
-        # `log_every_n_steps` is a parameter to the `Trainer` object
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
-        self.train_metrics(y_hat_hard, y)
-
-        return cast(Tensor, loss)
-
-    def training_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level training metrics.
-
-        Args:
-            outputs: list of items returned by training_step
-        """
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
-    def validation_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Validation step - reports average accuracy and average JaccardIndex.
-
-        Logs the first 10 validation samples to tensorboard as images with 3 subplots
-        showing the image, mask, and predictions.
-
-        Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        self.log("val_loss", loss, on_step=False, on_epoch=True)
-        self.val_metrics(y_hat_hard, y)
-
-        if batch_idx < 10:
-            try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
-                fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
+        match model:
+            case 'unet':
+                self.model = smp.Unet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
                 )
-            except AttributeError:
+            case 'deeplabv3+':
+                self.model = smp.DeepLabV3Plus(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'fcn':
+                self.model = FCN(
+                    in_channels=in_channels,
+                    classes=num_classes,
+                    num_filters=num_filters,
+                )
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+        if model != 'fcn':
+            if weights and weights is not True:
+                if isinstance(weights, WeightsEnum):
+                    state_dict = weights.get_state_dict(progress=True)
+                elif os.path.exists(weights):
+                    _, state_dict = utils.extract_backbone(weights)
+                else:
+                    state_dict = get_weight(weights).get_state_dict(progress=True)
+                self.model.encoder.load_state_dict(state_dict)
+
+        # Freeze backbone
+        if self.hparams['freeze_backbone'] and model != 'fcn':
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hparams['freeze_decoder'] and model != 'fcn':
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
+
+    def training_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            The loss tensor.
+        """
+        x = batch['image']
+        y = batch['mask']
+        batch_size = x.shape[0]
+        y_hat = self(x).squeeze(1)
+        self.train_metrics(y_hat, y)
+
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+
+        loss: Tensor = self.criterion(y_hat, y)
+        self.log('train_loss', loss, batch_size=batch_size)
+
+        return loss
+
+    def validation_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
+        x = batch['image']
+        y = batch['mask']
+        batch_size = x.shape[0]
+        y_hat = self(x).squeeze(1)
+        self.val_metrics(y_hat, y)
+
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+
+        loss = self.criterion(y_hat, y)
+        self.log('val_loss', loss, batch_size=batch_size)
+
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, 'datamodule')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
+            and self.logger
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
+        ):
+            datamodule = self.trainer.datamodule
+            if batch['image'].ndim == 5:
+                _, T, C, _, _ = batch['image'].shape
+                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
+
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['image'] = rearrange(
+                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
+                )
+            else:
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+            match self.hparams['task']:
+                case 'binary' | 'multilabel':
+                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                case 'multiclass':
+                    batch['prediction'] = y_hat.argmax(dim=1)
+
+            for key in ['image', 'mask', 'prediction']:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Figure | None = None
+            try:
+                fig = datamodule.plot(sample)
+            except RGBBandsMissingError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )  # ty: ignore[call-non-callable]
+                plt.close()
+
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
 
         Args:
-            outputs: list of items returned by validation_step
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
+        x = batch['image']
+        y = batch['mask']
+        batch_size = x.shape[0]
+        y_hat = self(x).squeeze(1)
+        self.test_metrics(y_hat, y)
 
-    def test_step(  # type: ignore[override]
-        self, batch: Dict[str, Any], batch_idx: int
-    ) -> None:
-        """Test step identical to the validation step.
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+
+        loss = self.criterion(y_hat, y)
+        self.log('test_loss', loss, batch_size=batch_size)
+
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> dict[str, Tensor | None]:
+        """Compute the predicted class probabilities.
 
         Args:
-            batch: Current batch
-            batch_idx: Index of current batch
-        """
-        x = batch["image"]
-        y = batch["mask"]
-        y_hat = self.forward(x)
-        y_hat_hard = y_hat.argmax(dim=1)
-
-        loss = self.loss(y_hat, y)
-
-        # by default, the test and validation steps only log per *epoch*
-        self.log("test_loss", loss, on_step=False, on_epoch=True)
-        self.test_metrics(y_hat_hard, y)
-
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
-
-        Args:
-            outputs: list of items returned by test_step
-        """
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+            Dictionary with 'probabilities', 'bounds', and 'transform' keys.
+
+        .. versionchanged:: 0.9
+           Changed return type from Tensor to dict with probabilities, bounds,
+           and transform keys.
         """
-        optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hparams["learning_rate"]
-        )
+        x = batch['image']
+        y_hat: Tensor = self(x)
+
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
+                y_hat = y_hat.sigmoid()
+            case 'multiclass':
+                y_hat = y_hat.softmax(dim=1)
+
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer, patience=self.hparams["learning_rate_schedule_patience"]
-                ),
-                "monitor": "val_loss",
-            },
+            'probabilities': y_hat,
+            'bounds': batch.get('bounds'),
+            'transform': batch.get('transform'),
         }

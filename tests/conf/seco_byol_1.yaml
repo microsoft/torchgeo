@@ -1,0 +1,12 @@
+model:
+  class_path: BYOLTask
+  init_args:
+    in_channels: 3
+    model: 'resnet18'
+data:
+  class_path: SeasonalContrastS2DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/seco'
+    seasons: 1

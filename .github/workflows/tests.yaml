@@ -2,74 +2,100 @@ name: tests
 on:
   push:
     branches:
-    - main
-    - release**
+      - main
+      - release**
   pull_request:
     branches:
-    - main
-    - release**
+      - main
+      - release**
+defaults:
+  run:
+    shell: bash
 jobs:
-  mypy:
-    name: mypy
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests]
-    - name: Run mypy checks
-      run: mypy .
-  pytest:
-    name: pytest
+  latest:
+    name: latest
     runs-on: ${{ matrix.os }}
-    env:
-      MPLBACKEND: Agg
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        exclude:
-        - os: windows-latest
-          python-version: 3.6
+        python-version: ['3.12', '3.13', '3.14', '3.14t']
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v2
-    - name: Set up python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install apt dependencies (Linux)
-      run: sudo apt-get install unrar
-      if: ${{ runner.os == 'Linux' }}
-    - name: Install brew dependencies (macOS)
-      run: brew install rar
-      if: ${{ runner.os == 'macOS' }}
-    - name: Install conda (Windows)
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        channels: conda-forge
-        channel-priority: strict
-      if: ${{ runner.os == 'Windows' }}
-    - name: Install conda dependencies (Windows)
-      run: |
-        # PyTorch isn't compatible with setuptools 59.6+, pin for now until new PyTorch release
-        # https://github.com/pytorch/pytorch/pull/69904
-        conda install 'fiona>=1.5' h5py 'rasterio>=1.0.16' 'setuptools<59.6'
-        conda list
-        conda info
-      if: ${{ runner.os == 'Windows' }}
-    - name: Install pip dependencies
-      run: |
-        pip install cython numpy  # needed for pycocotools
-        pip install .[datasets,tests]
-    - name: Run pytest checks
-      run: pytest --cov=torchgeo --cov-report=xml
-    - name: Report coverage
-      uses: codecov/codecov-action@v2
+      - name: Clone repo
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --extra datasets --extra models --extra tests
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
+        run: |
+          pytest --cov=torchgeo --cov-report=xml
+          python -m torchgeo --help
+      - name: Report coverage
+        uses: codecov/codecov-action@v6.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  minimum:
+    name: minimum
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: '3.12'
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+      - name: Install dependencies
+        run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
+        run: |
+          pytest --cov=torchgeo --cov-report=xml
+          python -m torchgeo --help
+      - name: Report coverage
+        uses: codecov/codecov-action@v6.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  optional:
+    name: optional
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v6.0.2
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: '3.14'
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --extra tests
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run checks
+        run: |
+          pytest --cov=torchgeo --cov-report=xml
+          python -m torchgeo --help
+      - name: Report coverage
+        uses: codecov/codecov-action@v6.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
