@@ -133,6 +133,8 @@ models = [
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
     "olmoearth-pretrain-minimal>=0.0.2",
+    # rfdetr 1.6+ required for RF-DETR object detection support
+    "rfdetr>=1.6",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels

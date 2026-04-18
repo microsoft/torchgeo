@@ -76,6 +76,35 @@ class TestObjectDetection:
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
 
+    def test_rf_detr_preserves_num_classes_api(self) -> None:
+        model = ObjectDetectionTask(
+            model='rf-detr-nano',
+            num_classes=2,
+            pretrain_weights=None,
+        )
+        assert model.rf_detr_model_config.num_classes == 1
+
+    def test_rf_detr_accepts_kwargs(self) -> None:
+        model = ObjectDetectionTask(
+            model='rf-detr-nano',
+            num_classes=2,
+            pretrain_weights=None,
+            resolution=512,
+            lr_encoder=1e-5,
+        )
+        assert model.rf_detr_model_config.resolution == 512
+        assert model.rf_detr_train_config.lr_encoder == 1e-5
+
+    def test_rf_detr_requires_rgb(self) -> None:
+        match = 'RF-DETR currently requires in_channels=3.'
+        with pytest.raises(ValueError, match=match):
+            ObjectDetectionTask(
+                model='rf-detr-nano',
+                num_classes=2,
+                in_channels=4,
+                pretrain_weights=None,
+            )
+
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)
         datamodule = NASAMarineDebrisDataModule(
