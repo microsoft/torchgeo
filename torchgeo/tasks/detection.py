@@ -248,13 +248,13 @@ class ObjectDetection(BaseTask):
         """Initialize an RF-DETR model and its training utilities."""
         if backbone != 'resnet50':
             raise ValueError(
-                "Backbone selection is not supported for RF-DETR. "
+                'Backbone selection is not supported for RF-DETR. '
                 "Leave backbone='resnet50' and use RF-DETR kwargs instead."
             )
         if self.weights is not None:
             raise ValueError(
                 "The 'weights' argument is not supported for RF-DETR. "
-                "Use RF-DETR kwargs such as pretrain_weights=... instead."
+                'Use RF-DETR kwargs such as pretrain_weights=... instead.'
             )
         if in_channels != 3:
             raise ValueError('RF-DETR currently requires in_channels=3.')
@@ -274,7 +274,10 @@ class ObjectDetection(BaseTask):
                 RFDETRSmallConfig,
                 TrainConfig,
             )
-            from rfdetr.models.lwdetr import build_criterion_and_postprocessors, build_model
+            from rfdetr.models.lwdetr import (
+                build_criterion_and_postprocessors,
+                build_model,
+            )
             from rfdetr.models.weights import load_pretrain_weights
         except ModuleNotFoundError as exc:
             raise ImportError(
@@ -307,8 +310,8 @@ class ObjectDetection(BaseTask):
 
         if 'num_classes' in model_kwargs:
             raise ValueError(
-                "Do not pass num_classes through RF-DETR kwargs. "
-                "Use ObjectDetectionTask(num_classes=...), which TorchGeo "
+                'Do not pass num_classes through RF-DETR kwargs. '
+                'Use ObjectDetectionTask(num_classes=...), which TorchGeo '
                 'interprets as including background.'
             )
 
@@ -325,11 +328,15 @@ class ObjectDetection(BaseTask):
         self.rf_detr_model_config = model_config_class(**model_kwargs)
         self.rf_detr_train_config = TrainConfig(**train_kwargs)
 
-        namespace = build_namespace(self.rf_detr_model_config, self.rf_detr_train_config)
+        namespace = build_namespace(
+            self.rf_detr_model_config, self.rf_detr_train_config
+        )
         self.model = build_model(namespace)
         if self.rf_detr_model_config.pretrain_weights is not None:
             load_pretrain_weights(self.model, self.rf_detr_model_config)
-            namespace = build_namespace(self.rf_detr_model_config, self.rf_detr_train_config)
+            namespace = build_namespace(
+                self.rf_detr_model_config, self.rf_detr_train_config
+            )
         self.rf_detr_criterion, self.rf_detr_postprocess = (
             build_criterion_and_postprocessors(namespace)
         )
@@ -358,9 +365,13 @@ class ObjectDetection(BaseTask):
         has_boxes = 'bbox_xyxy' in batch
         for index, image in enumerate(images):
             height, width = image.shape[-2:]
-            orig_size = torch.tensor([height, width], dtype=torch.int64, device=image.device)
+            orig_size = torch.tensor(
+                [height, width], dtype=torch.int64, device=image.device
+            )
             target: dict[str, Tensor] = {
-                'image_id': torch.tensor([index], dtype=torch.int64, device=image.device),
+                'image_id': torch.tensor(
+                    [index], dtype=torch.int64, device=image.device
+                ),
                 'orig_size': orig_size,
                 'size': orig_size,
             }
@@ -370,7 +381,7 @@ class ObjectDetection(BaseTask):
                 labels = batch['label'][index].long()
                 if len(labels) > 0 and torch.any(labels < 1):
                     raise ValueError(
-                        "TorchGeo RF-DETR support expects foreground labels to start at 1 "
+                        'TorchGeo RF-DETR support expects foreground labels to start at 1 '
                         'because num_classes includes the background class.'
                     )
 
@@ -597,7 +608,9 @@ class ObjectDetection(BaseTask):
         from rfdetr._namespace import build_namespace
         from rfdetr.training.param_groups import get_param_dict
 
-        namespace = build_namespace(self.rf_detr_model_config, self.rf_detr_train_config)
+        namespace = build_namespace(
+            self.rf_detr_model_config, self.rf_detr_train_config
+        )
         model_for_params = getattr(self.model, '_orig_mod', self.model)
         param_dicts = [
             param_dict

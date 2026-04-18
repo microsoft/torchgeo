@@ -78,9 +78,7 @@ class TestObjectDetection:
 
     def test_rf_detr_preserves_num_classes_api(self) -> None:
         model = ObjectDetectionTask(
-            model='rf-detr-nano',
-            num_classes=2,
-            pretrain_weights=None,
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
         )
         assert model.rf_detr_model_config.num_classes == 1
 
