@@ -13,23 +13,17 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Adam J. Stewart", email = "ajstewart426@gmail.com" }]
+authors = [
+    {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
+]
 maintainers = [
-    { name = "Adam J. Stewart", email = "ajstewart426@gmail.com" },
-    { name = "Caleb Robinson", email = "Caleb.Robinson@microsoft.com" },
-    { name = "Isaac Corley", email = "isaac.corley@proton.me" },
-    { name = "Nils Lehmann", email = "n.lehmann@tum.de" },
-    { name = "Ashwin Nair", email = "ashnair0007@gmail.com" },
+    {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
+    {name = "Caleb Robinson", email = "Caleb.Robinson@microsoft.com"},
+    {name = "Isaac Corley", email = "isaac.corley@proton.me"},
+    {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
+    {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
 ]
-keywords = [
-    "pytorch",
-    "deep learning",
-    "machine learning",
-    "remote sensing",
-    "satellite imagery",
-    "earth observation",
-    "geospatial",
-]
+keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -157,7 +151,9 @@ tests = [
     # pytest-socket 0.3.4+ required for wheels
     "pytest-socket>=0.3.4",
 ]
-all = ["torchgeo[datasets,docs,models,style,tests]"]
+all = [
+    "torchgeo[datasets,docs,models,style,tests]",
+]
 
 [project.scripts]
 torchgeo = "torchgeo.main:main"
@@ -172,7 +168,9 @@ Slack = "https://torchgeo.slack.com"
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
-exclude_also = ["@overload"]
+exclude_also = [
+    "@overload",
+]
 show_missing = true
 
 [tool.pytest.ini_options]
@@ -210,9 +208,18 @@ filterwarnings = [
     "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning",
     "ignore:invalid value encountered in oriented_envelope:RuntimeWarning",
 ]
-markers = ["slow: marks tests as slow"]
-norecursedirs = [".ipynb_checkpoints", "data", "__pycache__"]
-testpaths = ["tests", "docs/tutorials"]
+markers = [
+    "slow: marks tests as slow",
+]
+norecursedirs = [
+    ".ipynb_checkpoints",
+    "data",
+    "__pycache__",
+]
+testpaths = [
+    "tests",
+    "docs/tutorials",
+]
 tmp_path_retention_count = 1
 tmp_path_retention_policy = "failed"
 
@@ -220,7 +227,6 @@ tmp_path_retention_policy = "failed"
 [tool.ruff]
 extend-include = ["*.ipynb"]
 fix = true
-line-length = 88
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -243,7 +249,7 @@ convention = "google"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]
-version = { attr = "torchgeo.__version__" }
+version = {attr = "torchgeo.__version__"}
 
 [tool.setuptools.package-data]
 torchgeo = ["py.typed"]

@@ -30,6 +30,7 @@ def mae_augmentation(size: int = 224) -> K.AugmentationSequential:
             resample='bicubic',
         ),
         K.RandomHorizontalFlip(p=0.5),
+        K.RandomVerticalFlip(p=0.5),
         data_keys=['input'],
     )
 
