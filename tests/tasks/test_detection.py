@@ -668,7 +668,7 @@ class TestObjectDetection:
         monkeypatch.setattr(
             model, '_trainer', cast(Any, SimpleNamespace(datamodule=None))
         )
-        monkeypatch.setattr(model, '_logger', cast(Any, None))
+        monkeypatch.setattr(model, '_logger', cast(Any, None), raising=False)
         monkeypatch.setattr(
             model,
             'log_dict',
