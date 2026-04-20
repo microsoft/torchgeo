@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 import os
+import sys
+from types import ModuleType
 from typing import Any
 
 import pytest
 import torch
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torch import Tensor
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
@@ -117,6 +120,26 @@ def patch_fake_rfdetr_runtime(monkeypatch: MonkeyPatch) -> dict[str, list[Any]]:
             )
         ),
     )
+    return state
+
+
+def patch_fake_rfdetr_tensor_utils(monkeypatch: MonkeyPatch) -> dict[str, list[Any]]:
+    state: dict[str, list[Any]] = {'calls': []}
+
+    def nested_tensor_from_tensor_list(images: list[torch.Tensor]) -> dict[str, Any]:
+        state['calls'].append(images)
+        return {'images': images}
+
+    rfdetr_module = ModuleType('rfdetr')
+    utilities_module = ModuleType('rfdetr.utilities')
+    tensors_module = ModuleType('rfdetr.utilities.tensors')
+    tensors_module.nested_tensor_from_tensor_list = nested_tensor_from_tensor_list
+    utilities_module.tensors = tensors_module
+    rfdetr_module.utilities = utilities_module
+
+    monkeypatch.setitem(sys.modules, 'rfdetr', rfdetr_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.utilities', utilities_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.utilities.tensors', tensors_module)
     return state
 
 
@@ -250,6 +273,119 @@ class TestObjectDetection:
 
         result = model(torch.randn(1, 3, 16, 16))
         assert result['namespace']['model_config'] is model.rf_detr_model_config
+
+    def test_rf_detr_build_batch_converts_boxes(self, monkeypatch: MonkeyPatch) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        tensor_state = patch_fake_rfdetr_tensor_utils(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=3, pretrain_weights=None
+        )
+
+        batch = {
+            'image': torch.arange(3 * 10 * 20, dtype=torch.float32).reshape(
+                1, 3, 10, 20
+            ),
+            'bbox_xyxy': [torch.tensor([[2.0, 1.0, 6.0, 5.0]])],
+            'label': [torch.tensor([1])],
+        }
+
+        samples, targets, metric_targets = model._build_rf_detr_batch(batch)
+
+        assert len(tensor_state['calls']) == 1
+        assert samples['images'][0].shape == (3, 10, 20)
+        assert torch.equal(targets[0]['orig_size'], torch.tensor([10, 20]))
+        assert torch.allclose(targets[0]['boxes'], torch.tensor([[0.2, 0.3, 0.2, 0.4]]))
+        assert torch.equal(targets[0]['labels'], torch.tensor([0]))
+        assert torch.equal(targets[0]['area'], torch.tensor([16.0]))
+        assert torch.equal(targets[0]['iscrowd'], torch.tensor([0]))
+        assert torch.equal(metric_targets[0]['boxes'], batch['bbox_xyxy'][0])
+        assert torch.equal(metric_targets[0]['labels'], batch['label'][0])
+
+    def test_rf_detr_build_batch_supports_predict_inputs(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        patch_fake_rfdetr_tensor_utils(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        samples, targets, metric_targets = model._build_rf_detr_batch(
+            {'image': torch.randn(2, 3, 8, 6)}
+        )
+
+        assert len(samples['images']) == 2
+        assert len(targets) == 2
+        assert metric_targets == []
+        assert all('boxes' not in target for target in targets)
+
+    def test_rf_detr_build_batch_rejects_background_labels(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        patch_fake_rfdetr_tensor_utils(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        batch = {
+            'image': torch.randn(1, 3, 8, 8),
+            'bbox_xyxy': [torch.tensor([[1.0, 1.0, 2.0, 2.0]])],
+            'label': [torch.tensor([0])],
+        }
+
+        match = 'TorchGeo RF-DETR support expects foreground labels to start at 1'
+        with pytest.raises(ValueError, match=match):
+            model._build_rf_detr_batch(batch)
+
+    def test_rf_detr_postprocess_filters_background_class(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=3, pretrain_weights=None
+        )
+        assert model.rf_detr_model_config is not None
+        model.rf_detr_model_config.num_classes = 2
+
+        called: dict[str, Tensor] = {}
+
+        def fake_postprocess(
+            outputs: dict[str, Tensor], orig_sizes: Tensor
+        ) -> list[dict[str, Tensor]]:
+            called['orig_sizes'] = orig_sizes
+            return [
+                {
+                    'boxes': torch.tensor(
+                        [
+                            [1.0, 1.0, 2.0, 2.0],
+                            [3.0, 3.0, 4.0, 4.0],
+                            [5.0, 5.0, 6.0, 6.0],
+                        ]
+                    ),
+                    'labels': torch.tensor([0, 1, 2]),
+                    'scores': torch.tensor([0.9, 0.8, 0.1]),
+                }
+            ]
+
+        model.rf_detr_postprocess = fake_postprocess
+        predictions = model._postprocess_rf_detr(
+            outputs={'pred_logits': torch.tensor([1.0])},
+            targets=[{'orig_size': torch.tensor([10, 20])}],
+        )
+
+        assert torch.equal(called['orig_sizes'], torch.tensor([[10, 20]]))
+        assert len(predictions) == 1
+        assert torch.equal(
+            predictions[0]['boxes'],
+            torch.tensor([[1.0, 1.0, 2.0, 2.0], [3.0, 3.0, 4.0, 4.0]]),
+        )
+        assert torch.equal(predictions[0]['labels'], torch.tensor([1, 2]))
+        assert torch.equal(predictions[0]['scores'], torch.tensor([0.9, 0.8]))
 
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
