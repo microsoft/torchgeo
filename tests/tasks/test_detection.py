@@ -587,8 +587,8 @@ class TestObjectDetection:
                     'unused': torch.tensor(100.0),
                 }
 
-        class FakeModel:
-            def __call__(self, samples_arg: Any, targets_arg: Any) -> dict[str, Tensor]:
+        class FakeModel(torch.nn.Module):
+            def forward(self, samples_arg: Any, targets_arg: Any) -> dict[str, Tensor]:
                 calls['model'] = (samples_arg, targets_arg)
                 return {'pred_logits': torch.tensor([1.0])}
 
@@ -643,8 +643,8 @@ class TestObjectDetection:
             lambda batch: (samples, targets, metric_targets),
         )
 
-        class FakeModel:
-            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+        class FakeModel(torch.nn.Module):
+            def forward(self, samples_arg: Any) -> dict[str, Tensor]:
                 calls['model'] = samples_arg
                 return {'pred_logits': torch.tensor([1.0])}
 
@@ -719,8 +719,8 @@ class TestObjectDetection:
             lambda batch: (samples, targets, metric_targets),
         )
 
-        class FakeModel:
-            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+        class FakeModel(torch.nn.Module):
+            def forward(self, samples_arg: Any) -> dict[str, Tensor]:
                 calls['model'] = samples_arg
                 return {'pred_logits': torch.tensor([1.0])}
 
@@ -791,8 +791,8 @@ class TestObjectDetection:
             model, '_build_rf_detr_batch', lambda batch: (samples, targets, [])
         )
 
-        class FakeModel:
-            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+        class FakeModel(torch.nn.Module):
+            def forward(self, samples_arg: Any) -> dict[str, Tensor]:
                 calls['model'] = samples_arg
                 return {'pred_logits': torch.tensor([1.0])}
 
@@ -835,7 +835,16 @@ class TestObjectDetection:
         calls = patch_fake_rfdetr_optimizer_modules(monkeypatch, param_dicts)
 
         inner_model = torch.nn.Linear(1, 1)
-        model.model = SimpleNamespace(_orig_mod=inner_model)
+
+        class FakeCompiledModel(torch.nn.Module):
+            def __init__(self, orig_mod: torch.nn.Module) -> None:
+                super().__init__()
+                self._orig_mod = orig_mod
+
+            def forward(self, *args: Any, **kwargs: Any) -> Any:
+                return self._orig_mod(*args, **kwargs)
+
+        model.model = FakeCompiledModel(inner_model)
         assert model.rf_detr_train_config is not None
         model.rf_detr_train_config.lr = 1e-3
         model.rf_detr_train_config.weight_decay = 1e-4
