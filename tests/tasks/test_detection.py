@@ -31,6 +31,45 @@ def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
 
+class FakeRFDETRModelConfig:
+    model_fields = frozenset(
+        ('num_classes', 'pretrain_weights', 'resolution', 'freeze_encoder')
+    )
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.num_classes = kwargs.get('num_classes', 90)
+        self.pretrain_weights = kwargs.get('pretrain_weights')
+        self.resolution = kwargs.get('resolution', 384)
+        self.freeze_encoder = kwargs.get('freeze_encoder', False)
+
+
+class FakeRFDETRTrainConfig:
+    model_fields = frozenset(('dataset_dir', 'output_dir', 'lr', 'lr_encoder'))
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.dataset_dir = kwargs.get('dataset_dir', '.')
+        self.output_dir = kwargs.get('output_dir', '.')
+        self.lr = kwargs.get('lr', 1e-3)
+        self.lr_encoder = kwargs.get('lr_encoder', 1e-5)
+
+
+def patch_fake_rfdetr_configs(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        ObjectDetection,
+        '_load_rf_detr_config_dependencies',
+        staticmethod(
+            lambda: (
+                FakeRFDETRModelConfig,
+                FakeRFDETRModelConfig,
+                FakeRFDETRModelConfig,
+                FakeRFDETRModelConfig,
+                FakeRFDETRModelConfig,
+                FakeRFDETRTrainConfig,
+            )
+        ),
+    )
+
+
 class TestObjectDetection:
     @pytest.mark.parametrize(
         'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
@@ -76,14 +115,16 @@ class TestObjectDetection:
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
 
-    def test_rf_detr_preserves_num_classes_api(self) -> None:
-        model = ObjectDetectionTask(
+    def test_rf_detr_preserves_num_classes_api(self, monkeypatch: MonkeyPatch) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        model = ObjectDetection(
             model='rf-detr-nano', num_classes=2, pretrain_weights=None
         )
         assert model.rf_detr_model_config.num_classes == 1
 
-    def test_rf_detr_accepts_kwargs(self) -> None:
-        model = ObjectDetectionTask(
+    def test_rf_detr_accepts_kwargs(self, monkeypatch: MonkeyPatch) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        model = ObjectDetection(
             model='rf-detr-nano',
             num_classes=2,
             pretrain_weights=None,
@@ -96,40 +137,7 @@ class TestObjectDetection:
     def test_rf_detr_defers_runtime_import_errors(
         self, monkeypatch: MonkeyPatch
     ) -> None:
-        class FakeModelConfig:
-            model_fields = frozenset(
-                ('num_classes', 'pretrain_weights', 'resolution', 'freeze_encoder')
-            )
-
-            def __init__(self, **kwargs: Any) -> None:
-                self.num_classes = kwargs.get('num_classes', 90)
-                self.pretrain_weights = kwargs.get('pretrain_weights')
-                self.resolution = kwargs.get('resolution', 384)
-                self.freeze_encoder = kwargs.get('freeze_encoder', False)
-
-        class FakeTrainConfig:
-            model_fields = frozenset(('dataset_dir', 'output_dir', 'lr', 'lr_encoder'))
-
-            def __init__(self, **kwargs: Any) -> None:
-                self.dataset_dir = kwargs.get('dataset_dir', '.')
-                self.output_dir = kwargs.get('output_dir', '.')
-                self.lr = kwargs.get('lr', 1e-3)
-                self.lr_encoder = kwargs.get('lr_encoder', 1e-5)
-
-        monkeypatch.setattr(
-            ObjectDetectionTask,
-            '_load_rf_detr_config_dependencies',
-            staticmethod(
-                lambda: (
-                    FakeModelConfig,
-                    FakeModelConfig,
-                    FakeModelConfig,
-                    FakeModelConfig,
-                    FakeModelConfig,
-                    FakeTrainConfig,
-                )
-            ),
-        )
+        patch_fake_rfdetr_configs(monkeypatch)
 
         def broken_runtime_import() -> Any:
             raise ImportError(
@@ -137,12 +145,12 @@ class TestObjectDetection:
             )
 
         monkeypatch.setattr(
-            ObjectDetectionTask,
+            ObjectDetection,
             '_load_rf_detr_runtime_dependencies',
             staticmethod(broken_runtime_import),
         )
 
-        model = ObjectDetectionTask(
+        model = ObjectDetection(
             model='rf-detr-nano', num_classes=2, pretrain_weights=None
         )
 
@@ -155,7 +163,7 @@ class TestObjectDetection:
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
         with pytest.raises(ValueError, match=match):
-            ObjectDetectionTask(
+            ObjectDetection(
                 model='rf-detr-nano',
                 num_classes=2,
                 in_channels=4,
