@@ -116,8 +116,16 @@ class ObjectDetection(BaseTask):
         self.rf_detr_train_config: Any | None = None
         self.rf_detr_criterion: Any | None = None
         self.rf_detr_postprocess: Any | None = None
+        self._rf_detr_runtime_error: ImportError | None = None
+        self._rf_detr_runtime_ready = False
         super().__init__()
         self.hparams['kwargs'] = self.rf_detr_kwargs
+
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        """Forward pass of the model."""
+        if self._use_rf_detr_backend():
+            self._ensure_rf_detr_runtime()
+        return super().forward(*args, **kwargs)
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -236,6 +244,101 @@ class ObjectDetection(BaseTask):
         self.model.backbone.body.conv1.weight = Parameter(weight)  # ty: ignore[invalid-assignment]
         self.model.backbone.body.conv1.in_channels = in_channels  # ty: ignore[invalid-assignment]
 
+    @staticmethod
+    def _missing_rf_detr_dependency_error() -> ImportError:
+        return ImportError(
+            "RF-DETR support requires the optional 'rfdetr' dependency. "
+            'Install it with `pip install rfdetr`.'
+        )
+
+    @staticmethod
+    def _incompatible_rf_detr_runtime_error() -> ImportError:
+        return ImportError(
+            'RF-DETR runtime could not be imported. Ensure `rfdetr` and '
+            '`transformers` are compatible; for example, `rfdetr>=1.6` '
+            'requires `transformers>=5.1`.'
+        )
+
+    @staticmethod
+    def _load_rf_detr_config_dependencies() -> tuple[Any, Any, Any, Any, Any, Any]:
+        from rfdetr.config import (
+            ModelConfig,
+            RFDETRLargeConfig,
+            RFDETRMediumConfig,
+            RFDETRNanoConfig,
+            RFDETRSmallConfig,
+            TrainConfig,
+        )
+
+        return (
+            ModelConfig,
+            RFDETRLargeConfig,
+            RFDETRMediumConfig,
+            RFDETRNanoConfig,
+            RFDETRSmallConfig,
+            TrainConfig,
+        )
+
+    @staticmethod
+    def _load_rf_detr_runtime_dependencies() -> tuple[Any, Any, Any, Any]:
+        from rfdetr._namespace import build_namespace
+        from rfdetr.models.lwdetr import build_criterion_and_postprocessors, build_model
+        from rfdetr.models.weights import load_pretrain_weights
+
+        return (
+            build_namespace,
+            build_criterion_and_postprocessors,
+            build_model,
+            load_pretrain_weights,
+        )
+
+    def _initialize_rf_detr_runtime(self) -> None:
+        """Load and build the RF-DETR runtime on demand."""
+        if self._rf_detr_runtime_ready:
+            return
+
+        assert self.rf_detr_model_config is not None
+        assert self.rf_detr_train_config is not None
+
+        try:
+            (
+                build_namespace,
+                build_criterion_and_postprocessors,
+                build_model,
+                load_pretrain_weights,
+            ) = self._load_rf_detr_runtime_dependencies()
+        except ModuleNotFoundError as exc:
+            error = self._missing_rf_detr_dependency_error()
+            self._rf_detr_runtime_error = error
+            raise error from exc
+        except ImportError as exc:
+            error = self._incompatible_rf_detr_runtime_error()
+            self._rf_detr_runtime_error = error
+            raise error from exc
+
+        namespace = build_namespace(
+            self.rf_detr_model_config, self.rf_detr_train_config
+        )
+        self.model = build_model(namespace)
+        if self.rf_detr_model_config.pretrain_weights is not None:
+            load_pretrain_weights(self.model, self.rf_detr_model_config)
+            namespace = build_namespace(
+                self.rf_detr_model_config, self.rf_detr_train_config
+            )
+        self.rf_detr_criterion, self.rf_detr_postprocess = (
+            build_criterion_and_postprocessors(namespace)
+        )
+        self._rf_detr_runtime_error = None
+        self._rf_detr_runtime_ready = True
+
+    def _ensure_rf_detr_runtime(self) -> None:
+        """Ensure RF-DETR runtime dependencies are available before use."""
+        if not self._use_rf_detr_backend():
+            return
+        if self._rf_detr_runtime_error is not None:
+            raise self._rf_detr_runtime_error
+        self._initialize_rf_detr_runtime()
+
     def _configure_rf_detr_model(
         self,
         model: str,
@@ -265,25 +368,16 @@ class ObjectDetection(BaseTask):
             )
 
         try:
-            from rfdetr._namespace import build_namespace
-            from rfdetr.config import (
+            (
                 ModelConfig,
                 RFDETRLargeConfig,
                 RFDETRMediumConfig,
                 RFDETRNanoConfig,
                 RFDETRSmallConfig,
                 TrainConfig,
-            )
-            from rfdetr.models.lwdetr import (
-                build_criterion_and_postprocessors,
-                build_model,
-            )
-            from rfdetr.models.weights import load_pretrain_weights
+            ) = self._load_rf_detr_config_dependencies()
         except ModuleNotFoundError as exc:
-            raise ImportError(
-                "RF-DETR support requires the optional 'rfdetr' dependency. "
-                'Install it with `pip install rfdetr`.'
-            ) from exc
+            raise self._missing_rf_detr_dependency_error() from exc
 
         config_map = {
             'rf-detr-nano': RFDETRNanoConfig,
@@ -327,19 +421,11 @@ class ObjectDetection(BaseTask):
         model_config_class = config_map[model]
         self.rf_detr_model_config = model_config_class(**model_kwargs)
         self.rf_detr_train_config = TrainConfig(**train_kwargs)
-
-        namespace = build_namespace(
-            self.rf_detr_model_config, self.rf_detr_train_config
-        )
-        self.model = build_model(namespace)
-        if self.rf_detr_model_config.pretrain_weights is not None:
-            load_pretrain_weights(self.model, self.rf_detr_model_config)
-            namespace = build_namespace(
-                self.rf_detr_model_config, self.rf_detr_train_config
-            )
-        self.rf_detr_criterion, self.rf_detr_postprocess = (
-            build_criterion_and_postprocessors(namespace)
-        )
+        self.model = torch.nn.Identity()
+        try:
+            self._initialize_rf_detr_runtime()
+        except ImportError:
+            pass
 
     def _use_rf_detr_backend(self) -> bool:
         """Return whether the current task is backed by RF-DETR."""
@@ -356,6 +442,7 @@ class ObjectDetection(BaseTask):
         self, batch: Sample
     ) -> tuple[Any, list[dict[str, Tensor]], list[dict[str, Tensor]]]:
         """Convert a TorchGeo batch into RF-DETR inputs and targets."""
+        self._ensure_rf_detr_runtime()
         from rfdetr.utilities.tensors import nested_tensor_from_tensor_list
 
         images = list(batch['image'].unbind())
@@ -602,6 +689,7 @@ class ObjectDetection(BaseTask):
         if not self._use_rf_detr_backend():
             return super().configure_optimizers()
 
+        self._ensure_rf_detr_runtime()
         assert self.rf_detr_model_config is not None
         assert self.rf_detr_train_config is not None
 

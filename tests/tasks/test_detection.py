@@ -93,6 +93,30 @@ class TestObjectDetection:
         assert model.rf_detr_model_config.resolution == 512
         assert model.rf_detr_train_config.lr_encoder == 1e-5
 
+    def test_rf_detr_defers_runtime_import_errors(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        def broken_runtime_import() -> Any:
+            raise ImportError(
+                "cannot import name 'BackboneConfigMixin' from 'transformers'"
+            )
+
+        monkeypatch.setattr(
+            ObjectDetectionTask,
+            '_load_rf_detr_runtime_dependencies',
+            staticmethod(broken_runtime_import),
+        )
+
+        model = ObjectDetectionTask(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        assert model.rf_detr_model_config.num_classes == 1
+
+        match = 'RF-DETR runtime could not be imported'
+        with pytest.raises(ImportError, match=match):
+            model._ensure_rf_detr_runtime()
+
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
         with pytest.raises(ValueError, match=match):
