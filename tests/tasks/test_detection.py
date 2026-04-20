@@ -70,6 +70,55 @@ def patch_fake_rfdetr_configs(monkeypatch: MonkeyPatch) -> None:
     )
 
 
+def patch_fake_rfdetr_runtime(monkeypatch: MonkeyPatch) -> dict[str, list[Any]]:
+    state: dict[str, list[Any]] = {
+        'build_namespace_calls': [],
+        'load_pretrain_calls': [],
+    }
+
+    def fake_build_namespace(model_config: Any, train_config: Any) -> dict[str, Any]:
+        namespace = {
+            'model_config': model_config,
+            'train_config': train_config,
+            'call_index': len(state['build_namespace_calls']),
+        }
+        state['build_namespace_calls'].append(namespace)
+        return namespace
+
+    class FakeRFDETRModel(torch.nn.Module):
+        def __init__(self, namespace: dict[str, Any]) -> None:
+            super().__init__()
+            self.namespace = namespace
+
+        def forward(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+            return {'namespace': self.namespace, 'args': args, 'kwargs': kwargs}
+
+    def fake_build_model(namespace: dict[str, Any]) -> FakeRFDETRModel:
+        return FakeRFDETRModel(namespace)
+
+    def fake_load_pretrain_weights(model: Any, model_config: Any) -> None:
+        state['load_pretrain_calls'].append((model, model_config))
+
+    def fake_build_criterion_and_postprocessors(
+        namespace: dict[str, Any],
+    ) -> tuple[object, Any]:
+        return object(), lambda outputs, _: {'outputs': outputs, 'namespace': namespace}
+
+    monkeypatch.setattr(
+        ObjectDetection,
+        '_load_rf_detr_runtime_dependencies',
+        staticmethod(
+            lambda: (
+                fake_build_namespace,
+                fake_build_criterion_and_postprocessors,
+                fake_build_model,
+                fake_load_pretrain_weights,
+            )
+        ),
+    )
+    return state
+
+
 class TestObjectDetection:
     @pytest.mark.parametrize(
         'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
@@ -160,6 +209,47 @@ class TestObjectDetection:
         with pytest.raises(ImportError, match=match):
             model._ensure_rf_detr_runtime()
 
+    def test_rf_detr_missing_runtime_dependency_errors(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+
+        def missing_runtime_dependency() -> Any:
+            raise ModuleNotFoundError("No module named 'rfdetr'")
+
+        monkeypatch.setattr(
+            ObjectDetection,
+            '_load_rf_detr_runtime_dependencies',
+            staticmethod(missing_runtime_dependency),
+        )
+
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        match = "RF-DETR support requires the optional 'rfdetr' dependency"
+        with pytest.raises(ImportError, match=match):
+            model._ensure_rf_detr_runtime()
+
+    def test_rf_detr_initializes_runtime_and_loads_pretrain_weights(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        state = patch_fake_rfdetr_runtime(monkeypatch)
+
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights='rf-detr-nano.pth'
+        )
+
+        assert model._rf_detr_runtime_ready
+        assert model.rf_detr_criterion is not None
+        assert model.rf_detr_postprocess is not None
+        assert len(state['load_pretrain_calls']) == 1
+        assert len(state['build_namespace_calls']) == 2
+
+        result = model(torch.randn(1, 3, 16, 16))
+        assert result['namespace']['model_config'] is model.rf_detr_model_config
+
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
         with pytest.raises(ValueError, match=match):
@@ -231,3 +321,8 @@ class TestObjectDetection:
         sample = [torch.randn(in_channels, 224, 224)]
         with torch.inference_mode():
             model(sample)
+
+    def test_metrics_use_300_max_detection_threshold(self) -> None:
+        model = ObjectDetection(backbone='resnet18', num_classes=2)
+        metric = next(iter(model.val_metrics.values()))
+        assert list(metric.max_detection_thresholds) == [1, 10, 300]
