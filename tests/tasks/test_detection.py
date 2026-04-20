@@ -8,6 +8,7 @@ import pytest
 import torch
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import VHR10, NASAMarineDebris, RGBBandsMissingError
@@ -325,4 +326,5 @@ class TestObjectDetection:
     def test_metrics_use_300_max_detection_threshold(self) -> None:
         model = ObjectDetection(backbone='resnet18', num_classes=2)
         metric = next(iter(model.val_metrics.values()))
-        assert list(metric.max_detection_thresholds) == [1, 10, 300]
+        assert isinstance(metric, MeanAveragePrecision)
+        assert torch.equal(metric.max_detection_thresholds, torch.tensor([1, 10, 300]))
