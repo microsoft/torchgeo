@@ -96,6 +96,49 @@ class TestObjectDetection:
     def test_rf_detr_defers_runtime_import_errors(
         self, monkeypatch: MonkeyPatch
     ) -> None:
+        class FakeModelConfig:
+            model_fields = {
+                'num_classes': None,
+                'pretrain_weights': None,
+                'resolution': None,
+                'freeze_encoder': None,
+            }
+
+            def __init__(self, **kwargs: Any) -> None:
+                self.num_classes = kwargs.get('num_classes', 90)
+                self.pretrain_weights = kwargs.get('pretrain_weights')
+                self.resolution = kwargs.get('resolution', 384)
+                self.freeze_encoder = kwargs.get('freeze_encoder', False)
+
+        class FakeTrainConfig:
+            model_fields = {
+                'dataset_dir': None,
+                'output_dir': None,
+                'lr': None,
+                'lr_encoder': None,
+            }
+
+            def __init__(self, **kwargs: Any) -> None:
+                self.dataset_dir = kwargs.get('dataset_dir', '.')
+                self.output_dir = kwargs.get('output_dir', '.')
+                self.lr = kwargs.get('lr', 1e-3)
+                self.lr_encoder = kwargs.get('lr_encoder', 1e-5)
+
+        monkeypatch.setattr(
+            ObjectDetectionTask,
+            '_load_rf_detr_config_dependencies',
+            staticmethod(
+                lambda: (
+                    FakeModelConfig,
+                    FakeModelConfig,
+                    FakeModelConfig,
+                    FakeModelConfig,
+                    FakeModelConfig,
+                    FakeTrainConfig,
+                )
+            ),
+        )
+
         def broken_runtime_import() -> Any:
             raise ImportError(
                 "cannot import name 'BackboneConfigMixin' from 'transformers'"

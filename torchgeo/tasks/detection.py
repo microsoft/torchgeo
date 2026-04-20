@@ -538,7 +538,16 @@ class ObjectDetection(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision(average='macro')])
+        # COCO-style maxDets defaults cap evaluation at 100 predictions/image,
+        # which can undercount dense scenes common in overhead imagery and RF-DETR.
+        metrics = MetricCollection(
+            [
+                MeanAveragePrecision(
+                    average='macro',
+                    max_detection_thresholds=[1, 10, 300],
+                )
+            ]
+        )
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
