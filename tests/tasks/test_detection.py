@@ -654,8 +654,8 @@ class TestObjectDetection:
             calls['postprocess'] = (outputs, targets_arg)
             return predictions
 
-        class FakeMetrics:
-            def __call__(
+        class FakeMetrics(torch.nn.Module):
+            def forward(
                 self, y_hat: list[dict[str, Tensor]], y: list[dict[str, Tensor]]
             ) -> dict[str, Tensor]:
                 calls['metrics'] = (y_hat, y)
@@ -730,8 +730,8 @@ class TestObjectDetection:
             calls['postprocess'] = (outputs, targets_arg)
             return predictions
 
-        class FakeMetrics:
-            def __call__(
+        class FakeMetrics(torch.nn.Module):
+            def forward(
                 self, y_hat: list[dict[str, Tensor]], y: list[dict[str, Tensor]]
             ) -> dict[str, Tensor]:
                 calls['metrics'] = (y_hat, y)
