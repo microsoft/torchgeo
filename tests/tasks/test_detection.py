@@ -3,7 +3,7 @@
 
 import os
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from typing import Any
 
 import pytest
@@ -55,6 +55,12 @@ class FakeRFDETRTrainConfig:
         self.output_dir = kwargs.get('output_dir', '.')
         self.lr = kwargs.get('lr', 1e-3)
         self.lr_encoder = kwargs.get('lr_encoder', 1e-5)
+        self.weight_decay = kwargs.get('weight_decay', 1e-4)
+        self.epochs = kwargs.get('epochs', 4)
+        self.warmup_epochs = kwargs.get('warmup_epochs', 1)
+        self.lr_scheduler = kwargs.get('lr_scheduler', 'cosine')
+        self.lr_min_factor = kwargs.get('lr_min_factor', 0.2)
+        self.lr_drop = kwargs.get('lr_drop', 3)
 
 
 def patch_fake_rfdetr_configs(monkeypatch: MonkeyPatch) -> None:
@@ -143,6 +149,123 @@ def patch_fake_rfdetr_tensor_utils(monkeypatch: MonkeyPatch) -> dict[str, list[A
     return state
 
 
+def patch_fake_rfdetr_import_modules(monkeypatch: MonkeyPatch) -> dict[str, Any]:
+    class FakeImportedModelConfig:
+        model_fields = frozenset(('num_classes',))
+
+    class FakeImportedLargeConfig(FakeImportedModelConfig):
+        pass
+
+    class FakeImportedMediumConfig(FakeImportedModelConfig):
+        pass
+
+    class FakeImportedNanoConfig(FakeImportedModelConfig):
+        pass
+
+    class FakeImportedSmallConfig(FakeImportedModelConfig):
+        pass
+
+    class FakeImportedTrainConfig:
+        model_fields = frozenset(('lr',))
+
+    def fake_build_namespace(*args: Any, **kwargs: Any) -> tuple[Any, Any]:
+        return args, kwargs
+
+    def fake_build_criterion_and_postprocessors(
+        *args: Any, **kwargs: Any
+    ) -> tuple[Any, Any]:
+        return args, kwargs
+
+    def fake_build_model(*args: Any, **kwargs: Any) -> tuple[Any, Any]:
+        return args, kwargs
+
+    def fake_load_pretrain_weights(*args: Any, **kwargs: Any) -> tuple[Any, Any]:
+        return args, kwargs
+
+    rfdetr_module = ModuleType('rfdetr')
+    config_module = ModuleType('rfdetr.config')
+    namespace_module = ModuleType('rfdetr._namespace')
+    models_module = ModuleType('rfdetr.models')
+    lwdetr_module = ModuleType('rfdetr.models.lwdetr')
+    weights_module = ModuleType('rfdetr.models.weights')
+
+    config_module.ModelConfig = FakeImportedModelConfig
+    config_module.RFDETRLargeConfig = FakeImportedLargeConfig
+    config_module.RFDETRMediumConfig = FakeImportedMediumConfig
+    config_module.RFDETRNanoConfig = FakeImportedNanoConfig
+    config_module.RFDETRSmallConfig = FakeImportedSmallConfig
+    config_module.TrainConfig = FakeImportedTrainConfig
+
+    namespace_module.build_namespace = fake_build_namespace
+    lwdetr_module.build_criterion_and_postprocessors = (
+        fake_build_criterion_and_postprocessors
+    )
+    lwdetr_module.build_model = fake_build_model
+    weights_module.load_pretrain_weights = fake_load_pretrain_weights
+
+    rfdetr_module.config = config_module
+    rfdetr_module._namespace = namespace_module
+    rfdetr_module.models = models_module
+    models_module.lwdetr = lwdetr_module
+    models_module.weights = weights_module
+
+    monkeypatch.setitem(sys.modules, 'rfdetr', rfdetr_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.config', config_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr._namespace', namespace_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.models', models_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.models.lwdetr', lwdetr_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.models.weights', weights_module)
+
+    return {
+        'ModelConfig': FakeImportedModelConfig,
+        'RFDETRLargeConfig': FakeImportedLargeConfig,
+        'RFDETRMediumConfig': FakeImportedMediumConfig,
+        'RFDETRNanoConfig': FakeImportedNanoConfig,
+        'RFDETRSmallConfig': FakeImportedSmallConfig,
+        'TrainConfig': FakeImportedTrainConfig,
+        'build_namespace': fake_build_namespace,
+        'build_criterion_and_postprocessors': fake_build_criterion_and_postprocessors,
+        'build_model': fake_build_model,
+        'load_pretrain_weights': fake_load_pretrain_weights,
+    }
+
+
+def patch_fake_rfdetr_optimizer_modules(
+    monkeypatch: MonkeyPatch, param_dicts: list[dict[str, Any]]
+) -> dict[str, Any]:
+    calls: dict[str, Any] = {}
+
+    def fake_build_namespace(model_config: Any, train_config: Any) -> dict[str, Any]:
+        namespace = {'model_config': model_config, 'train_config': train_config}
+        calls['namespace'] = namespace
+        return namespace
+
+    def fake_get_param_dict(
+        namespace: dict[str, Any], model: Any
+    ) -> list[dict[str, Any]]:
+        calls['get_param_dict'] = (namespace, model)
+        return param_dicts
+
+    rfdetr_module = sys.modules.get('rfdetr', ModuleType('rfdetr'))
+    namespace_module = ModuleType('rfdetr._namespace')
+    training_module = ModuleType('rfdetr.training')
+    param_groups_module = ModuleType('rfdetr.training.param_groups')
+
+    namespace_module.build_namespace = fake_build_namespace
+    param_groups_module.get_param_dict = fake_get_param_dict
+    training_module.param_groups = param_groups_module
+    rfdetr_module._namespace = namespace_module
+    rfdetr_module.training = training_module
+
+    monkeypatch.setitem(sys.modules, 'rfdetr', rfdetr_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr._namespace', namespace_module)
+    monkeypatch.setitem(sys.modules, 'rfdetr.training', training_module)
+    monkeypatch.setitem(
+        sys.modules, 'rfdetr.training.param_groups', param_groups_module
+    )
+    return calls
+
+
 class TestObjectDetection:
     @pytest.mark.parametrize(
         'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
@@ -187,6 +310,26 @@ class TestObjectDetection:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
+
+    def test_load_rf_detr_config_dependencies(self, monkeypatch: MonkeyPatch) -> None:
+        imported = patch_fake_rfdetr_import_modules(monkeypatch)
+        assert ObjectDetection._load_rf_detr_config_dependencies() == (
+            imported['ModelConfig'],
+            imported['RFDETRLargeConfig'],
+            imported['RFDETRMediumConfig'],
+            imported['RFDETRNanoConfig'],
+            imported['RFDETRSmallConfig'],
+            imported['TrainConfig'],
+        )
+
+    def test_load_rf_detr_runtime_dependencies(self, monkeypatch: MonkeyPatch) -> None:
+        imported = patch_fake_rfdetr_import_modules(monkeypatch)
+        assert ObjectDetection._load_rf_detr_runtime_dependencies() == (
+            imported['build_namespace'],
+            imported['build_criterion_and_postprocessors'],
+            imported['build_model'],
+            imported['load_pretrain_weights'],
+        )
 
     def test_rf_detr_preserves_num_classes_api(self, monkeypatch: MonkeyPatch) -> None:
         patch_fake_rfdetr_configs(monkeypatch)
@@ -233,6 +376,17 @@ class TestObjectDetection:
         with pytest.raises(ImportError, match=match):
             model._ensure_rf_detr_runtime()
 
+    def test_rf_detr_ensure_runtime_noops_for_torchvision_backend(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        model = ObjectDetection(backbone='resnet18', num_classes=2)
+        monkeypatch.setattr(
+            model,
+            '_initialize_rf_detr_runtime',
+            lambda: pytest.fail('_initialize_rf_detr_runtime should not be called'),
+        )
+        model._ensure_rf_detr_runtime()
+
     def test_rf_detr_missing_runtime_dependency_errors(
         self, monkeypatch: MonkeyPatch
     ) -> None:
@@ -254,6 +408,21 @@ class TestObjectDetection:
         match = "RF-DETR support requires the optional 'rfdetr' dependency"
         with pytest.raises(ImportError, match=match):
             model._ensure_rf_detr_runtime()
+
+    def test_rf_detr_missing_config_dependency_errors(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            ObjectDetection,
+            '_load_rf_detr_config_dependencies',
+            staticmethod(lambda: (_ for _ in ()).throw(ModuleNotFoundError('rfdetr'))),
+        )
+
+        match = "RF-DETR support requires the optional 'rfdetr' dependency"
+        with pytest.raises(ImportError, match=match):
+            ObjectDetection(
+                model='rf-detr-nano', num_classes=2, pretrain_weights=None
+            )
 
     def test_rf_detr_initializes_runtime_and_loads_pretrain_weights(
         self, monkeypatch: MonkeyPatch
@@ -387,6 +556,343 @@ class TestObjectDetection:
         assert torch.equal(predictions[0]['labels'], torch.tensor([1, 2]))
         assert torch.equal(predictions[0]['scores'], torch.tensor([0.9, 0.8]))
 
+    def test_rf_detr_training_step_uses_rf_detr_loss_path(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        calls: dict[str, Any] = {}
+        samples = {'samples': 'value'}
+        targets = [{'target': 1}]
+
+        monkeypatch.setattr(
+            model, '_build_rf_detr_batch', lambda batch: (samples, targets, [])
+        )
+
+        class FakeCriterion:
+            def __init__(self) -> None:
+                self.weight_dict = {'loss_ce': 0.5, 'loss_bbox': 2.0}
+
+            def __call__(
+                self, outputs: dict[str, Tensor], targets_arg: list[dict[str, int]]
+            ) -> dict[str, Tensor]:
+                calls['criterion'] = (outputs, targets_arg)
+                return {
+                    'loss_ce': torch.tensor(2.0),
+                    'loss_bbox': torch.tensor(3.0),
+                    'unused': torch.tensor(100.0),
+                }
+
+        class FakeModel:
+            def __call__(self, samples_arg: Any, targets_arg: Any) -> dict[str, Tensor]:
+                calls['model'] = (samples_arg, targets_arg)
+                return {'pred_logits': torch.tensor([1.0])}
+
+        logged: dict[str, Any] = {}
+        model.model = FakeModel()
+        model.rf_detr_criterion = FakeCriterion()
+        monkeypatch.setattr(
+            model,
+            'log_dict',
+            lambda metrics, batch_size: logged.update(
+                {'metrics': metrics, 'batch_size': batch_size}
+            ),
+        )
+
+        batch = {
+            'image': torch.randn(2, 3, 8, 8),
+            'bbox_xyxy': [torch.tensor([[1.0, 1.0, 2.0, 2.0]])] * 2,
+            'label': [torch.tensor([1])] * 2,
+        }
+        train_loss = model.training_step(batch, batch_idx=0)
+
+        assert calls['model'] == (samples, targets)
+        assert calls['criterion'][1] == targets
+        assert torch.isclose(train_loss, torch.tensor(7.0))
+        assert logged['batch_size'] == 2
+        assert set(logged['metrics']) == {'loss_ce', 'loss_bbox', 'unused'}
+
+    def test_rf_detr_validation_step_uses_rf_detr_prediction_path(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        calls: dict[str, Any] = {}
+        samples = {'samples': 'value'}
+        targets = [{'target': 1}]
+        metric_targets = [{'boxes': torch.tensor([[1.0, 1.0, 2.0, 2.0]])}]
+        predictions = [
+            {
+                'boxes': torch.tensor([[1.0, 1.0, 2.0, 2.0]]),
+                'labels': torch.tensor([1]),
+                'scores': torch.tensor([0.9]),
+            }
+        ]
+
+        monkeypatch.setattr(
+            model,
+            '_build_rf_detr_batch',
+            lambda batch: (samples, targets, metric_targets),
+        )
+
+        class FakeModel:
+            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+                calls['model'] = samples_arg
+                return {'pred_logits': torch.tensor([1.0])}
+
+        def fake_postprocess(
+            outputs: dict[str, Tensor], targets_arg: list[dict[str, int]]
+        ) -> list[dict[str, Tensor]]:
+            calls['postprocess'] = (outputs, targets_arg)
+            return predictions
+
+        class FakeMetrics:
+            def __call__(
+                self, y_hat: list[dict[str, Tensor]], y: list[dict[str, Tensor]]
+            ) -> dict[str, Tensor]:
+                calls['metrics'] = (y_hat, y)
+                return {'val_map': torch.tensor(0.5), 'val_classes': torch.tensor([1])}
+
+        logged: dict[str, Any] = {}
+        model.model = FakeModel()
+        model._postprocess_rf_detr = fake_postprocess
+        model.val_metrics = FakeMetrics()  # type: ignore[method-assign]
+        model._trainer = SimpleNamespace(datamodule=None)
+        model._logger = None
+        monkeypatch.setattr(
+            model,
+            'log_dict',
+            lambda metrics, batch_size: logged.update(
+                {'metrics': metrics, 'batch_size': batch_size}
+            ),
+        )
+
+        batch = {
+            'image': torch.randn(1, 3, 8, 8),
+            'bbox_xyxy': [torch.tensor([[1.0, 1.0, 2.0, 2.0]])],
+            'label': [torch.tensor([1])],
+        }
+        model.validation_step(batch, batch_idx=20)
+
+        assert calls['model'] == samples
+        assert calls['postprocess'][1] == targets
+        assert calls['metrics'][0] is predictions
+        assert calls['metrics'][1] is metric_targets
+        assert logged['batch_size'] == 1
+        assert set(logged['metrics']) == {'val_map'}
+        assert torch.equal(logged['metrics']['val_map'], torch.tensor(0.5))
+
+    def test_rf_detr_test_step_uses_rf_detr_prediction_path(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        calls: dict[str, Any] = {}
+        samples = {'samples': 'value'}
+        targets = [{'target': 1}]
+        metric_targets = [{'boxes': torch.tensor([[1.0, 1.0, 2.0, 2.0]])}]
+        predictions = [
+            {
+                'boxes': torch.tensor([[1.0, 1.0, 2.0, 2.0]]),
+                'labels': torch.tensor([1]),
+                'scores': torch.tensor([0.9]),
+            }
+        ]
+
+        monkeypatch.setattr(
+            model,
+            '_build_rf_detr_batch',
+            lambda batch: (samples, targets, metric_targets),
+        )
+
+        class FakeModel:
+            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+                calls['model'] = samples_arg
+                return {'pred_logits': torch.tensor([1.0])}
+
+        def fake_postprocess(
+            outputs: dict[str, Tensor], targets_arg: list[dict[str, int]]
+        ) -> list[dict[str, Tensor]]:
+            calls['postprocess'] = (outputs, targets_arg)
+            return predictions
+
+        class FakeMetrics:
+            def __call__(
+                self, y_hat: list[dict[str, Tensor]], y: list[dict[str, Tensor]]
+            ) -> dict[str, Tensor]:
+                calls['metrics'] = (y_hat, y)
+                return {
+                    'test_map': torch.tensor(0.5),
+                    'test_classes': torch.tensor([1]),
+                }
+
+        logged: dict[str, Any] = {}
+        model.model = FakeModel()
+        model._postprocess_rf_detr = fake_postprocess
+        model.test_metrics = FakeMetrics()  # type: ignore[method-assign]
+        monkeypatch.setattr(
+            model,
+            'log_dict',
+            lambda metrics, batch_size: logged.update(
+                {'metrics': metrics, 'batch_size': batch_size}
+            ),
+        )
+
+        batch = {
+            'image': torch.randn(1, 3, 8, 8),
+            'bbox_xyxy': [torch.tensor([[1.0, 1.0, 2.0, 2.0]])],
+            'label': [torch.tensor([1])],
+        }
+        model.test_step(batch, batch_idx=0)
+
+        assert calls['model'] == samples
+        assert calls['postprocess'][1] == targets
+        assert calls['metrics'][0] is predictions
+        assert calls['metrics'][1] is metric_targets
+        assert logged['batch_size'] == 1
+        assert set(logged['metrics']) == {'test_map'}
+        assert torch.equal(logged['metrics']['test_map'], torch.tensor(0.5))
+
+    def test_rf_detr_predict_step_uses_rf_detr_prediction_path(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        calls: dict[str, Any] = {}
+        samples = {'samples': 'value'}
+        targets = [{'target': 1}]
+        predictions = [
+            {
+                'boxes': torch.tensor([[1.0, 1.0, 2.0, 2.0]]),
+                'labels': torch.tensor([1]),
+                'scores': torch.tensor([0.9]),
+            }
+        ]
+
+        monkeypatch.setattr(
+            model, '_build_rf_detr_batch', lambda batch: (samples, targets, [])
+        )
+
+        class FakeModel:
+            def __call__(self, samples_arg: Any) -> dict[str, Tensor]:
+                calls['model'] = samples_arg
+                return {'pred_logits': torch.tensor([1.0])}
+
+        def fake_postprocess(
+            outputs: dict[str, Tensor], targets_arg: list[dict[str, int]]
+        ) -> list[dict[str, Tensor]]:
+            calls['postprocess'] = (outputs, targets_arg)
+            return predictions
+
+        model.model = FakeModel()
+        model._postprocess_rf_detr = fake_postprocess
+
+        batch = {'image': torch.randn(1, 3, 8, 8)}
+        result = model.predict_step(batch, batch_idx=0)
+
+        assert calls['model'] == samples
+        assert calls['postprocess'][1] == targets
+        assert result is predictions
+
+    def test_rf_detr_configure_optimizers_uses_rf_detr_backend(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        patch_fake_rfdetr_runtime(monkeypatch)
+        model = ObjectDetection(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+
+        class FakeParams(list[Any]):
+            @property
+            def requires_grad(self) -> bool:
+                return any(param.requires_grad for param in self)
+
+        trainable_param = torch.nn.Parameter(torch.tensor(1.0))
+        frozen_param = torch.nn.Parameter(torch.tensor(2.0), requires_grad=False)
+        param_dicts = [
+            {'params': FakeParams([trainable_param]), 'lr': 1e-3},
+            {'params': FakeParams([frozen_param]), 'lr': 1e-4},
+        ]
+        calls = patch_fake_rfdetr_optimizer_modules(monkeypatch, param_dicts)
+
+        inner_model = torch.nn.Linear(1, 1)
+        model.model = SimpleNamespace(_orig_mod=inner_model)
+        assert model.rf_detr_train_config is not None
+        model.rf_detr_train_config.lr = 1e-3
+        model.rf_detr_train_config.weight_decay = 1e-4
+        model.rf_detr_train_config.epochs = 4
+        model.rf_detr_train_config.warmup_epochs = 1
+        model.rf_detr_train_config.lr_scheduler = 'cosine'
+        model.rf_detr_train_config.lr_min_factor = 0.2
+        model.rf_detr_train_config.lr_drop = 3
+        model._trainer = SimpleNamespace(estimated_stepping_batches=20)
+
+        optimizers = model.configure_optimizers()
+
+        optimizer = optimizers['optimizer']
+        scheduler = optimizers['lr_scheduler']['scheduler']
+        assert isinstance(optimizer, torch.optim.AdamW)
+        assert optimizers['lr_scheduler']['interval'] == 'step'
+        assert calls['get_param_dict'][0] == calls['namespace']
+        assert calls['get_param_dict'][1] is inner_model
+        assert len(optimizer.param_groups) == 1
+
+        lr_lambda = scheduler.lr_lambdas[0]
+        assert lr_lambda(0) == 0.0
+        assert lr_lambda(2) == 0.4
+        cosine_value = lr_lambda(7)
+        assert 0.2 <= cosine_value <= 1.0
+
+        model.rf_detr_train_config.lr_scheduler = 'step'
+        assert lr_lambda(12) == 1.0
+        assert lr_lambda(16) == 0.1
+
+    def test_rf_detr_rejects_unsupported_backbone(self) -> None:
+        match = 'Backbone selection is not supported for RF-DETR.'
+        with pytest.raises(ValueError, match=match):
+            ObjectDetection(
+                model='rf-detr-nano',
+                backbone='resnet18',
+                num_classes=2,
+                pretrain_weights=None,
+            )
+
+    def test_rf_detr_rejects_weights_argument(self) -> None:
+        match = "The 'weights' argument is not supported for RF-DETR."
+        with pytest.raises(ValueError, match=match):
+            ObjectDetection(
+                model='rf-detr-nano',
+                num_classes=2,
+                weights='sentinel',  # type: ignore[arg-type]
+                pretrain_weights=None,
+            )
+
+    def test_rf_detr_requires_num_classes_api_with_background(self) -> None:
+        match = (
+            "RF-DETR requires num_classes >= 2 when using TorchGeo's num_classes API"
+        )
+        with pytest.raises(ValueError, match=match):
+            ObjectDetection(
+                model='rf-detr-nano', num_classes=1, pretrain_weights=None
+            )
+
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
         with pytest.raises(ValueError, match=match):
@@ -395,6 +901,30 @@ class TestObjectDetection:
                 num_classes=2,
                 in_channels=4,
                 pretrain_weights=None,
+            )
+
+    def test_rf_detr_rejects_unknown_kwargs(self, monkeypatch: MonkeyPatch) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        match = "Unknown RF-DETR parameter 'bogus'."
+        with pytest.raises(ValueError, match=match):
+            ObjectDetection(
+                model='rf-detr-nano', num_classes=2, pretrain_weights=None, bogus=123
+            )
+
+    def test_rf_detr_rejects_num_classes_in_kwargs(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        task = ObjectDetection(backbone='resnet18', num_classes=2)
+        match = 'Do not pass num_classes through RF-DETR kwargs.'
+        with pytest.raises(ValueError, match=match):
+            task._configure_rf_detr_model(
+                model='rf-detr-nano',
+                backbone='resnet50',
+                in_channels=3,
+                num_classes=2,
+                freeze_backbone=False,
+                rf_detr_kwargs={'num_classes': 1},
             )
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
