@@ -543,8 +543,7 @@ class ObjectDetection(BaseTask):
         metrics = MetricCollection(
             [
                 MeanAveragePrecision(
-                    average='macro',
-                    max_detection_thresholds=[1, 10, 300],
+                    average='macro', max_detection_thresholds=[1, 10, 300]
                 )
             ]
         )

@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 import torch
@@ -97,7 +97,7 @@ class TestObjectDetection:
         self, monkeypatch: MonkeyPatch
     ) -> None:
         class FakeModelConfig:
-            model_fields = {
+            model_fields: ClassVar[dict[str, None]] = {
                 'num_classes': None,
                 'pretrain_weights': None,
                 'resolution': None,
@@ -111,7 +111,7 @@ class TestObjectDetection:
                 self.freeze_encoder = kwargs.get('freeze_encoder', False)
 
         class FakeTrainConfig:
-            model_fields = {
+            model_fields: ClassVar[dict[str, None]] = {
                 'dataset_dir': None,
                 'output_dir': None,
                 'lr': None,
