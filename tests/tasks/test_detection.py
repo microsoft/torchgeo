@@ -327,4 +327,4 @@ class TestObjectDetection:
         model = ObjectDetection(backbone='resnet18', num_classes=2)
         metric = next(iter(model.val_metrics.values()))
         assert isinstance(metric, MeanAveragePrecision)
-        assert torch.equal(metric.max_detection_thresholds, torch.tensor([1, 10, 300]))
+        assert tuple(metric.max_detection_thresholds) == (1, 10, 300)
