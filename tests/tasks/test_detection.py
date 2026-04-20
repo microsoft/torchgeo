@@ -4,7 +4,7 @@
 import os
 import sys
 from types import ModuleType, SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import torch
@@ -663,10 +663,12 @@ class TestObjectDetection:
 
         logged: dict[str, Any] = {}
         model.model = FakeModel()
-        model._postprocess_rf_detr = fake_postprocess
-        model.val_metrics = FakeMetrics()  # type: ignore[method-assign]
-        model._trainer = SimpleNamespace(datamodule=None)
-        model._logger = None
+        monkeypatch.setattr(model, '_postprocess_rf_detr', cast(Any, fake_postprocess))
+        monkeypatch.setattr(model, 'val_metrics', cast(Any, FakeMetrics()))
+        monkeypatch.setattr(
+            model, '_trainer', cast(Any, SimpleNamespace(datamodule=None))
+        )
+        monkeypatch.setattr(model, '_logger', cast(Any, None))
         monkeypatch.setattr(
             model,
             'log_dict',
@@ -740,8 +742,8 @@ class TestObjectDetection:
 
         logged: dict[str, Any] = {}
         model.model = FakeModel()
-        model._postprocess_rf_detr = fake_postprocess
-        model.test_metrics = FakeMetrics()  # type: ignore[method-assign]
+        monkeypatch.setattr(model, '_postprocess_rf_detr', cast(Any, fake_postprocess))
+        monkeypatch.setattr(model, 'test_metrics', cast(Any, FakeMetrics()))
         monkeypatch.setattr(
             model,
             'log_dict',
@@ -801,7 +803,7 @@ class TestObjectDetection:
             return predictions
 
         model.model = FakeModel()
-        model._postprocess_rf_detr = fake_postprocess
+        monkeypatch.setattr(model, '_postprocess_rf_detr', cast(Any, fake_postprocess))
 
         batch = {'image': torch.randn(1, 3, 8, 8)}
         result = model.predict_step(batch, batch_idx=0)
@@ -842,7 +844,9 @@ class TestObjectDetection:
         model.rf_detr_train_config.lr_scheduler = 'cosine'
         model.rf_detr_train_config.lr_min_factor = 0.2
         model.rf_detr_train_config.lr_drop = 3
-        model._trainer = SimpleNamespace(estimated_stepping_batches=20)
+        monkeypatch.setattr(
+            model, '_trainer', cast(Any, SimpleNamespace(estimated_stepping_batches=20))
+        )
 
         optimizers = model.configure_optimizers()
 
@@ -880,7 +884,7 @@ class TestObjectDetection:
             ObjectDetection(
                 model='rf-detr-nano',
                 num_classes=2,
-                weights='sentinel',  # type: ignore[arg-type]
+                weights=cast(Any, 'sentinel'),
                 pretrain_weights=None,
             )
 
