@@ -350,6 +350,18 @@ class TestObjectDetection:
         assert model.rf_detr_model_config.resolution == 512
         assert model.rf_detr_train_config.lr_encoder == 1e-5
 
+    def test_rf_detr_freeze_backbone_maps_to_freeze_encoder(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        model = ObjectDetectionTask(
+            model='rf-detr-nano',
+            num_classes=2,
+            freeze_backbone=True,
+            pretrain_weights=None,
+        )
+        assert model.rf_detr_model_config.freeze_encoder
+
     def test_rf_detr_defers_runtime_import_errors(
         self, monkeypatch: MonkeyPatch
     ) -> None:
