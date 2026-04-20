@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, ClassVar
+from typing import Any
 
 import pytest
 import torch
@@ -97,12 +97,9 @@ class TestObjectDetection:
         self, monkeypatch: MonkeyPatch
     ) -> None:
         class FakeModelConfig:
-            model_fields: ClassVar[dict[str, None]] = {
-                'num_classes': None,
-                'pretrain_weights': None,
-                'resolution': None,
-                'freeze_encoder': None,
-            }
+            model_fields = frozenset(
+                ('num_classes', 'pretrain_weights', 'resolution', 'freeze_encoder')
+            )
 
             def __init__(self, **kwargs: Any) -> None:
                 self.num_classes = kwargs.get('num_classes', 90)
@@ -111,12 +108,7 @@ class TestObjectDetection:
                 self.freeze_encoder = kwargs.get('freeze_encoder', False)
 
         class FakeTrainConfig:
-            model_fields: ClassVar[dict[str, None]] = {
-                'dataset_dir': None,
-                'output_dir': None,
-                'lr': None,
-                'lr_encoder': None,
-            }
+            model_fields = frozenset(('dataset_dir', 'output_dir', 'lr', 'lr_encoder'))
 
             def __init__(self, **kwargs: Any) -> None:
                 self.dataset_dir = kwargs.get('dataset_dir', '.')
