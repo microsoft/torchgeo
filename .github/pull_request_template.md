@@ -1,5 +1,3 @@
-
-
 ## AI Usage Disclosure
 
 <!-- Check one of the following boxes to help us better review your PR -->
