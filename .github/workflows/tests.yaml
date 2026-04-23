@@ -32,7 +32,14 @@ jobs:
             pyproject.toml
             uv.lock
       - name: Install dependencies
-        run: uv sync --locked --extra datasets --extra models --extra tests
+        run: |
+          extras='--extra datasets --extra tests'
+          # Free-threaded Python lacks published wheels for parts of the optional
+          # model stack, notably OpenCV via RF-DETR.
+          if [[ '${{ matrix.python-version }}' != '3.14t' ]]; then
+            extras="$extras --extra models"
+          fi
+          uv sync --locked $extras
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
