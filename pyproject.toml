@@ -129,6 +129,8 @@ docs = [
     "sphinx-github-changelog>=1.7.2",
 ]
 models = [
+    # opencv-python 4.13 lacks wheels for some CI platforms; keep RF-DETR on 4.12
+    "opencv-python<4.13",
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
