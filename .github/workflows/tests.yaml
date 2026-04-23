@@ -18,7 +18,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.12', '3.13', '3.14', '3.14t']
+        # NumPy does not yet publish cp314t wheels, so free-threaded Python 3.14
+        # falls back to an sdist build in CI.
+        python-version: ['3.12', '3.13', '3.14']
     steps:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
@@ -33,13 +35,7 @@ jobs:
             uv.lock
       - name: Install dependencies
         run: |
-          extras='--extra datasets --extra tests'
-          # Free-threaded Python lacks published wheels for parts of the optional
-          # model stack, notably OpenCV via RF-DETR.
-          if [[ '${{ matrix.python-version }}' != '3.14t' ]]; then
-            extras="$extras --extra models"
-          fi
-          uv sync --locked $extras
+          uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
