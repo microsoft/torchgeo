@@ -57,8 +57,11 @@ dependencies = [
     "lightning>=2.4,!=2.5.0,!=2.5.5,!=2.5.6",
     # matplotlib 3.7.3+ required for Python 3.12 wheels
     "matplotlib>=3.7.3",
-    # numpy 1.26+ required for Python 3.12 wheels
-    "numpy>=1.26",
+    # NumPy 1.26+ required for Python 3.12 wheels; keep NumPy 1 on 3.12 for
+    # compatibility with the minimum compiled dependency stack
+    "numpy>=1.26,<2; python_version<'3.13'",
+    # NumPy 2+ required for Python 3.13+ wheels
+    "numpy>=2; python_version>='3.13'",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas>=2.1.1",
     # pillow 10+ required for Python 3.12 wheels
@@ -129,9 +132,10 @@ docs = [
     "sphinx-github-changelog>=1.7.2",
 ]
 models = [
-    # opencv-python 4.13 lacks wheels for some CI platforms and lowest-direct
-    # otherwise picks an ancient sdist-only release; keep RF-DETR on 4.12
-    "opencv-python>=4.12.0.88,<4.13",
+    # opencv-python 4.12+ requires NumPy 2 on Python 3.9+, which breaks our
+    # Python 3.12 minimum stack; keep RF-DETR on the newest NumPy 1-compatible
+    # wheel-backed release
+    "opencv-python>=4.11.0.86,<4.12",
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
