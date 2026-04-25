@@ -21,6 +21,7 @@ from .geo import NonGeoDataset
 from .utils import (
     Path,
     Sample,
+    array_to_tensor,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -115,7 +116,7 @@ class S2100k(NonGeoDataset):
 
         if self.mode == 'both':
             with rio.open(self.root / 'images' / row['fn']) as f:
-                sample['image'] = torch.tensor(f.read()).float()
+                sample['image'] = array_to_tensor(f.read()).float()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
