@@ -388,7 +388,7 @@ def download_url(
     filename: Path | None = None,
     md5: str | None = None,
     max_redirect_hops: int = 3,
-    **kwargs: str,
+    **kwargs: str | None,
 ) -> None:
     """Download a file from a url and place it in root.
 
@@ -433,7 +433,7 @@ def download_and_extract_archive(
     filename: Path | None = None,
     md5: str | None = None,
     remove_finished: bool = False,
-    **kwargs: str,
+    **kwargs: str | None,
 ) -> None:
     """Download and extract a remote archive.
 
