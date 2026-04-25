@@ -6,7 +6,7 @@
 
 """S2-100k pre-training dataset from SatCLIP paper."""
 
-import os
+import pathlib
 from collections.abc import Callable
 from typing import Literal
 
@@ -25,8 +25,6 @@ from .utils import (
     download_url,
     extract_archive,
 )
-
-CHECK_MIN_FILESIZE = 10000  # 10kb
 
 
 class S2100k(NonGeoDataset):
@@ -67,8 +65,9 @@ class S2100k(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[Sample], Sample] | None = None,
+        *,
         mode: Literal['both', 'points'] = 'both',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -76,10 +75,10 @@ class S2100k(NonGeoDataset):
 
         Args:
             root: Root directory where dataset can be found.
-            transforms: A function/transform that takes input sample and its target as
-                entry and returns a transformed version.
             mode: Which data to return (options are "both" or "points"), useful for
                 embedding locations without loading images.
+            transforms: A function/transform that takes input sample and its target as
+                entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
             checksum: If True, check the MD5 of the downloaded files (may be slow).
 
@@ -89,7 +88,7 @@ class S2100k(NonGeoDataset):
         """
         assert mode in {'both', 'points'}
 
-        self.root = root
+        self.root = pathlib.Path(root)
         self.transforms = transforms
         self.mode = mode
         self.download = download
@@ -97,25 +96,7 @@ class S2100k(NonGeoDataset):
 
         self._verify()
 
-        df = pd.read_csv(os.path.join(self.root, 'index.csv'))
-
-        self.filenames = []
-        self.points = []
-        n_skipped_files = 0
-        for i in range(df.shape[0]):
-            filename = os.path.join(self.root, 'images', df.iloc[i]['fn'])
-
-            if os.path.getsize(filename) < CHECK_MIN_FILESIZE:
-                n_skipped_files += 1
-                continue
-
-            self.filenames.append(filename)
-            self.points.append((df.iloc[i]['lon'], df.iloc[i]['lat']))
-
-        print(
-            f'skipped {n_skipped_files}/{len(df)} images because they were smaller '
-            f'than {CHECK_MIN_FILESIZE} bytes... they probably contained nodata pixels'
-        )
+        self.df = pd.read_csv(self.root / 'index.csv')
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -127,11 +108,13 @@ class S2100k(NonGeoDataset):
             Dictionary with "image" and "point" keys where point is in (lon, lat)
             format.
         """
-        point = torch.tensor(self.points[index])
+        row = self.df.iloc[index]
+
+        point = torch.tensor([row['lon'], row['lat']])
         sample = {'point': point}
 
         if self.mode == 'both':
-            with rio.open(self.filenames[index]) as f:
+            with rio.open(self.root / 'images' / row['fn']) as f:
                 sample['image'] = torch.tensor(f.read()).float()
 
         if self.transforms is not None:
@@ -145,13 +128,13 @@ class S2100k(NonGeoDataset):
         Returns:
             Length of the dataset.
         """
-        return len(self.filenames)
+        return len(self.df)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # index.csv
         filename = 'index.csv'
-        if os.path.isfile(os.path.join(self.root, filename)):
+        if (self.root / filename).is_file():
             pass
         elif self.download:
             url = f'{self.url}/{filename}'
@@ -161,18 +144,17 @@ class S2100k(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         # data_*.tar.xz
-        if os.path.isfile(os.path.join(self.root, 'images', 'patch_0.tif')):
+        if (self.root / 'images' / 'patch_0.tif').is_file():
             return
 
-        root = os.path.join(self.root, 'images')
         for i, sha256 in enumerate(self.sha256s, start=1):
-            path = os.path.join(root, f'data_{i}.tar.xz')
-            if os.path.isfile(path):
+            path = self.root / 'images' / f'data_{i}.tar.xz'
+            if path.is_file():
                 extract_archive(path)
             elif self.download:
                 url = f'{self.url}/images/data_{i}.tar.xz'
                 sha256 = sha256 if self.checksum else None
-                download_and_extract_archive(url, root, sha256=sha256)
+                download_and_extract_archive(url, self.root / 'images', sha256=sha256)
             else:
                 raise DatasetNotFoundError(self)
 
