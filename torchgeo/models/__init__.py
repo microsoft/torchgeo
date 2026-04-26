@@ -37,6 +37,7 @@ from .resnet import (
     resnet50,
     resnet152,
 )
+from .satclip import SatCLIP, SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
     Swin_B_Weights,
@@ -102,6 +103,8 @@ __all__ = (
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
+    'SatCLIP',
+    'SatCLIP_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
     'SwinBackbone_Weights',
@@ -140,6 +143,7 @@ __all__ = (
     'resnet18',
     'resnet50',
     'resnet152',
+    'satclip',
     'scalemae_large_patch16',
     'swin_b',
     'swin_s',
