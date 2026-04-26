@@ -11,6 +11,7 @@ Community:
 [![slack](https://img.shields.io/badge/Slack-join-4A154B?logo=slack)](https://torchgeo.slack.com/join/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
 [![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
 [![huggingface](https://img.shields.io/badge/Hugging_Face-join-FFD21E?logo=huggingface)](https://huggingface.co/torchgeo)
+[![zenodo](https://img.shields.io/badge/Zenodo-join-1682D4?logo=zenodo)](https://zenodo.org/communities/torchgeo)
 [![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/join-ecosystem/)
 [![youtube](https://img.shields.io/badge/YouTube-subscribe-FF0000?logo=youtube)](https://www.youtube.com/@TorchGeo)
 
