@@ -44,6 +44,12 @@ jobs:
       - name: Run checks (Windows diagnostics)
         if: matrix.os == 'windows-latest'
         run: |
+          python -X faulthandler -u -c "print('import pytest', flush=True); import pytest; print('ok pytest', flush=True)"
+          python -X faulthandler -u -c "print('import coverage', flush=True); import coverage; print('ok coverage', flush=True)"
+          python -X faulthandler -u -c "print('import torchgeo', flush=True); import torchgeo; print('ok torchgeo', flush=True)"
+          python -X faulthandler -u -m pytest --version
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -X faulthandler -m pytest --collect-only -vv
+          python -X faulthandler -m pytest --trace-config
           python -X faulthandler -m pytest --collect-only -vv
           python -X faulthandler -m pytest --cov=torchgeo --cov-report=xml -vv -s
           python -m torchgeo --help
