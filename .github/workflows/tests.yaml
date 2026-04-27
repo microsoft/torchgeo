@@ -47,6 +47,11 @@ jobs:
           python -X faulthandler -u -c "print('import pytest', flush=True); import pytest; print('ok pytest', flush=True)"
           python -X faulthandler -u -c "print('import coverage', flush=True); import coverage; print('ok coverage', flush=True)"
           python -X faulthandler -u -c "print('import torchgeo', flush=True); import torchgeo; print('ok torchgeo', flush=True)"
+          python -X faulthandler -u -c "print('import matplotlib', flush=True); import matplotlib; print('ok matplotlib', flush=True)"
+          python -X faulthandler -u -c "print('import torch', flush=True); import torch; print('ok torch', torch.__version__, flush=True)"
+          python -X faulthandler -u -c "print('import torchvision', flush=True); import torchvision; print('ok torchvision', torchvision.__version__, flush=True)"
+          python -X faulthandler -u -c "print('import tests.conftest deps', flush=True); import matplotlib; import pytest; import torch; import torchvision; from pytest import MonkeyPatch; print('ok tests.conftest deps', flush=True)"
+          python -X faulthandler -u -c "print('exec tests/conftest.py', flush=True); exec(compile(open('tests/conftest.py').read(), 'tests/conftest.py', 'exec')); print('ok tests/conftest.py', flush=True)"
           python -X faulthandler -u -m pytest --version
           set +e
           for target in \
