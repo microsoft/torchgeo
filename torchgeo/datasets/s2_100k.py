@@ -97,7 +97,7 @@ class S2100k(NonGeoDataset):
 
         self._verify()
 
-        self.df = pd.read_csv(self.root / 'index.csv')
+        self.index = pd.read_csv(self.root / 'index.csv')
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -109,7 +109,7 @@ class S2100k(NonGeoDataset):
             Dictionary with "image" and "point" keys where point is in (lon, lat)
             format.
         """
-        row = self.df.iloc[index]
+        row = self.index.iloc[index]
 
         point = torch.tensor([row['lon'], row['lat']])
         sample = {'point': point}
@@ -129,7 +129,7 @@ class S2100k(NonGeoDataset):
         Returns:
             Length of the dataset.
         """
-        return len(self.df)
+        return len(self.index)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
