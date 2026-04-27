@@ -19,6 +19,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.12', '3.13', '3.14']
+        exclude:
+          # NumPy wheels for Python 3.14 on Windows are currently MINGW-W64
+          # builds that can segfault at import, breaking pytest collection.
+          - os: windows-latest
+            python-version: '3.14'
     steps:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
@@ -37,44 +42,9 @@ jobs:
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
-        if: matrix.os != 'windows-latest'
         run: |
           pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
-      - name: Run checks (Windows diagnostics)
-        if: matrix.os == 'windows-latest'
-        run: |
-          python -X faulthandler -u -c "print('import pytest', flush=True); import pytest; print('ok pytest', flush=True)"
-          python -X faulthandler -u -c "print('import coverage', flush=True); import coverage; print('ok coverage', flush=True)"
-          python -X faulthandler -u -c "print('import torchgeo', flush=True); import torchgeo; print('ok torchgeo', flush=True)"
-          python -X faulthandler -u -c "print('import matplotlib', flush=True); import matplotlib; print('ok matplotlib', flush=True)"
-          python -X faulthandler -u -c "print('import torch', flush=True); import torch; print('ok torch', torch.__version__, flush=True)"
-          python -X faulthandler -u -c "print('import torchvision', flush=True); import torchvision; print('ok torchvision', torchvision.__version__, flush=True)"
-          python -X faulthandler -u -c "print('import tests.conftest deps', flush=True); import matplotlib; import pytest; import torch; import torchvision; from pytest import MonkeyPatch; print('ok tests.conftest deps', flush=True)"
-          python -X faulthandler -u -c "print('exec tests/conftest.py', flush=True); exec(compile(open('tests/conftest.py').read(), 'tests/conftest.py', 'exec')); print('ok tests/conftest.py', flush=True)"
-          python -X faulthandler -u -m pytest --version
-          set +e
-          for target in \
-            tests/conftest.py \
-            tests/datamodules \
-            tests/datasets \
-            tests/losses \
-            tests/models \
-            tests/samplers \
-            tests/trainers \
-            tests/transforms \
-            docs/tutorials
-          do
-            echo "::group::collect ${target}"
-            PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -X faulthandler -m pytest -o addopts='' --collect-only -vv "${target}"
-            echo "exit code: $?"
-            echo "::endgroup::"
-          done
-          echo "::group::trace config"
-          python -X faulthandler -m pytest --trace-config
-          echo "exit code: $?"
-          echo "::endgroup::"
-          exit 1
       - name: Report coverage
         uses: codecov/codecov-action@v7.0.0
         with:
