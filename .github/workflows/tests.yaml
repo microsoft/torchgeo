@@ -18,8 +18,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # NumPy does not yet publish cp314t wheels, so free-threaded Python 3.14
-        # falls back to an sdist build in CI.
         python-version: ['3.12', '3.13', '3.14']
     steps:
       - name: Clone repo
