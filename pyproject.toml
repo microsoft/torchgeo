@@ -135,13 +135,14 @@ models = [
     # opencv-python 4.12+ requires NumPy 2 on Python 3.9+, which breaks our
     # Python 3.12 minimum stack; keep RF-DETR on the newest NumPy 1-compatible
     # wheel-backed release
-    "opencv-python>=4.11.0.86,<4.12",
+    "opencv-python>=4.11.0.86,<4.12; platform_system!='Windows'",
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
     "olmoearth-pretrain-minimal>=0.0.2",
-    # rfdetr 1.6+ required for RF-DETR object detection support
-    "rfdetr>=1.6",
+    # rfdetr 1.6+ required for RF-DETR object detection support. RF-DETR
+    # does not advertise Windows support and crashes Windows 3.14 CI at import.
+    "rfdetr>=1.6; platform_system!='Windows'",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
