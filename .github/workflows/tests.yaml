@@ -48,11 +48,28 @@ jobs:
           python -X faulthandler -u -c "print('import coverage', flush=True); import coverage; print('ok coverage', flush=True)"
           python -X faulthandler -u -c "print('import torchgeo', flush=True); import torchgeo; print('ok torchgeo', flush=True)"
           python -X faulthandler -u -m pytest --version
-          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -X faulthandler -m pytest -o addopts='' --collect-only -vv
+          set +e
+          for target in \
+            tests/conftest.py \
+            tests/datamodules \
+            tests/datasets \
+            tests/losses \
+            tests/models \
+            tests/samplers \
+            tests/trainers \
+            tests/transforms \
+            docs/tutorials
+          do
+            echo "::group::collect ${target}"
+            PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -X faulthandler -m pytest -o addopts='' --collect-only -vv "${target}"
+            echo "exit code: $?"
+            echo "::endgroup::"
+          done
+          echo "::group::trace config"
           python -X faulthandler -m pytest --trace-config
-          python -X faulthandler -m pytest --collect-only -vv
-          python -X faulthandler -m pytest --cov=torchgeo --cov-report=xml -vv -s
-          python -m torchgeo --help
+          echo "exit code: $?"
+          echo "::endgroup::"
+          exit 1
       - name: Report coverage
         uses: codecov/codecov-action@v7.0.0
         with:
