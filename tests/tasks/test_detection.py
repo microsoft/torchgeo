@@ -446,13 +446,19 @@ class TestObjectDetection:
             model='rf-detr-nano', num_classes=2, pretrain_weights='rf-detr-nano.pth'
         )
 
+        assert not model._rf_detr_runtime_ready
+        assert model.rf_detr_criterion is None
+        assert model.rf_detr_postprocess is None
+        assert len(state['load_pretrain_calls']) == 0
+        assert len(state['build_namespace_calls']) == 0
+
+        result = model(torch.randn(1, 3, 16, 16))
+
         assert model._rf_detr_runtime_ready
         assert model.rf_detr_criterion is not None
         assert model.rf_detr_postprocess is not None
         assert len(state['load_pretrain_calls']) == 1
         assert len(state['build_namespace_calls']) == 2
-
-        result = model(torch.randn(1, 3, 16, 16))
         assert result['namespace']['model_config'] is model.rf_detr_model_config
 
     def test_rf_detr_build_batch_converts_boxes(self, monkeypatch: MonkeyPatch) -> None:
@@ -857,6 +863,7 @@ class TestObjectDetection:
                 return self._orig_mod(*args, **kwargs)
 
         model.model = FakeCompiledModel(inner_model)
+        model._rf_detr_runtime_ready = True
         assert model.rf_detr_train_config is not None
         model.rf_detr_train_config.lr = 1e-3
         model.rf_detr_train_config.weight_decay = 1e-4

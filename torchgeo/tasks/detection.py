@@ -422,10 +422,6 @@ class ObjectDetection(BaseTask):
         self.rf_detr_model_config = model_config_class(**model_kwargs)
         self.rf_detr_train_config = TrainConfig(**train_kwargs)
         self.model = torch.nn.Identity()
-        try:
-            self._initialize_rf_detr_runtime()
-        except ImportError:
-            pass
 
     def _use_rf_detr_backend(self) -> bool:
         """Return whether the current task is backed by RF-DETR."""
