@@ -37,8 +37,15 @@ jobs:
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
+        if: matrix.os != 'windows-latest'
         run: |
           pytest --cov=torchgeo --cov-report=xml
+          python -m torchgeo --help
+      - name: Run checks (Windows diagnostics)
+        if: matrix.os == 'windows-latest'
+        run: |
+          python -X faulthandler -m pytest --collect-only -vv
+          python -X faulthandler -m pytest --cov=torchgeo --cov-report=xml -vv -s
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.0.0
