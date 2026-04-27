@@ -388,6 +388,26 @@ class TestObjectDetection:
         with pytest.raises(ImportError, match=match):
             model._ensure_rf_detr_runtime()
 
+    def test_rf_detr_ensure_runtime_reraises_cached_error(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        patch_fake_rfdetr_configs(monkeypatch)
+        model = ObjectDetectionTask(
+            model='rf-detr-nano', num_classes=2, pretrain_weights=None
+        )
+        error = ImportError('cached RF-DETR runtime error')
+        model._rf_detr_runtime_error = error
+        monkeypatch.setattr(
+            model,
+            '_initialize_rf_detr_runtime',
+            lambda: pytest.fail('_initialize_rf_detr_runtime should not be called'),
+        )
+
+        with pytest.raises(ImportError, match='cached RF-DETR runtime error') as exc:
+            model._ensure_rf_detr_runtime()
+
+        assert exc.value is error
+
     def test_rf_detr_ensure_runtime_noops_for_torchvision_backend(
         self, monkeypatch: MonkeyPatch
     ) -> None:
