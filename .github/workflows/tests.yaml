@@ -102,27 +102,6 @@ jobs:
         uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-  windows-numpy-diagnostic:
-    name: windows-numpy-diagnostic
-    runs-on: windows-latest
-    continue-on-error: true
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v6.0.2
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v8.1.0
-        with:
-          python-version: '3.14'
-          enable-cache: true
-          activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
-      - name: Install dependencies
-        run: uv sync --locked --extra tests
-      - name: Import NumPy
-        run: |
-          python -X faulthandler -u -c "print('import numpy', flush=True); import numpy; print('ok numpy', numpy.__version__, flush=True)"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
