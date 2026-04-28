@@ -52,6 +52,16 @@ class TestSatCLIP:
 
         assert embeddings.shape == (2, 64)
 
+    def test_satclip_coordinate_dtype(self) -> None:
+        model = satclip(
+            legendre_polys=10, capacity=128, embed_dim=64, num_hidden_layers=1
+        )
+        coords = torch.zeros(2, 2, dtype=torch.float64)
+        embeddings = model(coords)
+
+        assert embeddings.dtype == torch.float32
+        assert embeddings.shape == (2, 64)
+
     def test_satclip_pole_clamping(self) -> None:
         model = satclip(
             legendre_polys=10, capacity=64, embed_dim=32, num_hidden_layers=1
@@ -66,6 +76,7 @@ class TestSatCLIP:
         coords = torch.tensor([[0.0, 0.0]])
         embeddings = model(coords)
 
+        assert not model.training
         assert embeddings.shape == (1, mocked_weights.meta['embed_dim'])
 
     def test_transforms(self, weights: SatCLIP_Weights) -> None:

@@ -353,13 +353,26 @@ class SatCLIP(nn.Module):
             legendre_polys: Number of Legendre polynomials used by the spherical
                 harmonics encoder. Higher values preserve finer spatial variation
                 and increase the positional encoding size as ``legendre_polys ** 2``.
+                Must be positive.
             capacity: Number of hidden features in the SIREN network. Higher values
-                increase model capacity and memory use.
-            embed_dim: Number of output embedding features.
+                increase model capacity and memory use. Must be positive.
+            embed_dim: Number of output embedding features. Must be positive.
             num_hidden_layers: Number of hidden SIREN layers. Higher values increase
-                network depth and coordinate-expression capacity.
+                network depth and coordinate-expression capacity. Must be positive.
+
+        Raises:
+            ValueError: If any dimension argument is not positive.
         """
         super().__init__()
+        if legendre_polys < 1:
+            raise ValueError('legendre_polys must be positive')  # pragma: no cover
+        if capacity < 1:
+            raise ValueError('capacity must be positive')  # pragma: no cover
+        if embed_dim < 1:
+            raise ValueError('embed_dim must be positive')  # pragma: no cover
+        if num_hidden_layers < 1:
+            raise ValueError('num_hidden_layers must be positive')  # pragma: no cover
+
         self.posenc = SphericalHarmonics(legendre_polys)
         self.nnet = SirenNet(
             dim_in=self.posenc.embedding_dim,
@@ -373,10 +386,13 @@ class SatCLIP(nn.Module):
 
         Args:
             x: Coordinates of shape ``(B, 2)`` as ``(longitude, latitude)`` in degrees.
+                Coordinates are cast to the network parameter dtype.
 
         Returns:
             Embedding tensor of shape ``(B, embed_dim)``.
         """
+        dtype = self.nnet.last_layer.weight.dtype
+        x = x.to(dtype=dtype)
         return self.nnet(self.posenc(x))
 
 
@@ -416,7 +432,8 @@ def satclip(
     .. versionadded:: 0.10
 
     Args:
-        weights: Pre-trained SatCLIP weights to load.
+        weights: Pre-trained SatCLIP weights to load. If provided, the returned
+            model is set to eval mode.
         *args: Additional arguments to pass to :class:`SatCLIP`.
         **kwargs: Additional keyword arguments to pass to :class:`SatCLIP`.
 
@@ -434,7 +451,7 @@ def satclip(
     if weights:
         # SatCLIP releases ship as Lightning checkpoints with the location encoder
         # weights under the 'model.location.nnet.*' namespace.
-        checkpoint = weights.get_state_dict(progress=True)
+        checkpoint = weights.get_state_dict(progress=True, map_location='cpu')
         prefix = 'model.location.'
         state_dict = {
             key[len(prefix) :]: value
@@ -444,5 +461,6 @@ def satclip(
         missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=True)
         assert missing_keys == []
         assert unexpected_keys == []
+        model.eval()
 
     return model
