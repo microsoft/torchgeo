@@ -168,3 +168,15 @@ Atmospheric
    :header-rows: 1
    :align: center
    :file: weights/atmospheric.csv
+
+
+Location
+^^^^^^^^
+
+These weights encode geographic coordinates instead of image pixels.
+
+.. csv-table::
+   :widths: 45 10 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/location.csv

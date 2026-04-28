@@ -35,7 +35,9 @@ class SphericalHarmonics(nn.Module):
         """Initialize a new SphericalHarmonics instance.
 
         Args:
-            legendre_polys: Number of Legendre polynomials.
+            legendre_polys: Number of Legendre polynomials. Higher values add
+                higher-frequency spatial basis functions and increase the output
+                feature dimension quadratically as ``legendre_polys ** 2``.
         """
         super().__init__()
         self.L = int(legendre_polys)
@@ -172,7 +174,8 @@ class SineActivation(nn.Module):
         """Initialize a new SineActivation instance.
 
         Args:
-            w0: Frequency scaling factor.
+            w0: Frequency scaling factor applied before the sine activation.
+                Higher values make the activation vary more rapidly with its input.
         """
         super().__init__()
         self.w0 = w0
@@ -213,14 +216,22 @@ class Siren(nn.Module):
         """Initialize a new Siren instance.
 
         Args:
-            dim_in: Number of input dimensions.
-            dim_out: Number of output dimensions.
-            w0: Frequency scaling factor.
-            c: Weight initialization scale constant.
-            is_first: Whether this is the first SIREN layer.
+            dim_in: Number of input features in tensors of shape ``(..., dim_in)``.
+            dim_out: Number of output features in tensors of shape
+                ``(..., dim_out)``.
+            w0: Frequency scaling factor. Higher values let the layer represent
+                higher-frequency variation, but also shrink the initialization range
+                for non-first layers.
+            c: Weight initialization scale constant. Higher values widen the
+                initialization range for non-first layers.
+            is_first: Whether this is the first SIREN layer. First layers use a
+                wider initialization that preserves high-frequency coordinate
+                information.
             use_bias: Whether to include a bias term.
-            activation: Activation module.
-            dropout: Whether to apply dropout.
+            activation: Activation module applied after the linear layer. Defaults
+                to :class:`SineActivation`.
+            dropout: Whether to apply dropout to the linear output before the
+                activation.
         """
         super().__init__()
         self.dropout = dropout
@@ -273,12 +284,16 @@ class SirenNet(nn.Module):
         """Initialize a new SirenNet instance.
 
         Args:
-            dim_in: Number of input dimensions.
-            dim_hidden: Number of hidden dimensions.
-            dim_out: Number of output dimensions.
-            num_layers: Number of hidden SIREN layers.
-            w0: Frequency scaling for hidden layers.
-            w0_initial: Frequency scaling for the first layer.
+            dim_in: Number of input features in tensors of shape ``(B, dim_in)``.
+            dim_hidden: Number of hidden features in each SIREN layer. Higher
+                values increase network capacity and memory use.
+            dim_out: Number of output features in tensors of shape ``(B, dim_out)``.
+            num_layers: Number of hidden SIREN layers. Higher values increase
+                network depth and the number of nonlinear coordinate transforms.
+            w0: Frequency scaling for hidden layers. Higher values allow more
+                rapidly varying hidden representations.
+            w0_initial: Frequency scaling for the first layer. Higher values make
+                the network more sensitive to fine-scale input-coordinate changes.
             use_bias: Whether to include bias terms.
             final_activation: Activation applied to the last layer.
         """
@@ -335,10 +350,14 @@ class SatCLIP(nn.Module):
         """Initialize a new SatCLIP instance.
 
         Args:
-            legendre_polys: Number of Legendre polynomials.
-            capacity: Number of hidden dimensions.
-            embed_dim: Number of output dimensions.
-            num_hidden_layers: Number of hidden SIREN layers.
+            legendre_polys: Number of Legendre polynomials used by the spherical
+                harmonics encoder. Higher values preserve finer spatial variation
+                and increase the positional encoding size as ``legendre_polys ** 2``.
+            capacity: Number of hidden features in the SIREN network. Higher values
+                increase model capacity and memory use.
+            embed_dim: Number of output embedding features.
+            num_hidden_layers: Number of hidden SIREN layers. Higher values increase
+                network depth and coordinate-expression capacity.
         """
         super().__init__()
         self.posenc = SphericalHarmonics(legendre_polys)
