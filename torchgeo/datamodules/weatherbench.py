@@ -92,6 +92,8 @@ class AuroraWeatherBench2Sequence(Dataset[Sample]):
     Args:
         dataset: a :class:`~torchgeo.datasets.WeatherBench2` instance.
         region: ``(xmin, ymin, xmax, ymax)`` longitude/latitude bounding box.
+            Defaults to the dataset's full spatial bounds (i.e. the entire
+            store), which is also what Aurora expects for global rollouts.
         start_time: ISO timestamp (or :class:`pandas.Timestamp`) for the first
             window start. Clipped to ``dataset.bounds`` if it falls outside.
         end_time: exclusive end timestamp. The last window start is at
@@ -113,9 +115,9 @@ class AuroraWeatherBench2Sequence(Dataset[Sample]):
     def __init__(
         self,
         dataset: WeatherBench2,
-        region: tuple[float, float, float, float],
         start_time: str | pd.Timestamp,
         end_time: str | pd.Timestamp,
+        region: tuple[float, float, float, float] | None = None,
         timestep: str | pd.Timedelta = '6h',
         context_steps: int = 2,
         target_steps: int = 1,
@@ -132,7 +134,13 @@ class AuroraWeatherBench2Sequence(Dataset[Sample]):
             raise ValueError('context_steps and target_steps must be >= 1.')
 
         self.dataset = dataset
-        self.region = region
+        x_bounds, y_bounds, _ = dataset.bounds
+        self.region = region or (
+            x_bounds.start,
+            y_bounds.start,
+            x_bounds.stop,
+            y_bounds.stop,
+        )
         self.context_steps = context_steps
         self.target_steps = target_steps
         self.timestep = pd.to_timedelta(timestep)
@@ -390,9 +398,9 @@ class WeatherBench2AuroraDataModule(NonGeoDataModule):
     def __init__(
         self,
         paths: str,
-        region: tuple[float, float, float, float],
         start_time: str | pd.Timestamp,
         end_time: str | pd.Timestamp,
+        region: tuple[float, float, float, float] | None = None,
         timestep: str | pd.Timedelta = '6h',
         context_steps: int = 2,
         target_steps: int = 1,
@@ -407,9 +415,11 @@ class WeatherBench2AuroraDataModule(NonGeoDataModule):
 
         Args:
             paths: path or URI passed to :class:`~torchgeo.datasets.WeatherBench2`.
-            region: ``(xmin, ymin, xmax, ymax)`` longitude/latitude bbox.
             start_time: first window start (inclusive).
             end_time: exclusive end of the data range.
+            region: ``(xmin, ymin, xmax, ymax)`` longitude/latitude bbox.
+                Defaults to the dataset's full spatial bounds (i.e. the whole
+                store), which is also what Aurora expects for global rollouts.
             timestep: time between consecutive samples in the store.
             context_steps: number of context (input) steps per window.
             target_steps: number of target (supervision) steps per window.
