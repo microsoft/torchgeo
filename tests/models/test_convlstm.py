@@ -12,8 +12,8 @@ from torchgeo.models import ConvLSTM
 class TestConvLSTM:
     """Tests for the ConvLSTM model."""
 
-    def test_convlstm_forward(self) -> None:
-        """Test the forward pass of the ConvLSTM model."""
+    def test_convlstm_forward_features(self) -> None:
+        """Test the feature forward pass of the ConvLSTM model."""
         b = 1
         t = 4
         c = 3
@@ -28,7 +28,7 @@ class TestConvLSTM:
             num_layers=1,
             batch_first=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -53,7 +53,7 @@ class TestConvLSTM:
             batch_first=True,
             return_all_layers=True,
         )
-        layer_output_list, _ = model(input_tensor)
+        layer_output_list, _ = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == num_layers
         assert layer_output_list[0].shape == (b, t, hidden_dims[0], h, w)
@@ -75,7 +75,7 @@ class TestConvLSTM:
             num_layers=1,
             batch_first=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -97,7 +97,7 @@ class TestConvLSTM:
             num_layers=1,
             batch_first=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -119,7 +119,7 @@ class TestConvLSTM:
             num_layers=1,
             batch_first=False,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -152,9 +152,47 @@ class TestConvLSTM:
             batch_first=True,
             return_all_layers=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 2
         assert len(last_state_list) == 2
         assert layer_output_list[0].shape == (b, t, 16, h, w)
         assert layer_output_list[1].shape == (b, t, 32, h, w)
+
+    def test_convlstm_forward(self) -> None:
+        """Test segmentation forward pass with prediction head."""
+        b = 2
+        t = 4
+        c = 3
+        h = 16
+        w = 16
+        num_classes = 5
+        input_tensor = torch.rand(b, t, c, h, w)
+
+        model = ConvLSTM(
+            input_dim=c,
+            hidden_dim=16,
+            kernel_size=3,
+            num_layers=1,
+            batch_first=True,
+            num_classes=num_classes,
+            head_kernel_size=1,
+        )
+        y_hat = model(input_tensor, lengths=torch.tensor([4, 2]))
+
+        assert y_hat.shape == (b, num_classes, h, w)
+
+    def test_convlstm_forward_requires_head(self) -> None:
+        """Test that segmentation forward requires a configured prediction head."""
+        b = 1
+        t = 2
+        c = 3
+        h = 8
+        w = 8
+        input_tensor = torch.rand(b, t, c, h, w)
+        model = ConvLSTM(
+            input_dim=c, hidden_dim=8, kernel_size=3, num_layers=1, batch_first=True
+        )
+
+        with pytest.raises(ValueError, match='Segmentation head is not configured'):
+            model(input_tensor)
