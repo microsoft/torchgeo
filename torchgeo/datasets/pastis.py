@@ -126,12 +126,13 @@ class PASTIS(NonGeoDataset):
         'semantic': os.path.join('ANNOTATIONS', 'TARGET_'),
         'instance': os.path.join('INSTANCE_ANNOTATIONS', 'INSTANCES_'),
     }
+    s2_bands = ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B11', 'B12')
 
     def __init__(
         self,
         root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
-        bands: str = 's2',
+        bands: str | Sequence[str] = 's2',
         mode: str = 'semantic',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -144,7 +145,9 @@ class PASTIS(NonGeoDataset):
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
             bands: load Sentinel-1 ascending path data (s1a), Sentinel-1 descending path
-                data (s1d), or Sentinel-2 data (s2)
+                data (s1d), or Sentinel-2 data (s2). Alternatively, provide a
+                sequence of Sentinel-2 band names to load a subset, reorder bands,
+                or duplicate bands.
             mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -156,11 +159,22 @@ class PASTIS(NonGeoDataset):
         """
         for fold in folds:
             assert 1 <= fold <= 5
-        assert bands in ['s1a', 's1d', 's2']
         assert mode in ['semantic', 'instance']
+
+        self.band_indices: list[int] | None = None
+        if isinstance(bands, str):
+            assert bands in ['s1a', 's1d', 's2']
+            self.image_key = bands
+            self.bands = bands
+        else:
+            assert len(bands) > 0
+            assert set(bands) <= set(self.s2_bands)
+            self.image_key = 's2'
+            self.bands = tuple(bands)
+            self.band_indices = [self.s2_bands.index(band) for band in self.bands]
+
         self.root = root
         self.folds = folds
-        self.bands = bands
         self.mode = mode
         self.transforms = transforms
         self.download = download
@@ -218,8 +232,10 @@ class PASTIS(NonGeoDataset):
         Returns:
             the time-series
         """
-        path = self.files[index][self.bands]
+        path = self.files[index][self.image_key]
         array = np.load(path)
+        if self.band_indices is not None:
+            array = array[:, self.band_indices, :, :]
 
         tensor = torch.from_numpy(array).float()
         return tensor
