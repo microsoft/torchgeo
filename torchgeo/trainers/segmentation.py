@@ -4,6 +4,7 @@
 """Trainers for semantic segmentation."""
 
 import os
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -85,7 +86,7 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
            The *labels* and *pos_weight* parameters and dice loss support.
 
         .. versionadded:: 0.8
-           Time series, DPT, Segformer, and UPerNet support.
+           DPT, Segformer, and UPerNet support.
 
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
@@ -115,13 +116,30 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
         """Forward pass of the model.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) or (B, T, C, H, W).
+            x: Input tensor of shape ``(B, C, H, W)``. A 5-dimensional tensor of
+                shape ``(B, T, C, H, W)`` is deprecated but temporarily supported
+                for backward compatibility.
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
+
+        Raises:
+            ValueError: If ``x`` is not 4-dimensional or 5-dimensional.
         """
         if x.ndim == 5:
+            warnings.warn(
+                'Passing spatiotemporal input with shape (B, T, C, H, W) to '
+                'SemanticSegmentationTask is deprecated and will be removed in a '
+                'future release. Use SpatioTemporalSegmentationTask instead.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
             x = rearrange(x, 'b t c h w -> b (t c) h w')
+        elif x.ndim != 4:
+            raise ValueError(
+                'SemanticSegmentationTask expects input with shape (B, C, H, W). '
+                'For spatiotemporal input, use SpatioTemporalSegmentationTask.'
+            )
         x = self.model(x)
         return x
 
@@ -256,26 +274,12 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            if batch['image'].ndim == 5:
-                _, T, C, _, _ = batch['image'].shape
-                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
-
-                aug = K.AugmentationSequential(
-                    K.Denormalize(datamodule.mean, datamodule.std),
-                    data_keys=None,
-                    keepdim=True,
-                )
-                batch = aug(batch)
-                batch['image'] = rearrange(
-                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
-                )
-            else:
-                aug = K.AugmentationSequential(
-                    K.Denormalize(datamodule.mean, datamodule.std),
-                    data_keys=None,
-                    keepdim=True,
-                )
-                batch = aug(batch)
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
                     batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
