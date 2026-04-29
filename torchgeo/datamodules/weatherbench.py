@@ -229,6 +229,94 @@ class AuroraWeatherBench2Sequence(Dataset[Sample]):
         }
 
 
+def aurora_predictions_to_xarray(
+    preds: Sequence[Any],
+    init_time: str | pd.Timestamp,
+    timestep: str | pd.Timedelta = '6h',
+    surf_vars: dict[str, str] | None = None,
+    atmos_vars: dict[str, str] | None = None,
+) -> Any:
+    """Pack Aurora rollout predictions into a WeatherBench2-shaped xarray Dataset.
+
+    The output uses WeatherBench2 variable names and the standard
+    ``(time, latitude, longitude[, level])`` coordinates, ready to be persisted
+    via :meth:`xarray.Dataset.to_zarr` and re-opened with
+    :class:`~torchgeo.datasets.WeatherBench2`.
+
+    The *i*-th prediction is tagged with timestamp ``T0 + (i + 1) * timestep``
+    (Aurora's :func:`~aurora.rollout` yields predictions strictly after the
+    initialization time).
+
+    Args:
+        preds: a sequence of :class:`aurora.Batch` predictions, one per
+            rollout step (e.g. as collected from :func:`aurora.rollout`).
+        init_time: forecast initialization time T0.
+        timestep: time between rollout steps. Strings accepted by
+            :func:`pandas.to_timedelta` are also valid (e.g. ``'6h'``).
+        surf_vars: WB2 → Aurora surface variable mapping (defaults to
+            :data:`DEFAULT_SURF_VARS`). Pass an empty dict to skip surface
+            variables entirely.
+        atmos_vars: WB2 → Aurora atmospheric variable mapping (defaults to
+            :data:`DEFAULT_ATMOS_VARS`). Pass an empty dict to skip
+            atmospheric variables entirely.
+
+    Returns:
+        An :class:`xarray.Dataset` ready for ``ds.to_zarr(path)`` and reuse
+        with :class:`~torchgeo.datasets.WeatherBench2`.
+
+    Raises:
+        ValueError: If *preds* is empty.
+
+    .. versionadded:: 0.8
+    """
+    xr = lazy_import('xarray')
+    if not preds:
+        raise ValueError('preds must not be empty.')
+
+    timestep_td = pd.to_timedelta(timestep)
+    init = pd.Timestamp(init_time)
+    times = [init + (i + 1) * timestep_td for i in range(len(preds))]
+
+    surf = DEFAULT_SURF_VARS if surf_vars is None else surf_vars
+    atmos = DEFAULT_ATMOS_VARS if atmos_vars is None else atmos_vars
+    aurora_to_wb2_surf = {v: k for k, v in surf.items()}
+    aurora_to_wb2_atmos = {v: k for k, v in atmos.items()}
+
+    def _stack(field: str, key: str) -> Any:
+        return (
+            torch.stack([getattr(p, field)[key][0, 0] for p in preds])
+            .to(torch.float32)
+            .cpu()
+            .numpy()
+        )
+
+    data_vars: dict[str, tuple[tuple[str, ...], Any]] = {}
+    for k in preds[0].surf_vars:
+        wb2_key = aurora_to_wb2_surf.get(k)
+        if wb2_key is not None:
+            data_vars[wb2_key] = (
+                ('time', 'latitude', 'longitude'),
+                _stack('surf_vars', k),
+            )
+    for k in preds[0].atmos_vars:
+        wb2_key = aurora_to_wb2_atmos.get(k)
+        if wb2_key is not None:
+            data_vars[wb2_key] = (
+                ('time', 'level', 'latitude', 'longitude'),
+                _stack('atmos_vars', k),
+            )
+
+    coords: dict[str, Any] = {
+        'time': times,
+        'latitude': preds[0].metadata.lat.detach().cpu().numpy(),
+        'longitude': preds[0].metadata.lon.detach().cpu().numpy(),
+    }
+    if any('level' in dims for dims, _ in data_vars.values()):
+        coords['level'] = list(preds[0].metadata.atmos_levels)
+
+    return xr.Dataset(data_vars, coords=coords)
+
+
 def aurora_collate_fn(batch: Sequence[Sample]) -> dict[str, Any]:
     """Collate :class:`AuroraWeatherBench2Sequence` samples into an Aurora batch.
 

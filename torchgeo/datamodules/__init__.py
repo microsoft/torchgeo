@@ -66,6 +66,7 @@ from .weatherbench import (
     AuroraWeatherBench2Sequence,
     WeatherBench2AuroraDataModule,
     aurora_collate_fn,
+    aurora_predictions_to_xarray,
 )
 from .xbd import XView2DataModule, xBDDataModule
 
@@ -144,5 +145,6 @@ __all__ = (
     'WeatherBench2AuroraDataModule',
     'XView2DataModule',
     'aurora_collate_fn',
+    'aurora_predictions_to_xarray',
     'xBDDataModule',
 )

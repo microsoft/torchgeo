@@ -13,6 +13,7 @@ from torchgeo.datamodules import (
     AuroraWeatherBench2Sequence,
     WeatherBench2AuroraDataModule,
     aurora_collate_fn,
+    aurora_predictions_to_xarray,
 )
 from torchgeo.datasets import WeatherBench2
 
@@ -124,6 +125,63 @@ class TestAuroraCollateFn:
         # Targets keep [B=1, T=1, ...]
         assert next(iter(out['target_surf_vars'].values())).shape[1] == 1
         assert next(iter(out['target_atmos_vars'].values())).shape[1] == 1
+
+
+class TestAuroraPredictionsToXarray:
+    @pytest.fixture
+    def batch(self, tmp_path: Path) -> object:
+        _make_store(tmp_path / 'era5.zarr')
+        dataset = WeatherBench2(tmp_path / 'era5.zarr')
+        seq = AuroraWeatherBench2Sequence(
+            dataset=dataset,
+            region=(0.0, -90.0, 100.0, 0.0),
+            start_time='2023-01-01 00:00',
+            end_time='2023-01-01 18:00',
+            timestep='6h',
+        )
+        return aurora_collate_fn([seq[0]])['batch']
+
+    def test_basic(self, batch: object) -> None:
+        xr = pytest.importorskip('xarray')
+        init = pd.Timestamp('2023-01-01 06:00')
+        ds = aurora_predictions_to_xarray([batch, batch], init, timestep='6h')
+        assert isinstance(ds, xr.Dataset)
+        assert '2m_temperature' in ds.data_vars
+        assert 'temperature' in ds.data_vars
+        assert ds['2m_temperature'].dims == ('time', 'latitude', 'longitude')
+        assert ds['temperature'].dims == ('time', 'level', 'latitude', 'longitude')
+        assert ds.time.size == 2
+        assert pd.Timestamp(ds.time.values[0]) == init + pd.Timedelta('6h')
+        assert pd.Timestamp(ds.time.values[1]) == init + pd.Timedelta('12h')
+
+    def test_skip_atmos(self, batch: object) -> None:
+        ds = aurora_predictions_to_xarray(
+            [batch], pd.Timestamp('2023-01-01'), atmos_vars={}
+        )
+        assert '2m_temperature' in ds.data_vars
+        assert 'temperature' not in ds.data_vars
+        assert 'level' not in ds.coords
+
+    def test_skip_surf(self, batch: object) -> None:
+        ds = aurora_predictions_to_xarray(
+            [batch], pd.Timestamp('2023-01-01'), surf_vars={}
+        )
+        assert '2m_temperature' not in ds.data_vars
+        assert 'temperature' in ds.data_vars
+
+    def test_empty_raises(self) -> None:
+        with pytest.raises(ValueError, match='preds must not be empty'):
+            aurora_predictions_to_xarray([], pd.Timestamp('2023-01-01'))
+
+    def test_roundtrip_with_weatherbench2(self, batch: object, tmp_path: Path) -> None:
+        ds = aurora_predictions_to_xarray(
+            [batch, batch], pd.Timestamp('2023-01-01 06:00'), timestep='6h'
+        )
+        zarr_path = tmp_path / 'forecast.zarr'
+        ds.to_zarr(zarr_path, mode='w')
+        wb2 = WeatherBench2(paths=zarr_path, data_vars=('2m_temperature',))
+        sample = wb2[wb2.bounds]
+        assert '2m_temperature' in sample['variables']
 
 
 class TestWeatherBench2AuroraDataModule:
