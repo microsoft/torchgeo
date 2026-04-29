@@ -188,6 +188,7 @@ from .utils import (
 )
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
+from .weatherbench import WeatherBench2
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xbd import XView2, xBD
 from .zuericrop import ZueriCrop
@@ -372,6 +373,7 @@ __all__ = (
     'UnionDataset',
     'Vaihingen2D',
     'VectorDataset',
+    'WeatherBench2',
     'WesternUSALiveFuelMoisture',
     'XView2',
     'XarrayDataset',
