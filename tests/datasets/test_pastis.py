@@ -52,6 +52,8 @@ class TestPASTIS:
         root = tmp_path
         bands = params['bands']
         mode = params['mode']
+        assert isinstance(bands, str)
+        assert isinstance(mode, str)
         transforms = nn.Identity()
 
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
