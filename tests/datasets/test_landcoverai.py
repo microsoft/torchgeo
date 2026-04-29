@@ -76,7 +76,7 @@ class TestLandCoverAI:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
-        split: str = request.param[1]
+        split = request.param[1]
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
         monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')

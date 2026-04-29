@@ -372,9 +372,9 @@ def swin_t(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # same as for swinv2
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -417,9 +417,9 @@ def swin_s(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # same as for swinv2
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -519,9 +519,9 @@ def swin_v2_t(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # https://github.com/allenai/satlaspretrain_models/blob/main/satlaspretrain_models/models/backbones.py#L27
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -558,9 +558,9 @@ def swin_v2_b(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # https://github.com/allenai/satlaspretrain_models/blob/main/satlaspretrain_models/models/backbones.py#L27
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
