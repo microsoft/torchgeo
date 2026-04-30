@@ -5,11 +5,14 @@ import kornia.augmentation as K
 import numpy as np
 import pytest
 import torch
-from scipy.ndimage import uniform_filter
 
 from torchgeo.datasets.utils import Sample
 from torchgeo.transforms import LeeFilter
 from torchgeo.transforms.sar import lee_filter
+
+pytest.importorskip('scipy', minversion='1.11.2')
+
+from scipy.ndimage import uniform_filter
 
 
 @pytest.fixture
