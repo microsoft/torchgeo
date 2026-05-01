@@ -256,15 +256,7 @@ class ConvLSTM(nn.Module):
         Returns:
             Output tensor of shape (B, num_classes, H, W).
 
-        Raises:
-            ValueError: If the segmentation head is not configured.
         """
-        if self.head is None:
-            raise ValueError(
-                "Segmentation head is not configured. Set 'num_classes' to use "
-                'ConvLSTM for segmentation.'
-            )
-
         layer_output_list, _ = self.forward_features(
             input_tensor, hidden_state=hidden_state
         )
