@@ -19,9 +19,7 @@ class TestDLRSD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> DLRSD:
         url = os.path.join('tests', 'data', 'dlrsd') + os.sep
-        md5 = '6472a8d525ab11aa682f0fea86cbeb3a'
         monkeypatch.setattr(DLRSD, 'url', url)
-        monkeypatch.setattr(DLRSD, 'md5', md5)
         transforms = nn.Identity()
         return DLRSD(tmp_path, transforms, download=True)
 
@@ -67,15 +65,17 @@ class TestDLRSD:
         x['prediction'] = x['mask'].clone()
         dataset.plot(x)
         plt.close()
+        # Cover the float-image-normalized-to-[0, 1] overlay rescaling branch
+        x['image'] = x['image'] / 255.0
+        dataset.plot(x)
+        plt.close()
 
 
 class TestDLRSDMultilabel:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> DLRSDMultilabel:
         url = os.path.join('tests', 'data', 'dlrsd') + os.sep
-        md5 = '6472a8d525ab11aa682f0fea86cbeb3a'
         monkeypatch.setattr(DLRSDMultilabel, 'url', url)
-        monkeypatch.setattr(DLRSDMultilabel, 'md5', md5)
         transforms = nn.Identity()
         return DLRSDMultilabel(tmp_path, transforms, download=True)
 

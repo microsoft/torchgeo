@@ -4,10 +4,12 @@
 """DLRSD dataset."""
 
 import csv
+import glob
 import os
 from collections.abc import Callable
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -26,7 +28,129 @@ from .utils import (
 )
 
 
-class DLRSD(NonGeoDataset):
+class _DLRSDBase(NonGeoDataset):
+    """Shared base for DLRSD and DLRSDMultilabel.
+
+    Provides shared dataset assets and download/extract/verify plumbing for
+    both the semantic segmentation and multi-label variants of DLRSD.
+    """
+
+    url = 'https://hf.co/datasets/calebrob6/dlrsd/resolve/dcd622dd05f327cd0fd10951ad6cd7ba52d0e832/'
+
+    filename = 'DLRSD.zip'
+    sha256 = 'cb49d850855a7622c51b5f09dbdf98952e064b661f35cb105e8749513e75796f'
+
+    directory = 'DLRSD'
+
+    classes = (
+        'airplane',
+        'bare soil',
+        'buildings',
+        'cars',
+        'chaparral',
+        'court',
+        'dock',
+        'field',
+        'grass',
+        'mobile home',
+        'pavement',
+        'sand',
+        'sea',
+        'ship',
+        'tanks',
+        'trees',
+        'water',
+    )
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        download: bool = False,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new DLRSD-style dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the SHA256 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+        """
+        self.root = root
+        self.transforms = transforms
+        self.download = download
+        self.checksum = checksum
+
+        self._verify()
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.image_fns)
+
+    def _load_image(self, index: int) -> Tensor:
+        """Load a single image.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the image
+        """
+        path = self.image_fns[index]
+        with Image.open(path) as img:
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            tensor = torch.from_numpy(array).to(torch.float32)
+            return einops.rearrange(tensor, 'h w c -> c h w')
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: If an existing archive is corrupted.
+        """
+        filepath = os.path.join(self.root, self.directory)
+        if os.path.exists(filepath):
+            return
+
+        filepath = os.path.join(self.root, self.filename)
+        if os.path.isfile(filepath):
+            if self.checksum and not check_integrity(filepath, sha256=self.sha256):
+                raise RuntimeError('Dataset found, but corrupted.')
+            self._extract()
+            return
+
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        # Empty sha256 is treated as "no checksum" by check_integrity.
+        download_url(
+            self.url + self.filename,
+            self.root,
+            sha256=self.sha256 if self.checksum else '',
+        )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        filepath = os.path.join(self.root, self.filename)
+        extract_archive(filepath)
+
+
+class DLRSD(_DLRSDBase):
     """DLRSD semantic segmentation dataset.
 
     The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
@@ -68,33 +192,6 @@ class DLRSD(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
-
-    filename = 'DLRSD.zip'
-    md5 = '2df826d636fb68bf36c0250ae62a9161'
-
-    directory = 'DLRSD'
-
-    classes = (
-        'airplane',
-        'bare soil',
-        'buildings',
-        'cars',
-        'chaparral',
-        'court',
-        'dock',
-        'field',
-        'grass',
-        'mobile home',
-        'pavement',
-        'sand',
-        'sea',
-        'ship',
-        'tanks',
-        'trees',
-        'water',
-    )
-
     colormap: ClassVar[tuple[tuple[int, int, int], ...]] = (
         (166, 202, 240),
         (128, 128, 0),
@@ -129,32 +226,26 @@ class DLRSD(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, check the SHA256 of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
-        self.transforms = transforms
-        self.download = download
-        self.checksum = checksum
-
-        self._verify()
-
-        self.image_fns: list[str] = []
-        self.mask_fns: list[str] = []
+        super().__init__(root, transforms, download, checksum)
 
         images_dir = os.path.join(root, self.directory, 'Images')
         labels_dir = os.path.join(root, self.directory, 'Labels')
-
-        for cls in sorted(os.listdir(images_dir)):
-            cls_images_dir = os.path.join(images_dir, cls)
-            cls_labels_dir = os.path.join(labels_dir, cls)
-            for img in sorted(os.listdir(cls_images_dir)):
-                if img.endswith('.tif'):
-                    self.image_fns.append(os.path.join(cls_images_dir, img))
-                    mask_fn = img.replace('.tif', '.png')
-                    self.mask_fns.append(os.path.join(cls_labels_dir, mask_fn))
+        self.image_fns: list[str] = sorted(
+            glob.glob(os.path.join(images_dir, '*', '*.tif'))
+        )
+        self.mask_fns: list[str] = [
+            os.path.join(
+                labels_dir,
+                os.path.basename(os.path.dirname(p)),
+                os.path.basename(p).replace('.tif', '.png'),
+            )
+            for p in self.image_fns
+        ]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -174,29 +265,6 @@ class DLRSD(NonGeoDataset):
 
         return sample
 
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.image_fns)
-
-    def _load_image(self, index: int) -> Tensor:
-        """Load a single image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the image
-        """
-        path = self.image_fns[index]
-        with Image.open(path) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
-            tensor = torch.from_numpy(array).permute((2, 0, 1)).to(torch.float32)
-            return tensor
-
     def _load_mask(self, index: int) -> Tensor:
         """Load a single mask.
 
@@ -212,36 +280,6 @@ class DLRSD(NonGeoDataset):
             # Palette indices are 1-17, convert to 0-indexed
             tensor = torch.from_numpy(array).to(torch.long) - 1
             return tensor
-
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
-        filepath = os.path.join(self.root, self.directory)
-        if os.path.exists(filepath):
-            return
-
-        filepath = os.path.join(self.root, self.filename)
-        if os.path.isfile(filepath):
-            if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError('Dataset found, but corrupted.')
-            self._extract()
-            return
-
-        if not self.download:
-            raise DatasetNotFoundError(self)
-
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        download_url(
-            self.url + self.filename, self.root, md5=self.md5 if self.checksum else None
-        )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, self.filename)
-        extract_archive(filepath)
 
     def plot(
         self,
@@ -261,18 +299,29 @@ class DLRSD(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        image = einops.rearrange(sample['image'].numpy(), 'c h w -> h w c')
         if image.max() > 1:
             image = image.astype(np.float32) / 255.0
 
+        # Use a uint8 0-255 copy of the image for the segmentation overlay so
+        # that user transforms which normalize the tensor to [0, 1] don't
+        # produce a near-black overlay (draw_semantic_segmentation_masks
+        # casts to byte()).
+        overlay_image = sample['image']
+        if torch.is_floating_point(overlay_image):
+            if overlay_image.max() <= 1:
+                overlay_image = (overlay_image * 255).to(torch.uint8)
+            else:
+                overlay_image = overlay_image.to(torch.uint8)
+
         mask_overlay = draw_semantic_segmentation_masks(
-            sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
+            overlay_image, sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
             pred_overlay = draw_semantic_segmentation_masks(
-                sample['image'],
+                overlay_image,
                 sample['prediction'],
                 alpha=alpha,
                 colors=list(self.colormap),
@@ -301,7 +350,7 @@ class DLRSD(NonGeoDataset):
         return fig
 
 
-class DLRSDMultilabel(NonGeoDataset):
+class DLRSDMultilabel(_DLRSDBase):
     """DLRSD multi-label scene classification dataset.
 
     The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
@@ -344,33 +393,6 @@ class DLRSDMultilabel(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dlrsd/resolve/073a50e4ec8f531510f0ee72f2cf953816e01fd7/'
-
-    filename = 'DLRSD.zip'
-    md5 = '2df826d636fb68bf36c0250ae62a9161'
-
-    directory = 'DLRSD'
-
-    classes = (
-        'airplane',
-        'bare soil',
-        'buildings',
-        'cars',
-        'chaparral',
-        'court',
-        'dock',
-        'field',
-        'grass',
-        'mobile home',
-        'pavement',
-        'sand',
-        'sea',
-        'ship',
-        'tanks',
-        'trees',
-        'water',
-    )
-
     def __init__(
         self,
         root: Path = 'data',
@@ -385,26 +407,17 @@ class DLRSDMultilabel(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, check the SHA256 of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
-        self.transforms = transforms
-        self.download = download
-        self.checksum = checksum
-
-        self._verify()
-
-        self.image_fns: list[str] = []
+        super().__init__(root, transforms, download, checksum)
 
         images_dir = os.path.join(root, self.directory, 'Images')
-        for cls in sorted(os.listdir(images_dir)):
-            cls_images_dir = os.path.join(images_dir, cls)
-            for img in sorted(os.listdir(cls_images_dir)):
-                if img.endswith('.tif'):
-                    self.image_fns.append(os.path.join(cls_images_dir, img))
+        self.image_fns: list[str] = sorted(
+            glob.glob(os.path.join(images_dir, '*', '*.tif'))
+        )
 
         self.multilabels: dict[str, list[int]] = {}
         csv_path = os.path.join(root, self.directory, 'multilabels.csv')
@@ -432,29 +445,6 @@ class DLRSDMultilabel(NonGeoDataset):
 
         return sample
 
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.image_fns)
-
-    def _load_image(self, index: int) -> Tensor:
-        """Load a single image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the image
-        """
-        path = self.image_fns[index]
-        with Image.open(path) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
-            tensor = torch.from_numpy(array).permute((2, 0, 1)).to(torch.float32)
-            return tensor
-
     def _load_target(self, index: int) -> Tensor:
         """Load multi-label target for a single image.
 
@@ -481,36 +471,6 @@ class DLRSDMultilabel(NonGeoDataset):
         """
         return [self.classes[i] for i, v in enumerate(label_mask) if v]
 
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
-        filepath = os.path.join(self.root, self.directory)
-        if os.path.exists(filepath):
-            return
-
-        filepath = os.path.join(self.root, self.filename)
-        if os.path.isfile(filepath):
-            if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError('Dataset found, but corrupted.')
-            self._extract()
-            return
-
-        if not self.download:
-            raise DatasetNotFoundError(self)
-
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        download_url(
-            self.url + self.filename, self.root, md5=self.md5 if self.checksum else None
-        )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, self.filename)
-        extract_archive(filepath)
-
     def plot(
         self,
         sample: dict[str, Tensor],
@@ -527,7 +487,7 @@ class DLRSDMultilabel(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        image = einops.rearrange(sample['image'].numpy(), 'c h w -> h w c')
         if image.max() > 1:
             image = image.astype(np.float32) / 255.0
 
