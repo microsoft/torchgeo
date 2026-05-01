@@ -18,28 +18,14 @@ from torchgeo.datasets import PASTIS, PASTIS100, DatasetNotFoundError
 
 
 class TestPASTIS:
-    olmoearth_bands = (
-        'B02',
-        'B02',
-        'B03',
-        'B04',
-        'B05',
-        'B06',
-        'B07',
-        'B08',
-        'B8A',
-        'B8A',
-        'B11',
-        'B12',
-    )
-
     @pytest.fixture(
         params=product(
             [PASTIS, PASTIS100],
             [
-                {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
-                {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
-                {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
+                {'folds': (1, 2), 'bands': PASTIS.s2_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': ('B04', 'B03', 'B02'), 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1a_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1d_bands, 'mode': 'instance'},
             ],
         )
     )
@@ -52,7 +38,6 @@ class TestPASTIS:
         root = tmp_path
         bands = params['bands']
         mode = params['mode']
-        assert isinstance(bands, str)
         assert isinstance(mode, str)
         transforms = nn.Identity()
 
@@ -123,24 +108,9 @@ class TestPASTIS:
         with pytest.raises(AssertionError):
             PASTIS(mode='invalid')
 
-    def test_invalid_s2_bands(self) -> None:
-        with pytest.raises(AssertionError):
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError, match='bands must be a subset of'):
             PASTIS(bands=('B01',))
-
-    def test_getitem_supports_duplicate_s2_bands(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> None:
-        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
-        monkeypatch.setattr(PASTIS, 'url', url)
-        dataset = PASTIS(
-            root=tmp_path, folds=(1, 2), bands=self.olmoearth_bands, download=True
-        )
-
-        sample = dataset[0]
-
-        assert sample['image'].shape[1] == len(self.olmoearth_bands)
-        torch.testing.assert_close(sample['image'][:, 0], sample['image'][:, 1])
-        torch.testing.assert_close(sample['image'][:, 8], sample['image'][:, 9])
 
     def test_plot(self, dataset: PASTIS) -> None:
         x = dataset[0].copy()
