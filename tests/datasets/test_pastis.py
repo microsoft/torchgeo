@@ -112,6 +112,10 @@ class TestPASTIS:
         with pytest.raises(ValueError, match='bands must be a subset of'):
             PASTIS(bands=('B01',))
 
+    def test_invalid_bands_empty(self) -> None:
+        with pytest.raises(ValueError, match='bands must not be empty'):
+            PASTIS(bands=())
+
     def test_plot(self, dataset: PASTIS) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
