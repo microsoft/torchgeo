@@ -18,9 +18,7 @@ class TestS2100k:
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> S2100k:
         root = Path('tests', 'data', 's2_100k')
         mode = request.param
-        sha256s = ['fake']
         monkeypatch.setattr(S2100k, 'url', root)
-        monkeypatch.setattr(S2100k, 'sha256s', sha256s)
         transforms = Identity()
         return S2100k(root, mode=mode, transforms=transforms)
 
@@ -39,7 +37,7 @@ class TestS2100k:
     def test_extract(self, dataset: S2100k, tmp_path: Path) -> None:
         (tmp_path / 'images').mkdir()
         shutil.copy(dataset.root / 'index.csv', tmp_path)
-        shutil.copy(dataset.root / 'images' / 'data_1.tar.xz', tmp_path / 'images')
+        shutil.copy(dataset.root / 'satclip.tar', tmp_path)
         S2100k(tmp_path)
 
     def test_not_found(self, dataset: S2100k, tmp_path: Path) -> None:

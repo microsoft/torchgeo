@@ -44,24 +44,9 @@ class S2100k(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://huggingface.co/datasets/davanstrien/satclip/resolve/b7043ae65ce4de69fb6f18d88cfa041f6b8fcd7c'
-
-    # index.csv
-    sha256 = '9fdcdec776b331fcc2d9ab5af18355efc5bd0716df33ab78e1ff03f60cf343ad'
-
-    # data_*.tar.xz
-    sha256s = (
-        'c29355d0729c373ab8be3bc9bea915699db1daa6cd86b39e5843f28b9d1421c7',
-        '802a294fbff6f7d0d70b5b3a251703793de5f47fa578f0fe92bc9b951d58f7f3',
-        '0ed8343b08959ebd5b41519db15d6999833ffb423393888060fa2adef6ad5960',
-        '4583ee1414d6ed3c0acf0cfd1958460eabd38348214cdfc93c9e1b76ef22403d',
-        '8bea9f49cba4a0339ba6b00a97c40cc4bbd59935115354a6de123d5e52179fb8',
-        '7c15f63af8b1e0c65e9f53efe7efab465b676c668f1eceabd039d3dd358cbea7',
-        'f28b9d9f97eeb38a45d17250a2d28de99aacb93851fca9aed1cb62fb47c3eb80',
-        '1c419e0a44877844c79eaedf227b13c4854f1acddd959ac7109c73627311b39f',
-        'bc923a3420623925afb024edcadcb8295ebeecb8337726b05493068951462cde',
-        'a3399adc2b99528d2e64ebb74cefef74f70226f9392fa29cd9214c2ffbfcdd8b',
-    )
+    url = 'https://huggingface.co/datasets/kklmmr/s2-100k/resolve/fbdbb78ba57d22d5b6be203913f1e6020c2b4e0a'
+    index_sha256 = '9fdcdec776b331fcc2d9ab5af18355efc5bd0716df33ab78e1ff03f60cf343ad'
+    data_sha256 = 'da1bae4e9dd44fb00e5f1fc537b752f5025ac908a73b5a9e24ff90bcbdd56edb'
 
     def __init__(
         self,
@@ -133,31 +118,30 @@ class S2100k(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # index.csv
+        # Index
         filename = 'index.csv'
         if (self.root / filename).is_file():
             pass
         elif self.download:
             url = f'{self.url}/{filename}'
-            sha256 = self.sha256 if self.checksum else None
+            sha256 = self.index_sha256 if self.checksum else None
             download_url(url, self.root, sha256=sha256)
         else:
             raise DatasetNotFoundError(self)
 
-        # data_*.tar.xz
+        # Data
         if (self.root / 'images' / 'patch_0.tif').is_file():
             return
 
-        for i, sha256 in enumerate(self.sha256s, start=1):
-            path = self.root / 'images' / f'data_{i}.tar.xz'
-            if path.is_file():
-                extract_archive(path)
-            elif self.download:
-                url = f'{self.url}/images/data_{i}.tar.xz'
-                sha256 = sha256 if self.checksum else None
-                download_and_extract_archive(url, self.root / 'images', sha256=sha256)
-            else:
-                raise DatasetNotFoundError(self)
+        path = self.root / 'satclip.tar'
+        if path.is_file():
+            extract_archive(path, self.root / 'images')
+        elif self.download:
+            url = f'{self.url}/satclip.tar'
+            sha256 = self.data_sha256 if self.checksum else None
+            download_and_extract_archive(url, self.root / 'images', sha256=sha256)
+        else:
+            raise DatasetNotFoundError(self)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

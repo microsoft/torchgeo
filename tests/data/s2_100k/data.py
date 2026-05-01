@@ -48,7 +48,7 @@ for i in range(COUNT):
     with rio.open(images / patch, 'w', **profile) as src:
         src.write(Z)
 
-shutil.make_archive(images / 'data_1', 'xztar', images)
+shutil.make_archive('satclip', 'tar', images)
 
 lon = rng.uniform(-180, 180, COUNT)
 lat = rng.uniform(-90, 90, COUNT)
