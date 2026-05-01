@@ -17,7 +17,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, check_integrity, download_url, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class PASTIS(NonGeoDataset):
@@ -355,8 +362,10 @@ class PASTIS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # Keep the RGB bands and convert to T x H x W x C format
-        images = sample['image'][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
+        # Keep the RGB bands and quantile-normalize the displayed frames.
+        rgb_frames = sample['image'][:, [2, 1, 0], :, :]
+        rgb_frames = quantile_normalization(rgb_frames)
+        images = rgb_frames.numpy().transpose(0, 2, 3, 1)
         mask = sample['mask'].numpy()
 
         if self.mode == 'instance':
@@ -374,8 +383,8 @@ class PASTIS(NonGeoDataset):
                 predictions = label[predictions].numpy()
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
-        axs[0].imshow(images[0] / 5000)
-        axs[1].imshow(images[1] / 5000)
+        axs[0].imshow(images[0])
+        axs[1].imshow(images[1])
         axs[2].imshow(mask, vmin=0, vmax=19, cmap=self._cmap, interpolation='none')
         axs[0].axis('off')
         axs[1].axis('off')
