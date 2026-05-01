@@ -165,8 +165,9 @@ class PASTIS(NonGeoDataset):
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
             bands: sequence of band names to load. Must be a non-empty subset of
-                :attr:`s2_bands`, :attr:`s1a_bands`, or :attr:`s1d_bands`. All
-                bands must come from the same sensor. Defaults to all S2 bands.
+                :attr:`PASTIS.s2_bands`, :attr:`PASTIS.s1a_bands`, or
+                :attr:`PASTIS.s1d_bands`. All bands must come from the same
+                sensor. Defaults to all S2 bands.
             mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
