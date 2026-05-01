@@ -177,15 +177,13 @@ class ConvLSTM(nn.Module):
             )
 
         self.cell_list = nn.ModuleList(cell_list)
-        self.head: nn.Conv2d | None = None
-        if self.num_classes is not None:
-            padding = head_kernel_size // 2
-            self.head = nn.Conv2d(
-                in_channels=self.hidden_dim[-1],
-                out_channels=self.num_classes,
-                kernel_size=head_kernel_size,
-                padding=padding,
-            )
+        padding = head_kernel_size // 2
+        self.head = nn.Conv2d(
+            in_channels=self.hidden_dim[-1],
+            out_channels=self.num_classes,
+            kernel_size=head_kernel_size,
+            padding=padding,
+        )
 
     def forward_features(
         self,
