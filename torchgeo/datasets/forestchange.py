@@ -7,7 +7,7 @@ import json
 import os
 from collections.abc import Callable
 from random import randint
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_and_extract_archive, percentile_normalization
+from .utils import Path, Sample, download_and_extract_archive, quantile_normalization
 
 
 class ForestChange(NonGeoDataset):
@@ -64,47 +64,41 @@ class ForestChange(NonGeoDataset):
 
     * https://www.sciencedirect.com/science/article/pii/S1574954126001470
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.10
     """
 
-    mean: ClassVar[list[float]] = [0.2267 * 255, 0.29982 * 255, 0.22058 * 255]
-    std: ClassVar[list[float]] = [0.0923 * 255, 0.06658 * 255, 0.05681 * 255]
+    splits = ("train", "val", "test")
 
-    splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
+    classes = ["no_change", "deforestation"]
 
-    classes: ClassVar[list[str]] = ['no_change', 'deforestation']
+    directories = ("A", "B", "label")
 
-    directories: ClassVar[tuple[str, ...]] = ('A', 'B', 'label')
+    directory = "Forest-Change-dataset"
 
-    directory: ClassVar[str] = 'Forest-Change-dataset'
+    token_directory = "tokens"
 
-    token_directory: ClassVar[str] = 'tokens'
+    vocab_filename = "vocab"
 
-    vocab_filename: ClassVar[str] = 'vocab'
-
-    captions_filename: ClassVar[str] = 'ForestChatcaptions.json'
+    captions_filename = "ForestChatcaptions.json"
 
     special_tokens: ClassVar[dict[str, int]] = {
-        '<NULL>': 0,
-        '<UNK>': 1,
-        '<START>': 2,
-        '<END>': 3,
+        "<NULL>": 0,
+        "<UNK>": 1,
+        "<START>": 2,
+        "<END>": 3,
     }
 
-    url = 'https://huggingface.co/datasets/JimmyBrocko/Forest-Change/resolve/main/Forest-Change-dataset.zip'
-    md5 = '5fa9d6e28e8f101c481be0bbe96cc78c'
-    filename = 'Forest-Change-dataset.zip'
+    url = "https://hf.co/datasets/JimmyBrocko/Forest-Change/resolve/e8b25bf09c85ec85633d1b1b554f7bb23e47724d/Forest-Change-dataset.zip"
+    sha256 = "424931a075f00f8cf21d4d2f622df688de559494844df4876b59bde13d3d855d"
+    filename = "Forest-Change-dataset.zip"
 
     def __init__(
         self,
-        root: Path = 'data',
-        split: str = 'train',
+        root: Path = "data",
+        split: Literal["train", "val", "test"] = "train",
         transforms: Callable[[Sample], Sample] | None = None,
         max_length: int = 42,
-        allow_unk: bool = False,
-        num_classes: int = 2,
-        max_iters: int | None = None,
-        max_percent_samples: float | None = None,
+        allow_unknown: bool = False,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -120,21 +114,12 @@ class ForestChange(NonGeoDataset):
                 mean/std normalisation is applied.
             max_length: maximum token sequence length used when encoding
                 captions.
-            allow_unk: whether unknown tokens are mapped to ``<UNK>``
+            allow_unknown: whether unknown tokens are mapped to ``<UNK>``
                 during encoding.  When ``False`` a ``KeyError`` is raised
                 for out-of-vocabulary tokens.
-            num_classes: number of segmentation classes.
-            max_iters: if set, the effective dataset length is forced to
-                this value.  Values smaller than the file count truncate
-                the list; values larger repeat entries (suffixed
-                ``_aug<i>`` for train, ``_rep<i>`` for other splits).
-                Takes precedence over ``max_percent_samples``.
-            max_percent_samples: percentage (0-100) of the dataset to
-                retain.  Applied before ``max_iters`` expansion.  Ignored
-                when ``max_iters`` is set.
             download: if ``True``, download the dataset if it is not
                 already present under ``root``.
-            checksum: if ``True``, verify the MD5 of the downloaded zip
+            checksum: if ``True``, verify the SHA256 of the downloaded zip
                 (may be slow).
 
         Raises:
@@ -148,8 +133,7 @@ class ForestChange(NonGeoDataset):
         self.split = split
         self.transforms = transforms
         self.max_length = max_length
-        self.allow_unk = allow_unk
-        self.num_classes = num_classes
+        self.allow_unknown = allow_unknown
         self.checksum = checksum
 
         if download:
@@ -162,18 +146,12 @@ class ForestChange(NonGeoDataset):
             self._preprocess()
 
         vocab_path = os.path.join(
-            str(root), self.directory, self.vocab_filename + '.json'
+            str(root), self.directory, self.vocab_filename + ".json"
         )
         with open(vocab_path) as f:
             self.word_vocab: dict[str, int] = json.load(f)
 
         self.files = self._load_files()
-
-        if max_iters is not None:
-            self._apply_max_iters(max_iters)
-        elif max_percent_samples is not None:
-            max_samples = round(len(self.files) * max_percent_samples / 100)
-            self.files = self.files[:max_samples]
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset.
@@ -208,37 +186,27 @@ class ForestChange(NonGeoDataset):
         Returns:
             data and labels at that index
 
-        Raises:
-            IndexError: if ``index`` is out of range
         """
-        if index < 0 or index >= len(self):
-            raise IndexError(
-                f'index {index} is out of range for dataset of length {len(self)}'
-            )
 
         f = self.files[index]
-        image1 = self._load_image(f['image1'])
-        image2 = self._load_image(f['image2'])
-        mask = self._load_target(f['mask'])
+        image1 = self._load_image(f["image1"])
+        image2 = self._load_image(f["image2"])
+        mask = self._load_target(f["mask"])
 
-        stem = f['name'].split('_aug')[0].split('_rep')[0]
+        stem = f["name"].split("_aug")[0].split("_rep")[0]
         token_path = os.path.join(
-            str(self.root), self.directory, self.token_directory, stem + '.txt'
+            str(self.root), self.directory, self.token_directory, stem + ".txt"
         )
 
         sample: Sample = {
-            'image': torch.stack([image1, image2]),
-            'mask': mask,
-            'name': f['name'],
-            **self._load_tokens(token_path, f['token_id']),
+            "image": torch.stack([image1, image2]),
+            "mask": mask,
+            "name": f["name"],
+            **self._load_tokens(token_path, f["token_id"]),
         }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-        else:
-            mean = torch.tensor(self.mean, dtype=torch.float32).view(1, -1, 1, 1)
-            std = torch.tensor(self.std, dtype=torch.float32).view(1, -1, 1, 1)
-            sample['image'] = (sample['image'] - mean) / std
 
         return sample
 
@@ -257,34 +225,37 @@ class ForestChange(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 3
-        if 'prediction' in sample:
+        if "prediction" in sample:
             ncols += 1
 
-        image1 = sample['image'][0].permute(1, 2, 0).numpy()
-        image1 = percentile_normalization(image1, axis=(0, 1))
+        image1 = sample["image"][0].permute(1, 2, 0)
+        image1 = quantile_normalization(image1, dim=0)
+        image1 = image1.numpy()
 
-        image2 = sample['image'][1].permute(1, 2, 0).numpy()
-        image2 = percentile_normalization(image2, axis=(0, 1))
+        image2 = sample["image"][1].permute(1, 2, 0)
+        image2 = quantile_normalization(image2, dim=0)
+
+        image2 = image2.numpy()
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image1)
-        axs[0].axis('off')
+        axs[0].axis("off")
         axs[1].imshow(image2)
-        axs[1].axis('off')
-        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
-        axs[2].axis('off')
+        axs[1].axis("off")
+        axs[2].imshow(sample["mask"][0], cmap="gray", interpolation="none")
+        axs[2].axis("off")
 
-        if 'prediction' in sample:
-            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
-            axs[3].axis('off')
+        if "prediction" in sample:
+            axs[3].imshow(sample["prediction"][0], cmap="gray", interpolation="none")
+            axs[3].axis("off")
             if show_titles:
-                axs[3].set_title('Prediction')
+                axs[3].set_title("Prediction")
 
         if show_titles:
-            axs[0].set_title('Image 1')
-            axs[1].set_title('Image 2')
-            axs[2].set_title('Mask')
+            axs[0].set_title("Image 1")
+            axs[1].set_title("Image 2")
+            axs[2].set_title("Mask")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -306,7 +277,7 @@ class ForestChange(NonGeoDataset):
             for directory in self.directories:
                 if not os.path.exists(
                     os.path.join(
-                        str(self.root), self.directory, 'images', split, directory
+                        str(self.root), self.directory, "images", split, directory
                     )
                 ):
                     return False
@@ -319,25 +290,25 @@ class ForestChange(NonGeoDataset):
             ``True`` if all preprocessing outputs are present
         """
         base = os.path.join(str(self.root), self.directory)
-        if not os.path.exists(os.path.join(base, self.vocab_filename + '.json')):
+        if not os.path.exists(os.path.join(base, self.vocab_filename + ".json")):
             return False
         if not os.path.exists(os.path.join(base, self.token_directory)):
             return False
         for split in self.splits:
-            if not os.path.exists(os.path.join(base, f'{split}.txt')):
+            if not os.path.exists(os.path.join(base, f"{split}.txt")):
                 return False
         return True
 
     def _download(self) -> None:
         """Download and extract the dataset zip."""
         if self._check_integrity():
-            print('Files already downloaded and verified')
+            print("Files already downloaded and verified")
             return
         download_and_extract_archive(
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            md5=self.sha256 if self.checksum else None,
         )
 
     def _preprocess(self) -> None:
@@ -348,6 +319,7 @@ class ForestChange(NonGeoDataset):
         per-split list ``.txt`` files.  Runs once on first use; subsequent
         instantiations skip this step.
         """
+        print("Preprocessing captions (one-time operation)...")
         base = os.path.join(str(self.root), self.directory)
         token_dir = os.path.join(base, self.token_directory)
         os.makedirs(token_dir, exist_ok=True)
@@ -357,47 +329,47 @@ class ForestChange(NonGeoDataset):
             data: dict[str, Any] = json.load(f)
 
         all_cap_tokens: list[tuple[str, list[list[str]]]] = []
-        for img in data['images']:
+        for img in data["images"]:
             tokens_list: list[list[str]] = []
-            for sentence in img['sentences']:
-                if not sentence['raw']:
+            for sentence in img["sentences"]:
+                if not sentence["raw"]:
                     continue
                 tokens_list.append(
                     self._tokenize(
-                        sentence['raw'],
+                        sentence["raw"],
                         add_start_token=True,
                         add_end_token=True,
-                        punct_to_keep=[';', ','],
-                        punct_to_remove=['?', '.'],
+                        punct_to_keep=[";", ","],
+                        punct_to_remove=["?", "."],
                     )
                 )
-            all_cap_tokens.append((img['filename'], tokens_list))
+            all_cap_tokens.append((img["filename"], tokens_list))
 
         all_cap_tokens.sort()
 
         for split in self.splits:
-            list_path = os.path.join(base, f'{split}.txt')
+            list_path = os.path.join(base, f"{split}.txt")
             if os.path.exists(list_path):
                 os.remove(list_path)
 
         for filename, tokens_list in all_cap_tokens:
             stem = os.path.splitext(filename)[0]
-            with open(os.path.join(token_dir, stem + '.txt'), 'w') as f:
+            with open(os.path.join(token_dir, stem + ".txt"), "w") as f:
                 json.dump(tokens_list, f)
 
-            prefix = stem.split('_')[0]
+            prefix = stem.split("_")[0]
             if prefix in self.splits:
-                with open(os.path.join(base, f'{prefix}.txt'), 'a') as f:
-                    f.write(filename + '\n')
+                with open(os.path.join(base, f"{prefix}.txt"), "a") as f:
+                    f.write(filename + "\n")
 
         vocab = self._build_vocab(all_cap_tokens)
-        with open(os.path.join(base, self.vocab_filename + '.json'), 'w') as f:
+        with open(os.path.join(base, self.vocab_filename + ".json"), "w") as f:
             json.dump(vocab, f)
 
     @staticmethod
     def _tokenize(
         s: str,
-        delim: str = ' ',
+        delim: str = " ",
         add_start_token: bool = True,
         add_end_token: bool = True,
         punct_to_keep: list[str] | None = None,
@@ -423,22 +395,22 @@ class ForestChange(NonGeoDataset):
         s = s.lower()
         parts: list[str] = []
         for word in s.split():
-            if word.replace('.', '', 1).isdigit():
+            if word.replace(".", "", 1).isdigit():
                 parts.append(word)
             else:
                 if punct_to_keep:
                     for p in punct_to_keep:
-                        word = word.replace(p, f'{delim}{p}{delim}')
+                        word = word.replace(p, f"{delim}{p}{delim}")
                 if punct_to_remove:
                     for p in punct_to_remove:
-                        word = word.replace(p, '')
+                        word = word.replace(p, "")
                 parts.append(word)
 
-        tokens = [t for t in ' '.join(parts).split(delim) if t]
+        tokens = [t for t in " ".join(parts).split(delim) if t]
         if add_start_token:
-            tokens.insert(0, '<START>')
+            tokens.insert(0, "<START>")
         if add_end_token:
-            tokens.append('<END>')
+            tokens.append("<END>")
         return tokens
 
     def _build_vocab(
@@ -479,13 +451,13 @@ class ForestChange(NonGeoDataset):
 
         Raises:
             KeyError: if a token is not in the vocabulary and
-                ``allow_unk`` is ``False``
+                ``allow_unknown`` is ``False``
         """
         seq_idx: list[int] = []
         for token in seq_tokens:
             if token not in token_to_idx:
-                if self.allow_unk:
-                    token = '<UNK>'
+                if self.allow_unknown:
+                    token = "<UNK>"
                 else:
                     raise KeyError(f'Token "{token}" not in vocab')
             seq_idx.append(token_to_idx[token])
@@ -499,48 +471,31 @@ class ForestChange(NonGeoDataset):
             ``token_id``, and ``name``
         """
         base = os.path.join(str(self.root), self.directory)
-        list_path = os.path.join(base, f'{self.split}.txt')
+        list_path = os.path.join(base, f"{self.split}.txt")
         with open(list_path) as f:
             img_ids = [line.strip() for line in f if line.strip()]
 
         files: list[dict[str, Any]] = []
         for name in img_ids:
-            if self.split == 'train' and '-' in name:
-                base_name = name.split('-')[0]
-                token_id: int | None = int(name.split('-')[-1])
+            if self.split == "train" and "-" in name:
+                base_name = name.split("-")[0]
+                token_id: int | None = int(name.split("-")[-1])
             else:
                 base_name = name
                 token_id = None
 
             stem = os.path.splitext(base_name)[0]
-            img_dir = os.path.join(base, 'images', self.split)
+            img_dir = os.path.join(base, "images", self.split)
             files.append(
                 {
-                    'image1': os.path.join(img_dir, 'A', base_name),
-                    'image2': os.path.join(img_dir, 'B', base_name),
-                    'mask': os.path.join(img_dir, 'label', base_name),
-                    'token_id': token_id,
-                    'name': stem,
+                    "image1": os.path.join(img_dir, "A", base_name),
+                    "image2": os.path.join(img_dir, "B", base_name),
+                    "mask": os.path.join(img_dir, "label", base_name),
+                    "token_id": token_id,
+                    "name": stem,
                 }
             )
         return files
-
-    def _apply_max_iters(self, max_iters: int) -> None:
-        """Truncate or inflate ``self.files`` to exactly ``max_iters`` entries.
-
-        Args:
-            max_iters: target dataset length
-        """
-        original_size = len(self.files)
-        if original_size >= max_iters:
-            self.files = self.files[:max_iters]
-            return
-
-        suffix = 'aug' if self.split == 'train' else 'rep'
-        needed = max_iters - original_size
-        for i in range(needed):
-            original = self.files[i % original_size]
-            self.files.append({**original, 'name': f'{original["name"]}_{suffix}{i}'})
 
     def _load_image(self, path: Path) -> Tensor:
         """Load a single RGB image as a float32 CHW tensor.
@@ -552,9 +507,9 @@ class ForestChange(NonGeoDataset):
             float32 tensor of shape ``(C, H, W)``
         """
         with Image.open(str(path)) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array).float()
-            return einops.rearrange(tensor, 'h w c -> c h w')
+            return einops.rearrange(tensor, "h w c -> c h w")
 
     def _load_target(self, path: Path) -> Tensor:
         """Load and binarise a change mask.
@@ -568,10 +523,10 @@ class ForestChange(NonGeoDataset):
             int64 tensor of shape ``(1, H, W)``
         """
         with Image.open(str(path)) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert("L"))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1).to(torch.long)
-            return einops.rearrange(tensor, 'h w -> () h w')
+            return tensor.unsqueeze(0)
 
     def _load_tokens(self, token_path: Path, token_id: int | None) -> dict[str, Tensor]:
         """Load and encode captions for a single sample.
@@ -607,8 +562,8 @@ class ForestChange(NonGeoDataset):
             token_len = int(token_all_len[j, 0])
 
         return {
-            'token_all': torch.from_numpy(token_all),
-            'token_all_len': torch.from_numpy(token_all_len),
-            'token': torch.from_numpy(token.copy()),
-            'token_len': torch.tensor(token_len, dtype=torch.int64),
+            "token_all": torch.from_numpy(token_all),
+            "token_all_len": torch.from_numpy(token_all_len),
+            "token": torch.from_numpy(token.copy()),
+            "token_len": torch.tensor(token_len, dtype=torch.int64),
         }
