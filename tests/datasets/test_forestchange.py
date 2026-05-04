@@ -20,16 +20,16 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, ForestChange
 
-DATA_DIR = os.path.join("tests", "data", "forestchange")
+DATA_DIR = os.path.join('tests', 'data', 'forestchange')
 
 
 class TestForestChange:
-    @pytest.fixture(params=["train", "val", "test"])
+    @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ForestChange:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
         return ForestChange(
             root=tmp_path,
             split=request.param,
@@ -42,73 +42,73 @@ class TestForestChange:
         sample = dataset[0]
         assert isinstance(sample, dict)
         for key in (
-            "image",
-            "mask",
-            "token",
-            "token_all",
-            "token_all_len",
-            "token_len",
+            'image',
+            'mask',
+            'token',
+            'token_all',
+            'token_all_len',
+            'token_len',
         ):
-            assert key in sample, f"missing key: {key}"
-        assert sample["image"].shape[0] == 2
-        assert sample["image"].shape[1] == 3
-        assert sample["mask"].shape[0] == 1
-        assert sample["token"].shape[0] == dataset.max_length
+            assert key in sample, f'missing key: {key}'
+        assert sample['image'].shape[0] == 2
+        assert sample['image'].shape[1] == 3
+        assert sample['mask'].shape[0] == 1
+        assert sample['token'].shape[0] == dataset.max_length
 
     def test_len(self, dataset: ForestChange) -> None:
         assert len(dataset) == 2
 
     def test_mask_binary(self, dataset: ForestChange) -> None:
-        assert set(dataset[0]["mask"].unique().tolist()).issubset({0, 1})
+        assert set(dataset[0]['mask'].unique().tolist()).issubset({0, 1})
 
     def test_mask_dtype(self, dataset: ForestChange) -> None:
-        assert dataset[0]["mask"].dtype == torch.int64
+        assert dataset[0]['mask'].dtype == torch.int64
 
     def test_image_dtype(self, dataset: ForestChange) -> None:
-        assert dataset[0]["image"].dtype == torch.float32
+        assert dataset[0]['image'].dtype == torch.float32
 
     def test_token_dtype(self, dataset: ForestChange) -> None:
         sample = dataset[0]
-        assert sample["token"].dtype == torch.int64
-        assert sample["token_all"].dtype == torch.int64
-        assert sample["token_len"].dtype == torch.int64
+        assert sample['token'].dtype == torch.int64
+        assert sample['token_all'].dtype == torch.int64
+        assert sample['token_len'].dtype == torch.int64
 
     def test_token_all_shape(self, dataset: ForestChange) -> None:
         sample = dataset[0]
-        assert sample["token_all"].ndim == 2
-        assert sample["token_all"].shape[1] == dataset.max_length
+        assert sample['token_all'].ndim == 2
+        assert sample['token_all'].shape[1] == dataset.max_length
 
     def test_token_len_scalar(self, dataset: ForestChange) -> None:
-        assert dataset[0]["token_len"].ndim == 0
+        assert dataset[0]['token_len'].ndim == 0
 
     def test_random_caption_selection(self, dataset: ForestChange) -> None:
         random.seed(0)
         tokens_seen = set()
         for _ in range(20):
-            tokens_seen.add(tuple(dataset[0]["token"].numpy()))
+            tokens_seen.add(tuple(dataset[0]['token'].numpy()))
         assert len(tokens_seen) > 1
 
     def test_indexed_caption_selection(self, dataset: ForestChange) -> None:
-        dataset.files[0]["token_id"] = 1
+        dataset.files[0]['token_id'] = 1
         sample = dataset[0]
-        assert torch.equal(sample["token"], sample["token_all"][1])
+        assert torch.equal(sample['token'], sample['token_all'][1])
 
     def test_transforms_applied(self, dataset: ForestChange) -> None:
         class AddOne:
             def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
-                sample["image"] = sample["image"] + 1
+                sample['image'] = sample['image'] + 1
                 return sample
 
         dataset.transforms = AddOne()
-        assert torch.all(dataset[0]["image"] >= 1)
+        assert torch.all(dataset[0]['image'] >= 1)
 
     def test_plot(self, dataset: ForestChange) -> None:
-        fig = dataset.plot(dataset[0], suptitle="Test")
+        fig = dataset.plot(dataset[0], suptitle='Test')
         plt.close(fig)
 
     def test_plot_with_prediction(self, dataset: ForestChange) -> None:
         sample = dataset[0]
-        sample["prediction"] = sample["mask"].clone()
+        sample['prediction'] = sample['mask'].clone()
         fig = dataset.plot(sample)
         plt.close(fig)
 
@@ -122,39 +122,39 @@ class TestForestChange:
     def test_preprocess_skips_empty_raw(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
-        ForestChange(root=tmp_path, split="train", download=True)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
         base = os.path.join(str(tmp_path), ForestChange.directory)
         captions_path = os.path.join(base, ForestChange.captions_filename)
         with open(captions_path) as f:
             data = json.load(f)
-        data["images"][0]["sentences"].insert(0, {"raw": "", "tokens": []})
-        with open(captions_path, "w") as f:
+        data['images'][0]['sentences'].insert(0, {'raw': '', 'tokens': []})
+        with open(captions_path, 'w') as f:
             json.dump(data, f)
         shutil.rmtree(os.path.join(base, ForestChange.token_directory))
-        os.remove(os.path.join(base, ForestChange.vocab_filename + ".json"))
-        ForestChange(root=tmp_path, split="train")
+        os.remove(os.path.join(base, ForestChange.vocab_filename + '.json'))
+        ForestChange(root=tmp_path, split='train')
 
     def test_preprocess_rewrites_split_files(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
-        ForestChange(root=tmp_path, split="train", download=True)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
         base = os.path.join(str(tmp_path), ForestChange.directory)
-        train_list = os.path.join(base, "train.txt")
+        train_list = os.path.join(base, 'train.txt')
         mtime = os.path.getmtime(train_list)
         shutil.rmtree(os.path.join(base, ForestChange.token_directory))
-        os.remove(os.path.join(base, ForestChange.vocab_filename + ".json"))
+        os.remove(os.path.join(base, ForestChange.vocab_filename + '.json'))
         time.sleep(0.05)
-        ForestChange(root=tmp_path, split="train")
+        ForestChange(root=tmp_path, split='train')
         assert os.path.getmtime(train_list) != mtime
 
     def test_check_integrity_missing_image_dir(self, tmp_path: Path) -> None:
         base = os.path.join(str(tmp_path), ForestChange.directory)
         os.makedirs(base, exist_ok=True)
-        with open(os.path.join(base, ForestChange.captions_filename), "w") as f:
+        with open(os.path.join(base, ForestChange.captions_filename), 'w') as f:
             json.dump({}, f)
         ds = ForestChange.__new__(ForestChange)
         ds.root = str(tmp_path)
@@ -163,7 +163,7 @@ class TestForestChange:
     def test_check_preprocessed_missing_token_dir(self, tmp_path: Path) -> None:
         base = os.path.join(str(tmp_path), ForestChange.directory)
         os.makedirs(base, exist_ok=True)
-        with open(os.path.join(base, ForestChange.vocab_filename + ".json"), "w") as f:
+        with open(os.path.join(base, ForestChange.vocab_filename + '.json'), 'w') as f:
             json.dump({}, f)
         ds = ForestChange.__new__(ForestChange)
         ds.root = str(tmp_path)
@@ -172,7 +172,7 @@ class TestForestChange:
     def test_check_preprocessed_missing_split_file(self, tmp_path: Path) -> None:
         base = os.path.join(str(tmp_path), ForestChange.directory)
         os.makedirs(os.path.join(base, ForestChange.token_directory), exist_ok=True)
-        with open(os.path.join(base, ForestChange.vocab_filename + ".json"), "w") as f:
+        with open(os.path.join(base, ForestChange.vocab_filename + '.json'), 'w') as f:
             json.dump({}, f)
         ds = ForestChange.__new__(ForestChange)
         ds.root = str(tmp_path)
@@ -180,45 +180,45 @@ class TestForestChange:
 
     def test_tokenize_preserves_numbers(self) -> None:
         tokens = ForestChange._tokenize(
-            "42 trees removed", add_start_token=False, add_end_token=False
+            '42 trees removed', add_start_token=False, add_end_token=False
         )
-        assert "42" in tokens
+        assert '42' in tokens
 
     def test_encode_allow_unknown(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
         ds = ForestChange(
-            root=tmp_path, split="train", allow_unknown=True, download=True
+            root=tmp_path, split='train', allow_unknown=True, download=True
         )
-        assert ds._encode(["unknown_xyz"], ds.word_vocab) == [
-            ForestChange.special_tokens["<UNK>"]
+        assert ds._encode(['unknown_xyz'], ds.word_vocab) == [
+            ForestChange.special_tokens['<UNK>']
         ]
 
     def test_encode_raises_for_unknown(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
-        ds = ForestChange(root=tmp_path, split="train", download=True)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ds = ForestChange(root=tmp_path, split='train', download=True)
         with pytest.raises(KeyError):
-            ds._encode(["unknown_xyz"], ds.word_vocab)
+            ds._encode(['unknown_xyz'], ds.word_vocab)
 
     def test_load_files_caption_index(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join("tests", "data", "forestchange", "Forest-Change-dataset.zip")
-        monkeypatch.setattr(ForestChange, "url", url)
-        ForestChange(root=tmp_path, split="train", download=True)
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
         base = os.path.join(str(tmp_path), ForestChange.directory)
-        list_path = os.path.join(base, "train.txt")
+        list_path = os.path.join(base, 'train.txt')
         with open(list_path) as f:
             first = f.readline().strip()
-        with open(list_path, "w") as f:
-            f.write(f"{first}-2\n")
-        ds = ForestChange(root=tmp_path, split="train")
-        assert ds.files[0]["token_id"] == 2
+        with open(list_path, 'w') as f:
+            f.write(f'{first}-2\n')
+        ds = ForestChange(root=tmp_path, split='train')
+        assert ds.files[0]['token_id'] == 2
 
     def test_dataset_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError):
@@ -226,7 +226,7 @@ class TestForestChange:
 
     def test_invalid_split(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError):
-            ForestChange(root=tmp_path, split="invalid")
+            ForestChange(root=tmp_path, split='invalid')  # type: ignore[arg-type]
 
     def test_classes(self) -> None:
-        assert ForestChange.classes == ["no_change", "deforestation"]
+        assert ForestChange.classes == ('no_change', 'deforestation')

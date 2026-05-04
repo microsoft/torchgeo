@@ -4,9 +4,8 @@
 """Forest Change datamodule."""
 
 from typing import Any
+
 import kornia.augmentation as K
-import torch
-from torch.utils.data import random_split
 
 from ..datasets import ForestChange
 from ..samplers.utils import _to_tuple
@@ -42,10 +41,7 @@ class ForestChangeDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.ForestChange`.
         """
         super().__init__(
-            ForestChange,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            **kwargs,
+            ForestChange, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
         self.patch_size = _to_tuple(patch_size)
@@ -77,9 +73,14 @@ class ForestChangeDataModule(NonGeoDataModule):
         )
 
     def setup(self, stage: str) -> None:
-        if stage in ["fit"]:
-            self.train_dataset = ForestChange(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = ForestChange(split="val", **self.kwargs)
-        if stage in ["test"]:
-            self.test_dataset = ForestChange(split="test", **self.kwargs)
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ['fit']:
+            self.train_dataset = ForestChange(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = ForestChange(split='val', **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = ForestChange(split='test', **self.kwargs)
