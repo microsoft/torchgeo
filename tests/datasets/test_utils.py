@@ -704,6 +704,8 @@ def create_test_raster_file(
     height: int = 100,
     nodata_value: float = 0,
     crs: str = 'EPSG:32633',
+    origin: tuple[float, float] = (600000, 5700000),
+    res: float = 10,
     num_bands: int = 1,
     with_half_nodata: bool = False,
 ) -> MemoryFile:
@@ -717,8 +719,7 @@ def create_test_raster_file(
                     base_data[row, col] = nodata_value
 
     data = np.stack([base_data] * num_bands, axis=0)
-    # Realistic Sentinel-2-like origin and 10 m resolution in UTM zone 32N
-    transform = from_origin(600000, 5700000, 10, 10)
+    transform = from_origin(origin[0], origin[1], res, res)
 
     memfile = MemoryFile()
     with memfile.open(
@@ -736,14 +737,29 @@ def create_test_raster_file(
     return memfile
 
 
+@pytest.mark.parametrize(
+    'crs,origin,res',
+    [
+        ('EPSG:32633', (600000, 5700000), 10),  # UTM zone 33N, meters
+        ('EPSG:4326', (16.0, 51.01), 0.0001),  # WGS84, degrees (~11 m/px)
+    ],
+)
 @pytest.mark.parametrize('num_bands', [1, 3])
 @pytest.mark.parametrize('with_half_nodata', [True, False])
 def test_calc_valid_data_footprint_from_raster_mask(
-    num_bands: int, with_half_nodata: bool
+    num_bands: int,
+    with_half_nodata: bool,
+    crs: str,
+    origin: tuple[float, float],
+    res: float,
 ) -> None:
     with (
         create_test_raster_file(
-            num_bands=num_bands, with_half_nodata=with_half_nodata
+            num_bands=num_bands,
+            with_half_nodata=with_half_nodata,
+            crs=crs,
+            origin=origin,
+            res=res,
         ) as memfile,
         memfile.open() as dataset,
     ):
