@@ -1,16 +1,16 @@
 Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weights,CLI,GUI,Reprojection,STAC,Time Series
 `TorchGeo`_,PyTorch,"GDAL, h5py, laspy, NetCDF4, OpenCV, pandas, pillow, scipy, xarray","geopandas, R-tree*",Kornia,141,132,✅,❌,✅,🚧,🚧
-`OTB`_,"LibSVM, OpenCV, Shark",GDAL,-,-,0,0,✅,✅,✅,❌,❌
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",-,Albumentations,27,13,✅,❌,✅,❌,🚧
+`OTB`_,"LibSVM, OpenCV, Shark",GDAL,-,-,0,0,✅,✅,✅,❌,❌
 `DeepForest`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy",R-tree,"Kornia, Albumentations*",0,4,✅,❌,❌,❌,❌
 `Raster Vision`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy, xarray",STAC,Albumentations,0,6,✅,❌,✅,✅,🚧
 `samgeo`_,PyTorch,"GDAL, OpenCV, pandas, xarray",geopandas,numpy,0,0,❌,✅,✅,❌,❌
 `spopt`_,scikit-learn,pandas,shapely,numpy,0,0,❌,❌,✅,❌,❌
 `GDL`_,PyTorch,"GDAL, pandas",-,Kornia,0,3,✅,❌,❌,❌,❌
+`GeoAI`_,PyTorch,"GDAL, xarray",geopandas,Albumentations,0,6,❌,✅,✅,✅,❌
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,❌,✅,✅,✅
 `SPy`_,numpy,numpy,-,numpy,3,0,❌,❌,❌,❌,❌
 `srai`_,PyTorch,"pandas, polars, duckdb","geopandas, duckdb-spatial",-,0,0,❌,❌,❌,❌,❌
-`GeoAI`_,PyTorch,"GDAL, xarray",geopandas,Albumentations,0,6,❌,✅,✅,✅,❌
 `ML4Floods`_,PyTorch,pandas,geopandas,Albumentations,0,0,❌,❌,✅,❌,🚧
 `GeoTessera`_,scikit-learn,GDAL,-,geopandas,0,0,✅,❌,✅,❌,❌
 `AIDE`_,PyTorch,pillow,-,torchvision,0,0,❌,✅,❌,❌,❌
@@ -18,4 +18,5 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `Myria3D`_,PyTorch,"h5py, numpy",PDAL,PyTorch,0,0,🚧,❌,❌,❌,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
 `GeoDeep`_,ONNX,GDAL,-,-,0,7,✅,❌,✅,❌,❌
+`rs-embed`_,PyTorch,"Earth Engine, tifffile, xarray, pandas, pillow","pyproj, affine",-,0,19,✅,❌,❌,❌,✅
 `torchange`_,PyTorch,"Apache Arrow, skimage",-,Albumentations,8,8,❌,❌,❌,❌,✅

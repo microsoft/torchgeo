@@ -36,6 +36,45 @@ By default, only required dependencies are installed. TorchGeo has a number of o
 
 See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
 
+uv
+--
+
+`uv <https://docs.astral.sh/uv/>`_ is an extremely fast Python package manager written in Rust.
+
+To add TorchGeo as a dependency to your project:
+
+.. code-block:: console
+
+   $ uv add torchgeo
+
+For a development version from GitHub:
+
+.. code-block:: console
+
+   $ uv add git+https://github.com/torchgeo/torchgeo.git
+
+Optional dependencies can be added using extras:
+
+.. code-block:: console
+
+   $ uv add torchgeo[datasets,models]
+
+To develop TorchGeo itself, clone the repository and add it as an editable dependency:
+
+.. code-block:: console
+
+   $ git clone https://github.com/torchgeo/torchgeo.git
+   $ cd torchgeo
+   $ uv add --editable .
+
+To sync all dependencies after making changes:
+
+.. code-block:: console
+
+   $ uv sync
+
+See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
+
 conda
 -----
 

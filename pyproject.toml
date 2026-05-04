@@ -22,6 +22,7 @@ maintainers = [
     {name = "Isaac Corley", email = "isaac.corley@proton.me"},
     {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
     {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
+    {name = "Robin Cole", email = "robmarkcole@gmail.com"},
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
@@ -45,10 +46,8 @@ dependencies = [
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
-    # lightly 1.4.5+ required for LARS optimizer
-    # lightly 1.4.26 is incompatible with the version of timm required by smp
-    # https://github.com/torchgeo/torchgeo/issues/1824
-    "lightly>=1.4.5,!=1.4.26",
+    # lightly 1.5.1+ required for lightly.models.modules.MAEDecoderTIMM
+    "lightly>=1.5.1",
     # lightning 2.4+ required for fastapi and pydantic v2 support in lightning
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
@@ -136,8 +135,8 @@ style = [
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.25+ required for the following bug fix: https://github.com/astral-sh/ty/issues/2985
-    "ty>=0.0.25",
+    # ty 0.0.33+ required for latest type checking changes
+    "ty>=0.0.33",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support

@@ -9,6 +9,7 @@ This document lists the Maintainers of the Project. Maintainers may be added onc
 | Isaac Corley    | @isaaccorley  | Taylor Geospatial |
 | Nils Lehmann    | @nilsleh      | TUM               |
 | Ashwin Nair     | @ashnair1     | Space42           |
+| Robin Cole      | @robmarkcole  | EarthDaily        |
 
 ## How to Join
 
