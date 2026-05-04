@@ -225,8 +225,9 @@ class TestForestChange:
             ForestChange(root=tmp_path)
 
     def test_invalid_split(self, tmp_path: Path) -> None:
+        split: str = 'invalid'
         with pytest.raises(AssertionError):
-            ForestChange(root=tmp_path, split='invalid')  # type: ignore[arg-type]
+            ForestChange(root=tmp_path, split=split)
 
     def test_classes(self) -> None:
         assert ForestChange.classes == ('no_change', 'deforestation')
