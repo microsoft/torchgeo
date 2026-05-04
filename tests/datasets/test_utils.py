@@ -15,6 +15,9 @@ import pytest
 import torch
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
+from rasterio import MemoryFile
+from rasterio.transform import from_origin
+from shapely import MultiPolygon, Polygon, box
 from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
@@ -23,12 +26,14 @@ from torchgeo.datasets.utils import (
     Sample,
     array_to_tensor,
     check_integrity,
+    clean_binary_mask,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_url,
     extract_archive,
     find_files,
+    get_valid_footprint_from_datasource,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -692,3 +697,83 @@ class TestFindFiles:
         """A path that does not exist inside an archive resolves to nothing."""
         _, archive = temp_archive
         assert find_files(f'/vsizip/{archive}/non_existing.tif') == []
+
+
+def create_test_raster_file(
+    width: int = 100,
+    height: int = 100,
+    nodata_value: float = 0,
+    crs: str = 'EPSG:32633',
+    num_bands: int = 1,
+    with_half_nodata: bool = False,
+) -> MemoryFile:
+    """Creates a synthetic raster file for testing."""
+    base_data = np.ones((height, width), dtype=np.uint8)
+
+    if with_half_nodata:
+        for row in range(height):
+            for col in range(width):
+                if row + col < width:
+                    base_data[row, col] = nodata_value
+
+    data = np.stack([base_data] * num_bands, axis=0)
+    # Realistic Sentinel-2-like origin and 10 m resolution in UTM zone 32N
+    transform = from_origin(600000, 5700000, 10, 10)
+
+    memfile = MemoryFile()
+    with memfile.open(
+        driver='GTiff',
+        height=height,
+        width=width,
+        count=num_bands,
+        dtype=data.dtype,
+        transform=transform,
+        crs=crs,
+        nodata=nodata_value,
+    ) as dataset:
+        dataset.write(data)
+
+    return memfile
+
+
+@pytest.mark.parametrize('num_bands', [1, 3])
+@pytest.mark.parametrize('with_half_nodata', [True, False])
+def test_calc_valid_data_footprint_from_raster_mask(
+    num_bands: int, with_half_nodata: bool
+) -> None:
+    with (
+        create_test_raster_file(
+            num_bands=num_bands, with_half_nodata=with_half_nodata
+        ) as memfile,
+        memfile.open() as dataset,
+    ):
+        # Verify clean_binary_mask's 3D OR logic matches rasterio's own mask combination
+        assert np.array_equal(
+            clean_binary_mask(dataset.dataset_mask()),
+            clean_binary_mask(dataset.read_masks()),
+        )
+
+        footprint = get_valid_footprint_from_datasource(dataset)
+
+        assert isinstance(footprint, Polygon | MultiPolygon)
+        assert footprint.is_valid
+
+        raster_extent = box(*dataset.bounds)
+        expected_area = raster_extent.area
+
+        if with_half_nodata:
+            expected_area /= 2
+
+            relative_error = abs(footprint.area - expected_area) / expected_area
+            # Theoretical bound for triangle: ~2√2/N where N is the raster width in pixels.
+            # For N=100 this is ~2.83%; we allow 4% for floating-point margin.
+            assert relative_error < 0.04
+        else:
+            assert footprint.area == expected_area
+
+
+def test_get_valid_footprint_all_nodata_warns() -> None:
+    with create_test_raster_file(nodata_value=1) as memfile, memfile.open() as dataset:
+        with pytest.warns(UserWarning, match='All pixels are nodata'):
+            footprint = get_valid_footprint_from_datasource(dataset)
+        assert footprint.is_empty
