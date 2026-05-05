@@ -133,12 +133,26 @@ class PASTIS(NonGeoDataset):
         'semantic': os.path.join('ANNOTATIONS', 'TARGET_'),
         'instance': os.path.join('INSTANCE_ANNOTATIONS', 'INSTANCES_'),
     }
+    s2_bands: ClassVar[tuple[str, ...]] = (
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B11',
+        'B12',
+    )
+    s1a_bands: ClassVar[tuple[str, ...]] = ('S1A_VV', 'S1A_VH', 'S1A_VV_VH')
+    s1d_bands: ClassVar[tuple[str, ...]] = ('S1D_VV', 'S1D_VH', 'S1D_VV_VH')
 
     def __init__(
         self,
         root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
-        bands: str = 's2',
+        bands: Sequence[str] = s2_bands,
         mode: str = 'semantic',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -150,8 +164,9 @@ class PASTIS(NonGeoDataset):
             root: root directory where dataset can be found
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
-            bands: load Sentinel-1 ascending path data (s1a), Sentinel-1 descending path
-                data (s1d), or Sentinel-2 data (s2)
+            bands: sequence of band names to load. Must be a non-empty subset of
+                ``s2_bands``, ``s1a_bands``, or ``s1d_bands``. All bands must
+                come from the same sensor. Defaults to all S2 bands.
             mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -163,11 +178,29 @@ class PASTIS(NonGeoDataset):
         """
         for fold in folds:
             assert 1 <= fold <= 5
-        assert bands in ['s1a', 's1d', 's2']
         assert mode in ['semantic', 'instance']
+
+        bands_set = set(bands)
+        if not bands_set:
+            raise ValueError('bands must not be empty')
+        if bands_set <= set(self.s2_bands):
+            self.image_key = 's2'
+            all_bands: tuple[str, ...] = self.s2_bands
+        elif bands_set <= set(self.s1a_bands):
+            self.image_key = 's1a'
+            all_bands = self.s1a_bands
+        elif bands_set <= set(self.s1d_bands):
+            self.image_key = 's1d'
+            all_bands = self.s1d_bands
+        else:
+            raise ValueError(
+                f'bands must be a subset of s2_bands, s1a_bands, or s1d_bands; got {bands}'
+            )
+        self.bands = tuple(bands)
+        self.band_indices = [all_bands.index(b) for b in self.bands]
+
         self.root = root
         self.folds = folds
-        self.bands = bands
         self.mode = mode
         self.transforms = transforms
         self.download = download
@@ -225,9 +258,8 @@ class PASTIS(NonGeoDataset):
         Returns:
             the time-series
         """
-        path = self.files[index][self.bands]
-        array = np.load(path)
-
+        path = self.files[index][self.image_key]
+        array = np.load(path)[:, self.band_indices, :, :]
         tensor = torch.from_numpy(array).float()
         return tensor
 
