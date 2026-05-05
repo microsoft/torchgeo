@@ -1,0 +1,1 @@
+[["<START>", "minor", "forest", "loss", "is", "visible", "<END>"], ["<START>", "small", "areas", "of", "deforestation", "<END>"], ["<START>", "limited", "tree", "cover", "reduction", "<END>"], ["<START>", "minor", "deforestation", "observed", "<END>"], ["<START>", "sparse", "forest", "loss", "detected", "<END>"]]

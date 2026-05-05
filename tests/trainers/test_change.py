@@ -64,6 +64,7 @@ class TestChangeDetectionTask:
             'bright',
             'cabuar',
             'chabud',
+            'forestchange',
             'levircd',
             'levircdplus',
             'oscd',

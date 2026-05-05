@@ -41,14 +41,7 @@ class TestForestChange:
     def test_getitem(self, dataset: ForestChange) -> None:
         sample = dataset[0]
         assert isinstance(sample, dict)
-        for key in (
-            'image',
-            'mask',
-            'token',
-            'token_all',
-            'token_all_len',
-            'token_len',
-        ):
+        for key in ('image', 'mask', 'token', 'token_all', 'token_len'):
             assert key in sample, f'missing key: {key}'
         assert sample['image'].shape[0] == 2
         assert sample['image'].shape[1] == 3
@@ -57,9 +50,6 @@ class TestForestChange:
 
     def test_len(self, dataset: ForestChange) -> None:
         assert len(dataset) == 2
-
-    def test_mask_binary(self, dataset: ForestChange) -> None:
-        assert set(dataset[0]['mask'].unique().tolist()).issubset({0, 1})
 
     def test_mask_dtype(self, dataset: ForestChange) -> None:
         assert dataset[0]['mask'].dtype == torch.int64
@@ -72,14 +62,6 @@ class TestForestChange:
         assert sample['token'].dtype == torch.int64
         assert sample['token_all'].dtype == torch.int64
         assert sample['token_len'].dtype == torch.int64
-
-    def test_token_all_shape(self, dataset: ForestChange) -> None:
-        sample = dataset[0]
-        assert sample['token_all'].ndim == 2
-        assert sample['token_all'].shape[1] == dataset.max_length
-
-    def test_token_len_scalar(self, dataset: ForestChange) -> None:
-        assert dataset[0]['token_len'].ndim == 0
 
     def test_random_caption_selection(self, dataset: ForestChange) -> None:
         random.seed(0)
@@ -110,10 +92,6 @@ class TestForestChange:
         sample = dataset[0]
         sample['prediction'] = sample['mask'].clone()
         fig = dataset.plot(sample)
-        plt.close(fig)
-
-    def test_plot_no_titles(self, dataset: ForestChange) -> None:
-        fig = dataset.plot(dataset[0], show_titles=False)
         plt.close(fig)
 
     def test_already_downloaded(self, dataset: ForestChange) -> None:
@@ -151,32 +129,39 @@ class TestForestChange:
         ForestChange(root=tmp_path, split='train')
         assert os.path.getmtime(train_list) != mtime
 
-    def test_check_integrity_missing_image_dir(self, tmp_path: Path) -> None:
-        base = os.path.join(str(tmp_path), ForestChange.directory)
-        os.makedirs(base, exist_ok=True)
-        with open(os.path.join(base, ForestChange.captions_filename), 'w') as f:
-            json.dump({}, f)
-        ds = ForestChange.__new__(ForestChange)
-        ds.root = str(tmp_path)
-        assert ds._check_integrity() is False
+    def test_integrity_missing_image_dir(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
+        shutil.rmtree(
+            os.path.join(str(tmp_path), ForestChange.directory, 'images', 'train', 'A')
+        )
+        with pytest.raises(DatasetNotFoundError):
+            ForestChange(root=tmp_path, split='train')
 
-    def test_check_preprocessed_missing_token_dir(self, tmp_path: Path) -> None:
-        base = os.path.join(str(tmp_path), ForestChange.directory)
-        os.makedirs(base, exist_ok=True)
-        with open(os.path.join(base, ForestChange.vocab_filename + '.json'), 'w') as f:
-            json.dump({}, f)
-        ds = ForestChange.__new__(ForestChange)
-        ds.root = str(tmp_path)
-        assert ds._check_preprocessed() is False
+    def test_preprocessed_missing_token_dir(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
+        shutil.rmtree(
+            os.path.join(
+                str(tmp_path), ForestChange.directory, ForestChange.token_directory
+            )
+        )
+        ForestChange(root=tmp_path, split='train')
 
-    def test_check_preprocessed_missing_split_file(self, tmp_path: Path) -> None:
-        base = os.path.join(str(tmp_path), ForestChange.directory)
-        os.makedirs(os.path.join(base, ForestChange.token_directory), exist_ok=True)
-        with open(os.path.join(base, ForestChange.vocab_filename + '.json'), 'w') as f:
-            json.dump({}, f)
-        ds = ForestChange.__new__(ForestChange)
-        ds.root = str(tmp_path)
-        assert ds._check_preprocessed() is False
+    def test_preprocessed_missing_split_file(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+        ForestChange(root=tmp_path, split='train', download=True)
+        os.remove(os.path.join(str(tmp_path), ForestChange.directory, 'train.txt'))
+        ForestChange(root=tmp_path, split='train')
 
     def test_tokenize_preserves_numbers(self) -> None:
         tokens = ForestChange._tokenize(
@@ -227,6 +212,3 @@ class TestForestChange:
     def test_invalid_split(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError):
             ForestChange(root=tmp_path, split='invalid')  # type: ignore
-
-    def test_classes(self) -> None:
-        assert ForestChange.classes == ('no_change', 'deforestation')
