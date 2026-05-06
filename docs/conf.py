@@ -55,6 +55,7 @@ needs_sphinx = '5.3'
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
+    ('py:class', 'affine.Affine'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
