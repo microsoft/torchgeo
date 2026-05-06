@@ -111,7 +111,6 @@ class ConvLSTM(nn.Module):
         hidden_dim: int | list[int],
         kernel_size: int | tuple[int, int] | list[int | tuple[int, int]],
         num_layers: int,
-        batch_first: bool = True,
         bias: bool = True,
         return_all_layers: bool = False,
         num_classes: int = 1,
@@ -129,8 +128,6 @@ class ConvLSTM(nn.Module):
                 * a tuple of two integers (for rectangular kernels)
                 * a list of integers or tuples (one for each layer)
             num_layers: Number of LSTM layers stacked on each other.
-            batch_first: If ``True``, then the input and output tensors are
-                provided as (b, t, c, h, w).
             bias: If ``True``, adds a learnable bias to the output.
             return_all_layers: If ``True``, will return the list of computations
                 for all layers.
@@ -159,7 +156,6 @@ class ConvLSTM(nn.Module):
 
         self.input_dim = input_dim
         self.num_layers = num_layers
-        self.batch_first = batch_first
         self.bias = bias
         self.return_all_layers = return_all_layers
         self.num_classes = num_classes
@@ -195,15 +191,12 @@ class ConvLSTM(nn.Module):
         .. versionadded:: 0.10
 
         Args:
-            input_tensor: A 5-D Tensor of shape (t, b, c, h, w) or (b, t, c, h, w).
+            input_tensor: A 5-D Tensor of shape (b, t, c, h, w).
             hidden_state: An optional initial hidden state.
 
         Returns:
             A tuple containing layer_output_list and last_state_list.
         """
-        if not self.batch_first:
-            input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
-
         b, _, _, h, w = input_tensor.size()
 
         if hidden_state is None:
@@ -245,7 +238,7 @@ class ConvLSTM(nn.Module):
         """Forward pass for segmentation with the prediction head.
 
         Args:
-            input_tensor: A 5-D Tensor of shape (t, b, c, h, w) or (b, t, c, h, w).
+            input_tensor: A 5-D Tensor of shape (b, t, c, h, w).
             lengths: Optional sequence lengths (B,) before padding/truncation.
                 Values larger than the available sequence length use the final
                 timestep.
