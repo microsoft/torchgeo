@@ -1,10 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Air Quality dataset."""
 
 import os
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
@@ -35,7 +36,7 @@ class AirQuality(NonGeoDataset):
 
     * https://doi.org/10.1016/J.SNB.2007.09.060
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     url = 'https://archive.ics.uci.edu/static/public/360/data.csv'
@@ -45,25 +46,26 @@ class AirQuality(NonGeoDataset):
         self,
         root: Path = 'data',
         download: bool = False,
-        num_past_steps: int = 3,
-        num_future_steps: int = 1,
+        num_input_steps: int = 3,
+        num_target_steps: int = 1,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
             download: if True, download dataset and store it in the root directory
-            num_past_steps: Number of past time steps to use.
-            num_future_steps: Number of future time steps to use.
+            num_input_steps: Number of input time steps to use.
+            num_target_steps: Number of target time steps to use.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.download = download
-        self.num_past_steps = num_past_steps
-        self.num_future_steps = num_future_steps
+        self.num_input_steps = num_input_steps
+        self.num_target_steps = num_target_steps
         self.data = self._load_data()
+        self.feature_names = [c for c in self.data.columns if c != 'datetime']
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -71,7 +73,7 @@ class AirQuality(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.data) - (self.num_past_steps + self.num_future_steps)
+        return len(self.data) - (self.num_input_steps + self.num_target_steps)
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -82,16 +84,16 @@ class AirQuality(NonGeoDataset):
         Returns:
             data at that index
         """
-        past_targets = self.data.iloc[index : index + self.num_past_steps]
-        future_targets = self.data.iloc[
-            index + self.num_past_steps : index
-            + self.num_past_steps
-            + self.num_future_steps
+        x_input = self.data.iloc[index : index + self.num_input_steps]
+        y_target = self.data.iloc[
+            index + self.num_input_steps : index
+            + self.num_input_steps
+            + self.num_target_steps
         ]
 
         return {
-            'past_targets': torch.tensor(past_targets.values, dtype=torch.float32),
-            'future_targets': torch.tensor(future_targets.values, dtype=torch.float32),
+            'x_input': torch.tensor(x_input.values, dtype=torch.float32),
+            'y_target': torch.tensor(y_target.values, dtype=torch.float32),
         }
 
     def _load_data(self) -> pd.DataFrame:
@@ -109,17 +111,12 @@ class AirQuality(NonGeoDataset):
             df = pd.read_csv(self.url, na_values=-200)
 
         # Combine Date and Time into a single numeric column
-        df['datetime'] = pd.to_datetime(
-            df['Date'] + ' ' + df['Time'],
-            format='%m/%d/%Y %H:%M:%S',  # month/day/year
-        )
         df.drop(columns=['Date', 'Time'], inplace=True)
 
-        # Convert datetime64 to float (Unix timestamp in seconds) so it can become a Tensor
-        df['datetime'] = df['datetime'].astype('int64') / 1e9
-
-        # Drop rows with any remaining NaNs
-        df.dropna(inplace=True)
+        # Interpolate missing values
+        df = df.apply(pd.to_numeric, errors='coerce')
+        df = df.interpolate(method='linear', limit_direction='both')
+        df = df.ffill().bfill()
         df.reset_index(drop=True, inplace=True)
 
         return df
@@ -133,28 +130,29 @@ class AirQuality(NonGeoDataset):
         Returns:
             a matplotlib Figure with the plotted sample
         """
-        import matplotlib.pyplot as plt
+        input = sample['x_input'].numpy()
+        target = sample['y_target'].numpy()
 
-        past = sample['past_targets'].numpy()
-        future = sample['future_targets'].numpy()
-
-        num_features = past.shape[1]
+        num_features = input.shape[1]
         fig: Figure
         fig, axes = plt.subplots(num_features, 1, figsize=(10, 2 * num_features))
         if num_features == 1:
             axes = [axes]
 
-        past_steps = range(self.num_past_steps)
-        future_steps = range(
-            self.num_past_steps, self.num_past_steps + self.num_future_steps
+        input_steps = range(self.num_input_steps)
+        target_steps = range(
+            self.num_input_steps, self.num_input_steps + self.num_target_steps
         )
 
         for i, ax in enumerate(axes):
-            ax.plot(past_steps, past[:, i], label='Past', marker='o')
+            feature_name = self.feature_names[i]
+
+            ax.plot(input_steps, input[:, i], label='Input', marker='o')
             ax.plot(
-                future_steps, future[:, i], label='Future', marker='x', linestyle='--'
+                target_steps, target[:, i], label='Target', marker='x', linestyle='--'
             )
-            ax.set_title(f'Feature {i}')
+
+            ax.set_title(feature_name)
             ax.legend()
             ax.set_xlabel('Time step')
 
