@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Air Quality datamodule."""
@@ -18,7 +18,7 @@ class AirQualityDataModule(NonGeoDataModule):
     Uses the user provided splits to divide the dataset into
     train/val/test sets.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     def __init__(
@@ -53,7 +53,7 @@ class AirQualityDataModule(NonGeoDataModule):
         """
         dataset = AirQuality(**self.kwargs)
 
-        window_size = dataset.num_past_steps + dataset.num_future_steps
+        window_size = dataset.num_input_steps + dataset.num_target_steps
         n = len(dataset)
 
         train_split_pct = 1 - (self.val_split_pct + self.test_split_pct)
@@ -66,8 +66,8 @@ class AirQualityDataModule(NonGeoDataModule):
         if test_start >= n:
             raise ValueError(
                 f'Dataset too small ({n} samples) for the requested splits and '
-                f'window size ({window_size}). Reduce num_past_steps, '
-                f'num_future_steps, or the split percentages.'
+                f'window size ({window_size}). Reduce num_input_steps, '
+                f'num_target_steps, or the split percentages.'
             )
 
         train_indices = range(train_size)
@@ -104,10 +104,8 @@ class AirQualityDataModule(NonGeoDataModule):
         Returns:
             A batch of data with normalized targets and normalization stats.
         """
-        batch['past_targets'] = (batch['past_targets'] - self.mean) / (self.std + 1e-12)
-        batch['future_targets'] = (batch['future_targets'] - self.mean) / (
-            self.std + 1e-12
-        )
+        batch['x_input'] = (batch['x_input'] - self.mean) / (self.std + 1e-12)
+        batch['y_target'] = (batch['y_target'] - self.mean) / (self.std + 1e-12)
         # Pass stats along so the model can unnormalize predictions before metric computation
         batch['mean'] = self.mean
         batch['std'] = self.std
