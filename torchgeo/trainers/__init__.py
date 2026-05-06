@@ -10,22 +10,19 @@ from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
 from .instance_segmentation import InstanceSegmentationTask
 from .iobench import IOBenchTask
-from .mae import MAETask
-from .mixins import ClassificationMixin
 from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
+from .temporal_regression import TemporalRegressionTask
 
 __all__ = (
     'BYOLTask',
     'BaseTask',
     'ChangeDetectionTask',
-    'ClassificationMixin',
     'ClassificationTask',
     'IOBenchTask',
     'InstanceSegmentationTask',
-    'MAETask',
     'MoCoTask',
     'MultiLabelClassificationTask',
     'ObjectDetectionTask',
@@ -33,4 +30,5 @@ __all__ = (
     'RegressionTask',
     'SemanticSegmentationTask',
     'SimCLRTask',
+    'TemporalRegressionTask',
 )
