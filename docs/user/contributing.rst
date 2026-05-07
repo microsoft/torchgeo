@@ -212,23 +212,30 @@ The following checklist lists all files that need to be modified to add new mode
 I/O Benchmarking
 ----------------
 
-For PRs that may affect GeoDataset sampling speed, you can test the performance impact as follows. On the main branch (before) and on your PR branch (after), run the following commands:
+For PRs that may affect GeoDataset sampling speed, you can test the performance impact as follows. On the main branch (before) and on your PR branch (after), run:
 
 .. code-block:: console
 
-   $ python -m torchgeo fit --config tests/conf/io_raw.yaml
-   $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
+   $ python scripts/iobench.py
 
-This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the total time taken by ``train_dataloader_next`` (RandomGeoSampler) and ``val_next`` (GridGeoSampler). With this, you can create a table on your PR like:
+This will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file (if not already present), then time one full epoch of iteration over each split (``raw`` and ``preprocessed``) using a :class:`~torchgeo.samplers.GridGeoSampler` with non-overlapping patches. For each split it prints the total wall-clock time, samples/second, and batches/second.
 
-======  ============  ==========  =====================  ===================
- state  raw (random)  raw (grid)  preprocessed (random)  preprocessed (grid)
-======  ============  ==========  =====================  ===================
-before        17.223      10.974                 15.685               4.6075
- after        17.360      11.032                  9.613               4.6673
-======  ============  ==========  =====================  ===================
+Options:
 
-In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
+* ``--root``: directory containing the IOBench data (default: ``data/io``)
+* ``--batch-size``: mini-batch size (default: ``32``)
+* ``--patch-size``: patch size in pixels (default: ``256``)
+* ``--num-workers``: dataloader worker processes (default: ``0``)
+* ``--splits``: which splits to benchmark, ``raw`` and/or ``preprocessed`` (default: both)
+
+Compare timing on both branches and report the results in your PR, e.g.:
+
+======  =======  ================
+ state  raw (s)  preprocessed (s)
+======  =======  ================
+before    82.5              57.9
+ after     ...               ...
+======  =======  ================
 
 Related Libraries
 -----------------
