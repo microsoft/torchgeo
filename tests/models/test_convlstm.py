@@ -12,8 +12,8 @@ from torchgeo.models import ConvLSTM
 class TestConvLSTM:
     """Tests for the ConvLSTM model."""
 
-    def test_convlstm_forward(self) -> None:
-        """Test the forward pass of the ConvLSTM model."""
+    def test_convlstm_forward_features(self) -> None:
+        """Test the feature forward pass of the ConvLSTM model."""
         b = 1
         t = 4
         c = 3
@@ -21,14 +21,8 @@ class TestConvLSTM:
         w = 64
         input_tensor = torch.rand(b, t, c, h, w)
 
-        model = ConvLSTM(
-            input_dim=c,
-            hidden_dim=16,
-            kernel_size=(3, 3),
-            num_layers=1,
-            batch_first=True,
-        )
-        layer_output_list, last_state_list = model(input_tensor)
+        model = ConvLSTM(input_dim=c, hidden_dim=16, kernel_size=(3, 3), num_layers=1)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -50,10 +44,9 @@ class TestConvLSTM:
             hidden_dim=hidden_dims,
             kernel_size=(3, 3),
             num_layers=num_layers,
-            batch_first=True,
             return_all_layers=True,
         )
-        layer_output_list, _ = model(input_tensor)
+        layer_output_list, _ = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == num_layers
         assert layer_output_list[0].shape == (b, t, hidden_dims[0], h, w)
@@ -73,9 +66,8 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=3,  # Pass as integer
             num_layers=1,
-            batch_first=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -95,31 +87,8 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=[(3, 3)],  # Pass as list of tuples
             num_layers=1,
-            batch_first=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
-
-        assert len(layer_output_list) == 1
-        assert len(last_state_list) == 1
-        assert layer_output_list[0].shape == (b, t, 16, h, w)
-
-    def test_convlstm_batch_first_false(self) -> None:
-        """Test the forward pass with batch_first=False."""
-        b = 1
-        t = 4
-        c = 3
-        h = 64
-        w = 64
-        input_tensor = torch.rand(t, b, c, h, w)  # Note the different order
-
-        model = ConvLSTM(
-            input_dim=c,
-            hidden_dim=16,
-            kernel_size=(3, 3),
-            num_layers=1,
-            batch_first=False,
-        )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
@@ -149,12 +118,56 @@ class TestConvLSTM:
             hidden_dim=[16, 32],
             kernel_size=[3, (5, 5)],  # Mix of int and tuple
             num_layers=2,
-            batch_first=True,
             return_all_layers=True,
         )
-        layer_output_list, last_state_list = model(input_tensor)
+        layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 2
         assert len(last_state_list) == 2
         assert layer_output_list[0].shape == (b, t, 16, h, w)
         assert layer_output_list[1].shape == (b, t, 32, h, w)
+
+    def test_convlstm_forward(self) -> None:
+        """Test segmentation forward pass with prediction head."""
+        b = 2
+        t = 4
+        c = 3
+        h = 16
+        w = 16
+        num_classes = 5
+        input_tensor = torch.rand(b, t, c, h, w)
+
+        model = ConvLSTM(
+            input_dim=c,
+            hidden_dim=16,
+            kernel_size=3,
+            num_layers=1,
+            num_classes=num_classes,
+            head_kernel_size=1,
+        )
+        y_hat = model(input_tensor, lengths=torch.tensor([4, 2]))
+
+        assert y_hat.shape == (b, num_classes, h, w)
+
+    def test_convlstm_forward_uses_last_timestep_without_lengths(self) -> None:
+        """Test segmentation forward pass defaults to the final timestep."""
+        b = 2
+        t = 4
+        c = 3
+        h = 16
+        w = 16
+        num_classes = 5
+        input_tensor = torch.rand(b, t, c, h, w)
+
+        model = ConvLSTM(
+            input_dim=c,
+            hidden_dim=16,
+            kernel_size=3,
+            num_layers=1,
+            num_classes=num_classes,
+            head_kernel_size=1,
+        )
+        y_hat = model(input_tensor)
+        y_hat_last_step = model(input_tensor, lengths=torch.tensor([t, t]))
+
+        torch.testing.assert_close(y_hat, y_hat_last_step)
