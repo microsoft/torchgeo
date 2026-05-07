@@ -114,7 +114,7 @@ class ConvLSTM(nn.Module):
         batch_first: bool = True,
         bias: bool = True,
         return_all_layers: bool = False,
-        num_classes: int | None = None,
+        num_classes: int | None = 1,
         head_kernel_size: int = 1,
     ) -> None:
         """Initializes the ConvLSTM model.

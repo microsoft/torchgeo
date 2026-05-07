@@ -50,7 +50,6 @@ class TestConvLSTM:
             hidden_dim=hidden_dims,
             kernel_size=(3, 3),
             num_layers=num_layers,
-            batch_first=True,
             return_all_layers=True,
         )
         layer_output_list, _ = model.forward_features(input_tensor)
@@ -73,7 +72,6 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=3,  # Pass as integer
             num_layers=1,
-            batch_first=True,
         )
         layer_output_list, last_state_list = model.forward_features(input_tensor)
 
@@ -95,7 +93,6 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=[(3, 3)],  # Pass as list of tuples
             num_layers=1,
-            batch_first=True,
         )
         layer_output_list, last_state_list = model.forward_features(input_tensor)
 
@@ -149,7 +146,6 @@ class TestConvLSTM:
             hidden_dim=[16, 32],
             kernel_size=[3, (5, 5)],  # Mix of int and tuple
             num_layers=2,
-            batch_first=True,
             return_all_layers=True,
         )
         layer_output_list, last_state_list = model.forward_features(input_tensor)
@@ -191,8 +187,36 @@ class TestConvLSTM:
         w = 8
         input_tensor = torch.rand(b, t, c, h, w)
         model = ConvLSTM(
-            input_dim=c, hidden_dim=8, kernel_size=3, num_layers=1, batch_first=True
+            input_dim=c,
+            hidden_dim=8,
+            kernel_size=3,
+            num_layers=1,
+            batch_first=True,
+            num_classes=None,
         )
 
         with pytest.raises(ValueError, match='Segmentation head is not configured'):
             model(input_tensor)
+
+    def test_convlstm_forward_uses_last_timestep_without_lengths(self) -> None:
+        """Test segmentation forward pass defaults to the final timestep."""
+        b = 2
+        t = 4
+        c = 3
+        h = 16
+        w = 16
+        num_classes = 5
+        input_tensor = torch.rand(b, t, c, h, w)
+
+        model = ConvLSTM(
+            input_dim=c,
+            hidden_dim=16,
+            kernel_size=3,
+            num_layers=1,
+            num_classes=num_classes,
+            head_kernel_size=1,
+        )
+        y_hat = model(input_tensor)
+        y_hat_last_step = model(input_tensor, lengths=torch.tensor([t, t]))
+
+        torch.testing.assert_close(y_hat, y_hat_last_step)
