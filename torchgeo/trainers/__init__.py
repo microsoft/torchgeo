@@ -9,7 +9,6 @@ from .change import ChangeDetectionTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
 from .instance_segmentation import InstanceSegmentationTask
-from .iobench import IOBenchTask
 from .mae import MAETask
 from .mixins import ClassificationMixin
 from .moco import MoCoTask
@@ -23,7 +22,6 @@ __all__ = (
     'ChangeDetectionTask',
     'ClassificationMixin',
     'ClassificationTask',
-    'IOBenchTask',
     'InstanceSegmentationTask',
     'MAETask',
     'MoCoTask',

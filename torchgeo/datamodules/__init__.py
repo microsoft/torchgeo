@@ -25,7 +25,6 @@ from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
 from .hyspecnet import HySpecNet11kDataModule
 from .inria import InriaAerialImageLabelingDataModule
-from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
 from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAI100DataModule, LandCoverAIDataModule
@@ -88,7 +87,6 @@ __all__ = (
     'GeoDataModule',
     'GeoNRWDataModule',
     'HySpecNet11kDataModule',
-    'IOBenchDataModule',
     'InriaAerialImageLabelingDataModule',
     'L7IrishDataModule',
     'L8BiomeDataModule',
