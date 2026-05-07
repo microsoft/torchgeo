@@ -21,12 +21,7 @@ class TestConvLSTM:
         w = 64
         input_tensor = torch.rand(b, t, c, h, w)
 
-        model = ConvLSTM(
-            input_dim=c,
-            hidden_dim=16,
-            kernel_size=(3, 3),
-            num_layers=1,
-        )
+        model = ConvLSTM(input_dim=c, hidden_dim=16, kernel_size=(3, 3), num_layers=1)
         layer_output_list, last_state_list = model.forward_features(input_tensor)
 
         assert len(layer_output_list) == 1
@@ -163,11 +158,7 @@ class TestConvLSTM:
         w = 8
         input_tensor = torch.rand(b, t, c, h, w)
         model = ConvLSTM(
-            input_dim=c,
-            hidden_dim=8,
-            kernel_size=3,
-            num_layers=1,
-            num_classes=None,
+            input_dim=c, hidden_dim=8, kernel_size=3, num_layers=1, num_classes=None
         )
 
         with pytest.raises(ValueError, match='Segmentation head is not configured'):
