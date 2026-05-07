@@ -20,21 +20,18 @@ import time
 from typing import Literal
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from torchgeo.datasets import IOBench, stack_samples
 from torchgeo.samplers import GridGeoSampler
 
-Split = Literal['raw', 'preprocessed']
-
 
 def benchmark_split(
-    split: Split,
+    split: Literal['raw', 'preprocessed'],
     root: str,
     batch_size: int,
     patch_size: int,
     num_workers: int,
-    download: bool,
-    checksum: bool,
 ) -> None:
     """Benchmark one full epoch over a single ``IOBench`` split.
 
@@ -44,11 +41,9 @@ def benchmark_split(
         batch_size: Number of patches per mini-batch.
         patch_size: Size of each square patch in pixels.
         num_workers: Number of dataloader worker processes.
-        download: If True, download the dataset to ``root`` if missing.
-        checksum: If True, verify MD5 of the downloaded archive.
     """
     print(f'\n=== split={split} ===')
-    dataset = IOBench(root=root, split=split, download=download, checksum=checksum)
+    dataset = IOBench(root=root, split=split, download=True, checksum=True)
     sampler = GridGeoSampler(dataset, size=patch_size, stride=patch_size)
     dataloader = DataLoader(
         dataset,
@@ -61,7 +56,7 @@ def benchmark_split(
     num_samples = len(sampler)
     num_batches = 0
     start = time.perf_counter()
-    for _ in dataloader:
+    for _ in tqdm(dataloader, total=len(dataloader), desc=split):
         num_batches += 1
     elapsed = time.perf_counter() - start
 
@@ -99,12 +94,6 @@ def main() -> None:
         default=['raw', 'preprocessed'],
         help='which IOBench splits to benchmark',
     )
-    parser.add_argument(
-        '--download', action='store_true', help='download the dataset if missing'
-    )
-    parser.add_argument(
-        '--checksum', action='store_true', help='verify MD5 of the downloaded archive'
-    )
     args = parser.parse_args()
 
     print('IOBench benchmark')
@@ -120,8 +109,6 @@ def main() -> None:
             batch_size=args.batch_size,
             patch_size=args.patch_size,
             num_workers=args.num_workers,
-            download=args.download,
-            checksum=args.checksum,
         )
 
 
