@@ -3,6 +3,9 @@
 
 """Visualize samplers."""
 
+import itertools
+from pathlib import Path
+
 from geopandas import GeoDataFrame
 from pandas import IntervalIndex, Timedelta, Timestamp
 from shapely import Polygon
@@ -43,9 +46,12 @@ class ToyDataset(RasterDataset):
 
 
 dataset = ToyDataset()
-samplers = [
+
+spatial_samplers = [
     RandomSpatialSampler(dataset, size=3, generator=0),
     GridSpatialSampler(dataset, size=3, stride=2),
+]
+temporal_samplers = [
     RandomTimestampSampler(dataset, generator=0),
     SequentialTimestampSampler(dataset),
     RandomTimedeltaSampler(dataset, delta=Timedelta('31D'), generator=0),
@@ -53,6 +59,17 @@ samplers = [
     RandomPeriodSampler(dataset, freq='M', generator=0),
     SequentialPeriodSampler(dataset, freq='M'),
 ]
-for sampler in samplers:
+
+directory = Path(__file__).resolve().parent
+for sampler in spatial_samplers + temporal_samplers:
+    filename = f'{sampler.__class__.__name__}.gif'
+    print(filename)
     ani = sampler.plot()
-    ani.save(f'{sampler.__class__.__name__}.gif')
+    ani.save(directory / filename)
+
+for spatial, temporal in itertools.product(spatial_samplers, temporal_samplers):
+    filename = f'{spatial.__class__.__name__}_{temporal.__class__.__name__}.gif'
+    print(filename)
+    sampler = spatial @ temporal
+    ani = sampler.plot()
+    ani.save(directory / filename)

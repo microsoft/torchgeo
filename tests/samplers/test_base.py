@@ -206,6 +206,11 @@ class TestSpatioTemporalSampler:
         assert 0 <= y.start == y.stop <= 100
         assert TMIN <= t.start < t.stop <= TMAX
 
+    def test_plot(self, sampler: SpatioTemporalSampler, tmp_path: Path) -> None:
+        ani = sampler.plot()
+        ani.save(tmp_path / 'out.gif')
+        plt.close()
+
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(

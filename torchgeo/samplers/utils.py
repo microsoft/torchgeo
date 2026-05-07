@@ -6,7 +6,9 @@
 import math
 from typing import overload
 
+import numpy as np
 import torch
+from numpy.typing import NDArray
 from pandas import Timedelta
 from torch import Generator
 from typing_extensions import deprecated
@@ -159,3 +161,39 @@ def convolution_arithmetic[T: (float, Timedelta)](
     """
     stride = stride or kernel_size
     return math.ceil((input_size - kernel_size) / stride) + 1  # ty: ignore[no-matching-overload]
+
+
+def prism(x: NDArray, y: NDArray, z: NDArray) -> list[NDArray]:
+    """Convert x, y, z coordinates to the vertices of a prism.
+
+    Args:
+        x: All x coordinates of a Polygon.
+        y: All y coordinates of a Polygon.
+        z: Two z coordinates to project the Polygon into.
+
+    Returns:
+        The vertices of a 3D prism.
+
+    Raises:
+        AssertionError: If len(x) != len(y) or len(z) != 2.
+    """
+    assert len(x) == len(y)
+    assert len(z) == 2
+    verts = []
+
+    # Bottom face
+    z0 = z[0].repeat(len(x))
+    verts.append(np.stack([x, y, z0]).T)
+
+    # Top face
+    z1 = z[1].repeat(len(x))
+    verts.append(np.stack([x, y, z1]).T)
+
+    # Side faces
+    zi = np.array([z[0], z[0], z[1], z[1], z[0]])
+    for i in range(len(x) - 1):
+        xi = np.array([x[i], x[i + 1], x[i + 1], x[i], x[i]])
+        yi = np.array([y[i], y[i + 1], y[i + 1], y[i], y[i]])
+        verts.append(np.stack([xi, yi, zi]).T)
+
+    return verts

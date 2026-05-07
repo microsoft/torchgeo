@@ -3,11 +3,13 @@
 
 import math
 
+import numpy as np
 import pytest
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from pandas import Timedelta
 
 from torchgeo.samplers import get_random_bounding_box, tile_to_chips
-from torchgeo.samplers.utils import _to_tuple, convolution_arithmetic
+from torchgeo.samplers.utils import _to_tuple, convolution_arithmetic, prism
 
 MAYBE_TUPLE = float | tuple[float, float]
 
@@ -99,3 +101,11 @@ def test_convolution_arithmetic[T: (float, Timedelta)](
 ) -> None:
     output_size = convolution_arithmetic(input_size, kernel_size, stride)
     assert output_size == expected
+
+
+def test_prism() -> None:
+    x = np.array([1, 2, 1, 0, 1])
+    y = np.array([0, 1, 2, 1, 0])
+    z = np.array([0, 1])
+    verts = prism(x, y, z)
+    Poly3DCollection(verts)

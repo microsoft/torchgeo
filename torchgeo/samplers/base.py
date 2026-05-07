@@ -9,17 +9,20 @@ from collections.abc import Iterable, Iterator
 from typing import Literal
 
 import numpy as np
+import shapely
 import shapely.plotting
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.artist import Artist
 from matplotlib.patches import Rectangle
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from pandas import Interval, IntervalIndex
 from shapely import MultiPolygon, Polygon
 from torch.utils.data import Sampler
 
 from ..datasets import GeoDataset
 from ..datasets.utils import GeoSlice
+from .utils import prism
 
 
 # TODO: alternatively call it BaseSampler to have more backwards-compatibility when deprecating the prior GeoSampler
@@ -221,13 +224,13 @@ class TemporalSampler(GeoSampler):
         Returns:
             An animation visualizing the sampling strategy.
         """
-        left = self.index.index.left.min()
-        right = self.index.index.right.max()
+        tmin = self.index.index.left.min()
+        tmax = self.index.index.right.max()
 
         fig, ax = plt.subplots()
         ax.set_title(self.__class__.__name__)
         ax.set_xlabel('t')
-        ax.set_xlim(left, right)
+        ax.set_xlim(tmin, tmax)
         ax.yaxis.set_visible(False)
         ax.spines[['left', 'top', 'right']].set_visible(False)
         fig.autofmt_xdate()
@@ -285,7 +288,7 @@ class SpatioTemporalSampler(GeoSampler):
         match self.spatial_sampler.strategy, self.temporal_sampler.strategy:
             case 'random', 'random':
                 spatial_iter = iter(self.spatial_sampler)
-                for _ in range(len(self.spatial_sampler) * len(self.temporal_sampler)):
+                for _ in range(len(self.spatial_sampler)):
                     location = next(spatial_iter)
                     yield next(self.temporal_sampler._iter_subset(location))
             case 'sequential', 'sequential':
@@ -302,3 +305,62 @@ class SpatioTemporalSampler(GeoSampler):
                 for location in self.spatial_sampler:
                     for _ in range(len(self.temporal_sampler)):
                         yield next(self.temporal_sampler._iter_subset(location))
+
+    def plot(self) -> FuncAnimation:
+        """Plot a visualization of the sampling strategy.
+
+        Returns:
+            An animation visualizing the sampling strategy.
+        """
+        spatial = self.spatial_sampler
+        temporal = self.temporal_sampler
+
+        xmin, ymin, xmax, ymax = spatial.geometry.bounds
+        tmin = temporal.index.index.left.min().timestamp()  # Timestamp not supported
+        tmax = temporal.index.index.right.max().timestamp()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.set_title(f'{spatial.__class__.__name__} @ {temporal.__class__.__name__}')
+        ax.set(xlabel='x', ylabel='y', zlabel='t')
+        ax.set(xlim=[xmin, xmax], ylim=[ymin, ymax], zlim=[tmin, tmax])
+        ax.set_aspect('equalxy')
+
+        def init_func() -> Iterable[Artist]:
+            """Plot the static dataset."""
+            verts = []
+            for index, data in temporal.index.iterrows():
+                x, y = data['geometry'].exterior.coords.xy
+                tmin = index.left.timestamp()
+                tmax = index.right.timestamp()
+                t = np.array([tmin, tmax])
+                verts.extend(prism(x, y, t))
+            poly = Poly3DCollection(verts, color='tab:blue', alpha=0.3)
+            return ax.add_collection3d(poly)
+
+        def func(index: tuple[slice, slice, slice]) -> Iterable[Artist]:
+            """Plot the dynamic samples."""
+            x = np.array(
+                [
+                    index[0].start,
+                    index[0].start,
+                    index[0].stop,
+                    index[0].stop,
+                    index[0].start,
+                ]
+            )
+            y = np.array(
+                [
+                    index[1].start,
+                    index[1].stop,
+                    index[1].stop,
+                    index[1].start,
+                    index[1].start,
+                ]
+            )
+            t = np.array([index[2].start.timestamp(), index[2].stop.timestamp()])
+            verts = prism(x, y, t)
+            poly = Poly3DCollection(verts, color='tab:orange', alpha=0.3)
+            return ax.add_collection3d(poly)
+
+        return FuncAnimation(fig, func=func, frames=self, init_func=init_func)
