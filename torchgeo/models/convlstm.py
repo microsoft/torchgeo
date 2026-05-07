@@ -111,9 +111,10 @@ class ConvLSTM(nn.Module):
         hidden_dim: int | list[int],
         kernel_size: int | tuple[int, int] | list[int | tuple[int, int]],
         num_layers: int,
-        batch_first: bool = True,
         bias: bool = True,
         return_all_layers: bool = False,
+        num_classes: int = 1,
+        head_kernel_size: int = 1,
     ) -> None:
         """Initializes the ConvLSTM model.
 
@@ -127,11 +128,12 @@ class ConvLSTM(nn.Module):
                 * a tuple of two integers (for rectangular kernels)
                 * a list of integers or tuples (one for each layer)
             num_layers: Number of LSTM layers stacked on each other.
-            batch_first: If ``True``, then the input and output tensors are
-                provided as (b, t, c, h, w).
             bias: If ``True``, adds a learnable bias to the output.
             return_all_layers: If ``True``, will return the list of computations
                 for all layers.
+            num_classes: Optional number of segmentation classes for an attached
+                prediction head.
+            head_kernel_size: Kernel size for the optional segmentation head.
         """
         super().__init__()
 
@@ -154,9 +156,9 @@ class ConvLSTM(nn.Module):
 
         self.input_dim = input_dim
         self.num_layers = num_layers
-        self.batch_first = batch_first
         self.bias = bias
         self.return_all_layers = return_all_layers
+        self.num_classes = num_classes
 
         cell_list = []
         for i in range(self.num_layers):
@@ -171,24 +173,30 @@ class ConvLSTM(nn.Module):
             )
 
         self.cell_list = nn.ModuleList(cell_list)
+        padding = head_kernel_size // 2
+        self.head = nn.Conv2d(
+            in_channels=self.hidden_dim[-1],
+            out_channels=self.num_classes,
+            kernel_size=head_kernel_size,
+            padding=padding,
+        )
 
-    def forward(
+    def forward_features(
         self,
         input_tensor: torch.Tensor,
         hidden_state: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
     ) -> tuple[list[torch.Tensor], list[tuple[torch.Tensor, torch.Tensor]]]:
-        """Forward pass of the ConvLSTM.
+        """Forward pass of ConvLSTM feature extraction.
+
+        .. versionadded:: 0.10
 
         Args:
-            input_tensor: A 5-D Tensor of shape (t, b, c, h, w) or (b, t, c, h, w).
+            input_tensor: A 5-D Tensor of shape (b, t, c, h, w).
             hidden_state: An optional initial hidden state.
 
         Returns:
             A tuple containing layer_output_list and last_state_list.
         """
-        if not self.batch_first:
-            input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
-
         b, _, _, h, w = input_tensor.size()
 
         if hidden_state is None:
@@ -220,6 +228,40 @@ class ConvLSTM(nn.Module):
             last_state_list = last_state_list[-1:]
 
         return layer_output_list, last_state_list
+
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        lengths: torch.Tensor | None = None,
+        hidden_state: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
+    ) -> torch.Tensor:
+        """Forward pass for segmentation with the prediction head.
+
+        Args:
+            input_tensor: A 5-D Tensor of shape (b, t, c, h, w).
+            lengths: Optional sequence lengths (B,) before padding/truncation.
+                Values larger than the available sequence length use the final
+                timestep.
+            hidden_state: An optional initial hidden state.
+
+        Returns:
+            Output tensor of shape (B, num_classes, H, W).
+
+        """
+        layer_output_list, _ = self.forward_features(
+            input_tensor, hidden_state=hidden_state
+        )
+        layer_output = layer_output_list[-1]
+
+        if lengths is None:
+            features = layer_output[:, -1]
+        else:
+            idx = lengths.to(device=layer_output.device, dtype=torch.long) - 1
+            idx = idx.clamp(min=0, max=layer_output.size(1) - 1)
+            batch_idx = torch.arange(layer_output.size(0), device=idx.device)
+            features = layer_output[batch_idx, idx]
+
+        return self.head(features)
 
     def _init_hidden(
         self, batch_size: int, image_size: tuple[int, int]
