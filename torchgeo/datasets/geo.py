@@ -276,6 +276,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         print(f'Converting {self.__class__.__name__} CRS from {self.crs} to {new_crs}')
         self.index.to_crs(new_crs, inplace=True)
+        self.index['geometry'] = self.index.geometry.envelope
 
     @property
     def res(self) -> tuple[float, float]:
@@ -1541,6 +1542,7 @@ class IntersectionDataset(GeoDataset):
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self.index.to_crs(new_crs, inplace=True)
+        self.index['geometry'] = self.index.geometry.envelope
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
@@ -1685,6 +1687,7 @@ class UnionDataset(GeoDataset):
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self.index.to_crs(new_crs, inplace=True)
+        self.index['geometry'] = self.index.geometry.envelope
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 

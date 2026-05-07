@@ -129,6 +129,19 @@ class TestGeoDataset:
     def test_crs(self, dataset: GeoDataset, crs: CRS) -> None:
         dataset.crs = crs
 
+    def test_crs_geometry_envelope(self) -> None:
+        # Reprojection densifies edges and turns axis-aligned bounding boxes
+        # into curved polygons. The crs setter must restore them to envelopes
+        # so samplers (which sample within geometry.bounds) never produce
+        # queries that fall outside the dataset's geometry.
+        ds = CustomGeoDataset(
+            bounds=[(-2_500_000, 2_500_000, 0, 3_000_000, MINT, MAXT)],
+            crs=CRS.from_epsg(5070),
+        )
+        ds.crs = CRS.from_epsg(32616)
+        for geom in ds.index.geometry:
+            assert geom.equals(shapely.box(*geom.bounds))
+
     def test_and_two(self) -> None:
         ds1 = CustomGeoDataset()
         ds2 = CustomGeoDataset()
@@ -898,6 +911,13 @@ class TestIntersectionDataset:
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
+        # After reprojection, the geometry must be an axis-aligned bounding
+        # box so that samplers (which sample within geometry.bounds) never
+        # produce queries that fall outside the dataset's geometry.
+        for geom in ds.index.geometry:
+            assert geom.equals(shapely.box(*geom.bounds))
+        for geom in ds2.index.geometry:
+            assert geom.equals(shapely.box(*geom.bounds))
 
     def test_different_crs_12_3(self) -> None:
         ds1 = RasterDataset(
