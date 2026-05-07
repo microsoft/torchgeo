@@ -113,7 +113,7 @@ class ConvLSTM(nn.Module):
         num_layers: int,
         bias: bool = True,
         return_all_layers: bool = False,
-        num_classes: int | None = 1,
+        num_classes: int = 1,
         head_kernel_size: int = 1,
     ) -> None:
         """Initializes the ConvLSTM model.
@@ -131,9 +131,8 @@ class ConvLSTM(nn.Module):
             bias: If ``True``, adds a learnable bias to the output.
             return_all_layers: If ``True``, will return the list of computations
                 for all layers.
-            num_classes: Optional number of segmentation classes for an attached
-                prediction head.
-            head_kernel_size: Kernel size for the optional segmentation head.
+            num_classes: Number of segmentation classes for the prediction head.
+            head_kernel_size: Kernel size for the segmentation head.
         """
         super().__init__()
 
@@ -173,15 +172,13 @@ class ConvLSTM(nn.Module):
             )
 
         self.cell_list = nn.ModuleList(cell_list)
-        self.head: nn.Conv2d | None = None
-        if self.num_classes is not None:
-            padding = head_kernel_size // 2
-            self.head = nn.Conv2d(
-                in_channels=self.hidden_dim[-1],
-                out_channels=self.num_classes,
-                kernel_size=head_kernel_size,
-                padding=padding,
-            )
+        padding = head_kernel_size // 2
+        self.head = nn.Conv2d(
+            in_channels=self.hidden_dim[-1],
+            out_channels=self.num_classes,
+            kernel_size=head_kernel_size,
+            padding=padding,
+        )
 
     def forward_features(
         self,
@@ -248,16 +245,7 @@ class ConvLSTM(nn.Module):
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
-
-        Raises:
-            ValueError: If the segmentation head is not configured.
         """
-        if self.head is None:
-            raise ValueError(
-                "Segmentation head is not configured. Set 'num_classes' to use "
-                'ConvLSTM for segmentation.'
-            )
-
         layer_output_list, _ = self.forward_features(
             input_tensor, hidden_state=hidden_state
         )

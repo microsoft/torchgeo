@@ -149,21 +149,6 @@ class TestConvLSTM:
 
         assert y_hat.shape == (b, num_classes, h, w)
 
-    def test_convlstm_forward_requires_head(self) -> None:
-        """Test that segmentation forward requires a configured prediction head."""
-        b = 1
-        t = 2
-        c = 3
-        h = 8
-        w = 8
-        input_tensor = torch.rand(b, t, c, h, w)
-        model = ConvLSTM(
-            input_dim=c, hidden_dim=8, kernel_size=3, num_layers=1, num_classes=None
-        )
-
-        with pytest.raises(ValueError, match='Segmentation head is not configured'):
-            model(input_tensor)
-
     def test_convlstm_forward_uses_last_timestep_without_lengths(self) -> None:
         """Test segmentation forward pass defaults to the final timestep."""
         b = 2
