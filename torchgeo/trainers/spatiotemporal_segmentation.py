@@ -89,7 +89,6 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
                 )
                 num_layers = cast(int, self.hparams.get('num_layers', 1))
                 head_kernel_size = cast(int, self.hparams.get('head_kernel_size', 1))
-                batch_first = cast(bool, self.hparams.get('batch_first', True))
                 bias = cast(bool, self.hparams.get('bias', True))
                 return_all_layers = cast(
                     bool, self.hparams.get('return_all_layers', False)
@@ -99,7 +98,6 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
                     hidden_dim=hidden_dim,
                     kernel_size=kernel_size,
                     num_layers=num_layers,
-                    batch_first=batch_first,
                     bias=bias,
                     return_all_layers=return_all_layers,
                     num_classes=num_classes,

@@ -26,7 +26,6 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=(3, 3),
             num_layers=1,
-            batch_first=True,
         )
         layer_output_list, last_state_list = model.forward_features(input_tensor)
 
@@ -100,28 +99,6 @@ class TestConvLSTM:
         assert len(last_state_list) == 1
         assert layer_output_list[0].shape == (b, t, 16, h, w)
 
-    def test_convlstm_batch_first_false(self) -> None:
-        """Test the forward pass with batch_first=False."""
-        b = 1
-        t = 4
-        c = 3
-        h = 64
-        w = 64
-        input_tensor = torch.rand(t, b, c, h, w)  # Note the different order
-
-        model = ConvLSTM(
-            input_dim=c,
-            hidden_dim=16,
-            kernel_size=(3, 3),
-            num_layers=1,
-            batch_first=False,
-        )
-        layer_output_list, last_state_list = model.forward_features(input_tensor)
-
-        assert len(layer_output_list) == 1
-        assert len(last_state_list) == 1
-        assert layer_output_list[0].shape == (b, t, 16, h, w)
-
     def test_convlstm_inconsistent_list_length(self) -> None:
         """Test that inconsistent list lengths raise a ValueError."""
         with pytest.raises(ValueError, match='Inconsistent list length'):
@@ -170,7 +147,6 @@ class TestConvLSTM:
             hidden_dim=16,
             kernel_size=3,
             num_layers=1,
-            batch_first=True,
             num_classes=num_classes,
             head_kernel_size=1,
         )
@@ -191,7 +167,6 @@ class TestConvLSTM:
             hidden_dim=8,
             kernel_size=3,
             num_layers=1,
-            batch_first=True,
             num_classes=None,
         )
 
