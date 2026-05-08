@@ -83,7 +83,6 @@ class RandomSpatialSampler(SpatialSampler):
 
         # Erosion to avoid out-of-bounds sampling
         # Purposefully conservative radius calculation
-        # TODO: this operation removes Point and LineString, should we keep these?
         distance = math.sqrt((self.size[0] / 2) ** 2 + (self.size[1] / 2) ** 2)
         self.series = GeoSeries([shapely.buffer(self.geometry, -distance)])
 
@@ -187,24 +186,37 @@ class GridSpatialSampler(SpatialSampler):
         """
         xmin, ymin, xmax, ymax = self.geometry.bounds
 
-        # TODO: adjust xmin/ymin to have equal spacing in case of non-integer multiple
-        # xmid, ymid = self.geometry.centroid
-        # TODO: but ensure we remain snapped to the pixel grid...
-
         rows = convolution_arithmetic(ymax - ymin, self.size[0], self.stride[0])
         cols = convolution_arithmetic(xmax - xmin, self.size[1], self.stride[1])
 
+        # Adjust xmin/ymin to have equal spacing in case of non-integer multiple
+        geometry_width = xmax - xmin
+        stride_width = self.stride[1] * (cols - 1) + self.size[1]
+        xmin -= (stride_width - geometry_width) / 2
+        geometry_height = ymax - ymin
+        stride_height = self.stride[0] * (rows - 1) + self.size[0]
+        ymin -= (stride_height - geometry_height) / 2
+
+        # Snap to grid
+        # Convert from geospatial coords to pixel coords
+        xmin = (xmin - self.bounds[0]) / self.res[0]
+        ymin = (ymin - self.bounds[1]) / self.res[1]
+        # Round to the nearest pixel
+        xmin = round(xmin)
+        ymin = round(ymin)
+        # Convert from pixel coords to geospatial coords
+        xmin = xmin * self.res[0] + self.bounds[0]
+        ymin = ymin * self.res[1] + self.bounds[1]
+
         # For each row...
         for i in range(rows):
-            ymin = self.geometry.bounds[1] + i * self.stride[0]
-            ymax = ymin + self.size[0]
+            y = ymin + i * self.stride[0]
 
             # For each column...
             for j in range(cols):
-                xmin = self.geometry.bounds[0] + j * self.stride[1]
-                xmax = xmin + self.size[1]
+                x = xmin + j * self.stride[1]
 
                 # Check for intersection
-                bbox = shapely.box(xmin, ymin, xmax, ymax)
+                bbox = shapely.box(x, y, x + self.size[1], y + self.size[0])
                 if self.geometry.intersects(bbox):
-                    yield slice(xmin, xmax), slice(ymin, ymax)
+                    yield slice(x, x + self.size[1]), slice(y, y + self.size[0])
