@@ -31,7 +31,7 @@ from .utils import (
 class S2100k(NonGeoDataset):
     """S2-100K dataset.
 
-    The `S2-100k dataset <https://huggingface.co/datasets/davanstrien/satclip>`__
+    The `S2-100k dataset <https://hf.co/datasets/kklmmr/s2-100k>`__
     contains 100,000 256x256 patches of 12 band Sentinel imagery sampled randomly from
     Sentinel 2 scenes on the Microsoft Planetary Computer that have <20% cloud cover,
     intersect land, and were captured between 2021-01-01 and 2023-05-17 (there are
@@ -44,7 +44,7 @@ class S2100k(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://huggingface.co/datasets/kklmmr/s2-100k/resolve/fbdbb78ba57d22d5b6be203913f1e6020c2b4e0a'
+    url = 'https://hf.co/datasets/kklmmr/s2-100k/resolve/fbdbb78ba57d22d5b6be203913f1e6020c2b4e0a'
     index_sha256 = '9fdcdec776b331fcc2d9ab5af18355efc5bd0716df33ab78e1ff03f60cf343ad'
     data_sha256 = 'da1bae4e9dd44fb00e5f1fc537b752f5025ac908a73b5a9e24ff90bcbdd56edb'
 
