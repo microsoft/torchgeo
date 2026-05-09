@@ -17,10 +17,10 @@ np.random.seed(0)
 root = 'Forest-Change-dataset'
 splits = ['train', 'val', 'test']
 directories = ['A', 'B', 'label']
-N = 2
+N_classes = 2
 
 
-def create_image(path: str) -> None:
+def create_rgb_image(path: str) -> None:
     arr = np.random.randint(255, size=(32, 32, 3), dtype=np.uint8)
     Image.fromarray(arr).convert('RGB').save(path)
 
@@ -46,7 +46,7 @@ def create_captions() -> dict:
                 ],
             }
             for split in splits
-            for i in range(N)
+            for i in range(N_classes)
         ]
     }
 
@@ -63,10 +63,10 @@ if __name__ == '__main__':
             os.makedirs(root_path / 'images' / split / d)
 
     for split in splits:
-        for i in range(N):
+        for i in range(N_classes):
             name = f'{split}_{i:06d}.png'
-            create_image(str(root_path / 'images' / split / 'A' / name))
-            create_image(str(root_path / 'images' / split / 'B' / name))
+            create_rgb_image(str(root_path / 'images' / split / 'A' / name))
+            create_rgb_image(str(root_path / 'images' / split / 'B' / name))
             create_mask(str(root_path / 'images' / split / 'label' / name))
 
     with open(root_path / 'ForestChatcaptions.json', 'w') as f:

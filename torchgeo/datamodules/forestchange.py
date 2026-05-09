@@ -18,6 +18,8 @@ class ForestChangeDataModule(NonGeoDataModule):
     .. versionadded:: 0.10
     """
 
+    # Calculates dataset-wide per-channel mean and standard deviation by aggregating pixel-wise sums
+    #  and squared sums across all images using a numerically stable variance formulation.
     mean = (0.2267 * 255, 0.29982 * 255, 0.22058 * 255)
     std = (0.0923 * 255, 0.06658 * 255, 0.05681 * 255)
 

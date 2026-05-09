@@ -86,6 +86,9 @@ class TestForestChange:
 
     def test_plot(self, dataset: ForestChange) -> None:
         fig = dataset.plot(dataset[0], suptitle='Test')
+
+        assert len(fig.texts) > 0
+
         plt.close(fig)
 
     def test_plot_with_prediction(self, dataset: ForestChange) -> None:
@@ -212,3 +215,12 @@ class TestForestChange:
     def test_invalid_split(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError):
             ForestChange(root=tmp_path, split='invalid')  # type: ignore
+
+    def test_decode_tokens(self, dataset: ForestChange) -> None:
+        sample = dataset[0]
+
+        decoded = dataset._decode_tokens(sample['token'])
+
+        assert isinstance(decoded, str)
+        assert '<START>' not in decoded
+        assert '<END>' not in decoded

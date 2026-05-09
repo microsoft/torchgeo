@@ -29,7 +29,7 @@ class ForestChange(NonGeoDataset):
     <https://huggingface.co/datasets/JimmyBrocko/Forest-Change>`__
     dataset is the first benchmark designed for joint forest change detection
     and captioning in remote sensing imagery.  It provides bi-temporal
-    satellite image pairs, pixel-level deforestation masks, and
+    satellite image pairs from Google Earth (Landsat), pixel-level deforestation masks, and
     multi-granularity natural-language captions describing forest cover
     changes in tropical and subtropical regions.
 
@@ -151,6 +151,8 @@ class ForestChange(NonGeoDataset):
         with open(vocab_path) as f:
             self.word_vocab: dict[str, int] = json.load(f)
 
+        self.idx_to_word = {v: k for k, v in self.word_vocab.items()}
+
         self.files = self._load_files()
 
     def __len__(self) -> int:
@@ -233,21 +235,23 @@ class ForestChange(NonGeoDataset):
 
         image2 = sample['image'][1].permute(1, 2, 0)
         image2 = quantile_normalization(image2, dim=0)
-
         image2 = image2.numpy()
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image1)
         axs[0].axis('off')
+
         axs[1].imshow(image2)
         axs[1].axis('off')
+
         axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
         axs[2].axis('off')
 
         if 'prediction' in sample:
             axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
             axs[3].axis('off')
+
             if show_titles:
                 axs[3].set_title('Prediction')
 
@@ -256,8 +260,22 @@ class ForestChange(NonGeoDataset):
             axs[1].set_title('Image 2')
             axs[2].set_title('Mask')
 
+        caption = self._decode_tokens(sample['token'])
+
+        fig.text(
+            0.5,
+            0.02,
+            f'Caption: {caption}',
+            ha='center',
+            va='bottom',
+            wrap=True,
+            fontsize=11,
+        )
+
         if suptitle is not None:
             plt.suptitle(suptitle)
+
+        plt.tight_layout(rect=(0, 0.05, 1, 1))
 
         return fig
 
@@ -461,6 +479,32 @@ class ForestChange(NonGeoDataset):
                     raise KeyError(f'Token "{token}" not in vocab')
             seq_idx.append(token_to_idx[token])
         return seq_idx
+
+    def _decode_tokens(self, tokens: Tensor) -> str:
+        """Convert an encoded caption tensor into a human-readable sentence.
+
+        Decodes integer token indices using the dataset vocabulary, removes
+        special control tokens such as ``<START>`` and ``<NULL>``, and stops
+        decoding at the first ``<END>`` token.
+
+        Args:
+            tokens: Tensor of token indices representing an encoded caption.
+
+        Returns:
+            Decoded caption string.
+        """
+        words = []
+
+        for idx in tokens.tolist():
+            word = self.idx_to_word.get(idx, '<UNK>')
+
+            if word == '<END>':
+                break
+
+            if word not in {'<START>', '<NULL>'}:
+                words.append(word)
+
+        return ' '.join(words)
 
     def _load_files(self) -> list[dict[str, Any]]:
         """Build the file list from the split text file.
