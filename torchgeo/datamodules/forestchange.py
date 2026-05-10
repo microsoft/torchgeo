@@ -73,6 +73,7 @@ class ForestChangeDataModule(NonGeoDataModule):
             keepdim=True,
             same_on_batch=True,
         )
+        self.aug = self.train_aug
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -80,9 +81,9 @@ class ForestChangeDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ['fit']:
-            self.train_dataset = ForestChange(split='train', **self.kwargs)
-        if stage in ['fit', 'validate']:
-            self.val_dataset = ForestChange(split='val', **self.kwargs)
-        if stage in ['test']:
-            self.test_dataset = ForestChange(split='test', **self.kwargs)
+        if stage in ["fit"]:
+            self.train_dataset = ForestChange(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            self.val_dataset = ForestChange(split="val", **self.kwargs)
+        if stage in ["test"]:
+            self.test_dataset = ForestChange(split="test", **self.kwargs)
