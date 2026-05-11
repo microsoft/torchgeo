@@ -131,8 +131,9 @@ class ConvLSTM(nn.Module):
             bias: If ``True``, adds a learnable bias to the output.
             return_all_layers: If ``True``, will return the list of computations
                 for all layers.
-            num_classes: Number of segmentation classes for the prediction head.
-            head_kernel_size: Kernel size for the segmentation head.
+            num_classes: Optional number of segmentation classes for an attached
+                prediction head.
+            head_kernel_size: Kernel size for the optional segmentation head.
         """
         super().__init__()
 
