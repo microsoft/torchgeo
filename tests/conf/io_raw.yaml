@@ -8,6 +8,7 @@ data:
     download: true
     checksum: true
 trainer:
+  accelerator: 'cpu'
   max_epochs: 1
   num_sanity_val_steps: 0
   profiler: 'simple'
