@@ -24,7 +24,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`FAIR1M`,OD,Gaofen/Google Earth,"15,000",37,"1,024x1,024",0.3--0.8,RGB,CC-BY-NC-SA-3.0
 :ref:`Fields Of The World`,"S,I",Sentinel-2,"70795","2,3",256x256,10,MSI,Various
 :ref:`FireRisk`,C,NAIP Aerial,"91,872",7,"320x320",1,RGB,CC-BY-NC-4.0
-:ref:`Forest-Change`,CDC,Google Earth,334,2,"256x256",30,RGB,Various
+:ref:`Forest-Change`,"CD, IC",Google Earth,334,2,"256x256",30,RGB,Various
 :ref:`Forest Damage`,OD,Drone imagery,"1,543",4,"1,500x1,500",,RGB,CDLA-Permissive-1.0
 :ref:`GID-15`,S,Gaofen-2,150,15,"6,800x7,200",3,RGB,
 :ref:`GeoNRW`,S,Aerial,"7,783",11,"1,000x1,000",1,"RGB, DEM",CC-BY-4.0

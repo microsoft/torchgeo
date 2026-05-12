@@ -27,7 +27,6 @@ class ForestChangeDataModule(NonGeoDataModule):
         self,
         batch_size: int = 8,
         patch_size: tuple[int, int] | int = 256,
-        val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -37,7 +36,6 @@ class ForestChangeDataModule(NonGeoDataModule):
             batch_size: Size of each mini-batch.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
-            val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ForestChange`.
@@ -47,7 +45,6 @@ class ForestChangeDataModule(NonGeoDataModule):
         )
 
         self.patch_size = _to_tuple(patch_size)
-        self.val_split_pct = val_split_pct
 
         self.train_aug = K.AugmentationSequential(
             K.VideoSequential(

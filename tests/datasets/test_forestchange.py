@@ -28,7 +28,7 @@ class TestForestChange:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ForestChange:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         return ForestChange(
             root=tmp_path,
@@ -103,7 +103,7 @@ class TestForestChange:
     def test_preprocess_skips_empty_raw(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ForestChange(root=tmp_path, split='train', download=True)
         base = os.path.join(str(tmp_path), ForestChange.directory)
@@ -120,22 +120,35 @@ class TestForestChange:
     def test_preprocess_rewrites_split_files(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
+
         ForestChange(root=tmp_path, split='train', download=True)
+
         base = os.path.join(str(tmp_path), ForestChange.directory)
         train_list = os.path.join(base, 'train.txt')
-        mtime = os.path.getmtime(train_list)
+
+        with open(train_list) as f:
+            original = f.read()
+
         shutil.rmtree(os.path.join(base, ForestChange.token_directory))
         os.remove(os.path.join(base, ForestChange.vocab_filename + '.json'))
-        time.sleep(0.05)
+
+        with open(train_list, 'w') as f:
+            f.write('corrupted')
+
         ForestChange(root=tmp_path, split='train')
-        assert os.path.getmtime(train_list) != mtime
+
+        with open(train_list) as f:
+            rewritten = f.read()
+
+        assert rewritten != 'corrupted'
+        assert rewritten == original
 
     def test_integrity_missing_image_dir(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ForestChange(root=tmp_path, split='train', download=True)
         shutil.rmtree(
@@ -147,7 +160,7 @@ class TestForestChange:
     def test_preprocessed_missing_token_dir(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ForestChange(root=tmp_path, split='train', download=True)
         shutil.rmtree(
@@ -160,7 +173,7 @@ class TestForestChange:
     def test_preprocessed_missing_split_file(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ForestChange(root=tmp_path, split='train', download=True)
         os.remove(os.path.join(str(tmp_path), ForestChange.directory, 'train.txt'))
@@ -175,7 +188,7 @@ class TestForestChange:
     def test_encode_allow_unknown(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ds = ForestChange(
             root=tmp_path, split='train', allow_unknown=True, download=True
@@ -187,7 +200,7 @@ class TestForestChange:
     def test_encode_maps_unknown_to_unk(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
 
         ds = ForestChange(root=tmp_path, split='train', download=True)
@@ -199,7 +212,7 @@ class TestForestChange:
     def test_encode_raises_for_unknown(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
 
         ds = ForestChange(
@@ -212,7 +225,7 @@ class TestForestChange:
     def test_load_files_caption_index(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> None:
-        url = os.path.join('tests', 'data', 'forestchange', 'Forest-Change-dataset.zip')
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
         monkeypatch.setattr(ForestChange, 'url', url)
         ForestChange(root=tmp_path, split='train', download=True)
         base = os.path.join(str(tmp_path), ForestChange.directory)
@@ -240,3 +253,21 @@ class TestForestChange:
         assert isinstance(decoded, str)
         assert '<START>' not in decoded
         assert '<END>' not in decoded
+
+    def test_load_tokens_truncates_to_max_length(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+
+        ds = ForestChange(root=tmp_path, split='train', download=True, max_length=4)
+
+        sample = ds[0]
+
+        assert sample['token'].shape[0] == 4
+        assert sample['token_len'] <= 4
+
+        assert torch.equal(
+            sample['token'][sample['token_len'] :],
+            torch.zeros(4 - sample['token_len'], dtype=torch.int64),
+        )

@@ -109,9 +109,8 @@ class ForestChange(NonGeoDataset):
                 downloaded.  The zip extracts to
                 ``<root>/Forest-Change-dataset/``.
             split: one of ``'train'``, ``'val'``, or ``'test'``.
-            transforms: optional callable applied to each sample dict.
-                Should include any normalisation; if ``None`` a built-in
-                mean/std normalisation is applied.
+            transforms: a function/transform that takes input sample and its target as
+            entry and returns a transformed version
             max_length: maximum token sequence length used when encoding
                 captions.
             allow_unknown: whether unknown tokens are mapped to ``<UNK>``
@@ -325,7 +324,7 @@ class ForestChange(NonGeoDataset):
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.sha256 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def _preprocess(self) -> None:
@@ -593,8 +592,9 @@ class ForestChange(NonGeoDataset):
 
         for j, tokens in enumerate(caption_list):
             encoded = self._encode(tokens, self.word_vocab)
-            token_all[j, : len(encoded)] = encoded
-            token_all_len[j] = len(encoded)
+            encoded_len = min(len(encoded), self.max_length)
+            token_all[j, :encoded_len] = encoded[:encoded_len]
+            token_all_len[j] = encoded_len
 
         if token_id is not None:
             token = token_all[token_id]
