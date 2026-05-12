@@ -93,7 +93,7 @@ class TestFLAIRHUB:
             )
 
     def test_len(self, dataset: FLAIRHUB | FLAIRHUBToy) -> None:
-        assert len(dataset) > 0
+        assert len(dataset) == 3
 
     def test_add(self, dataset: FLAIRHUB | FLAIRHUBToy) -> None:
         ds = dataset + dataset
