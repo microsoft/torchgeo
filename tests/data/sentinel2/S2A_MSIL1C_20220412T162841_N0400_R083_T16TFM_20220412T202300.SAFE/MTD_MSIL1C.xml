@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<n1:Level-1C_User_Product
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="https://psd-14.sentinel2.eo.esa.int/PSD/User_Product_Level-1C.xsd">
+    <n1:General_Info>
+        <Product_Info>
+            <Query_Options completeSingleTile="true">
+                <PRODUCT_FORMAT>SAFE_COMPACT</PRODUCT_FORMAT>
+            </Query_Options>
+            <Product_Organisation></Product_Organisation>
+        </Product_Info>
+    </n1:General_Info>
+    <n1:Geometric_Info>
+        <Product_Footprint>
+            <Product_Footprint>
+                <Global_Footprint>
+                    <EXT_POS_LIST>40.64494890710644 -88.16803706364593 40.63342003853183 -88.16783610987474 40.633265997522585 -88.18296905031913 40.63903040364289 -88.1830708137392 40.64487210335262 -88.17560484975292 40.64494890710644 -88.16803706364593</EXT_POS_LIST>
+                </Global_Footprint>
+            </Product_Footprint>
+        </Product_Footprint>
+    </n1:Geometric_Info>
+</n1:Level-1C_User_Product>
