@@ -43,7 +43,6 @@ class RandomTimestampSampler(TemporalSampler):
                 (defaults to the bounds of ``dataset.index``).
             generator: Pseudo-random number generator (PRNG).
         """
-        # TODO: do we want a length parameter?
         super().__init__(dataset, toi=toi)
         self.generator = np.random.default_rng(generator)
 
@@ -138,7 +137,6 @@ class RandomTimedeltaSampler(TemporalSampler):
         """
         super().__init__(dataset, toi=toi)
         self.delta = delta
-        # TODO: should these be moved to _iter_subset? Length will change each epoch
         left = self.index.index.left.min()
         right = self.index.index.right.max()
         self.length = length or convolution_arithmetic(right - left, delta)
@@ -221,7 +219,6 @@ class SequentialTimedeltaSampler(TemporalSampler):
 
         x, y = location
         for _ in range(length):
-            # TODO: ensure this doesn't escape our TOI
             interval = Interval(left, left + self.delta)
             if intervals.overlaps(interval).any():
                 t = slice(interval.left, interval.right)
@@ -266,7 +263,6 @@ class RandomPeriodSampler(TemporalSampler):
         """
         super().__init__(dataset, toi=toi)
         self.freq = freq
-        # TODO: should these be moved to _iter_subset? Length will change each epoch
         left = self.index.index.left.min()
         right = self.index.index.right.max()
         period = Period(left, freq=freq)
@@ -328,7 +324,6 @@ class SequentialPeriodSampler(TemporalSampler):
             toi: Time of interest to sample from
                 (defaults to the bounds of ``dataset.index``).
         """
-        # TODO: do we want stride here? How would it even work?
         super().__init__(dataset, toi=toi)
         self.freq = freq
 

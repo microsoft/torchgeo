@@ -25,7 +25,6 @@ from ..datasets.utils import GeoSlice
 from .utils import prism
 
 
-# TODO: alternatively call it BaseSampler to have more backwards-compatibility when deprecating the prior GeoSampler
 class GeoSampler(Sampler[GeoSlice], ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
@@ -260,9 +259,6 @@ class SpatioTemporalSampler(GeoSampler):
 
     .. versionadded:: 0.10
     """
-
-    # akin to IntersectionDataset
-    # name: ZipSampler? ProductSampler?
 
     # TODO: this parameter will be ignored, maybe move abc to spatial/temporal?
     strategy = 'random'
