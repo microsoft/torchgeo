@@ -191,7 +191,7 @@ class TestGeoDataModule:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
         dm.sampler = RandomSpatialSampler(dm.dataset, size=1, length=1)
-        dm.sampler.length = 0
+        dm.sampler._length = 0
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
             dm.train_dataloader()
