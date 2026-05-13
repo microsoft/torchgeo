@@ -218,5 +218,5 @@ class GridSpatialSampler(SpatialSampler):
 
                 # Check for intersection
                 bbox = shapely.box(x, y, x + self.size[1], y + self.size[0])
-                if self.geometry.intersects(bbox):
+                if self.geometry.intersects(bbox) and not self.geometry.touches(bbox):
                     yield slice(x, x + self.size[1]), slice(y, y + self.size[0])
