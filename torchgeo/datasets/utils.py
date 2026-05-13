@@ -802,6 +802,7 @@ def percentile_normalization(
     lower: float = 2,
     upper: float = 98,
     axis: int | Sequence[int] | None = None,
+    nodata: int = 0,
 ) -> NDArray:
     """Applies percentile normalization to an input image.
 
@@ -815,6 +816,7 @@ def percentile_normalization(
         upper: upper percentile in range [0,100]
         axis: Axis or axes along which the percentiles are computed. The default
             is to compute the percentile(s) along a flattened version of the array.
+        nodata: Nodata value to ignore during quantile calculation.
 
     Returns:
         normalized version of ``img``
@@ -825,12 +827,12 @@ def percentile_normalization(
     .. versionadded:: 0.2
     .. versiondeprecated:: 0.10
     """
-    if not np.any(img):
+    if (img == nodata).all():
         return img
 
     assert lower < upper
-    lower_percentile = np.percentile(img[img != 0], lower, axis=axis)
-    upper_percentile = np.percentile(img[img != 0], upper, axis=axis)
+    lower_percentile = np.percentile(img[img != nodata], lower, axis=axis)
+    upper_percentile = np.percentile(img[img != nodata], upper, axis=axis)
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
@@ -841,6 +843,7 @@ def quantile_normalization(
     img: Tensor,
     lower: float | Tensor = 0.02,
     upper: float | Tensor = 0.98,
+    nodata: float = 0,
     dim: int | None = None,
 ) -> Tensor:
     """Normalize and clip an input image to a specific quantile range.
@@ -849,6 +852,7 @@ def quantile_normalization(
         img: Image to normalize.
         lower: Lower quantile in range [0, 1].
         upper: Upper quantile in range [0, 1].
+        nodata: Nodata value to ignore during quantile calculation.
         dim: Dimension to reduce.
 
     Returns:
@@ -856,11 +860,11 @@ def quantile_normalization(
 
     .. versionadded:: 0.10
     """
-    if torch.count_nonzero(img) == 0:
+    if (img == nodata).all():
         return img
 
-    lower = torch.quantile(img[img != 0], lower, dim, interpolation='higher')
-    upper = torch.quantile(img[img != 0], upper, dim, interpolation='lower')
+    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
+    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
     img = (img - lower) / (upper - lower + 1e-5)
     return torch.clamp(img, 0, 1)
 
