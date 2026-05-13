@@ -34,20 +34,6 @@ class GeoSampler(Sampler[GeoSlice], ABC):
 
     length: int
 
-    @property
-    @abc.abstractmethod
-    def strategy(self) -> Literal['random', 'sequential']:
-        """Sampling strategy.
-
-        All sampling strategies can be categorized as either being random or sequential.
-        This distinction only matters when combining samplers via
-        :class:`SpatioTemporalSampler`, where either a zip (random) or product
-        (sequential) of all sample locations is taken during each epoch.
-
-        Returns:
-            One of 'random' or 'sequential'.
-        """
-
     @abc.abstractmethod
     def __iter__(self) -> Iterator[GeoSlice]:
         """Iterate over generated sample locations for each epoch.
@@ -74,6 +60,20 @@ class SpatialSampler(GeoSampler):
 
     .. versionadded:: 0.10
     """
+
+    @property
+    @abc.abstractmethod
+    def strategy(self) -> Literal['random', 'sequential']:
+        """Sampling strategy.
+
+        All sampling strategies can be categorized as either being random or sequential.
+        This distinction only matters when combining samplers via
+        :class:`SpatioTemporalSampler`, where either a zip (random) or product
+        (sequential) of all sample locations is taken during each epoch.
+
+        Returns:
+            One of 'random' or 'sequential'.
+        """
 
     def __init__(self, dataset: GeoDataset, *, roi: Polygon | None = None) -> None:
         """Initialize a new SpatialSampler instance.
@@ -154,6 +154,20 @@ class TemporalSampler(GeoSampler):
 
     .. versionadded:: 0.10
     """
+
+    @property
+    @abc.abstractmethod
+    def strategy(self) -> Literal['random', 'sequential']:
+        """Sampling strategy.
+
+        All sampling strategies can be categorized as either being random or sequential.
+        This distinction only matters when combining samplers via
+        :class:`SpatioTemporalSampler`, where either a zip (random) or product
+        (sequential) of all sample locations is taken during each epoch.
+
+        Returns:
+            One of 'random' or 'sequential'.
+        """
 
     def __init__(self, dataset: GeoDataset, *, toi: Interval | None = None) -> None:
         """Initialize a new TemporalSampler instance.
@@ -259,9 +273,6 @@ class SpatioTemporalSampler(GeoSampler):
 
     .. versionadded:: 0.10
     """
-
-    # TODO: this parameter will be ignored, maybe move abc to spatial/temporal?
-    strategy = 'random'
 
     def __init__(
         self, spatial_sampler: SpatialSampler, temporal_sampler: TemporalSampler

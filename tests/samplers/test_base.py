@@ -25,8 +25,6 @@ TMAX = Timestamp(2025, 4, 30)
 
 
 class CustomGeoSampler(GeoSampler):
-    strategy = 'sequential'
-
     def __init__(self, dataset: GeoDataset, *, length: int | None = None) -> None:
         self.hidden_length = length or 5
         if length:
