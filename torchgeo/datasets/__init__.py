@@ -141,6 +141,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .s2_100k import S2100k
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
@@ -341,6 +342,7 @@ __all__ = (
     'RasterDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'S2100k',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
     'SeasoNet',
