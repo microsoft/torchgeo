@@ -110,7 +110,7 @@ class ForestChange(NonGeoDataset):
                 ``<root>/Forest-Change-dataset/``.
             split: one of ``'train'``, ``'val'``, or ``'test'``.
             transforms: a function/transform that takes input sample and its target as
-            entry and returns a transformed version
+                entry and returns a transformed version
             max_length: maximum token sequence length used when encoding
                 captions.
             allow_unknown: whether unknown tokens are mapped to ``<UNK>``
