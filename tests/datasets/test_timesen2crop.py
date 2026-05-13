@@ -135,3 +135,35 @@ class TestTimeSen2Crop:
         ds = TimeSen2Crop(root=dataset.root, tiles=TEST_TILES, bands=('B5',))
         with pytest.raises(RGBBandsMissingError):
             ds.plot(ds[0])
+
+    def test_build_cache_skips_missing_tile(
+        self, dataset: TimeSen2Crop, monkeypatch: MonkeyPatch
+    ) -> None:
+        # Force a rebuild with a phantom tile listed in ``valid_tiles``.
+        shutil.rmtree(os.path.join(dataset.root, TimeSen2Crop.cache_dirname))
+        monkeypatch.setattr(TimeSen2Crop, 'valid_tiles', (*TEST_TILES, '32TPT'))
+        TimeSen2Crop(root=dataset.root, tiles=TEST_TILES)
+
+    def test_build_cache_skips_out_of_range_class(
+        self, dataset: TimeSen2Crop, monkeypatch: MonkeyPatch
+    ) -> None:
+        # A subfolder named for a class id beyond ``classes`` should be ignored.
+        shutil.rmtree(os.path.join(dataset.root, TimeSen2Crop.cache_dirname))
+        rogue = os.path.join(
+            dataset.root, TimeSen2Crop.extracted_dirname, '33TUN', '99'
+        )
+        os.makedirs(rogue)
+        with open(os.path.join(rogue, '0.csv'), 'w') as f:
+            f.write('B1,B2\n0,0\n')
+        monkeypatch.setattr(TimeSen2Crop, 'valid_tiles', TEST_TILES)
+        TimeSen2Crop(root=dataset.root, tiles=TEST_TILES)
+
+    def test_build_cache_skips_empty_class_dir(
+        self, dataset: TimeSen2Crop, monkeypatch: MonkeyPatch
+    ) -> None:
+        # A class subfolder with no CSVs should be skipped silently.
+        shutil.rmtree(os.path.join(dataset.root, TimeSen2Crop.cache_dirname))
+        empty = os.path.join(dataset.root, TimeSen2Crop.extracted_dirname, '33TUN', '2')
+        os.makedirs(empty)
+        monkeypatch.setattr(TimeSen2Crop, 'valid_tiles', TEST_TILES)
+        TimeSen2Crop(root=dataset.root, tiles=TEST_TILES)
