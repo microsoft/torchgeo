@@ -32,7 +32,7 @@ class GeoSampler(Sampler[GeoSlice], ABC):
     returns a GeoSlice that can uniquely index any :class:`~torchgeo.datasets.GeoDataset`.
     """
 
-    length: int
+    _length: int
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[GeoSlice]:
@@ -48,11 +48,11 @@ class GeoSampler(Sampler[GeoSlice], ABC):
         Returns:
             The sampler length.
         """
-        if not hasattr(self, 'length'):
+        if not hasattr(self, '_length'):
             # Use brute force to calculate length if not already cached
-            self.length = sum(1 for _ in self)
+            self._length = sum(1 for _ in self)
 
-        return self.length
+        return self._length
 
 
 class SpatialSampler(GeoSampler):

@@ -79,7 +79,7 @@ class RandomSpatialSampler(SpatialSampler):
         # Default to approximate number of non-overlapping patches
         total_area = shapely.area(self.geometry)
         patch_area = self.size[0] * self.size[1]
-        self.length = length or convolution_arithmetic(total_area, patch_area)
+        self._length = length or convolution_arithmetic(total_area, patch_area)
 
         # Erosion to avoid out-of-bounds sampling
         # Purposefully conservative radius calculation
@@ -93,7 +93,7 @@ class RandomSpatialSampler(SpatialSampler):
             [xmin:xmax, ymin:ymax] coordinates to index a dataset.
         """
         # Ensure a new set of random points for each epoch
-        points = self.series.sample_points(size=self.length, rng=self.generator)
+        points = self.series.sample_points(size=len(self), rng=self.generator)
 
         # Points are random, but order is not
         # Remove once https://github.com/geopandas/geopandas/pull/3773 is in min version

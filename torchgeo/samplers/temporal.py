@@ -139,7 +139,7 @@ class RandomTimedeltaSampler(TemporalSampler):
         self.delta = delta
         left = self.index.index.left.min()
         right = self.index.index.right.max()
-        self.length = length or convolution_arithmetic(right - left, delta)
+        self._length = length or convolution_arithmetic(right - left, delta)
         self.generator = np.random.default_rng(generator)
 
     def _iter_subset(
@@ -160,7 +160,7 @@ class RandomTimedeltaSampler(TemporalSampler):
 
         i = 0
         x, y = location
-        while i < self.length:
+        while i < len(self):
             ts = self.generator.uniform(left.timestamp(), right.timestamp())
             tmin = Timestamp.fromtimestamp(ts)
             tmax = tmin + self.delta
@@ -267,7 +267,7 @@ class RandomPeriodSampler(TemporalSampler):
         right = self.index.index.right.max()
         period = Period(left, freq=freq)
         window = period.end_time - period.start_time
-        self.length = length or convolution_arithmetic(right - left, window)
+        self._length = length or convolution_arithmetic(right - left, window)
         self.generator = np.random.default_rng(generator)
 
     def _iter_subset(
@@ -294,7 +294,7 @@ class RandomPeriodSampler(TemporalSampler):
 
         i = 0
         x, y = location
-        while i < self.length:
+        while i < len(self):
             ts = self.generator.uniform(left.timestamp(), right.timestamp())
             period = Period(Timestamp.fromtimestamp(ts), freq=self.freq)
             interval = Interval(period.start_time, period.end_time)

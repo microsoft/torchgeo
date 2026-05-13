@@ -28,7 +28,7 @@ class CustomGeoSampler(GeoSampler):
     def __init__(self, dataset: GeoDataset, *, length: int | None = None) -> None:
         self.hidden_length = length or 5
         if length:
-            self.length = length
+            self._length = length
 
     def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         for i in range(self.hidden_length):
@@ -37,11 +37,11 @@ class CustomGeoSampler(GeoSampler):
 
 class CustomSpatialSampler(SpatialSampler):
     strategy = 'random'
-    length = 5
+    _length = 5
 
     def __iter__(self) -> Iterator[tuple[slice, slice]]:
         series = GeoSeries([self.geometry])
-        points = series.sample_points(size=self.length).explode()
+        points = series.sample_points(size=len(self)).explode()
         for point in points:
             yield slice(point.x, point.x), slice(point.y, point.y)
 
