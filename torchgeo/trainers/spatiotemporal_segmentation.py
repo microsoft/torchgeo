@@ -133,26 +133,22 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics."""
-        del batch_idx, dataloader_idx
         return self._shared_step(batch, 'train')
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics."""
-        del batch_idx, dataloader_idx
         self._shared_step(batch, 'val')
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics."""
-        del batch_idx, dataloader_idx
         self._shared_step(batch, 'test')
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities."""
-        del batch_idx, dataloader_idx
         y_hat: Tensor = self(batch['image'], lengths=batch.get('length'))
 
         match self.hparams['task']:
