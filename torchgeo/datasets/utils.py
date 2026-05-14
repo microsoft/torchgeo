@@ -28,6 +28,7 @@ import pandas as pd
 import rasterio
 import shapely.affinity
 import torch
+from numpy.typing import NDArray
 from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
@@ -797,11 +798,12 @@ def rgb_to_mask(
 
 @deprecated('Use torchgeo.datasets.utils.quantile_normalization instead')
 def percentile_normalization(
-    img: np.typing.NDArray[np.int_],
+    img: NDArray,
     lower: float = 2,
     upper: float = 98,
     axis: int | Sequence[int] | None = None,
-) -> np.typing.NDArray[np.int_]:
+    nodata: int = 0,
+) -> NDArray:
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -814,16 +816,23 @@ def percentile_normalization(
         upper: upper percentile in range [0,100]
         axis: Axis or axes along which the percentiles are computed. The default
             is to compute the percentile(s) along a flattened version of the array.
+        nodata: Nodata value to ignore during quantile calculation.
 
     Returns:
         normalized version of ``img``
 
+    Raises:
+        AssertionError: If *lower* is higher than *upper*.
+
     .. versionadded:: 0.2
     .. versiondeprecated:: 0.10
     """
+    if (img == nodata).all():
+        return img
+
     assert lower < upper
-    lower_percentile = np.percentile(img, lower, axis=axis)
-    upper_percentile = np.percentile(img, upper, axis=axis)
+    lower_percentile = np.percentile(img[img != nodata], lower, axis=axis)
+    upper_percentile = np.percentile(img[img != nodata], upper, axis=axis)
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
@@ -834,6 +843,7 @@ def quantile_normalization(
     img: Tensor,
     lower: float | Tensor = 0.02,
     upper: float | Tensor = 0.98,
+    nodata: float = 0,
     dim: int | None = None,
 ) -> Tensor:
     """Normalize and clip an input image to a specific quantile range.
@@ -842,6 +852,7 @@ def quantile_normalization(
         img: Image to normalize.
         lower: Lower quantile in range [0, 1].
         upper: Upper quantile in range [0, 1].
+        nodata: Nodata value to ignore during quantile calculation.
         dim: Dimension to reduce.
 
     Returns:
@@ -849,8 +860,11 @@ def quantile_normalization(
 
     .. versionadded:: 0.10
     """
-    lower = torch.quantile(img, lower, dim, interpolation='higher')
-    upper = torch.quantile(img, upper, dim, interpolation='lower')
+    if (img == nodata).all():
+        return img
+
+    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
+    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
     img = (img - lower) / (upper - lower + 1e-5)
     return torch.clamp(img, 0, 1)
 
