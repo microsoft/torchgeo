@@ -22,9 +22,10 @@ class TestPASTIS:
         params=product(
             [PASTIS, PASTIS100],
             [
-                {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
-                {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
-                {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
+                {'folds': (1, 2), 'bands': PASTIS.s2_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': ('B04', 'B03', 'B02'), 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1a_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1d_bands, 'mode': 'instance'},
             ],
         )
     )
@@ -32,11 +33,12 @@ class TestPASTIS:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
         base_class: type[PASTIS] = request.param[0]
-        params: dict[str, str] = request.param[1]
+        params: dict[str, str | tuple[str, ...]] = request.param[1]
 
         root = tmp_path
         bands = params['bands']
         mode = params['mode']
+        assert isinstance(mode, str)
         transforms = nn.Identity()
 
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
@@ -105,6 +107,14 @@ class TestPASTIS:
     def test_invalid_mode(self) -> None:
         with pytest.raises(AssertionError):
             PASTIS(mode='invalid')
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError, match='bands must be a subset of'):
+            PASTIS(bands=('B01',))
+
+    def test_invalid_bands_empty(self) -> None:
+        with pytest.raises(ValueError, match='bands must not be empty'):
+            PASTIS(bands=())
 
     def test_plot(self, dataset: PASTIS) -> None:
         x = dataset[0].copy()

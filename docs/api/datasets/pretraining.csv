@@ -4,6 +4,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`HySpecNet-11k`,-,EnMAP,11k,-,128,30,HSI,CC0-1.0
 :ref:`MMEarth`,"C, S","Aster, Sentinel, ERA5","100K--1M",,"128x128 or 64x64",10,MSI,CC-BY-4.0
 :ref:`Million-AID`,C,Google Earth,1M,51--73,,0.5--153,RGB,
+:ref:`S2-100k`,LE,Sentinel-2,100k,-,256x256,10,MSI,MIT
 :ref:`SSL4EO`-L,T,Landsat,1M,-,264x264,30,MSI,CC0-1.0
 :ref:`SSL4EO`-S12,T,Sentinel-1/2,1M,-,264x264,10,"SAR, MSI",CC-BY-4.0
 :ref:`SatlasPretrain`,"C, R, S, I, OD","NAIP, Landsat, Sentinel",302M,137,512,0.6--30,"SAR, MSI",ESA AND CC0-1.0 AND ODbL-1.0 AND CC-BY-4.0

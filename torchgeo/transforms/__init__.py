@@ -20,6 +20,7 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
+from .sar import LeeFilter
 from .spatial import SatSlideMix
 from .temporal import Rearrange
 
@@ -38,6 +39,7 @@ __all__ = (
     'AppendRBNDVI',
     'AppendSWI',
     'AppendTriBandNormalizedDifferenceIndex',
+    'LeeFilter',
     'RandomGrayscale',
     'Rearrange',
     'SatSlideMix',

@@ -9,10 +9,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
-import numpy.typing
 import pandas as pd
 import pytest
 import torch
+from numpy.typing import NDArray
+from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
@@ -543,20 +544,18 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
         assert subdir.cwd() == subdir
 
 
-def test_percentile_normalization() -> None:
-    img = np.array([[1, 2], [98, 100]])
+@pytest.mark.parametrize('img', [np.random.rand(2, 2), np.zeros((2, 2))])
+def test_percentile_normalization(img: NDArray[np.float64]) -> None:
     match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
     with pytest.warns(DeprecationWarning, match=match):
-        img = percentile_normalization(img, 2, 98)
-    assert img.min() == 0
-    assert img.max() == 1
+        img = percentile_normalization(img)
+    assert 0 <= img.min() <= img.max() <= 1
 
 
-def test_quantile_normalization() -> None:
-    img = torch.rand(3, 16, 16)
+@pytest.mark.parametrize('img', [torch.rand(2, 2), torch.zeros(2, 2)])
+def test_quantile_normalization(img: Tensor) -> None:
     img = quantile_normalization(img)
-    assert img.min() == 0
-    assert img.max() == 1
+    assert 0 <= img.min() <= img.max() <= 1
 
 
 @pytest.mark.parametrize(

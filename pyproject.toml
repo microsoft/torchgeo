@@ -22,6 +22,7 @@ maintainers = [
     {name = "Isaac Corley", email = "isaac.corley@proton.me"},
     {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
     {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
+    {name = "Robin Cole", email = "robmarkcole@gmail.com"},
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
