@@ -13,8 +13,8 @@ from shapely import Polygon
 from torchgeo.datasets import RasterDataset
 from torchgeo.samplers import (
     GriddedPatchSampler,
-    RandomPeriodSampler,
     RandomPatchSampler,
+    RandomPeriodSampler,
     RandomTimedeltaSampler,
     RandomTimestampSampler,
     SequentialPeriodSampler,
