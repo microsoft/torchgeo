@@ -73,7 +73,11 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         return self.model(x, lengths=lengths)
 
     def configure_models(self) -> None:
-        """Initialize the model."""
+        """Initialize the model.
+
+        Raises:
+            ValueError: If *model* is invalid.
+        """
         model: str = self.hparams['model']
         in_channels: int = self.hparams['in_channels']
         num_classes: int = (
@@ -103,6 +107,9 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
                     num_classes=num_classes,
                     head_kernel_size=head_kernel_size,
                 )
+            case _:
+                msg = f"Invalid model type '{model}'. Supported model: 'convlstm'"
+                raise ValueError(msg)
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
         """Compute the loss and metrics for the given stage."""
