@@ -11,6 +11,7 @@ import torchgeo
 
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules
+import torchgeo.profilers
 import torchgeo.trainers
 from torchgeo.datamodules import BaseDataModule
 from torchgeo.trainers import BaseTask
