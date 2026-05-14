@@ -1,6 +1,6 @@
-RandomSpatialSampler
+RandomPatchSampler
 ====================
 
-.. image:: ../../_static/animations/RandomSpatialSampler.gif
+.. image:: ../../_static/animations/RandomPatchSampler.gif
 
-.. autoclass:: torchgeo.samplers.RandomSpatialSampler
+.. autoclass:: torchgeo.samplers.RandomPatchSampler

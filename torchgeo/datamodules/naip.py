@@ -19,7 +19,7 @@ from ..datasets import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
-from ..samplers import GridSpatialSampler, RandomSpatialSampler
+from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from .geo import GeoDataModule
 
 
@@ -88,17 +88,17 @@ class NAIPChesapeakeDataModule(GeoDataModule):
 
         if stage in ['fit']:
             train_roi = shapely.box(x.start, y.start, midx, y.stop)
-            self.train_sampler = RandomSpatialSampler(
+            self.train_sampler = RandomPatchSampler(
                 self.dataset, size=self.patch_size, length=self.length, roi=train_roi
             )
         if stage in ['fit', 'validate']:
             val_roi = shapely.box(midx, y.start, x.stop, midy)
-            self.val_sampler = GridSpatialSampler(
+            self.val_sampler = GriddedPatchSampler(
                 self.dataset, size=self.patch_size, stride=self.patch_size, roi=val_roi
             )
         if stage in ['test']:
             test_roi = shapely.box(midx, midy, x.stop, y.stop)
-            self.test_sampler = GridSpatialSampler(
+            self.test_sampler = GriddedPatchSampler(
                 self.dataset, size=self.patch_size, stride=self.patch_size, roi=test_roi
             )
 

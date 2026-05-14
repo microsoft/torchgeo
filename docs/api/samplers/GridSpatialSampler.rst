@@ -1,6 +1,6 @@
-GridSpatialSampler
+GriddedPatchSampler
 ==================
 
-.. image:: ../../_static/animations/GridSpatialSampler.gif
+.. image:: ../../_static/animations/GriddedPatchSampler.gif
 
-.. autoclass:: torchgeo.samplers.GridSpatialSampler
+.. autoclass:: torchgeo.samplers.GriddedPatchSampler

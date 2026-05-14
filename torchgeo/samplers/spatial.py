@@ -19,7 +19,7 @@ from .constants import Units
 from .utils import _to_tuple, convolution_arithmetic
 
 
-class RandomSpatialSampler(SpatialSampler):
+class RandomPatchSampler(SpatialSampler):
     """Sample locations from a region of interest randomly.
 
     This is particularly useful during training when you want to maximize the size of
@@ -46,7 +46,7 @@ class RandomSpatialSampler(SpatialSampler):
         | SeedSequence
         | None = None,
     ) -> None:
-        """Initialize a new RandomSpatialSampler instance.
+        """Initialize a new RandomPatchSampler instance.
 
         The ``size`` argument can either be:
 
@@ -120,7 +120,7 @@ class RandomSpatialSampler(SpatialSampler):
             yield slice(xmin, xmax), slice(ymin, ymax)
 
 
-class GridSpatialSampler(SpatialSampler):
+class GriddedPatchSampler(SpatialSampler):
     """Sample locations from a region of interest in a grid-like fashion.
 
     This is particularly useful during evaluation when you want to make predictions for
@@ -148,7 +148,7 @@ class GridSpatialSampler(SpatialSampler):
         roi: Polygon | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
-        """Initialize a new GridSpatialSampler instance.
+        """Initialize a new GriddedPatchSampler instance.
 
         The ``size`` and ``stride`` arguments can either be:
 

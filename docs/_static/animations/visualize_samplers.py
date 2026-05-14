@@ -12,9 +12,9 @@ from shapely import Polygon
 
 from torchgeo.datasets import RasterDataset
 from torchgeo.samplers import (
-    GridSpatialSampler,
+    GriddedPatchSampler,
     RandomPeriodSampler,
-    RandomSpatialSampler,
+    RandomPatchSampler,
     RandomTimedeltaSampler,
     RandomTimestampSampler,
     SequentialPeriodSampler,
@@ -48,8 +48,8 @@ class ToyDataset(RasterDataset):
 dataset = ToyDataset()
 
 spatial_samplers = [
-    RandomSpatialSampler(dataset, size=3, generator=0),
-    GridSpatialSampler(dataset, size=3, stride=2),
+    RandomPatchSampler(dataset, size=3, generator=0),
+    GriddedPatchSampler(dataset, size=3, stride=2),
 ]
 temporal_samplers = [
     RandomTimestampSampler(dataset, generator=0),

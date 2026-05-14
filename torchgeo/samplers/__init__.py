@@ -7,7 +7,7 @@ from .base import GeoSampler, SpatialSampler, SpatioTemporalSampler, TemporalSam
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
 from .constants import Units
 from .single import GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
-from .spatial import GridSpatialSampler, RandomSpatialSampler
+from .spatial import GriddedPatchSampler, RandomPatchSampler
 from .temporal import (
     RandomPeriodSampler,
     RandomTimedeltaSampler,
@@ -22,12 +22,12 @@ __all__ = (
     'BatchGeoSampler',
     'GeoSampler',
     'GridGeoSampler',
-    'GridSpatialSampler',
+    'GriddedPatchSampler',
     'PreChippedGeoSampler',
     'RandomBatchGeoSampler',
     'RandomGeoSampler',
     'RandomPeriodSampler',
-    'RandomSpatialSampler',
+    'RandomPatchSampler',
     'RandomTimedeltaSampler',
     'RandomTimestampSampler',
     'SequentialPeriodSampler',

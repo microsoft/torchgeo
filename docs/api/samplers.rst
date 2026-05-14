@@ -20,10 +20,10 @@ Samplers are used to index a dataset, retrieving a single query at a time. For :
    from torch.utils.data import DataLoader
 
    from torchgeo.datasets import Landsat
-   from torchgeo.samplers import RandomSpatialSampler
+   from torchgeo.samplers import RandomPatchSampler
 
    dataset = Landsat(...)
-   sampler = RandomSpatialSampler(dataset, size=256, length=10000)
+   sampler = RandomPatchSampler(dataset, size=256, length=10000)
    dataloader = DataLoader(dataset, sampler=sampler)
 
 
@@ -36,10 +36,10 @@ Some datasets have static mosaics, and only spatial sampling is important. Other
    from torch.utils.data import DataLoader
 
    from torchgeo.datasets import Landsat
-   from torchgeo.samplers import GridSpatialSampler, SequentialPeriodSampler
+   from torchgeo.samplers import GriddedPatchSampler, SequentialPeriodSampler
 
    dataset = Landsat(..., time_series=True)
-   spatial_sampler = GridSpatialSampler(dataset, size=256, stride=128)
+   spatial_sampler = GriddedPatchSampler(dataset, size=256, stride=128)
    temporal_sampler = SequentialPeriodSampler(dataset, freq='Y')
    spatiotemporal_sampler = spatial_sampler @ temporal_sampler
    dataloader = DataLoader(dataset, sampler=spatiotemporal_sampler)
@@ -55,8 +55,8 @@ Spatial Samplers
 .. autosummary::
    :nosignatures:
 
-   RandomSpatialSampler
-   GridSpatialSampler
+   RandomPatchSampler
+   GriddedPatchSampler
 
 Temporal Samplers
 ^^^^^^^^^^^^^^^^^
@@ -94,10 +94,10 @@ By default, the ``size`` parameter specifies the size of the image in *pixel* un
    from torch.utils.data import DataLoader
 
    from torchgeo.datasets import Landsat
-   from torchgeo.samplers import RandomSpatialSampler, Units
+   from torchgeo.samplers import RandomPatchSampler, Units
 
    dataset = Landsat(...)
-   sampler = RandomSpatialSampler(dataset, size=256 * 30, length=10000, units=Units.CRS)
+   sampler = RandomPatchSampler(dataset, size=256 * 30, length=10000, units=Units.CRS)
    dataloader = DataLoader(dataset, sampler=sampler)
 
 

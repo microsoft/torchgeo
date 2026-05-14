@@ -83,7 +83,7 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
         """
 
 
-@deprecated('Use torchgeo.samplers.RandomSpatialSampler instead')
+@deprecated('Use torchgeo.samplers.RandomPatchSampler instead')
 class RandomBatchGeoSampler(BatchGeoSampler):
     """Samples batches of elements from a region of interest randomly.
 

@@ -21,7 +21,7 @@ from torchgeo.datamodules import (
 )
 from torchgeo.datasets import GeoDataset, NonGeoDataset
 from torchgeo.datasets.utils import GeoSlice, Sample
-from torchgeo.samplers import RandomBatchGeoSampler, RandomSpatialSampler
+from torchgeo.samplers import RandomBatchGeoSampler, RandomPatchSampler
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -55,10 +55,10 @@ class CustomGeoDataModule(GeoDataModule):
 class SamplerGeoDataModule(CustomGeoDataModule):
     def setup(self, stage: str) -> None:
         self.dataset = CustomGeoDataset()
-        self.train_sampler = RandomSpatialSampler(self.dataset, size=1, length=1)
-        self.val_sampler = RandomSpatialSampler(self.dataset, size=1, length=1)
-        self.test_sampler = RandomSpatialSampler(self.dataset, size=1, length=1)
-        self.predict_sampler = RandomSpatialSampler(self.dataset, size=1, length=1)
+        self.train_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.val_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.test_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.predict_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
 
 
 class BatchSamplerGeoDataModule(CustomGeoDataModule):
@@ -190,7 +190,7 @@ class TestGeoDataModule:
     def test_zero_length_sampler(self) -> None:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
-        dm.sampler = RandomSpatialSampler(dm.dataset, size=1, length=1)
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
         dm.sampler._length = 0
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
@@ -205,7 +205,7 @@ class TestGeoDataModule:
     def test_drop_last(self) -> None:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset(length=2)
-        dm.sampler = RandomSpatialSampler(dm.dataset, size=1, length=1)
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
 
         assert dm.train_dataloader().drop_last
         assert not dm.val_dataloader().drop_last
