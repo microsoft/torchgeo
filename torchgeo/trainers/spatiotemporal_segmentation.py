@@ -73,43 +73,31 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         return self.model(x, lengths=lengths)
 
     def configure_models(self) -> None:
-        """Initialize the model.
-
-        Raises:
-            ValueError: If *model* is invalid.
-        """
-        model: str = self.hparams['model']
+        """Initialize the model."""
         in_channels: int = self.hparams['in_channels']
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
 
-        match model:
-            case 'convlstm':
-                hidden_dim = cast(int | list[int], self.hparams.get('hidden_dim', 64))
-                kernel_size = cast(
-                    int | tuple[int, int] | list[int | tuple[int, int]],
-                    self.hparams.get('kernel_size', 3),
-                )
-                num_layers = cast(int, self.hparams.get('num_layers', 1))
-                head_kernel_size = cast(int, self.hparams.get('head_kernel_size', 1))
-                bias = cast(bool, self.hparams.get('bias', True))
-                return_all_layers = cast(
-                    bool, self.hparams.get('return_all_layers', False)
-                )
-                self.model = ConvLSTM(
-                    input_dim=in_channels,
-                    hidden_dim=hidden_dim,
-                    kernel_size=kernel_size,
-                    num_layers=num_layers,
-                    bias=bias,
-                    return_all_layers=return_all_layers,
-                    num_classes=num_classes,
-                    head_kernel_size=head_kernel_size,
-                )
-            case _:
-                msg = f"Invalid model type '{model}'. Supported model: 'convlstm'"
-                raise ValueError(msg)
+        hidden_dim = cast(int | list[int], self.hparams.get('hidden_dim', 64))
+        kernel_size = cast(
+            int | tuple[int, int] | list[int | tuple[int, int]],
+            self.hparams.get('kernel_size', 3),
+        )
+        num_layers = cast(int, self.hparams.get('num_layers', 1))
+        head_kernel_size = cast(int, self.hparams.get('head_kernel_size', 1))
+        bias = cast(bool, self.hparams.get('bias', True))
+        return_all_layers = cast(bool, self.hparams.get('return_all_layers', False))
+        self.model = ConvLSTM(
+            input_dim=in_channels,
+            hidden_dim=hidden_dim,
+            kernel_size=kernel_size,
+            num_layers=num_layers,
+            bias=bias,
+            return_all_layers=return_all_layers,
+            num_classes=num_classes,
+            head_kernel_size=head_kernel_size,
+        )
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
         """Compute the loss and metrics for the given stage."""
