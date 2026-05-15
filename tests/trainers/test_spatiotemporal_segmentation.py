@@ -118,11 +118,7 @@ class TestSpatioTemporalSegmentationTask:
         ('loss', 'expected_type'),
         [('jaccard', smp.losses.JaccardLoss), ('focal', smp.losses.FocalLoss)],
     )
-    def test_alternate_losses(
-        self,
-        loss: str,
-        expected_type: type[nn.Module],
-    ) -> None:
+    def test_alternate_losses(self, loss: str, expected_type: type[nn.Module]) -> None:
         model = self._make_task(
             in_channels=3, num_classes=3, task='multiclass', loss=loss, ignore_index=1
         )
