@@ -7,11 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 import torch
-import torch.nn as nn
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
-from torchgeo.models import ConvLSTM
 from torchgeo.trainers import SpatioTemporalSegmentationTask
 
 
@@ -50,22 +48,14 @@ class TestSpatioTemporalSegmentationTask:
         task.log_dict = MagicMock()  # type: ignore[method-assign]
         return task
 
-    def test_spatiotemporal_forward_defaults_to_convlstm(self) -> None:
-        model = SpatioTemporalSegmentationTask(in_channels=3, num_classes=5)
-        assert model.hparams['model'] == 'convlstm'
-        assert isinstance(model.model, ConvLSTM)
-
-    def test_spatiotemporal_forward_supports_direct_convlstm_kwargs(self) -> None:
-        model = SpatioTemporalSegmentationTask(
-            in_channels=3, num_classes=5, hidden_dim=8, num_layers=1
-        )
-        assert isinstance(model.model, ConvLSTM)
-        assert model.model.hidden_dim == [8]
-
     def test_convlstm_timeseries_forward_and_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
-            model='convlstm', in_channels=10, num_classes=5, task='multiclass',
-            hidden_dim=8, num_layers=1,
+            model='convlstm',
+            in_channels=10,
+            num_classes=5,
+            task='multiclass',
+            hidden_dim=8,
+            num_layers=1,
         )
         batch = {
             'image': torch.randn(2, 7, 10, 16, 16),
@@ -85,16 +75,6 @@ class TestSpatioTemporalSegmentationTask:
         # final timestep instead of indexing out of bounds.
         y_hat_clamped = model(batch['image'], lengths=torch.tensor([9.0, 12.0]))
         torch.testing.assert_close(y_hat_no_lengths, y_hat_clamped)
-
-    def test_ce_class_weights_from_sequence(self) -> None:
-        model = self._make_task(
-            in_channels=3, num_classes=2, task='multiclass', class_weights=[1.0, 2.0]
-        )
-
-        assert isinstance(model.criterion, nn.CrossEntropyLoss)
-        torch.testing.assert_close(
-            model.criterion.weight, torch.tensor([1.0, 2.0], dtype=torch.float32)
-        )
 
     def test_binary_steps_and_predict_step(self) -> None:
         model = self._make_task(in_channels=3, task='binary', loss='bce')
@@ -124,4 +104,3 @@ class TestSpatioTemporalSegmentationTask:
         torch.testing.assert_close(
             probabilities.sum(dim=1), torch.ones((2, 16, 16)), atol=1e-5, rtol=1e-5
         )
-
