@@ -795,101 +795,32 @@ class FLAIRHUB(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify dataset integrity and download missing files."""
-        to_download: list[tuple[str, str, str]] = []  # (domain, year, modality)
-        to_extract: list[tuple[str, str, str]] = []  # (domain, year, modality)
-
-        if self.dataset_type == 'land_cover':
-            label_modality = 'AERIAL_LABEL-COSIA'
-        else:
-            label_modality = 'ALL_LABEL-LPIS'
+        label_modality = (
+            'AERIAL_LABEL-COSIA'
+            if self.dataset_type == 'land_cover'
+            else 'ALL_LABEL-LPIS'
+        )
 
         for domain, years in self.domain_years.items():
             for year in years:
-                modalities_to_check = [
-                    label_modality,  # Always need labels
-                    *self.bands,
-                ]
+                for modality in [label_modality, *self.bands]:
+                    year_str = '195X' if modality == 'AERIAL-RLT_PAN' else year
+                    dir_name = f'{domain}-{year_str}_{modality}'
+                    dir_path = pathlib.Path(self.root) / dir_name
+                    zip_path = pathlib.Path(self.root) / f'{dir_name}.zip'
 
-                for modality_suffix in modalities_to_check:
-                    if modality_suffix == 'AERIAL-RLT_PAN':
-                        year_str = '195X'
-                    else:
-                        year_str = year
-                    modality_dir = f'{domain}-{year_str}_{modality_suffix}'
-                    # e.g., "data/D012-2019_AERIAL_RGBI"
-                    modality_path = pathlib.Path(self.root) / modality_dir
-                    modality_zip = pathlib.Path(self.root) / f'{modality_dir}.zip'
+                    if dir_path.is_dir() and list(dir_path.rglob('*.tif')):
+                        continue
 
-                    if modality_path.is_dir():
-                        tif_files = list(modality_path.rglob('*.tif'))
-                        if tif_files:
-                            continue
+                    if not zip_path.is_file():
+                        if not self.download:
+                            raise DatasetNotFoundError(self)
+                        download_url(
+                            f'{self.download_link}/{dir_name}.zip', str(self.root)
+                        )
 
-                    if modality_zip.is_file():
-                        to_extract.append((domain, year_str, modality_suffix))
-                    else:
-                        to_download.append((domain, year_str, modality_suffix))
-
-        if to_extract:
-            print(f'Extracting {len(to_extract)} modality archives...')
-            for domain, year, modality in to_extract:
-                self._extract(domain, year, modality)
-
-        if to_download:
-            if not self.download:
-                print(
-                    f'Missing {len(to_download)} modality archives. \
-                     Set download=True to download them.'
-                )
-                raise DatasetNotFoundError(self)
-
-            for domain, year, modality in to_download:
-                self._download_and_extract(domain, year, modality)
-
-        if not to_download and not to_extract:
-            print('All requested modalities are already downloaded and extracted.')
-
-    def _download(self, domain: str, year: str, modality: str) -> None:
-        """Download a specific modality file from HuggingFace.
-
-        Args:
-            domain: Domain identifier (e.g., 'D004')
-            year: Year
-            modality: Modality suffix (e.g., 'AERIAL_RGBI')
-        """
-        filename = f'{domain}-{year}_{modality}.zip'
-        url = f'{self.download_link}/{filename}'
-
-        download_url(url, str(self.root), filename=filename, md5=None)
-
-    def _download_and_extract(self, domain: str, year: str, modality: str) -> None:
-        """Download and extract a specific modality file from HuggingFace.
-
-        Args:
-            domain: Domain identifier (e.g., 'D004')
-            year: Year
-            modality: Modality suffix (e.g., 'AERIAL_RGBI')
-        """
-        self._download(domain, year, modality)
-        self._extract(domain, year, modality)
-
-    def _extract(self, domain: str, year: str, modality: str) -> None:
-        """Extract a specific modality archive and delete the zip file.
-
-        Args:
-            domain: Domain identifier (e.g., 'D004')
-            year: Year
-            modality: Modality suffix (e.g., 'AERIAL_RGBI')
-        """
-        filename = f'{domain}-{year}_{modality}.zip'
-        zipfile_path = pathlib.Path(self.root) / filename
-
-        if not zipfile_path.is_file():
-            raise FileNotFoundError(f'Archive not found: {zipfile_path}')
-
-        extract_archive(str(zipfile_path), str(self.root))
-
-        zipfile_path.unlink()
+                    extract_archive(str(zip_path), str(self.root))
+                    zip_path.unlink()
 
     def _load_mask(self, path: Path) -> Tensor:
         """Load a mask from a path.
@@ -1272,39 +1203,12 @@ class FLAIRHUBToy(FLAIRHUB):
         toy_zip = self.root_folder / 'FLAIR-HUB_TOY_DATASET.zip'
 
         if toy_dir.is_dir():
-            print('Toy dataset downloaded and extracted already...')
             return
 
-        if toy_zip.is_file():
-            print('Extracting toy dataset...')
-            self._extract()
-            return
+        if not toy_zip.is_file():
+            if not self.download:
+                raise DatasetNotFoundError(self)
+            download_url(self.download_link, self.root_folder)
 
-        if not self.download:
-            raise DatasetNotFoundError(self)
-
-        self._download()
-        self._extract()
-
+        extract_archive(str(toy_zip), str(self.root_folder))
         self.files = self._load_files()
-
-    def _download(self, domain: str = '', year: str = '', modality: str = '') -> None:
-        """Download the dataset.
-
-        Args:
-            domain: Ignored (for compatibility with parent class)
-            year: Ignored (for compatibility with parent class)
-            modality: Ignored (for compatibility with parent class)
-        """
-        download_url(self.download_link, self.root_folder)
-
-    def _extract(self, domain: str = '', year: str = '', modality: str = '') -> None:
-        """Extract the dataset.
-
-        Args:
-            domain: Ignored (for compatibility with parent class)
-            year: Ignored (for compatibility with parent class)
-            modality: Ignored (for compatibility with parent class)
-        """
-        zipfile = pathlib.Path(self.root_folder) / 'FLAIR-HUB_TOY_DATASET.zip'
-        extract_archive(str(zipfile), str(self.root_folder))
