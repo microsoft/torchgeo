@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import os
-from collections.abc import Callable
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -43,20 +43,12 @@ class TestSpatioTemporalSegmentationTask:
         except MisconfigurationException:
             pass
 
-    @pytest.fixture
-    def create_spatiotemporal_model(
-        self,
-    ) -> Callable[..., SpatioTemporalSegmentationTask]:
-        def _create_spatiotemporal_model(
-            **kwargs: Any,
-        ) -> SpatioTemporalSegmentationTask:
-            model = SpatioTemporalSegmentationTask(hidden_dim=8, num_layers=1, **kwargs)
-            # Avoid Lightning warnings when calling step hooks without a Trainer.
-            setattr(model, 'log', lambda *args, **kwargs: None)
-            setattr(model, 'log_dict', lambda *args, **kwargs: None)
-            return model
-
-        return _create_spatiotemporal_model
+    def _make_task(self, **kwargs: Any) -> SpatioTemporalSegmentationTask:
+        task = SpatioTemporalSegmentationTask(hidden_dim=8, num_layers=1, **kwargs)
+        # Avoid Lightning warnings when calling step hooks without a Trainer.
+        task.log = MagicMock()  # type: ignore[method-assign]
+        task.log_dict = MagicMock()  # type: ignore[method-assign]
+        return task
 
     def test_spatiotemporal_forward_defaults_to_convlstm(self) -> None:
         model = SpatioTemporalSegmentationTask(in_channels=3, num_classes=5)
@@ -86,10 +78,8 @@ class TestSpatioTemporalSegmentationTask:
         assert model.hparams['num_layers'] == 1
         assert 'kwargs' not in model.hparams
 
-    def test_convlstm_timeseries_forward_and_step(
-        self, create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask]
-    ) -> None:
-        model = create_spatiotemporal_model(
+    def test_convlstm_timeseries_forward_and_step(self) -> None:
+        model = self._make_task(
             model='convlstm', in_channels=10, num_classes=5, task='multiclass'
         )
         batch = {
@@ -114,10 +104,8 @@ class TestSpatioTemporalSegmentationTask:
         loss = model.training_step(batch, 0)
         assert loss.ndim == 0
 
-    def test_ce_class_weights_from_sequence(
-        self, create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask]
-    ) -> None:
-        model = create_spatiotemporal_model(
+    def test_ce_class_weights_from_sequence(self) -> None:
+        model = self._make_task(
             in_channels=3, num_classes=2, task='multiclass', class_weights=[1.0, 2.0]
         )
 
@@ -132,20 +120,17 @@ class TestSpatioTemporalSegmentationTask:
     )
     def test_alternate_losses(
         self,
-        create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask],
         loss: str,
         expected_type: type[nn.Module],
     ) -> None:
-        model = create_spatiotemporal_model(
+        model = self._make_task(
             in_channels=3, num_classes=3, task='multiclass', loss=loss, ignore_index=1
         )
 
         assert isinstance(model.criterion, expected_type)
 
-    def test_binary_steps_and_predict_step(
-        self, create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask]
-    ) -> None:
-        model = create_spatiotemporal_model(in_channels=3, task='binary', loss='bce')
+    def test_binary_steps_and_predict_step(self) -> None:
+        model = self._make_task(in_channels=3, task='binary', loss='bce')
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
             'mask': torch.randint(0, 2, (2, 16, 16)),
@@ -163,12 +148,8 @@ class TestSpatioTemporalSegmentationTask:
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
 
-    def test_multiclass_predict_step(
-        self, create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask]
-    ) -> None:
-        model = create_spatiotemporal_model(
-            in_channels=3, num_classes=4, task='multiclass'
-        )
+    def test_multiclass_predict_step(self) -> None:
+        model = self._make_task(in_channels=3, num_classes=4, task='multiclass')
         batch = {'image': torch.randn(2, 4, 3, 16, 16), 'length': torch.tensor([4, 3])}
 
         probabilities = model.predict_step(batch, 0)
@@ -177,10 +158,8 @@ class TestSpatioTemporalSegmentationTask:
             probabilities.sum(dim=1), torch.ones((2, 16, 16)), atol=1e-5, rtol=1e-5
         )
 
-    def test_multiclass_classwise_metrics(
-        self, create_spatiotemporal_model: Callable[..., SpatioTemporalSegmentationTask]
-    ) -> None:
-        model = create_spatiotemporal_model(
+    def test_multiclass_classwise_metrics(self) -> None:
+        model = self._make_task(
             in_channels=3,
             num_classes=3,
             task='multiclass',
