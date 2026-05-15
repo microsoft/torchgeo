@@ -3,6 +3,7 @@
 
 """Trainers for spatiotemporal semantic segmentation."""
 
+import inspect
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -12,22 +13,7 @@ from ..models import ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
 
-_TASK_HPARAMS = frozenset(
-    {
-        'model',
-        'in_channels',
-        'task',
-        'num_classes',
-        'num_labels',
-        'labels',
-        'pos_weight',
-        'loss',
-        'class_weights',
-        'ignore_index',
-        'lr',
-        'patience',
-    }
-)
+_convlstm = inspect.signature(ConvLSTM.__init__).parameters
 
 
 class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
@@ -50,7 +36,14 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
-        **kwargs: Any,
+        hidden_dim: int | list[int] = _convlstm['hidden_dim'].default,
+        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]] = _convlstm[
+            'kernel_size'
+        ].default,
+        num_layers: int = _convlstm['num_layers'].default,
+        bias: bool = _convlstm['bias'].default,
+        return_all_layers: bool = _convlstm['return_all_layers'].default,
+        head_kernel_size: int = _convlstm['head_kernel_size'].default,
     ) -> None:
         """Initialize a new SpatioTemporalSegmentationTask instance.
 
@@ -71,8 +64,13 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
                 metrics.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
-            **kwargs: Additional model-specific kwargs. For ``model='convlstm'``,
-                kwargs are passed to ``ConvLSTM``.
+            hidden_dim: Number of hidden channels in ``ConvLSTM``.
+            kernel_size: Convolutional kernel size in ``ConvLSTM``.
+            num_layers: Number of stacked ``ConvLSTM`` layers.
+            bias: If ``True``, adds a learnable bias in ``ConvLSTM``.
+            return_all_layers: If ``True``, ``ConvLSTM`` returns outputs for
+                all layers, not just the last.
+            head_kernel_size: Kernel size of the segmentation head in ``ConvLSTM``.
 
         """
         super().__init__()
@@ -95,8 +93,16 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
-        kwargs = {k: v for k, v in self.hparams.items() if k not in _TASK_HPARAMS}
-        self.model = ConvLSTM(input_dim=in_channels, num_classes=num_classes, **kwargs)
+        self.model = ConvLSTM(
+            input_dim=in_channels,
+            hidden_dim=self.hparams['hidden_dim'],
+            kernel_size=self.hparams['kernel_size'],
+            num_layers=self.hparams['num_layers'],
+            bias=self.hparams['bias'],
+            return_all_layers=self.hparams['return_all_layers'],
+            num_classes=num_classes,
+            head_kernel_size=self.hparams['head_kernel_size'],
+        )
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
         """Compute the loss and metrics for the given stage."""
