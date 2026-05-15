@@ -171,3 +171,20 @@ class TestConvLSTM:
         y_hat_last_step = model(input_tensor, lengths=torch.tensor([t, t]))
 
         torch.testing.assert_close(y_hat, y_hat_last_step)
+
+    def test_convlstm_forward_clamps_lengths_exceeding_sequence(self) -> None:
+        """Test that lengths longer than the sequence clamp to the final timestep."""
+        b = 2
+        t = 4
+        c = 3
+        h = 16
+        w = 16
+        input_tensor = torch.rand(b, t, c, h, w)
+
+        model = ConvLSTM(
+            input_dim=c, hidden_dim=16, kernel_size=3, num_layers=1, num_classes=5
+        )
+        y_hat_clamped = model(input_tensor, lengths=torch.tensor([9.0, 12.0]))
+        y_hat_last = model(input_tensor)
+
+        torch.testing.assert_close(y_hat_clamped, y_hat_last)

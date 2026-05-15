@@ -41,34 +41,6 @@ class TestSpatioTemporalSegmentationTask:
         except MisconfigurationException:
             pass
 
-    def test_convlstm_timeseries_forward_and_step(self) -> None:
-        model = SpatioTemporalSegmentationTask(
-            model='convlstm',
-            in_channels=10,
-            num_classes=5,
-            task='multiclass',
-            hidden_dim=8,
-            num_layers=1,
-        )
-        batch = {
-            'image': torch.randn(2, 7, 10, 16, 16),
-            'mask': torch.randint(0, 5, (2, 16, 16)),
-            'length': torch.tensor([7, 5]),
-        }
-        y_hat = model(batch['image'], lengths=batch['length'])
-        assert y_hat.shape == (2, 5, 16, 16)
-
-        # If no lengths are provided, the model uses the last timestep.
-        # This should match the explicit `lengths=T` case.
-        y_hat_no_lengths = model(batch['image'])
-        y_hat_last_step = model(batch['image'], lengths=torch.tensor([7, 7]))
-        torch.testing.assert_close(y_hat_no_lengths, y_hat_last_step)
-
-        # Lengths longer than the available sequence should clamp to the
-        # final timestep instead of indexing out of bounds.
-        y_hat_clamped = model(batch['image'], lengths=torch.tensor([9.0, 12.0]))
-        torch.testing.assert_close(y_hat_no_lengths, y_hat_clamped)
-
     def test_binary_steps_and_predict_step(self, monkeypatch: MonkeyPatch) -> None:
         model = SpatioTemporalSegmentationTask(
             in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
