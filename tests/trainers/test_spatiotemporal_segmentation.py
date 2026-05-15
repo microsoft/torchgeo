@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 
@@ -17,7 +16,7 @@ from torchgeo.trainers import SpatioTemporalSegmentationTask
 
 
 class TestSpatioTemporalSegmentationTask:
-    @pytest.mark.parametrize('name', ['pastis'])
+    @pytest.mark.parametrize('name', ['pastis', 'pastis_focal', 'pastis_jaccard'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -96,17 +95,6 @@ class TestSpatioTemporalSegmentationTask:
         torch.testing.assert_close(
             model.criterion.weight, torch.tensor([1.0, 2.0], dtype=torch.float32)
         )
-
-    @pytest.mark.parametrize(
-        ('loss', 'expected_type'),
-        [('jaccard', smp.losses.JaccardLoss), ('focal', smp.losses.FocalLoss)],
-    )
-    def test_alternate_losses(self, loss: str, expected_type: type[nn.Module]) -> None:
-        model = self._make_task(
-            in_channels=3, num_classes=3, task='multiclass', loss=loss, ignore_index=1
-        )
-
-        assert isinstance(model.criterion, expected_type)
 
     def test_binary_steps_and_predict_step(self) -> None:
         model = self._make_task(in_channels=3, task='binary', loss='bce')
