@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: uv pip install build
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Build project
         run: python -m build
       - name: Upload artifacts
