@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 import torch
+from pytest import MonkeyPatch
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
@@ -41,13 +41,6 @@ class TestSpatioTemporalSegmentationTask:
         except MisconfigurationException:
             pass
 
-    def _make_task(self, **kwargs: Any) -> SpatioTemporalSegmentationTask:
-        task = SpatioTemporalSegmentationTask(hidden_dim=8, num_layers=1, **kwargs)
-        # Avoid Lightning warnings when calling step hooks without a Trainer.
-        task.log = MagicMock()  # type: ignore[method-assign]
-        task.log_dict = MagicMock()  # type: ignore[method-assign]
-        return task
-
     def test_convlstm_timeseries_forward_and_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
             model='convlstm',
@@ -76,8 +69,14 @@ class TestSpatioTemporalSegmentationTask:
         y_hat_clamped = model(batch['image'], lengths=torch.tensor([9.0, 12.0]))
         torch.testing.assert_close(y_hat_no_lengths, y_hat_clamped)
 
-    def test_binary_steps_and_predict_step(self) -> None:
-        model = self._make_task(in_channels=3, task='binary', loss='bce')
+    def test_binary_steps_and_predict_step(self, monkeypatch: MonkeyPatch) -> None:
+        model = SpatioTemporalSegmentationTask(
+            in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
+        )
+        # Avoid Lightning warnings when calling step hooks without a Trainer.
+        monkeypatch.setattr(model, 'log', MagicMock())
+        monkeypatch.setattr(model, 'log_dict', MagicMock())
+
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
             'mask': torch.randint(0, 2, (2, 16, 16)),
@@ -96,7 +95,9 @@ class TestSpatioTemporalSegmentationTask:
         assert torch.all(probabilities <= 1)
 
     def test_multiclass_predict_step(self) -> None:
-        model = self._make_task(in_channels=3, num_classes=4, task='multiclass')
+        model = SpatioTemporalSegmentationTask(
+            in_channels=3, num_classes=4, task='multiclass', hidden_dim=8, num_layers=1
+        )
         batch = {'image': torch.randn(2, 4, 3, 16, 16), 'length': torch.tensor([4, 3])}
 
         probabilities = model.predict_step(batch, 0)
