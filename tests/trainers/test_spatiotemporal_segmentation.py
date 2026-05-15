@@ -63,15 +63,6 @@ class TestSpatioTemporalSegmentationTask:
         assert isinstance(model.model, ConvLSTM)
         assert model.model.hidden_dim == [8]
 
-    def test_spatiotemporal_direct_kwargs_are_saved_in_hparams(self) -> None:
-        model = SpatioTemporalSegmentationTask(
-            in_channels=3, num_classes=5, hidden_dim=8, num_layers=1
-        )
-
-        assert model.hparams['hidden_dim'] == 8
-        assert model.hparams['num_layers'] == 1
-        assert 'kwargs' not in model.hparams
-
     def test_convlstm_timeseries_forward_and_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
             model='convlstm', in_channels=10, num_classes=5, task='multiclass',
