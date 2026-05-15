@@ -3,7 +3,6 @@
 
 """Trainers for spatiotemporal semantic segmentation."""
 
-import inspect
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -12,8 +11,6 @@ from torch import Tensor
 from ..models import ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
-
-_convlstm = inspect.signature(ConvLSTM.__init__).parameters
 
 
 class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
@@ -36,14 +33,12 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
-        hidden_dim: int | list[int] = _convlstm['hidden_dim'].default,
-        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]] = _convlstm[
-            'kernel_size'
-        ].default,
-        num_layers: int = _convlstm['num_layers'].default,
-        bias: bool = _convlstm['bias'].default,
-        return_all_layers: bool = _convlstm['return_all_layers'].default,
-        head_kernel_size: int = _convlstm['head_kernel_size'].default,
+        hidden_dim: int | list[int] = 64,
+        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]] = 3,
+        num_layers: int = 1,
+        bias: bool = True,
+        return_all_layers: bool = False,
+        head_kernel_size: int = 1,
     ) -> None:
         """Initialize a new SpatioTemporalSegmentationTask instance.
 
