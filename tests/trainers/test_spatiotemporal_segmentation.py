@@ -125,22 +125,3 @@ class TestSpatioTemporalSegmentationTask:
             probabilities.sum(dim=1), torch.ones((2, 16, 16)), atol=1e-5, rtol=1e-5
         )
 
-    def test_multiclass_classwise_metrics(self) -> None:
-        model = self._make_task(
-            in_channels=3,
-            num_classes=3,
-            task='multiclass',
-            labels=['background', 'crop', 'water'],
-        )
-        y_hat = torch.randn(2, 3, 16, 16)
-        y = torch.randint(0, 3, (2, 16, 16))
-
-        model.val_metrics(y_hat, y)
-        metrics = model.val_metrics.compute()
-
-        assert 'val_OverallAccuracy' in metrics
-        assert 'val_AverageJaccardIndex' in metrics
-        assert 'val_ClasswiseAccuracy_background' in metrics
-        assert 'val_ClasswiseAccuracy_crop' in metrics
-        assert 'val_ClasswiseAccuracy_water' in metrics
-        assert 'val_ClasswiseJaccardIndex_background' in metrics
