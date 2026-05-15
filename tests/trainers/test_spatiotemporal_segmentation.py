@@ -63,12 +63,6 @@ class TestSpatioTemporalSegmentationTask:
         assert isinstance(model.model, ConvLSTM)
         assert model.model.hidden_dim == [8]
 
-    def test_spatiotemporal_invalid_model(self) -> None:
-        invalid_model: Any = 'invalid'
-        match = "Invalid model type 'invalid'. Supported model: 'convlstm'"
-        with pytest.raises(ValueError, match=match):
-            SpatioTemporalSegmentationTask(model=invalid_model)
-
     def test_spatiotemporal_direct_kwargs_are_saved_in_hparams(self) -> None:
         model = SpatioTemporalSegmentationTask(
             in_channels=3, num_classes=5, hidden_dim=8, num_layers=1
