@@ -101,6 +101,7 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
+
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)

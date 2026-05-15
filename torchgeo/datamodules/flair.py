@@ -3,19 +3,15 @@
 
 """FLAIRHUB datamodule."""
 
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 import kornia.augmentation as K
-import numpy as np
 import torch
 import torch.nn.functional as TF
-from torch.utils.data import Subset
 
 from ..datasets import FLAIRHUB, FLAIRHUBToy
 from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
-
-FLAIRHUBDatasetType = FLAIRHUB | FLAIRHUBToy
 
 # From the research paper : https://arxiv.org/abs/2506.07080 p16
 # AERIAL_RGBI: R, G, B, NIR bands
@@ -38,35 +34,17 @@ AERIAL_RLT_PAN_STD = torch.tensor([38.69])
 class FLAIRHUBDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the FLAIRHUB dataset.
 
-    Implements domain-based train/val/test splits to ensure that samples from
-    the same domain stay together in the same split. This prevents data leakage
-    between train/validation, and test sets.
+    Uses official splits from the research paper. You can choose between
+    ``split_1``, ``split_2``, ``split_3``, ``split_4``, ``split_5``, and
+    ``split_flairchallenge``.
 
-    If ``official_splits`` is provided, a file containing the official splits
-    will be downloaded from HuggingFace. You can choose between ``split_1``,
-    ``split_2``, ``split_3``, ``split_4``, ``split_5``, and
-    ``split_flairchallenge``. If no ``official_splits`` is provided, the splits
-    method will be the same as the research paper but with a different random
-    distribution.
-
-    The first split (train+val vs test) is domain-based. The second split
-    (train vs val) is random and ignores domain boundaries.
-
-    The default splits are: 16 test domains, 80% train / 20% val split.
-
-    The exact splits used in the research paper can be found at:
-    ``https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data/GLOBAL_ALL_MTD.zip``
-    in the file ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
-
-    .. versionadded:: 0.10.0
+    .. versionadded:: 0.10
     """
 
     def __init__(
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        n_test_domains: int = 16,
-        train_val_split: float = 0.8,
         official_splits: Literal[
             'split_1',
             'split_2',
@@ -74,9 +52,8 @@ class FLAIRHUBDataModule(NonGeoDataModule):
             'split_4',
             'split_5',
             'split_flairchallenge',
-        ]
-        | str
-        | None = None,
+            'split_toy',
+        ] = 'split_1',
         concatenate_modalities: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -85,12 +62,9 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            n_test_domains: Number of domains to use for testing.
-            train_val_split: Proportion of train+val samples to use for training.
-                Remaining proportion goes to validation. Defaults to 0.8.
-            official_splits: If provided, use official splits from the research paper.
+            official_splits: Official splits from the research paper.
                 Choose from 'split_1', 'split_2', 'split_3', 'split_4', 'split_5',
-                or 'split_flairchallenge'. If None, use domain-based random splits.
+                or 'split_flairchallenge'.
             concatenate_modalities: If True, concatenate all mono-temporal modalities
                 (AERIAL_RGBI, SPOT_RGBI, DEM_ELEV, AERIAL-RLT_PAN) into an 'image' key.
                 Modalities will be resized to the maximum resolution before concatenation.
@@ -100,8 +74,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         """
         super().__init__(FLAIRHUB, batch_size, num_workers, **kwargs)
 
-        self.n_test_domains = n_test_domains
-        self.train_val_split = train_val_split
         self.official_splits = official_splits
         self.concatenate_modalities = concatenate_modalities
 
@@ -125,89 +97,26 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if self.official_splits is not None:
-            # Pre-defined splits: one dataset per split (same design as FTW)
-            train_kwargs = {
-                **self.kwargs,
-                'split': 'train',
-                'split_column': self.official_splits,
-            }
-            val_kwargs = {
-                **self.kwargs,
-                'split': 'val',
-                'split_column': self.official_splits,
-            }
-            test_kwargs = {
-                **self.kwargs,
-                'split': 'test',
-                'split_column': self.official_splits,
-            }
-            if stage in ['fit', 'validate']:
-                self.train_dataset = self.dataset_class(**train_kwargs)
-                self.val_dataset = self.dataset_class(**val_kwargs)
-            if stage in ['test']:
-                self.test_dataset = self.dataset_class(**test_kwargs)
-            return
-
-        # Domain-based random splits: single dataset + Subsets
-        dataset = cast(FLAIRHUBDatasetType, self.dataset_class(**self.kwargs))
-        train_indices, val_indices, test_indices = self._get_domain_based_splits(
-            dataset
-        )
+        train_kwargs = {
+            **self.kwargs,
+            'split': 'train',
+            'split_column': self.official_splits,
+        }
+        val_kwargs = {
+            **self.kwargs,
+            'split': 'val',
+            'split_column': self.official_splits,
+        }
+        test_kwargs = {
+            **self.kwargs,
+            'split': 'test',
+            'split_column': self.official_splits,
+        }
         if stage in ['fit', 'validate']:
-            self.train_dataset = Subset(dataset, train_indices)
-            self.val_dataset = Subset(dataset, val_indices)
+            self.train_dataset = self.dataset_class(**train_kwargs)
+            self.val_dataset = self.dataset_class(**val_kwargs)
         if stage in ['test']:
-            self.test_dataset = Subset(dataset, test_indices)
-
-    def _get_domain_based_splits(
-        self, dataset: FLAIRHUBDatasetType
-    ) -> tuple[list[int], list[int], list[int]]:
-        """Get domain-based random splits.
-
-        Args:
-            dataset: The FLAIRHUB dataset instance.
-
-        Returns:
-            Tuple of (train_indices, val_indices, test_indices).
-        """
-        # Extract domains from all samples
-        # domains[i] corresponds to dataset.files[i], so indices match dataset indices
-        domains: list[str] = []
-        for sample in dataset.files:
-            patch_id = sample['patch_id']
-            assert isinstance(patch_id, str)
-            domain = patch_id.split('-')[0]
-            domains.append(domain)
-
-        # Get unique domains and split them
-        unique_domains = sorted(set(domains))
-
-        # First split: train+val vs test (domain-based)
-        # Select n_test_domains domains for testing
-        generator = np.random.default_rng(seed=0)
-        test_domain_names = set(
-            generator.choice(unique_domains, size=self.n_test_domains, replace=False)
-        )
-
-        # Map domain names back to dataset indices
-        train_val_indices = []
-        test_indices = []
-        for i, domain in enumerate(domains):
-            if domain in test_domain_names:
-                test_indices.append(i)
-            else:
-                train_val_indices.append(i)
-
-        # Second split: train vs val, random split (ignoring domains)
-        shuffled_indices = train_val_indices.copy()
-        generator.shuffle(shuffled_indices)
-
-        n_train = int(len(shuffled_indices) * self.train_val_split)
-        train_indices = shuffled_indices[:n_train]
-        val_indices = shuffled_indices[n_train:]
-
-        return train_indices, val_indices, test_indices
+            self.test_dataset = self.dataset_class(**test_kwargs)
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply normalization to specific modalities in the batch.
@@ -261,25 +170,7 @@ class FLAIRHUBDataModule(NonGeoDataModule):
 class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
     """LightningDataModule implementation for the FLAIRHUBToy dataset.
 
-    Implements domain-based train/val/test splits to ensure that samples from
-    the same domain stay together in the same split. This prevents data leakage
-    between train/validation, and test sets.
-
-    If ``official_splits`` is provided, a file containing the official splits
-    will be downloaded from HuggingFace. You can choose between ``split_1``,
-    ``split_2``, ``split_3``, ``split_4``, ``split_5``, and
-    ``split_flairchallenge``. If no ``official_splits`` is provided, the splits
-    method will be the same as the research paper but with a different random
-    distribution.
-
-    The first split (train+val vs test) is domain-based. The second split
-    (train vs val) is random and ignores domain boundaries.
-
-    The default splits are: 16 test domains, 80% train / 20% val split.
-
-    The exact splits used in the research paper can be found at:
-    ``https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data/GLOBAL_ALL_MTD.zip``
-    in the file ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
+    Uses official splits from the ``split_toy`` column.
 
     .. versionadded:: 0.10.0
     """
@@ -288,9 +179,7 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        n_test_domains: int = 16,
-        train_val_split: float = 0.8,
-        official_splits: Literal['split_toy'] | None = None,
+        official_splits: Literal['split_toy'] = 'split_toy',
         concatenate_modalities: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -299,12 +188,7 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            n_test_domains: Number of domains to use for testing.
-            train_val_split: Proportion of train+val samples to use for training.
-                Remaining proportion goes to validation. Defaults to 0.8.
-            official_splits: If provided, use official splits from the research paper.
-                Choose from 'split_1', 'split_2', 'split_3', 'split_4', 'split_5',
-                or 'split_flairchallenge'. If None, use domain-based random splits.
+            official_splits: Official splits column for the toy dataset.
             concatenate_modalities: If True, concatenate all mono-temporal modalities
                 (aerial_rgbi, spot_rgbi, dem_elev, aerial_rlt_pan) into an 'image' key.
                 Modalities will be resized to the maximum resolution before concatenation.
@@ -315,8 +199,6 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         super().__init__(
             batch_size=batch_size,
             num_workers=num_workers,
-            n_test_domains=n_test_domains,
-            train_val_split=train_val_split,
             official_splits=official_splits,
             concatenate_modalities=concatenate_modalities,
             **kwargs,

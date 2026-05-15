@@ -12,8 +12,6 @@ data:
   class_path: FLAIRHUBDataModule
   init_args:
     batch_size: 1
-    n_test_domains: 1
-    train_val_split: 0.8
     concatenate_modalities: true
     official_splits: 'split_1'
   dict_kwargs:

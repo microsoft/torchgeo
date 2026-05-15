@@ -5,13 +5,14 @@
 
 import pathlib
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal, TypedDict
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from einops import rearrange
 from matplotlib.axes import Axes
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.figure import Figure
@@ -26,8 +27,318 @@ from .utils import (
     array_to_tensor,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
+
+AvailableBands = Literal[
+    'AERIAL_RGBI',
+    'SPOT_RGBI',
+    'DEM_ELEV',
+    'AERIAL-RLT_PAN',
+    'SENTINEL2_TS',
+    'SENTINEL2_MSK-SC',
+    'SENTINEL1-ASC_TS',
+    'SENTINEL1-DESC_TS',
+]
+
+
+class _Task(TypedDict, total=False):
+    classes: list[str]
+    cmap: ListedColormap
+
+
+class _PlotData(TypedDict):
+    plot_type: str
+    data: Tensor
+    title: str
+
+
+_PLOT_KEYS: dict[str, tuple[str, str]] = {
+    'image_aerial_rgbi': ('aerial_rgbi', 'Aerial RGBI'),
+    'image_spot_rgbi': ('spot_rgbi', 'SPOT RGBI'),
+    'image_dem_elev': ('dem', 'DEM Elevation'),
+    'image_aerial_rlt_pan': ('aerial_rlt_pan', 'Aerial RLT PAN'),
+    'image_sentinel2': ('sentinel2_ts', 'Sentinel-2 Time Series'),
+    'mask_sentinel2_snowcloud': ('sentinel2_msk_sc', 'Sentinel-2 Mask SC'),
+    'image_sentinel1_asc': ('sentinel1_asc_ts', 'Sentinel-1 ASC Time Series'),
+    'image_sentinel1_desc': ('sentinel1_desc_ts', 'Sentinel-1 DESC Time Series'),
+}
+
+
+TASKS: dict[str, _Task] = {
+    'land_cover': {
+        # Note: the original dataset contains 19 classes, but the dataset paper
+        # suggests not using clear cut, ligneous & mixed as they are nearly empty
+        'classes': [
+            'building',
+            'greenhouse',
+            'swimming_pool',
+            'impervious surface',
+            'pervious surface',
+            'bare soil',
+            'water',
+            'snow',
+            'herbaceous vegetation',
+            'agricultural land',
+            'plowed land',
+            'vineyard',
+            'deciduous',
+            'coniferous',
+            'brushwood',
+            'clear cut',
+            'ligneous',
+            'mixed',
+            'undefined',
+        ],
+        'cmap': ListedColormap(
+            [
+                '#db0e9a',  # building
+                '#9999ff',  # greenhouse
+                '#3de6eb',  # swimming_pool
+                '#f80c00',  # impervious surface
+                '#938e7b',  # pervious surface
+                '#a97101',  # bare soil
+                '#1553ae',  # water
+                '#ffffff',  # snow
+                '#55ff00',  # herbaceous vegetation
+                '#fff30d',  # agricultural land
+                '#e4df7c',  # plowed land
+                '#660082',  # vineyard
+                '#46e483',  # deciduous
+                '#194a26',  # coniferous
+                '#f3a60d',  # brushwood
+                '#8ab3a0',  # clear cut
+                '#c5dc42',  # ligneous
+                '#6b714f',  # mixed
+                '#000000',  # undefined
+            ]
+        ),
+    },
+    'crop_type': {
+        'classes': [
+            'grasses',
+            'wheat',
+            'barley',
+            'maize',
+            'other cereals',
+            'rice',
+            'flax/hemp/tobacco',
+            'sunflower',
+            'rapeseed',
+            'other oilseed crops',
+            'soy',
+            'other protein crops',
+            'fodder legumes',
+            'beetroots',
+            'potatoes',
+            'other arable crops',
+            'vineyard',
+            'olive groves',
+            'fruits orchards',
+            'nut orchards',
+            'other permanent crops',
+            'mixed crops',
+            'background',
+        ],
+        'cmap': ListedColormap(
+            [
+                '#92d050',  # grasses
+                '#d7e600',  # wheat
+                '#e0e000',  # barley
+                '#fff100',  # maize
+                '#ffff00',  # other cereals
+                '#e8e8e8',  # rice
+                '#dceaf7',  # flax/hemp/tobacco
+                '#d29ead',  # sunflower
+                '#d29ed0',  # rapeseed
+                '#ffbe99',  # other oilseed crops
+                '#ffc000',  # soy
+                '#ff9000',  # other protein crops
+                '#009999',  # fodder legumes
+                '#808000',  # beetroots
+                '#a7a700',  # potatoes
+                '#89896d',  # other arable crops
+                '#f2cfee',  # vineyard
+                '#6f6633',  # olive groves
+                '#ac8141',  # fruits orchards
+                '#996633',  # nut orchards
+                '#80c1d7',  # other permanent crops
+                '#000000',  # mixed crops
+                '#000000',  # background
+            ]
+        ),
+    },
+    'crop_type_2': {
+        'classes': [
+            'grasses',
+            'wheat',
+            'barley',
+            'maize',
+            'sorghum/millet',
+            'other winter cereals',
+            'other spring cereals',
+            'other cereals',
+            'rice',
+            'hemp/tobacco',
+            'flax',
+            'sunflower',
+            'rapeseed',
+            'other oilseed crops',
+            'soy',
+            'other protein crops',
+            'alfalfa',
+            'other fodder legumes',
+            'beetroots',
+            'potatoes',
+            'fruits and vegetables',
+            'aromatic/medicinal plants',
+            'other arable crops',
+            'vineyard',
+            'olive groves',
+            'fruit orchards',
+            'nut orchards',
+            'lavandin',
+            'other permanent crops',
+            'mixed crops',
+            'background',
+        ],
+        'cmap': ListedColormap(
+            [
+                '#92d050',  # grasses
+                '#d7e600',  # wheat
+                '#e0e000',  # barley
+                '#fff100',  # maize
+                '#ffff00',  # sorghum/millet
+                '#ffff00',  # other winter cereals
+                '#ffff00',  # other spring cereals
+                '#ffff00',  # other cereals
+                '#e8e8e8',  # rice
+                '#dceaf7',  # hemp/tobacco
+                '#dceaf7',  # flax
+                '#d29ead',  # sunflower
+                '#d29ed0',  # rapeseed
+                '#ffbe99',  # other oilseed crops
+                '#ffc000',  # soy
+                '#ff9000',  # other protein crops
+                '#009999',  # alfalfa
+                '#009999',  # other fodder legumes
+                '#808000',  # beetroots
+                '#a7a700',  # potatoes
+                '#89896d',  # fruits and vegetables
+                '#89896d',  # aromatic/medicinal plants
+                '#89896d',  # other arable crops
+                '#f2cfee',  # vineyard
+                '#6f6633',  # olive groves
+                '#ac8141',  # fruit orchards
+                '#996633',  # nut orchards
+                '#80c1d7',  # lavandin
+                '#80c1d7',  # other permanent crops
+                '#000000',  # mixed crops
+                '#000000',  # background
+            ]
+        ),
+    },
+    'crop_type_3': {
+        'classes': [
+            'grasses monoculture',
+            'grasses mixture',
+            'winter wheat',
+            'spring wheat',
+            'winter barley',
+            'spring barley',
+            'maize',
+            'sorghum',
+            'millet / Foxtail millet',
+            'winter durum wheat',
+            'winter triticale',
+            'winter oat',
+            'winter rye',
+            'spring oat',
+            'other spring cereals',
+            'other cereals',
+            'rice',
+            'hemp/tobacco',
+            'fiber flax',
+            'other flax',
+            'sunflower',
+            'rapeseed',
+            'Mustard',
+            'other oilseed crops',
+            'soy',
+            'spring peas',
+            'winter protein crops',
+            'other protein crops',
+            'alfalfa',
+            'clover',
+            'other fodder legumes',
+            'beetroots',
+            'potatoes',
+            'fruits and vegetables',
+            'aromatic/medicinal plants',
+            'buckwheat',
+            'other arable crops',
+            'vineyard',
+            'olive groves',
+            'fruit orchards',
+            'nut orchards',
+            'lavandin',
+            'berries',
+            'other permanent crops',
+            'mixed crops',
+            'background',
+        ],
+        'cmap': ListedColormap(
+            [
+                '#92d050',  # grasses monoculture
+                '#92d050',  # grasses mixture
+                '#d7e600',  # winter wheat
+                '#d7e600',  # spring wheat
+                '#e0e000',  # winter barley
+                '#e0e000',  # spring barley
+                '#fff100',  # maize
+                '#ffff00',  # sorghum
+                '#ffff00',  # millet / Foxtail millet
+                '#ffff00',  # winter durum wheat
+                '#ffff00',  # winter triticale
+                '#ffff00',  # winter oat
+                '#ffff00',  # winter rye
+                '#ffff00',  # spring oat
+                '#ffff00',  # other spring cereals
+                '#ffff00',  # other cereals
+                '#e8e8e8',  # rice
+                '#dceaf7',  # hemp/tobacco
+                '#dceaf7',  # fiber flax
+                '#dceaf7',  # other flax
+                '#d29ead',  # sunflower
+                '#d29ed0',  # rapeseed
+                '#ffbe99',  # Mustard
+                '#ffbe99',  # other oilseed crops
+                '#ffc000',  # soy
+                '#ff9000',  # spring peas
+                '#ff9000',  # winter protein crops
+                '#ff9000',  # other protein crops
+                '#009999',  # alfalfa
+                '#009999',  # clover
+                '#009999',  # other fodder legumes
+                '#808000',  # beetroots
+                '#a7a700',  # potatoes
+                '#89896d',  # fruits and vegetables
+                '#89896d',  # aromatic/medicinal plants
+                '#89896d',  # buckwheat
+                '#89896d',  # other arable crops
+                '#f2cfee',  # vineyard
+                '#6f6633',  # olive groves
+                '#ac8141',  # fruit orchards
+                '#996633',  # nut orchards
+                '#80c1d7',  # lavandin
+                '#80c1d7',  # berries
+                '#80c1d7',  # other permanent crops
+                '#000000',  # mixed crops
+                '#000000',  # background
+            ]
+        ),
+    },
+}
 
 
 class FLAIRHUB(NonGeoDataset):
@@ -36,7 +347,7 @@ class FLAIRHUB(NonGeoDataset):
     Large-scale Multimodal Dataset for Land Cover and Crop Mapping dataset.
 
     `FLAIR-HUB <https://github.com/IGNF/FLAIR-HUB>`__ builds upon and includes the FLAIR#1 and FLAIR#2 datasets,
-    expanding them into a unified,large-scale,
+    expanding them into a unified, large-scale,
     multi-sensor land-cover resource with very-high-resolution
     annotations. Spanning over 2,500 km² of diverse French ecoclimatic regions
     and landscapes, FLAIR-HUB features 63 billion hand-annotated pixels across
@@ -72,14 +383,14 @@ class FLAIRHUB(NonGeoDataset):
 
     Available modalities (100% coverage across all domains):
 
-    - ``AERIAL_RGBI``: High-resolution aerial imagery (RGB + NIR, 0.2m)
-    - ``SPOT_RGBI``: SPOT satellite imagery (RGB + NIR, 1.5m)
-    - ``DEM_ELEV``: Digital Elevation Model (DSM + DTM, 1m)
-    - ``AERIAL-RLT_PAN``: Historical aerial panchromatic (1950s)
-    - ``SENTINEL1-ASC_TS``: Sentinel-1 SAR Ascending time series (VV + VH)
-    - ``SENTINEL1-DESC_TS``: Sentinel-1 SAR Descending time series (VV + VH)
-    - ``SENTINEL2_TS``: Sentinel-2 multispectral time series (12 bands, 10m)
-    - ``SENTINEL2_MSK-SC``: Sentinel-2 scene classification mask
+    - ``AERIAL_RGBI``: High-resolution aerial imagery (RGB + NIR, 0.2m) — key: ``image_aerial_rgbi``
+    - ``SPOT_RGBI``: SPOT satellite imagery (RGB + NIR, 1.5m) — key: ``image_spot_rgbi``
+    - ``DEM_ELEV``: Digital Elevation Model (DSM + DTM, 1m) — key: ``image_dem_elev``
+    - ``AERIAL-RLT_PAN``: Historical aerial panchromatic (1950s) — key: ``image_aerial_rlt_pan``
+    - ``SENTINEL1-ASC_TS``: Sentinel-1 SAR Ascending time series (VV + VH) — key: ``image_sentinel1_asc``
+    - ``SENTINEL1-DESC_TS``: Sentinel-1 SAR Descending time series (VV + VH) — key: ``image_sentinel1_desc``
+    - ``SENTINEL2_TS``: Sentinel-2 multispectral time series (12 bands, 10m) — key: ``image_sentinel2``
+    - ``SENTINEL2_MSK-SC``: Sentinel-2 scene classification mask — key: ``mask_sentinel2_snowcloud``
     - ``AERIAL_LABEL-COSIA``: Land cover labels (19 classes)
     - ``ALL_LABEL-LPIS``: Crop type labels (23 classes)
 
@@ -185,18 +496,8 @@ class FLAIRHUB(NonGeoDataset):
 
     download_link = 'https://hf.co/datasets/IGNF/FLAIR-HUB/resolve/e8ed7981d488508aa70bb05c37cf6585432b7d5f/data'
 
-    splits = ('train', 'val', 'test')
-    valid_split_columns: ClassVar[tuple[str, ...]] = (
-        'split_1',
-        'split_2',
-        'split_3',
-        'split_4',
-        'split_5',
-        'split_flairchallenge',
-    )
-
     # Note: Some domains have multiple years available
-    _default_domain_years: ClassVar[dict[str, list[str]]] = {
+    domain_years: ClassVar[dict[str, list[str]]] = {
         'D004': ['2021'],
         'D005': ['2018'],
         'D006': ['2020'],
@@ -269,303 +570,36 @@ class FLAIRHUB(NonGeoDataset):
         'D091': ['2021'],
     }
 
-    available_bands: ClassVar[list[str]] = [
-        'AERIAL_RGBI',
-        'SPOT_RGBI',
-        'DEM_ELEV',
-        'AERIAL-RLT_PAN',
-        'SENTINEL2_TS',
-        'SENTINEL2_MSK-SC',
-        'SENTINEL1-ASC_TS',
-        'SENTINEL1-DESC_TS',
-    ]
-
-    # Note: the original dataset contains 19 classes, but the dataset paper
-    # suggests not using clear cut, ligneous & mixed as they are nearly empty
-    cosia: ClassVar[dict[str, Any]] = {
-        'classes': [
-            'building',
-            'greenhouse',
-            'swimming_pool',
-            'impervious surface',
-            'pervious surface',
-            'bare soil',
-            'water',
-            'snow',
-            'herbaceous vegetation',
-            'agricultural land',
-            'plowed land',
-            'vineyard',
-            'deciduous',
-            'coniferous',
-            'brushwood',
-            'clear cut',
-            'ligneous',
-            'mixed',
-            'undefined',
-        ],
-        'cmap': ListedColormap(
-            [
-                '#db0e9a',  # building
-                '#9999ff',  # greenhouse
-                '#3de6eb',  # swimming_pool
-                '#f80c00',  # impervious surface
-                '#938e7b',  # pervious surface
-                '#a97101',  # bare soil
-                '#1553ae',  # water
-                '#ffffff',  # snow
-                '#55ff00',  # herbaceous vegetation
-                '#fff30d',  # agricultural land
-                '#e4df7c',  # plowed land
-                '#660082',  # vineyard
-                '#46e483',  # deciduous
-                '#194a26',  # coniferous
-                '#f3a60d',  # brushwood
-                '#8ab3a0',  # clear cut
-                '#c5dc42',  # ligneous
-                '#6b714f',  # mixed
-                '#000000',  # undefined
-            ]
-        ),
-    }
-    lpis_1: ClassVar[dict[str, Any]] = {
-        'classes': [
-            'grasses',
-            'wheat',
-            'barley',
-            'maize',
-            'other cereals',
-            'rice',
-            'flax/hemp/tobacco',
-            'sunflower',
-            'rapeseed',
-            'other oilseed crops',
-            'soy',
-            'other protein crops',
-            'fodder legumes',
-            'beetroots',
-            'potatoes',
-            'other arable crops',
-            'vineyard',
-            'olive groves',
-            'fruits orchards',
-            'nut orchards',
-            'other permanent crops',
-            'mixed crops',
-            'background',
-        ],
-        'cmap': ListedColormap(
-            [
-                '#92d050',  # grasses
-                '#d7e600',  # wheat
-                '#e0e000',  # barley
-                '#fff100',  # maize
-                '#ffff00',  # other cereals
-                '#e8e8e8',  # rice
-                '#dceaf7',  # flax/hemp/tobacco
-                '#d29ead',  # sunflower
-                '#d29ed0',  # rapeseed
-                '#ffbe99',  # other oilseed crops
-                '#ffc000',  # soy
-                '#ff9000',  # other protein crops
-                '#009999',  # fodder legumes
-                '#808000',  # beetroots
-                '#a7a700',  # potatoes
-                '#89896d',  # other arable crops
-                '#f2cfee',  # vineyard
-                '#6f6633',  # olive groves
-                '#ac8141',  # fruits orchards
-                '#996633',  # nut orchards
-                '#80c1d7',  # other permanent crops
-                '#000000',  # mixed crops
-                '#000000',  # background
-            ]
-        ),
-    }
-
-    lpis_2: ClassVar[dict[str, Any]] = {
-        'classes': [
-            'grasses',
-            'wheat',
-            'barley',
-            'maize',
-            'sorghum/millet',
-            'other winter cereals',
-            'other spring cereals',
-            'other cereals',
-            'rice',
-            'hemp/tobacco',
-            'flax',
-            'sunflower',
-            'rapeseed',
-            'other oilseed crops',
-            'soy',
-            'other protein crops',
-            'alfalfa',
-            'other fodder legumes',
-            'beetroots',
-            'potatoes',
-            'fruits and vegetables',
-            'aromatic/medicinal plants',
-            'other arable crops',
-            'vineyard',
-            'olive groves',
-            'fruit orchards',
-            'nut orchards',
-            'lavandin',
-            'other permanent crops',
-            'mixed crops',
-            'background',
-        ],
-        'cmap': ListedColormap(
-            [
-                '#92d050',  # grasses
-                '#d7e600',  # wheat
-                '#e0e000',  # barley
-                '#fff100',  # maize
-                '#ffff00',  # sorghum/millet
-                '#ffff00',  # other winter cereals
-                '#ffff00',  # other spring cereals
-                '#ffff00',  # other cereals
-                '#e8e8e8',  # rice
-                '#dceaf7',  # hemp/tobacco
-                '#dceaf7',  # flax
-                '#d29ead',  # sunflower
-                '#d29ed0',  # rapeseed
-                '#ffbe99',  # other oilseed crops
-                '#ffc000',  # soy
-                '#ff9000',  # other protein crops
-                '#009999',  # alfalfa
-                '#009999',  # other fodder legumes
-                '#808000',  # beetroots
-                '#a7a700',  # potatoes
-                '#89896d',  # fruits and vegetables
-                '#89896d',  # aromatic/medicinal plants
-                '#89896d',  # other arable crops
-                '#f2cfee',  # vineyard
-                '#6f6633',  # olive groves
-                '#ac8141',  # fruit orchards
-                '#996633',  # nut orchards
-                '#80c1d7',  # lavandin
-                '#80c1d7',  # other permanent crops
-                '#000000',  # mixed crops
-                '#000000',  # background
-            ]
-        ),
-    }
-    lpis_3: ClassVar[dict[str, Any]] = {
-        'classes': [
-            'grasses monoculture',
-            'grasses mixture',
-            'winter wheat',
-            'spring wheat',
-            'winter barley',
-            'spring barley',
-            'maize',
-            'sorghum',
-            'millet / Foxtail millet',
-            'winter durum wheat',
-            'winter triticale',
-            'winter oat',
-            'winter rye',
-            'spring oat',
-            'other spring cereals',
-            'other cereals',
-            'rice',
-            'hemp/tobacco',
-            'fiber flax',
-            'other flax',
-            'sunflower',
-            'rapeseed',
-            'Mustard',
-            'other oilseed crops',
-            'soy',
-            'spring peas',
-            'winter protein crops',
-            'other protein crops',
-            'alfalfa',
-            'clover',
-            'other fodder legumes',
-            'beetroots',
-            'potatoes',
-            'fruits and vegetables',
-            'aromatic/medicinal plants',
-            'buckwheat',
-            'other arable crops',
-            'vineyard',
-            'olive groves',
-            'fruit orchards',
-            'nut orchards',
-            'lavandin',
-            'berries',
-            'other permanent crops',
-            'mixed crops',
-            'background',
-        ],
-        'cmap': ListedColormap(
-            [
-                '#92d050',  # grasses monoculture
-                '#92d050',  # grasses mixture
-                '#d7e600',  # winter wheat
-                '#d7e600',  # spring wheat
-                '#e0e000',  # winter barley
-                '#e0e000',  # spring barley
-                '#fff100',  # maize
-                '#ffff00',  # sorghum
-                '#ffff00',  # millet / Foxtail millet
-                '#ffff00',  # winter durum wheat
-                '#ffff00',  # winter triticale
-                '#ffff00',  # winter oat
-                '#ffff00',  # winter rye
-                '#ffff00',  # spring oat
-                '#ffff00',  # other spring cereals
-                '#ffff00',  # other cereals
-                '#e8e8e8',  # rice
-                '#dceaf7',  # hemp/tobacco
-                '#dceaf7',  # fiber flax
-                '#dceaf7',  # other flax
-                '#d29ead',  # sunflower
-                '#d29ed0',  # rapeseed
-                '#ffbe99',  # Mustard
-                '#ffbe99',  # other oilseed crops
-                '#ffc000',  # soy
-                '#ff9000',  # spring peas
-                '#ff9000',  # winter protein crops
-                '#ff9000',  # other protein crops
-                '#009999',  # alfalfa
-                '#009999',  # clover
-                '#009999',  # other fodder legumes
-                '#808000',  # beetroots
-                '#a7a700',  # potatoes
-                '#89896d',  # fruits and vegetables
-                '#89896d',  # aromatic/medicinal plants
-                '#89896d',  # buckwheat
-                '#89896d',  # other arable crops
-                '#f2cfee',  # vineyard
-                '#6f6633',  # olive groves
-                '#ac8141',  # fruit orchards
-                '#996633',  # nut orchards
-                '#80c1d7',  # lavandin
-                '#80c1d7',  # berries
-                '#80c1d7',  # other permanent crops
-                '#000000',  # mixed crops
-                '#000000',  # background
-            ]
-        ),
+    modality_key_map: ClassVar[dict[AvailableBands, str]] = {
+        'AERIAL_RGBI': 'image_aerial_rgbi',
+        'SPOT_RGBI': 'image_spot_rgbi',
+        'DEM_ELEV': 'image_dem_elev',
+        'AERIAL-RLT_PAN': 'image_aerial_rlt_pan',
+        'SENTINEL2_TS': 'image_sentinel2',
+        'SENTINEL2_MSK-SC': 'mask_sentinel2_snowcloud',
+        'SENTINEL1-ASC_TS': 'image_sentinel1_asc',
+        'SENTINEL1-DESC_TS': 'image_sentinel1_desc',
     }
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        split_column: str | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        split_column: Literal[
+            'split_1',
+            'split_2',
+            'split_3',
+            'split_4',
+            'split_5',
+            'split_flairchallenge',
+        ]
+        | Literal['split_toy'] = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        bands: list[str] | None = None,
+        bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
         ] = 'land_cover',
-        domain_years: dict[str, list[str]] | None = None,
     ) -> None:
         """Initialize a new FLAIRHUB dataset instance.
 
@@ -573,29 +607,26 @@ class FLAIRHUB(NonGeoDataset):
         cover and crop type mapping. You can selectively load any combination of the
         available modalities by specifying them in the bands parameter.
 
-        When ``split_column`` is set, only samples belonging to that split (train, val,
-        or test) are loaded, using the official splits from ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
-        When ``split_column`` is None, all samples are loaded (e.g. for domain-based
-        splitting in a datamodule).
+        Only samples belonging to the specified split (train, val, or test) are loaded,
+        using the official splits from ``GLOBAL_ALL_MTD_SPLIT.gpkg``.
 
         Args:
             root: Root directory where dataset can be found or will be downloaded.
-            split: One of ``train``, ``val``, or ``test``. Only used when
-                ``split_column`` is not None.
+            split: One of ``train``, ``val``, or ``test``.
             split_column: Column name in the official splits GeoPackage (e.g. ``split_1``,
-                ``split_5``, ``split_flairchallenge``). If None, all patches are loaded.
+                ``split_5``, ``split_flairchallenge``).
             transforms: Optional transforms to apply to samples.
             download: If True, download the dataset if it is not found.
             bands: List of bands/modalities to load. Available options:
 
-                - ``AERIAL_RGBI``: High-resolution aerial imagery (RGB + NIR, 0.2m)
-                - ``SPOT_RGBI``: SPOT satellite imagery (RGB + NIR, 1.5m)
-                - ``DEM_ELEV``: Digital Elevation Model (DSM + DTM, 1m)
-                - ``AERIAL-RLT_PAN``: Historical aerial panchromatic (1950s)
-                - ``SENTINEL2_TS``: Sentinel-2 time series data
-                - ``SENTINEL2_MSK-SC``: Sentinel-2 cloud and snow probability masks
-                - ``SENTINEL1-ASC_TS``: Sentinel-1 ASC time series data
-                - ``SENTINEL1-DESC_TS``: Sentinel-1 DESC time series data
+                - ``AERIAL_RGBI``: High-resolution aerial imagery (RGB + NIR, 0.2m) — key: ``image_aerial_rgbi``
+                - ``SPOT_RGBI``: SPOT satellite imagery (RGB + NIR, 1.5m) — key: ``image_spot_rgbi``
+                - ``DEM_ELEV``: Digital Elevation Model (DSM + DTM, 1m) — key: ``image_dem_elev``
+                - ``AERIAL-RLT_PAN``: Historical aerial panchromatic (1950s) — key: ``image_aerial_rlt_pan``
+                - ``SENTINEL2_TS``: Sentinel-2 time series data — key: ``image_sentinel2``
+                - ``SENTINEL2_MSK-SC``: Sentinel-2 cloud and snow probability masks — key: ``mask_sentinel2_snowcloud``
+                - ``SENTINEL1-ASC_TS``: Sentinel-1 ASC time series data — key: ``image_sentinel1_asc``
+                - ``SENTINEL1-DESC_TS``: Sentinel-1 DESC time series data — key: ``image_sentinel1_desc``
 
                 Defaults to None, which enables all bands.
             dataset_type: Type of labels to use. Choose ``land_cover`` for
@@ -605,9 +636,6 @@ class FLAIRHUB(NonGeoDataset):
                 LPIS crop classification labels. ``crop_type_2`` and
                 ``crop_type_3`` are deeper levels of the LPIS crop classification
                 labels.
-            domain_years: Optional dictionary mapping domain names to lists of years.
-                If provided, restricts the dataset to only these domain-year combinations.
-                Defaults to None, which uses all available domain-year combinations.
 
         Raises:
             AssertionError: If ``split`` or ``split_column`` is invalid.
@@ -617,12 +645,6 @@ class FLAIRHUB(NonGeoDataset):
             ValueError: If no data modality is enabled.
             ValueError: If an invalid band name is provided.
         """
-        assert split in self.splits, f'split must be one of {self.splits}'
-        if split_column is not None:
-            assert split_column in self.valid_split_columns, (
-                f'split_column must be one of {self.valid_split_columns}'
-            )
-
         self.root = root
         self.split = split
         self.split_column = split_column
@@ -630,17 +652,8 @@ class FLAIRHUB(NonGeoDataset):
         self.download = download
         self.dataset_type = dataset_type
 
-        self.domain_years = domain_years if domain_years else self._default_domain_years
-
         if bands is None:
-            bands = list(self.available_bands)
-        else:
-            invalid_bands = [b for b in bands if b not in self.available_bands]
-            if invalid_bands:
-                raise ValueError(
-                    f'Invalid band names: {invalid_bands}. '
-                    f'Available bands: {self.available_bands}'
-                )
+            bands = list(self.modality_key_map.keys())
 
         self.bands = bands
         self._verify()
@@ -677,9 +690,11 @@ class FLAIRHUB(NonGeoDataset):
 
         Returns:
             Dictionary containing tensors for each modality. Keys are the
-            modality names: ``mask``, ``AERIAL_RGBI``, ``SPOT_RGBI``,
-            ``DEM_ELEV``, ``AERIAL-RLT_PAN``, ``SENTINEL2_TS``,
-            ``SENTINEL2_MSK-SC``, ``SENTINEL1-ASC_TS``, ``SENTINEL1-DESC_TS``.
+            modality names prefixed with ``image_`` or ``mask_``: ``mask``,
+            ``image_aerial_rgbi``, ``image_spot_rgbi``, ``image_dem_elev``,
+            ``image_aerial_rlt_pan``, ``image_sentinel2``,
+            ``mask_sentinel2_snowcloud``, ``image_sentinel1_asc``,
+            ``image_sentinel1_desc``.
         """
         file_dict = self.files[index]
         sample: Sample = {}
@@ -690,6 +705,7 @@ class FLAIRHUB(NonGeoDataset):
 
         # Load requested modalities
         for modality_name in self.bands:
+            sample_key = self.modality_key_map[modality_name]
             modality_path = file_dict[modality_name]
             if 'TS' in modality_name or 'SC' in modality_name:
                 band_names: tuple[str, ...]
@@ -703,11 +719,11 @@ class FLAIRHUB(NonGeoDataset):
                     case 'SENTINEL1-DESC_TS':
                         band_names = self.sentinel1_desc_ts_bands
 
-                sample[modality_name] = self._load_time_series(
+                sample[sample_key] = self._load_time_series(
                     modality_path, len(band_names)
                 )
             else:
-                sample[modality_name] = self._load_image(modality_path)
+                sample[sample_key] = self._load_image(modality_path)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -721,40 +737,30 @@ class FLAIRHUB(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> list[dict[str, Any]]:
+    def _load_files(self) -> list[dict[str, str | pathlib.Path]]:
         """Load the files for the dataset.
 
-        When ``split_column`` is set, only patches in that split are included.
+        Only patches belonging to the configured split are included.
 
         Returns:
             List of dictionaries with paths to each modality for each sample.
         """
-        files_list: list[dict[str, Any]] = []
+        files_list: list[dict[str, str | pathlib.Path]] = []
 
         if self.dataset_type == 'land_cover':
             label_dir = 'AERIAL_LABEL-COSIA'
-        elif self.dataset_type in ('crop_type', 'crop_type_2', 'crop_type_3'):
+        else:
             label_dir = 'ALL_LABEL-LPIS'
 
         filename_glob = f'D*_{label_dir}/*/*.tif'
 
-        allowed_patch_ids: set[str] | None = None
-        if self.split_column is not None:
-            gpkg_path = self._ensure_splits_available()
-            gdf = gpd.read_file(gpkg_path)
-            # Dataset uses 'valid', API uses 'val'
-            gpkg_split = 'valid' if self.split == 'val' else self.split
-            allowed_patch_ids = set(
-                gdf.loc[gdf[self.split_column] == gpkg_split, 'patch_id'].astype(str)
-            )
-
-        allowed_domain_years: set[str] | None = None
-        if self.domain_years:
-            allowed_domain_years = {
-                f'{domain}-{year}'
-                for domain, years in self.domain_years.items()
-                for year in years
-            }
+        gpkg_path = self._ensure_splits_available()
+        gdf = gpd.read_file(gpkg_path)
+        # Dataset uses 'valid', API uses 'val'
+        gpkg_split = 'valid' if self.split == 'val' else self.split
+        allowed_patch_ids: set[str] = set(
+            gdf.loc[gdf[self.split_column] == gpkg_split, 'patch_id'].astype(str)
+        )
 
         # Iterate through all label files and build file dictionaries
         for label_path in pathlib.Path(self.root).glob(filename_glob):
@@ -763,16 +769,12 @@ class FLAIRHUB(NonGeoDataset):
             patch_id = filename_stem.replace(f'{label_dir}_', '')
             if allowed_patch_ids is not None and patch_id not in allowed_patch_ids:
                 continue
-            if allowed_domain_years is not None:
-                domain_year = patch_id.split('_')[0]
-                if domain_year not in allowed_domain_years:
-                    continue
 
-            file_dict: dict[str, Any] = {}
+            file_dict: dict[str, str | pathlib.Path] = {}
             file_dict['mask'] = label_path
             file_dict['patch_id'] = patch_id
 
-            # Add each requested modality
+            # Add modality
             for modality_name in self.bands:
                 file_path = pathlib.Path(
                     str(label_path).replace(label_dir, modality_name)
@@ -792,12 +794,7 @@ class FLAIRHUB(NonGeoDataset):
         return files_list
 
     def _verify(self) -> None:
-        """Verify dataset integrity and download missing files.
-
-        This method checks if the requested modalities are present for all
-        domain-year combinations that have label files.
-        If any are missing, it downloads them if *download* is set to True.
-        """
+        """Verify dataset integrity and download missing files."""
         to_download: list[tuple[str, str, str]] = []  # (domain, year, modality)
         to_extract: list[tuple[str, str, str]] = []  # (domain, year, modality)
 
@@ -919,8 +916,8 @@ class FLAIRHUB(NonGeoDataset):
     def _load_time_series(self, path: Path, num_bands: int) -> Tensor:
         """Load a time series from a path.
 
-        Process it to be in the T x C x H x W format instead of the usual
-        (TxC) x H x W format.
+        Process it to be in the T * C * H * W format instead of the usual
+        (T*C) * H * W format.
 
         Args:
             path: path to the time series
@@ -931,12 +928,8 @@ class FLAIRHUB(NonGeoDataset):
         """
         with rasterio.open(str(path)) as f:
             tensor = array_to_tensor(f.read()).float()
-
-            # Reshape from (T*C) x H x W to T x C x H x W
-            c = num_bands
-            tc, h, w = tensor.shape
-            t = tc // c
-            tensor = tensor.view(t, c, h, w)
+            # Reshape from (T*C) * H * W to T * C * H * W
+            tensor = rearrange(tensor, '(t c) h w -> t c h w', c=num_bands)
         return tensor
 
     def _load_image(self, path: Path) -> Tensor:
@@ -959,19 +952,9 @@ class FLAIRHUB(NonGeoDataset):
             ax: Matplotlib axes to plot on
             show_legend: Whether to show the legend
         """
-        match self.dataset_type:
-            case 'land_cover':
-                class_names = self.cosia['classes']
-                cmap = self.cosia['cmap']
-            case 'crop_type_2':
-                class_names = self.lpis_2['classes']
-                cmap = self.lpis_2['cmap']
-            case 'crop_type_3':
-                class_names = self.lpis_3['classes']
-                cmap = self.lpis_3['cmap']
-            case 'crop_type':
-                class_names = self.lpis_1['classes']
-                cmap = self.lpis_1['cmap']
+        task = TASKS[self.dataset_type]
+        class_names = task['classes']
+        cmap = task['cmap']
 
         mask_np = mask.numpy()
 
@@ -1021,13 +1004,10 @@ class FLAIRHUB(NonGeoDataset):
             ax: Matplotlib axes to plot on
             title: Title for the subplot
         """
-        data_np = data.numpy()
-
-        # Select RGB bands and transpose from (C, H, W) to (H, W, C) for matplotlib
-        rgb_image = data_np[:3].transpose(1, 2, 0)
-        # Normalize using percentile normalization for better visualization
-        rgb_image = percentile_normalization(rgb_image, axis=(0, 1))
-        ax.imshow(rgb_image)
+        # Take only RGB bands (first 3), normalize for better visualization, rearrange, convert to numpy
+        image = rearrange(data[:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
+        ax.imshow(image.numpy())
         ax.set_title(title)
 
     def _plot_dem(self, data: Tensor, ax: Axes, title: str) -> None:
@@ -1074,7 +1054,7 @@ class FLAIRHUB(NonGeoDataset):
         """
         data_np = data.numpy()
 
-        # The format of the data is T x C x H x W
+        # The format of the data is T * C * H * W
         last_timepoint = data_np[-1]
 
         # Map RGB band names to indices in sentinel2_ts_bands
@@ -1104,7 +1084,7 @@ class FLAIRHUB(NonGeoDataset):
             title: Title for the subplot
         """
         data_np = data.numpy()
-        # The format of the data is T x C x H x W
+        # The format of the data is T * C * H * W
         last_timepoint = data_np[-1]
         snow_probability = last_timepoint[0]
         cloud_probability = last_timepoint[1]
@@ -1155,7 +1135,7 @@ class FLAIRHUB(NonGeoDataset):
             ax: Matplotlib axes to plot on
             title: Title for the subplot
         """
-        # T x C x H x W -> take last timepoint, VV band (index 0)
+        # T * C * H * W -> take last timepoint, VV band (index 0)
         vv = data[-1, 0].numpy()
         p2, p98 = np.percentile(vv, (2, 98))
         vv_norm = np.clip((vv - p2) / (p98 - p2 + 1e-6), 0, 1)
@@ -1172,7 +1152,7 @@ class FLAIRHUB(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        plot_data: dict[str, dict[str, Any]] = {}
+        plot_data: dict[str, _PlotData] = {}
 
         plot_data['mask'] = {
             'plot_type': 'mask',
@@ -1180,61 +1160,13 @@ class FLAIRHUB(NonGeoDataset):
             'title': 'mask',
         }
 
-        if 'AERIAL_RGBI' in sample:
-            plot_data['AERIAL_RGBI'] = {
-                'plot_type': 'aerial_rgbi',
-                'data': sample['AERIAL_RGBI'],
-                'title': 'Aerial RGBI',
-            }
-
-        if 'SPOT_RGBI' in sample:
-            plot_data['SPOT_RGBI'] = {
-                'plot_type': 'spot_rgbi',
-                'data': sample['SPOT_RGBI'],
-                'title': 'SPOT RGBI',
-            }
-
-        if 'DEM_ELEV' in sample:
-            plot_data['DEM_ELEV'] = {
-                'plot_type': 'dem',
-                'data': sample['DEM_ELEV'],
-                'title': 'DEM Elevation',
-            }
-
-        if 'AERIAL-RLT_PAN' in sample:
-            plot_data['AERIAL-RLT_PAN'] = {
-                'plot_type': 'aerial_rlt_pan',
-                'data': sample['AERIAL-RLT_PAN'],
-                'title': 'Aerial RLT PAN',
-            }
-
-        if 'SENTINEL2_TS' in sample:
-            plot_data['SENTINEL2_TS'] = {
-                'plot_type': 'sentinel2_ts',
-                'data': sample['SENTINEL2_TS'],
-                'title': 'Sentinel-2 Time Series',
-            }
-
-        if 'SENTINEL2_MSK-SC' in sample:
-            plot_data['SENTINEL2_MSK-SC'] = {
-                'plot_type': 'sentinel2_msk_sc',
-                'data': sample['SENTINEL2_MSK-SC'],
-                'title': 'Sentinel-2 Mask SC',
-            }
-
-        if 'SENTINEL1-ASC_TS' in sample:
-            plot_data['SENTINEL1-ASC_TS'] = {
-                'plot_type': 'sentinel1_asc_ts',
-                'data': sample['SENTINEL1-ASC_TS'],
-                'title': 'Sentinel-1 ASC Time Series',
-            }
-
-        if 'SENTINEL1-DESC_TS' in sample:
-            plot_data['SENTINEL1-DESC_TS'] = {
-                'plot_type': 'sentinel1_desc_ts',
-                'data': sample['SENTINEL1-DESC_TS'],
-                'title': 'Sentinel-1 DESC Time Series',
-            }
+        for key, (plot_type, title) in _PLOT_KEYS.items():
+            if key in sample:
+                plot_data[key] = {
+                    'plot_type': plot_type,
+                    'data': sample[key],
+                    'title': title,
+                }
 
         num_plots = len(plot_data)
         ncols = min(4, num_plots)
@@ -1250,22 +1182,23 @@ class FLAIRHUB(NonGeoDataset):
             data = plot_info['data']
             title = plot_info['title']
 
-            if plot_type == 'mask':
-                self._plot_mask(data, axs[idx], show_legend=True)
-            elif plot_type == 'aerial_rgbi':
-                self._plot_aerial_rgbi(data, axs[idx], title)
-            elif plot_type == 'dem':
-                self._plot_dem(data, axs[idx], title)
-            elif plot_type == 'spot_rgbi':
-                self._plot_spot_rgbi(data, axs[idx], title)
-            elif plot_type == 'aerial_rlt_pan':
-                self._plot_aerial_rlt_pan(data, axs[idx], title)
-            elif plot_type == 'sentinel2_ts':
-                self._plot_sentinel2_ts(data, axs[idx], title)
-            elif plot_type == 'sentinel2_msk_sc':
-                self._plot_sentinel2_msk_sc(data, axs[idx], title)
-            elif plot_type in ('sentinel1_asc_ts', 'sentinel1_desc_ts'):
-                self._plot_sentinel1_ts(data, axs[idx], title)
+            match plot_type:
+                case 'mask':
+                    self._plot_mask(data, axs[idx], show_legend=True)
+                case 'aerial_rgbi':
+                    self._plot_aerial_rgbi(data, axs[idx], title)
+                case 'dem':
+                    self._plot_dem(data, axs[idx], title)
+                case 'spot_rgbi':
+                    self._plot_spot_rgbi(data, axs[idx], title)
+                case 'aerial_rlt_pan':
+                    self._plot_aerial_rlt_pan(data, axs[idx], title)
+                case 'sentinel2_ts':
+                    self._plot_sentinel2_ts(data, axs[idx], title)
+                case 'sentinel2_msk_sc':
+                    self._plot_sentinel2_msk_sc(data, axs[idx], title)
+                case 'sentinel1_asc_ts' | 'sentinel1_desc_ts':
+                    self._plot_sentinel1_ts(data, axs[idx], title)
 
         if suptitle:
             fig.suptitle(suptitle, fontsize=16)
@@ -1281,16 +1214,15 @@ class FLAIRHUBToy(FLAIRHUB):
     """
 
     download_link = 'https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_hub/FLAIR-HUB_TOY_DATASET.zip'
-    valid_split_columns = ('split_toy',)
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        split_column: str | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        split_column: Literal['split_toy'] = 'split_toy',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        bands: list[str] | None = None,
+        bands: list[AvailableBands] | None = None,
         dataset_type: Literal['land_cover', 'crop_type'] = 'land_cover',
     ) -> None:
         """Initialize a new FLAIRHUBToy dataset instance.
@@ -1301,10 +1233,8 @@ class FLAIRHUBToy(FLAIRHUB):
 
         Args:
             root: Root directory where toy dataset can be found or will be downloaded.
-            split: One of ``train``, ``val``, or ``test``. Only used when
-                ``split_column`` is not None.
-            split_column: Column name in the official splits GeoPackage. If None,
-                all patches are loaded.
+            split: One of ``train``, ``val``, or ``test``.
+            split_column: Column name in the official splits GeoPackage.
             transforms: Optional transforms to apply to samples.
             download: If True, download the toy dataset if not found (~10 MB).
             bands: List of bands/modalities to load. See
@@ -1318,15 +1248,11 @@ class FLAIRHUBToy(FLAIRHUB):
             ValueError: If *dataset_type* is not ``land_cover`` or ``crop_type``.
             FileNotFoundError: Requested modality file is missing from the toy dataset.
 
-        Warning:
-            This is a TOY DATASET for testing only. Do not use for actual training or
-            evaluation. Use the full FLAIRHUB dataset for research purposes.
-
         See Also:
             :class:`~torchgeo.datasets.FLAIRHUB`: Full dataset class for
                 production use.
 
-        .. versionadded:: 0.10.0
+        .. versionadded:: 0.10
         """
         self.root_folder = pathlib.Path(root)
         modified_root = self.root_folder / 'FLAIR-HUB_TOY'
