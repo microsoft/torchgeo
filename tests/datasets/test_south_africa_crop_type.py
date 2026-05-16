@@ -44,6 +44,9 @@ class TestSouthAfricaCropType:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
+        assert x['image'].ndim == 4
+        assert x['image'].shape[0] == 2
+        assert x['image'].shape[1] == len(dataset.bands)
 
     def test_len(self, dataset: SouthAfricaCropType) -> None:
         assert len(dataset) == 10

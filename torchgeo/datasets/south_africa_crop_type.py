@@ -30,16 +30,16 @@ class SouthAfricaCropType(RasterDataset):
     crop type that were collected by aerial and vehicle survey from May 2017 to March
     2018. Data was provided by the Western Cape Department of Agriculture and is
     available via the Radiant Earth Foundation. For each field id the dataset contains
-    time series imagery and a single label mask. Since TorchGeo does not yet support
-    timeseries datasets, the first available imagery in July will be returned for each
-    field. Note that the dates for S1 and S2 imagery for a given field are not
-    guaranteed to be the same. Due to this date mismatch only S1 or S2 bands may be
-    queried at a time, a mix of both is not supported. Each pixel in the label
-    contains an integer field number and crop type class.
+    time series imagery and a single label mask. Note that the dates for S1 and S2
+    imagery for a given field are not guaranteed to be the same. Due to this date
+    mismatch only S1 or S2 bands may be queried at a time, a mix of both is not
+    supported. Each pixel in the label contains an integer field number and crop type
+    class.
 
     Dataset format:
 
-    * images are 2-band Sentinel 1 and 12-band Sentinel-2 data with a cloud mask
+    * images are time-series 2-band Sentinel 1 and 12-band Sentinel-2 data
+      returned as T x C x H x W tensors, where T is the number of timesteps
     * masks are tiff images with unique values representing the class and field id.
 
     Dataset classes:
@@ -72,10 +72,10 @@ class SouthAfricaCropType(RasterDataset):
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/ref-south-africa-crops-competition-v1'
 
-    filename_glob = '*_07_*_{}_10m.*'
+    filename_glob = '*_{}_10m.*'
     filename_regex = r"""
         ^(?P<field_id>\d+)
-        _(?P<date>\d{4}_07_\d{2})
+        _(?P<date>\d{4}_\d{2}_\d{2})
         _(?P<band>[BHV\d]+)
         _10m
     """
@@ -188,13 +188,11 @@ class SouthAfricaCropType(RasterDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
-        # Loop through matched filepaths and find all unique field ids
+        # Loop through matched filepaths and find all unique field ids and dates
         field_ids: list[str] = []
-        # Store date in July for s1 and s2 we want to use for each sample
-        imagery_dates: dict[str, dict[str, str]] = {}
+        imagery_dates: dict[str, dict[str, set[str]]] = {}
 
         for filepath in df.filepath:
             filename = os.path.basename(filepath)
@@ -206,33 +204,38 @@ class SouthAfricaCropType(RasterDataset):
                 band_type = 's1' if band in self.s1_bands else 's2'
                 if field_id not in field_ids:
                     field_ids.append(field_id)
-                    imagery_dates[field_id] = {'s1': '', 's2': ''}
-                if (
-                    date.split('_')[1] == '07'
-                    and not imagery_dates[field_id][band_type]
-                ):
-                    imagery_dates[field_id][band_type] = date
+                    imagery_dates[field_id] = {'s1': set(), 's2': set()}
+                imagery_dates[field_id][band_type].add(date)
 
-        # Create Tensors for each band using stored dates
+        # Determine band type and collect sorted unique dates across all fields
+        band_type = 's1' if self.bands[0] in self.s1_bands else 's2'
+        all_dates: set[str] = set()
+        for field_id in field_ids:
+            all_dates |= imagery_dates[field_id][band_type]
+        sorted_dates = sorted(all_dates)
+
+        # Create T x C x H x W tensor
         assert isinstance(self.paths, str | os.PathLike)
         paths = cast(Path, self.paths)
-        for band in self.bands:
-            band_type = 's1' if band in self.s1_bands else 's2'
-            band_filepaths = []
-            for field_id in field_ids:
-                date = imagery_dates[field_id][band_type]
-                filepath = os.path.join(
-                    paths,
-                    'train',
-                    'imagery',
-                    band_type,
-                    field_id,
-                    date,
-                    f'{field_id}_{date}_{band}_10m.tif',
-                )
-                band_filepaths.append(filepath)
-            data_list.append(self._merge_or_stack(band_filepaths, index))
-        image = torch.cat(data_list, dim=-3)
+        timesteps: list[Tensor] = []
+        for date in sorted_dates:
+            band_list: list[Tensor] = []
+            for band in self.bands:
+                band_filepaths = []
+                for field_id in field_ids:
+                    filepath = os.path.join(
+                        paths,
+                        'train',
+                        'imagery',
+                        band_type,
+                        field_id,
+                        date,
+                        f'{field_id}_{date}_{band}_10m.tif',
+                    )
+                    band_filepaths.append(filepath)
+                band_list.append(self._merge_or_stack(band_filepaths, index))
+            timesteps.append(torch.cat(band_list))
+        image = torch.stack(timesteps)
 
         # Add labels for each field
         mask_filepaths: list[str] = []
@@ -301,31 +304,36 @@ class SouthAfricaCropType(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample['image'][rgb_indices].permute(1, 2, 0)
-        image = (image - image.min()) / (image.max() - image.min())
+        images = sample['image'][:, rgb_indices].numpy().transpose(0, 2, 3, 1)
+        images = (images - images.min()) / (images.max() - images.min())
 
         mask = sample['mask'].squeeze()
-        ncols = 2
+        num_timesteps = images.shape[0]
+        ncols = num_timesteps + 1
 
-        showing_prediction = 'prediction' in sample
-        if showing_prediction:
-            pred = sample['prediction'].squeeze()
+        if 'prediction' in sample:
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
-        axs[0].imshow(image)
-        axs[0].axis('off')
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
-        axs[1].axis('off')
-        if show_titles:
-            axs[0].set_title('Image')
-            axs[1].set_title('Mask')
+        fig, axs = plt.subplots(
+            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
+        )
 
-        if showing_prediction:
-            axs[2].imshow(pred)
-            axs[2].axis('off')
+        for t in range(num_timesteps):
+            axs[0, t].imshow(images[t])
+            axs[0, t].axis('off')
             if show_titles:
-                axs[2].set_title('Prediction')
+                axs[0, t].set_title(f'Image {t}')
+
+        axs[0, num_timesteps].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, num_timesteps].axis('off')
+        if show_titles:
+            axs[0, num_timesteps].set_title('Mask')
+
+        if 'prediction' in sample:
+            axs[0, num_timesteps + 1].imshow(sample['prediction'].squeeze())
+            axs[0, num_timesteps + 1].axis('off')
+            if show_titles:
+                axs[0, num_timesteps + 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

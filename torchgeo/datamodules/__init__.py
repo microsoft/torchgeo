@@ -50,7 +50,7 @@ from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataMod
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .solar_plants_brazil import SolarPlantsBrazilDataModule
-from .southafricacroptype import SouthAfricaCropTypeDataModule
+from .south_africa_crop_type import SouthAfricaCropTypeDataModule
 from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseDataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule

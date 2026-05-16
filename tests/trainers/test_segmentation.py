@@ -79,7 +79,7 @@ class TestSemanticSegmentationTask:
             'sentinel2_nccm',
             'sentinel2_south_america_soybean',
             'solar_plants_brazil',
-            'southafricacroptype',
+            'south_africa_crop_type',
             'spacenet1',
             'spacenet6',
             'ssl4eo_l_benchmark_cdl',
