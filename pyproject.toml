@@ -117,7 +117,7 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
-    # myst-parser 5.1+ required by sphinx-github-changelog 2.0.0+
+    # myst-parser 5.1+ required by sphinx-github-changelog 2+
     "myst-parser>=5.1",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
