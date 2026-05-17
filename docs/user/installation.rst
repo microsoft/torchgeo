@@ -66,7 +66,7 @@ To develop TorchGeo itself, clone the repository, create a new virtual environme
    $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
    $ uv venv
-   $ . .venv/bin/activate.sh
+   $ . .venv/bin/activate
    $ uv sync
 
 See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
