@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+
 import pytest
 import torch
 from pytest import MonkeyPatch
@@ -43,6 +44,7 @@ class TestSpatioTemporalSegmentationTask:
         model = SpatioTemporalSegmentationTask(
             in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
         )
+
         # Avoid Lightning warnings when calling step hooks without a Trainer.
         def noop(*_args: object, **_kwargs: object) -> None:
             pass
