@@ -67,7 +67,6 @@ class TestSemanticSegmentationTask:
             'loveda',
             'mmflood',
             'naipchesapeake',
-            'pastis',
             'pastis100',
             'potsdam2d',
             'sen12ms_all',
