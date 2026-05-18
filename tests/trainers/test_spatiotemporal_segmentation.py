@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import torch
@@ -69,7 +69,7 @@ class TestSpatioTemporalSegmentationTask:
         trainer.test(model, dataloaders=dataloader)
         predictions = trainer.predict(model, dataloaders=dataloader)
         assert predictions is not None
-        prediction: torch.Tensor = predictions[0]
+        prediction = cast(torch.Tensor, predictions[0])
         assert prediction.shape == (2, 1, 16, 16)
         assert torch.all(prediction >= 0)
         assert torch.all(prediction <= 1)
