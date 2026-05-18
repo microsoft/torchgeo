@@ -18,7 +18,7 @@ class BinarySegDataset(Dataset):  # type: ignore[type-arg]
     def __len__(self) -> int:
         return 4
 
-    def __getitem__(self, idx: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         return {
             'image': torch.randn(4, 3, 16, 16),
             'mask': torch.randint(0, 2, (16, 16)),
@@ -69,9 +69,10 @@ class TestSpatioTemporalSegmentationTask:
         trainer.test(model, dataloaders=dataloader)
         predictions = trainer.predict(model, dataloaders=dataloader)
         assert predictions is not None
-        assert predictions[0].shape == (2, 1, 16, 16)
-        assert torch.all(predictions[0] >= 0)
-        assert torch.all(predictions[0] <= 1)
+        prediction: torch.Tensor = predictions[0]
+        assert prediction.shape == (2, 1, 16, 16)
+        assert torch.all(prediction >= 0)
+        assert torch.all(prediction <= 1)
 
     def test_multilabel_predict_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
