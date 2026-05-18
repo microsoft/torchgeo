@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra style
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run ruff checks
         run: |
           ruff check --output-format=github --no-fix .
@@ -55,7 +55,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra style --extra tests
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run ty checks
         run: ty check --output-format=github
   prettier:
