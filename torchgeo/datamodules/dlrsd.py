@@ -9,7 +9,7 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from ..datasets import DLRSD, DLRSDMultilabel, NonGeoDataset
+from ..datasets import DLRSD, DLRSDBase, DLRSDMultilabel
 from .geo import NonGeoDataModule
 
 
@@ -97,4 +97,4 @@ class DLRSDMultilabelDataModule(DLRSDDataModule):
     .. versionadded:: 0.10
     """
 
-    _dataset_cls: type[NonGeoDataset] = DLRSDMultilabel
+    _dataset_cls: type[DLRSDBase] = DLRSDMultilabel

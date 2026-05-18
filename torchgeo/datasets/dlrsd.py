@@ -3,7 +3,6 @@
 
 """DLRSD dataset."""
 
-import csv
 import glob
 import os
 from collections.abc import Callable
@@ -12,6 +11,7 @@ from typing import ClassVar
 import einops
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
@@ -31,8 +31,39 @@ from .utils import (
 class DLRSDBase(NonGeoDataset):
     """Shared base for DLRSD and DLRSDMultilabel.
 
-    Provides shared dataset assets and download/extract/verify plumbing for
-    both the semantic segmentation and multi-label variants of DLRSD.
+    The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
+    dataset is a dataset for dense labeling of remote sensing imagery. It contains
+    2100 images of size 256x256 pixels across 21 scene categories (100 images per
+    class), and is derived from the UC Merced Land Use Dataset.
+
+    Dataset features:
+
+    * 2100 images with 0.3m spatial resolution (256x256 px)
+    * three spectral bands - RGB
+
+    Dataset classes:
+
+    0. airplane
+    1. bare soil
+    2. buildings
+    3. cars
+    4. chaparral
+    5. court
+    6. dock
+    7. field
+    8. grass
+    9. mobile home
+    10. pavement
+    11. sand
+    12. sea
+    13. ship
+    14. tanks
+    15. trees
+    16. water
+
+    This base class provides shared dataset assets and download/extract/verify
+    plumbing for both the semantic segmentation and multi-label variants of
+    DLRSD.
 
     .. versionadded:: 0.10
     """
@@ -155,37 +186,8 @@ class DLRSDBase(NonGeoDataset):
 class DLRSD(DLRSDBase):
     """DLRSD semantic segmentation dataset.
 
-    The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
-    dataset is a dataset for dense labeling of remote sensing imagery. It contains
-    2100 images of size 256x256 pixels across 21 scene categories (100 images per
-    class) with pixel-level semantic segmentation annotations for 17 land cover
-    classes.
-
-    Dataset features:
-
-    * 2100 images with 0.3m spatial resolution (256x256 px)
-    * three spectral bands - RGB
-    * 17 pixel-level semantic segmentation classes
-
-    Dataset classes:
-
-    0. airplane
-    1. bare soil
-    2. buildings
-    3. cars
-    4. chaparral
-    5. court
-    6. dock
-    7. field
-    8. grass
-    9. mobile home
-    10. pavement
-    11. sand
-    12. sea
-    13. ship
-    14. tanks
-    15. trees
-    16. water
+    The :class:`DLRSD` variant provides pixel-level semantic segmentation
+    annotations for 17 land cover classes.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -355,39 +357,10 @@ class DLRSD(DLRSDBase):
 class DLRSDMultilabel(DLRSDBase):
     """DLRSD multi-label scene classification dataset.
 
-    The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
-    dataset is a dataset for dense labeling of remote sensing imagery. This variant
-    provides multi-label scene classification annotations for 2100 images of size
-    256x256 pixels across 21 scene categories (100 images per class) with 17 label
-    classes.
+    The :class:`DLRSDMultilabel` variant provides multi-label scene
+    classification annotations with 17 label classes.
 
-    Dataset features:
-
-    * 2100 images with 0.3m spatial resolution (256x256 px)
-    * three spectral bands - RGB
-    * 17-class multi-label annotations
-
-    Dataset classes:
-
-    0. airplane
-    1. bare soil
-    2. buildings
-    3. cars
-    4. chaparral
-    5. court
-    6. dock
-    7. field
-    8. grass
-    9. mobile home
-    10. pavement
-    11. sand
-    12. sea
-    13. ship
-    14. tanks
-    15. trees
-    16. water
-
-    If you use this dataset in your research, please cite the following paper:
+    If you use this dataset in your research, please cite the following papers:
 
     * https://doi.org/10.3390/rs10060964
     * https://doi.org/10.1109/TGRS.2017.2760909
@@ -423,11 +396,9 @@ class DLRSDMultilabel(DLRSDBase):
 
         self.multilabels: dict[str, list[int]] = {}
         csv_path = os.path.join(root, self.directory, 'multilabels.csv')
-        with open(csv_path) as f:
-            reader = csv.reader(f)
-            next(reader)  # skip header
-            for row in reader:
-                self.multilabels[row[0]] = [int(x) for x in row[1:]]
+        df = pd.read_csv(csv_path)
+        for _, row in df.iterrows():
+            self.multilabels[row.iloc[0]] = [int(x) for x in row.iloc[1:]]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
