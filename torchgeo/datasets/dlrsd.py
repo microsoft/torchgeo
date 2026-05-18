@@ -28,11 +28,13 @@ from .utils import (
 )
 
 
-class _DLRSDBase(NonGeoDataset):
+class DLRSDBase(NonGeoDataset):
     """Shared base for DLRSD and DLRSDMultilabel.
 
     Provides shared dataset assets and download/extract/verify plumbing for
     both the semantic segmentation and multi-label variants of DLRSD.
+
+    .. versionadded:: 0.10
     """
 
     url = 'https://hf.co/datasets/calebrob6/dlrsd/resolve/dcd622dd05f327cd0fd10951ad6cd7ba52d0e832/'
@@ -150,7 +152,7 @@ class _DLRSDBase(NonGeoDataset):
         extract_archive(filepath)
 
 
-class DLRSD(_DLRSDBase):
+class DLRSD(DLRSDBase):
     """DLRSD semantic segmentation dataset.
 
     The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__
@@ -350,7 +352,7 @@ class DLRSD(_DLRSDBase):
         return fig
 
 
-class DLRSDMultilabel(_DLRSDBase):
+class DLRSDMultilabel(DLRSDBase):
     """DLRSD multi-label scene classification dataset.
 
     The `DLRSD <https://sites.google.com/view/zhouwx/dataset>`__

@@ -61,7 +61,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
-from .dlrsd import DLRSD, DLRSDMultilabel
+from .dlrsd import DLRSD, DLRSDBase, DLRSDMultilabel
 from .dota import DOTA
 from .earth_embeddings import EarthEmbeddings
 from .earth_index import EarthIndexEmbeddings
@@ -275,6 +275,7 @@ __all__ = (
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
+    'DLRSDBase',
     'DLRSDMultilabel',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
