@@ -73,14 +73,13 @@ class TestSpatioTemporalSegmentationTask:
         assert torch.all(predictions[0] >= 0)
         assert torch.all(predictions[0] <= 1)
 
-    def test_multiclass_predict_step(self) -> None:
+    def test_multilabel_predict_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
-            in_channels=3, num_classes=4, task='multiclass', hidden_dim=8, num_layers=1
+            in_channels=3, num_labels=4, task='multilabel', hidden_dim=8, num_layers=1
         )
         batch = {'image': torch.randn(2, 4, 3, 16, 16), 'length': torch.tensor([4, 3])}
 
         probabilities = model.predict_step(batch, 0)
         assert probabilities.shape == (2, 4, 16, 16)
-        torch.testing.assert_close(
-            probabilities.sum(dim=1), torch.ones((2, 16, 16)), atol=1e-5, rtol=1e-5
-        )
+        assert torch.all(probabilities >= 0)
+        assert torch.all(probabilities <= 1)
