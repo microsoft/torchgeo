@@ -2,14 +2,28 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Any
 
 import pytest
 import torch
-from pytest import MonkeyPatch
+from lightning.pytorch import Trainer
+from torch.utils.data import DataLoader, Dataset
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.trainers import SpatioTemporalSegmentationTask
+
+
+class BinarySegDataset(Dataset):  # type: ignore[type-arg]
+    def __len__(self) -> int:
+        return 4
+
+    def __getitem__(self, idx: int) -> dict[str, Any]:
+        return {
+            'image': torch.randn(4, 3, 16, 16),
+            'mask': torch.randint(0, 2, (16, 16)),
+            'length': torch.tensor(4),
+        }
 
 
 class TestSpatioTemporalSegmentationTask:
@@ -40,34 +54,24 @@ class TestSpatioTemporalSegmentationTask:
         except MisconfigurationException:
             pass
 
-    def test_binary_steps_and_predict_step(self, monkeypatch: MonkeyPatch) -> None:
+    def test_binary_task(self, fast_dev_run: bool) -> None:
+        dataloader = DataLoader(BinarySegDataset(), batch_size=2)
         model = SpatioTemporalSegmentationTask(
             in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
         )
-
-        # Avoid Lightning warnings when calling step hooks without a Trainer.
-        def noop(*_args: object, **_kwargs: object) -> None:
-            pass
-
-        monkeypatch.setattr(model, 'log', noop)
-        monkeypatch.setattr(model, 'log_dict', noop)
-
-        batch = {
-            'image': torch.randn(2, 4, 3, 16, 16),
-            'mask': torch.randint(0, 2, (2, 16, 16)),
-            'length': torch.tensor([4, 2]),
-        }
-
-        train_loss = model.training_step(batch, 0)
-        assert train_loss.ndim == 0
-
-        assert model.validation_step(batch, 0) is None
-        assert model.test_step(batch, 0) is None
-
-        probabilities = model.predict_step(batch, 0)
-        assert probabilities.shape == (2, 1, 16, 16)
-        assert torch.all(probabilities >= 0)
-        assert torch.all(probabilities <= 1)
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.fit(model, train_dataloaders=dataloader, val_dataloaders=dataloader)
+        trainer.test(model, dataloaders=dataloader)
+        predictions = trainer.predict(model, dataloaders=dataloader)
+        assert predictions is not None
+        assert predictions[0].shape == (2, 1, 16, 16)
+        assert torch.all(predictions[0] >= 0)
+        assert torch.all(predictions[0] <= 1)
 
     def test_multiclass_predict_step(self) -> None:
         model = SpatioTemporalSegmentationTask(
