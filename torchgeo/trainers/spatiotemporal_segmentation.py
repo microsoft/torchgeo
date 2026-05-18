@@ -55,9 +55,6 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
-                For ``'convlstm'``: ``hidden_dim``, ``kernel_size``, ``num_layers``,
-                ``bias``, ``return_all_layers``, ``head_kernel_size``.
-
         """
         self.kwargs = kwargs
         super().__init__()
