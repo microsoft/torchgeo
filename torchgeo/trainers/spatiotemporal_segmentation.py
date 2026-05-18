@@ -33,12 +33,7 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
-        hidden_dim: int | list[int] = 64,
-        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]] = 3,
-        num_layers: int = 1,
-        bias: bool = True,
-        return_all_layers: bool = False,
-        head_kernel_size: int = 1,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new SpatioTemporalSegmentationTask instance.
 
@@ -59,15 +54,12 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
                 metrics.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
-            hidden_dim: Number of hidden channels in ``ConvLSTM``.
-            kernel_size: Convolutional kernel size in ``ConvLSTM``.
-            num_layers: Number of stacked ``ConvLSTM`` layers.
-            bias: If ``True``, adds a learnable bias in ``ConvLSTM``.
-            return_all_layers: If ``True``, ``ConvLSTM`` returns outputs for
-                all layers, not just the last.
-            head_kernel_size: Kernel size of the segmentation head in ``ConvLSTM``.
+            **kwargs: Additional keyword arguments passed to the model constructor.
+                For ``'convlstm'``: ``hidden_dim``, ``kernel_size``, ``num_layers``,
+                ``bias``, ``return_all_layers``, ``head_kernel_size``.
 
         """
+        self.kwargs = kwargs
         super().__init__()
 
     def forward(self, x: Tensor, lengths: Tensor | None = None) -> Tensor:
@@ -89,14 +81,7 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
         self.model = ConvLSTM(
-            input_dim=in_channels,
-            hidden_dim=self.hparams['hidden_dim'],
-            kernel_size=self.hparams['kernel_size'],
-            num_layers=self.hparams['num_layers'],
-            bias=self.hparams['bias'],
-            return_all_layers=self.hparams['return_all_layers'],
-            num_classes=num_classes,
-            head_kernel_size=self.hparams['head_kernel_size'],
+            input_dim=in_channels, num_classes=num_classes, **self.kwargs
         )
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
