@@ -59,15 +59,12 @@ Optional dependencies can be added using extras:
 
    $ uv add torchgeo --extra datasets --extra models
 
-To develop TorchGeo itself, clone the repository, create a new virtual environment, and sync the dependencies:
+To develop TorchGeo itself, clone the repository and sync the dependencies:
 
 .. code-block:: console
 
    $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
-   $ uv venv
-   $ source .venv/bin/activate  # macOS/Linux
-   $ .venv\Scripts\activate     # Windows
    $ uv sync --extra all
 
 See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
