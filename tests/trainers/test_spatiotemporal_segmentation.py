@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from unittest.mock import MagicMock
-
 import pytest
 import torch
 from pytest import MonkeyPatch
@@ -46,8 +44,11 @@ class TestSpatioTemporalSegmentationTask:
             in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
         )
         # Avoid Lightning warnings when calling step hooks without a Trainer.
-        monkeypatch.setattr(model, 'log', MagicMock())
-        monkeypatch.setattr(model, 'log_dict', MagicMock())
+        def noop(*_args: object, **_kwargs: object) -> None:
+            pass
+
+        monkeypatch.setattr(model, 'log', noop)
+        monkeypatch.setattr(model, 'log_dict', noop)
 
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
