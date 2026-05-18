@@ -23,7 +23,7 @@ class DLRSDDataModule(NonGeoDataModule):
 
     std = torch.tensor(255)
 
-    _dataset_cls: type[NonGeoDataset] = DLRSD
+    _dataset_cls: type[DLRSDBase] = DLRSD
 
     def __init__(
         self,
