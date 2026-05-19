@@ -103,3 +103,16 @@ class TestUTAE:
         )
         out = model(x)
         assert out.shape == (2, 3, 16, 16)
+
+    def test_forward_with_positions(self, small_model: UTAE, x: torch.Tensor) -> None:
+        """batch_positions triggers the date-based positional encoder in L-TAE 2D."""
+        batch_positions = torch.randint(1, 366, (2, 4))
+        out = small_model(x, batch_positions=batch_positions)
+        assert out.shape == (2, 3, 16, 16)
+
+    def test_forward_with_padding(self, small_model: UTAE) -> None:
+        """All-zero frames (matching pad_value=0) exercise the padding mask paths."""
+        x = torch.randn(2, 4, 4, 16, 16)
+        x[:, 2:] = 0.0  # last two timesteps are padding
+        out = small_model(x)
+        assert out.shape == (2, 3, 16, 16)
