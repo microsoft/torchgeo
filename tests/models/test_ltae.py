@@ -1,12 +1,12 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Tests for LTAE model."""
+"""Tests for LTAE models."""
 
 import pytest
 import torch
 
-from torchgeo.models import LTAE
+from torchgeo.models import LTAE, LTAE2d
 
 
 class TestLTAE:
@@ -48,3 +48,77 @@ class TestLTAE:
             model = LTAE(in_channels=in_channels)
             x = torch.randn(batch_size, seq_len, wrong_channels)
             model(x)
+
+
+class TestLTAE2d:
+    """Tests for the LTAE2d model."""
+
+    def test_forward(self) -> None:
+        """Basic forward pass without positional encoding."""
+        model = LTAE2d(
+            in_channels=32,
+            n_head=4,
+            d_model=32,
+            mlp=(32, 16),
+            d_k=4,
+            positional_encoding=False,
+        )
+        x = torch.randn(2, 5, 32, 8, 8)
+        out = model(x)
+        assert out.shape == (2, 16, 8, 8)
+
+    def test_forward_with_positions(self) -> None:
+        """Forward pass with acquisition-date positional encoding."""
+        model = LTAE2d(in_channels=32, n_head=4, d_model=32, mlp=(32, 16), d_k=4)
+        x = torch.randn(2, 5, 32, 8, 8)
+        positions = torch.randint(1, 365, (2, 5))
+        out = model(x, batch_positions=positions)
+        assert out.shape == (2, 16, 8, 8)
+
+    def test_return_att(self) -> None:
+        """Return attention masks when return_att=True."""
+        model = LTAE2d(
+            in_channels=32,
+            n_head=4,
+            d_model=32,
+            mlp=(32, 16),
+            d_k=4,
+            return_att=True,
+            positional_encoding=False,
+        )
+        x = torch.randn(2, 5, 32, 8, 8)
+        out, att = model(x)
+        assert out.shape == (2, 16, 8, 8)
+        assert att.shape == (4, 2, 5, 8, 8)  # (n_head, B, T, H, W)
+
+    def test_pad_mask(self) -> None:
+        """Forward pass with a padding mask."""
+        model = LTAE2d(
+            in_channels=32,
+            n_head=4,
+            d_model=32,
+            mlp=(32, 16),
+            d_k=4,
+            return_att=True,
+            positional_encoding=False,
+        )
+        x = torch.randn(2, 5, 32, 8, 8)
+        pad_mask = torch.zeros(2, 5, dtype=torch.bool)
+        pad_mask[0, -1] = True  # last timestep of first item is padded
+        out, att = model(x, pad_mask=pad_mask)
+        assert out.shape == (2, 16, 8, 8)
+        assert att.shape == (4, 2, 5, 8, 8)
+
+    def test_no_d_model(self) -> None:
+        """Forward pass without an input projection (d_model=None)."""
+        model = LTAE2d(
+            in_channels=32,
+            n_head=4,
+            d_model=None,
+            mlp=(32, 16),
+            d_k=4,
+            positional_encoding=False,
+        )
+        x = torch.randn(2, 5, 32, 8, 8)
+        out = model(x)
+        assert out.shape == (2, 16, 8, 8)
