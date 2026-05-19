@@ -2,12 +2,12 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, cast
+from typing import cast
 
 import pytest
 import torch
 from lightning.pytorch import Trainer
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main

@@ -86,7 +86,7 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]
-        kwargs: dict[str, Any] = {}
+        kwargs: dict[str, Tensor] = {}
         if (lengths := batch.get('length')) is not None:
             kwargs['lengths'] = lengths
         y_hat = self(x, **kwargs).squeeze(1)
@@ -121,7 +121,7 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities."""
-        kwargs: dict[str, Any] = {}
+        kwargs: dict[str, Tensor] = {}
         if (lengths := batch.get('length')) is not None:
             kwargs['lengths'] = lengths
         y_hat: Tensor = self(batch['image'], **kwargs)
