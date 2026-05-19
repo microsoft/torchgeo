@@ -14,7 +14,7 @@ from torchgeo.main import main
 from torchgeo.trainers import SpatioTemporalSegmentationTask
 
 
-class BinarySegDataset(Dataset):  # type: ignore[type-arg]
+class BinarySegDataset(NonGeoDataset):
     def __len__(self) -> int:
         return 4
 
