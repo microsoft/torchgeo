@@ -5,7 +5,7 @@
 
 """Convolutional Long Short-Term Memory (ConvLSTM) model."""
 
-from typing import Any, cast
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -234,7 +234,6 @@ class ConvLSTM(nn.Module):
         input_tensor: torch.Tensor,
         lengths: torch.Tensor | None = None,
         hidden_state: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
-        **kwargs: Any,
     ) -> torch.Tensor:
         """Forward pass for segmentation with the prediction head.
 
@@ -244,7 +243,6 @@ class ConvLSTM(nn.Module):
                 Values larger than the available sequence length use the final
                 timestep.
             hidden_state: An optional initial hidden state.
-            **kwargs: Additional keyword arguments (ignored).
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
