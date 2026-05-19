@@ -48,6 +48,11 @@ class TestSpatioTemporalSegmentationTask:
             'mask': torch.randint(0, 2, (2, 16, 16)),
             'length': torch.tensor([4, 4]),
         }
+        # Exercises y = y.float() for bce loss; self.log raises without a Trainer
+        try:
+            model.training_step(batch, 0)
+        except MisconfigurationException:
+            pass
         probabilities = model.predict_step(batch, 0)
         assert probabilities.shape == (2, 1, 16, 16)
         assert torch.all(probabilities >= 0)
