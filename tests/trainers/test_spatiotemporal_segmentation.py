@@ -10,6 +10,8 @@ from lightning.pytorch import Trainer
 from torch.utils.data import DataLoader
 
 from torchgeo.datamodules import MisconfigurationException
+from torchgeo.datasets import NonGeoDataset
+from torchgeo.datasets.utils import Sample
 from torchgeo.main import main
 from torchgeo.trainers import SpatioTemporalSegmentationTask
 
