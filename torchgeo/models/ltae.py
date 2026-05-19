@@ -11,6 +11,8 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor, nn
 
+__all__ = ['LTAE', 'LTAE2d']
+
 
 class LTAE(nn.Module):
     """Lightweight Temporal Attention Encoder (L-TAE).
@@ -159,3 +161,290 @@ class PositionalEncoding(nn.Module):
         pe = self.pe[:, : x.size(1)]  # ty: ignore[not-subscriptable]
         output: Tensor = self.dropout(x + pe)
         return output
+
+
+class _PositionalEncoder(nn.Module):
+    """Date-based sinusoidal positional encoder for L-TAE 2D.
+
+    Unlike :class:`PositionalEncoding`, this encoder maps actual acquisition
+    dates (integer day values) rather than sequence indices, and supports
+    repeating the encoding across attention heads.
+    """
+
+    def __init__(self, d: int, T: int = 1000, repeat: int | None = None) -> None:
+        """Initialize the positional encoder.
+
+        Args:
+            d: Dimension of the encoding per head (``d_model // n_head``).
+            T: Period for the sinusoidal functions.
+            repeat: Number of times to repeat the encoding (``n_head``).
+        """
+        super().__init__()
+        self.d = d
+        self.T = T
+        self.repeat = repeat
+        denom = torch.zeros(d)
+        for i in range(0, d, 2):
+            denom[i] = 1.0 / (T ** (i / d))
+            if i + 1 < d:
+                denom[i + 1] = 1.0 / (T ** (i / d))
+        self.register_buffer('denom', denom)
+
+    def forward(self, batch_positions: Tensor) -> Tensor:
+        """Encode batch positions.
+
+        Args:
+            batch_positions: Integer positions of shape ``(B, T)``.
+
+        Returns:
+            Positional encoding of shape ``(B, T, d)`` or ``(B, T, d * repeat)``.
+        """
+        pe = batch_positions.unsqueeze(-1).float() * self.denom.unsqueeze(0).unsqueeze(
+            0
+        )  # ty: ignore[operator]
+        pe[..., 0::2] = torch.sin(pe[..., 0::2])
+        pe[..., 1::2] = torch.cos(pe[..., 1::2])
+        if self.repeat is not None:
+            pe = pe.repeat(1, 1, self.repeat)
+        return pe
+
+
+class _ScaledDotProductAttention(nn.Module):
+    """Scaled dot-product attention with optional padding mask."""
+
+    def __init__(self, temperature: float, attn_dropout: float = 0.1) -> None:
+        """Initialize scaled dot-product attention.
+
+        Args:
+            temperature: Scaling factor (typically ``sqrt(d_k)``).
+            attn_dropout: Dropout rate applied to attention weights.
+        """
+        super().__init__()
+        self.temperature = temperature
+        self.dropout = nn.Dropout(attn_dropout)
+        self.softmax = nn.Softmax(dim=2)
+
+    def forward(
+        self, q: Tensor, k: Tensor, v: Tensor, pad_mask: Tensor | None = None
+    ) -> tuple[Tensor, Tensor]:
+        """Forward pass.
+
+        Args:
+            q: Query tensor of shape ``(n_head * B, d_k)``.
+            k: Key tensor of shape ``(n_head * B, T, d_k)``.
+            v: Value tensor of shape ``(n_head * B, T, d_in // n_head)``.
+            pad_mask: Boolean mask of shape ``(n_head * B, T)``.
+
+        Returns:
+            Tuple of (output, attention weights).
+        """
+        attn = torch.matmul(q.unsqueeze(1), k.transpose(1, 2)) / self.temperature
+        if pad_mask is not None:
+            attn = attn.masked_fill(pad_mask.unsqueeze(1), -1e3)
+        attn = self.dropout(self.softmax(attn))
+        output = torch.matmul(attn, v)
+        return output, attn
+
+
+class _MultiHeadAttention(nn.Module):
+    """Multi-head attention with a shared learned master query for L-TAE.
+
+    The query is a learned parameter (not derived from the input), shared
+    across all spatial positions. Keys and values are projected from the input.
+    """
+
+    def __init__(self, n_head: int, d_k: int, d_in: int) -> None:
+        """Initialize multi-head attention.
+
+        Args:
+            n_head: Number of attention heads.
+            d_k: Dimension of key/query space per head.
+            d_in: Total input/value dimension (``d_model``).
+        """
+        super().__init__()
+        self.n_head = n_head
+        self.d_k = d_k
+        self.d_in = d_in
+
+        self.Q = nn.Parameter(torch.zeros(n_head, d_k))
+        nn.init.normal_(self.Q, mean=0, std=math.sqrt(2.0 / d_k))
+
+        self.fc1_k = nn.Linear(d_in, n_head * d_k)
+        nn.init.normal_(self.fc1_k.weight, mean=0, std=math.sqrt(2.0 / d_k))
+
+        self.attention = _ScaledDotProductAttention(temperature=math.sqrt(d_k))
+
+    def forward(
+        self, v: Tensor, pad_mask: Tensor | None = None
+    ) -> tuple[Tensor, Tensor]:
+        """Forward pass.
+
+        Args:
+            v: Value/input tensor of shape ``(B, T, d_in)``.
+            pad_mask: Boolean padding mask of shape ``(B, T)``.
+
+        Returns:
+            Tuple of (output ``(n_head, B, d_in // n_head)``,
+            attention ``(n_head, B, T)``).
+        """
+        n_head, d_k, d_in = self.n_head, self.d_k, self.d_in
+        sz_b, seq_len, _ = v.size()
+
+        q = torch.stack([self.Q] * sz_b, dim=1).view(n_head * sz_b, d_k)
+
+        k = self.fc1_k(v).view(sz_b, seq_len, n_head, d_k)
+        k = k.permute(2, 0, 1, 3).contiguous().view(n_head * sz_b, seq_len, d_k)
+
+        if pad_mask is not None:
+            pad_mask = pad_mask.repeat(n_head, 1)
+
+        v_split = torch.stack(v.split(d_in // n_head, dim=-1)).view(
+            n_head * sz_b, seq_len, -1
+        )
+
+        output, attn = self.attention(q, k, v_split, pad_mask=pad_mask)
+        attn = attn.view(n_head, sz_b, 1, seq_len).squeeze(2)
+        output = output.view(n_head, sz_b, 1, d_in // n_head).squeeze(2)
+        return output, attn
+
+
+class LTAE2d(nn.Module):
+    """Lightweight Temporal Attention Encoder for 2D image time series (L-TAE 2D).
+
+    Applies a shared L-TAE over all spatial positions of a ``(B, T, C, H, W)``
+    image time series, producing a single ``(B, C', H, W)`` feature map.
+    Attention weights are returned per head for use in skip-connection
+    aggregation (e.g. in U-TAE).
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2007.00586
+
+    .. versionadded:: 0.10
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 128,
+        n_head: int = 16,
+        d_k: int = 4,
+        mlp: Sequence[int] = (256, 128),
+        dropout: float = 0.2,
+        d_model: int | None = 256,
+        T: int = 1000,
+        return_att: bool = False,
+        positional_encoding: bool = True,
+    ) -> None:
+        """Initialize L-TAE 2D.
+
+        Args:
+            in_channels: Number of channels of the input embeddings.
+            n_head: Number of attention heads.
+            d_k: Dimension of the key and query vectors per head.
+            mlp: Channel widths of the MLP that processes concatenated head
+                outputs. ``mlp[0]`` must equal ``d_model``.
+            dropout: Dropout rate.
+            d_model: If given, projects input to this dimension first.
+            T: Period for sinusoidal positional encoding.
+            return_att: If True, return attention masks alongside output.
+            positional_encoding: If False, no positional encoding is applied.
+        """
+        super().__init__()
+        self.in_channels = in_channels
+        self.return_att = return_att
+        self.n_head = n_head
+        self.d_model = d_model if d_model is not None else in_channels
+
+        self.inconv: nn.Conv1d | None = None
+        if d_model is not None:
+            self.inconv = nn.Conv1d(in_channels, d_model, 1)
+
+        n_neurons = list(mlp)
+        assert n_neurons[0] == self.d_model
+
+        self.positional_encoder: _PositionalEncoder | None = None
+        if positional_encoding:
+            self.positional_encoder = _PositionalEncoder(
+                self.d_model // n_head, T=T, repeat=n_head
+            )
+
+        self.attention_heads = _MultiHeadAttention(
+            n_head=n_head, d_k=d_k, d_in=self.d_model
+        )
+        self.in_norm = nn.GroupNorm(num_groups=n_head, num_channels=self.in_channels)
+        self.out_norm = nn.GroupNorm(num_groups=n_head, num_channels=n_neurons[-1])
+
+        layers: list[nn.Module] = []
+        for i in range(len(n_neurons) - 1):
+            layers.extend(
+                [
+                    nn.Linear(n_neurons[i], n_neurons[i + 1]),
+                    nn.BatchNorm1d(n_neurons[i + 1]),
+                    nn.ReLU(),
+                ]
+            )
+        self.mlp = nn.Sequential(*layers)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(
+        self,
+        x: Tensor,
+        batch_positions: Tensor | None = None,
+        pad_mask: Tensor | None = None,
+    ) -> Tensor | tuple[Tensor, Tensor]:
+        """Forward pass.
+
+        Args:
+            x: Input tensor of shape ``(B, T, C, H, W)``.
+            batch_positions: Acquisition dates of shape ``(B, T)`` used for
+                positional encoding. Required when ``positional_encoding=True``.
+            pad_mask: Boolean padding mask of shape ``(B, T)`` where ``True``
+                marks padded (invalid) timesteps.
+
+        Returns:
+            Output feature map of shape ``(B, mlp[-1], H, W)``, and
+            optionally attention weights of shape
+            ``(n_head, B, T, H, W)`` when ``return_att=True``.
+        """
+        sz_b, seq_len, d, h, w = x.shape
+
+        if pad_mask is not None:
+            pad_mask = (
+                pad_mask.unsqueeze(-1).repeat(1, 1, h).unsqueeze(-1).repeat(1, 1, 1, w)
+            )  # B x T x H x W
+            pad_mask = (
+                pad_mask.permute(0, 2, 3, 1).contiguous().view(sz_b * h * w, seq_len)
+            )
+
+        out = x.permute(0, 3, 4, 1, 2).contiguous().view(sz_b * h * w, seq_len, d)
+        out = self.in_norm(out.permute(0, 2, 1)).permute(0, 2, 1)
+
+        if self.inconv is not None:
+            out = self.inconv(out.permute(0, 2, 1)).permute(0, 2, 1)
+
+        if self.positional_encoder is not None and batch_positions is not None:
+            bp = (
+                batch_positions.unsqueeze(-1)
+                .repeat(1, 1, h)
+                .unsqueeze(-1)
+                .repeat(1, 1, 1, w)
+            )  # B x T x H x W
+            bp = bp.permute(0, 2, 3, 1).contiguous().view(sz_b * h * w, seq_len)
+            out = out + self.positional_encoder(bp)
+
+        out, attn = self.attention_heads(out, pad_mask=pad_mask)
+
+        out = (
+            out.permute(1, 0, 2).contiguous().view(sz_b * h * w, -1)
+        )  # concatenate heads
+        out = self.dropout(self.mlp(out))
+        out = self.out_norm(out)
+        out = out.view(sz_b, h, w, -1).permute(0, 3, 1, 2)
+
+        attn = attn.view(self.n_head, sz_b, h, w, seq_len).permute(
+            0, 1, 4, 2, 3
+        )  # n_head x B x T x H x W
+
+        if self.return_att:
+            return out, attn
+        return out
