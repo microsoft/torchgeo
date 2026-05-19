@@ -18,7 +18,7 @@ class BinarySegDataset(NonGeoDataset):
     def __len__(self) -> int:
         return 4
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         return {
             'image': torch.randn(4, 3, 16, 16),
             'mask': torch.randint(0, 2, (16, 16)),
