@@ -244,7 +244,7 @@ class TemporalAggregator(nn.Module):
                 )(attn)
                 attn = attn * (~pad_mask).float()[:, :, None, None]
                 return (x * attn[:, :, None, :, :]).sum(dim=1)
-            elif self.mode == 'mean':
+            else:
                 out = x * (~pad_mask).float()[:, :, None, None, None]
                 return out.sum(dim=1) / (~pad_mask).sum(dim=1)[:, None, None, None]
         else:
@@ -268,7 +268,7 @@ class TemporalAggregator(nn.Module):
                     size=x.shape[-2:], mode='bilinear', align_corners=False
                 )(attn)
                 return (x * attn[:, :, None, :, :]).sum(dim=1)
-            elif self.mode == 'mean':
+            else:
                 return x.mean(dim=1)
 
 
