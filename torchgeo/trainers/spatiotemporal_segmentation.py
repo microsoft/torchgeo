@@ -59,17 +59,17 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         self.kwargs = kwargs
         super().__init__()
 
-    def forward(self, x: Tensor, lengths: Tensor | None = None) -> Tensor:
+    def forward(self, x: Tensor, **kwargs: Any) -> Tensor:
         """Forward pass of the model.
 
         Args:
             x: Input tensor of shape (B, T, C, H, W).
-            lengths: Optional sequence lengths (B,) before padding/truncation.
+            **kwargs: Additional keyword arguments forwarded to the model.
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
         """
-        return self.model(x, lengths=lengths)
+        return self.model(x, **kwargs)
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -85,9 +85,11 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         """Compute the loss and metrics for the given stage."""
         x = batch['image']
         y = batch['mask']
-        lengths = batch.get('length')
         batch_size = x.shape[0]
-        y_hat = self(x, lengths=lengths).squeeze(1)
+        kwargs: dict[str, Any] = {}
+        if (lengths := batch.get('length')) is not None:
+            kwargs['lengths'] = lengths
+        y_hat = self(x, **kwargs).squeeze(1)
 
         metrics = getattr(self, f'{stage}_metrics')
         metrics(y_hat, y)
@@ -119,7 +121,10 @@ class SpatioTemporalSegmentationTask(ClassificationMixin, BaseTask):
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities."""
-        y_hat: Tensor = self(batch['image'], lengths=batch.get('length'))
+        kwargs: dict[str, Any] = {}
+        if (lengths := batch.get('length')) is not None:
+            kwargs['lengths'] = lengths
+        y_hat: Tensor = self(batch['image'], **kwargs)
 
         match self.hparams['task']:
             case 'binary' | 'multilabel':
