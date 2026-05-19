@@ -110,9 +110,36 @@ class TestUTAE:
         out = small_model(x, batch_positions=batch_positions)
         assert out.shape == (2, 3, 16, 16)
 
-    def test_forward_with_padding(self, small_model: UTAE) -> None:
+    @pytest.mark.parametrize('agg_mode', ['att_group', 'att_mean', 'mean'])
+    def test_forward_with_padding(self, agg_mode: str) -> None:
         """All-zero frames (matching pad_value=0) exercise the padding mask paths."""
+        model = UTAE(
+            input_dim=4,
+            encoder_widths=(32, 64),
+            decoder_widths=(16, 64),
+            out_conv=(8, 3),
+            n_head=16,
+            d_model=64,
+            d_k=4,
+            agg_mode=agg_mode,
+        )
         x = torch.randn(2, 4, 4, 16, 16)
         x[:, 2:] = 0.0  # last two timesteps are padding
-        out = small_model(x)
+        out = model(x)
+        assert out.shape == (2, 3, 16, 16)
+
+    @pytest.mark.parametrize('encoder_norm', ['instance', 'none'])
+    def test_encoder_norm(self, x: torch.Tensor, encoder_norm: str) -> None:
+        """Instance norm and no-norm branches in ConvLayer."""
+        model = UTAE(
+            input_dim=4,
+            encoder_widths=(32, 64),
+            decoder_widths=(16, 64),
+            out_conv=(8, 3),
+            n_head=16,
+            d_model=64,
+            d_k=4,
+            encoder_norm=encoder_norm,
+        )
+        out = model(x)
         assert out.shape == (2, 3, 16, 16)

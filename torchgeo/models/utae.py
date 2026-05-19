@@ -228,8 +228,6 @@ class TemporalAggregator(nn.Module):
                     attn = nn.Upsample(
                         size=x.shape[-2:], mode='bilinear', align_corners=False
                     )(attn)
-                else:
-                    attn = nn.AvgPool2d(kernel_size=w // x.shape[-2])(attn)
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
                 attn = attn * (~pad_mask).float()[None, :, :, None, None]
                 out = torch.stack(
@@ -258,8 +256,6 @@ class TemporalAggregator(nn.Module):
                     attn = nn.Upsample(
                         size=x.shape[-2:], mode='bilinear', align_corners=False
                     )(attn)
-                else:
-                    attn = nn.AvgPool2d(kernel_size=w // x.shape[-2])(attn)
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
                 out = torch.stack(x.chunk(n_heads, dim=2))
                 out = attn[:, :, :, None, :, :] * out
@@ -274,7 +270,6 @@ class TemporalAggregator(nn.Module):
                 return (x * attn[:, :, None, :, :]).sum(dim=1)
             elif self.mode == 'mean':
                 return x.mean(dim=1)
-        return x.mean(dim=1)  # fallback
 
 
 class TemporallySharedBlock(nn.Module):
@@ -304,9 +299,6 @@ class TemporallySharedBlock(nn.Module):
         Returns:
             Output matching the input rank.
         """
-        if x.dim() == 4:
-            return self.forward(x)
-
         b, t, c, h, w = x.shape
         if self.pad_value is not None:
             dummy = torch.zeros(x.shape, device=x.device)
@@ -325,8 +317,6 @@ class TemporallySharedBlock(nn.Module):
                 out = temp
             else:
                 out = self.forward(out)
-        else:
-            out = self.forward(out)
 
         _, c_out, h_out, w_out = out.shape
         return out.view(b, t, c_out, h_out, w_out)
@@ -388,8 +378,6 @@ class ConvLayer(nn.Module):
             if nl is not None:
                 layers.append(nl(nkernels[i + 1]))
             if last_relu:
-                layers.append(nn.ReLU())
-            elif i < len(nkernels) - 2:
                 layers.append(nn.ReLU())
         self.conv = nn.Sequential(*layers)
 
