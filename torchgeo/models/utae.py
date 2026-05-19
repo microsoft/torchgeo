@@ -6,6 +6,7 @@
 """U-Net with Lightweight Temporal Attention Encoder (U-TAE)."""
 
 from collections.abc import Callable, Sequence
+from typing import Literal, cast
 
 import torch
 import torch.nn as nn
@@ -47,7 +48,7 @@ class UTAE(nn.Module):
         encoder: bool = False,
         return_maps: bool = False,
         pad_value: float = 0,
-        padding_mode: str = 'reflect',
+        padding_mode: Literal['zeros', 'reflect', 'replicate', 'circular'] = 'reflect',
     ) -> None:
         """Initialize U-TAE.
 
@@ -154,7 +155,9 @@ class UTAE(nn.Module):
         feature_maps = [out]
 
         for i in range(self.n_stages - 1):
-            out = self.down_blocks[i].smart_forward(feature_maps[-1])
+            out = cast(TemporallySharedBlock, self.down_blocks[i]).smart_forward(
+                feature_maps[-1]
+            )
             feature_maps.append(out)
 
         out, att = self.temporal_encoder(
@@ -313,6 +316,7 @@ class TemporallySharedBlock(nn.Module):
         if self.pad_value is not None:
             pad_mask = (out == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)
             if pad_mask.any():
+                assert self.out_shape is not None
                 temp = (
                     torch.ones(self.out_shape, device=x.device, requires_grad=False)
                     * self.pad_value
@@ -340,7 +344,7 @@ class ConvLayer(nn.Module):
         p: int = 1,
         n_groups: int = 4,
         last_relu: bool = True,
-        padding_mode: str = 'reflect',
+        padding_mode: Literal['zeros', 'reflect', 'replicate', 'circular'] = 'reflect',
     ) -> None:
         """Initialize ConvLayer.
 
@@ -403,7 +407,7 @@ class ConvBlock(TemporallySharedBlock):
         pad_value: float | None = None,
         norm: str = 'batch',
         last_relu: bool = True,
-        padding_mode: str = 'reflect',
+        padding_mode: Literal['zeros', 'reflect', 'replicate', 'circular'] = 'reflect',
     ) -> None:
         """Initialize ConvBlock.
 
@@ -436,7 +440,7 @@ class DownConvBlock(TemporallySharedBlock):
         p: int,
         pad_value: float | None = None,
         norm: str = 'batch',
-        padding_mode: str = 'reflect',
+        padding_mode: Literal['zeros', 'reflect', 'replicate', 'circular'] = 'reflect',
     ) -> None:
         """Initialize DownConvBlock.
 
@@ -480,7 +484,7 @@ class UpConvBlock(nn.Module):
         p: int,
         norm: str = 'batch',
         d_skip: int | None = None,
-        padding_mode: str = 'reflect',
+        padding_mode: Literal['zeros', 'reflect', 'replicate', 'circular'] = 'reflect',
     ) -> None:
         """Initialize UpConvBlock.
 

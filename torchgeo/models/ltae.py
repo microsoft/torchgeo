@@ -7,6 +7,7 @@
 
 import math
 from collections.abc import Sequence
+from typing import cast
 
 import torch
 from torch import Tensor, nn
@@ -199,9 +200,8 @@ class _PositionalEncoder(nn.Module):
         Returns:
             Positional encoding of shape ``(B, T, d)`` or ``(B, T, d * repeat)``.
         """
-        pe = batch_positions.unsqueeze(-1).float() * self.denom.unsqueeze(0).unsqueeze(
-            0
-        )  # ty: ignore[operator]
+        denom = cast(Tensor, self.denom)
+        pe = batch_positions.unsqueeze(-1).float() * denom.unsqueeze(0).unsqueeze(0)
         pe[..., 0::2] = torch.sin(pe[..., 0::2])
         pe[..., 1::2] = torch.cos(pe[..., 1::2])
         if self.repeat is not None:
