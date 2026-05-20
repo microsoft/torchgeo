@@ -4,6 +4,7 @@
 """TorchGeo sampler base classes."""
 
 import abc
+import warnings
 from abc import ABC
 from collections.abc import Iterable, Iterator
 from typing import Literal
@@ -285,6 +286,13 @@ class SpatioTemporalSampler(GeoSampler):
         """
         self.spatial_sampler = spatial_sampler
         self.temporal_sampler = temporal_sampler
+
+        match self.spatial_sampler.strategy, self.temporal_sampler.strategy:
+            case 'random', 'sequential':
+                msg = 'random_sampler @ sequential_sampler may result in a different '
+                msg += 'number of samples per epoch if different random locations have '
+                msg += 'a different number of timestamps'
+                warnings.warn(msg, UserWarning)
 
     def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Iterate over generated sample locations for each epoch.
