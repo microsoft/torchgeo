@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, which
+from .utils import GeoSlice, Path, Sample, quantile_normalization, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -118,6 +118,7 @@ class SouthAfricaCropType(RasterDataset):
         bands: Sequence[str] = s2_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
 
@@ -129,9 +130,14 @@ class SouthAfricaCropType(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(classes) <= self.cmap.keys(), (
             f'Only the following classes are valid: {list(self.cmap.keys())}.'
@@ -144,7 +150,13 @@ class SouthAfricaCropType(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
+        super().__init__(
+            paths=paths,
+            crs=crs,
+            bands=bands,
+            transforms=transforms,
+            time_series=time_series,
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
@@ -203,13 +215,14 @@ class SouthAfricaCropType(RasterDataset):
 
         # Create Tensors for each band using stored dates
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
                 filepath = os.path.join(
-                    self.paths,
+                    paths,
                     'train',
                     'imagery',
                     band_type,
@@ -218,18 +231,18 @@ class SouthAfricaCropType(RasterDataset):
                     f'{field_id}_{date}_{band}_10m.tif',
                 )
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, index))
-        image = torch.cat(data_list)
+            data_list.append(self._merge_or_stack(band_filepaths, index))
+        image = torch.cat(data_list, dim=-3)
 
         # Add labels for each field
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
-                self.paths, 'train', 'labels', f'{field_id}.tif'
+                paths, 'train', 'labels', f'{field_id}.tif'
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, index).squeeze(0)
+        mask = self._merge_or_stack(mask_filepaths, index).squeeze(-3)
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
@@ -260,9 +273,10 @@ class SouthAfricaCropType(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        os.makedirs(self.paths, exist_ok=True)
+        paths = cast(Path, self.paths)
+        os.makedirs(paths, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', paths, '--recursive=true')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -288,7 +302,7 @@ class SouthAfricaCropType(RasterDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].squeeze()
         ncols = 2

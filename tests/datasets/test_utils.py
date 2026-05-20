@@ -7,12 +7,13 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 import torch
+from numpy.typing import NDArray
+from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
@@ -29,6 +30,7 @@ from torchgeo.datasets.utils import (
     merge_samples,
     pad_across_batches,
     percentile_normalization,
+    quantile_normalization,
     stack_samples,
     unbind_samples,
     which,
@@ -335,8 +337,8 @@ class TestBoundingBox:
 
 def test_check_integrity() -> None:
     fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     assert check_integrity(fpath)
     assert check_integrity(fpath, md5=md5)
@@ -369,8 +371,8 @@ def test_extract_archive(from_path: str, tmp_path: Path) -> None:
 
 def test_download_url(tmp_path: Path) -> None:
     url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     download_url(url, tmp_path)
     download_url(url, tmp_path, md5=md5)
@@ -382,8 +384,8 @@ def test_download_url(tmp_path: Path) -> None:
 
 def test_download_and_extract_archive(tmp_path: Path) -> None:
     url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
-    md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
-    sha256 = '2cd7abf9ec04bd10356208a634a9b0ea82c96405bd98882878883a9b6f3d7b46'
+    md5 = '91dd532523a543fb8dee0887e4188e9b'
+    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 
     download_and_extract_archive(url, tmp_path)
     download_and_extract_archive(url, tmp_path, md5=md5)
@@ -542,20 +544,26 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
         assert subdir.cwd() == subdir
 
 
-def test_percentile_normalization() -> None:
-    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
+@pytest.mark.parametrize('img', [np.random.rand(2, 2), np.zeros((2, 2))])
+def test_percentile_normalization(img: NDArray[np.float64]) -> None:
+    match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
+    with pytest.warns(DeprecationWarning, match=match):
+        img = percentile_normalization(img)
+    assert 0 <= img.min() <= img.max() <= 1
 
-    img = percentile_normalization(img, 2, 98)
-    assert img.min() == 0
-    assert img.max() == 1
+
+@pytest.mark.parametrize('img', [torch.rand(2, 2), torch.zeros(2, 2)])
+def test_quantile_normalization(img: Tensor) -> None:
+    img = quantile_normalization(img)
+    assert 0 <= img.min() <= img.max() <= 1
 
 
 @pytest.mark.parametrize(
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
+def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+    array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)
@@ -596,11 +604,14 @@ def test_pad_across_batches() -> None:
     out = pad_across_batches(batch, padding_value=0.0, padding_length=3)
     assert out['image'].shape[1] == 3
     assert out['mask'].shape[0] == len(batch)
+    # Track the original sequence lengths so models can ignore padded timesteps.
+    assert torch.equal(out['length'], torch.tensor([2, 3], device=out['length'].device))
 
     with pytest.warns(UserWarning, match='Truncated 2 sequences to length 1'):
         out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
     assert out['image'].shape[1] == 1
     assert out['mask'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([1, 1], device=out['length'].device))
 
     batch = [
         {
@@ -618,3 +629,4 @@ def test_pad_across_batches() -> None:
     assert out['image'].shape[1] == 5
     assert out['bbox_xyxy'].shape[0] == len(batch)
     assert out['label'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([3, 2], device=out['length'].device))

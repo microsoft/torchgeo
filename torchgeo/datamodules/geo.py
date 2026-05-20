@@ -159,7 +159,7 @@ class BaseDataModule(LightningDataModule):
             dataset = dataset.dataset
         if dataset is not None:
             if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)  # type: ignore[call-non-callable]
+                fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
         return fig
 
 
@@ -223,8 +223,9 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit']:
             self.train_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='train', **self.kwargs
+                self.dataset_class(
+                    split='train',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
@@ -233,8 +234,9 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit', 'validate']:
             self.val_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='val', **self.kwargs
+                self.dataset_class(
+                    split='val',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.val_sampler = GridGeoSampler(
@@ -243,8 +245,9 @@ class GeoDataModule(BaseDataModule):
         if stage in ['test']:
             self.test_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='test', **self.kwargs
+                self.dataset_class(
+                    split='test',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.test_sampler = GridGeoSampler(
@@ -375,16 +378,19 @@ class NonGeoDataModule(BaseDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit']:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='train', **self.kwargs
+            self.train_dataset = self.dataset_class(
+                split='train',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['fit', 'validate']:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='val', **self.kwargs
+            self.val_dataset = self.dataset_class(
+                split='val',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['test']:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='test', **self.kwargs
+            self.test_dataset = self.dataset_class(
+                split='test',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[Sample]:

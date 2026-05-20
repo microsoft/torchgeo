@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, check_integrity, percentile_normalization
+from .utils import Path, Sample, check_integrity, quantile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -167,7 +167,7 @@ class SEN12MS(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
@@ -335,8 +335,8 @@ class SEN12MS(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image, mask = sample['image'][rgb_indices].numpy(), sample['mask']
-        image = percentile_normalization(image)
+        image, mask = sample['image'][rgb_indices], sample['mask']
+        image = quantile_normalization(image)
         ncols = 2
 
         showing_predictions = 'prediction' in sample

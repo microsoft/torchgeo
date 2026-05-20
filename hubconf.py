@@ -4,7 +4,7 @@
 """TorchGeo pre-trained model repository configuration file.
 
 * https://pytorch.org/hub/
-* https://pytorch.org/docs/stable/hub.html
+* https://docs.pytorch.org/docs/stable/hub.html
 """
 
 from torchgeo.models import (
@@ -17,7 +17,9 @@ from torchgeo.models import (
     dofa_large_patch16_224,
     earthloc,
     ltae,
+    olmoearth_v1,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
@@ -48,7 +50,9 @@ __all__ = (
     'dofa_large_patch16_224',
     'earthloc',
     'ltae',
+    'olmoearth_v1',
     'panopticon_vitb14',
+    'presto',
     'resnet18',
     'resnet50',
     'resnet152',
@@ -71,7 +75,8 @@ __all__ = (
 
 dependencies = [
     'kornia',
-    'microsoft-aurora',
+    'aurora',
+    'olmoearth_pretrain_minimal',
     'segmentation_models_pytorch',
     'timm',
     'torchvision',

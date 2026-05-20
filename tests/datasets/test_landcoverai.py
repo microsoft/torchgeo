@@ -76,7 +76,7 @@ class TestLandCoverAI:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
-        split: str = request.param[1]
+        split = request.param[1]
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
         monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
@@ -111,10 +111,6 @@ class TestLandCoverAI:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LandCoverAI(tmp_path)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LandCoverAI(split='foo')
 
     def test_plot(self, dataset: LandCoverAI) -> None:
         x = dataset[0].copy()

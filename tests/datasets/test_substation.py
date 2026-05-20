@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, Substation
+from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, Substation
 
 
 class TestSubstation:
@@ -128,3 +128,10 @@ class TestSubstation:
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample)
         plt.close()
+
+    def test_plot_rgb_missing(self) -> None:
+        root = os.path.join('tests', 'data', 'substation')
+        dataset = Substation(root, bands=[0, 4, 5])
+        sample = dataset[0]
+        with pytest.raises(RGBBandsMissingError):
+            dataset.plot(sample)

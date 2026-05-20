@@ -24,7 +24,7 @@ from .utils import (
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -434,12 +434,12 @@ class DOTA(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0))
         if self.bbox_orientation == 'horizontal':
-            boxes = sample['bbox_xyxy'].cpu().numpy()
+            boxes = sample['bbox_xyxy']
         else:
-            boxes = sample['bbox'].cpu().numpy()
-        labels = sample['labels'].cpu().numpy()
+            boxes = sample['bbox']
+        labels = sample['labels']
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(image)

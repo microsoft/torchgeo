@@ -4,7 +4,6 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -24,6 +23,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -68,10 +68,10 @@ class ObjectDetectionTask(BaseTask):
 
         Args:
             model: Name of the `torchvision
-                <https://pytorch.org/vision/stable/models.html#object-detection>`__
+                <https://docs.pytorch.org/vision/stable/models.html#object-detection>`__
                 model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
             backbone: Name of the `torchvision
-                <https://pytorch.org/vision/stable/models.html#classification>`__
+                <https://docs.pytorch.org/vision/stable/models.html#classification>`__
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.
@@ -198,9 +198,9 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 
-        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
-        self.model.backbone.body.conv1.weight = Parameter(weight)
-        self.model.backbone.body.conv1.in_channels = in_channels
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # ty: ignore[invalid-argument-type]
+        self.model.backbone.body.conv1.weight = Parameter(weight)  # ty: ignore[invalid-assignment]
+        self.model.backbone.body.conv1.in_channels = in_channels  # ty: ignore[invalid-assignment]
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -222,7 +222,7 @@ class ObjectDetectionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss.
 
@@ -247,7 +247,7 @@ class ObjectDetectionTask(BaseTask):
         return train_loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation metrics.
 
@@ -291,10 +291,6 @@ class ObjectDetectionTask(BaseTask):
             batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
             sample = unbind_samples(batch)[0]
-            # Convert image to uint8 for plotting
-            if torch.is_floating_point(sample['image']):
-                sample['image'] *= 255
-                sample['image'] = sample['image'].to(torch.uint8)
 
             fig: Figure | None = None
             try:
@@ -306,10 +302,10 @@ class ObjectDetectionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # type: ignore[call-non-callable]
+                )  # ty: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
         Args:
@@ -333,7 +329,7 @@ class ObjectDetectionTask(BaseTask):
         self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> list[dict[str, Tensor]]:
         """Compute the predicted bounding boxes.
 

@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -106,19 +105,8 @@ def main() -> None:
     populate_data(HOLDOUT_IDS, 'train', with_target=True)
     populate_data(VAL_IDS, 'val', with_target=False)
 
-    # zip and compute md5
     zip_filename = os.path.join(ROOT, 'dfc25_track2_trainval')
     shutil.make_archive(zip_filename, 'zip', ROOT, DATA_DIR)
-
-    def md5(fname: str) -> str:
-        hash_md5 = hashlib.md5()
-        with open(fname, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b''):
-                hash_md5.update(chunk)
-        return hash_md5.hexdigest()
-
-    md5sum = md5(zip_filename + '.zip')
-    print(f'MD5 checksum: {md5sum}')
 
 
 if __name__ == '__main__':

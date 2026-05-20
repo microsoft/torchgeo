@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import csv
-import hashlib
 import os
 import shutil
 
@@ -131,7 +130,3 @@ if __name__ == '__main__':
     zip_dirs = ['train_features', 'test_features', 'train_agbm']
     for dir in zip_dirs:
         shutil.make_archive(dir, 'zip', dir)
-        # Compute checksums
-        with open(dir + '.zip', 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{dir}: {md5}')

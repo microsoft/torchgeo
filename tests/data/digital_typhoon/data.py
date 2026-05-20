@@ -9,7 +9,6 @@ import shutil
 import h5py
 import numpy as np
 import pandas as pd
-from torchvision.datasets.utils import calculate_md5
 
 # Define the root directory
 root = 'WP'
@@ -104,8 +103,3 @@ with open(path, 'rb') as f:
 # Create gzab as a copy of gzaa
 shutil.copy2(f'{path}aa', f'{path}ab')
 paths.append(f'{path}ab')
-
-
-# Calculate the md5sum of the tar file
-for path in paths:
-    print(f'{path}: {calculate_md5(path)}')

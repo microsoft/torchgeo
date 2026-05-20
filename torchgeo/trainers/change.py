@@ -5,27 +5,26 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
-import torch
-import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
+from .mixins import ClassificationMixin
 
 
-class ChangeDetectionTask(BaseTask):
+class ChangeDetectionTask(ClassificationMixin, BaseTask):
     """Change Detection. Supports binary, multiclass, and multilabel change detection.
 
     .. versionadded:: 0.8
@@ -51,6 +50,7 @@ class ChangeDetectionTask(BaseTask):
         task: Literal['binary', 'multiclass', 'multilabel'] = 'binary',
         num_classes: int | None = None,
         num_labels: int | None = None,
+        labels: list[str] | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
         loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'bce',
@@ -76,6 +76,7 @@ class ChangeDetectionTask(BaseTask):
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            labels: List of class names.
             num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
@@ -90,83 +91,12 @@ class ChangeDetectionTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
+
+        .. versionadded:: 0.9
+           The *labels* parameter.
         """
         self.weights = weights
         super().__init__()
-
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        ignore_index: int | None = self.hparams['ignore_index']
-        class_weights = self.hparams['class_weights']
-        if class_weights is not None and not isinstance(class_weights, Tensor):
-            class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
-        match self.hparams['loss']:
-            case 'ce':
-                ignore_value = -1000 if ignore_index is None else ignore_index
-                self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=class_weights
-                )
-            case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss(
-                    pos_weight=self.hparams['pos_weight']
-                )
-            case 'jaccard':
-                # JaccardLoss requires a list of classes to use instead of a class
-                # index to ignore.
-                if self.hparams['task'] == 'multiclass' and ignore_index is not None:
-                    classes = [
-                        i
-                        for i in range(self.hparams['num_classes'])
-                        if i != ignore_index
-                    ]
-                    self.criterion = smp.losses.JaccardLoss(
-                        mode=self.hparams['task'], classes=classes
-                    )
-                else:
-                    self.criterion = smp.losses.JaccardLoss(mode=self.hparams['task'])
-            case 'focal':
-                self.criterion = smp.losses.FocalLoss(
-                    mode=self.hparams['task'],
-                    ignore_index=ignore_index,
-                    normalized=True,
-                )
-            case 'dice':
-                self.criterion = smp.losses.DiceLoss(
-                    mode=self.hparams['task'], ignore_index=ignore_index
-                )
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.Accuracy`: Overall accuracy
-          (OA) using 'micro' averaging. The number of true positives divided by the
-          dataset size. Higher values are better.
-        * :class:`~torchmetrics.JaccardIndex`: Intersection
-          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
-             for balanced performance assessment across imbalanced classes.
-        """
-        kwargs = {
-            'task': self.hparams['task'],
-            'num_classes': self.hparams['num_classes'],
-            'num_labels': self.hparams['num_labels'],
-            'ignore_index': self.hparams['ignore_index'],
-        }
-        metrics = MetricCollection(
-            [
-                Accuracy(multidim_average='global', average='micro', **kwargs),
-                JaccardIndex(average='micro', **kwargs),
-                F1Score(average='micro', **kwargs),
-            ]
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -269,7 +199,7 @@ class ChangeDetectionTask(BaseTask):
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
-    def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
+    def _shared_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
         """Compute the loss and additional metrics for the given stage.
 
         Args:
@@ -304,7 +234,6 @@ class ChangeDetectionTask(BaseTask):
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
             metrics(y_hat, y)
-            self.log_dict(metrics, batch_size=x.shape[0])
 
         if stage == 'val':
             if (
@@ -342,12 +271,12 @@ class ChangeDetectionTask(BaseTask):
                     summary_writer = self.logger.experiment
                     summary_writer.add_figure(
                         f'image/{batch_idx}', fig, global_step=self.global_step
-                    )  # type: ignore[call-non-callable]
+                    )  # ty: ignore[call-non-callable]
                     plt.close()
 
         return loss
 
-    def training_step(self, batch: Any, batch_idx: int) -> Tensor:
+    def training_step(self, batch: Sample, batch_idx: int) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
@@ -360,7 +289,7 @@ class ChangeDetectionTask(BaseTask):
         loss = self._shared_step(batch, batch_idx, 'train')
         return loss
 
-    def validation_step(self, batch: Any, batch_idx: int) -> None:
+    def validation_step(self, batch: Sample, batch_idx: int) -> None:
         """Compute the validation loss and additional metrics.
 
         Args:
@@ -369,7 +298,7 @@ class ChangeDetectionTask(BaseTask):
         """
         self._shared_step(batch, batch_idx, 'val')
 
-    def test_step(self, batch: Any, batch_idx: int) -> None:
+    def test_step(self, batch: Sample, batch_idx: int) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -379,7 +308,7 @@ class ChangeDetectionTask(BaseTask):
         self._shared_step(batch, batch_idx, 'test')
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 

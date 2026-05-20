@@ -4,7 +4,6 @@
 """Trainers for regression."""
 
 import os
-from typing import Any
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -19,6 +18,7 @@ from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -100,13 +100,13 @@ class RegressionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(self.model, state_dict)  # type: ignore[invalid-argument-type]
+            utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams['freeze_backbone']:
             for param in self.model.parameters():
                 param.requires_grad = False
-            for param in self.model.get_classifier().parameters():
+            for param in self.model.get_classifier().parameters():  # ty: ignore[call-non-callable]
                 param.requires_grad = True
 
     def configure_losses(self) -> None:
@@ -137,6 +137,7 @@ class RegressionTask(BaseTask):
           Lower values are better.
         """
         metrics = MetricCollection(
+            # https://github.com/astral-sh/ty/issues/2985
             {
                 'RMSE': MeanSquaredError(squared=False),
                 'MSE': MeanSquaredError(squared=True),
@@ -148,7 +149,7 @@ class RegressionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -175,7 +176,7 @@ class RegressionTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -229,10 +230,10 @@ class RegressionTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # type: ignore[call-non-callable]
+                )  # ty: ignore[call-non-callable]
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -253,7 +254,7 @@ class RegressionTask(BaseTask):
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted regression values.
 

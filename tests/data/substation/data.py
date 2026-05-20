@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 from typing import Literal
@@ -71,12 +70,3 @@ if __name__ == '__main__':
     filename_masks = 'mask.tar.gz'
     shutil.make_archive('image_stack', 'gztar', '.', 'image_stack')
     shutil.make_archive('mask', 'gztar', '.', 'mask')
-
-    # Compute and print MD5 checksums for data validation
-    with open(filename_images, 'rb') as f:
-        md5_images = hashlib.md5(f.read()).hexdigest()
-        print(f'{filename_images}: {md5_images}')
-
-    with open(filename_masks, 'rb') as f:
-        md5_masks = hashlib.md5(f.read()).hexdigest()
-        print(f'{filename_masks}: {md5_masks}')

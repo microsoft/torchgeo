@@ -27,14 +27,6 @@ class TestBioMassters:
     def test_len_of_ds(self, dataset: BioMassters) -> None:
         assert len(dataset) > 0
 
-    def test_invalid_split(self, dataset: BioMassters) -> None:
-        with pytest.raises(AssertionError):
-            BioMassters(dataset.root, split='foo')
-
-    def test_invalid_bands(self, dataset: BioMassters) -> None:
-        with pytest.raises(AssertionError):
-            BioMassters(dataset.root, sensors=['S3'])
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BioMassters(tmp_path)

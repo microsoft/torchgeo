@@ -16,7 +16,9 @@ from torchgeo.models import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthV1_Weights,
     Panopticon_Weights,
+    Presto_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
@@ -48,7 +50,9 @@ from torchgeo.models import (
     get_model_weights,
     get_weight,
     list_models,
+    olmoearth_v1,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
@@ -79,7 +83,9 @@ builders = [
     dofa_large_patch16_224,
     dofa_small_patch16_224,
     earthloc,
+    olmoearth_v1,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
@@ -107,7 +113,9 @@ enums = [
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthV1_Weights,
     Panopticon_Weights,
+    Presto_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
@@ -133,6 +141,8 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
+    if builder == olmoearth_v1:
+        pytest.importorskip('olmoearth_pretrain_minimal')
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
@@ -152,7 +162,7 @@ def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('enum', enums)
 def test_get_weight(enum: WeightsEnum) -> None:
-    for weight in enum:  # type: ignore[not-iterable]
+    for weight in enum:  # ty: ignore[not-iterable]
         assert weight == get_weight(str(weight))
 
 

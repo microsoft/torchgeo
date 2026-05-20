@@ -8,7 +8,7 @@ import glob
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,20 +120,6 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         self._extract()
 
     @abc.abstractmethod
-    def __getitem__(self, index: Any) -> Sample:
-        """Retrieve image, mask and metadata indexed by index.
-
-        Args:
-            index: coordinates or an index
-
-        Returns:
-            sample of image, mask and metadata at that index
-
-        Raises:
-            IndexError: if index is not found in the dataset
-        """
-
-    @abc.abstractmethod
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
 
@@ -151,7 +137,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
+            sample: a sample returned by `__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
@@ -209,6 +195,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
@@ -224,12 +211,25 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
-        RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
+        RasterDataset.__init__(
+            self,
+            root,
+            crs,
+            res,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
+        )
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
@@ -265,8 +265,8 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        img = self._merge_files(img_filepaths, index, self.band_indexes)
-        mask = self._merge_files(mask_filepaths, index, self.band_indexes)
+        img = self._merge_or_stack(img_filepaths, index, self.band_indexes)
+        mask = self._merge_or_stack(mask_filepaths, index, self.band_indexes)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
             'bounds': self._slice_to_tensor(index),
@@ -305,7 +305,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,

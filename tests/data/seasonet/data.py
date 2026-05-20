@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -109,19 +108,9 @@ for season in seasons:
     # Create archives
     shutil.make_archive(season, 'zip', '.', season)
 
-    # Compute checksums
-    with open(archive, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{season}: {md5!r}')
-
 # Write meta.csv
 with open('meta.csv', 'w') as f:
     f.writelines(meta_lines)
-
-# Compute checksums
-with open('meta.csv', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'meta.csv: {md5!r}')
 
 os.makedirs('splits', exist_ok=True)
 
@@ -134,8 +123,3 @@ for split in ['train', 'val', 'test']:
             f.write(str(i) + '\n')
 
 shutil.make_archive('splits', 'zip', '.', 'splits')
-
-# Compute checksums
-with open('splits.zip', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'splits: {md5!r}')

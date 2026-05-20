@@ -1,0 +1,5 @@
+Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
+:ref:`EuroSAT` 100,C,Sentinel-2,"27,000",10,64x64,10,MSI,MIT
+:ref:`LandCover.ai` 100,S,Aerial,"10,674",5,512x512,0.25--0.5,RGB,CC-BY-NC-SA-4.0
+:ref:`OSCD` 100,CD,Sentinel-2,24,2,"241--1,180",60,MSI,CC-BY-NC-SA-4.0
+:ref:`PASTIS` 100,I,Sentinel-1/2,"2,433",19,128x128xT,10,MSI,CC-BY-4.0

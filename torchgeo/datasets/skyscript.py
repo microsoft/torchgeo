@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal, NotRequired, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -14,16 +14,19 @@ from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
+from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    Path,
-    Sample,
-    download_and_extract_archive,
-    download_url,
-    extract_archive,
-)
+from .utils import Path, download_and_extract_archive, download_url, extract_archive
+
+
+class CaptionSample(TypedDict):
+    """Sample for image captioning."""
+
+    image: Tensor
+    caption: str
+    prediction: NotRequired[str]
 
 
 class SkyScript(NonGeoDataset):
@@ -68,8 +71,8 @@ class SkyScript(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[Sample], Sample] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[CaptionSample], CaptionSample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -107,7 +110,7 @@ class SkyScript(NonGeoDataset):
         """
         return len(self.captions)
 
-    def __getitem__(self, index: int) -> Sample:
+    def __getitem__(self, index: int) -> CaptionSample:  # ty: ignore[invalid-method-override]
         """Return an index within the dataset.
 
         Args:
@@ -123,7 +126,7 @@ class SkyScript(NonGeoDataset):
             array = rearrange(array, 'h w c -> c h w')
             image = torch.from_numpy(array)
 
-        sample = {'image': image, 'caption': title}
+        sample: CaptionSample = {'image': image, 'caption': title}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -159,7 +162,10 @@ class SkyScript(NonGeoDataset):
             download_url(url, self.root, md5=md5)
 
     def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+        self,
+        sample: CaptionSample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

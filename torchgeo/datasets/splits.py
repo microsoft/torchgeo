@@ -81,7 +81,7 @@ def random_bbox_assignment(
     new_datasets = []
     for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = dataset.index.iloc[indices[offset - length : offset]]
+        ds.index = dataset.index.iloc[indices[offset - length : offset]]  # ty: ignore[invalid-argument-type]
         new_datasets.append(ds)
 
     return new_datasets
@@ -166,7 +166,7 @@ def random_bbox_splitting(
                             new_geometry, geometry_remaining = geom1, geom2
                         else:
                             geometry_remaining, new_geometry = geom1, geom2
-            new_datasets[j].index.iloc[i, i_geom] = new_geometry
+            new_datasets[j].index.iloc[i, i_geom] = new_geometry  # ty: ignore[invalid-assignment]
 
             fraction_remaining -= fraction
             horizontal = not horizontal
@@ -283,7 +283,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
 
 def time_series_split(
     dataset: GeoDataset,
-    lengths: Sequence[float] | Sequence[pd.Timedelta] | Sequence[pd.Interval],  # type: ignore[type-arg]
+    lengths: Sequence[float] | Sequence[pd.Timedelta] | Sequence[pd.Interval],
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -319,7 +319,7 @@ def time_series_split(
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[pd.Interval], lengths)  # type: ignore[type-arg]
+    lengths = cast(Sequence[pd.Interval], lengths)
 
     _totalt = pd.Timedelta(0)
     new_datasets = []

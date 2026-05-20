@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -83,9 +82,3 @@ for split, count in splits:
 for directory in directories:
     # Compress data
     shutil.make_archive(directory, 'zip', '.', directory)
-
-    # Compute checksums
-    filename = f'{directory}.zip'
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(repr(filename) + ': ' + repr(md5) + ',')

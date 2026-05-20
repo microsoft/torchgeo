@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -37,11 +36,6 @@ for split in ['training', 'validation', 'testing']:
         f.create_dataset('label', data=label, compression='gzip', compression_opts=9)
         f.create_dataset('sen1', data=sen1, compression='gzip', compression_opts=9)
         f.create_dataset('sen2', data=sen2, compression='gzip', compression_opts=9)
-
-    # Compute checksums
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(repr(split.replace('ing', '')) + ':', repr(md5) + ',')
 
 for version in ['random', 'block', 'culture_10']:
     os.makedirs(version, exist_ok=True)

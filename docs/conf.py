@@ -9,6 +9,7 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import inspect
 import os
 import sys
 
@@ -39,8 +40,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.linkcode',
     'nbsphinx',
+    'sphinx_github_changelog',
 ]
 
 # List of patterns, relative to source directory, that match files and
@@ -69,6 +71,9 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    # Internal type aliases we don't yet want to expose
+    ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
+    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -80,7 +85,7 @@ html_theme = 'pydata_sphinx_theme'
 
 # Define the version we use for matching in the version switcher.
 version_match = os.environ.get('READTHEDOCS_VERSION')
-json_url = 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json'
+json_url = 'https://docs.torchgeo.org/en/latest/_static/switcher.json'
 
 # If READTHEDOCS_VERSION doesn't exist, we're not on RTD
 # If it is an integer, we're in a PR build and the version isn't correct.
@@ -102,7 +107,7 @@ elif version_match == 'stable':
 # documentation: https://pydata-sphinx-theme.readthedocs.io/
 html_theme_options = {
     'collapse_navigation': False,
-    'show_nav_level': 2,
+    'show_nav_level': 1,
     'show_toc_level': 2,
     'navigation_depth': 4,
     'navbar_align': 'left',
@@ -160,6 +165,7 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pillow': ('https://pillow.readthedocs.io/en/stable/', None),
     'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
@@ -179,3 +185,47 @@ suppress_warnings = ['myst.header']
 nbsphinx_execute = 'never'
 with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
+
+# sphinx-github-changelog
+sphinx_github_changelog_token = os.environ.get('SPHINX_GITHUB_CHANGELOG_TOKEN')
+
+
+# sphinx.ext.linkcode
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """Resolve a GitHub URL for the given Python object."""
+    if domain != 'py':
+        return None
+
+    modname = info.get('module', '')
+    fullname = info.get('fullname', '')
+    if not modname:
+        return None
+
+    try:
+        mod = sys.modules.get(modname)
+        if mod is None:
+            __import__(modname)
+            mod = sys.modules[modname]
+
+        obj = mod
+        for part in fullname.split('.'):
+            obj = getattr(obj, part)
+
+        obj = inspect.unwrap(obj)
+        sourcefile = inspect.getsourcefile(obj)
+        if sourcefile is None:
+            return None
+        source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
+    except Exception:
+        return None
+
+    # Make path relative to the repo root
+    sourcefile = os.path.relpath(
+        sourcefile, start=os.path.join(os.path.dirname(__file__), '..')
+    )
+
+    lineend = lineno + source.count('\n') - 1
+    return (
+        f'https://github.com/torchgeo/torchgeo/blob/main/{sourcefile}'
+        f'#L{lineno}-L{lineend}'
+    )

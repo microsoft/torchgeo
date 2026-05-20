@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 from matplotlib.figure import Figure
 
-from .errors import DatasetNotFoundError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import Path, Sample, download_url, extract_archive
 
@@ -40,12 +40,16 @@ class Substation(NonGeoDataset):
     * 26,522 image-mask pairs stored as numpy files.
     * Data from 5 revisits for most locations.
     * Multi-temporal, multi-spectral images (13 channels) paired with masks,
-      with a spatial resolution of 228x228 pixels
+      with a spatial resolution of 228x228 pixels. When ``timepoint_aggregation``
+      is None, images are returned as T x C x H x W tensors.
 
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.48550/arXiv.2409.17363
     """
+
+    # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue) = indices 3, 2, 1
+    rgb_bands = (3, 2, 1)
 
     directory = 'Substation'
     filename_images = 'image_stack.tar.gz'
@@ -62,7 +66,7 @@ class Substation(NonGeoDataset):
         mask_2d: bool = True,
         num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
-        | None = 'concat',
+        | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -75,6 +79,7 @@ class Substation(NonGeoDataset):
             mask_2d: Whether to use a 2D mask.
             num_of_timepoints: Number of timepoints to use for each image.
             timepoint_aggregation: How to aggregate multiple timepoints.
+                If None, returns time-series as T x C x H x W.
             transforms: A transform takes input sample and returns a transformed version.
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
@@ -161,6 +166,8 @@ class Substation(NonGeoDataset):
     ) -> Figure:
         """Plot a sample from the dataset.
 
+        When the image is 4D (T x C x H x W), the first two timepoints are plotted.
+
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
@@ -168,18 +175,39 @@ class Substation(NonGeoDataset):
 
         Returns:
             A matplotlib Figure containing the rendered sample.
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
-        ncols = 2
-        shape_of_image = sample['image'].shape
-        if len(shape_of_image) == 4:
-            # Plot the first timepoint
-            image = sample['image'][0][:3].permute(1, 2, 0).cpu().numpy()
+        is_time_series = sample['image'].ndim == 4
+
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(list(self.bands).index(band))
+            else:
+                raise RGBBandsMissingError()
+
+        if is_time_series:
+            images = (
+                torch.clamp(sample['image'][:, rgb_indices] / 4000, min=0, max=1)
+                .cpu()
+                .numpy()
+                .transpose(0, 2, 3, 1)
+            )
+            num_images = min(len(images), 2)
+            ncols = num_images + 1
         else:
-            image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
-        image = image / 255.0
+            image = (
+                torch.clamp(sample['image'][rgb_indices] / 4000, min=0, max=1)
+                .permute(1, 2, 0)
+                .cpu()
+                .numpy()
+            )
+            ncols = 2
 
         if self.mask_2d:
-            mask = sample['mask'][0].squeeze(0).cpu().numpy()
+            mask = sample['mask'][1].squeeze(dim=0).cpu().numpy()
         else:
             mask = sample['mask'].cpu().numpy()
         showing_predictions = 'prediction' in sample
@@ -187,23 +215,40 @@ class Substation(NonGeoDataset):
             prediction = sample['prediction'].cpu().numpy()
             if self.mask_2d:
                 prediction = prediction[0]
-            ncols = 3
+            ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
-        axs[0].imshow(image)
-        axs[0].axis('off')
-        axs[1].imshow(mask, cmap='gray', interpolation='none')
-        axs[1].axis('off')
 
-        if show_titles:
-            axs[0].set_title('Image')
-            axs[1].set_title('Mask')
-
-        if showing_predictions:
-            axs[2].imshow(prediction, cmap='gray', interpolation='none')
-            axs[2].axis('off')
+        if is_time_series:
+            for i in range(num_images):
+                axs[i].imshow(images[i])
+                axs[i].axis('off')
+                if show_titles:
+                    axs[i].set_title(f'Image {i}')
+            axs[num_images].imshow(mask, cmap='gray', interpolation='none')
+            axs[num_images].axis('off')
             if show_titles:
-                axs[2].set_title('Prediction')
+                axs[num_images].set_title('Mask')
+            if showing_predictions:
+                axs[num_images + 1].imshow(
+                    prediction, cmap='gray', interpolation='none'
+                )
+                axs[num_images + 1].axis('off')
+                if show_titles:
+                    axs[num_images + 1].set_title('Prediction')
+        else:
+            axs[0].imshow(image)
+            axs[0].axis('off')
+            axs[1].imshow(mask, cmap='gray', interpolation='none')
+            axs[1].axis('off')
+            if show_titles:
+                axs[0].set_title('Image')
+                axs[1].set_title('Mask')
+            if showing_predictions:
+                axs[2].imshow(prediction, cmap='gray', interpolation='none')
+                axs[2].axis('off')
+                if show_titles:
+                    axs[2].set_title('Prediction')
 
         if suptitle:
             fig.suptitle(suptitle)

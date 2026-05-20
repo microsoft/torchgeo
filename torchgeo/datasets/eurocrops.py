@@ -6,13 +6,14 @@
 import csv
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import cast
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
+from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
@@ -150,13 +151,14 @@ class EuroCrops(VectorDataset):
             return True
 
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
 
-        filepath = os.path.join(self.paths, self.hcat_fname)
+        filepath = os.path.join(paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
             return False
 
         for fname, md5 in self.zenodo_files:
-            filepath = os.path.join(self.paths, fname)
+            filepath = os.path.join(paths, fname)
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -167,14 +169,15 @@ class EuroCrops(VectorDataset):
             print('Files already downloaded and verified')
             return
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         download_url(
             self.base_url + self.hcat_fname,
-            self.paths,
+            paths,
             md5=self.hcat_md5 if self.checksum else None,
         )
         for fname, md5 in self.zenodo_files:
             download_and_extract_archive(
-                self.base_url + fname, self.paths, md5=md5 if self.checksum else None
+                self.base_url + fname, paths, md5=md5 if self.checksum else None
             )
 
     def _load_class_map(self, classes: list[str] | None) -> None:
@@ -189,8 +192,9 @@ class EuroCrops(VectorDataset):
         """
         if not classes:
             assert isinstance(self.paths, str | os.PathLike)
+            paths = cast(Path, self.paths)
             classes = []
-            filepath = os.path.join(self.paths, self.hcat_fname)
+            filepath = os.path.join(paths, self.hcat_fname)
             with open(filepath) as f:
                 reader = csv.DictReader(f)
                 for row in reader:
@@ -213,6 +217,7 @@ class EuroCrops(VectorDataset):
         # Convert the HCAT code of this feature to its index per self.class_map.
         # We go up the class hierarchy until there is a match.
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
+        assert self.label_name
         hcat_code = feature[self.label_name]
         if hcat_code is None:
             return 0
@@ -254,14 +259,13 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(
-            arr: 'np.typing.NDArray[Any]',
-        ) -> 'np.typing.NDArray[np.float64]':
-            # Color 0 as black, while applying default color map for the class indices.
+        def apply_cmap(tensor: Tensor) -> Tensor:
+            """Color 0 as black, while applying default color map for the class indices."""
+            array = tensor.numpy()
             cmap = plt.get_cmap('viridis')
-            im: np.typing.NDArray[np.float64] = cmap(arr / len(self.class_map))
-            im[arr == 0] = 0
-            return im
+            image = cmap(array / len(self.class_map))
+            image[array == 0] = 0
+            return torch.from_numpy(image)
 
         if showing_prediction:
             axs[0].imshow(apply_cmap(mask), interpolation='none')

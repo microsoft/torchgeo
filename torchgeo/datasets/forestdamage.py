@@ -39,15 +39,15 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """
     et = ElementTree.parse(path)
     element = et.getroot()
-    filename = element.find('filename').text  # type: ignore[union-attr]
+    filename = element.find('filename').text
     labels, bboxes = [], []
     for obj in element.findall('object'):
         bndbox = obj.find('bndbox')
         bbox = [
-            int(bndbox.find('xmin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
+            int(bndbox.find('xmin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('xmax').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymax').text),  # ty: ignore[invalid-argument-type]
         ]
 
         label_var = obj.find('damage')

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import Literal, cast
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ class EverWatch(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -130,7 +130,7 @@ class EverWatch(NonGeoDataset):
 
         # group per image path to get all annotations for one sample
         self.annot_df['sample_index'] = pd.factorize(self.annot_df['image_path'])[0]
-        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])  # type: ignore[arg-type]
+        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 

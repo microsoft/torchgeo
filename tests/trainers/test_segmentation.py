@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torch import Tensor
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
@@ -54,6 +55,8 @@ class TestSemanticSegmentationTask:
             'chesapeake_cvpr_7',
             'cloud_cover',
             'deepglobelandcover',
+            'dlrsd',
+            'dlrsd_no_val',
             'etci2021',
             'ftw',
             'geonrw',
@@ -66,7 +69,6 @@ class TestSemanticSegmentationTask:
             'loveda',
             'mmflood',
             'naipchesapeake',
-            'pastis',
             'pastis100',
             'potsdam2d',
             'sen12ms_all',
@@ -312,6 +314,7 @@ class TestSemanticSegmentationTask:
         result = task.predict_step(batch, 0)
 
         probabilities = result['probabilities']
+        assert isinstance(probabilities, Tensor)
         assert probabilities.shape == (batch_size, num_classes, height, width)
 
     def test_predict_step_preserves_metadata(self) -> None:

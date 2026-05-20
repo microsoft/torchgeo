@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import zipfile
 
@@ -100,8 +99,3 @@ if __name__ == '__main__':
             for file in files:
                 output_fn = os.path.join(root, file)
                 zipf.write(output_fn, os.path.relpath(output_fn, country))
-
-    # Compute checksums
-    with open(f'{country}.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{md5}')

@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import zipfile
 
@@ -74,8 +73,3 @@ if __name__ == '__main__':
         )
         with zipfile.ZipFile(zipfilename, 'w') as zip:
             zip.write(filename, arcname=filename)
-
-        # Compute checksums
-        with open(zipfilename, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{zipfilename}: {md5}')

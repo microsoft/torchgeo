@@ -4,23 +4,25 @@
 # Sorted by # contributors, then # forks, etc. (update_github.py)
 index = [
     'TorchGeo',
-    'OTB',
     'TerraTorch',
+    'OTB',
     'DeepForest',
     'Raster Vision',
     'samgeo',
     'spopt',
     'GDL',
+    'GeoAI',
     'SITS',
     'SPy',
     'srai',
-    'GeoAI',
     'ML4Floods',
     'GeoTessera',
+    'AIDE',
     'scikit-eo',
     'Myria3D',
     'OTBTF',
     'GeoDeep',
+    'rs-embed',
     'torchange',
 ]
 
@@ -64,6 +66,7 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
+    'rs-embed': ('cybergis', 'rs-embed'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
@@ -89,6 +92,8 @@ hardcoded_coverage = {
     'GeoDeep': 0,
     'GeoTessera': 15,
     'torchange': 0,
+    'AIDE': 0,
+    'rs-embed': 61,
 }
 name_to_pypi = {
     'SPy': 'spectral',
@@ -107,6 +112,7 @@ name_to_pypi = {
     'GeoDeep': 'geodeep',
     'GeoTessera': 'geotessera',
     'torchange': 'torchange',
+    'rs-embed': 'rs-embed',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {

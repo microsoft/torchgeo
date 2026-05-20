@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -144,6 +144,7 @@ class NLCD(RasterDataset):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -162,10 +163,15 @@ class NLCD(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(years) <= self.md5s.keys(), (
             'NLCD data product only exists for the following years: '
@@ -186,7 +192,9 @@ class NLCD(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
@@ -217,10 +225,9 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
-            pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace('*', str(year))
-            )
+            pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):
                 exists.append(True)
                 self._extract()
@@ -241,20 +248,22 @@ class NLCD(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
-            pathname = os.path.join(self.paths, zipfile_name)
-            extract_archive(pathname, self.paths)
+            pathname = os.path.join(paths, zipfile_name)
+            extract_archive(pathname, paths)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

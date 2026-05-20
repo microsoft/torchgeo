@@ -1,2 +1,0 @@
-# models
-microsoft-aurora==1.8.0

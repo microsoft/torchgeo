@@ -23,7 +23,7 @@ _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
 
-class Unet_Weights(WeightsEnum):  # type: ignore[misc]
+class Unet_Weights(WeightsEnum):
     """U-Net weights.
 
     For `smp <https://github.com/qubvel-org/segmentation_models.pytorch>`_
@@ -284,8 +284,8 @@ def unet(
             )
         # Random initialize segmentation head for new task
         else:
-            del state_dict['segmentation_head.0.weight']  # type: ignore[not-subscriptable]
-            del state_dict['segmentation_head.0.bias']  # type: ignore[not-subscriptable]
+            del state_dict['segmentation_head.0.weight']
+            del state_dict['segmentation_head.0.bias']
             missing_keys, unexpected_keys = model.load_state_dict(
                 state_dict, strict=False
             )

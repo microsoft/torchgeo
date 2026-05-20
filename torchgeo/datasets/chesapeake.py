@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
-import rasterio.mask
+import rasterio.windows
 import shapely.geometry
 import shapely.ops
 import torch
@@ -33,7 +33,7 @@ class Chesapeake(RasterDataset, ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay Land Use and Land Cover (LULC) Database 2022 Edition
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    <https://www.chesapeakeconservancy.org/projects/cbp-land-use-land-cover-data-project>`_
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time
@@ -132,6 +132,7 @@ class Chesapeake(RasterDataset, ABC):
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
 
@@ -147,9 +148,14 @@ class Chesapeake(RasterDataset, ABC):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -163,7 +169,9 @@ class Chesapeake(RasterDataset, ABC):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -173,7 +181,8 @@ class Chesapeake(RasterDataset, ABC):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
 
@@ -188,14 +197,16 @@ class Chesapeake(RasterDataset, ABC):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year, md5 in self.md5s.items():
             url = self.url.format(state=self.state, year=year)
-            download_url(url, self.paths, md5=md5 if self.checksum else None)
+            download_url(url, paths, md5=md5 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        for file in glob.iglob(os.path.join(paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
     def plot(
@@ -418,13 +429,13 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, Any]] = {
+    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ).transform,
+        ),
         'epsg:26918': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ).transform,
+        ),
     }
 
     def __init__(
@@ -513,19 +524,19 @@ class ChesapeakeCVPR(GeoDataset):
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
-            'image': [],
-            'mask': [],
             'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(transform),
         }
 
+        images = []
+        masks = []
         if df.empty:
             raise IndexError(
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
         elif len(df) == 1:
             filenames = df.iloc[0]
-            query_geom_transformed = None  # is set by the first layer
+            query_box_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
@@ -535,16 +546,27 @@ class ChesapeakeCVPR(GeoDataset):
                 with rasterio.open(os.path.join(self.root, fn)) as f:
                     dst_crs = f.crs.to_string().lower()
 
-                    if query_geom_transformed is None:
+                    if query_box_transformed is None:
                         query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs], query_box
+                            self.p_transformers[dst_crs].transform, query_box
                         ).envelope
-                        query_geom_transformed = shapely.geometry.mapping(
-                            query_box_transformed
-                        )
 
-                    data, _ = rasterio.mask.mask(
-                        f, [query_geom_transformed], crop=True, all_touched=True
+                    # Use a boundless windowed read so the returned array
+                    # always matches the requested patch shape, even when
+                    # the query extends beyond the raster footprint. The
+                    # out-of-raster region is filled with nodata (or 0 if
+                    # the raster has no nodata defined).
+                    window = rasterio.windows.from_bounds(
+                        *query_box_transformed.bounds, transform=f.transform
+                    )
+                    out_height = round(window.height)
+                    out_width = round(window.width)
+                    fill_value = f.nodata if f.nodata is not None else 0
+                    data = f.read(
+                        window=window,
+                        boundless=True,
+                        fill_value=fill_value,
+                        out_shape=(f.count, out_height, out_width),
                     )
 
                 if layer in [
@@ -553,22 +575,19 @@ class ChesapeakeCVPR(GeoDataset):
                     'landsat-leaf-on',
                     'landsat-leaf-off',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in [
                     'lc',
                     'nlcd',
                     'buildings',
                     'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
             raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
+        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
+        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)

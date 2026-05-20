@@ -92,7 +92,7 @@ These are download metrics for the project. Note that these numbers can be artif
    :header-rows: 1
    :widths: auto
 
-**PyPI Downloads**: The number of downloads from the Python Packaging Index. PyPI download metrics are computed by `PyPI Stats <https://pypistats.org/>`_ and `PePy <https://www.pepy.tech/>`_.
+**PyPI Downloads**: The number of downloads from the Python Packaging Index. PyPI download metrics are computed by `PyPI Stats <https://pypistats.org/>`_ and `PePy <https://pepy.tech/>`_.
 
 **CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_.
 
@@ -123,3 +123,5 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _GeoTessera: https://github.com/ucam-eo/geotessera
 .. _GeoDeep: https://github.com/uav4geo/GeoDeep
 .. _torchange: https://github.com/Z-Zheng/pytorch-change-models
+.. _AIDE: https://github.com/microsoft/aerial_wildlife_detection
+.. _rs-embed: https://github.com/cybergis/rs-embed

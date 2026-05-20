@@ -26,7 +26,7 @@ from torchgeo.models import (
 class TestSwin_T:
     @pytest.fixture(params=[*Swin_T_Weights])
     def weights(self, request: SubRequest) -> Swin_T_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -42,7 +42,7 @@ class TestSwin_T:
         )
         torch.save({'state_dict': model.state_dict()}, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_swin_t(self) -> None:
         swin_t()
@@ -77,7 +77,7 @@ class TestSwin_T:
 class TestSwin_S:
     @pytest.fixture(params=[*Swin_S_Weights])
     def weights(self, request: SubRequest) -> Swin_S_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -93,7 +93,7 @@ class TestSwin_S:
         )
         torch.save({'state_dict': model.state_dict()}, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_swin_s(self) -> None:
         swin_s()
@@ -128,7 +128,7 @@ class TestSwin_S:
 class TestSwin_B:
     @pytest.fixture(params=[*Swin_B_Weights])
     def weights(self, request: SubRequest) -> Swin_B_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -147,13 +147,13 @@ class TestSwin_B:
             stochastic_depth_prob=0.5,
         )
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels  # type: ignore[not-subscriptable]
-        model.features[0][0] = torch.nn.Conv2d(  # type: ignore[invalid-assignment]
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         torch.save({'state_dict': model.state_dict()}, path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_swin_b(self) -> None:
         swin_b()
@@ -188,7 +188,7 @@ class TestSwin_B:
 class TestSwin_V2_T:
     @pytest.fixture(params=[*Swin_V2_T_Weights])
     def weights(self, request: SubRequest) -> Swin_V2_T_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -204,7 +204,7 @@ class TestSwin_V2_T:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_swin_v2_t(self) -> None:
         swin_v2_t()
@@ -239,7 +239,7 @@ class TestSwin_V2_T:
 class TestSwin_V2_B:
     @pytest.fixture(params=[*Swin_V2_B_Weights])
     def weights(self, request: SubRequest) -> Swin_V2_B_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -255,7 +255,7 @@ class TestSwin_V2_B:
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_swin_v2_b(self) -> None:
         swin_v2_b()

@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -39,7 +39,7 @@ class DigitalTyphoon(NonGeoDataset):
     covers over four decades.
 
     See `the Digital Typhoon website
-    <http://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
     for more information about the dataset.
 
     Dataset features:
@@ -349,15 +349,15 @@ class DigitalTyphoon(NonGeoDataset):
         """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
-        feature_dict = {
-            name: torch.tensor(feature_df[name].item()).float()
-            for name in self.features
-        }
+        feature_dict = {}
+        for name in self.features:
+            feature_dict[name] = torch.tensor(feature_df[name].item()).float()
+
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
-                feature_dict[feature] = (  # type: ignore[index]
-                    feature_dict[feature] - mean  # type: ignore[index]
+                feature_dict[feature] = (
+                    feature_dict[feature] - mean
                 ) / self.target_std[feature]
         return feature_dict
 
@@ -410,7 +410,7 @@ class DigitalTyphoon(NonGeoDataset):
             with tarfile.open(
                 os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             ) as tar:
-                tar.extractall(path=self.root)
+                tar.extractall(path=self.root, filter='data')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -425,9 +425,9 @@ class DigitalTyphoon(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample['image'].numpy(), sample['label'].numpy()
+        image, label = sample['image'], sample['label']
 
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         image = einops.rearrange(image, 'c h w -> h w c')
 
         showing_predictions = 'prediction' in sample

@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import shutil
 
 import numpy as np
@@ -104,8 +103,3 @@ for state in ['dc', 'de', 'md', 'ny', 'pa', 'va', 'wv']:
 
     # Compress file
     shutil.make_archive(filename, 'zip', '.', filename + '.tif')
-
-    # Compute checksums
-    with open(f'{filename}.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(state, repr(md5))

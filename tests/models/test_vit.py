@@ -30,7 +30,7 @@ from torchgeo.models import (
 class TestViTSmall16:
     @pytest.fixture(params=[*ViTSmall16_Weights])
     def weights(self, request: SubRequest) -> ViTSmall16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -50,7 +50,7 @@ class TestViTSmall16:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_small_patch16_224()
@@ -87,7 +87,7 @@ class TestViTSmall16:
 class TestViTBase16:
     @pytest.fixture(params=[*ViTBase16_Weights])
     def weights(self, request: SubRequest) -> ViTBase16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -107,7 +107,7 @@ class TestViTBase16:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_base_patch16_224()
@@ -144,7 +144,7 @@ class TestViTBase16:
 class TestViTLarge16:
     @pytest.fixture(params=[*ViTLarge16_Weights])
     def weights(self, request: SubRequest) -> ViTLarge16_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -164,7 +164,7 @@ class TestViTLarge16:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_large_patch16_224()
@@ -201,7 +201,7 @@ class TestViTLarge16:
 class TestViTHuge14:
     @pytest.fixture(params=[*ViTHuge14_Weights])
     def weights(self, request: SubRequest) -> ViTHuge14_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -221,7 +221,7 @@ class TestViTHuge14:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_huge_patch14_224()
@@ -258,7 +258,7 @@ class TestViTHuge14:
 class TestViTSmall14_DINOv2:
     @pytest.fixture(params=[*ViTSmall14_DINOv2_Weights])
     def weights(self, request: SubRequest) -> ViTSmall14_DINOv2_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -279,7 +279,7 @@ class TestViTSmall14_DINOv2:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_small_patch14_dinov2()
@@ -321,7 +321,7 @@ class TestViTSmall14_DINOv2:
 class TestViTBase14_DINOv2:
     @pytest.fixture(params=[*ViTBase14_DINOv2_Weights])
     def weights(self, request: SubRequest) -> ViTBase14_DINOv2_Weights:
-        return request.param  # type: ignore[no-any-return]
+        return request.param
 
     @pytest.fixture
     def mocked_weights(
@@ -342,7 +342,7 @@ class TestViTBase14_DINOv2:
         model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights  # type: ignore[no-any-return]
+        return weights
 
     def test_vit(self) -> None:
         vit_base_patch14_dinov2()

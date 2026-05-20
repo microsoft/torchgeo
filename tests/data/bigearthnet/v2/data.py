@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 from pathlib import Path
@@ -225,13 +224,6 @@ def main() -> None:
             split_paths.append(split_name)
 
         os.remove(tar_path)
-
-        for path in split_paths:
-            hash_md5 = hashlib.md5()
-            with open(path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b''):
-                    hash_md5.update(chunk)
-            print(path, hash_md5.hexdigest())
 
 
 if __name__ == '__main__':

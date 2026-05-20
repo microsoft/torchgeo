@@ -209,7 +209,7 @@ class EarthLoc(nn.Module):
         return x
 
 
-class EarthLoc_Weights(WeightsEnum):  # type: ignore[misc]
+class EarthLoc_Weights(WeightsEnum):
     """EarthLoc weights."""
 
     SENTINEL2_RESNET50 = Weights(

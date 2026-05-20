@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, Literal, TypedDict, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +18,13 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import Path, Sample, check_integrity, extract_archive
+
+
+class Metadata(TypedDict):
+    """Image and label metadata."""
+
+    image: str
+    label: list[str]
 
 
 class MillionAID(NonGeoDataset):
@@ -191,8 +198,8 @@ class MillionAID(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        task: str = 'multi-class',
-        split: str = 'train',
+        task: Literal['multi-class', 'multi-label'] = 'multi-class',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -252,7 +259,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: Path) -> list[dict[str, Any]]:
+    def _load_files(self, root: Path) -> list[Metadata]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -291,7 +298,9 @@ class MillionAID(NonGeoDataset):
 
         images = imgs_no_subcat + imgs_subcat
 
-        files = [dict(image=image, label=label) for image, label in zip(images, labels)]
+        files: list[Metadata] = [
+            dict(image=image, label=label) for image, label in zip(images, labels)
+        ]
 
         return files
 

@@ -3,7 +3,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -147,15 +146,3 @@ shutil.make_archive(
     root_dir='.',
     base_dir=ds_root_name,
 )
-
-
-def calculate_md5(filename: str) -> str:
-    hash_md5 = hashlib.md5()
-    with open(filename, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
-checksum = calculate_md5(zip_path)
-print(f'MD5 checksum: {checksum}')

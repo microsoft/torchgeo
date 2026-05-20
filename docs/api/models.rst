@@ -17,6 +17,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
    :maxdepth: 1
 
    models/l-tae
+   models/presto
    models/tessera
 
 2D Images (:math:`\scriptstyle B \times C \times H \times W`)
@@ -32,6 +33,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/farseg
    models/fcn
    models/mosaiks
+   models/olmoearth
    models/panopticon
    models/resnet
    models/scale-mae
@@ -158,4 +160,3 @@ Atmospheric
    :header-rows: 1
    :align: center
    :file: weights/atmospheric.csv
-

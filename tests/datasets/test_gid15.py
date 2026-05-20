@@ -44,10 +44,6 @@ class TestGID15:
     def test_already_downloaded(self, dataset: GID15) -> None:
         GID15(root=dataset.root, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            GID15(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GID15(tmp_path)

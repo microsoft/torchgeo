@@ -1,0 +1,6 @@
+.. _S2-100k:
+
+S2-100k
+=======
+
+.. autoclass:: torchgeo.datasets.S2100k
