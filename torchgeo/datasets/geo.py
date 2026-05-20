@@ -1471,10 +1471,18 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatial intersection')
 
+        # Ensure that resulting index has same columns as original
+        # Suffixes may be okay for 1 intersection but not for many
+        self.index['filepath'] = self.index.pop('filepath_1')
+        self.index.pop('filepath_2')
+
+        name = 'datetime'
+        datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
+        datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')), name=name)
+        self.index.index = datetime_1
+
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
-            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
