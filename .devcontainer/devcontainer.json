@@ -10,7 +10,7 @@
   },
 
   // "postCreateCommand": "",
-  "postStartCommand": "uv sync",
+  "postStartCommand": "uv sync --extra all",
 
   // Enable GPU support
   "hostRequirements": {
