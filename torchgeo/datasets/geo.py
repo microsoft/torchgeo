@@ -1471,10 +1471,10 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatial intersection')
 
-        # Ensure that resulting index has same columns as original
-        # Suffixes may be okay for 1 intersection but not for many
-        self.index['filepath'] = self.index.pop('filepath_1')
-        self.index.pop('filepath_2')
+        # Remove duplicate columns with a suffix
+        # Pandas does not allow suffixes of suffixes
+        columns = ['filepath_1', 'filepath_2']
+        self.index.drop(columns=columns, inplace=True, errors='ignore')
 
         name = 'datetime'
         datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
