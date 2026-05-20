@@ -270,3 +270,32 @@ class TestForestChange:
             sample['token'][sample['token_len'] :],
             torch.zeros(4 - sample['token_len'], dtype=torch.int64),
         )
+
+    def test_load_tokens_invalid_caption_index(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+
+        ds = ForestChange(root=tmp_path, split='train', download=True)
+
+        ds.files[0]['token_id'] = 999
+
+        with pytest.raises(ValueError, match='out of range'):
+            ds[0]
+
+    def test_load_tokens_empty_caption_list(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join(DATA_DIR, 'Forest-Change-dataset.zip')
+        monkeypatch.setattr(ForestChange, 'url', url)
+
+        ds = ForestChange(root=tmp_path, split='train', download=True)
+
+        token_path = tmp_path / 'empty.txt'
+
+        with open(token_path, 'w') as f:
+            json.dump([], f)
+
+        with pytest.raises(ValueError, match='No captions available'):
+            ds._load_tokens(token_path, None)

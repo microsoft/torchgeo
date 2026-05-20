@@ -576,17 +576,25 @@ class ForestChange(NonGeoDataset):
         Args:
             token_path: path to the JSON caption file
             token_id: index of the caption to use as the primary
-                ``token`` / ``token_len`` pair.  When ``None`` a caption
+                ``token`` / ``token_len`` pair. When ``None`` a caption
                 is chosen at random.
 
         Returns:
             dict with keys ``token_all``, ``token_all_len``, ``token``,
             ``token_len``
+
+        Raises:
+            ValueError: if the sample contains no captions or if
+                ``token_id`` is outside the valid caption range.
         """
         with open(str(token_path)) as f:
             caption_list: list[list[str]] = json.load(f)
 
         n = len(caption_list)
+
+        if n == 0:
+            raise ValueError('No captions available for sample')
+
         token_all = np.zeros((n, self.max_length), dtype=np.int64)
         token_all_len = np.zeros((n, 1), dtype=np.int64)
 
@@ -597,6 +605,12 @@ class ForestChange(NonGeoDataset):
             token_all_len[j] = encoded_len
 
         if token_id is not None:
+            if not 0 <= token_id < n:
+                raise ValueError(
+                    f'Caption index {token_id} out of range for sample '
+                    f'with {n} captions'
+                )
+
             token = token_all[token_id]
             token_len = int(token_all_len[token_id, 0])
         else:
@@ -605,8 +619,8 @@ class ForestChange(NonGeoDataset):
             token_len = int(token_all_len[j, 0])
 
         return {
-            'token_all': torch.from_numpy(token_all),
-            'token_all_len': torch.from_numpy(token_all_len),
-            'token': torch.from_numpy(token.copy()),
+            'token': torch.from_numpy(token).long(),
+            'token_all': torch.from_numpy(token_all).long(),
             'token_len': torch.tensor(token_len, dtype=torch.int64),
+            'token_all_len': torch.from_numpy(token_all_len).long(),
         }
