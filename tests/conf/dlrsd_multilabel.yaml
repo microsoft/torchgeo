@@ -10,5 +10,7 @@ data:
   class_path: DLRSDMultilabelDataModule
   init_args:
     batch_size: 1
+    val_split_pct: 0.3
+    test_split_pct: 0.3
   dict_kwargs:
     root: 'tests/data/dlrsd'

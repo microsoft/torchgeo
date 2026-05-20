@@ -22,7 +22,14 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, extract_archive, lazy_import
+from .utils import (
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    lazy_import,
+    quantile_normalization,
+)
 
 
 class IDTReeS(NonGeoDataset):
@@ -256,7 +263,7 @@ class IDTReeS(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array = f.read(out_shape=self.image_size, resampling=Resampling.bilinear)
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_las(self, path: Path) -> Tensor:
@@ -507,13 +514,11 @@ class IDTReeS(NonGeoDataset):
         """
         assert len(hsi_indices) == 3
 
-        def normalize(x: Tensor) -> Tensor:
-            return (x - x.min()) / (x.max() - x.min())
-
         ncols = 3
 
-        hsi = normalize(sample['hsi'][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
-        chm = normalize(sample['chm']).permute((1, 2, 0)).numpy()
+        hsi = sample['hsi'][hsi_indices, :, :].permute((1, 2, 0))
+        hsi = quantile_normalization(hsi)
+        chm = quantile_normalization(sample['chm']).permute((1, 2, 0))
 
         if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
             labels = (
@@ -524,9 +529,9 @@ class IDTReeS(NonGeoDataset):
             image = draw_bounding_boxes(
                 image=sample['image'], boxes=sample['bbox_xyxy'], labels=labels
             )
-            image = image.permute((1, 2, 0)).numpy()
+            image = image.permute((1, 2, 0))
         else:
-            image = sample['image'].permute((1, 2, 0)).numpy()
+            image = sample['image'].permute((1, 2, 0))
 
         if 'prediction_bbox_xyxy' in sample and len(sample['prediction_bbox_xyxy']):
             ncols += 1
@@ -540,7 +545,7 @@ class IDTReeS(NonGeoDataset):
                 boxes=sample['prediction_bbox_xyxy'],
                 labels=labels,
             )
-            preds = preds.permute((1, 2, 0)).numpy()
+            preds = preds.permute((1, 2, 0))
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image)
