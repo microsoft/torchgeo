@@ -104,11 +104,11 @@ class AirQuality(NonGeoDataset):
         """
         pathname = os.path.join(self.root, self.data_file_name)
         if os.path.exists(pathname):
-            df = pd.read_csv(pathname, na_values=["-200"])
+            df = pd.read_csv(pathname, na_values=['-200'])
         elif not self.download:
             raise DatasetNotFoundError(self)
         else:
-            df = pd.read_csv(self.url, na_values=["-200"])
+            df = pd.read_csv(self.url, na_values=['-200'])
 
         # Combine Date and Time into a single numeric column
         df.drop(columns=['Date', 'Time'], inplace=True)
