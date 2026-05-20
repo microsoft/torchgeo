@@ -274,12 +274,26 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = K.AugmentationSequential(
-                K.Denormalize(datamodule.mean, datamodule.std),
-                data_keys=None,
-                keepdim=True,
-            )
-            batch = aug(batch)
+            if batch['image'].ndim == 5:
+                _, T, C, _, _ = batch['image'].shape
+                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
+
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['image'] = rearrange(
+                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
+                )
+            else:
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
                     batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
