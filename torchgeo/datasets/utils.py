@@ -601,18 +601,24 @@ def pad_across_batches(
     )
 
     truncated = 0
+    lengths: list[int] = []
     for i, img in enumerate(images):
         seq_len = img.size(0)
         if seq_len > padding_length:
             padded_images[i, :padding_length] = img[:padding_length]
             truncated += 1
+            lengths.append(padding_length)
         else:
             padded_images[i, :seq_len] = img
+            lengths.append(seq_len)
 
     if truncated > 0:
         warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
 
     collated['image'] = padded_images
+    collated['length'] = torch.tensor(
+        lengths, device=padded_images.device, dtype=torch.long
+    )
     if 'mask' in batch[0]:
         collated['mask'] = torch.stack([sample['mask'] for sample in batch])
     if 'bbox_xyxy' in batch[0]:

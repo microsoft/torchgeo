@@ -604,11 +604,14 @@ def test_pad_across_batches() -> None:
     out = pad_across_batches(batch, padding_value=0.0, padding_length=3)
     assert out['image'].shape[1] == 3
     assert out['mask'].shape[0] == len(batch)
+    # Track the original sequence lengths so models can ignore padded timesteps.
+    assert torch.equal(out['length'], torch.tensor([2, 3], device=out['length'].device))
 
     with pytest.warns(UserWarning, match='Truncated 2 sequences to length 1'):
         out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
     assert out['image'].shape[1] == 1
     assert out['mask'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([1, 1], device=out['length'].device))
 
     batch = [
         {
@@ -626,3 +629,4 @@ def test_pad_across_batches() -> None:
     assert out['image'].shape[1] == 5
     assert out['bbox_xyxy'].shape[0] == len(batch)
     assert out['label'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([3, 2], device=out['length'].device))
