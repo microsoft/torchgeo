@@ -67,7 +67,6 @@ from .xbd import XView2DataModule, xBDDataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
-    'AirQualityDataModule',
     'BRIGHTDFC2025DataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
