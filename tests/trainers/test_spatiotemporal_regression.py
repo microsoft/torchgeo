@@ -1,6 +1,8 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+from typing import Literal
+
 import pytest
 import torch
 
@@ -10,7 +12,7 @@ from torchgeo.trainers import SpatioTemporalPixelwiseRegressionTask
 
 class TestSpatioTemporalPixelwiseRegressionTask:
     @pytest.mark.parametrize('loss', ['mse', 'mae'])
-    def test_task(self, loss: str) -> None:
+    def test_task(self, loss: Literal['mse', 'mae']) -> None:
         model = SpatioTemporalPixelwiseRegressionTask(
             in_channels=3, loss=loss, hidden_dim=8, num_layers=1
         )
