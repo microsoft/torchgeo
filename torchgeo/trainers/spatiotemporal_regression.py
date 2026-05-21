@@ -58,21 +58,12 @@ class SpatioTemporalPixelwiseRegressionTask(BaseTask):
         )
 
     def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is not ``'mse'`` or ``'mae'``.
-        """
+        """Initialize the loss criterion."""
         loss: str = self.hparams['loss']
         if loss == 'mse':
             self.criterion: nn.Module = nn.MSELoss()
-        elif loss == 'mae':
-            self.criterion = nn.L1Loss()
         else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'mse' or 'mae' loss."
-            )
+            self.criterion = nn.L1Loss()
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
