@@ -23,6 +23,8 @@ class TestSpatioTemporalPixelwiseRegressionTask:
         }
         try:
             model.training_step(batch, 0)
+            model.validation_step(batch, 0)
+            model.test_step(batch, 0)
         except MisconfigurationException:
             pass
         y_hat = model.predict_step(batch, 0)
