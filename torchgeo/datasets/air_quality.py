@@ -111,17 +111,14 @@ class AirQuality(NonGeoDataset):
         else:
             df = pd.read_csv(self.url, na_values=['-200'])
 
-        # Combine Date and Time into a single numeric column
+        # Drop Date and Time, not yet using these inputs
         df.drop(columns=['Date', 'Time'], inplace=True)
 
         # Drop NMHC(GT) column which has mostly missing values
         df.drop(columns=['NMHC(GT)'], inplace=True)
 
         # Interpolate missing values
-        df = df.apply(pd.to_numeric, errors='coerce')
-        df = df.interpolate(method='linear', limit_direction='both')
-        df = df.ffill().bfill()
-        df.reset_index(drop=True, inplace=True)
+        df.interpolate(inplace=True)
 
         return df
 
