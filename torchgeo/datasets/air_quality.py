@@ -138,10 +138,7 @@ class AirQuality(NonGeoDataset):
         target = sample['target'].numpy()
 
         num_features = input.shape[1]
-        fig: Figure
         fig, axes = plt.subplots(num_features, 1, figsize=(10, 2 * num_features))
-        if num_features == 1:
-            axes = [axes]
 
         input_steps = range(self.num_input_steps)
         target_steps = range(
@@ -160,5 +157,5 @@ class AirQuality(NonGeoDataset):
             ax.legend()
             ax.set_xlabel('Time step')
 
-        plt.tight_layout()
+        fig.tight_layout()
         return fig
