@@ -42,7 +42,9 @@ class TestAirQuality:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             AirQuality(tmp_path)
     
-    def test_already_downloaded(self, dataset: AirQuality, monkeypatch: MonkeyPatch) -> None:
+    def test_already_downloaded(
+        self, dataset: AirQuality, monkeypatch: MonkeyPatch
+    ) -> None:
         # Copy the test CSV into dataset.root so os.path.exists hits True
         src = os.path.join('tests', 'data', 'air_quality', 'data.csv')
         dst = os.path.join(dataset.root, AirQuality.data_file_name)
