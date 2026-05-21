@@ -134,6 +134,22 @@ class AirQuality(NonGeoDataset):
         Returns:
             a matplotlib Figure with the plotted sample
         """
+        ylabel = {
+            'CO(GT)': 'CO (mg/m$^3$)',
+            'PT08.S1(CO)': 'CO',
+            'NMHC(GT)': 'NMHC (μg/m$^3$)',
+            'C6H6(GT)': 'C$_6$H$_6$ (μg/m$^3$)',
+            'PT08.S2(NMHC)': 'NHMC',
+            'NOx(GT)': 'NO$_x$ (ppb)',
+            'PT08.S3(NOx)': 'NO$_x$',
+            'NO2(GT)': 'NO$_2$ (μg/m$^3$)',
+            'PT08.S4(NO2)': 'NO$_2$',
+            'PT08.S5(O3)': 'O$_3$',
+            'T': 'Temperature (°C)',
+            'RH': 'Relative Humidity (%)',
+            'AH': 'Absolute Humidity',
+        }
+
         input = sample['input']
         target = sample['target']
 
@@ -146,6 +162,7 @@ class AirQuality(NonGeoDataset):
             ax.plot(input_steps, input[:, i], label='Input', marker='o')
             ax.plot(target_steps, target[:, i], label='Target', marker='x')
             ax.set_title(feature_name)
+            ax.set_ylabel(ylabel[feature_name])
             ax.legend()
 
         fig.tight_layout()
