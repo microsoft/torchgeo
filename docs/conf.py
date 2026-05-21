@@ -128,6 +128,11 @@ html_theme_options = {
             'url': 'https://www.youtube.com/@TorchGeo',
             'icon': 'fa-brands fa-youtube',
         },
+        {
+            'name': 'Hugging Face',
+            'url': 'https://huggingface.co/torchgeo',
+            'icon': 'fa-brands fa-hugging-face',
+        },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
