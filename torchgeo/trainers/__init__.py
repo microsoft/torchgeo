@@ -16,6 +16,7 @@ from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
+from .spatiotemporal_regression import SpatioTemporalPixelwiseRegressionTask
 from .spatiotemporal_segmentation import SpatioTemporalSegmentationTask
 
 __all__ = (
@@ -34,5 +35,6 @@ __all__ = (
     'RegressionTask',
     'SemanticSegmentationTask',
     'SimCLRTask',
+    'SpatioTemporalPixelwiseRegressionTask',
     'SpatioTemporalSegmentationTask',
 )
