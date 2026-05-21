@@ -26,8 +26,8 @@ class TestAirQuality:
 
     def test_getitem(self, dataset: AirQuality) -> None:
         item = dataset[0]
-        x = item['x_input']
-        y = item['y_target']
+        x = item['input']
+        y = item['target']
         assert isinstance(x, Tensor)
         assert x.shape[1] == 12
         assert x.shape[0] == dataset.num_input_steps
@@ -64,8 +64,8 @@ class TestAirQuality:
         single_feature_dataset.feature_names = [dataset.feature_names[0]]
 
         single_sample = {
-            'x_input': sample['x_input'][:, :1],
-            'y_target': sample['y_target'][:, :1],
+            'input': sample['input'][:, :1],
+            'target': sample['target'][:, :1],
         }
         fig = single_feature_dataset.plot(single_sample)
         assert isinstance(fig, Figure)

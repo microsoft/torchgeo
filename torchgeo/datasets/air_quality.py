@@ -45,17 +45,18 @@ class AirQuality(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        download: bool = False,
+        *,
         num_input_steps: int = 3,
         num_target_steps: int = 1,
+        download: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
-            download: if True, download dataset and store it in the root directory
             num_input_steps: Number of input time steps to use.
             num_target_steps: Number of target time steps to use.
+            download: if True, download dataset and store it in the root directory
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -84,16 +85,16 @@ class AirQuality(NonGeoDataset):
         Returns:
             data at that index
         """
-        x_input = self.data.iloc[index : index + self.num_input_steps]
-        y_target = self.data.iloc[
+        input = self.data.iloc[index : index + self.num_input_steps]
+        target = self.data.iloc[
             index + self.num_input_steps : index
             + self.num_input_steps
             + self.num_target_steps
         ]
 
         return {
-            'x_input': torch.tensor(x_input.values, dtype=torch.float32),
-            'y_target': torch.tensor(y_target.values, dtype=torch.float32),
+            'input': torch.tensor(input.values, dtype=torch.float32),
+            'target': torch.tensor(target.values, dtype=torch.float32),
         }
 
     def _load_data(self) -> pd.DataFrame:
@@ -133,8 +134,8 @@ class AirQuality(NonGeoDataset):
         Returns:
             a matplotlib Figure with the plotted sample
         """
-        input = sample['x_input'].numpy()
-        target = sample['y_target'].numpy()
+        input = sample['input'].numpy()
+        target = sample['target'].numpy()
 
         num_features = input.shape[1]
         fig: Figure
