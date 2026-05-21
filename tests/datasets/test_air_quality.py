@@ -2,10 +2,13 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
+from matplotlib.figure import Figure
 from pytest import MonkeyPatch
 from torch import Tensor
 
@@ -38,3 +41,30 @@ class TestAirQuality:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             AirQuality(tmp_path)
+    
+    def test_already_downloaded(self, dataset: AirQuality, monkeypatch: MonkeyPatch) -> None:
+        # Copy the test CSV into dataset.root so os.path.exists hits True
+        src = os.path.join('tests', 'data', 'air_quality', 'data.csv')
+        dst = os.path.join(dataset.root, AirQuality.data_file_name)
+        shutil.copy(src, dst)
+        AirQuality(dataset.root)
+
+    def test_plot(self, dataset: AirQuality) -> None:
+        sample = dataset[0]
+
+        fig = dataset.plot(sample)
+        assert isinstance(fig, Figure)
+        plt.close()
+
+        single_feature_dataset = AirQuality.__new__(AirQuality)
+        single_feature_dataset.num_input_steps = dataset.num_input_steps
+        single_feature_dataset.num_target_steps = dataset.num_target_steps
+        single_feature_dataset.feature_names = [dataset.feature_names[0]]
+
+        single_sample = {
+            'x_input': sample['x_input'][:, :1],
+            'y_target': sample['y_target'][:, :1],
+        }
+        fig = single_feature_dataset.plot(single_sample)
+        assert isinstance(fig, Figure)
+        plt.close()
