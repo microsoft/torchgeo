@@ -134,28 +134,19 @@ class AirQuality(NonGeoDataset):
         Returns:
             a matplotlib Figure with the plotted sample
         """
-        input = sample['input'].numpy()
-        target = sample['target'].numpy()
+        input = sample['input']
+        target = sample['target']
 
-        num_features = input.shape[1]
-        fig, axes = plt.subplots(num_features, 1, figsize=(10, 2 * num_features))
+        fig, axes = plt.subplots(4, 3, figsize=(16, 12))
+        input_steps = range(input.shape[0])
+        target_steps = range(input.shape[0], input.shape[0] + target.shape[0])
 
-        input_steps = range(self.num_input_steps)
-        target_steps = range(
-            self.num_input_steps, self.num_input_steps + self.num_target_steps
-        )
-
-        for i, ax in enumerate(axes):
+        for i, ax in enumerate(axes.flatten()):
             feature_name = self.feature_names[i]
-
             ax.plot(input_steps, input[:, i], label='Input', marker='o')
-            ax.plot(
-                target_steps, target[:, i], label='Target', marker='x', linestyle='--'
-            )
-
+            ax.plot(target_steps, target[:, i], label='Target', marker='x')
             ax.set_title(feature_name)
             ax.legend()
-            ax.set_xlabel('Time step')
 
         fig.tight_layout()
         return fig
