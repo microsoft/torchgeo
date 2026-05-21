@@ -1560,7 +1560,7 @@ wheels = [
 
 [[package]]
 name = "lightning"
-version = "2.6.1"
+version = "2.6.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fsspec", extra = ["http"] },
@@ -1573,9 +1573,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/15/ad/a1c91a795521be252209d45fb080f28a4f1e7244d3b37121fcc6e3e43034/lightning-2.6.1.tar.gz", hash = "sha256:859104b98c61add6fe60d0c623abf749baf25f2950a66ebdfb4bd18aa7decba9", size = 663175, upload-time = "2026-01-30T14:59:13.92Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/7f/a418b2bca57dcbc3cd07a528f8633f3201e7841dd0e79de8fa05f597630a/lightning-2.6.4.tar.gz", hash = "sha256:79a4eaf3db09e88485d0589abb6aa1beedde81e4e52536b1ddbb4478cda22235", size = 658975, upload-time = "2026-05-20T22:10:04.026Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/6d/42640e15a8c34b57dc7ea922152440c0c6692214a08d5282b6e3eb46ddf4/lightning-2.6.1-py3-none-any.whl", hash = "sha256:30e1adac23004c713663928541bd72ecb1371b7abc9aff9f46b7fd2644988d30", size = 853631, upload-time = "2026-01-30T14:59:11.687Z" },
+    { url = "https://files.pythonhosted.org/packages/31/d5/95e6e5b128cfc891bbeb33e56300bed52f9ceaa3028f1f20730105bb35ae/lightning-2.6.4-py3-none-any.whl", hash = "sha256:e2079d61a3459bc5b24d76474b40e86548bd409251c0ef1133dd9cb3a185e34a", size = 848365, upload-time = "2026-05-20T22:10:01.633Z" },
 ]
 
 [[package]]
