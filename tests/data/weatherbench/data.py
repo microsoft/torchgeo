@@ -22,13 +22,21 @@ PERIODS = 4
 LEVELS = (50, 250, 500, 1000)
 
 
-def make_dataset() -> xr.Dataset:
+def make_dataset(
+    start_date: str = '2023-01-01',
+    *,
+    descending_lat: bool = True,
+    descending_lon: bool = False,
+) -> xr.Dataset:
     """Build a synthetic ERA5-like xarray Dataset."""
     rng = np.random.default_rng(0)
-    longitude = np.linspace(0, 359, SIZE).astype(np.float32)
-    # Latitude is descending in WeatherBench2.
-    latitude = np.linspace(90, -90, SIZE).astype(np.float32)
-    time = pd.date_range('2023-01-01', periods=PERIODS, freq='6h')
+    # Latitude is descending in WeatherBench2 by default; flip via flags to
+    # exercise the opposite axis ordering.
+    lon_pair = (359.0, 0.0) if descending_lon else (0.0, 359.0)
+    lat_pair = (90.0, -90.0) if descending_lat else (-90.0, 90.0)
+    longitude = np.linspace(*lon_pair, SIZE).astype(np.float32)
+    latitude = np.linspace(*lat_pair, SIZE).astype(np.float32)
+    time = pd.date_range(start_date, periods=PERIODS, freq='6h')
     level = np.array(LEVELS, dtype=np.int32)
 
     surf_shape = (PERIODS, SIZE, SIZE)
@@ -94,9 +102,17 @@ def make_dataset() -> xr.Dataset:
     return xr.Dataset(data_vars, coords)
 
 
-def main(out: str) -> None:
+def main(
+    out: str,
+    start_date: str = '2023-01-01',
+    *,
+    descending_lat: bool = True,
+    descending_lon: bool = False,
+) -> None:
     """Write the fixture to disk."""
-    make_dataset().to_zarr(out, mode='w')
+    make_dataset(
+        start_date, descending_lat=descending_lat, descending_lon=descending_lon
+    ).to_zarr(out, mode='w')
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import nullcontext
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -83,7 +83,7 @@ class WeatherBench2(XarrayDataset):
     .. _fsspec: https://filesystem-spec.readthedocs.io/
     .. _gcsfs: https://gcsfs.readthedocs.io/
 
-    .. versionadded:: 0.8
+    .. versionadded:: 0.10
     """
 
     filename_glob = '*.zarr'
@@ -149,6 +149,9 @@ class WeatherBench2(XarrayDataset):
         if not filepaths:
             raise DatasetNotFoundError(self)
 
+        # ``res`` is set inside the loop above (a missing value would have
+        # raised :class:`DatasetNotFoundError`), so it must be defined here.
+        assert res is not None
         if isinstance(res, int | float):
             res = (float(res), float(res))
         self._res = res
@@ -174,7 +177,7 @@ class WeatherBench2(XarrayDataset):
             All Zarr stores in the dataset.
         """
         if isinstance(self.paths, str | os.PathLike):
-            paths: Iterable[Path] = [self.paths]
+            paths: Iterable[Path] = [cast(Path, self.paths)]
         else:
             paths = self.paths
 
@@ -233,9 +236,9 @@ class WeatherBench2(XarrayDataset):
                 [x.step, 0.0, x.start, 0.0, -y.step, y.stop, 0.0, 0.0, 1.0]
             ).reshape(3, 3),
         }
-        # Only populate ``image`` when variables are stackable (homogeneous
-        # shape). For mixed surface/pressure-level/static variables, callers
-        # should use ``variables`` directly (e.g. Aurora's structured Batch).
+        # Only populate ``image`` when all selected variables share a shape;
+        # mixed surface/pressure-level/static variables cannot be stacked, so
+        # callers should consume ``variables`` directly in that case.
         shapes = {tuple(v.shape) for v in variables.values()}
         if len(shapes) == 1:
             sample['image'] = torch.stack(list(variables.values()))
@@ -335,7 +338,13 @@ class WeatherBench2(XarrayDataset):
             for ctx in contexts[1:]:
                 with ctx as more:
                     srcs.append(more)
-            ds = srcs[0] if len(srcs) == 1 else xr.concat(srcs, dim='time')
+            # Pin ``data_vars='all'`` so we stay compatible with both the
+            # current xarray default and the upcoming change to ``None``.
+            ds = (
+                srcs[0]
+                if len(srcs) == 1
+                else xr.concat(srcs, dim='time', data_vars='all')
+            )
 
             lon_name, lat_name = self._coord_names(ds)
             lat_vals = np.asarray(ds[lat_name].values, dtype=float)
