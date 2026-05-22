@@ -29,8 +29,9 @@ class AirQuality(NonGeoDataset):
 
     Dataset Features:
 
-    * hourly averaged sensor responses and reference analyzer ground truth over one year (2004-2005)
-    * has missing features
+    * hourly averaged sensor responses and reference analyzer ground truth over one year
+      (2004-2005)
+    * contains missing features, gap filled using linear interpolation
 
     If you use this dataset in your research, please cite:
 
@@ -74,7 +75,7 @@ class AirQuality(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.data) - (self.num_input_steps + self.num_target_steps) + 1
+        return len(self.data) - self.num_input_steps - self.num_target_steps + 1
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
