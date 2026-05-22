@@ -3,6 +3,7 @@
 
 """PASTIS datamodule."""
 
+from functools import partial
 from typing import Any
 
 import kornia.augmentation as K
@@ -44,8 +45,10 @@ class PASTISDataModule(NonGeoDataModule):
             PASTIS, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
         self.padding_length = padding_length
-        self.collate_fn = lambda batch: pad_across_batches(
-            batch, padding_length=self.padding_length
+        # Use a picklable callable for multiprocessing DataLoader workers.
+        # Local lambdas fail under ``spawn`` with "Can't get local object ...".
+        self.collate_fn = partial(
+            pad_across_batches, padding_length=self.padding_length
         )
 
         self.val_split_pct = val_split_pct
@@ -105,8 +108,10 @@ class PASTIS100DataModule(NonGeoDataModule):
             PASTIS100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
         self.padding_length = padding_length
-        self.collate_fn = lambda batch: pad_across_batches(
-            batch, padding_length=self.padding_length
+        # Use a picklable callable for multiprocessing DataLoader workers.
+        # Local lambdas fail under ``spawn`` with "Can't get local object ...".
+        self.collate_fn = partial(
+            pad_across_batches, padding_length=self.padding_length
         )
 
         self.val_split_pct = val_split_pct

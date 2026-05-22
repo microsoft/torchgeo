@@ -381,7 +381,7 @@ class BaseTransformer(nn.Module):
             x: Input tensor.
             relative_position_bias: whether to use relative position bias.
         """
-        for self_attn, ffn in self.layers:  # type: ignore[misc]
+        for self_attn, ffn in self.layers:  # ty: ignore[not-iterable]
             x = self_attn(x, relative_position_bias) + x
             x = ffn(x) + x
 
@@ -441,7 +441,7 @@ class BaseTransformerCrossAttn(nn.Module):
         Returns:
             Output tensor.
         """
-        for self_attn, cross_attn, ffn in self.layers:  # type: ignore[non-iterable]
+        for self_attn, cross_attn, ffn in self.layers:  # ty: ignore[not-iterable]
             x = self_attn(x, relative_position_bias) + x
             x = cross_attn(x, context, relative_position_bias) + x
             x = ffn(x) + x

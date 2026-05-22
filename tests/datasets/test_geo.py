@@ -200,7 +200,7 @@ class TestGeoDataset:
         with pytest.raises(
             ValueError, match='IntersectionDataset only supports GeoDatasets'
         ):
-            dataset & ds2  # type: ignore[operator]
+            dataset & ds2  # ty: ignore[unsupported-operator]
 
     @pytest.mark.parametrize(
         'index,expected_output',
@@ -593,7 +593,7 @@ class TestVectorDataset:
 
     def test_invalid_task(self, dataset: CustomVectorDataset) -> None:
         with pytest.raises(ValueError, match='Invalid task:'):
-            CustomVectorDataset(dataset.paths, task='invalid-task')  # type: ignore[arg-type]
+            CustomVectorDataset(dataset.paths, task='invalid-task')  # ty: ignore[invalid-argument-type]
 
     def test_getitem_sem_seg(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
@@ -855,7 +855,7 @@ class TestIntersectionDataset:
         with pytest.raises(
             ValueError, match='IntersectionDataset only supports GeoDatasets'
         ):
-            IntersectionDataset(ds1, ds2)  # type: ignore[arg-type]
+            IntersectionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
 
     def test_multiple_res_12(self) -> None:
         ds1 = RasterDataset(
@@ -1251,11 +1251,11 @@ class TestUnionDataset:
         ds3 = CustomGeoDataset()
         msg = 'UnionDataset only supports GeoDatasets'
         with pytest.raises(ValueError, match=msg):
-            UnionDataset(ds1, ds2)  # type: ignore[arg-type]
+            UnionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
         with pytest.raises(ValueError, match=msg):
-            UnionDataset(ds1, ds3)  # type: ignore[arg-type]
+            UnionDataset(ds1, ds3)  # ty: ignore[invalid-argument-type]
         with pytest.raises(ValueError, match=msg):
-            UnionDataset(ds3, ds1)  # type: ignore[arg-type]
+            UnionDataset(ds3, ds1)  # ty: ignore[invalid-argument-type]
 
     def test_invalid_index(self, dataset: UnionDataset) -> None:
         with pytest.raises(

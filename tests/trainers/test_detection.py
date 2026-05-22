@@ -10,7 +10,7 @@ from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
-from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
+from torchgeo.datasets import VHR10, NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
 
@@ -39,6 +39,9 @@ class TestObjectDetectionTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
+
+        if name.startswith('vhr10'):
+            monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
 
         args = [
             '--config',

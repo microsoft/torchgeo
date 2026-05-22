@@ -239,7 +239,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         self.sample_sequences: list[_SampleSequenceDict] = [
             item
-            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]  # type: ignore[no-matching-overload]
+            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]
             .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
@@ -349,10 +349,10 @@ class DigitalTyphoon(NonGeoDataset):
         """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
-        feature_dict = {
-            name: torch.tensor(feature_df[name].item()).float()
-            for name in self.features
-        }
+        feature_dict = {}
+        for name in self.features:
+            feature_dict[name] = torch.tensor(feature_df[name].item()).float()
+
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():

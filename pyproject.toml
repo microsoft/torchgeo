@@ -22,6 +22,7 @@ maintainers = [
     {name = "Isaac Corley", email = "isaac.corley@proton.me"},
     {name = "Nils Lehmann", email = "n.lehmann@tum.de"},
     {name = "Ashwin Nair", email = "ashnair0007@gmail.com"},
+    {name = "Robin Cole", email = "robmarkcole@gmail.com"},
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
@@ -45,10 +46,8 @@ dependencies = [
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
-    # lightly 1.4.5+ required for LARS optimizer
-    # lightly 1.4.26 is incompatible with the version of timm required by smp
-    # https://github.com/torchgeo/torchgeo/issues/1824
-    "lightly>=1.4.5,!=1.4.26",
+    # lightly 1.5.1+ required for lightly.models.modules.MAEDecoderTIMM
+    "lightly>=1.5.1",
     # lightning 2.4+ required for fastapi and pydantic v2 support in lightning
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
@@ -81,7 +80,7 @@ dependencies = [
     # torch 2.2+ required for Python 3.12 wheels
     "torch>=2.2",
     # torchmetrics 1.2+ required for average argument in mAP metric
-    "torchmetrics>=1.2",
+    "torchmetrics[detection]>=1.2",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
     # typing-extensions 4.8+ required by torch 2.2
@@ -122,18 +121,22 @@ docs = [
     # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
     # https://github.com/sphinx-doc/sphinx/pull/10887
     "sphinx>=5.3",
+    # sphinx-github-changelog 1.7.2+ required for image URL fix
+    "sphinx-github-changelog>=1.7.2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
+    # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
+    "olmoearth-pretrain-minimal>=0.0.2",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.21+ required for a couple new rules that catch both real bugs and false positives
-    "ty>=0.0.21",
+    # ty 0.0.33+ required for latest type checking changes
+    "ty>=0.0.33",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support

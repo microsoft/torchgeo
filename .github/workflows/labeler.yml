@@ -11,6 +11,6 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v6.0.2
       - name: Add label
-        uses: actions/labeler@v6.0.1
+        uses: actions/labeler@v6.1.0
         with:
           sync-labels: true

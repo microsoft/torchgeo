@@ -84,15 +84,35 @@ def test_load_state_dict_unequal_classes(
         load_state_dict(model, state_dict)
 
 
-def test_reinit_initial_conv_layer() -> None:
-    conv_layer = nn.Conv2d(3, 5, kernel_size=3, stride=2, padding=1, bias=True)
+@pytest.mark.parametrize(
+    'keep_rgb_weights,bias,new_stride,new_padding',
+    [
+        (True, True, None, None),
+        (True, False, None, None),
+        (False, True, None, None),
+        (False, False, None, None),
+        (True, True, 1, None),
+        (True, True, None, 0),
+    ],
+)
+def test_reinit_initial_conv_layer(
+    keep_rgb_weights: bool, bias: bool, new_stride: int | None, new_padding: int | None
+) -> None:
+    conv_layer = nn.Conv2d(3, 5, kernel_size=3, stride=2, padding=1, bias=bias)
     initial_weights = conv_layer.weight.data.clone()
 
-    new_conv_layer = reinit_initial_conv_layer(conv_layer, 4, keep_rgb_weights=True)
+    new_conv_layer = reinit_initial_conv_layer(
+        conv_layer,
+        4,
+        keep_rgb_weights=keep_rgb_weights,
+        new_stride=new_stride,
+        new_padding=new_padding,
+    )
 
-    out_channels, in_channels, k1, k2 = new_conv_layer.weight.shape
-    assert torch.allclose(initial_weights, new_conv_layer.weight.data[:, :3, :, :])
-    assert out_channels == 5
-    assert in_channels == 4
-    assert k1 == 3 and k2 == 3
-    assert new_conv_layer.stride[0] == 2
+    assert new_conv_layer.out_channels == 5
+    assert new_conv_layer.in_channels == 4
+    assert new_conv_layer.kernel_size == (3, 3)
+    expected_stride = new_stride if new_stride is not None else conv_layer.stride[0]
+    assert new_conv_layer.stride[0] == expected_stride
+    if keep_rgb_weights:
+        assert torch.allclose(initial_weights, new_conv_layer.weight.data[:, :3, :, :])

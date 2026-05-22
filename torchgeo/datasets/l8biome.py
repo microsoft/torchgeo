@@ -15,7 +15,14 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import (
+    GeoSlice,
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class L8BiomeImage(RasterDataset):
@@ -253,9 +260,7 @@ class L8Biome(IntersectionDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].numpy().astype('uint8').squeeze()
 

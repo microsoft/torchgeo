@@ -16,7 +16,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import Path, Sample, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class IOBench(IntersectionDataset):
@@ -160,7 +160,7 @@ class IOBench(IntersectionDataset):
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
         mask = sample['mask'].squeeze()
 
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
         mask = self.cdl.ordinal_cmap[mask]
 
         fig, axes = plt.subplots(1, 2, figsize=(8, 4))

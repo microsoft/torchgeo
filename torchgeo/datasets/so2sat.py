@@ -362,7 +362,7 @@ class So2Sat(NonGeoDataset):
 
         image = sample['image'][rgb_indices]
         image = einops.rearrange(image, 'c h w -> h w c')
-        image = quantile_normalization(image, 0, 1)
+        image = quantile_normalization(image)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]

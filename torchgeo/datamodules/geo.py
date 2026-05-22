@@ -159,7 +159,7 @@ class BaseDataModule(LightningDataModule):
             dataset = dataset.dataset
         if dataset is not None:
             if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)  # type: ignore[call-non-callable]
+                fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
         return fig
 
 
@@ -224,7 +224,7 @@ class GeoDataModule(BaseDataModule):
             self.train_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='train',  # type: ignore[unknown-argument]
+                    split='train',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
@@ -235,7 +235,7 @@ class GeoDataModule(BaseDataModule):
             self.val_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='val',  # type: ignore[unknown-argument]
+                    split='val',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
@@ -246,7 +246,7 @@ class GeoDataModule(BaseDataModule):
             self.test_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='test',  # type: ignore[unknown-argument]
+                    split='test',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
@@ -379,17 +379,17 @@ class NonGeoDataModule(BaseDataModule):
         """
         if stage in ['fit']:
             self.train_dataset = self.dataset_class(
-                split='train',  # type: ignore[unknown-argument]
+                split='train',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = self.dataset_class(
-                split='val',  # type: ignore[unknown-argument]
+                split='val',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['test']:
             self.test_dataset = self.dataset_class(
-                split='test',  # type: ignore[unknown-argument]
+                split='test',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
 

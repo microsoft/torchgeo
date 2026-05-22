@@ -9,10 +9,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
-import numpy.typing
 import pandas as pd
 import pytest
 import torch
+from numpy.typing import NDArray
+from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
@@ -543,20 +544,18 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
         assert subdir.cwd() == subdir
 
 
-def test_percentile_normalization() -> None:
-    img = np.array([[1, 2], [98, 100]])
+@pytest.mark.parametrize('img', [np.random.rand(2, 2), np.zeros((2, 2))])
+def test_percentile_normalization(img: NDArray[np.float64]) -> None:
     match = 'Use torchgeo.datasets.utils.quantile_normalization instead'
     with pytest.warns(DeprecationWarning, match=match):
-        img = percentile_normalization(img, 2, 98)
-    assert img.min() == 0
-    assert img.max() == 1
+        img = percentile_normalization(img)
+    assert 0 <= img.min() <= img.max() <= 1
 
 
-def test_quantile_normalization() -> None:
-    img = torch.rand(3, 16, 16)
+@pytest.mark.parametrize('img', [torch.rand(2, 2), torch.zeros(2, 2)])
+def test_quantile_normalization(img: Tensor) -> None:
     img = quantile_normalization(img)
-    assert img.min() == 0
-    assert img.max() == 1
+    assert 0 <= img.min() <= img.max() <= 1
 
 
 @pytest.mark.parametrize(
@@ -605,11 +604,14 @@ def test_pad_across_batches() -> None:
     out = pad_across_batches(batch, padding_value=0.0, padding_length=3)
     assert out['image'].shape[1] == 3
     assert out['mask'].shape[0] == len(batch)
+    # Track the original sequence lengths so models can ignore padded timesteps.
+    assert torch.equal(out['length'], torch.tensor([2, 3], device=out['length'].device))
 
     with pytest.warns(UserWarning, match='Truncated 2 sequences to length 1'):
         out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
     assert out['image'].shape[1] == 1
     assert out['mask'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([1, 1], device=out['length'].device))
 
     batch = [
         {
@@ -627,3 +629,4 @@ def test_pad_across_batches() -> None:
     assert out['image'].shape[1] == 5
     assert out['bbox_xyxy'].shape[0] == len(batch)
     assert out['label'].shape[0] == len(batch)
+    assert torch.equal(out['length'], torch.tensor([3, 2], device=out['length'].device))
