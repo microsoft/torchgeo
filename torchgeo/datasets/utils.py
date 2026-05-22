@@ -425,7 +425,12 @@ def download_url(
         # TODO: use gdown if we want Google Drive support
         # TODO: use requests if we want redirect support
         # TODO: use tqdm if we want a progress bar
-        urllib.request.urlretrieve(url, fpath)
+        # Some hosts (e.g. Source Cooperative for FieldsOfTheWorld) reject the
+        # default ``Python-urllib/X.Y`` user agent with HTTP 403, so identify
+        # ourselves explicitly.
+        request = urllib.request.Request(url, headers={'User-Agent': 'torchgeo'})
+        with urllib.request.urlopen(request) as response, open(fpath, 'wb') as f:
+            shutil.copyfileobj(response, f)
         if not check_integrity(fpath, md5, **kwargs):
             raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
 
