@@ -185,6 +185,7 @@ PASTIS
 ^^^^^^
 
 .. autoclass:: PASTISDataModule
+.. autoclass:: PASTIS100DataModule
 
 PatternNet
 ^^^^^^^^^^

@@ -166,7 +166,7 @@ def reinit_initial_conv_layer(
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
         if use_bias:
-            b_old = cast(Tensor, layer.bias).data.clone()
+            b_old = layer.bias.data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
     updated_padding = layer.padding if new_padding is None else new_padding

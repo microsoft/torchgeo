@@ -85,7 +85,7 @@ html_theme = 'pydata_sphinx_theme'
 
 # Define the version we use for matching in the version switcher.
 version_match = os.environ.get('READTHEDOCS_VERSION')
-json_url = 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json'
+json_url = 'https://docs.torchgeo.org/en/latest/_static/switcher.json'
 
 # If READTHEDOCS_VERSION doesn't exist, we're not on RTD
 # If it is an integer, we're in a PR build and the version isn't correct.

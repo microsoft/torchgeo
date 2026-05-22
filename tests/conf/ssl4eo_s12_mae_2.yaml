@@ -1,0 +1,13 @@
+model:
+  class_path: MAETask
+  init_args:
+    model: 'vit_small_patch16_224'
+    in_channels: 2
+data:
+  class_path: SSL4EOS12DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/ssl4eo/s12'
+    split: 's1'
+    seasons: 1

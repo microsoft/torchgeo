@@ -22,6 +22,7 @@ index = [
     'Myria3D',
     'OTBTF',
     'GeoDeep',
+    'rs-embed',
     'torchange',
 ]
 
@@ -65,6 +66,7 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
+    'rs-embed': ('cybergis', 'rs-embed'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
@@ -91,6 +93,7 @@ hardcoded_coverage = {
     'GeoTessera': 15,
     'torchange': 0,
     'AIDE': 0,
+    'rs-embed': 61,
 }
 name_to_pypi = {
     'SPy': 'spectral',
@@ -109,6 +112,7 @@ name_to_pypi = {
     'GeoDeep': 'geodeep',
     'GeoTessera': 'geotessera',
     'torchange': 'torchange',
+    'rs-embed': 'rs-embed',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {

@@ -270,7 +270,7 @@ class ChangeViT(Module):
             **kwargs,
         )
 
-        embed_dim: int = self.encoder.embed_dim  # ty: ignore[invalid-assignment]
+        embed_dim: int = self.encoder.embed_dim
 
         self.detail_capture = DetailCaptureModule(
             in_channels=in_channels * 2, pretrained=pretrained

@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -60,7 +60,7 @@ jobs:
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -87,7 +87,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra tests
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
