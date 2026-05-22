@@ -74,7 +74,7 @@ class AirQuality(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.data) - (self.num_input_steps + self.num_target_steps)
+        return len(self.data) - (self.num_input_steps + self.num_target_steps) + 1
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
