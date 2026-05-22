@@ -76,13 +76,7 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ValueError: If *split* is invalid.
         """
-        if split not in ['train', 'val', 'test']:
-            raise ValueError(
-                f"Invalid split '{split}', expected one of: 'train', 'val', or 'test'"
-            )
-
         self.root = root
         self.transforms = transforms
         self.dataset_path = os.path.join(self.root, split)

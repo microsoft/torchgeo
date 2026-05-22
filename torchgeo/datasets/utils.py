@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import bz2
-import collections
 import contextlib
 import hashlib
 import importlib
@@ -29,6 +28,7 @@ import pandas as pd
 import rasterio
 import shapely.affinity
 import torch
+from numpy.typing import NDArray
 from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
@@ -38,11 +38,37 @@ from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
 
-# Waiting to upgrade Sphinx before switching to type statement
+#: Slice to index a GeoDataset.
+#:
+#: Can handle several different forms, such as:
+#:
+#: .. code-block:: python
+#:    ds[xmin:xmax:xres, ymin:ymax:yres]
+#:    ds[:, :, tmin:tmax:tres]
+#:    ds[xmin:xmax, ymin:ymax, tmin:tmax]
+#:
+#: All values are optional and will default to the spatiotemporal extent of the dataset.
 GeoSlice: TypeAlias = (  # noqa: UP040
     slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
+
+#: Path-like object.
+#:
+#: Most datasets can handle any kind of path-like object,
+#: and some can support a list of paths.
 Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
+
+#: Sample dictionary returned by a GeoDataset.
+#:
+#: Keys typically follow Kornia constants and include common keys like:
+#:
+#: * image: input image
+#: * mask: expected output semantic segmentation mask
+#: * label: expected output classification or regression label
+#: * bbox_xyxy: expected output bounding box in (x1, y1, x2, y2) format
+#: * prediction: predicted output
+#:
+#: Values are usually of type torch.Tensor.
 Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
@@ -363,7 +389,7 @@ def download_url(
     filename: Path | None = None,
     md5: str | None = None,
     max_redirect_hops: int = 3,
-    **kwargs: str,
+    **kwargs: str | None,
 ) -> None:
     """Download a file from a url and place it in root.
 
@@ -408,7 +434,7 @@ def download_and_extract_archive(
     filename: Path | None = None,
     md5: str | None = None,
     remove_finished: bool = False,
-    **kwargs: str,
+    **kwargs: str | None,
 ) -> None:
     """Download and extract a remote archive.
 
@@ -575,18 +601,24 @@ def pad_across_batches(
     )
 
     truncated = 0
+    lengths: list[int] = []
     for i, img in enumerate(images):
         seq_len = img.size(0)
         if seq_len > padding_length:
             padded_images[i, :padding_length] = img[:padding_length]
             truncated += 1
+            lengths.append(padding_length)
         else:
             padded_images[i, :seq_len] = img
+            lengths.append(seq_len)
 
     if truncated > 0:
         warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
 
     collated['image'] = padded_images
+    collated['length'] = torch.tensor(
+        lengths, device=padded_images.device, dtype=torch.long
+    )
     if 'mask' in batch[0]:
         collated['mask'] = torch.stack([sample['mask'] for sample in batch])
     if 'bbox_xyxy' in batch[0]:
@@ -772,11 +804,12 @@ def rgb_to_mask(
 
 @deprecated('Use torchgeo.datasets.utils.quantile_normalization instead')
 def percentile_normalization(
-    img: np.typing.NDArray[np.int_],
+    img: NDArray,
     lower: float = 2,
     upper: float = 98,
     axis: int | Sequence[int] | None = None,
-) -> np.typing.NDArray[np.int_]:
+    nodata: int = 0,
+) -> NDArray:
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -789,16 +822,23 @@ def percentile_normalization(
         upper: upper percentile in range [0,100]
         axis: Axis or axes along which the percentiles are computed. The default
             is to compute the percentile(s) along a flattened version of the array.
+        nodata: Nodata value to ignore during quantile calculation.
 
     Returns:
         normalized version of ``img``
 
+    Raises:
+        AssertionError: If *lower* is higher than *upper*.
+
     .. versionadded:: 0.2
     .. versiondeprecated:: 0.10
     """
+    if (img == nodata).all():
+        return img
+
     assert lower < upper
-    lower_percentile = np.percentile(img, lower, axis=axis)
-    upper_percentile = np.percentile(img, upper, axis=axis)
+    lower_percentile = np.percentile(img[img != nodata], lower, axis=axis)
+    upper_percentile = np.percentile(img[img != nodata], upper, axis=axis)
     img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
@@ -809,6 +849,7 @@ def quantile_normalization(
     img: Tensor,
     lower: float | Tensor = 0.02,
     upper: float | Tensor = 0.98,
+    nodata: float = 0,
     dim: int | None = None,
 ) -> Tensor:
     """Normalize and clip an input image to a specific quantile range.
@@ -817,6 +858,7 @@ def quantile_normalization(
         img: Image to normalize.
         lower: Lower quantile in range [0, 1].
         upper: Upper quantile in range [0, 1].
+        nodata: Nodata value to ignore during quantile calculation.
         dim: Dimension to reduce.
 
     Returns:
@@ -824,8 +866,11 @@ def quantile_normalization(
 
     .. versionadded:: 0.10
     """
-    lower = torch.quantile(img, lower, dim, interpolation='higher')
-    upper = torch.quantile(img, upper, dim, interpolation='lower')
+    if (img == nodata).all():
+        return img
+
+    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
+    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
     img = (img - lower) / (upper - lower + 1e-5)
     return torch.clamp(img, 0, 1)
 
@@ -901,9 +946,6 @@ def lazy_import(name: str) -> Any:
     except ModuleNotFoundError:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
-        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'skimage': 'scikit-image'}
-        name = module_to_pypi[name]
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:
 

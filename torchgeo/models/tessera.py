@@ -15,6 +15,10 @@ from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 # Normalization statistics from https://github.com/ucam-eo/tessera/blob/b994972f637d1985185725153b55cf1624a7a445/tessera_infer/src/datasets/ssl_dataset.py#L20-L26
+# These values are aligned to Tessera's non-conventional Sentinel-2 channel order
+# (B4, B2, B3, B8, B8A, B5, B6, B7, B11, B12), NOT to the wavelength-ascending
+# order B2..B12. Inputs to the model must be stacked in the same order; see the
+# `bands` metadata on each Weights entry below.
 _S2_BAND_MEAN = [
     1711.0938,
     1308.8511,
@@ -267,7 +271,13 @@ class Tessera(nn.Module):
 
         Args:
             x: Input tensor of shape (B, seq_len, 14) containing:
-                - Channels 0-9: Sentinel-2 bands (B2-B12)
+
+                - Channels 0-9: Sentinel-2 bands in Tessera's training order
+                  ``[B4, B2, B3, B8, B8A, B5, B6, B7, B11, B12]`` (i.e.
+                  red, blue, green, nir, nir08, rededge1, rededge2, rededge3,
+                  swir16, swir22). This is **not** the wavelength-ascending
+                  ``B2..B12`` order — see the ``bands`` metadata on
+                  :class:`Tessera_Weights` for details.
                 - Channel 10: Sentinel-2 day of year
                 - Channels 11-12: Sentinel-1 VV and VH
                 - Channel 13: Sentinel-1 day of year
@@ -300,15 +310,19 @@ class Tessera_Weights(WeightsEnum):
             'dataset': 'TESSERA',
             'publication': 'https://arxiv.org/abs/2506.20380',
             'repo': 'https://github.com/ucam-eo/tessera',
+            # Sentinel-2 channels follow Tessera's training order, which is
+            # not wavelength-ascending: red (B4), blue (B2), green (B3),
+            # nir (B8), nir08 (B8A), then the three red-edge bands
+            # (B5, B6, B7), then SWIR (B11, B12). See ucam-eo/tessera#21.
             'bands': [
+                'B4',
                 'B2',
                 'B3',
-                'B4',
+                'B8',
+                'B8A',
                 'B5',
                 'B6',
                 'B7',
-                'B8',
-                'B8A',
                 'B11',
                 'B12',
                 'S2_DOY',
@@ -328,15 +342,19 @@ class Tessera_Weights(WeightsEnum):
             'dataset': 'TESSERA',
             'publication': 'https://arxiv.org/abs/2506.20380',
             'repo': 'https://github.com/ucam-eo/tessera',
+            # Sentinel-2 channels follow Tessera's training order, which is
+            # not wavelength-ascending: red (B4), blue (B2), green (B3),
+            # nir (B8), nir08 (B8A), then the three red-edge bands
+            # (B5, B6, B7), then SWIR (B11, B12). See ucam-eo/tessera#21.
             'bands': [
+                'B4',
                 'B2',
                 'B3',
-                'B4',
+                'B8',
+                'B8A',
                 'B5',
                 'B6',
                 'B7',
-                'B8',
-                'B8A',
                 'B11',
                 'B12',
                 'S2_DOY',

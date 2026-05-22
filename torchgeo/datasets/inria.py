@@ -115,7 +115,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                if match := pattern.search(img):
+                fname = os.path.basename(img)
+                if match := pattern.search(fname):
                     idx = int(match.group(2))
                     # For validation, use the first 5 images of every location
                     if self.split == 'train' and idx > 5:

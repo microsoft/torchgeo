@@ -166,7 +166,7 @@ def reinit_initial_conv_layer(
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
         if use_bias:
-            b_old = cast(Tensor, layer.bias).data.clone()
+            b_old = layer.bias.data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
     updated_padding = layer.padding if new_padding is None else new_padding
@@ -174,10 +174,10 @@ def reinit_initial_conv_layer(
     new_layer = Conv2d(
         new_in_channels,
         layer.out_channels,
-        kernel_size=layer.kernel_size,  # type: ignore[arg-type]
-        stride=updated_stride,  # type: ignore[arg-type]
-        padding=updated_padding,  # type: ignore[arg-type]
-        dilation=layer.dilation,  # type: ignore[arg-type]
+        kernel_size=layer.kernel_size,  # ty: ignore[invalid-argument-type]
+        stride=updated_stride,  # ty: ignore[invalid-argument-type]
+        padding=updated_padding,  # ty: ignore[invalid-argument-type]
+        dilation=layer.dilation,  # ty: ignore[invalid-argument-type]
         groups=layer.groups,
         bias=use_bias,
         padding_mode=layer.padding_mode,

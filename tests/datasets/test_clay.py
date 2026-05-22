@@ -16,7 +16,7 @@ pytest.importorskip('pyarrow')
 
 
 class TestClayEmbeddings:
-    @pytest.fixture(params=['v0', 'v1.5'])
+    @pytest.fixture(params=['v0_sentinel', 'v1.5_naip', 'v1.5_sentinel'])
     def dataset(self, request: SubRequest) -> ClayEmbeddings:
         root = os.path.join('tests', 'data', 'clay', request.param)
         transforms = nn.Identity()

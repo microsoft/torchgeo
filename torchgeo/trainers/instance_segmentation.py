@@ -208,7 +208,7 @@ class InstanceSegmentationTask(BaseTask):
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
                     f'image/{batch_idx}', fig, global_step=self.global_step
-                )  # type: ignore[call-non-callable]
+                )  # ty: ignore[call-non-callable]
                 plt.close()
 
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:

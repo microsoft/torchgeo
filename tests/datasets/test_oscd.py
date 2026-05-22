@@ -86,7 +86,20 @@ class TestOSCD:
             OSCD(tmp_path)
 
     def test_plot(self, dataset: OSCD) -> None:
-        dataset.plot(dataset[0], suptitle='Test')
+        sample = dataset[0]
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
+
+    def test_plot_alpha_deprecated(self, dataset: OSCD) -> None:
+        sample = dataset[0]
+        with pytest.warns(DeprecationWarning, match='alpha parameter is deprecated'):
+            dataset.plot(sample, alpha=0.5)
+        plt.close()
+
+    def test_plot_prediction(self, dataset: OSCD) -> None:
+        sample = dataset[0]
+        sample['prediction'] = sample['mask'].clone()
+        dataset.plot(sample, suptitle='Test')
         plt.close()
 
     def test_failed_plot(self, dataset: OSCD) -> None:

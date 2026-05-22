@@ -29,6 +29,12 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git commit -m "descriptive commit message"
    $ git push
 
+For developers using `uv <https://docs.astral.sh/uv/>`_, you can sync the project dependencies with:
+
+.. code-block:: console
+
+   $ uv sync
+
 
 For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/torchgeo/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
@@ -171,6 +177,37 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add the dataset metadata to one of ``docs/api/datasets/*.csv``
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
+
+Models
+------
+
+Pull requests may involve adding new model architectures, new pre-trained model weights, or both.
+
+Model Architectures
+^^^^^^^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add a new model *architecture*:
+
+* ``torchgeo/models/foo.py``: the actual model code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``torchgeo/models/api.py``: the model loading code
+* ``tests/models/test_foo.py``: the model tests
+* ``tests/models/test_api.py``: the model loading tests
+* ``hubconf.py``: for ``torch.hub`` support
+* ``docs/api/models/foo.rst``: the model documentation
+* ``docs/api/models.rst``: the model table of contents
+
+Model Weights
+^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add new model *weights*:
+
+* ``torchgeo/models/foo.py``: the actual weight code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``tests/models/test_foo.py``: the weight tests
+* ``docs/api/weights/bar.csv``: the weight documentation
+* ``docs/api/models.rst``: if bar.csv is a new sensor
+
 
 I/O Benchmarking
 ----------------

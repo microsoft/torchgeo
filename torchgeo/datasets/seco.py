@@ -255,7 +255,7 @@ class SeasonalContrastS2(NonGeoDataset):
         for i in range(self.seasons):
             image = sample['image'][indices + i * len(self.bands)]
             image = einops.rearrange(image, 'c h w -> h w c')
-            image = quantile_normalization(image, 0, 1)
+            image = quantile_normalization(image)
 
             axes[i].imshow(image)
             axes[i].axis('off')

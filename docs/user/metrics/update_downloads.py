@@ -130,13 +130,13 @@ if __name__ == '__main__':
     print('\nPyPI')
     for name, package in name_to_pypi.items():
         print(f'* {package}')
-        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN Last Month'] += pypistats(package)  # type: ignore[misc]
+        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN Last Month'] += pypistats(package)
         df.loc[name, 'PyPI/CRAN All Time'] += pepytech(package, api_key=args.api_key)
 
     print('\nCRAN')
     for name, package in name_to_cran.items():
         print(f'* {package}')
-        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN All Time'] += cranlogs(package)  # type: ignore[misc]
+        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN All Time'] += cranlogs(package)
 
     print('\nConda')
     for name, package in name_to_conda.items():

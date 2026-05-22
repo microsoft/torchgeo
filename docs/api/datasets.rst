@@ -47,7 +47,7 @@ Pre-Training Datasets
 
 Pre-training datasets are designed for foundation model development, providing millions of input images with global distributions. These datasets may come with output labels for supervised pre-training, or come without output labels for self-supervised pre-training.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, LE = location encoding
    :header-rows: 1
    :align: center
    :file: datasets/pretraining.csv

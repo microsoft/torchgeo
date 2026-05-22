@@ -11,7 +11,7 @@ import re
 import time
 import warnings
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypedDict
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -28,6 +28,13 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
 from .utils import Path, Sample
+
+
+class OSMClassConfig(TypedDict):
+    """Type definition for OpenStreetMap class configuration."""
+
+    name: str
+    selector: list[dict[str, str | list[str]]]
 
 
 class OpenStreetMap(VectorDataset):
@@ -85,7 +92,7 @@ class OpenStreetMap(VectorDataset):
     def __init__(
         self,
         bbox: tuple[float, float, float, float],
-        classes: list[dict[str, Any]],
+        classes: list[OSMClassConfig],
         paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
@@ -97,7 +104,7 @@ class OpenStreetMap(VectorDataset):
             bbox: bounding box for initial data fetch as (xmin, ymin, xmax, ymax) in EPSG:4326
             classes: list of dicts defining feature classes. Each dict must have:
                 - 'name' (str): class name
-                - 'selector' (list[dict[str, Any]]): list of OSM tag filters
+                - 'selector' (list[dict[str, str | list[str]]]): list of OSM tag filters
                 Features get labels 1-N based on class order, with first match taking priority.
             paths: paths directory where dataset will be stored
             res: resolution of the dataset in units of EPSG:4326 (degrees). Default is 0.0001°.
@@ -137,12 +144,12 @@ class OpenStreetMap(VectorDataset):
         # Check for empty classes after initialization
         self._check_empty_classes()
 
-    def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
+    def _validate_classes(self, classes: list[OSMClassConfig]) -> None:
         """Validate classes configuration.
 
         Args:
             classes: list of class definitions to validate. Each class should be a dict
-                with 'name' (str) and 'selector' (list[dict[str, Any]]) keys.
+                with 'name' (str) and 'selector' (list[dict[str, str | list[str]]]) keys.
 
         Raises:
             ValueError: if classes configuration is invalid
@@ -364,7 +371,7 @@ class OpenStreetMap(VectorDataset):
         return 0
 
     def _feature_matches_selector(
-        self, props: dict[str, Any], selector: dict[str, Any]
+        self, props: dict[str, Any], selector: dict[str, str | list[str]]
     ) -> bool:
         """Check if feature properties match a selector.
 

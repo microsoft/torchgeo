@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
-import rasterio.mask
+import rasterio.windows
 import shapely.geometry
 import shapely.ops
 import torch
@@ -536,7 +536,7 @@ class ChesapeakeCVPR(GeoDataset):
             )
         elif len(df) == 1:
             filenames = df.iloc[0]
-            query_geom_transformed = None  # is set by the first layer
+            query_box_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
@@ -546,16 +546,27 @@ class ChesapeakeCVPR(GeoDataset):
                 with rasterio.open(os.path.join(self.root, fn)) as f:
                     dst_crs = f.crs.to_string().lower()
 
-                    if query_geom_transformed is None:
+                    if query_box_transformed is None:
                         query_box_transformed = shapely.ops.transform(
                             self.p_transformers[dst_crs].transform, query_box
                         ).envelope
-                        query_geom_transformed = shapely.geometry.mapping(
-                            query_box_transformed
-                        )
 
-                    data, _ = rasterio.mask.mask(
-                        f, [query_geom_transformed], crop=True, all_touched=True
+                    # Use a boundless windowed read so the returned array
+                    # always matches the requested patch shape, even when
+                    # the query extends beyond the raster footprint. The
+                    # out-of-raster region is filled with nodata (or 0 if
+                    # the raster has no nodata defined).
+                    window = rasterio.windows.from_bounds(
+                        *query_box_transformed.bounds, transform=f.transform
+                    )
+                    out_height = round(window.height)
+                    out_width = round(window.width)
+                    fill_value = f.nodata if f.nodata is not None else 0
+                    data = f.read(
+                        window=window,
+                        boundless=True,
+                        fill_value=fill_value,
+                        out_shape=(f.count, out_height, out_width),
                     )
 
                 if layer in [
