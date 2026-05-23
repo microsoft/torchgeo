@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo transforms."""
@@ -20,9 +20,9 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
+from .sar import LeeFilter
 from .spatial import SatSlideMix
 from .temporal import Rearrange
-from .transforms import AugmentationSequential
 
 __all__ = (
     'AppendBNDVI',
@@ -39,7 +39,7 @@ __all__ = (
     'AppendRBNDVI',
     'AppendSWI',
     'AppendTriBandNormalizedDifferenceIndex',
-    'AugmentationSequential',
+    'LeeFilter',
     'RandomGrayscale',
     'Rearrange',
     'SatSlideMix',

@@ -1,10 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 from pathlib import Path
 from typing import Any, Literal
 
+import kornia.augmentation as K
 import pytest
 import segmentation_models_pytorch as smp
 import timm
@@ -48,7 +49,12 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class PredictChangeDetectionDataModule(OSCDDataModule):
     def setup(self, stage: str) -> None:
-        self.predict_dataset = OSCD(**self.kwargs)
+        transforms = K.AugmentationSequential(
+            K.VideoSequential(K.RandomCrop(self.patch_size)),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.predict_dataset = OSCD(transforms=transforms, **self.kwargs)
 
 
 class TestChangeDetectionTask:
@@ -61,10 +67,11 @@ class TestChangeDetectionTask:
             'levircd',
             'levircdplus',
             'oscd',
+            'oscd100',
             'oscd_multiclass',
             'oscd_multiclass_focal',
             'oscd_multiclass_jaccard',
-            'xview2',
+            'xbd',
         ],
     )
     def test_trainer(
@@ -72,7 +79,7 @@ class TestChangeDetectionTask:
     ) -> None:
         match name:
             case 'cabuar' | 'chabud':
-                pytest.importorskip('h5py', minversion='3.6')
+                pytest.importorskip('h5py', minversion='3.10')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -160,30 +167,33 @@ class TestChangeDetectionTask:
             in_channels=mocked_weights.meta['in_chans'],
         )
 
-    @pytest.mark.slow
-    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
-        ChangeDetectionTask(
-            backbone=weights.meta['model'],
-            weights=weights,
-            in_channels=weights.meta['in_chans'],
-        )
-
-    @pytest.mark.slow
-    def test_weight_str_download(self, weights: WeightsEnum) -> None:
-        ChangeDetectionTask(
-            backbone=weights.meta['model'],
-            weights=str(weights),
-            in_channels=weights.meta['in_chans'],
-        )
-
-    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     @pytest.mark.parametrize(
-        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
+        'model_name,backbone',
+        [
+            ('unet', 'resnet18'),
+            ('deeplabv3+', 'resnet18'),
+            ('upernet', 'resnet18'),
+            ('segformer', 'resnet18'),
+            ('dpt', 'tu-vit_tiny_patch16_224'),
+            ('fcsiamdiff', 'resnet18'),
+            ('fcsiamconc', 'resnet18'),
+            ('changevit', 'vit_tiny_patch16_224'),
+            ('btc', 'swin_tiny'),
+        ],
     )
     def test_freeze_backbone(
         self,
         model_name: Literal[
-            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+            'changevit',
+            'btc',
         ],
         backbone: str,
     ) -> None:
@@ -194,36 +204,44 @@ class TestChangeDetectionTask:
             [param.requires_grad is False for param in model.model.encoder.parameters()]
         )
         assert all([param.requires_grad for param in model.model.decoder.parameters()])
-        assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
-        )
 
     @pytest.mark.parametrize(
-        'model_name',
-        ['unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'],
+        'model_name,backbone',
+        [
+            ('unet', 'resnet18'),
+            ('deeplabv3+', 'resnet18'),
+            ('upernet', 'resnet18'),
+            ('segformer', 'resnet18'),
+            ('dpt', 'tu-vit_tiny_patch16_224'),
+            ('fcsiamdiff', 'resnet18'),
+            ('fcsiamconc', 'resnet18'),
+            ('changevit', 'vit_tiny_patch16_224'),
+            ('btc', 'swin_tiny'),
+        ],
     )
     def test_freeze_decoder(
         self,
         model_name: Literal[
-            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+            'changevit',
+            'btc',
         ],
+        backbone: str,
     ) -> None:
         model = ChangeDetectionTask(
-            model=model_name, backbone='resnet18', freeze_decoder=True
+            model=model_name, backbone=backbone, freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
         assert all([param.requires_grad for param in model.model.encoder.parameters()])
-        assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
-        )
 
     def test_vit_backbone(self) -> None:
         ChangeDetectionTask(model='dpt', backbone='tu-vit_base_patch16_224')
@@ -232,8 +250,44 @@ class TestChangeDetectionTask:
         """FCN has no backbone/decoder. Need separate test for full test coverage."""
         ChangeDetectionTask(model='fcn')
 
-    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
-    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
+    def test_btc_model(self) -> None:
+        """BTC uses only swin backbones. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='btc', backbone='swin_tiny')
+
+    def test_changevit_model(self) -> None:
+        """ChangeViT uses ViT backbones. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='changevit', backbone='vit_tiny_patch16_224')
+
+    def test_changevit_in_channels(self) -> None:
+        """Test ChangeViT with custom in_channels."""
+        model = ChangeDetectionTask(
+            model='changevit', backbone='vit_tiny_patch16_224', in_channels=4
+        )
+        x = torch.randn(1, 2, 4, 256, 256)
+        y = model(x)
+        assert y.shape == (1, 1, 256, 256)
+
+    def test_changevit_num_classes(self) -> None:
+        """Test ChangeViT with multiclass segmentation."""
+        model = ChangeDetectionTask(
+            model='changevit',
+            backbone='vit_tiny_patch16_224',
+            task='multiclass',
+            num_classes=5,
+        )
+        x = torch.randn(1, 2, 3, 256, 256)
+        y = model(x)
+        assert y.shape == (1, 5, 256, 256)
+
+    def test_changevit_predict(self) -> None:
+        """Test ChangeViT predict_step to ensure input is not rearranged."""
+        model = ChangeDetectionTask(model='changevit', backbone='vit_tiny_patch16_224')
+        batch = {'image': torch.randn(1, 2, 3, 256, 256)}
+        y = model.predict_step(batch, batch_idx=0)
+        assert y.shape == (1, 1, 256, 256)
+
+    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
+    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetectionTask(loss=loss_fn)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:

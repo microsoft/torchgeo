@@ -9,8 +9,8 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
-  - package-ecosystem: 'pip'
-    directory: '/requirements'
+  - package-ecosystem: 'uv'
+    directory: '/'
     schedule:
       interval: 'daily'
     groups:
@@ -23,17 +23,6 @@ updates:
         patterns:
           - 'torch'
           - 'torchvision'
-    ignore:
-      # setuptools releases new versions almost daily
-      - dependency-name: 'setuptools'
-        update-types: ['version-update:semver-patch']
-      # sphinx 6 is incompatible with pytorch-sphinx-theme
-      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-      - dependency-name: 'sphinx'
-        versions: '>=6'
-      # ultralytics releases new versions almost daily
-      - dependency-name: 'ultralytics'
-        update-types: ['version-update:semver-patch']
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -10,7 +10,7 @@ from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
-from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
+from torchgeo.datasets import VHR10, NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
 
@@ -39,6 +39,9 @@ class TestObjectDetectionTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
+
+        if name.startswith('vhr10'):
+            monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
 
         args = [
             '--config',
@@ -72,9 +75,6 @@ class TestObjectDetectionTask:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetectionTask(backbone='invalid_backbone')
-
-    def test_pretrained_backbone(self) -> None:
-        ObjectDetectionTask(backbone='resnet18', weights=True)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)

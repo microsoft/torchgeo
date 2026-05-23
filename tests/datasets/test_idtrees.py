@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
-pytest.importorskip('laspy', minversion='2')
+pytest.importorskip('laspy', minversion='2.5.3')
 
 
 class TestIDTReeS:
@@ -27,12 +27,12 @@ class TestIDTReeS:
         metadata = {
             'train': {
                 'url': os.path.join(data_dir, 'IDTREES_competition_train_v2.zip'),
-                'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
+                'md5': '',
                 'filename': 'IDTREES_competition_train_v2.zip',
             },
             'test': {
                 'url': os.path.join(data_dir, 'IDTREES_competition_test_v2.zip'),
-                'md5': 'b108931c84a70f2a38a8234290131c9b',
+                'md5': '',
                 'filename': 'IDTREES_competition_test_v2.zip',
             },
         }
@@ -40,7 +40,7 @@ class TestIDTReeS:
         monkeypatch.setattr(IDTReeS, 'metadata', metadata)
         root = tmp_path
         transforms = nn.Identity()
-        return IDTReeS(root, split, task, transforms, download=True, checksum=True)
+        return IDTReeS(root, split, task, transforms, download=True)
 
     def test_getitem(self, dataset: IDTReeS) -> None:
         x = dataset[0]
@@ -62,6 +62,7 @@ class TestIDTReeS:
             if x['bbox_xyxy'].ndim != 1:
                 assert x['bbox_xyxy'].ndim == 2
                 assert x['bbox_xyxy'].shape[-1] == 4
+                assert x['bbox_xyxy'].shape[0] > 0
 
     def test_len(self, dataset: IDTReeS) -> None:
         assert len(dataset) == 3

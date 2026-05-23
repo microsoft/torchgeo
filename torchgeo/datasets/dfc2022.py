@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """2022 IEEE GRSS Data Fusion Contest (DFC2022) dataset."""
@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +19,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class DFC2022(NonGeoDataset):
@@ -139,8 +145,8 @@ class DFC2022(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DFC2022 dataset instance.
@@ -167,7 +173,7 @@ class DFC2022(NonGeoDataset):
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -289,10 +295,7 @@ class DFC2022(NonGeoDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -307,10 +310,10 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image_arr = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0)
 
-        dem = sample['image'][-1].numpy()
-        dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
+        dem = sample['image'][-1]
+        dem = quantile_normalization(dem)
 
         showing_mask = 'mask' in sample
         showing_prediction = 'prediction' in sample
@@ -318,13 +321,13 @@ class DFC2022(NonGeoDataset):
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
         if showing_prediction:
-            pred = sample['prediction'].numpy()
+            pred = sample['prediction']
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))
 
         axs[0].imshow(image_arr)
         axs[0].axis('off')

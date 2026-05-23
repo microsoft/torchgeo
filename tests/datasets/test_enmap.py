@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -30,7 +29,6 @@ class TestEnMAP:
     def test_getitem(self, dataset: EnMAP) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: EnMAP) -> None:
@@ -62,8 +60,8 @@ class TestEnMAP:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EnMAP(tmp_path)
 
-    def test_invalid_query(self, dataset: EnMAP) -> None:
+    def test_invalid_index(self, dataset: EnMAP) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

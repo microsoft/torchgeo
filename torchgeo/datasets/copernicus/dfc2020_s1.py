@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench DFC2020-S1 dataset."""
@@ -6,8 +6,8 @@
 import os
 
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 
@@ -61,7 +61,7 @@ class CopernicusBenchDFC2020S1(CopernicusBenchBase):
         ]
     )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -70,7 +70,7 @@ class CopernicusBenchDFC2020S1(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index]
+        file = str(self.files[index])
         image_path = os.path.join(
             self.root, self.directory, 's1', file.replace('dfc', 's1')
         )

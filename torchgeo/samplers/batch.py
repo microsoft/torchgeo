@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo batch samplers."""
@@ -166,7 +166,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[list[tuple[slice, slice, slice]]]:  # type: ignore[override]
+    def __iter__(self) -> Iterator[list[tuple[slice, slice, slice]]]:  # ty: ignore[invalid-method-override]
         """Return the indices of a dataset.
 
         Yields:

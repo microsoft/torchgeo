@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -19,14 +19,10 @@ class TestReforesTree:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
         data_dir = os.path.join('tests', 'data', 'reforestree')
         url = os.path.join(data_dir, 'reforesTree.zip')
-        md5 = 'bfc8d35df5d61d1ff4020375843018d9'
         monkeypatch.setattr(ReforesTree, 'url', url)
-        monkeypatch.setattr(ReforesTree, 'md5', md5)
         root = tmp_path
         transforms = nn.Identity()
-        return ReforesTree(
-            root=root, transforms=transforms, download=True, checksum=True
-        )
+        return ReforesTree(root=root, transforms=transforms, download=True)
 
     def test_already_downloaded(self, dataset: ReforesTree) -> None:
         ReforesTree(root=dataset.root, download=True)
@@ -53,7 +49,7 @@ class TestReforesTree:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'reforesTree.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             ReforesTree(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:

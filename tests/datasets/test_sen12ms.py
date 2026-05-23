@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -59,10 +59,6 @@ class TestSEN12MS:
     def test_out_of_bounds(self, dataset: SEN12MS) -> None:
         with pytest.raises(IndexError):
             dataset[8]
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SEN12MS(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

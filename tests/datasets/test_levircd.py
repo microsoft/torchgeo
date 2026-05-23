@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -50,10 +50,6 @@ class TestLEVIRCD:
     def test_already_downloaded(self, dataset: LEVIRCD) -> None:
         LEVIRCD(root=dataset.root, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LEVIRCD(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LEVIRCD(tmp_path)
@@ -92,10 +88,6 @@ class TestLEVIRCDPlus:
 
     def test_already_downloaded(self, dataset: LEVIRCDPlus) -> None:
         LEVIRCDPlus(root=dataset.root, download=True)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LEVIRCDPlus(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

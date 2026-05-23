@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Cheasapeake Bay Program Land Use/Land Cover Data Project datasets."""
@@ -7,35 +7,33 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
-import rasterio.mask
+import rasterio.windows
 import shapely.geometry
 import shapely.ops
 import torch
-from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay Land Use and Land Cover (LULC) Database 2022 Edition
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    <https://www.chesapeakeconservancy.org/projects/cbp-land-use-land-cover-data-project>`_
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time
@@ -130,10 +128,11 @@ class Chesapeake(RasterDataset, ABC):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
 
@@ -149,9 +148,14 @@ class Chesapeake(RasterDataset, ABC):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -165,7 +169,9 @@ class Chesapeake(RasterDataset, ABC):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -175,7 +181,8 @@ class Chesapeake(RasterDataset, ABC):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
 
@@ -189,22 +196,21 @@ class Chesapeake(RasterDataset, ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year, md5 in self.md5s.items():
             url = self.url.format(state=self.state, year=year)
-            print(url)
-            download_url(url, self.paths, md5=md5 if self.checksum else None)
+            download_url(url, paths, md5=md5 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        for file in glob.iglob(os.path.join(paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -423,13 +429,13 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, Any]] = {
+    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ).transform,
+        ),
         'epsg:26918': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ).transform,
+        ),
     }
 
     def __init__(
@@ -437,7 +443,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['de-train'],
         layers: Sequence[str] = ['naip-new', 'lc'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -485,67 +491,52 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint = pd.Timestamp.min
         maxt = pd.Timestamp.max
-        data = []
-        datetimes = []
-        geometries = []
-        with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
-            for row in f:
-                if row['properties']['split'] in splits:
-                    prior_fn = row['properties']['lc'].replace(
-                        'lc.tif',
-                        'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-                    )
-                    geometries.append(shapely.geometry.shape(row['geometry']))
-                    datetimes.append((mint, maxt))
-                    data.append(
-                        {
-                            'naip-new': row['properties']['naip-new'],
-                            'naip-old': row['properties']['naip-old'],
-                            'landsat-leaf-on': row['properties']['landsat-leaf-on'],
-                            'landsat-leaf-off': row['properties']['landsat-leaf-off'],
-                            'lc': row['properties']['lc'],
-                            'nlcd': row['properties']['nlcd'],
-                            'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
-                        }
-                    )
-
+        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
+            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
+        )
+        datetimes = [(mint, maxt)] * len(gdf)
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(3857)
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+        gdf.set_crs('EPSG:3857', inplace=True)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        sample: dict[str, Any] = {
-            'image': [],
-            'mask': [],
-            'crs': self.crs,
-            'bounds': query,
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
         }
 
-        if index.empty:
+        images = []
+        masks = []
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(index) == 1:
-            filenames = index.iloc[0]
-            query_geom_transformed = None  # is set by the first layer
+        elif len(df) == 1:
+            filenames = df.iloc[0]
+            query_box_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
@@ -555,16 +546,27 @@ class ChesapeakeCVPR(GeoDataset):
                 with rasterio.open(os.path.join(self.root, fn)) as f:
                     dst_crs = f.crs.to_string().lower()
 
-                    if query_geom_transformed is None:
+                    if query_box_transformed is None:
                         query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs], query_box
+                            self.p_transformers[dst_crs].transform, query_box
                         ).envelope
-                        query_geom_transformed = shapely.geometry.mapping(
-                            query_box_transformed
-                        )
 
-                    data, _ = rasterio.mask.mask(
-                        f, [query_geom_transformed], crop=True, all_touched=True
+                    # Use a boundless windowed read so the returned array
+                    # always matches the requested patch shape, even when
+                    # the query extends beyond the raster footprint. The
+                    # out-of-raster region is filled with nodata (or 0 if
+                    # the raster has no nodata defined).
+                    window = rasterio.windows.from_bounds(
+                        *query_box_transformed.bounds, transform=f.transform
+                    )
+                    out_height = round(window.height)
+                    out_width = round(window.width)
+                    fill_value = f.nodata if f.nodata is not None else 0
+                    data = f.read(
+                        window=window,
+                        boundless=True,
+                        fill_value=fill_value,
+                        out_shape=(f.count, out_height, out_width),
                     )
 
                 if layer in [
@@ -573,22 +575,19 @@ class ChesapeakeCVPR(GeoDataset):
                     'landsat-leaf-on',
                     'landsat-leaf-off',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in [
                     'lc',
                     'nlcd',
                     'buildings',
                     'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
-            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
+            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
+        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
+        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -639,10 +638,7 @@ class ChesapeakeCVPR(GeoDataset):
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

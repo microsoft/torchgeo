@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """USAVars dataset."""
@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -83,14 +83,18 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = ('treecover', 'elevation', 'population')
+    ALL_LABELS: tuple[Literal['treecover', 'elevation', 'population'], ...] = (
+        'treecover',
+        'elevation',
+        'population',
+    )
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        labels: Sequence[str] = ALL_LABELS,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        labels: Sequence[Literal['treecover', 'elevation', 'population']] = ALL_LABELS,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -131,7 +135,7 @@ class USAVars(NonGeoDataset):
             for lab in self.labels
         }
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -228,10 +232,7 @@ class USAVars(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.dirname + '.zip'))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_labels: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_labels: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

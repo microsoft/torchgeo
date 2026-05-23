@@ -1,21 +1,20 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SustainBench Crop Yield dataset."""
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -51,7 +50,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     md5 = '362bad07b51a1264172b8376b39d1fc9'
 
-    url = 'https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link'
+    url = 'https://hf.co/datasets/torchgeo/sustainbench_crop_yield/resolve/eceefda0b866c321c18baa256205d21fa6f5eb8c/soybeans_updated.zip'
 
     dir = 'soybeans'
 
@@ -60,9 +59,9 @@ class SustainBenchCropYield(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        countries: list[str] = ['usa'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        split: Literal['train', 'dev', 'test'] = 'train',
+        countries: list[Literal['usa', 'brazil', 'argentina']] = ['usa'],
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -139,7 +138,7 @@ class SustainBenchCropYield(NonGeoDataset):
         """
         return len(self.images)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -148,7 +147,7 @@ class SustainBenchCropYield(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, Tensor] = {'image': self.images[index]}
+        sample: Sample = {'image': self.images[index]}
         sample.update(self.features[index])
 
         if self.transforms is not None:
@@ -194,7 +193,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Sample,
         band_idx: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,

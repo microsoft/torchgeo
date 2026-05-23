@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -13,18 +13,12 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import CropHarvest, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestCropHarvest:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
-        monkeypatch.setitem(
-            CropHarvest.file_dict['features'], 'md5', 'ef6f4f00c0b3b50ed8380b0044928572'
-        )
-        monkeypatch.setitem(
-            CropHarvest.file_dict['labels'], 'md5', '1d93b6bfcec7b6797b75acbd9d284b92'
-        )
         monkeypatch.setitem(
             CropHarvest.file_dict['features'],
             'url',
@@ -39,7 +33,7 @@ class TestCropHarvest:
         root = tmp_path
         transforms = nn.Identity()
 
-        dataset = CropHarvest(root, transforms, download=True, checksum=True)
+        dataset = CropHarvest(root, transforms, download=True)
         return dataset
 
     def test_getitem(self, dataset: CropHarvest) -> None:

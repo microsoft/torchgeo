@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench AQ-O3-S5P dataset."""
@@ -8,9 +8,8 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 import torch
-from torch import Tensor
 
-from ..utils import Path, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -51,7 +50,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['annual', 'seasonal'] = 'annual',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -73,7 +72,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
         self.mode = mode
         super().__init__(root, split, bands, transforms, download, checksum)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -82,7 +81,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        pid = self.files[index]
+        pid = str(self.files[index])
         match self.mode:
             case 'annual':
                 file = '2021-01-01_2021-12-31.tif'

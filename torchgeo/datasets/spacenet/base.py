@@ -1,22 +1,23 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SpaceNet abstract base class."""
 
 import glob
+import json
 import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Any, ClassVar
+from json.decoder import JSONDecodeError
+from typing import ClassVar, Literal
 
-import fiona
+import einops
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from fiona.errors import FionaError, FionaValueError
-from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from pyproj import CRS
 from rasterio.enums import Resampling
@@ -28,9 +29,10 @@ from ..errors import DatasetNotFoundError
 from ..geo import NonGeoDataset
 from ..utils import (
     Path,
+    Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
     which,
 )
 
@@ -104,11 +106,11 @@ class SpaceNet(NonGeoDataset, ABC):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -188,20 +190,25 @@ class SpaceNet(NonGeoDataset, ABC):
             Tensor: label tensor
         """
         try:
-            with fiona.open(path) as src:
-                vector_crs = CRS(src.crs)
-                labels = [
-                    transform_geom(
-                        vector_crs.to_string(),
-                        raster_crs.to_string(),
-                        feature['geometry'],
-                    )
-                    for feature in src
-                    if feature['geometry']
-                ]
-        except (FionaError, FionaValueError):
-            # Empty geojson files, geometries that cannot be transformed (SN7)
+            # Raises a JSONDecodeError for empty files
+            with open(path) as f:
+                json.load(f)
+
+            gdf = gpd.read_file(path)
+
+        except JSONDecodeError:
+            # Handle empty files
+            gdf = gpd.GeoDataFrame(
+                {'geometry': []}, geometry='geometry', crs='EPSG:4326'
+            )
+
+        if gdf.empty:
             labels = []
+        else:
+            # Convert to CRS and filter out invalid geometries
+            gdf.to_crs(raster_crs, inplace=True)
+            gdf.dropna(subset=['geometry'], inplace=True)
+            labels = gdf.geometry.tolist()
 
         if labels:
             mask = rasterize(
@@ -217,7 +224,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return torch.from_numpy(mask)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -241,7 +248,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return sample
 
-    def _image_id(self, path: str) -> list[Any]:
+    def _image_id(self, path: str) -> list[int | str]:
         """Return the image ID.
 
         Args:
@@ -250,7 +257,7 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             A list of integers.
         """
-        keys: list[Any] = []
+        keys: list[int | str] = []
         if match := re.search(self.file_regex, path):
             for key in match.group(1).split('_'):
                 try:
@@ -339,10 +346,7 @@ class SpaceNet(NonGeoDataset, ABC):
                 self.masks.extend(masks)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -356,19 +360,19 @@ class SpaceNet(NonGeoDataset, ABC):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 8, 8))

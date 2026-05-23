@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -11,7 +11,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -25,28 +24,16 @@ from torchgeo.datasets import (
 class TestCDL:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
-        md5s = {
-            2023: '3fbd3eecf92b8ce1ae35060ada463c6d',
-            2022: '826c6fd639d9cdd94a44302fbc5b76c3',
-        }
-        monkeypatch.setattr(CDL, 'md5s', md5s)
         url = os.path.join('tests', 'data', 'cdl', '{}_30m_cdls.zip')
         monkeypatch.setattr(CDL, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
         transforms = nn.Identity()
-        return CDL(
-            root,
-            transforms=transforms,
-            download=True,
-            checksum=True,
-            years=[2023, 2022],
-        )
+        return CDL(root, transforms=transforms, download=True, years=[2023, 2022])
 
     def test_getitem(self, dataset: CDL) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CDL) -> None:
@@ -70,8 +57,8 @@ class TestCDL:
 
     def test_full_year(self, dataset: CDL) -> None:
         time = pd.Timestamp(2023, 6, 1)
-        query = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
-        dataset[query]
+        index = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
+        dataset[index]
 
     def test_already_extracted(self, dataset: CDL) -> None:
         CDL(dataset.paths, years=[2023, 2022])
@@ -98,14 +85,14 @@ class TestCDL:
             CDL(classes=[11])
 
     def test_plot(self, dataset: CDL) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: CDL) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -114,8 +101,8 @@ class TestCDL:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CDL(tmp_path)
 
-    def test_invalid_query(self, dataset: CDL) -> None:
+    def test_invalid_index(self, dataset: CDL) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

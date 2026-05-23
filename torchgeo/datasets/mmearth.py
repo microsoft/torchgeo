@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MMEarth Dataset."""
@@ -7,10 +7,12 @@ import json
 import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
-from typing import Any, ClassVar, cast
+from typing import ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 import torch
 from einops import rearrange
 from matplotlib.figure import Figure
@@ -18,7 +20,18 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import, percentile_normalization
+from .utils import Path, Sample, lazy_import, quantile_normalization
+
+
+class TileInfo(TypedDict):
+    """A single element in tile_info.json."""
+
+    S2_DATE: str
+    S2_type: str
+    CRS: str
+    lat: float
+    lon: float
+    BANDS: dict[str, list[str]]
 
 
 class MMEarth(NonGeoDataset):
@@ -190,7 +203,7 @@ class MMEarth(NonGeoDataset):
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         normalization_mode: str = 'z-score',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize the MMEarth dataset.
 
@@ -267,9 +280,7 @@ class MMEarth(NonGeoDataset):
         with open(
             os.path.join(self.root, self.filenames[self.subset], self.splits_filename)
         ) as f:
-            split_indices: dict[str, list[int]] = json.load(f)
-
-        return split_indices[self.split]
+            return json.load(f)[self.split]
 
     def _load_normalization_stats(self) -> dict[str, dict[str, float]]:
         """Load normalization statistics for each band.
@@ -282,11 +293,9 @@ class MMEarth(NonGeoDataset):
                 self.root, self.filenames[self.subset], self.band_stats_filename
             )
         ) as f:
-            band_stats = json.load(f)
+            return json.load(f)
 
-        return cast(dict[str, dict[str, float]], band_stats)
-
-    def _load_tile_info(self) -> dict[str, dict[str, str]]:
+    def _load_tile_info(self) -> dict[str, TileInfo]:
         """Load tile information.
 
         Returns:
@@ -297,9 +306,7 @@ class MMEarth(NonGeoDataset):
                 self.root, self.filenames[self.subset], self.tile_info_filename
             )
         ) as f:
-            tile_info = json.load(f)
-
-        return cast(dict[str, dict[str, str]], tile_info)
+            return json.load(f)
 
     def _validate_modalities(self, modalities: Sequence[str]) -> None:
         """Validate list of modalities.
@@ -341,7 +348,7 @@ class MMEarth(NonGeoDataset):
                         f"'{val}' is an invalid band name for modality '{key}'."
                     )
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return a sample from the dataset.
 
         Normalization is applied to the data with chosen ``normalization_mode``.
@@ -350,15 +357,16 @@ class MMEarth(NonGeoDataset):
         * lat: latitude
         * lon: longitude
         * date: date
-        * crs: coordinate reference system
         * tile_id: tile identifier
 
         Args:
             index: index to return
 
         Returns:
-            dictionary containing the modalities and metadata
-            of the sample
+            dictionary containing the modalities and metadata of the sample
+
+        .. versionchanged:: 0.10
+           Removed *avail_bands* metadata, cast all other metadata to Tensor.
         """
         ds_index = self.indices[index]
 
@@ -371,8 +379,8 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def get_sample_specific_band_names(
-        self, tile_info: dict[str, Any]
+    def _get_sample_specific_band_names(
+        self, tile_info: TileInfo
     ) -> dict[str, list[str]]:
         """Retrieve the sample specific band names.
 
@@ -399,7 +407,7 @@ class MMEarth(NonGeoDataset):
 
         return specific_modality_bands
 
-    def get_intersection_dict(self, tile_info: dict[str, Any]) -> dict[str, list[str]]:
+    def _get_intersection_dict(self, tile_info: TileInfo) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
@@ -408,7 +416,7 @@ class MMEarth(NonGeoDataset):
         Returns:
             Dictionary with intersected keys and lists.
         """
-        sample_specific_band_names = self.get_sample_specific_band_names(tile_info)
+        sample_specific_band_names = self._get_sample_specific_band_names(tile_info)
         # used the chosen modality bands to get the intersection with available bands
         intersection_dict = {}
         for modality in self.all_modalities:
@@ -423,7 +431,7 @@ class MMEarth(NonGeoDataset):
 
         return intersection_dict
 
-    def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
+    def _retrieve_sample(self, ds_index: int) -> Sample:
         """Retrieve a sample from the dataset.
 
         Args:
@@ -434,15 +442,15 @@ class MMEarth(NonGeoDataset):
             of the sample
         """
         h5py = lazy_import('h5py')
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         with h5py.File(
             os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            tile_info: dict[str, Any] = self.tile_info[name]
+            tile_info = self.tile_info[name]
             # need to find the intersection of requested and available bands
-            intersection_dict = self.get_intersection_dict(tile_info)
+            intersection_dict = self._get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
                 if 'sentinel1' in modality:
                     data = f['sentinel1'][ds_index][:]
@@ -453,15 +461,13 @@ class MMEarth(NonGeoDataset):
                 modality_name = self.modality_category_name.get(modality, '') + modality
                 sample[modality_name] = tensor
 
-            # add the sensor and bands actually available
-            sample['avail_bands'] = intersection_dict
-
             # add additional metadata to the sample
-            sample['lat'] = tile_info['lat']
-            sample['lon'] = tile_info['lon']
-            sample['date'] = tile_info['S2_DATE']
-            sample['crs'] = tile_info['CRS']
-            sample['tile_id'] = name
+            sample['lat'] = torch.tensor(tile_info['lat'])
+            sample['lon'] = torch.tensor(tile_info['lon'])
+            sample['date'] = torch.tensor(
+                pd.Timestamp(tile_info['S2_DATE']).timestamp()
+            )
+            sample['tile_id'] = torch.tensor(int(name))
 
         return sample
 
@@ -495,11 +501,7 @@ class MMEarth(NonGeoDataset):
         return indices
 
     def _preprocess_modality(
-        self,
-        data: 'np.typing.NDArray[Any]',
-        modality: str,
-        tile_info: dict[str, Any],
-        bands: list[str],
+        self, data: npt.NDArray, modality: str, tile_info: TileInfo, bands: list[str]
     ) -> Tensor:
         """Preprocess a single modality.
 
@@ -578,8 +580,8 @@ class MMEarth(NonGeoDataset):
         return tensor
 
     def _normalize_modality(
-        self, data: 'np.typing.NDArray[Any]', modality: str, bands: list[str]
-    ) -> 'np.typing.NDArray[np.float64]':
+        self, data: npt.NDArray, modality: str, bands: list[str]
+    ) -> npt.NDArray[np.float64]:
         """Normalize a single modality.
 
         Args:
@@ -623,12 +625,11 @@ class MMEarth(NonGeoDataset):
         return len(self.indices)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
+
+        .. versionadded:: 0.8
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
@@ -678,48 +679,44 @@ class MMEarth(NonGeoDataset):
             'image_canopy_height_eth',
         ]
 
-        avail_bands_dict = dict(sample['avail_bands'])
         for key in keys_to_plot:
             val = sample[key]
             modalities_name = key.split('_', 1)[1]
             match modalities_name:
                 case 'sentinel2':
-                    norm_img = percentile_normalization(val[[3, 2, 1]].numpy())
+                    norm_img = quantile_normalization(val[[3, 2, 1]])
                     images.append(rearrange(norm_img, 'c h w -> h w c'))
 
                     titles.append('Sentinel-2 RGB')
                 case 'esa_worldcover':
-                    tensor_np = val.squeeze().numpy()
-                    rgb_image = np.zeros(
-                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    tensor = val.squeeze()
+                    rgb_image = torch.zeros(
+                        (tensor.shape[0], tensor.shape[1], 3), dtype=torch.uint8
                     )
                     for value, color in color_map[modalities_name].items():
-                        mask = tensor_np == value
-                        rgb_image[mask] = color
+                        mask = tensor == value
+                        rgb_image[mask] = torch.tensor(color, dtype=torch.uint8)
 
                     images.append(rgb_image)
                     titles.append(modalities_name.replace('_', ' ').title())
                 case 'dynamic_world':
-                    tensor_np = val.squeeze().numpy()
-                    rgb_image = np.zeros(
-                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    tensor = val.squeeze()
+                    rgb_image = torch.zeros(
+                        (tensor.shape[0], tensor.shape[1], 3), dtype=torch.uint8
                     )
                     for value, color in color_map[modalities_name].items():
-                        mask = tensor_np == value
-                        rgb_image[mask] = color
+                        mask = tensor == value
+                        rgb_image[mask] = torch.tensor(color, dtype=torch.uint8)
 
                     images.append(rgb_image)
                     titles.append(modalities_name.replace('_', ' ').title())
                 case _:
-                    band_val = val[0].numpy()
-                    norm_img = percentile_normalization(band_val)
+                    band_val = val[0]
+                    norm_img = quantile_normalization(band_val)
                     images.append(norm_img)
 
                     modalities_name = key.split('_', 1)[1]
-                    band_name = avail_bands_dict[modalities_name][0]
-                    titles.append(
-                        (modalities_name.replace('_', ' ').title()) + ' ' + band_name
-                    )
+                    titles.append(modalities_name.replace('_', ' ').title())
         fig, ax = plt.subplots(1, 6, figsize=(12, 4))
 
         for i, (image, title) in enumerate(zip(images, titles)):

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dataset splitting utilities."""
@@ -13,6 +13,7 @@ from typing import cast
 import geopandas
 import pandas as pd
 import shapely
+import shapely.ops
 from geopandas import GeoDataFrame
 from shapely import LineString, Polygon
 from torch import Generator, default_generator, randint, randperm
@@ -80,7 +81,7 @@ def random_bbox_assignment(
     new_datasets = []
     for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = dataset.index.iloc[indices[offset - length : offset]]
+        ds.index = dataset.index.iloc[indices[offset - length : offset]]  # ty: ignore[invalid-argument-type]
         new_datasets.append(ds)
 
     return new_datasets
@@ -113,6 +114,7 @@ def random_bbox_splitting(
     if any(n <= 0 for n in fractions):
         raise ValueError('All items in input fractions must be greater than 0.')
 
+    i_geom = dataset.index.columns.get_loc('geometry')
     new_datasets = [deepcopy(dataset) for _ in fractions]
 
     for i in range(len(dataset)):
@@ -164,8 +166,7 @@ def random_bbox_splitting(
                             new_geometry, geometry_remaining = geom1, geom2
                         else:
                             geometry_remaining, new_geometry = geom1, geom2
-
-            new_datasets[j].index.iloc[i].geometry = new_geometry
+            new_datasets[j].index.iloc[i, i_geom] = new_geometry  # ty: ignore[invalid-assignment]
 
             fraction_remaining -= fraction
             horizontal = not horizontal
@@ -204,8 +205,6 @@ def random_grid_cell_assignment(
     if grid_size < 2:
         raise ValueError('Input grid_size must be greater than 1.')
 
-    lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
-
     # Generate the grid's cells for each bbox in index
     left = []
     right = []
@@ -230,6 +229,8 @@ def random_grid_cell_assignment(
                     right.append(index.right)
                     rows.append(row)
                     geometry.append(geom)
+
+    lengths = _fractions_to_lengths(fractions, len(rows))
 
     indexes_sr = pd.IntervalIndex.from_arrays(
         left, right, closed='both', name='datetime'
@@ -281,7 +282,8 @@ def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[float | pd.Timedelta | pd.Interval]
+    dataset: GeoDataset,
+    lengths: Sequence[float] | Sequence[pd.Timedelta] | Sequence[pd.Interval],
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -295,11 +297,12 @@ def time_series_split(
 
     .. versionadded:: 0.5
     """
-    x, y, t = dataset.bounds
+    _, _, t = dataset.bounds
 
     totalt = t.stop - t.start
 
     if all(isinstance(x, int | float) for x in lengths):
+        lengths = cast(Sequence[float], lengths)
         if any(n <= 0 for n in lengths):
             raise ValueError('All items in input lengths must be greater than 0.')
 
@@ -335,20 +338,20 @@ def time_series_split(
             )
 
         for other in lengths:
-            x = other.left
-            y = other.right
-            if start < x < end or start < y < end:
+            left = other.left
+            right = other.right
+            if start < left < end or start < right < end:
                 raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
         ds = deepcopy(dataset)
         ds.index = dataset.index.iloc[dataset.index.index.overlaps(interval)]
         new_index = []
         for xy in ds.index.index:
-            x = xy.left
-            y = xy.right
-            x = max(start, x)
-            y = min(end - offset, y - offset)
-            new_index.append(pd.Interval(x, y, closed='neither'))
+            left = xy.left
+            right = xy.right
+            left = max(start, left)
+            right = min(end - offset, right - offset)
+            new_index.append(pd.Interval(left, right, closed='neither'))
         ds.index.index = pd.IntervalIndex(new_index, closed='neither', name='datetime')
         new_datasets.append(ds)
         _totalt += end - start

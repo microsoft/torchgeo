@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Inria Aerial Image Labeling Dataset."""
@@ -7,8 +7,9 @@ import glob
 import os
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -18,7 +19,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -60,8 +67,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new InriaAerialImageLabeling Dataset instance.
@@ -108,7 +115,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                if match := pattern.search(img):
+                fname = os.path.basename(img)
+                if match := pattern.search(fname):
                     idx = int(match.group(2))
                     # For validation, use the first 5 images of every location
                     if self.split == 'train' and idx > 5:
@@ -158,7 +166,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -194,10 +202,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         extract_archive(archive_path)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -209,19 +214,19 @@ class InriaAerialImageLabeling(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))

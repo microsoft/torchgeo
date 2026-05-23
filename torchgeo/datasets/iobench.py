@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """I/O benchmark dataset."""
@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -16,7 +16,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class IOBench(IntersectionDataset):
@@ -51,12 +51,12 @@ class IOBench(IntersectionDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'preprocessed',
+        split: Literal['original', 'raw', 'preprocessed'] = 'preprocessed',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -135,10 +135,7 @@ class IOBench(IntersectionDataset):
         extract_archive(os.path.join(self.root, f'{self.split}.tar.gz'), self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -163,7 +160,7 @@ class IOBench(IntersectionDataset):
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
         mask = sample['mask'].squeeze()
 
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
         mask = self.cdl.ordinal_cmap[mask]
 
         fig, axes = plt.subplots(1, 2, figsize=(8, 4))

@@ -1,19 +1,18 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """FireRisk dataset."""
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import Literal, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class FireRisk(NonGeoClassificationDataset):
@@ -51,7 +50,7 @@ class FireRisk(NonGeoClassificationDataset):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
+    url = 'https://hf.co/datasets/isaaccorley/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
     md5 = 'a77b9a100d51167992ae8c51d26198a6'
     filename = 'FireRisk.zip'
     directory = 'FireRisk'
@@ -69,8 +68,8 @@ class FireRisk(NonGeoClassificationDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -135,10 +134,7 @@ class FireRisk(NonGeoClassificationDataset):
         extract_archive(filepath)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

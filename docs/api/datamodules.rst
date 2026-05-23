@@ -82,6 +82,11 @@ ChaBuD
 
 .. autoclass:: ChaBuDDataModule
 
+Cloud Cover Detection
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CloudCoverDetectionDataModule
+
 COWC
 ^^^^
 
@@ -174,6 +179,13 @@ OSCD
 ^^^^
 
 .. autoclass:: OSCDDataModule
+.. autoclass:: OSCD100DataModule
+
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTISDataModule
+.. autoclass:: PASTIS100DataModule
 
 PatternNet
 ^^^^^^^^^^
@@ -283,10 +295,10 @@ VHR-10
 
 .. autoclass:: VHR10DataModule
 
-xView2
-^^^^^^
+xBD
+^^^
 
-.. autoclass:: XView2DataModule
+.. autoclass:: xBDDataModule
 
 Base Classes
 ------------

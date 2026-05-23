@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, QuakeSet
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestQuakeSet:
@@ -22,15 +22,11 @@ class TestQuakeSet:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> QuakeSet:
         url = os.path.join('tests', 'data', 'quakeset', 'earthquakes.h5')
-        md5 = '127d0d6a1f82d517129535f50053a4c9'
-        monkeypatch.setattr(QuakeSet, 'md5', md5)
         monkeypatch.setattr(QuakeSet, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return QuakeSet(
-            root, split, transforms=transforms, download=True, checksum=True
-        )
+        return QuakeSet(root, split, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: QuakeSet) -> None:
         x = dataset[0]

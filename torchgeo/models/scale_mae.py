@@ -1,25 +1,23 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Scale-MAE models."""
 
-from collections import OrderedDict
 from functools import partial
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 import torch.nn as nn
+import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-_mean = torch.tensor([0.485, 0.456, 0.406])
-_std = torch.tensor([0.229, 0.224, 0.225])
-_scale_mae_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.Normalize(mean=_mean, std=_std),
-    data_keys=None,
+_mean = [0.485, 0.456, 0.406]
+_std = [0.229, 0.224, 0.225]
+_scale_mae_transforms = nn.Sequential(
+    T.Normalize(mean=[0], std=[255], inplace=True),
+    T.Normalize(mean=_mean, std=_std, inplace=True),
 )
 
 
@@ -35,7 +33,7 @@ def get_2d_sincos_pos_embed_with_resolution(
         cls_token: Increase positional embedding size by 1 for class token.
 
     Returns:
-        pos_embed: Spatial resolution aware positional embeddings (Ph * Pw, D).
+        Spatial resolution aware positional embeddings (Ph * Pw, D).
     """
     device, dtype = res.device, res.dtype
     grid_h = torch.arange(grid_size, dtype=dtype, device=device)
@@ -61,7 +59,7 @@ def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor) -> Ten
         grid: Tensor representing the image patch grid (C, N, Ph, Pw)
 
     Returns:
-        emb: 2D sin-cos positional embeddings (Ph * Pw, D).
+        2D sin-cos positional embeddings (Ph * Pw, D).
     """
     assert embed_dim % 2 == 0
     emb_h = get_1d_sincos_pos_embed_from_grid_torch(embed_dim // 2, grid[0])
@@ -78,7 +76,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
         pos: Tensor of positions to be encoded (M,).
 
     Returns:
-        emb: 1D sin-cos positional embeddings (M, D).
+        1D sin-cos positional embeddings (M, D).
     """
     assert embed_dim % 2 == 0
     omega = torch.arange(embed_dim // 2, dtype=pos.dtype, device=pos.device)
@@ -143,8 +141,8 @@ class ScaleMAE(VisionTransformer):
 
 
 def interpolate_pos_embed(
-    model: ScaleMAE, state_dict: OrderedDict[str, Tensor]
-) -> OrderedDict[str, Tensor]:
+    model: ScaleMAE, state_dict: dict[str, Tensor]
+) -> dict[str, Tensor]:
     """Interpolate the positional embeddings if image size is different than pretrained image size.
 
     Args:
@@ -152,7 +150,7 @@ def interpolate_pos_embed(
         state_dict: Pretrained model state dict.
 
     Returns:
-        state_dict: State dict with interpolated positional embeddings.
+        State dict with interpolated positional embeddings.
     """
     pos_embed_checkpoint = state_dict['pos_embed']
     embedding_size = pos_embed_checkpoint.shape[-1]
@@ -185,20 +183,14 @@ def interpolate_pos_embed(
     return state_dict
 
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
-
-
-class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class ScaleMAELarge16_Weights(WeightsEnum):
     """Scale-MAE Large patch size 16 weights.
 
     .. versionadded:: 0.6
     """
 
     FMOW_RGB = Weights(
-        url='https://hf.co/torchgeo/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
+        url='https://hf.co/isaaccorley/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
         transforms=_scale_mae_transforms,
         meta={
             'dataset': 'fMoW',

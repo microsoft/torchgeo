@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SolarPlantsBrazil dataset."""
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class SolarPlantsBrazil(NonGeoDataset):
@@ -60,7 +60,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -76,13 +76,7 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ValueError: If *split* is invalid.
         """
-        if split not in ['train', 'val', 'test']:
-            raise ValueError(
-                f"Invalid split '{split}', expected one of: 'train', 'val', or 'test'"
-            )
-
         self.root = root
         self.transforms = transforms
         self.dataset_path = os.path.join(self.root, split)
@@ -121,7 +115,7 @@ class SolarPlantsBrazil(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the image and mask at the given index.
 
         Args:
@@ -178,7 +172,8 @@ class SolarPlantsBrazil(NonGeoDataset):
         """Plot a sample from the SolarPlantsBrazil dataset.
 
         Args:
-            sample: A dictionary with 'image' and 'mask' tensors.
+            sample: A dictionary with 'image' and 'mask' tensors. Optionally,
+                a 'prediction' tensor can be provided to visualize model outputs.
             suptitle: Optional string to use as a suptitle.
 
         Returns:
@@ -186,6 +181,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         """
         image = sample['image']
         mask = sample['mask']
+        show_prediction = 'prediction' in sample
 
         # Use RGB only
         if image.shape[0] == 4:
@@ -193,12 +189,15 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         # Normalize for display
         image_np = image.numpy()
-        image_np = image_np / np.max(image_np)
+        max_val = np.max(image_np)
+        if max_val > 0:
+            image_np = image_np / max_val
         image_np = np.transpose(image_np, (1, 2, 0))
 
         mask_np = mask.squeeze().numpy()
 
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        ncols = 3 if show_prediction else 2
+        fig, axs = plt.subplots(1, ncols, figsize=(5 * ncols, 5))
         axs[0].imshow(image_np)
         axs[0].set_title('RGB Image')
         axs[0].axis('off')
@@ -206,6 +205,12 @@ class SolarPlantsBrazil(NonGeoDataset):
         axs[1].imshow(mask_np, cmap='gray')
         axs[1].set_title('Mask')
         axs[1].axis('off')
+
+        if show_prediction:
+            pred_np = sample['prediction'].squeeze().numpy()
+            axs[2].imshow(pred_np, cmap='gray')
+            axs[2].set_title('Prediction')
+            axs[2].axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

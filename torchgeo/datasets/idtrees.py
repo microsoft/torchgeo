@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """IDTReeS dataset."""
@@ -6,9 +6,9 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast, overload
+from typing import Any, ClassVar, Literal, cast, overload
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -22,7 +22,14 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import (
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    lazy_import,
+    quantile_normalization,
+)
 
 
 class IDTReeS(NonGeoDataset):
@@ -155,9 +162,9 @@ class IDTReeS(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        task: str = 'task1',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        task: Literal['task1', 'task2'] = 'task1',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -194,7 +201,7 @@ class IDTReeS(NonGeoDataset):
         self._verify()
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -256,7 +263,7 @@ class IDTReeS(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array = f.read(out_shape=self.image_size, resampling=Resampling.bilinear)
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_las(self, path: Path) -> Tensor:
@@ -292,7 +299,7 @@ class IDTReeS(NonGeoDataset):
         if self.split == 'train':
             indices = self.labels['rsFile'] == base_path
             ids = self.labels[indices]['id'].tolist()
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
         # The test set has no mapping csv. The mapping is inside of the geometry
         # properties i.e. geom["property"]["plotID"] contains the RGB image filename
         # Return all geometries with the matching RGB image filename of the sample
@@ -302,18 +309,20 @@ class IDTReeS(NonGeoDataset):
                 for k, v in geometries.items()
                 if v['properties']['plotID'] == base_path
             ]
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
 
         # Convert to pixel coords
         boxes = []
         with rasterio.open(path) as f:
             for geom in geoms:
-                coords = [f.index(x, y) for x, y in geom]
-                xmin = min(coord[1] for coord in coords)
-                xmax = max(coord[1] for coord in coords)
-                ymin = min(coord[0] for coord in coords)
-                ymax = max(coord[0] for coord in coords)
-                boxes.append([xmin, ymin, xmax, ymax])
+                xmin, ymin, xmax, ymax = geom.bounds
+                row_min, col_min = f.index(xmin, ymin)
+                row_max, col_max = f.index(xmax, ymax)
+                xmin_px = min(col_min, col_max)
+                xmax_px = max(col_min, col_max)
+                ymin_px = min(row_min, row_max)
+                ymax_px = max(row_min, row_max)
+                boxes.append([xmin_px, ymin_px, xmax_px, ymax_px])
 
         tensor = torch.tensor(boxes)
         return tensor
@@ -350,7 +359,7 @@ class IDTReeS(NonGeoDataset):
         """
         if self.split == 'train':
             directory = os.path.join(root, self.directories[self.split][0])
-            labels: pd.DataFrame = self._load_labels(directory)
+            labels: pd.DataFrame | None = self._load_labels(directory)
             geoms = self._load_geometries(directory)
         else:
             directory = os.path.join(root, self.task)
@@ -399,15 +408,21 @@ class IDTReeS(NonGeoDataset):
         i = 0
         features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
-            with fiona.open(path) as src:
-                for feature in src:
-                    # The train set has a unique id for each geometry in the properties
-                    if self.split == 'train':
-                        features[feature['properties']['id']] = feature
-                    # The test set has no unique id so create a dummy id
-                    else:
-                        features[i] = feature
-                        i += 1
+            gdf = gpd.read_file(path)
+            for _, row in gdf.iterrows():
+                # The train set has a unique id for each geometry in the properties
+                if self.split == 'train':
+                    features[row['id']] = {
+                        'geometry': row.geometry,
+                        'properties': row.drop('geometry').to_dict(),
+                    }
+                # The test set has no unique id so create a dummy id
+                else:
+                    features[i] = {
+                        'geometry': row.geometry,
+                        'properties': row.drop('geometry').to_dict(),
+                    }
+                    i += 1
         return features
 
     @overload
@@ -481,7 +496,7 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
@@ -499,13 +514,11 @@ class IDTReeS(NonGeoDataset):
         """
         assert len(hsi_indices) == 3
 
-        def normalize(x: Tensor) -> Tensor:
-            return (x - x.min()) / (x.max() - x.min())
-
         ncols = 3
 
-        hsi = normalize(sample['hsi'][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
-        chm = normalize(sample['chm']).permute((1, 2, 0)).numpy()
+        hsi = sample['hsi'][hsi_indices, :, :].permute((1, 2, 0))
+        hsi = quantile_normalization(hsi)
+        chm = quantile_normalization(sample['chm']).permute((1, 2, 0))
 
         if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
             labels = (
@@ -516,9 +529,9 @@ class IDTReeS(NonGeoDataset):
             image = draw_bounding_boxes(
                 image=sample['image'], boxes=sample['bbox_xyxy'], labels=labels
             )
-            image = image.permute((1, 2, 0)).numpy()
+            image = image.permute((1, 2, 0))
         else:
-            image = sample['image'].permute((1, 2, 0)).numpy()
+            image = sample['image'].permute((1, 2, 0))
 
         if 'prediction_bbox_xyxy' in sample and len(sample['prediction_bbox_xyxy']):
             ncols += 1
@@ -532,7 +545,7 @@ class IDTReeS(NonGeoDataset):
                 boxes=sample['prediction_bbox_xyxy'],
                 labels=labels,
             )
-            preds = preds.permute((1, 2, 0)).numpy()
+            preds = preds.permute((1, 2, 0))
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image)

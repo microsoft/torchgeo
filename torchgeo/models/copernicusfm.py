@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # https://github.com/zhu-xlab/Copernicus-FM
@@ -369,25 +369,49 @@ class CopernicusFM(nn.Module):
         **1. Spectral Mode (Using Wavelength and Bandwidth):**
 
         >>> model = CopernicusFM()
-        >>> x = torch.randn(1, 4, 224, 224) # input image
-        >>> metadata = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
-        >>> wavelengths = [490, 560, 665, 842] # wavelength (nm): B,G,R,NIR (Sentinel 2)
-        >>> bandwidths = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
-        >>> kernel_size = 16 # expected patch size
+        >>> x = torch.randn(1, 4, 224, 224)  # input image
+        >>> metadata = torch.full(
+        ...     (1, 4), float('nan')
+        ... )  # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
+        >>> wavelengths = [
+        ...     490,
+        ...     560,
+        ...     665,
+        ...     842,
+        ... ]  # wavelength (nm): B,G,R,NIR (Sentinel 2)
+        >>> bandwidths = [65, 35, 30, 115]  # bandwidth (nm): B,G,R,NIR (Sentinel 2)
+        >>> kernel_size = 16  # expected patch size
         >>> input_mode = 'spectral'
-        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidths=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(
+        ...     x,
+        ...     metadata,
+        ...     wavelengths=wavelengths,
+        ...     bandwidths=bandwidths,
+        ...     input_mode=input_mode,
+        ...     kernel_size=kernel_size,
+        ... )
         >>> print(logit.shape)
 
         **2. Variable Mode (Using language embedding):**
 
         >>> model = CopernicusFM()
-        >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for language embed)
-        >>> x = torch.randn(1, 1, 56, 56) # input image
-        >>> metadata = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
-        >>> language_embed = torch.randn(2048) # language embedding: encode varname with a LLM (e.g. Llama)
-        >>> kernel_size = 4 # expected patch size
+        >>> varname = 'Sentinel 5P Nitrogen Dioxide'  # variable name (as input to a LLM for language embed)
+        >>> x = torch.randn(1, 1, 56, 56)  # input image
+        >>> metadata = torch.full(
+        ...     (1, 4), float('nan')
+        ... )  # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
+        >>> language_embed = torch.randn(
+        ...     2048
+        ... )  # language embedding: encode varname with a LLM (e.g. Llama)
+        >>> kernel_size = 4  # expected patch size
         >>> input_mode = 'variable'
-        >>> logit = model(x, metadata, language_embed=language_embed, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(
+        ...     x,
+        ...     metadata,
+        ...     language_embed=language_embed,
+        ...     input_mode=input_mode,
+        ...     kernel_size=kernel_size,
+        ... )
         >>> print(logit.shape)
 
     """
@@ -696,12 +720,12 @@ class CopernicusFM(nn.Module):
         return x
 
 
-class CopernicusFM_Base_Weights(WeightsEnum):  # type: ignore[misc]
+class CopernicusFM_Base_Weights(WeightsEnum):
     """Copernicus-FM-base weights."""
 
     CopernicusFM_ViT = Weights(
         url='https://huggingface.co/torchgeo/copernicus-fm/resolve/f395812cc990ba25a451dbb9c9e6d95c8482947e/CopernicusFM_ViT_base_varlang-085350e4.pth',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'Copernicus-Pretrain',
             'model': 'copernicusfm_base',

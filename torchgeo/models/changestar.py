@@ -1,13 +1,16 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """ChangeStar implementations."""
+
+from typing import Literal
 
 import torch
 import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
+from torchvision.models._api import WeightsEnum
 
 from .farseg import FarSeg
 
@@ -103,7 +106,7 @@ class ChangeStar(Module):
         dense_feature_extractor: Module,
         seg_classifier: Module,
         changemixin: ChangeMixin,
-        inference_mode: str = 't1t2',
+        inference_mode: Literal['t1t2', 't2t1', 'mean'] = 't1t2',
     ) -> None:
         """Initializes a new ChangeStar model.
 
@@ -122,9 +125,6 @@ class ChangeStar(Module):
         self.dense_feature_extractor = dense_feature_extractor
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin
-
-        if inference_mode not in ['t1t2', 't2t1', 'mean']:
-            raise ValueError(f'Unknown inference_mode: {inference_mode}')
         self.inference_mode = inference_mode
 
     def forward(self, x: Tensor) -> dict[str, Tensor]:
@@ -137,7 +137,7 @@ class ChangeStar(Module):
             a dictionary containing bitemporal semantic segmentation logit and binary
             change detection logit/probability
         """
-        b, t, c, h, w = x.shape
+        _, t, _, _, _ = x.shape
         x = rearrange(x, 'b t c h w -> (b t) c h w')
         # feature extraction
         bi_feature = self.dense_feature_extractor(x)
@@ -152,18 +152,19 @@ class ChangeStar(Module):
         results: dict[str, Tensor] = {}
         if not self.training:
             results.update({'bi_seg_logit': bi_seg_logit})
-            if self.inference_mode == 't1t2':
-                results.update({'change_prob': c12.sigmoid()})
-            elif self.inference_mode == 't2t1':
-                results.update({'change_prob': c21.sigmoid()})
-            elif self.inference_mode == 'mean':
-                results.update(
-                    {
-                        'change_prob': torch.stack([c12, c21], dim=0)
-                        .sigmoid_()
-                        .mean(dim=0)
-                    }
-                )
+            match self.inference_mode:
+                case 't1t2':
+                    results.update({'change_prob': c12.sigmoid()})
+                case 't2t1':
+                    results.update({'change_prob': c21.sigmoid()})
+                case 'mean':
+                    results.update(
+                        {
+                            'change_prob': torch.stack([c12, c21], dim=0)
+                            .sigmoid_()
+                            .mean(dim=0)
+                        }
+                    )
         else:
             results.update(
                 {
@@ -188,20 +189,23 @@ class ChangeStarFarSeg(ChangeStar):
         self,
         backbone: str = 'resnet50',
         classes: int = 1,
-        backbone_pretrained: bool = True,
+        backbone_weights: WeightsEnum | None = None,
     ) -> None:
         """Initializes a new ChangeStarFarSeg model.
 
         Args:
             backbone: name of ResNet backbone
             classes: number of output segmentation classes
-            backbone_pretrained: whether to use pretrained weight for backbone
+            backbone_weights: Pre-trained model weights to use.
+
+        .. versionadded:: 0.9
+           The *backbone_weights* parameter.
         """
         model = FarSeg(
-            backbone=backbone, classes=classes, backbone_pretrained=backbone_pretrained
+            backbone=backbone, classes=classes, backbone_weights=backbone_weights
         )
         seg_classifier: Module = model.decoder.classifier
-        model.decoder.classifier = nn.modules.Identity()  # type: ignore[assignment]
+        model.decoder.classifier = nn.modules.Identity()  # ty: ignore[invalid-assignment]
 
         super().__init__(
             dense_feature_extractor=model,

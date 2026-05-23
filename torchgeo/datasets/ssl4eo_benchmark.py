@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Self-Supervised Learning for Earth Observation Benchmark Datasets."""
@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +19,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -112,11 +112,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        sensor: str = 'oli_sr',
-        product: str = 'cdl',
-        split: str = 'train',
+        sensor: Literal['etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'] = 'oli_sr',
+        product: Literal['cdl', 'nlcd'] = 'cdl',
+        split: Literal['train', 'val', 'test'] = 'train',
         classes: list[int] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -257,7 +257,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         extract_archive(mask_pathname)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -329,10 +329,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         return mask
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

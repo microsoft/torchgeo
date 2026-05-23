@@ -1,10 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EverWatch dataset."""
 
 import os
 from collections.abc import Callable
+from typing import Literal, cast
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -17,7 +18,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class EverWatch(NonGeoDataset):
@@ -80,8 +87,8 @@ class EverWatch(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -133,9 +140,10 @@ class EverWatch(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.annot_df.index.levels[0])
+        index = cast(pd.MultiIndex, self.annot_df.index)
+        return len(index.levels[0])
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -144,7 +152,7 @@ class EverWatch(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample_df = self.annot_df.loc[index]
+        sample_df = cast(pd.DataFrame, self.annot_df.loc[index])
 
         img_path = os.path.join(self.root, self.dir, sample_df['image_path'].iloc[0])
 
@@ -187,9 +195,10 @@ class EverWatch(NonGeoDataset):
         boxes = torch.from_numpy(
             sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values
         ).float()
-        labels = torch.Tensor(
-            [self.class2idx[label] for label in sample_df['label'].tolist()]
-        ).long()
+        labels = torch.tensor(
+            [self.class2idx[label] for label in sample_df['label'].tolist()],
+            dtype=torch.long,
+        )
         return boxes, labels
 
     def _verify(self) -> None:
@@ -234,10 +243,7 @@ class EverWatch(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        suptitle: str | None = None,
-        box_alpha: float = 0.7,
+        self, sample: Sample, suptitle: str | None = None, box_alpha: float = 0.7
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -1,55 +1,51 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Pre-trained Swin v2 Transformer models."""
+"""Pre-trained Swin Transformer models."""
 
 from typing import Any
 
-import kornia.augmentation as K
 import torch
+import torch.nn as nn
 import torchvision
+import torchvision.transforms.v2 as T
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
-
-import torchgeo.transforms.transforms as T
 
 # All Satlas transforms include:
 # https://github.com/allenai/satlas/blob/main/satlas/cmd/model/train.py#L49
 #
 # Information about sensor-specific normalization can be found at:
 # https://github.com/allenai/satlas/blob/main/Normalization.md
-
 _satlas_bands = ('B04', 'B03', 'B02')
-_satlas_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    data_keys=None,
+_satlas_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=[0], std=[255], inplace=True)
 )
 
-_satlas_sentinel2_bands = (*_satlas_bands, 'B05', 'B06', 'B07', 'B08', 'B11', 'B12')
-_std = torch.tensor([255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160])
-_satlas_sentinel2_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=_std),
-    T._Clamp(p=1, min=0, max=1),
-    data_keys=None,
+_satlas_sentinel2_bands = (
+    'B04',
+    'B03',
+    'B02',
+    'B05',
+    'B06',
+    'B07',
+    'B08',
+    'B11',
+    'B12',
+)
+_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+_std = [255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160]
+_satlas_sentinel2_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=_mean, std=_std, inplace=True)
 )
 
 _satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
-_satlas_landsat_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
-    T._Clamp(p=1, min=0, max=1),
-    data_keys=None,
+_satlas_landsat_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=[4000], std=[16320], inplace=True)
 )
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
-
-class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
+class Swin_V2_T_Weights(WeightsEnum):
     """Swin Transformer v2 Tiny weights.
 
     For `torchvision <https://github.com/pytorch/vision>`_
@@ -111,7 +107,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
+class Swin_V2_B_Weights(WeightsEnum):
     """Swin Transformer v2 Base weights.
 
     For `torchvision <https://github.com/pytorch/vision>`_
@@ -251,6 +247,253 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
+class SwinBackbone_Weights(WeightsEnum):
+    """SwinBackbone weights parent class.
+
+    These weights contain the encoder weights and optionally the backbone layernorm
+    weights. To select whether layernorm weights are returned pass `include_norms`
+    to get_state_dict (default is false).
+
+    .. versionadded:: 0.8
+    """
+
+    def get_state_dict(
+        self, include_norms: bool = False, *args: Any, **kwargs: Any
+    ) -> Any:
+        """Get the state dict for this model from provided url, optionally including backbone layernorm weights.
+
+        Args:
+            include_norms: Whether to also return backbone layernorm weights.
+            *args: anything passed to WeightsEnum get_state_dict.
+            **kwargs: anything passed to WeightsEnum get_state_dict.
+
+        Returns:
+            dict with state dict only if include_norms is False,
+            dict with 'state_dict' and 'feat_norms_state_dict' if include_norms is True.
+        """
+        full_state_dict = WeightsEnum.get_state_dict(self, *args, **kwargs)
+        if include_norms:
+            return full_state_dict
+        else:
+            return full_state_dict['state_dict']
+
+
+class Swin_T_Weights(SwinBackbone_Weights):
+    """Swin Transformer Tiny weights.
+
+    For `torchvision <https://github.com/pytorch/vision>`_
+    *swin_t* implementation.
+
+    .. versionadded:: 0.8
+    """
+
+    CITYSCAPES_SEMSEG = Weights(
+        url='https://hf.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Tiny',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'window_size': 7,
+        },
+    )
+
+
+class Swin_S_Weights(SwinBackbone_Weights):
+    """Swin Transformer Small weights.
+
+    For `torchvision <https://github.com/pytorch/vision>`_
+    *swin_s* implementation.
+
+    .. versionadded:: 0.8
+    """
+
+    CITYSCAPES_SEMSEG = Weights(
+        url='https://hf.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Small',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'window_size': 7,
+        },
+    )
+
+
+class Swin_B_Weights(SwinBackbone_Weights):
+    """Swin Transformer Base weights.
+
+    For `torchvision <https://github.com/pytorch/vision>`_
+    *swin_b* implementation.
+
+    .. versionadded:: 0.8
+    """
+
+    CITYSCAPES_SEMSEG = Weights(
+        url='https://hf.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Base',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'window_size': 12,
+        },
+    )
+
+
+def swin_t(
+    weights: Swin_T_Weights | None = None, *args: Any, **kwargs: Any
+) -> SwinTransformer:
+    """Swin Transformer tiny model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2103.14030
+
+    .. versionadded:: 0.8
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+        **kwargs: Additional keyword arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+
+    Returns:
+        A Swin Transformer Tiny model.
+    """
+    model: SwinTransformer = torchvision.models.swin_t(weights=None, *args, **kwargs)
+
+    if weights:
+        num_channels = weights.meta['in_chans']
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
+        # same as for swinv2
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
+            num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
+        )
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        # some weights do not contain final norm and cls head weights
+        assert set(missing_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
+        assert not unexpected_keys
+
+    return model
+
+
+def swin_s(
+    weights: Swin_S_Weights | None = None, *args: Any, **kwargs: Any
+) -> SwinTransformer:
+    """Swin Transformer small model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2103.14030
+
+    .. versionadded:: 0.8
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+        **kwargs: Additional keyword arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+
+    Returns:
+        A Swin Transformer Small model.
+    """
+    model: SwinTransformer = torchvision.models.swin_s(weights=None, *args, **kwargs)
+
+    if weights:
+        num_channels = weights.meta['in_chans']
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
+        # same as for swinv2
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
+            num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
+        )
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        # some weights do not contain final norm and cls head weights
+        assert set(missing_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
+        assert not unexpected_keys
+
+    return model
+
+
+def swin_b(
+    weights: Swin_B_Weights | None = None, *args: Any, **kwargs: Any
+) -> SwinTransformer:
+    """Swin Transformer base model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2103.14030
+
+    .. versionadded:: 0.8
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+        **kwargs: Additional keyword arguments to
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
+
+    Returns:
+        A Swin Transformer Base model.
+    """
+    if weights:
+        # here we use the class directly to support non-default larger window-size
+        window_size = weights.meta.get('window_size', 7)
+        kwargs |= {
+            'patch_size': [4, 4],
+            'embed_dim': 128,
+            'depths': [2, 2, 18, 2],
+            'num_heads': [4, 8, 16, 32],
+            'window_size': [window_size, window_size],
+            'stochastic_depth_prob': 0.5,
+        }
+        model: SwinTransformer = torchvision.models.SwinTransformer(*args, **kwargs)
+
+        num_channels = weights.meta['in_chans']
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
+        # same as for swinv2
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
+            num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
+        )
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        # some weights do not contain final norm and cls head weights
+        assert set(missing_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
+        assert not unexpected_keys
+    else:
+        model = torchvision.models.swin_b(weights=None, *args, **kwargs)
+
+    return model
+
+
 def swin_v2_t(
     weights: Swin_V2_T_Weights | None = None, *args: Any, **kwargs: Any
 ) -> SwinTransformer:
@@ -276,9 +519,9 @@ def swin_v2_t(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # https://github.com/allenai/satlaspretrain_models/blob/main/satlaspretrain_models/models/backbones.py#L27
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -315,9 +558,9 @@ def swin_v2_b(
 
     if weights:
         num_channels = weights.meta['in_chans']
-        out_channels = model.features[0][0].out_channels
+        out_channels = model.features[0][0].out_channels  # ty: ignore[not-subscriptable]
         # https://github.com/allenai/satlaspretrain_models/blob/main/satlaspretrain_models/models/backbones.py#L27
-        model.features[0][0] = torch.nn.Conv2d(
+        model.features[0][0] = torch.nn.Conv2d(  # ty: ignore[invalid-assignment]
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(

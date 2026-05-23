@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -31,7 +31,7 @@ class TestEuroSAT:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
         base_class: type[EuroSAT] = request.param[0]
-        split: str = request.param[1]
+        split = request.param[1]
         url = os.path.join('tests', 'data', 'eurosat') + os.sep
         monkeypatch.setattr(base_class, 'url', url)
         transforms = nn.Identity()
@@ -42,10 +42,6 @@ class TestEuroSAT:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            EuroSAT(split='foo')
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -22,9 +22,7 @@ class TestMillionAID:
         root = os.path.join('tests', 'data', 'millionaid')
         split, task = request.param
         transforms = nn.Identity()
-        return MillionAID(
-            root=root, split=split, task=task, transforms=transforms, checksum=True
-        )
+        return MillionAID(root=root, split=split, task=task, transforms=transforms)
 
     def test_getitem(self, dataset: MillionAID) -> None:
         x = dataset[0]
@@ -49,7 +47,7 @@ class TestMillionAID:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'train.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             MillionAID(tmp_path, checksum=True)
 
     def test_plot(self, dataset: MillionAID) -> None:

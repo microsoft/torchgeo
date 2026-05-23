@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -73,7 +73,7 @@ class TestRegressionTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
-            pytest.importorskip('h5py', minversion='3.6')
+            pytest.importorskip('h5py', minversion='3.10')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Base classes for all :mod:`torchgeo` data modules."""
@@ -10,10 +10,10 @@ import kornia.augmentation as K
 import torch
 from lightning.pytorch import LightningDataModule
 from matplotlib.figure import Figure
-from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
+from ..datasets.utils import Sample
 from ..samplers import (
     BatchGeoSampler,
     GeoSampler,
@@ -34,7 +34,7 @@ class BaseDataModule(LightningDataModule):
 
     def __init__(
         self,
-        dataset_class: type[Dataset[dict[str, Tensor]]],
+        dataset_class: type[Dataset[Sample]],
         batch_size: int = 1,
         num_workers: int = 0,
         **kwargs: Any,
@@ -55,11 +55,11 @@ class BaseDataModule(LightningDataModule):
         self.kwargs = kwargs
 
         # Datasets
-        self.dataset: Dataset[dict[str, Tensor]] | None = None
-        self.train_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.val_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.test_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.predict_dataset: Dataset[dict[str, Tensor]] | None = None
+        self.dataset: Dataset[Sample] | None = None
+        self.train_dataset: Dataset[Sample] | None = None
+        self.val_dataset: Dataset[Sample] | None = None
+        self.test_dataset: Dataset[Sample] | None = None
+        self.predict_dataset: Dataset[Sample] | None = None
 
         # Data loaders
         self.train_batch_size: int | None = None
@@ -68,7 +68,7 @@ class BaseDataModule(LightningDataModule):
         self.predict_batch_size: int | None = None
 
         # Data augmentation
-        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
+        Transform = Callable[[Sample], Sample]
         self.aug: Transform = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
@@ -115,9 +115,7 @@ class BaseDataModule(LightningDataModule):
         msg = f'{self.__class__.__name__}.setup must define one of {args}.'
         raise MisconfigurationException(msg)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:
@@ -161,7 +159,7 @@ class BaseDataModule(LightningDataModule):
             dataset = dataset.dataset
         if dataset is not None:
             if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)
+                fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
         return fig
 
 
@@ -225,8 +223,9 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit']:
             self.train_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='train', **self.kwargs
+                self.dataset_class(
+                    split='train',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
@@ -235,8 +234,9 @@ class GeoDataModule(BaseDataModule):
         if stage in ['fit', 'validate']:
             self.val_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='val', **self.kwargs
+                self.dataset_class(
+                    split='val',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.val_sampler = GridGeoSampler(
@@ -245,15 +245,16 @@ class GeoDataModule(BaseDataModule):
         if stage in ['test']:
             self.test_dataset = cast(
                 GeoDataset,
-                self.dataset_class(  # type: ignore[call-arg]
-                    split='test', **self.kwargs
+                self.dataset_class(
+                    split='test',  # ty: ignore[unknown-argument]
+                    **self.kwargs,
                 ),
             )
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
 
-    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders.
 
         Args:
@@ -286,10 +287,12 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            # drop_last is incompatible with batch sampler
+            drop_last=split == 'train' and batch_sampler is None,
             persistent_workers=self.num_workers > 0,
         )
 
-    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def train_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -301,7 +304,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('train')
 
-    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -313,7 +316,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('val')
 
-    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -325,7 +328,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('test')
 
-    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:
@@ -336,28 +339,6 @@ class GeoDataModule(BaseDataModule):
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
         return self._dataloader_factory('predict')
-
-    def transfer_batch_to_device(
-        self, batch: dict[str, Tensor], device: torch.device, dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Transfer batch to device.
-
-        Defines how custom data types are moved to the target device.
-
-        Args:
-            batch: A batch of data that needs to be transferred to a new device.
-            device: The target device as defined in PyTorch.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A reference to the data on the new device.
-        """
-        # Non-Tensor values cannot be moved to a device
-        del batch['crs']
-        del batch['bounds']
-
-        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
-        return batch
 
 
 class NonGeoDataModule(BaseDataModule):
@@ -397,19 +378,22 @@ class NonGeoDataModule(BaseDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit']:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='train', **self.kwargs
+            self.train_dataset = self.dataset_class(
+                split='train',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['fit', 'validate']:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='val', **self.kwargs
+            self.val_dataset = self.dataset_class(
+                split='val',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
         if stage in ['test']:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='test', **self.kwargs
+            self.test_dataset = self.dataset_class(
+                split='test',  # ty: ignore[unknown-argument]
+                **self.kwargs,
             )
 
-    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders.
 
         Args:
@@ -430,10 +414,11 @@ class NonGeoDataModule(BaseDataModule):
             shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            drop_last=split == 'train',
             persistent_workers=self.num_workers > 0,
         )
 
-    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def train_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -445,7 +430,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('train')
 
-    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -457,7 +442,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('val')
 
-    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -469,7 +454,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('test')
 
-    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:

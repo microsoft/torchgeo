@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import enum
@@ -16,13 +16,20 @@ from torchgeo.models import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthV1_Weights,
     Panopticon_Weights,
+    Presto_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
     ScaleMAELarge16_Weights,
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
+    Tessera_Weights,
+    TileNet_Weights,
     Unet_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -30,7 +37,6 @@ from torchgeo.models import (
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
-    YOLO_Weights,
     aurora_swin_unet,
     copernicusfm_base,
     croma_base,
@@ -44,13 +50,20 @@ from torchgeo.models import (
     get_model_weights,
     get_weight,
     list_models,
+    olmoearth_v1,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
     scalemae_large_patch16,
+    swin_b,
+    swin_s,
+    swin_t,
     swin_v2_b,
     swin_v2_t,
+    tessera,
+    tilenet,
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
@@ -58,7 +71,6 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 )
 
 builders = [
@@ -71,13 +83,20 @@ builders = [
     dofa_large_patch16_224,
     dofa_small_patch16_224,
     earthloc,
+    olmoearth_v1,
     panopticon_vitb14,
+    presto,
     resnet18,
     resnet50,
     resnet152,
     scalemae_large_patch16,
+    swin_t,
+    swin_s,
+    swin_b,
     swin_v2_t,
     swin_v2_b,
+    tilenet,
+    tessera,
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
@@ -85,7 +104,6 @@ builders = [
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 ]
 enums = [
     Aurora_Weights,
@@ -95,13 +113,20 @@ enums = [
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthV1_Weights,
     Panopticon_Weights,
+    Presto_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
     ScaleMAELarge16_Weights,
+    Swin_T_Weights,
+    Swin_S_Weights,
+    Swin_B_Weights,
     Swin_V2_T_Weights,
     Swin_V2_B_Weights,
+    TileNet_Weights,
+    Tessera_Weights,
     Unet_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -109,7 +134,6 @@ enums = [
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
-    YOLO_Weights,
 ]
 
 
@@ -117,8 +141,8 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
-    elif builder == yolo:
-        pytest.importorskip('ultralytics', minversion='8.3')
+    if builder == olmoearth_v1:
+        pytest.importorskip('olmoearth_pretrain_minimal')
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
@@ -138,7 +162,7 @@ def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('enum', enums)
 def test_get_weight(enum: WeightsEnum) -> None:
-    for weight in enum:
+    for weight in enum:  # ty: ignore[not-iterable]
         assert weight == get_weight(str(weight))
 
 

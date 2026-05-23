@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -21,13 +21,11 @@ class TestFireRisk:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FireRisk:
         url = os.path.join('tests', 'data', 'fire_risk', 'FireRisk.zip')
-        md5 = 'db22106d61b10d855234b4a74db921ac'
-        monkeypatch.setattr(FireRisk, 'md5', md5)
         monkeypatch.setattr(FireRisk, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return FireRisk(root, split, transforms, download=True, checksum=True)
+        return FireRisk(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: FireRisk) -> None:
         x = dataset[0]

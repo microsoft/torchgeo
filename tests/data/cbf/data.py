@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import json
 import os
 import shutil
@@ -46,8 +45,3 @@ if __name__ == '__main__':
         os.getcwd(),
         filename.replace('.zip', '.geojson'),
     )
-
-    # Compute checksums
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{filename}: {md5}')

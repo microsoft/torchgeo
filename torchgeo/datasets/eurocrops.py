@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EuroCrops dataset."""
@@ -6,17 +6,24 @@
 import csv
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import cast
 
-import fiona
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
+import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
+from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import Path, check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+)
 
 
 class EuroCrops(VectorDataset):
@@ -86,10 +93,10 @@ class EuroCrops(VectorDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS = CRS.from_epsg(4326),
+        crs: CRS | None = None,
         res: float | tuple[float, float] = (0.00001, 0.00001),
         classes: list[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -120,6 +127,9 @@ class EuroCrops(VectorDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
+        if crs is None:
+            crs = CRS.from_epsg(4326)
+
         self._load_class_map(classes)
 
         super().__init__(
@@ -141,13 +151,14 @@ class EuroCrops(VectorDataset):
             return True
 
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
 
-        filepath = os.path.join(self.paths, self.hcat_fname)
+        filepath = os.path.join(paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
             return False
 
         for fname, md5 in self.zenodo_files:
-            filepath = os.path.join(self.paths, fname)
+            filepath = os.path.join(paths, fname)
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -158,14 +169,15 @@ class EuroCrops(VectorDataset):
             print('Files already downloaded and verified')
             return
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         download_url(
             self.base_url + self.hcat_fname,
-            self.paths,
+            paths,
             md5=self.hcat_md5 if self.checksum else None,
         )
         for fname, md5 in self.zenodo_files:
             download_and_extract_archive(
-                self.base_url + fname, self.paths, md5=md5 if self.checksum else None
+                self.base_url + fname, paths, md5=md5 if self.checksum else None
             )
 
     def _load_class_map(self, classes: list[str] | None) -> None:
@@ -180,8 +192,9 @@ class EuroCrops(VectorDataset):
         """
         if not classes:
             assert isinstance(self.paths, str | os.PathLike)
+            paths = cast(Path, self.paths)
             classes = []
-            filepath = os.path.join(self.paths, self.hcat_fname)
+            filepath = os.path.join(paths, self.hcat_fname)
             with open(filepath) as f:
                 reader = csv.DictReader(f)
                 for row in reader:
@@ -192,11 +205,11 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def get_label(self, feature: 'fiona.model.Feature') -> int:
+    def get_label(self, feature: pd.Series) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`fiona.model.Feature` from which to extract the label.
+            feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
@@ -204,7 +217,8 @@ class EuroCrops(VectorDataset):
         # Convert the HCAT code of this feature to its index per self.class_map.
         # We go up the class hierarchy until there is a match.
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
-        hcat_code = feature['properties'][self.label_name]
+        assert self.label_name
+        hcat_code = feature[self.label_name]
         if hcat_code is None:
             return 0
 
@@ -223,10 +237,7 @@ class EuroCrops(VectorDataset):
         return 0
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -248,14 +259,13 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(
-            arr: 'np.typing.NDArray[Any]',
-        ) -> 'np.typing.NDArray[np.float64]':
-            # Color 0 as black, while applying default color map for the class indices.
+        def apply_cmap(tensor: Tensor) -> Tensor:
+            """Color 0 as black, while applying default color map for the class indices."""
+            array = tensor.numpy()
             cmap = plt.get_cmap('viridis')
-            im: np.typing.NDArray[np.float64] = cmap(arr / len(self.class_map))
-            im[arr == 0] = 0
-            return im
+            image = cmap(array / len(self.class_map))
+            image[array == 0] = 0
+            return torch.from_numpy(image)
 
         if showing_prediction:
             axs[0].imshow(apply_cmap(mask), interpolation='none')

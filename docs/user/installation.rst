@@ -16,13 +16,13 @@ If you want to install a development version, you can use a VCS project URL:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/microsoft/torchgeo.git
+   $ pip install git+https://github.com/torchgeo/torchgeo.git
 
 or a local git checkout:
 
 .. code-block:: console
 
-   $ git clone https://github.com/microsoft/torchgeo.git
+   $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
    $ pip install .
 
@@ -35,6 +35,39 @@ By default, only required dependencies are installed. TorchGeo has a number of o
    $ pip install torchgeo[all]
 
 See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
+
+uv
+--
+
+`uv <https://docs.astral.sh/uv/>`_ is an extremely fast Python package manager written in Rust.
+
+To add TorchGeo as a dependency to your project:
+
+.. code-block:: console
+
+   $ uv add torchgeo
+
+For a development version from GitHub:
+
+.. code-block:: console
+
+   $ uv add git+https://github.com/torchgeo/torchgeo.git
+
+Optional dependencies can be added using extras:
+
+.. code-block:: console
+
+   $ uv add torchgeo --extra datasets --extra models
+
+To develop TorchGeo itself, clone the repository and sync the dependencies:
+
+.. code-block:: console
+
+   $ git clone https://github.com/torchgeo/torchgeo.git
+   $ cd torchgeo
+   $ uv sync --extra all
+
+See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
 
 conda
 -----

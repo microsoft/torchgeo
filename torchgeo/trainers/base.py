@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Base classes for all :mod:`torchgeo` trainers."""
@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any
 
-import lightning
+import lightning.pytorch.utilities.types
 from lightning.pytorch import LightningModule
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau

@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Fields Of The World dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -18,13 +18,19 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, array_to_tensor, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    array_to_tensor,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class FieldsOfTheWorld(NonGeoDataset):
     """Fields Of The World dataset.
 
-    The `Fields Of The World <https://beta.source.coop/repositories/kerner-lab/fields-of-the-world/>`__
+    The `Fields Of The World <https://source.coop/kerner-lab/fields-of-the-world>`__
     datataset is a semantic and instance segmentation dataset for delineating field
     boundaries.
 
@@ -119,10 +125,10 @@ class FieldsOfTheWorld(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        target: str = '2-class',
+        split: Literal['train', 'val', 'test'] = 'train',
+        target: Literal['2-class', '3-class', 'instance'] = '2-class',
         countries: str | Sequence[str] = ['austria'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -161,7 +167,7 @@ class FieldsOfTheWorld(NonGeoDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -179,7 +185,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         win_b = self._load_image(win_b_fn)
         mask = self._load_target(mask_fn)
 
-        image = torch.cat((win_a, win_b), dim=0)
+        image = torch.cat((win_b, win_a), dim=0)
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
@@ -307,10 +313,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         return True
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

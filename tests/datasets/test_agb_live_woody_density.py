@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -41,7 +40,6 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     def test_getitem(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
@@ -65,14 +63,14 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()

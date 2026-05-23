@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Chesapeake Bay High-Resolution Land Cover Project datamodule."""
@@ -7,9 +7,9 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch.nn.functional as F
-from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
+from ..datasets.utils import Sample
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
 
@@ -54,7 +54,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.ChesapeakeCVPR`.
 
         Raises:
-            ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
+            AssertionError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
@@ -68,11 +68,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         )
 
         assert class_set in [5, 7]
-        if use_prior_labels and class_set == 7:
-            raise ValueError(
-                'The pre-generated prior labels are only valid for the 5'
-                + ' class set of labels'
-            )
+        msg = 'The pre-generated prior labels are only valid for the 5 class set of labels'
+        assert not (use_prior_labels and class_set == 7), msg
 
         self.train_splits = train_splits
         self.val_splits = val_splits
@@ -124,9 +121,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 self.test_dataset, self.original_patch_size, self.original_patch_size
             )
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

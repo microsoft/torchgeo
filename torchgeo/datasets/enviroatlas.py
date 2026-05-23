@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EnviroAtlas High-Resolution Land Cover datasets."""
@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,14 +17,13 @@ import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
-from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -257,7 +256,7 @@ class EnviroAtlas(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
         layers: Sequence[str] = ['naip', 'prior'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -299,73 +298,52 @@ class EnviroAtlas(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint = pd.Timestamp.min
         maxt = pd.Timestamp.max
-        data = []
-        datetimes = []
-        geometries = []
-        with fiona.open(
-            os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson'), 'r'
-        ) as f:
-            for row in f:
-                if row['properties']['split'] in splits:
-                    geometries.append(shapely.geometry.shape(row['geometry']))
-                    datetimes.append((mint, maxt))
-                    data.append(
-                        {
-                            'naip': row['properties']['naip'],
-                            'nlcd': row['properties']['nlcd'],
-                            'roads': row['properties']['roads'],
-                            'water': row['properties']['water'],
-                            'waterways': row['properties']['waterways'],
-                            'waterbodies': row['properties']['waterbodies'],
-                            'buildings': row['properties']['buildings'],
-                            'lc': row['properties']['lc'],
-                            'prior_no_osm_no_buildings': row['properties'][
-                                'naip'
-                            ].replace(
-                                'a_naip',
-                                'prior_from_cooccurrences_101_31_no_osm_no_buildings',
-                            ),
-                            'prior': row['properties']['naip'].replace(
-                                'a_naip', 'prior_from_cooccurrences_101_31'
-                            ),
-                        }
-                    )
-
+        gdf = gpd.read_file(
+            os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson')
+        )
+        gdf.set_crs(CRS.from_epsg(3857), inplace=True)
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_no_osm_no_buildings'] = gdf['naip'].replace(
+            'a_naip', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'
+        )
+        gdf['prior'] = gdf['naip'].replace('a_naip', 'prior_from_cooccurrences_101_31')
+        datetimes = [(mint, maxt)] * len(gdf)
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(3857)
-        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        sample: dict[str, Any] = {
-            'image': [],
-            'mask': [],
-            'crs': self.crs,
-            'bounds': query,
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
         }
 
-        if index.empty:
+        images = []
+        masks = []
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(index) == 1:
-            filenames = index.iloc[0]
+        elif len(df) == 1:
+            filenames = df.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
@@ -398,23 +376,20 @@ class EnviroAtlas(GeoDataset):
                     'waterbodies',
                     'water',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in ['prior', 'prior_no_osm_no_buildings']:
                     if self.prior_as_input:
-                        sample['image'].append(data)
+                        images.append(data)
                     else:
-                        sample['mask'].append(data)
+                        masks.append(data)
                 elif layer in ['lc']:
                     data = self.raw_enviroatlas_to_idx_map[data]
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
-            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
+            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image'])
-        sample['mask'] = torch.from_numpy(sample['mask'])
+        sample['image'] = torch.from_numpy(np.concatenate(images))
+        sample['mask'] = torch.from_numpy(np.concatenate(masks))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -453,10 +428,7 @@ class EnviroAtlas(GeoDataset):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

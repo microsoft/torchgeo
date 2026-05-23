@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """L7 Irish dataset."""
@@ -6,17 +6,23 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import (
+    GeoSlice,
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class L7IrishImage(RasterDataset):
@@ -57,19 +63,19 @@ class L7IrishMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
+        sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
@@ -131,13 +137,14 @@ class L7Irish(IntersectionDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = CRS.from_epsg(3857),
+        crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new L7Irish instance.
 
@@ -154,9 +161,14 @@ class L7Irish(IntersectionDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         self.paths = paths
         self.download = download
@@ -164,8 +176,13 @@ class L7Irish(IntersectionDataset):
 
         self._verify()
 
-        self.image = L7IrishImage(paths, crs, res, bands, transforms, cache)
-        self.mask = L7IrishMask(paths, crs, res, None, transforms, cache)
+        if crs is None:
+            crs = CRS.from_epsg(3857)
+
+        self.image = L7IrishImage(
+            paths, crs, res, bands, transforms, cache, time_series
+        )
+        self.mask = L7IrishMask(paths, crs, res, None, transforms, cache, time_series)
 
         # Mask filename does not include the date, grab it from the image filename
         self.mask.index.index = self.image.index.index
@@ -181,15 +198,17 @@ class L7Irish(IntersectionDataset):
         if not isinstance(self.paths, str | os.PathLike):
             return
 
+        paths = cast(Path, self.paths)
+
         for classname in [L7IrishImage, L7IrishMask]:
-            pathname = os.path.join(self.paths, '**', classname.filename_glob)
+            pathname = os.path.join(paths, '**', classname.filename_glob)
             if not glob.glob(pathname, recursive=True):
                 break
         else:
             return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.paths, '*.tar.gz')
+        pathname = os.path.join(paths, '*.tar.gz')
         if glob.glob(pathname):
             self._extract()
             return
@@ -204,23 +223,23 @@ class L7Irish(IntersectionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for biome, md5 in self.md5s.items():
             download_url(
-                self.url.format(biome), self.paths, md5=md5 if self.checksum else None
+                self.url.format(biome), paths, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, '*.tar.gz')
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -243,9 +262,7 @@ class L7Irish(IntersectionDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].numpy().astype('uint8').squeeze()
 

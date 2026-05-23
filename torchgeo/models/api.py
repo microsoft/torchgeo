@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """APIs for querying and loading pre-trained model weights.
@@ -6,7 +6,7 @@
 See the following references for design details:
 
 * https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
-* https://pytorch.org/vision/stable/models.html
+* https://docs.pytorch.org/vision/stable/models.html
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """
 
@@ -28,7 +28,9 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon_Weights, panopticon_vitb14
+from .presto import Presto_Weights, presto
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -38,7 +40,20 @@ from .resnet import (
     resnet152,
 )
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
-from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
+from .swin import (
+    Swin_B_Weights,
+    Swin_S_Weights,
+    Swin_T_Weights,
+    Swin_V2_B_Weights,
+    Swin_V2_T_Weights,
+    swin_b,
+    swin_s,
+    swin_t,
+    swin_v2_b,
+    swin_v2_t,
+)
+from .tessera import Tessera_Weights, tessera
+from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -54,7 +69,6 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
@@ -66,13 +80,20 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
+    'olmoearth_v1': olmoearth_v1,
     'panopticon_vitb14': panopticon_vitb14,
+    'presto': presto,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
     'scalemae_large_patch16': scalemae_large_patch16,
+    'swin_t': swin_t,
+    'swin_s': swin_s,
+    'swin_b': swin_b,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
+    'tilenet': tilenet,
+    'tessera': tessera,
     'unet': unet,
     'vit_small_patch16_224': vit_small_patch16_224,
     'vit_base_patch14_dinov2': vit_base_patch14_dinov2,
@@ -80,10 +101,11 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_huge_patch14_224': vit_huge_patch14_224,
     'vit_large_patch16_224': vit_large_patch16_224,
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
-    'yolo': yolo,
 }
 
-_model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
+_model_weights: dict[
+    str | Callable[..., nn.Module], WeightsEnum
+] = {  # ty :ignore[invalid-assignment]
     aurora_swin_unet: Aurora_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
@@ -91,13 +113,20 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
+    olmoearth_v1: OlmoEarthV1_Weights,
     panopticon_vitb14: Panopticon_Weights,
+    presto: Presto_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
+    swin_t: Swin_T_Weights,
+    swin_s: Swin_S_Weights,
+    swin_b: Swin_B_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    tilenet: TileNet_Weights,
+    tessera: Tessera_Weights,
     unet: Unet_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
@@ -105,7 +134,6 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     vit_huge_patch14_224: ViTHuge14_Weights,
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
-    yolo: YOLO_Weights,
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
@@ -113,13 +141,20 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
+    'olmoearth_v1': OlmoEarthV1_Weights,
     'panopticon_vitb14': Panopticon_Weights,
+    'presto': Presto_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
+    'swin_t': Swin_T_Weights,
+    'swin_s': Swin_S_Weights,
+    'swin_b': Swin_B_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'tilenet': TileNet_Weights,
+    'tessera': Tessera_Weights,
     'unet': Unet_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
     'vit_base_patch14_dinov2': ViTBase14_DINOv2_Weights,
@@ -127,7 +162,6 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'vit_huge_patch14_224': ViTHuge14_Weights,
     'vit_large_patch16_224': ViTLarge16_Weights,
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
-    'yolo': YOLO_Weights,
 }
 
 
@@ -178,7 +212,7 @@ def get_weight(name: str) -> WeightsEnum:
     """
     for weight_name, weight_enum in _model_weights.items():
         if isinstance(weight_name, str):
-            for sub_weight_enum in weight_enum:
+            for sub_weight_enum in weight_enum:  # ty: ignore[not-iterable]
                 if name == str(sub_weight_enum):
                     return sub_weight_enum
 

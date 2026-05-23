@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -19,12 +19,10 @@ class TestEverWatch:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EverWatch:
         data_dir = os.path.join('tests', 'data', 'everwatch')
         url = os.path.join(data_dir, 'everwatch-benchmark.zip')
-        md5 = '6d797a56dc7edea89109b38c47c55e53'
         monkeypatch.setattr(EverWatch, 'url', url)
-        monkeypatch.setattr(EverWatch, 'md5', md5)
         root = tmp_path
         transforms = nn.Identity()
-        return EverWatch(root=root, transforms=transforms, download=True, checksum=True)
+        return EverWatch(root=root, transforms=transforms, download=True)
 
     def test_already_downloaded(self, dataset: EverWatch) -> None:
         EverWatch(root=dataset.root, download=True)
@@ -52,7 +50,7 @@ class TestEverWatch:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'everwatch-benchmark.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             EverWatch(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:

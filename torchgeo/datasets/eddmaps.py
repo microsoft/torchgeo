@@ -1,23 +1,22 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dataset for EDDMapS."""
 
 import functools
 import os
-from datetime import datetime
-from typing import Any
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import rasterio
+import torch
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import GeoSlice, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -67,44 +66,46 @@ class EDDMapS(GeoDataset):
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
         func = functools.partial(disambiguate_timestamp, format='%m-%d-%y')
-        index = pd.IntervalIndex.from_tuples(
-            df['ObsDate'].apply(func), closed='both', name='datetime'
-        )
+        data = df['ObsDate'].apply(func).to_list()
+        index = pd.IntervalIndex.from_tuples(data, closed='both', name='datetime')
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': index}
+        keypoints = torch.tensor(df.get_coordinates().values, dtype=torch.float32)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'bounds': self._slice_to_tensor(index),
+            'keypoints': keypoints,
+            'transform': torch.tensor(transform),
+        }
 
         return sample
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -121,28 +122,13 @@ class EDDMapS(GeoDataset):
         fig, ax = plt.subplots(figsize=(10, 8))
         ax.grid(ls='--')
 
-        # Extract bounding boxes (coordinates) from the sample
-        index = sample['bounds']
+        # Extract coordinates
+        keypoints = sample['keypoints']
+        x = keypoints[:, 0]
+        y = keypoints[:, 1]
 
-        # Extract coordinates and timestamps
-        longitudes = [point.x for point in index.geometry]
-        latitudes = [point.y for point in index.geometry]
-        timestamps = [time.timestamp() for time in index.index.left]
-
-        # Plot the points with colors based on date
-        scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
-
-        # Create a formatter function
-        def format_date(x: float, pos: int | None = None) -> str:
-            # Convert timestamp to datetime
-            return datetime.fromtimestamp(x).strftime('%Y-%m-%d')
-
-        # Add a colorbar
-        cbar = fig.colorbar(scatter, ax=ax, pad=0.04)
-        cbar.set_label('Observed Timestamp', rotation=90, labelpad=-100, va='center')
-
-        # Apply the formatter to the colorbar
-        cbar.ax.yaxis.set_major_formatter(FuncFormatter(format_date))
+        # Plot the points
+        ax.scatter(x, y)
 
         # Set labels
         ax.set_xlabel('Longitude')

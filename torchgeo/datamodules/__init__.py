@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo datamodules."""
@@ -10,10 +10,12 @@ from .cabuar import CaBuArDataModule
 from .caffe import CaFFeDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
+from .cloud_cover import CloudCoverDetectionDataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .digital_typhoon import DigitalTyphoonDataModule
+from .dlrsd import DLRSDDataModule, DLRSDMultilabelDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
@@ -33,7 +35,8 @@ from .loveda import LoveDADataModule
 from .mmflood import MMFloodDataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
-from .oscd import OSCDDataModule
+from .oscd import OSCD100DataModule, OSCDDataModule
+from .pastis import PASTIS100DataModule, PASTISDataModule
 from .patternnet import PatternNetDataModule
 from .potsdam import Potsdam2DDataModule
 from .quakeset import QuakeSetDataModule
@@ -60,7 +63,7 @@ from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
 from .vhr10 import VHR10DataModule
-from .xview import XView2DataModule
+from .xbd import XView2DataModule, xBDDataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
@@ -72,6 +75,9 @@ __all__ = (
     'CaFFeDataModule',
     'ChaBuDDataModule',
     'ChesapeakeCVPRDataModule',
+    'CloudCoverDetectionDataModule',
+    'DLRSDDataModule',
+    'DLRSDMultilabelDataModule',
     'DeepGlobeLandCoverDataModule',
     'DigitalTyphoonDataModule',
     'ETCI2021DataModule',
@@ -99,7 +105,10 @@ __all__ = (
     'NAIPChesapeakeDataModule',
     'NASAMarineDebrisDataModule',
     'NonGeoDataModule',
+    'OSCD100DataModule',
     'OSCDDataModule',
+    'PASTIS100DataModule',
+    'PASTISDataModule',
     'PatternNetDataModule',
     'Potsdam2DDataModule',
     'QuakeSetDataModule',
@@ -130,4 +139,5 @@ __all__ = (
     'VHR10DataModule',
     'Vaihingen2DDataModule',
     'XView2DataModule',
+    'xBDDataModule',
 )

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MapInWild dataset."""
@@ -7,7 +7,7 @@ import os
 import shutil
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,10 +21,11 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -115,8 +116,8 @@ class MapInWild(NonGeoDataset):
         self,
         root: Path = 'data',
         modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'validation', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -170,10 +171,10 @@ class MapInWild(NonGeoDataset):
 
         if os.path.exists(os.path.join(self.root, 'split_IDs.csv')):
             split_dataframe = pd.read_csv(os.path.join(self.root, 'split_IDs.csv'))
-            self.ids = split_dataframe[split].dropna().values.tolist()
-            self.ids = list(map(int, self.ids))
+            ids = split_dataframe[split].dropna().values.tolist()
+            self.ids = list(map(int, ids))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -195,7 +196,7 @@ class MapInWild(NonGeoDataset):
 
         image = torch.cat(list_modalities, dim=0)
 
-        sample: dict[str, Tensor] = {'image': image, 'mask': mask}
+        sample: Sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -332,10 +333,7 @@ class MapInWild(NonGeoDataset):
         return arr_3d
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -381,7 +379,7 @@ class MapInWild(NonGeoDataset):
                 img = img[:, :, 0]
 
             if not 'esa_wc':
-                img = percentile_normalization(img)
+                img = quantile_normalization(img)
 
             ax.imshow(img)
             if show_titles:

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Western USA Live Fuel Moisture Dataset."""
@@ -7,14 +7,15 @@ import glob
 import json
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -24,7 +25,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     (mass of water in vegetation) and remotely sensed variables
     in the western United States. It contains 2615 datapoints and 138
     variables. For more details see the
-    `dataset page <https://beta.source.coop/stanford/sar-moisture-conent/>`_.
+    `dataset page <https://source.coop/stanford/sar-moisture-conent>`_.
 
     Dataset Format:
 
@@ -199,7 +200,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self,
         root: Path = 'data',
         input_features: Iterable[str] = all_variable_names,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
@@ -234,7 +235,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         return len(self.dataframe)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -297,3 +298,115 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         os.makedirs(self.root, exist_ok=True)
         azcopy = which('azcopy')
         azcopy('sync', self.url, self.root, '--recursive=true')
+
+    def plot(
+        self,
+        sample: Sample,
+        variables_to_plot: list[str] | None = None,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a time series visualization of the LFMC sample.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            variables_to_plot: a list of valid variable to be drawn in the plot
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for the Figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.8
+        """
+        if not variables_to_plot:
+            variables_to_plot = [
+                'slope',
+                'elevation',
+                'canopy_height',
+                'forest_cover',
+                'silt',
+                'sand',
+                'clay',
+                'vv',
+                'vh',
+                'red',
+                'green',
+                'blue',
+                'swir',
+                'nir',
+                'ndvi',
+                'ndwi',
+                'nirv',
+                'vv_red',
+                'vv_green',
+                'vv_blue',
+                'vv_swir',
+                'vv_nir',
+                'vv_ndvi',
+                'vv_ndwi',
+                'vv_nirv',
+                'vh_red',
+                'vh_green',
+                'vh_blue',
+                'vh_swir',
+                'vh_nir',
+                'vh_ndvi',
+                'vh_ndwi',
+                'vh_nirv',
+                'vh_vv',
+            ]
+
+        input_data = sample['input'].numpy()
+
+        # Time points to display on x-axis
+        time_labels = ['t', 't-1', 't-2', 't-3']
+
+        fig, axs = plt.subplots(
+            len(variables_to_plot),
+            1,
+            figsize=(6, 1.5 * len(variables_to_plot)),
+            sharex=True,
+        )
+
+        # Handle single subplot case
+        if len(variables_to_plot) == 1:
+            axs = [axs]
+
+        for i, var_base_name in enumerate(variables_to_plot):
+            values = []
+
+            # Extract data for each time point (t, t-1, t-2, t-3)
+            for t_label in time_labels:
+                full_var_name = f'{var_base_name}({t_label})'
+                var_position = self.all_variable_names.index(full_var_name)
+                values.append(input_data[var_position])
+
+            axs[i].plot(range(len(time_labels)), values, 'o-')
+            axs[i].grid(True, alpha=0.3)
+
+            if show_titles:
+                axs[i].set_title(f'{var_base_name.upper()}')
+
+        axs[-1].set_xticks(range(len(time_labels)))
+        axs[-1].set_xticklabels(time_labels)
+
+        # add coordinate and label information below the plot
+        lon = input_data[-2]
+        lat = input_data[-1]
+        lfmc_value = sample['label'].item()
+
+        axs[-1].text(
+            x=0.5,
+            y=-0.7,
+            s=f'Live Fuel Moisture Content\nat {lon:.4f}, {lat:.4f}: {lfmc_value:.2f}%',
+            ha='center',
+            transform=axs[-1].transAxes,
+        )
+
+        if suptitle is not None:
+            fig.suptitle(t=suptitle, y=1.6, transform=axs[0].transAxes)
+
+        plt.tight_layout()
+
+        return fig

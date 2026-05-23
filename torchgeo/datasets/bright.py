@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """BRIGHT dataset."""
@@ -6,7 +6,7 @@
 import os
 import textwrap
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .utils import Path, Sample, check_integrity, download_url, extract_archive
 
 
 class BRIGHTDFC2025(NonGeoDataset):
@@ -65,7 +65,7 @@ class BRIGHTDFC2025(NonGeoDataset):
 
     md5 = '45fd96716e7f5673869b166859a6cb3c'
 
-    url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
+    url = 'https://hf.co/datasets/isaaccorley/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
     data_dir = 'dfc25_track2_trainval'
 
@@ -90,8 +90,8 @@ class BRIGHTDFC2025(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -120,8 +120,11 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         self.sample_paths = self._get_paths()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -267,10 +270,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         return tensor
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -300,8 +300,9 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         cmap = colors.ListedColormap(self.colormap)
 
+        kwargs = {'cmap': cmap, 'vmin': 0, 'vmax': 3, 'interpolation': 'none'}
         if showing_mask:
-            axs[2].imshow(sample['mask'][0], cmap=cmap, interpolation='none')
+            axs[2].imshow(sample['mask'][0], **kwargs)
             axs[2].axis('off')
             unique_classes = np.unique(sample['mask'].numpy())
             handles = [
@@ -316,10 +317,10 @@ class BRIGHTDFC2025(NonGeoDataset):
             ]
             axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
             if showing_prediction:
-                axs[3].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
+                axs[3].imshow(sample['prediction'][0], **kwargs)
                 axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
+            axs[2].imshow(sample['prediction'][0], **kwargs)
             axs[2].axis('off')
 
         if show_titles:

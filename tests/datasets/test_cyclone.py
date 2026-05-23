@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -53,10 +53,6 @@ class TestTropicalCyclone:
 
     def test_already_downloaded(self, dataset: TropicalCyclone) -> None:
         TropicalCyclone(root=dataset.root, download=True)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            TropicalCyclone(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

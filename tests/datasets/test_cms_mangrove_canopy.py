@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -27,22 +26,14 @@ class TestCMSGlobalMangroveCanopy:
     ) -> CMSGlobalMangroveCanopy:
         zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
         monkeypatch.setattr(CMSGlobalMangroveCanopy, 'zipfile', zipfile)
-
-        md5 = 'd6894fa6293cc9c0f3f95a810e842de5'
-        monkeypatch.setattr(CMSGlobalMangroveCanopy, 'md5', md5)
-
         root = os.path.join('tests', 'data', 'cms_mangrove_canopy')
         transforms = nn.Identity()
         country = 'Angola'
-
-        return CMSGlobalMangroveCanopy(
-            root, country=country, transforms=transforms, checksum=True
-        )
+        return CMSGlobalMangroveCanopy(root, country=country, transforms=transforms)
 
     def test_getitem(self, dataset: CMSGlobalMangroveCanopy) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CMSGlobalMangroveCanopy) -> None:
@@ -68,7 +59,7 @@ class TestCMSGlobalMangroveCanopy:
             os.path.join(tmp_path, 'CMS_Global_Map_Mangrove_Canopy_1665.zip'), 'w'
         ) as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             CMSGlobalMangroveCanopy(tmp_path, country='Angola', checksum=True)
 
     def test_invalid_country(self) -> None:
@@ -88,14 +79,14 @@ class TestCMSGlobalMangroveCanopy:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: CMSGlobalMangroveCanopy) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: CMSGlobalMangroveCanopy) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()

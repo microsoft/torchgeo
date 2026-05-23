@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EuroSAT dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +17,7 @@ from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
 from .utils import (
     Path,
+    Sample,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -107,9 +108,9 @@ class EuroSAT(NonGeoClassificationDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -133,7 +134,8 @@ class EuroSAT(NonGeoClassificationDataset):
         """
         self.root = root
         self.split = split
-        self.transforms = transforms
+        # Avoid conflict between ImageFolder.transforms and our transforms
+        self.tg_transforms = transforms
         self.download = download
         self.checksum = checksum
 
@@ -162,7 +164,7 @@ class EuroSAT(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -175,8 +177,8 @@ class EuroSAT(NonGeoClassificationDataset):
         image = torch.index_select(image, dim=0, index=self.band_indices).float()
         sample = {'image': image, 'label': label}
 
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        if self.tg_transforms is not None:
+            sample = self.tg_transforms(sample)
 
         return sample
 
@@ -228,15 +230,12 @@ class EuroSAT(NonGeoClassificationDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`NonGeoClassificationDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

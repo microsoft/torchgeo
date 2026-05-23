@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """InriaAerialImageLabeling datamodule."""
@@ -6,11 +6,9 @@
 from typing import Any
 
 import kornia.augmentation as K
-from torch import Tensor
 
 from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -59,14 +57,14 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         )
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.CenterCrop(self.patch_size),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
         )
         self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.CenterCrop(self.patch_size),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
@@ -85,26 +83,3 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         if stage in ['predict']:
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = InriaAerialImageLabeling(split='test', **self.kwargs)
-
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-
-        .. versionadded:: 0.7
-        """
-        # This solves a special case where if batch_size=1 the mask won't be stacked correctly
-        if 'mask' in batch and batch['mask'].ndim == 3:
-            batch['mask'] = batch['mask'].unsqueeze(0)
-            batch = super().on_after_batch_transfer(batch, dataloader_idx)
-            batch['mask'] = batch['mask'].squeeze(dim=1)
-            return batch
-        else:
-            return super().on_after_batch_transfer(batch, dataloader_idx)

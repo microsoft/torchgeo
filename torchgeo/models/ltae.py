@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Copyright (c) 2020 VSainteuf (Vivien Sainte Fare Garnot)
@@ -106,8 +106,6 @@ class LTAE(nn.Module):
         Returns:
             Output tensor of shape (batch_size, n_neurons[-1])
         """
-        sz_b, seq_len, d = x.shape
-
         x = self.inlayernorm(x)
 
         if self.inconv is not None:
@@ -159,6 +157,6 @@ class PositionalEncoding(nn.Module):
             Output tensor with positional encoding added
         """
         # Get positional encoding up to the sequence length
-        pe = self.pe[:, : x.size(1)]  # type: ignore[index]
+        pe = self.pe[:, : x.size(1)]  # ty: ignore[not-subscriptable]
         output: Tensor = self.dropout(x + pe)
         return output

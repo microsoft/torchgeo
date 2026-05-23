@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dynamic One-For-All (DOFA) models."""
@@ -6,11 +6,11 @@
 from functools import partial
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
+import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
@@ -255,7 +255,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # type: ignore[assignment]
+        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # ty: ignore[invalid-parameter-default]
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -387,15 +387,10 @@ class DOFA(nn.Module):
 
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
-_dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+_dofa_transforms = nn.Sequential(T.CenterCrop((224, 224)))
 
 
-class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFABase16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) base patch size 16 weights.
 
     .. versionadded:: 0.6
@@ -414,7 +409,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFALarge16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) large patch size 16 weights.
 
     .. versionadded:: 0.6

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, ZueriCrop
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestZueriCrop:

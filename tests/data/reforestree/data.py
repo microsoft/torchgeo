@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import csv
-import hashlib
 import os
 import shutil
 
@@ -70,8 +69,3 @@ if __name__ == '__main__':
 
     # compress data
     shutil.make_archive(data_root, 'zip', data_root)
-
-    # Compute checksums
-    with open(data_root + '.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{data_root}: {md5}')

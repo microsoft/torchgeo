@@ -1,14 +1,14 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SimCLR trainer for self-supervised learning (SSL)."""
 
 import os
 import warnings
-from typing import Any
+from typing import cast
 
 import kornia.augmentation as K
-import lightning
+import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn as nn
@@ -22,6 +22,7 @@ from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
+from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -171,7 +172,7 @@ class SimCLRTask(BaseTask):
             utils.load_state_dict(self.backbone, state_dict)
 
         # Create projection head
-        input_dim = self.backbone.num_features
+        input_dim = cast(int, self.backbone.num_features)
         if self.hparams['hidden_dim'] is None:
             self.hparams['hidden_dim'] = input_dim
         if self.hparams['output_dim'] is None:
@@ -221,7 +222,7 @@ class SimCLRTask(BaseTask):
         return z, h
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -254,7 +255,7 @@ class SimCLRTask(BaseTask):
             x2 = self.augmentations(x2)
 
         z1, h1 = self(x1)
-        z2, h2 = self(x2)
+        z2, _ = self(x2)
 
         loss: Tensor = self.criterion(z1, z2)
 
@@ -272,16 +273,18 @@ class SimCLRTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(

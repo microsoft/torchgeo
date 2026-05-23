@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.8')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestChaBuD:
@@ -23,19 +23,12 @@ class TestChaBuD:
     ) -> ChaBuD:
         data_dir = os.path.join('tests', 'data', 'chabud')
         url = os.path.join(data_dir, 'train_eval.hdf5')
-        md5 = '1bec048beeb87a865c53f40ab418aa75'
         monkeypatch.setattr(ChaBuD, 'url', url)
-        monkeypatch.setattr(ChaBuD, 'md5', md5)
         bands, split = request.param
         root = tmp_path
         transforms = nn.Identity()
         return ChaBuD(
-            root=root,
-            split=split,
-            bands=bands,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, split=split, bands=bands, transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: ChaBuD) -> None:

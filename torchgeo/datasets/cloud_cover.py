@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Cloud Cover Detection Challenge dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class CloudCoverDetection(NonGeoDataset):
@@ -26,7 +26,7 @@ class CloudCoverDetection(NonGeoDataset):
     This training dataset was generated as part of a `crowdsourcing competition
     <https://www.drivendata.org/competitions/83/cloud-cover/>`_ on DrivenData.org, and
     later on was validated using a team of expert annotators. See `this website
-    <https://beta.source.coop/radiantearth/cloud-cover-detection-challenge/>`__
+    <https://source.coop/radiantearth/cloud-cover-detection-challenge>`__
     for dataset details.
 
     The dataset consists of Sentinel-2 satellite imagery and corresponding cloudy
@@ -63,9 +63,9 @@ class CloudCoverDetection(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initiatlize a CloudCoverDetection instance.
@@ -87,11 +87,12 @@ class CloudCoverDetection(NonGeoDataset):
 
         self.root = root
         self.split = split
+        self.directory = os.path.join(self.root, self.splits[self.split])
         self.bands = bands
         self.transforms = transforms
         self.download = download
 
-        self.csv = os.path.join(self.root, self.split, f'{self.split}_metadata.csv')
+        self.csv = os.path.join(self.directory, f'{self.split}_metadata.csv')
         self._verify()
 
         self.metadata = pd.read_csv(self.csv)
@@ -104,7 +105,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.metadata)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Returns a sample from dataset.
 
         Args:
@@ -113,7 +114,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             data and label at given index
         """
-        chip_id = self.metadata.iat[index, 0]
+        chip_id = str(self.metadata.iat[index, 0])
         image = self._load_image(chip_id)
         label = self._load_target(chip_id)
         sample = {'image': image, 'mask': label}
@@ -132,7 +133,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of stacked source image data
         """
-        path = os.path.join(self.root, self.split, f'{self.split}_features', chip_id)
+        path = os.path.join(self.directory, f'{self.split}_features', chip_id)
         images = []
         for band in self.bands:
             with rasterio.open(os.path.join(path, f'{band}.tif')) as src:
@@ -148,7 +149,7 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of the label image data
         """
-        path = os.path.join(self.root, self.split, f'{self.split}_labels')
+        path = os.path.join(self.directory, f'{self.split}_labels')
         with rasterio.open(os.path.join(path, f'{chip_id}.tif')) as src:
             return torch.from_numpy(src.read(1).astype(np.int64))
 
@@ -167,17 +168,14 @@ class CloudCoverDetection(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        directory = os.path.join(self.root, self.split)
+        directory = self.directory
         os.makedirs(directory, exist_ok=True)
         url = f'{self.url}/{self.splits[self.split]}'
         azcopy = which('azcopy')
         azcopy('sync', url, directory, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -202,13 +200,13 @@ class CloudCoverDetection(NonGeoDataset):
 
         if 'prediction' in sample:
             prediction = sample['prediction']
-            n_cols = 3
+            ncols = 3
         else:
-            n_cols = 2
+            ncols = 2
 
         image, mask = sample['image'] / 3000, sample['mask']
 
-        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis('off')

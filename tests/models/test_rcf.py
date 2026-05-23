@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -25,11 +25,11 @@ class TestRCF:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')
         x = torch.randn(2, 5, 64, 64)
         y = model(x)
-        assert y.shape[1] == 4
+        assert y.shape == (2, 4)
 
         x = torch.randn(1, 5, 64, 64)
         y = model(x)
-        assert y.shape[0] == 4
+        assert y.shape == (1, 4)
 
     def test_untrainable(self) -> None:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')

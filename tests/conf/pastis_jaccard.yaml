@@ -1,0 +1,22 @@
+model:
+  class_path: SpatioTemporalSegmentationTask
+  init_args:
+    model: 'convlstm'
+    in_channels: 10
+    task: 'multiclass'
+    num_classes: 20
+    loss: 'jaccard'
+  dict_kwargs:
+    hidden_dim: 8
+    num_layers: 1
+    kernel_size: 3
+    head_kernel_size: 1
+data:
+  class_path: PASTISDataModule
+  init_args:
+    batch_size: 2
+    val_split_pct: 0.2
+    test_split_pct: 0.2
+    padding_length: 9
+  dict_kwargs:
+    root: 'tests/data/pastis'

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MMFlood dataset."""
@@ -15,11 +15,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class MMFloodComponent(RasterDataset):
@@ -32,8 +31,9 @@ class MMFloodComponent(RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize MMFloodComponent dataset instance.
 
@@ -49,6 +49,11 @@ class MMFloodComponent(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         self.content = content
         self.is_image = content != 'mask'
@@ -56,7 +61,9 @@ class MMFloodComponent(RasterDataset):
         for s in subfolders:
             paths += glob(os.path.join(root, '**', f'{s}*-*', self.content, '*.tif'))
         paths = sorted(paths)
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
 
 class MMFlood(IntersectionDataset):
@@ -122,13 +129,14 @@ class MMFlood(IntersectionDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
         cache: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new MMFlood dataset instance.
 
@@ -148,11 +156,15 @@ class MMFlood(IntersectionDataset):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split* is invalid.
 
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert split in self._splits
 
@@ -173,20 +185,46 @@ class MMFlood(IntersectionDataset):
             self.metadata_df['subset'] == self.split
         ].index.tolist()
         self.image: MMFloodComponent | IntersectionDataset = MMFloodComponent(
-            split_subfolders, 's1_raw', root, crs, res, cache=cache
+            split_subfolders,
+            's1_raw',
+            root,
+            crs,
+            res,
+            cache=cache,
+            time_series=time_series,
         )
         if include_dem:
-            dem = MMFloodComponent(split_subfolders, 'DEM', root, crs, res, cache=cache)
+            dem = MMFloodComponent(
+                split_subfolders,
+                'DEM',
+                root,
+                crs,
+                res,
+                cache=cache,
+                time_series=time_series,
+            )
             self.image = self.image & dem
             self.image.index = dem.index
         if include_hydro:
             hydro = MMFloodComponent(
-                split_subfolders, 'hydro', root, crs, res, cache=cache
+                split_subfolders,
+                'hydro',
+                root,
+                crs,
+                res,
+                cache=cache,
+                time_series=time_series,
             )
             self.image = self.image & hydro
             self.image.index = hydro.index
         self.mask = MMFloodComponent(
-            split_subfolders, 'mask', root, crs, res, cache=cache
+            split_subfolders,
+            'mask',
+            root,
+            crs,
+            res,
+            cache=cache,
+            time_series=time_series,
         )
 
         super().__init__(self.image, self.mask, transforms=transforms)
@@ -207,19 +245,19 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Tensor]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        data = super().__getitem__(query)
+        data = super().__getitem__(index)
         missing_data = data['image'].isnan().any(dim=0)
         # Set all pixel values of invalid areas to 0, all mask values to 255
         data['image'][:, missing_data] = 0
@@ -269,10 +307,7 @@ class MMFlood(IntersectionDataset):
         self._extract()
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

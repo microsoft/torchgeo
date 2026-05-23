@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """DIOR dataset."""
@@ -21,6 +21,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     download_and_extract_archive,
     download_url,
@@ -39,18 +40,18 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """
     et = ElementTree.parse(path)
     element = et.getroot()
-    filename = element.find('filename').text  # type: ignore[union-attr]
+    filename = element.find('filename').text
     labels, bboxes = [], []
 
     for obj in element.findall('object'):
         bndbox = obj.find('bndbox')
         bbox = [
-            int(bndbox.find('xmin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
+            int(bndbox.find('xmin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('xmax').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymax').text),  # ty: ignore[invalid-argument-type]
         ]
-        label = obj.find('name').text  # type: ignore[union-attr]
+        label = obj.find('name').text
         bboxes.append(bbox)
         labels.append(label)
 
@@ -108,7 +109,7 @@ class DIOR(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    url = 'https://hf.co/datasets/torchgeo/dior/resolve/ec7be9567d2e08eb3d3401c15a52ee2145d0ef01/{}'
+    url = 'https://hf.co/datasets/torchgeo/dior/resolve/0b8439a538b66457e553a8bd9105ef093cce8169/{}'
 
     files: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         'trainval': {
@@ -158,7 +159,7 @@ class DIOR(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -202,20 +203,20 @@ class DIOR(NonGeoDataset):
         """
         return len(self.sample_df)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
-            idx: index to return
+            index: index to return
 
         Returns:
             data and label at that index
         """
-        row = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[index]
 
         image = self._load_image(os.path.join(self.root, row['image_path']))
 
-        sample: dict[str, Tensor] = {'image': image}
+        sample: Sample = {'image': image}
 
         if self.split != 'test':
             boxes, labels = self._load_target(
@@ -330,7 +331,7 @@ class DIOR(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,

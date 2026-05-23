@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -38,6 +38,9 @@ class TestInstanceSegmentationTask:
     ) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
+        if name.startswith('vhr10'):
+            monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
+
         args = [
             '--config',
             config,
@@ -71,11 +74,8 @@ class TestInstanceSegmentationTask:
         with pytest.raises(ValueError, match=match):
             InstanceSegmentationTask(backbone='invalid_backbone')
 
-    def test_weights(self) -> None:
-        InstanceSegmentationTask(weights=True, num_classes=3)
-        InstanceSegmentationTask(weights=True, num_classes=91)
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot)
         datamodule = VHR10DataModule(
             root='tests/data/vhr10', batch_size=1, num_workers=0
@@ -90,6 +90,7 @@ class TestInstanceSegmentationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot_missing_bands)
         datamodule = VHR10DataModule(
             root='tests/data/vhr10', batch_size=1, num_workers=0

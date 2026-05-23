@@ -3,7 +3,7 @@
 Contributing
 ============
 
-The TorchGeo project welcomes contributions and suggestions! If you think you've found a bug or would like to suggest a new feature, you can `open an issue on GitHub <https://github.com/microsoft/torchgeo/issues/new/choose>`_. TorchGeo is an open-source community-supported project, so we try to address issues in order of severity or impact. If you feel confident, the fastest way to make changes to TorchGeo is to submit a pull request. This guide explains everything you need to know about contributing to TorchGeo.
+The TorchGeo project welcomes contributions and suggestions! If you think you've found a bug or would like to suggest a new feature, you can `open an issue on GitHub <https://github.com/torchgeo/torchgeo/issues/new/choose>`_. TorchGeo is an open-source community-supported project, so we try to address issues in order of severity or impact. If you feel confident, the fastest way to make changes to TorchGeo is to submit a pull request. This guide explains everything you need to know about contributing to TorchGeo.
 
 .. note:: TorchGeo is a library for geospatial datasets, transforms, and models. If you would like to add a new transform or model that doesn't involve geospatial data or isn't specific to the remote sensing domain, you're better off adding it to a general purpose computer vision library like `torchvision <https://github.com/pytorch/vision>`_ or `Kornia <https://github.com/kornia/kornia>`_.
 
@@ -11,7 +11,7 @@ The TorchGeo project welcomes contributions and suggestions! If you think you've
 Git
 ---
 
-All development is done on GitHub. If you would like to submit a pull request, you'll first want to fork https://github.com/microsoft/torchgeo. Then, clone the repository using:
+All development is done on GitHub. If you would like to submit a pull request, you'll first want to fork https://github.com/torchgeo/torchgeo. Then, clone the repository using:
 
 .. code-block:: console
 
@@ -29,21 +29,23 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git commit -m "descriptive commit message"
    $ git push
 
+For developers using `uv <https://docs.astral.sh/uv/>`_, you can sync the project dependencies with:
 
-For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/microsoft/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
+.. code-block:: console
+
+   $ uv sync
+
+
+For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/torchgeo/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
 Licensing
 ---------
 
-TorchGeo is licensed under the MIT License. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://opensource.microsoft.com/cla/.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
-
-If your pull request adds any new files containing code, including ``*.py`` and ``*.ipynb`` files, you'll need to add the following comment to the top of the file:
+TorchGeo is licensed under the MIT License. If your pull request adds any new files containing code, including ``*.py`` and ``*.ipynb`` files, you'll need to add the following comment to the top of the file:
 
 .. code-block:: python
 
-   # Copyright (c) Microsoft Corporation. All rights reserved.
+   # Copyright (c) TorchGeo Contributors. All rights reserved.
    # Licensed under the MIT License.
 
 
@@ -81,7 +83,7 @@ From this output, you can see that all tests pass, but many lines of code in ``t
 
 These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
-.. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/microsoft/torchgeo/blob/main/tests/data/README.md>`__.
+.. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
 
 .. _linters:
 
@@ -91,8 +93,8 @@ Linters
 In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a few linting tools:
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
-* `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
-* `prettier <https://prettier.io/docs/en/>`_ for code formatting
+* `ty <https://docs.astral.sh/ty/>`_ for static type analysis
+* `prettier <https://prettier.io/docs/>`_ for config file formatting
 
 These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
 
@@ -102,14 +104,14 @@ These tools should be used from the root of the project to ensure that our confi
    $ ruff check
 
 
-Mypy won't fix your code for you, but will warn you about potential issues with your code:
+Ty won't fix your code for you, but will warn you about potential issues with your code:
 
 .. code-block:: console
 
-   $ mypy .
+   $ ty check
 
 
-If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
+If you've never used ty before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
 
 Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages.
 
@@ -138,8 +140,8 @@ All of our documentation is hosted on `Read the Docs <https://about.readthedocs.
 
    $ pip install .[docs]
    $ cd docs
-   $ pip install -r requirements.txt
 
+Pandoc must also be installed. You can download it from the `official Pandoc website <https://pandoc.org/installing.html>`_ and ensure it is included in your system PATH.
 
 Then run the following commands:
 
@@ -171,10 +173,41 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add an import alias to this dataset in ``torchgeo/datasets/__init__.py``
 * Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
 * Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
-* Add the dataset to ``docs/api/datasets.rst``
-* Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
+* Create a new ``docs/api/datasets/foo.rst`` file with the dataset documentation (see existing files for the format)
+* Add the dataset metadata to one of ``docs/api/datasets/*.csv``
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
+
+Models
+------
+
+Pull requests may involve adding new model architectures, new pre-trained model weights, or both.
+
+Model Architectures
+^^^^^^^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add a new model *architecture*:
+
+* ``torchgeo/models/foo.py``: the actual model code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``torchgeo/models/api.py``: the model loading code
+* ``tests/models/test_foo.py``: the model tests
+* ``tests/models/test_api.py``: the model loading tests
+* ``hubconf.py``: for ``torch.hub`` support
+* ``docs/api/models/foo.rst``: the model documentation
+* ``docs/api/models.rst``: the model table of contents
+
+Model Weights
+^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add new model *weights*:
+
+* ``torchgeo/models/foo.py``: the actual weight code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``tests/models/test_foo.py``: the weight tests
+* ``docs/api/weights/bar.csv``: the weight documentation
+* ``docs/api/models.rst``: if bar.csv is a new sensor
+
 
 I/O Benchmarking
 ----------------
@@ -196,3 +229,20 @@ before        17.223      10.974                 15.685               4.6075
 ======  ============  ==========  =====================  ===================
 
 In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
+
+Related Libraries
+-----------------
+
+TorchGeo maintains a list of :ref:`related-libraries`. New GeoML libraries can be added to this list using the following scripts in ``docs/user/metrics``:
+
+1. Add the library, GitHub repository, Codecov, PyPI/CRAN, and Conda information to ``common.py``.
+2. (Optional) Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
+3. (Optional) Sort all dictionaries in ``common.py`` in order of first commit.
+4. Run ``python3 update_github.py --api-key GITHUB_TOKEN`` to update ``github.csv``.
+5. Sort ``index`` in ``common.py`` and ``features.csv`` in the same order as ``github.csv``.
+6. Run ``python3 update_downloads.py --api-key PEPY_TOKEN`` to update ``downloads.csv``.
+7. Document all library features in ``features.csv``.
+8. Add a GitHub link to the bottom of ``../alternatives.rst``.
+9. Open a pull request.
+
+Libraries must be primarily geospatial machine learning libraries. Furthermore, libraries should have stable releases, recent commit activity, and at least 100 stars on GitHub. If you have any questions about how to determine any features, do not hesitate to ask for assistance on your pull request.

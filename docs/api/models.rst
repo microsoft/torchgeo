@@ -1,157 +1,97 @@
 torchgeo.models
-=================
+===============
 
 .. module:: torchgeo.models
 
-Aurora
-^^^^^^
+This section provides an overview of all models available in ``torchgeo.models``.
 
-.. autofunction:: aurora_swin_unet
-.. autoclass:: Aurora_Weights
+Model Architectures
+-------------------
 
-Change Star
-^^^^^^^^^^^
+TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
 
-.. autoclass:: ChangeStar
-.. autoclass:: ChangeStarFarSeg
-.. autoclass:: ChangeMixin
+1D Time Series (:math:`\scriptstyle B \times T \times C`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Copernicus-FM
-^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 1
 
-.. autoclass:: CopernicusFM
-.. autofunction:: copernicusfm_base
-.. autoclass:: CopernicusFM_Base_Weights
+   models/l-tae
+   models/presto
+   models/tessera
 
-CROMA
-^^^^^
+2D Images (:math:`\scriptstyle B \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: CROMA
-.. autofunction:: croma_base
-.. autofunction:: croma_large
-.. autoclass:: CROMABase_Weights
-.. autoclass:: CROMALarge_Weights
+.. toctree::
+   :maxdepth: 1
 
-DOFA
-^^^^
+   models/copernicus-fm
+   models/croma
+   models/dofa
+   models/earthloc
+   models/farseg
+   models/fcn
+   models/mosaiks
+   models/olmoearth
+   models/panopticon
+   models/resnet
+   models/scale-mae
+   models/swin-transformer
+   models/tilenet
+   models/u-net
+   models/vision-transformer
 
-.. autoclass:: DOFA
-.. autofunction:: dofa_small_patch16_224
-.. autofunction:: dofa_base_patch16_224
-.. autofunction:: dofa_large_patch16_224
-.. autofunction:: dofa_huge_patch14_224
-.. autoclass:: DOFABase16_Weights
-.. autoclass:: DOFALarge16_Weights
+TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__ encoders and `SMP <https://segmentation-modelspytorch.readthedocs.io/en/latest/>`__ decoders.
 
-EarthLoc
-^^^^^^^^
+3D Change Detection (:math:`\scriptstyle B \times 2 \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: EarthLoc
-.. autofunction:: earthloc
-.. autoclass:: EarthLoc_Weights
+.. toctree::
+   :maxdepth: 1
 
-FarSeg
-^^^^^^
+   models/btc
+   models/changestar
+   models/changevit
+   models/fc-siamese-networks
 
-.. autoclass:: FarSeg
+See `torchange <https://github.com/Z-Zheng/pytorch-change-models>`__ for additional change detection architectures.
 
-Fully-convolutional Network
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3D Image Time Series (:math:`\scriptstyle B \times T \times C \times H \times W`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: FCN
+.. toctree::
+   :maxdepth: 1
 
-FC Siamese Networks
-^^^^^^^^^^^^^^^^^^^
+   models/convlstm
 
-.. autoclass:: FCSiamConc
-.. autoclass:: FCSiamDiff
+4D Ocean and Atmosphere (:math:`\scriptstyle B \times T \times C \times Z \times Y \times X`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-L-TAE
-^^^^^
+.. toctree::
+   :maxdepth: 1
 
-.. autoclass:: LTAE
-
-MOSAIKS
-^^^^^^^
-
-.. autoclass:: MOSAIKS
-.. autoclass:: RCF
-
-ResNet
-^^^^^^
-
-.. autofunction:: resnet18
-.. autofunction:: resnet50
-.. autofunction:: resnet152
-.. autoclass:: ResNet18_Weights
-.. autoclass:: ResNet50_Weights
-.. autoclass:: ResNet152_Weights
-
-Scale-MAE
-^^^^^^^^^
-
-.. autofunction:: ScaleMAE
-.. autoclass:: ScaleMAELarge16_Weights
-
-Swin Transformer
-^^^^^^^^^^^^^^^^^^
-
-.. autofunction:: swin_v2_t
-.. autofunction:: swin_v2_b
-.. autoclass:: Swin_V2_T_Weights
-.. autoclass:: Swin_V2_B_Weights
-
-Panopticon
-^^^^^^^^^^
-
-.. autoclass:: Panopticon
-.. autofunction:: panopticon_vitb14
-.. autoclass:: Panopticon_Weights
-
-U-Net
-^^^^^
-
-.. autofunction:: unet
-.. autoclass:: Unet_Weights
-
-Vision Transformer
-^^^^^^^^^^^^^^^^^^
-
-.. autofunction:: vit_small_patch16_224
-.. autofunction:: vit_base_patch16_224
-.. autofunction:: vit_large_patch16_224
-.. autofunction:: vit_huge_patch14_224
-.. autofunction:: vit_small_patch14_dinov2
-.. autofunction:: vit_base_patch14_dinov2
-.. autoclass:: ViTSmall16_Weights
-.. autoclass:: ViTBase16_Weights
-.. autoclass:: ViTLarge16_Weights
-.. autoclass:: ViTHuge14_Weights
-.. autoclass:: ViTSmall14_DINOv2_Weights
-.. autoclass:: ViTBase14_DINOv2_Weights
-
-YOLO
-^^^^
-
-.. autofunction:: yolo
-.. autoclass:: YOLO_Weights
+   models/aurora
 
 Utility Functions
-^^^^^^^^^^^^^^^^^
+-----------------
 
 .. autofunction:: get_model
 .. autofunction:: get_model_weights
 .. autofunction:: get_weight
 .. autofunction:: list_models
 
-
 Pretrained Weights
-^^^^^^^^^^^^^^^^^^
+------------------
 
 TorchGeo provides a number of pre-trained models and backbones, allowing you to perform transfer learning on small datasets without training a new model from scratch or relying on ImageNet weights. Depending on the satellite/sensor where your data comes from, choose from the following pre-trained weights based on which one has the best performance metrics.
 
+.. contents::
+   :local:
+   :depth: 2
+
 Sensor-Agnostic
----------------
+^^^^^^^^^^^^^^^
 
 These weights can be used with imagery from any satellite/sensor. In addition to the usual performance metrics, there are also additional columns for dynamic spatial (resolution), temporal (time span), and/or spectral (wavelength) support, either via their training data (implicit) or via their model architecture (explicit).
 
@@ -163,7 +103,7 @@ These weights can be used with imagery from any satellite/sensor. In addition to
 
 
 Landsat
--------
+^^^^^^^
 
 .. csv-table::
    :widths: 65 10 10 10 10 10 10 10 10 10
@@ -173,7 +113,7 @@ Landsat
 
 
 NAIP
-----
+^^^^
 
 .. csv-table::
    :widths: 45 10 10 10 10
@@ -183,7 +123,7 @@ NAIP
 
 
 Sentinel-1
-----------
+^^^^^^^^^^
 
 .. csv-table::
    :widths: 45 10 10 10 10
@@ -193,7 +133,7 @@ Sentinel-1
 
 
 Sentinel-2
-----------
+^^^^^^^^^^
 
 .. csv-table::
    :widths: 45 10 10 10 10 15 10 10 10
@@ -202,12 +142,21 @@ Sentinel-2
    :file: weights/sentinel2.csv
 
 
+Aerial
+^^^^^^
+
+.. csv-table::
+   :widths: 45 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/aerial.csv
+
+
 Atmospheric
------------
+^^^^^^^^^^^
 
 .. csv-table:: N = Nowcasting, MWF = Medium-Range Weather Forecasting, S2S = Subseasonal to Seasonal, DS = Decadal Scale
    :widths: 45 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: weights/atmospheric.csv
-

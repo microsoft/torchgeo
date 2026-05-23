@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import json
+
+import geopandas as gpd
 
 # Create an L shape:
 #
@@ -58,3 +60,6 @@ geojson = {
 
 with open('vector_2024.geojson', 'w') as f:
     json.dump(geojson, f)
+
+df = gpd.read_file('vector_2024.geojson')
+df.to_parquet('vector_2024.parquet')

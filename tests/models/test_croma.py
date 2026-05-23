@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from pathlib import Path
@@ -7,7 +7,6 @@ import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
     CROMA,
@@ -55,13 +54,13 @@ class TestCROMA:
 
 class TestCROMABase:
     @pytest.fixture(params=[*CROMABase_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> CROMABase_Weights:
         return request.param
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> CROMABase_Weights:
         weights = CROMABase_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_base()
@@ -72,23 +71,23 @@ class TestCROMABase:
     def test_croma(self) -> None:
         croma_base()
 
-    def test_croma_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_croma_weights(self, mocked_weights: CROMABase_Weights) -> None:
         croma_base(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_croma_download(self, weights: WeightsEnum) -> None:
+    def test_croma_download(self, weights: CROMABase_Weights) -> None:
         croma_base(weights=weights)
 
 
 class TestCROMALarge:
     @pytest.fixture(params=[*CROMALarge_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> CROMALarge_Weights:
         return request.param
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> CROMALarge_Weights:
         weights = CROMALarge_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_large()
@@ -99,9 +98,9 @@ class TestCROMALarge:
     def test_croma(self) -> None:
         croma_large()
 
-    def test_croma_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_croma_weights(self, mocked_weights: CROMALarge_Weights) -> None:
         croma_large(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_croma_download(self, weights: WeightsEnum) -> None:
+    def test_croma_download(self, weights: CROMALarge_Weights) -> None:
         croma_large(weights=weights)

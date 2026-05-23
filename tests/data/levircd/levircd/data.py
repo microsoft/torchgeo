@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import zipfile
 
@@ -52,8 +51,3 @@ if __name__ == '__main__':
             for directory in directories:
                 for file in os.listdir(directory):
                     f.write(os.path.join(directory, file))
-
-        # compute checksum
-        with open(filename, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{filename}: {md5}')

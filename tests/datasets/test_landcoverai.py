@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -26,13 +26,11 @@ from torchgeo.datasets import (
 class TestLandCoverAIGeo:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
-        monkeypatch.setattr(LandCoverAIGeo, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(LandCoverAIGeo, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return LandCoverAIGeo(root, transforms=transforms, download=True, checksum=True)
+        return LandCoverAIGeo(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: LandCoverAIGeo) -> None:
         x = dataset[dataset.bounds]
@@ -53,9 +51,9 @@ class TestLandCoverAIGeo:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LandCoverAIGeo(tmp_path)
 
-    def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
+    def test_out_of_bounds_index(self, dataset: LandCoverAIGeo) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -71,8 +69,6 @@ class TestLandCoverAIGeo:
 
 
 class TestLandCoverAI:
-    pytest.importorskip('cv2', minversion='4.5.5')
-
     @pytest.fixture(
         params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
     )
@@ -80,18 +76,13 @@ class TestLandCoverAI:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
-        split: str = request.param[1]
-        md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
-        monkeypatch.setattr(base_class, 'md5', md5)
+        split = request.param[1]
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
-        sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(base_class, 'sha256', sha256)
-        if base_class == LandCoverAI100:
-            monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
+        monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
         transforms = nn.Identity()
-        return base_class(root, split, transforms, download=True, checksum=True)
+        return base_class(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:
         x = dataset[0]
@@ -111,20 +102,15 @@ class TestLandCoverAI:
         LandCoverAI(root=dataset.root, download=True)
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         root = tmp_path
-        shutil.copy(url, root)
+        # Copy with the expected filename for LandCoverAI
+        shutil.copy(url, os.path.join(root, 'output.zip'))
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             LandCoverAI(tmp_path)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            LandCoverAI(split='foo')
 
     def test_plot(self, dataset: LandCoverAI) -> None:
         x = dataset[0].copy()

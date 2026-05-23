@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -10,7 +10,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -43,7 +42,6 @@ class TestSouthAfricaCropType:
     def test_getitem(self, dataset: SouthAfricaCropType) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
@@ -80,9 +78,9 @@ class TestSouthAfricaCropType:
         ds.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: SouthAfricaCropType) -> None:
+    def test_invalid_index(self, dataset: SouthAfricaCropType) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

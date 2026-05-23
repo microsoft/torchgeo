@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
 
 from torchgeo.datasets import (
     AsterGDEM,
@@ -38,7 +37,6 @@ class TestAsterGDEM:
     def test_getitem(self, dataset: AsterGDEM) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: AsterGDEM) -> None:
@@ -53,20 +51,20 @@ class TestAsterGDEM:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: AsterGDEM) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AsterGDEM) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: AsterGDEM) -> None:
+    def test_invalid_index(self, dataset: AsterGDEM) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

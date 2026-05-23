@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MoCo trainer for self-supervised learning (SSL)."""
@@ -6,10 +6,10 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any
+from typing import cast
 
 import kornia.augmentation as K
-import lightning
+import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn as nn
@@ -31,6 +31,7 @@ from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
+from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -255,7 +256,7 @@ class MoCoTask(BaseTask):
         # Create projection (and prediction) head
         batch_norm = version == 3
         if version > 1:
-            input_dim = self.backbone.num_features
+            input_dim = cast(int, self.backbone.num_features)
             self.projection_head = MoCoProjectionHead(
                 input_dim, hidden_dim, output_dim, layers, batch_norm=batch_norm
             )
@@ -364,7 +365,7 @@ class MoCoTask(BaseTask):
         return k
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -408,9 +409,10 @@ class MoCoTask(BaseTask):
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
         if self.hparams['version'] == 3:
-            m = cosine_schedule(self.current_epoch, self.trainer.max_epochs, m, 1)
+            max_steps = self.trainer.max_epochs or 200
+            m = cosine_schedule(self.current_epoch, max_steps, m, 1)
             q1, h1 = self.forward(x1)
-            q2, h2 = self.forward(x2)
+            q2, _ = self.forward(x2)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
@@ -432,12 +434,14 @@ class MoCoTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""

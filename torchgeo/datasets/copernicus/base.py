@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench abstract base class."""
@@ -25,11 +25,12 @@ from torchgeo.datasets.geo import NonGeoDataset
 from ..errors import DatasetNotFoundError, RGBBandsMissingError
 from ..utils import (
     Path,
+    Sample,
     array_to_tensor,
     disambiguate_timestamp,
     download_and_extract_archive,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -91,7 +92,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -120,7 +121,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         self._verify()
 
         filepath = os.path.join(root, self.directory, self.filename.format(split))
-        self.files = pd.read_csv(filepath, header=None)[0]
+        self.files: pd.Series | pd.DataFrame = pd.read_csv(filepath, header=None)[0]
 
     def __len__(self) -> int:
         """Return the length of the dataset.
@@ -139,7 +140,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             An image sample.
         """
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         with rio.open(path) as f:
             # Image
             image = f.read(self.band_indices).astype(np.float32)
@@ -180,7 +181,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             A target sample.
         """
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         with rio.open(path) as f:
             sample['mask'] = array_to_tensor(f.read(1)).to(self.dtype)
 
@@ -215,10 +216,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         download_and_extract_archive(self.url, self.root, md5=md5)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -241,9 +239,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 raise RGBBandsMissingError()
 
         # Static -> time series
-        images = sample['image'].numpy()
+        images = sample['image']
         if sample['image'].dim() == 3:
-            images = np.expand_dims(images, axis=0)
+            images = torch.unsqueeze(images, dim=0)
 
         ncols = len(images)
         if 'mask' in sample:
@@ -277,10 +275,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             # SAR
             vv = images[:, 0]
             vh = images[:, 1]
-            images = np.stack([vv, vh, (vv + vh) / 2], axis=1)
-            images = percentile_normalization(images)
+            images = torch.stack([vv, vh, (vv + vh) / 2], dim=1)
+            images = quantile_normalization(images)
 
-        images = percentile_normalization(images)
+        images = quantile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
             ax[0, i].imshow(images[i])

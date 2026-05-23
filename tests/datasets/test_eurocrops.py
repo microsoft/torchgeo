@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -10,7 +10,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -27,10 +26,8 @@ class TestEuroCrops:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
         classes = request.param
-        monkeypatch.setattr(
-            EuroCrops, 'zenodo_files', [('AA.zip', 'b2ef5cac231294731c1dfea47cba544d')]
-        )
-        monkeypatch.setattr(EuroCrops, 'hcat_md5', '22d61cf3b316c8babfd209ae81419d8f')
+        monkeypatch.setattr(EuroCrops, 'zenodo_files', [('AA.zip', '')])
+        monkeypatch.setattr(EuroCrops, 'hcat_md5', '')
         base_url = os.path.join('tests', 'data', 'eurocrops') + os.sep
         monkeypatch.setattr(EuroCrops, 'base_url', base_url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
@@ -43,7 +40,6 @@ class TestEuroCrops:
     def test_getitem(self, dataset: EuroCrops) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: EuroCrops) -> None:
@@ -61,13 +57,13 @@ class TestEuroCrops:
         EuroCrops(dataset.paths, download=True)
 
     def test_plot(self, dataset: EuroCrops) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
 
     def test_plot_prediction(self, dataset: EuroCrops) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
 
@@ -75,14 +71,14 @@ class TestEuroCrops:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EuroCrops(tmp_path)
 
-    def test_invalid_query(self, dataset: EuroCrops) -> None:
+    def test_invalid_index(self, dataset: EuroCrops) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[200:200, 200:200, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_get_label_with_none_hcat_code(self, dataset: EuroCrops) -> None:
-        mock_feature = {'properties': {dataset.label_name: None}}
+        mock_feature = pd.Series({dataset.label_name: None})
         label = dataset.get_label(mock_feature)
         assert label == 0, "Expected label to be 0 when 'EC_hcat_c' is None."
 

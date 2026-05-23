@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Vaihingen dataset."""
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +18,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -28,12 +29,12 @@ from .utils import (
 class Vaihingen2D(NonGeoDataset):
     """Vaihingen 2D Semantic Segmentation dataset.
 
-    The `Vaihingen <https://www.isprs.org/education/benchmarks/UrbanSemLab/semantic-labeling.aspx>`__
+    The `Vaihingen <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/2d-sem-label-vaihingen.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Vaihingen. This dataset uses the "ISPRS_semantic_labeling_Vaihingen.zip"
     and "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip" files to create the
     train/test sets used in the challenge. The dataset can be downloaded from
-    `here <https://www.isprs.org/education/benchmarks/UrbanSemLab/default.aspx>`__.
+    `here <https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/default.aspx>`__.
     Note, the server contains additional data for 3D Semantic Labeling which
     are currently not supported.
 
@@ -123,8 +124,8 @@ class Vaihingen2D(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
@@ -155,7 +156,7 @@ class Vaihingen2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -241,7 +242,7 @@ class Vaihingen2D(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,

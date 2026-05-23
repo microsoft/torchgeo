@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import shutil
@@ -13,8 +13,8 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, DL4GAMAlps, RGBBandsMissingError
 
-pytest.importorskip('xarray', minversion='0.12.3')
-pytest.importorskip('netCDF4', minversion='1.5.8')
+pytest.importorskip('xarray', minversion='0.17')
+pytest.importorskip('netCDF4', minversion='1.6.5')
 
 
 class TestDL4GAMAlps:
@@ -32,18 +32,9 @@ class TestDL4GAMAlps:
     ) -> DL4GAMAlps:
         url = Path('tests', 'data', 'dl4gam_alps')
         download_metadata = {
-            'dataset_small': {
-                'url': str(url / 'dataset_small.tar.gz'),
-                'checksum': '35f85360b943caa8661d9fb573b0f0b5',
-            },
-            'dataset_large': {
-                'url': str(url / 'dataset_large.tar.gz'),
-                'checksum': '636be5be35b8bd1e7771e9010503e4bc',
-            },
-            'splits_csv': {
-                'url': str(url / 'splits.csv'),
-                'checksum': '973367465c8ab322d0cf544a345b02f5',
-            },
+            'dataset_small': {'url': str(url / 'dataset_small.tar.gz'), 'checksum': ''},
+            'dataset_large': {'url': str(url / 'dataset_large.tar.gz'), 'checksum': ''},
+            'splits_csv': {'url': str(url / 'splits.csv'), 'checksum': ''},
         }
 
         monkeypatch.setattr(DL4GAMAlps, 'download_metadata', download_metadata)
@@ -59,7 +50,6 @@ class TestDL4GAMAlps:
             extra_features,
             transforms,
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: DL4GAMAlps) -> None:
@@ -97,10 +87,6 @@ class TestDL4GAMAlps:
         fp_splits = Path('tests', 'data', 'dl4gam_alps', 'splits.csv')
         shutil.copyfile(fp_splits, Path(str(tmp_path), fp_splits.name))
         DL4GAMAlps(root=str(tmp_path), download=False)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            DL4GAMAlps(split='foo')
 
     def test_plot(self, dataset: DL4GAMAlps) -> None:
         dataset.plot(dataset[0], suptitle='Test')

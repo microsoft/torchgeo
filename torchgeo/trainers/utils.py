@@ -1,10 +1,9 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Common trainer utilities."""
 
 import warnings
-from collections import OrderedDict
 from typing import cast
 
 import torch
@@ -14,7 +13,7 @@ from torch.nn.modules import Conv2d, Module
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 
-class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[misc]
+class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):
     """GeneralizedRCNNTransform without the normalize and resize ops.
 
     .. versionadded:: 0.8
@@ -31,7 +30,7 @@ class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[mi
         return image, target
 
 
-def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:
+def extract_backbone(path: str) -> tuple[str, dict[str, Tensor]]:
     """Extracts a backbone from a lightning checkpoint file.
 
     Args:
@@ -51,19 +50,17 @@ def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:
     if 'model' in checkpoint['hyper_parameters']:
         name = checkpoint['hyper_parameters']['model']
         state_dict = checkpoint['state_dict']
-        state_dict = OrderedDict({k: v for k, v in state_dict.items() if 'model.' in k})
-        state_dict = OrderedDict(
-            {k.replace('model.', ''): v for k, v in state_dict.items()}
-        )
+        state_dict = {k: v for k, v in state_dict.items() if 'model.' in k}
+        state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}
     elif 'backbone' in checkpoint['hyper_parameters']:
         name = checkpoint['hyper_parameters']['backbone']
         state_dict = checkpoint['state_dict']
-        state_dict = OrderedDict(
-            {k: v for k, v in state_dict.items() if 'model.backbone.model' in k}
-        )
-        state_dict = OrderedDict(
-            {k.replace('model.backbone.model.', ''): v for k, v in state_dict.items()}
-        )
+        state_dict = {
+            k: v for k, v in state_dict.items() if 'model.backbone.model' in k
+        }
+        state_dict = {
+            k.replace('model.backbone.model.', ''): v for k, v in state_dict.items()
+        }
     else:
         raise ValueError(
             'Unknown checkpoint task. Only backbone or model extraction is supported'
@@ -90,7 +87,7 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
 
 
 def load_state_dict(
-    model: Module, state_dict: 'OrderedDict[str, Tensor]'
+    model: Module, state_dict: dict[str, Tensor]
 ) -> tuple[list[str], list[str]]:
     """Load pretrained resnet weights to a model.
 
@@ -169,7 +166,7 @@ def reinit_initial_conv_layer(
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
         if use_bias:
-            b_old = cast(Tensor, layer.bias).data.clone()
+            b_old = layer.bias.data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
     updated_padding = layer.padding if new_padding is None else new_padding
@@ -177,10 +174,10 @@ def reinit_initial_conv_layer(
     new_layer = Conv2d(
         new_in_channels,
         layer.out_channels,
-        kernel_size=layer.kernel_size,  # type: ignore[arg-type]
-        stride=updated_stride,  # type: ignore[arg-type]
-        padding=updated_padding,  # type: ignore[arg-type]
-        dilation=layer.dilation,  # type: ignore[arg-type]
+        kernel_size=layer.kernel_size,  # ty: ignore[invalid-argument-type]
+        stride=updated_stride,  # ty: ignore[invalid-argument-type]
+        padding=updated_padding,  # ty: ignore[invalid-argument-type]
+        dilation=layer.dilation,  # ty: ignore[invalid-argument-type]
         groups=layer.groups,
         bias=use_bias,
         padding_mode=layer.padding_mode,

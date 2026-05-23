@@ -1,20 +1,19 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """RESISC45 dataset."""
 
 import os
 from collections.abc import Callable
-from typing import ClassVar, cast
+from typing import ClassVar, Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -93,16 +92,16 @@ class RESISC45(NonGeoClassificationDataset):
     * https://doi.org/10.1109/jproc.2017.2675998
     """
 
-    url = 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/NWPU-RESISC45.zip'
+    url = 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/NWPU-RESISC45.zip'
     md5 = '75206b2e16446591afa88e2628744886'
     filename = 'NWPU-RESISC45.zip'
     directory = 'NWPU-RESISC45'
 
     splits = ('train', 'val', 'test')
     split_urls: ClassVar[dict[str, str]] = {
-        'train': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-train.txt',
-        'val': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-val.txt',
-        'test': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-test.txt',
+        'train': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-train.txt',
+        'val': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-val.txt',
+        'test': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-test.txt',
     }
     split_md5s: ClassVar[dict[str, str]] = {
         'train': 'b5a4c05a37de15e4ca886696a85c403e',
@@ -113,8 +112,8 @@ class RESISC45(NonGeoClassificationDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -194,10 +193,7 @@ class RESISC45(NonGeoClassificationDataset):
         extract_archive(filepath)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

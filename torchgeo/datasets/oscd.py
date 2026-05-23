@@ -1,12 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """OSCD dataset."""
 
 import glob
 import os
+import warnings
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -20,9 +21,10 @@ from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     download_url,
-    draw_semantic_segmentation_masks,
     extract_archive,
+    quantile_normalization,
     sort_sentinel2_bands,
 )
 
@@ -53,15 +55,9 @@ class OSCD(NonGeoDataset):
     """
 
     urls: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': (
-            'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
-        ),
-        'Onera Satellite Change Detection dataset - Train Labels.zip': (
-            'https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download'
-        ),
-        'Onera Satellite Change Detection dataset - Test Labels.zip': (
-            'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
-        ),
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
     md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
@@ -77,9 +73,7 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits = ('train', 'test')
-
-    colormap = ('blue',)
+    splits: tuple[str, ...] = ('train', 'test')
 
     all_bands = (
         'B01',
@@ -102,9 +96,9 @@ class OSCD(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -138,8 +132,11 @@ class OSCD(NonGeoDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -155,7 +152,12 @@ class OSCD(NonGeoDataset):
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
+            # FIXME: VideoSequential only works with a batch dimension
+            sample['image'] = sample['image'].unsqueeze(0)
+            sample['mask'] = sample['mask'].unsqueeze(0)
             sample = self.transforms(sample)
+            sample['image'] = sample['image'].squeeze(0)
+            sample['mask'] = sample['mask'].squeeze(0)
 
         return sample
 
@@ -183,7 +185,7 @@ class OSCD(NonGeoDataset):
             mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
             def get_image_paths(ind: int) -> list[str]:
-                return sorted(
+                return sorted(  # ty: ignore[invalid-return-type]
                     glob.glob(
                         os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
                     ),
@@ -270,12 +272,12 @@ class OSCD(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for f_name in self.urls:
+        for filename in self.urls:
             download_url(
-                self.urls[f_name],
+                self.urls[filename],
                 self.root,
-                filename=f_name,
-                md5=self.md5s[f_name] if self.checksum else None,
+                filename=filename,
+                md5=self.md5s[filename] if self.checksum else None,
             )
 
     def _extract(self) -> None:
@@ -286,10 +288,10 @@ class OSCD(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
-        alpha: float = 0.5,
+        alpha: float | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -297,7 +299,7 @@ class OSCD(NonGeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            alpha: opacity with which to render predictions on top of the imagery
+            alpha: deprecated, has no effect
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -305,41 +307,87 @@ class OSCD(NonGeoDataset):
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
-        ncols = 2
+        if alpha is not None:
+            warnings.warn(
+                'The alpha parameter is deprecated and has no effect.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         try:
             rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
             raise RGBBandsMissingError() from e
 
-        def get_masked(img: Tensor) -> 'np.typing.NDArray[np.uint8]':
-            rgb_img = img[rgb_indices].float().numpy()
-            per02 = np.percentile(rgb_img, 2)
-            per98 = np.percentile(rgb_img, 98)
-            rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
-                np.uint8
-            )
-            array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
-                torch.from_numpy(rgb_img),
-                sample['mask'][0],
-                alpha=alpha,
-                colors=list(self.colormap),
-            )
-            return array
+        def to_rgb(img: Tensor) -> Tensor:
+            rgb = img[rgb_indices].float()
+            return quantile_normalization(rgb).permute(1, 2, 0)
 
-        image1 = get_masked(sample['image'][0])
-        image2 = get_masked(sample['image'][1])
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
+        ncols = 3
+        if 'prediction' in sample:
+            ncols = 4
+
+        image1 = to_rgb(sample['image'][0])
+        image2 = to_rgb(sample['image'][1])
+        mask = sample['mask'][0]
+
+        h, w = image1.shape[:2]
+        fig, axs = plt.subplots(
+            1, ncols, figsize=(ncols * 5, 5 * h / w), layout='constrained'
+        )
         axs[0].imshow(image1)
-        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis('off')
+        axs[2].imshow(mask, cmap='gray', interpolation='none', vmin=0, vmax=1)
+        if ncols == 4:
+            axs[3].imshow(
+                sample['prediction'][0],
+                cmap='gray',
+                interpolation='none',
+                vmin=0,
+                vmax=1,
+            )
+
+        for ax in axs:
+            ax.axis('off')
 
         if show_titles:
-            axs[0].set_title('Pre change')
-            axs[1].set_title('Post change')
+            axs[0].set_title('Pre-change (T1)')
+            axs[1].set_title('Post-change (T2)')
+            axs[2].set_title('Ground Truth')
+            if ncols == 4:
+                axs[3].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
 
         return fig
+
+
+class OSCD100(OSCD):
+    """Subset of OSCD with 100 pre-cropped image pairs at 256x256 resolution.
+
+    Intended for tutorials and demonstrations, not benchmarking.
+
+    Maintains the same file structure and all 13 Sentinel-2 bands as OSCD, but with
+    100 pre-cropped 256x256 patches. Adds a validation split (train/val/test).
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.1109/IGARSS.2018.8518015
+
+    .. versionadded:: 0.9
+    """
+
+    urls: ClassVar[dict[str, str]] = {
+        'Onera Satellite Change Detection dataset - Images.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Images.zip',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
+    }
+    md5s: ClassVar[dict[str, str]] = {
+        'Onera Satellite Change Detection dataset - Images.zip': '1b4592e0195b675d3822d0fb675b3be2',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': 'ef1d59b9f1a2b9c8b595c33b726c5d0a',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': 'abcbb7e5b0e9f4fd0ff51f28d5c46ae0',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': 'b615ba424a77fcc41bdab8c5a56c7b54',
+    }
+    splits: tuple[str, ...] = ('train', 'val', 'test')

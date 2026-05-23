@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench Cloud-S2 dataset."""
@@ -6,8 +6,8 @@
 import os
 
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 
@@ -72,7 +72,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     cmap = ListedColormap(['white', 'yellow', 'green', 'red'])
     classes = ('Clear', 'Thick Cloud', 'Thin Cloud', 'Cloud Shadow')
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -81,7 +81,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index] + '.tif'
+        file = str(self.files[index]) + '.tif'
         image_path = os.path.join(self.root, self.directory, 's2_toa', file)
         mask_path = os.path.join(self.root, self.directory, 'cloud', file)
         sample = self._load_image(image_path) | self._load_mask(mask_path)

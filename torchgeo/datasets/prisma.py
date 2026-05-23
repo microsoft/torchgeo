@@ -1,15 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """PRISMA datasets."""
-
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import RasterDataset
-from .utils import percentile_normalization
+from .utils import Sample, quantile_normalization
 
 
 class PRISMA(RasterDataset):
@@ -78,10 +76,7 @@ class PRISMA(RasterDataset):
     date_format = '%Y%m%d%H%M%S'
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -96,7 +91,7 @@ class PRISMA(RasterDataset):
         # RGB band indices based on https://doi.org/10.3390/rs14164080
         rgb_indices = [34, 23, 11]
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
-        image = percentile_normalization(image, axis=(0, 1))
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
         ax.imshow(image)

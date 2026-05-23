@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TreeSatAI datasets."""
@@ -6,7 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import rasterio as rio
 import torch
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class TreeSatAI(NonGeoDataset):
@@ -98,7 +98,7 @@ class TreeSatAI(NonGeoDataset):
     )
 
     # https://zenodo.org/records/6780578/files/220629_doc_TreeSatAI_benchmark_archive.pdf
-    all_sensors = ('aerial', 's1', 's2')
+    all_sensors: tuple[Literal['aerial', 's1', 's2'], ...] = ('aerial', 's1', 's2')
     all_bands: ClassVar[dict[str, list[str]]] = {
         'aerial': ['IR', 'G', 'B', 'R'],
         's1': ['VV', 'VH', 'VV/VH'],
@@ -126,9 +126,9 @@ class TreeSatAI(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        sensors: Sequence[str] = all_sensors,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['aerial', 's1', 's2']] = all_sensors,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -174,7 +174,7 @@ class TreeSatAI(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -239,7 +239,7 @@ class TreeSatAI(NonGeoDataset):
 
         extract_archive(os.path.join(self.root, file), to_path)
 
-    def plot(self, sample: dict[str, Tensor], show_titles: bool = True) -> Figure:
+    def plot(self, sample: Sample, show_titles: bool = True) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -252,10 +252,10 @@ class TreeSatAI(NonGeoDataset):
         fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False)
 
         for i, sensor in enumerate(self.sensors):
-            image = sample[f'image_{sensor}'].cpu().numpy()
+            image = sample[f'image_{sensor}']
             bands = [self.all_bands[sensor].index(b) for b in self.rgb_bands[sensor]]
             image = rearrange(image[bands], 'c h w -> h w c')
-            image = percentile_normalization(image)
+            image = quantile_normalization(image)
             ax[0, i].imshow(image)
             ax[0, i].axis('off')
 
@@ -285,7 +285,7 @@ class TreeSatAI(NonGeoDataset):
             Class names and percentages sorted by percentage.
         """
         labels: list[tuple[str, float]] = []
-        for i, pct in enumerate(multilabel.cpu().numpy()):
+        for i, pct in enumerate(multilabel):
             if pct > 0.001:
                 labels.append((self.classes[i], pct))
 

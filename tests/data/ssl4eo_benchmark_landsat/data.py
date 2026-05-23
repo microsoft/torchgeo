@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -176,11 +175,6 @@ def create_tarballs(directories: str) -> None:
     for directory in directories:
         # Create tarballs
         shutil.make_archive(directory, 'gztar', '.', directory)
-
-        # Compute checksums
-        with open(f'{directory}.tar.gz', 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(directory, md5)
 
 
 if __name__ == '__main__':

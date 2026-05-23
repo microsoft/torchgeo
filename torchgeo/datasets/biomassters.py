@@ -1,11 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """BioMassters Dataset."""
 
 import os
 from collections.abc import Sequence
+from typing import Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -16,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, percentile_normalization
+from .utils import Path, Sample, quantile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -48,7 +50,7 @@ class BioMassters(NonGeoDataset):
     * https://nascetti-a.github.io/BioMasster/
 
     .. note::
-        This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://hf.co/datasets/torchgeo/biomassters>`_.
+        This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://huggingface.co/datasets/torchgeo/biomassters>`_.
 
     .. versionadded:: 0.5
     """
@@ -61,8 +63,8 @@ class BioMassters(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        sensors: Sequence[str] = ['S1', 'S2'],
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
@@ -130,7 +132,7 @@ class BioMassters(NonGeoDataset):
 
             self.df['num_index'] = self.df.groupby(['chip_id', 'month']).ngroup()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -150,7 +152,7 @@ class BioMassters(NonGeoDataset):
         )
 
         filepaths = sample_df['filename'].tolist()
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         for sens in self.sensors:
             sens_filepaths = [fp for fp in filepaths if sens in fp]
             sample[f'image_{sens}'] = self._load_input(sens_filepaths)
@@ -182,7 +184,10 @@ class BioMassters(NonGeoDataset):
         filepaths = [
             os.path.join(self.root, f'{self.split}_features', f) for f in filenames
         ]
-        arr_list = [rasterio.open(fp).read() for fp in filepaths]
+        arr_list = []
+        for fp in filepaths:
+            with rasterio.open(fp) as src:
+                arr_list.append(src.read())
         if self.as_time_series:
             arr = np.stack(arr_list, axis=0)
         else:
@@ -219,10 +224,7 @@ class BioMassters(NonGeoDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -242,26 +244,24 @@ class BioMassters(NonGeoDataset):
 
         fig, axs = plt.subplots(1, ncols=ncols, figsize=(5 * ncols, 10))
         for idx, sens in enumerate(self.sensors):
-            img = sample[f'image_{sens}'].numpy()
+            img = sample[f'image_{sens}'].float()
             if self.as_time_series:
                 # plot last time step
                 img = img[-1, ...]
             if sens == 'S2':
                 img = img[[2, 1, 0], ...]
-                img = percentile_normalization(img.transpose(1, 2, 0))
+                img = quantile_normalization(einops.rearrange(img, 'c h w -> h w c'))
             else:
                 co_polarization = img[0]  # transmit == receive
                 cross_polarization = img[1]  # transmit != receive
                 ratio = co_polarization / cross_polarization
 
                 # https://gis.stackexchange.com/a/400780/123758
-                co_polarization = np.clip(co_polarization / 0.3, a_min=0, a_max=1)
-                cross_polarization = np.clip(
-                    cross_polarization / 0.05, a_min=0, a_max=1
-                )
-                ratio = np.clip(ratio / 25, a_min=0, a_max=1)
+                co_polarization = torch.clamp(co_polarization / 0.3, 0, 1)
+                cross_polarization = torch.clamp(cross_polarization / 0.05, 0, 1)
+                ratio = torch.clamp(ratio / 25, 0, 1)
 
-                img = np.stack((co_polarization, cross_polarization, ratio), axis=-1)
+                img = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
 
             axs[idx].imshow(img)
             axs[idx].axis('off')

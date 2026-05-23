@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """BYOL trainer for self-supervised learning (SSL)."""
@@ -14,6 +14,7 @@ from kornia import augmentation as K
 from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
+from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -167,7 +168,7 @@ class BackboneWrapper(nn.Module):
         """Hook to record the activations at the projection layer.
 
         See the following docs page for more details on hooks:
-        https://pytorch.org/docs/stable/generated/torch.nn.modules.module.register_module_forward_hook.html
+        https://docs.pytorch.org/docs/stable/generated/torch.nn.modules.module.register_module_forward_hook.html
 
         Args:
             module: the calling module
@@ -349,7 +350,7 @@ class BYOLTask(BaseTask):
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -395,12 +396,14 @@ class BYOLTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""

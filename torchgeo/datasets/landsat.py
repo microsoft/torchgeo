@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Landsat datasets."""
 
 import abc
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -13,13 +13,13 @@ from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample, quantile_normalization
 
 
 class Landsat(RasterDataset, abc.ABC):
     """Abstract base class for all Landsat datasets.
 
-    `Landsat <https://landsat.gsfc.nasa.gov/>`__ is a joint NASA/USGS program,
+    `Landsat <https://science.nasa.gov/mission/landsat/>`__ is a joint NASA/USGS program,
     providing the longest continuous space-based record of Earth's land in existence.
 
     If you use this dataset in your research, please cite it using the following format:
@@ -68,8 +68,9 @@ class Landsat(RasterDataset, abc.ABC):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -84,9 +85,14 @@ class Landsat(RasterDataset, abc.ABC):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -94,13 +100,10 @@ class Landsat(RasterDataset, abc.ABC):
         bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -127,9 +130,7 @@ class Landsat(RasterDataset, abc.ABC):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

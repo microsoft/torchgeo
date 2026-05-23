@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """AgriFieldNet India Challenge dataset."""
@@ -6,10 +6,11 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import rasterio
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -17,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, which
+from .utils import GeoSlice, Path, Sample, quantile_normalization, which
 
 
 class AgriFieldNet(RasterDataset):
@@ -42,8 +43,8 @@ class AgriFieldNet(RasterDataset):
     crops being over represented. The test set was drawn randomly from an area
     weighted field list that ensured that fields with less common crop types
     were better represented in the test set. The original dataset can be
-    downloaded from `Source Cooperative <https://beta.source.coop/
-    radiantearth/agrifieldnet-competition/>`__.
+    downloaded from `Source Cooperative <https://source.coop/
+    radiantearth/agrifieldnet-competition>`__.
 
     Dataset format:
 
@@ -129,9 +130,10 @@ class AgriFieldNet(RasterDataset):
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
@@ -146,9 +148,14 @@ class AgriFieldNet(RasterDataset):
                 entry and returns a transformed version
             cache: if True, cache the dataset in memory
             download: if True, download dataset and store it in the root directory
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert set(classes) <= self.cmap.keys(), (
             f'Only the following classes are valid: {list(self.cmap.keys())}.'
@@ -162,7 +169,12 @@ class AgriFieldNet(RasterDataset):
         self._verify()
 
         super().__init__(
-            paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
+            paths=paths,
+            crs=crs,
+            bands=bands,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
@@ -172,36 +184,37 @@ class AgriFieldNet(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
 
-        x, y, t = self._disambiguate_slice(query)
+        x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
-        index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if index.empty:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.bands:
             band_filepaths = []
-            for filepath in index.filepath:
+            for filepath in df.filepath:
                 filename = os.path.basename(filepath)
                 directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
@@ -212,24 +225,25 @@ class AgriFieldNet(RasterDataset):
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, query))
-        image = torch.cat(data_list)
+            data_list.append(self._merge_or_stack(band_filepaths, index))
+        image = torch.cat(data_list, dim=-3)
 
         mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.paths, 'train_labels')):
+        for root, dirs, files in os.walk(os.path.join(paths, 'train_labels')):
             for file in files:
                 if not file.endswith('_field_ids.tif') and file.endswith('.tif'):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query)
+        mask = self._merge_or_stack(mask_filepaths, index)
         mask = self.ordinal_map[mask.squeeze().long()]
 
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(index),
             'image': image.float(),
             'mask': mask.long(),
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:
@@ -253,15 +267,13 @@ class AgriFieldNet(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        os.makedirs(self.paths, exist_ok=True)
+        paths = cast(Path, self.paths)
+        os.makedirs(paths, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', paths, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -284,7 +296,7 @@ class AgriFieldNet(RasterDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].squeeze()
         ncols = 2

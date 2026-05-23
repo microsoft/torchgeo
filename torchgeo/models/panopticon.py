@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Panopticon Foundation Model."""
@@ -59,7 +59,7 @@ class PanopticonPE(nn.Module):
         chn_ids = x_dict['chn_ids']
         mask = x_dict.get('spec_masks', None)
 
-        x, hp, wp = self.conv3d(x)
+        x, _, _ = self.conv3d(x)
 
         x = self.chnfus(x, chn_ids=chn_ids, mask=mask)  # B,L,D
         x = self.proj(x)
@@ -160,7 +160,7 @@ class ChnAttn(nn.Module):
             Output tensor of shape (B, L, D) independent of the input channel dimension
             C.
         """
-        B, C, L, D = x.shape
+        B, _, L, D = x.shape
 
         # add embeddings
         chn_embs = self.chnemb(chn_ids)  # B,C,D
@@ -354,17 +354,17 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
         Tensor of embeddings of shape (M,D).
     """
     assert embed_dim % 2 == 0
-    omega = torch.arange(embed_dim // 2, dtype=torch.float32, device=pos.device)
-    omega /= embed_dim / 2.0
-    omega = 1.0 / 10000**omega  # (D/2,)
+    # Compute omega factor in one step and ensure float32 and device match pos
+    half_dim = embed_dim // 2
+    omega = torch.arange(half_dim, dtype=torch.float32, device=pos.device) / (half_dim)
+    omega = 1.0 / (10000**omega)  # (D/2,)
 
-    pos = pos.reshape(-1)  # (M,)
-    out = torch.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
+    # pos is assumed 1D (M,). Use .view(-1) which is a cheap no-copy if already 1D.
+    pos = pos.view(-1)
+    out = torch.outer(pos, omega)  # (M, D/2); faster than einsum for this case
 
-    emb_sin = torch.sin(out)  # (M, D/2)
-    emb_cos = torch.cos(out)  # (M, D/2)
-
-    emb = torch.cat([emb_sin, emb_cos], dim=1)  # (M, D)
+    # Compute sin and cos in one call for better efficiency and memory behavior
+    emb = torch.cat((out.sin(), out.cos()), dim=1)  # (M, D)
     return emb
 
 
@@ -467,7 +467,7 @@ class Panopticon(torch.nn.Module):
         return out
 
 
-class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
+class Panopticon_Weights(WeightsEnum):
     """Panopticon weights.
 
     .. versionadded:: 0.7
@@ -475,7 +475,7 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
 
     VIT_BASE14 = Weights(
         url='https://hf.co/lewaldm/panopticon/resolve/c8c2bb9555819e8b2bcedf5b3b00e3bf531554e7/panopticon_vitb14_teacher.pth',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'model': 'panopticon_vitb14',
             'publication': 'https://arxiv.org/abs/2503.10845',

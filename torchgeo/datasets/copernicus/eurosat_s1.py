@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench EuroSAT-S1 dataset."""
@@ -6,8 +6,8 @@
 import os
 
 import torch
-from torch import Tensor
 
+from ..utils import Sample
 from .base import CopernicusBenchBase
 
 
@@ -45,7 +45,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
         'SeaLake',
     )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -54,7 +54,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index].replace('.jpg', '.tif')
+        file = str(self.files[index].replace('.jpg', '.tif'))
         classname = file.split('_')[0]
         path = os.path.join(self.root, self.directory, 'all_imgs', classname, file)
         sample = self._load_image(path)

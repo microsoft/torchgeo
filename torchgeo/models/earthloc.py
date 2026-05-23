@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EarthLoc."""
@@ -6,11 +6,10 @@
 import math
 from typing import Any
 
-import kornia.augmentation as K
 import timm
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.transforms.v2 as T
 from einops import rearrange
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
@@ -21,14 +20,10 @@ _earthloc_sentinel2_bands = ['B4', 'B3', 'B2']
 # https://github.com/gmberton/EarthLoc/blob/2da231ae7ec9764fac6cde2aa88a17db23c1bb6a/datasets/train_dataset.py#L43
 # https://github.com/gmberton/EarthLoc/blob/2da231ae7ec9764fac6cde2aa88a17db23c1bb6a/augmentations.py#L40
 # Divide by 255 and normalize with ImageNet mean and std
-_earthloc_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(255.0)),
-    K.Normalize(
-        mean=torch.tensor([0.485, 0.456, 0.406]),
-        std=torch.tensor([0.229, 0.224, 0.225]),
-    ),
-    K.Resize((320, 320)),
-    data_keys=None,
+_earthloc_transforms = nn.Sequential(
+    T.Normalize(mean=[0.0], std=[255.0], inplace=True),
+    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=True),
+    T.Resize((320, 320)),
 )
 
 
@@ -164,7 +159,7 @@ class EarthLoc(nn.Module):
         image_size: int = 320,
         desc_dim: int = 4096,
         backbone: str = 'resnet50',
-        pretrained: bool = True,
+        pretrained: bool = False,
     ) -> None:
         """Initialize the EarthLoc model.
 
@@ -214,7 +209,7 @@ class EarthLoc(nn.Module):
         return x
 
 
-class EarthLoc_Weights(WeightsEnum):  # type: ignore[misc]
+class EarthLoc_Weights(WeightsEnum):
     """EarthLoc weights."""
 
     SENTINEL2_RESNET50 = Weights(

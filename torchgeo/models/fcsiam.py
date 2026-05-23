@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Fully convolutional change detection (FCCD) implementations."""
@@ -10,10 +10,11 @@ import segmentation_models_pytorch as smp
 import torch
 from segmentation_models_pytorch import Unet
 from segmentation_models_pytorch.base.model import SegmentationModel
+from segmentation_models_pytorch.decoders.unet.decoder import UnetDecoder
 from torch import Tensor
 
 
-class FCSiamConc(SegmentationModel):  # type: ignore[misc]
+class FCSiamConc(SegmentationModel):
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
     If you use this model in your research, please cite the following paper:
@@ -68,7 +69,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
 
                   **Example**:
                   ```python
-                  decoder_use_norm={"type": "layernorm", "eps": 1e-2}
+                  decoder_use_norm = {'type': 'layernorm', 'eps': 1e-2}
                   ```
             decoder_attention_type: Attention module used in decoder of the model.
                 Available options are **None** and **scse**. SCSE paper
@@ -91,7 +92,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         )
         encoder_out_channels = [c * 2 for c in self.encoder.out_channels[1:]]
         encoder_out_channels.insert(0, self.encoder.out_channels[0])
-        self.decoder = smp.decoders.unet.decoder.UnetDecoder(
+        self.decoder = UnetDecoder(
             encoder_channels=encoder_out_channels,
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,
@@ -132,7 +133,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         return masks
 
 
-class FCSiamDiff(Unet):  # type: ignore[misc]
+class FCSiamDiff(Unet):
     """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
     If you use this model in your research, please cite the following paper:

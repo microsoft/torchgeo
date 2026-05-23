@@ -1,13 +1,12 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Vision Transformer models."""
 
 from typing import Any, cast
 
-import kornia.augmentation as K
 import timm
-import torch
+import torchvision.transforms.v2 as T
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -26,29 +25,21 @@ from .resnet import (
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=None,
+_zhu_xlab_transforms = nn.Sequential(
+    T.Resize((256, 256)),
+    T.CenterCrop(224),
+    T.Normalize(mean=[0], std=[10000], inplace=True),
 )
 
 # https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
-_ssl4eo_l_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.CenterCrop((224, 224)),
-    data_keys=None,
+_ssl4eo_l_transforms = nn.Sequential(
+    T.Normalize(mean=[0], std=[255], inplace=True), T.CenterCrop((224, 224))
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
 
 
-class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTSmall16_Weights(WeightsEnum):
     """Vision Transformer Small Patch Size 16 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -65,7 +56,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_tm_toa_bands,
         },
@@ -79,7 +70,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_tm_toa_bands,
         },
@@ -93,7 +84,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_toa_bands,
         },
@@ -107,7 +98,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_toa_bands,
         },
@@ -121,7 +112,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_sr_bands,
         },
@@ -135,7 +126,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_sr_bands,
         },
@@ -149,7 +140,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -163,7 +154,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -177,7 +168,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_sr_bands,
         },
@@ -191,7 +182,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_sr_bands,
         },
@@ -199,8 +190,8 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -270,7 +261,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,
@@ -310,7 +301,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTBase16_Weights(WeightsEnum):
     """Vision Transformer Base Patch Size 16 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -376,7 +367,7 @@ class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTLarge16_Weights(WeightsEnum):
     """Vision Transformer Large Patch Size 16 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -387,8 +378,8 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -430,7 +421,7 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,
@@ -470,7 +461,7 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTHuge14_Weights(WeightsEnum):
     """Vision Transformer Huge Patch Size 14 weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -536,7 +527,7 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTSmall14_DINOv2_Weights(WeightsEnum):
     """Vision Transformer Small Patch Size 14 (DINOv2) weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_
@@ -576,7 +567,7 @@ class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
+class ViTBase14_DINOv2_Weights(WeightsEnum):
     """Vision Transformer Base Patch Size 14 (DINOv2) weights.
 
     For `timm <https://github.com/huggingface/pytorch-image-models>`_

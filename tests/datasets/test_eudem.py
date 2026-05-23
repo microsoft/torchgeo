@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -10,8 +10,6 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from pyproj import CRS
-from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     EUDEM,
@@ -23,9 +21,7 @@ from torchgeo.datasets import (
 
 class TestEUDEM:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EUDEM:
-        md5s = {'eu_dem_v11_E30N10.zip': 'ef148466c02197a08be169eaad186591'}
-        monkeypatch.setattr(EUDEM, 'md5s', md5s)
+    def dataset(self, tmp_path: Path) -> EUDEM:
         zipfile = os.path.join('tests', 'data', 'eudem', 'eu_dem_v11_E30N10.zip')
         shutil.copy(zipfile, tmp_path)
         root = tmp_path
@@ -35,7 +31,6 @@ class TestEUDEM:
     def test_getitem(self, dataset: EUDEM) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: EUDEM) -> None:
@@ -56,7 +51,7 @@ class TestEUDEM:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'eu_dem_v11_E30N10.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             EUDEM(tmp_path, checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
@@ -68,20 +63,20 @@ class TestEUDEM:
         assert isinstance(ds, UnionDataset)
 
     def test_plot(self, dataset: EUDEM) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: EUDEM) -> None:
-        query = dataset.bounds
-        x = dataset[query]
+        index = dataset.bounds
+        x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: EUDEM) -> None:
+    def test_invalid_index(self, dataset: EUDEM) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

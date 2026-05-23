@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from pathlib import Path
@@ -8,7 +8,6 @@ import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch import Tensor
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from torchgeo.models.copernicusfm import (
@@ -120,13 +119,13 @@ class TestCopernicusFM:
 
 class TestCopernicusFMBase:
     @pytest.fixture(params=[*CopernicusFM_Base_Weights])
-    def weights(self, request: SubRequest) -> WeightsEnum:
+    def weights(self, request: SubRequest) -> CopernicusFM_Base_Weights:
         return request.param
 
     @pytest.fixture
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    ) -> CopernicusFM_Base_Weights:
         weights = CopernicusFM_Base_Weights.CopernicusFM_ViT
         path = tmp_path / f'{weights}.pth'
         model = copernicusfm_base()
@@ -157,9 +156,11 @@ class TestCopernicusFMBase:
         input_mode = 'variable'
         model(x, metadata, language_embed=language_embed, input_mode=input_mode)
 
-    def test_copernicusfm_weights(self, mocked_weights: WeightsEnum) -> None:
+    def test_copernicusfm_weights(
+        self, mocked_weights: CopernicusFM_Base_Weights
+    ) -> None:
         copernicusfm_base(weights=mocked_weights)
 
     @pytest.mark.slow
-    def test_copernicusfm_download(self, weights: WeightsEnum) -> None:
+    def test_copernicusfm_download(self, weights: CopernicusFM_Base_Weights) -> None:
         copernicusfm_base(weights=weights)

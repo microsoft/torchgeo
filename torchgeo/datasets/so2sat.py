@@ -1,21 +1,21 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """So2Sat dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar, Literal, cast
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, lazy_import, percentile_normalization
+from .utils import Path, Sample, check_integrity, lazy_import, quantile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -195,10 +195,10 @@ class So2Sat(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        version: str = '2',
-        split: str = 'train',
+        version: Literal['2', '3_random', '3_block', '3_culture_10'] = '2',
+        split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
@@ -266,7 +266,7 @@ class So2Sat(NonGeoDataset):
         with h5py.File(self.fn, 'r') as f:
             self.size: int = f['label'].shape[0]
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -335,10 +335,7 @@ class So2Sat(NonGeoDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -363,9 +360,9 @@ class So2Sat(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
-        image = np.rollaxis(image, 0, 3)
-        image = percentile_normalization(image, 0, 100)
+        image = sample['image'][rgb_indices]
+        image = einops.rearrange(image, 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]

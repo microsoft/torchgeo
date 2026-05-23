@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CDL dataset."""
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -22,7 +22,7 @@ class CDL(RasterDataset):
 
     The `Cropland Data Layer
     <https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php>`__, hosted on
-    `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
+    `CropScape <https://nassgeodata.gmu.edu/CropScape/%3B>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
     boundary, water and road layers. The Boundary Layer options provided are County,
@@ -50,6 +50,7 @@ class CDL(RasterDataset):
 
     url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
     md5s: ClassVar[dict[int, str]] = {
+        2024: '841cd0cb8d4a9129cb1e4cfa0e40c286',
         2023: '8c7685d6278d50c554f934b16a6076b7',
         2022: '754cf50670cdfee511937554785de3e6',
         2021: '27606eab08fe975aa138baad3e5dfcd8',
@@ -212,10 +213,11 @@ class CDL(RasterDataset):
         res: float | tuple[float, float] | None = None,
         years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -234,10 +236,15 @@ class CDL(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionadded:: 0.5
            The *years* and *classes* parameters.
@@ -264,26 +271,28 @@ class CDL(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *query* is not found in the index.
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
+        sample = super().__getitem__(index)
         sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
@@ -296,10 +305,9 @@ class CDL(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
-            pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace('*', str(year))
-            )
+            pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):
                 exists.append(True)
                 self._extract()
@@ -319,31 +327,31 @@ class CDL(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
-            pathname = os.path.join(self.paths, zipfile_name)
-            extract_archive(pathname, self.paths)
+            pathname = os.path.join(paths, zipfile_name)
+            extract_archive(pathname, paths)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """DOTA dataset."""
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,10 +20,11 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -77,7 +78,7 @@ class DOTA(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/dota/resolve/672e63236622f7da6ee37fca44c50ac368b77cab/{}'
+    url = 'https://hf.co/datasets/isaaccorley/dota/resolve/672e63236622f7da6ee37fca44c50ac368b77cab/{}'
 
     file_info: ClassVar[dict[str, dict[str, dict[str, dict[str, str]]]]] = {
         'train': {
@@ -176,7 +177,7 @@ class DOTA(NonGeoDataset):
         split: Literal['train', 'val'] = 'train',
         version: Literal['1.0', '1.5', '2.0'] = '2.0',
         bbox_orientation: Literal['horizontal', 'oriented'] = 'oriented',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -233,7 +234,7 @@ class DOTA(NonGeoDataset):
         """
         return len(self.sample_df)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -417,7 +418,7 @@ class DOTA(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,
@@ -433,12 +434,12 @@ class DOTA(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0))
         if self.bbox_orientation == 'horizontal':
-            boxes = sample['bbox_xyxy'].cpu().numpy()
+            boxes = sample['bbox_xyxy']
         else:
-            boxes = sample['bbox'].cpu().numpy()
-        labels = sample['labels'].cpu().numpy()
+            boxes = sample['bbox']
+        labels = sample['labels']
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(image)

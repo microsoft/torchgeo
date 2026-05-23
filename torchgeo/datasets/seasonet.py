@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SeasoNet dataset."""
@@ -6,7 +6,7 @@
 import os
 import random
 from collections.abc import Callable, Collection, Iterable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -86,7 +86,7 @@ class SeasoNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    metadata = (
+    metadata: tuple[dict[str, str], ...] = (
         {
             'name': 'spring',
             'ext': '.zip',
@@ -214,12 +214,12 @@ class SeasoNet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
         concat_seasons: int = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -282,8 +282,8 @@ class SeasoNet(NonGeoDataset):
 
         if self.concat_seasons > 1:
             # Group entries by location
-            self.files = csv.groupby(['Latitude', 'Longitude'])
-            self.files = self.files['Path'].agg('sum')
+            files = csv.groupby(['Latitude', 'Longitude'])
+            self.files = files['Path'].agg('sum')
 
             # Remove entries with less than concat_seasons available seasons
             self.files = self.files[
@@ -292,15 +292,15 @@ class SeasoNet(NonGeoDataset):
         else:
             self.files = csv['Path']
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            sample at that index containing the image with shape SCxHxW
-            and the mask with shape HxW, where ``S = self.concat_seasons``
+            sample at that index containing the image with shape TxCxHxW
+            and the mask with shape HxW, where ``T = self.concat_seasons``
         """
         image = self._load_image(index)
         mask = self._load_target(index)
@@ -331,7 +331,7 @@ class SeasoNet(NonGeoDataset):
         paths = self.files.iloc[index]
         if self.concat_seasons > 1:
             paths = random.sample(paths, self.concat_seasons)
-        tensor = torch.empty(self.concat_seasons * self.channels, *self.image_size)
+        tensor = torch.empty(self.concat_seasons, self.channels, *self.image_size)
         for img_idx, path in enumerate(paths):
             bnd_idx = 0
             for band in self.bands:
@@ -342,8 +342,7 @@ class SeasoNet(NonGeoDataset):
                         resampling=Resampling.bilinear,
                     )
                 image = torch.from_numpy(array).float()
-                c = img_idx * self.channels + bnd_idx
-                tensor[c : c + image.shape[0]] = image
+                tensor[img_idx, bnd_idx : bnd_idx + image.shape[0]] = image
                 bnd_idx += image.shape[0]
         return tensor
 
@@ -402,7 +401,7 @@ class SeasoNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         show_legend: bool = True,
         suptitle: str | None = None,
@@ -440,30 +439,31 @@ class SeasoNet(NonGeoDataset):
             if b == '10m_RGB':
                 break
             start += self.band_nums[b]
-        rgb_indices = [start + s * self.channels for s in range(self.concat_seasons)]
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4.5, 5))
         fig.subplots_adjust(wspace=0.05)
-        for ax, index in enumerate(rgb_indices):
-            image = images[index : index + 3].permute(1, 2, 0).numpy()
-            image = percentile_normalization(image)
-            axs[ax].imshow(image)
-            axs[ax].axis('off')
+        for t in range(self.concat_seasons):
+            image = images[t, start : start + 3].permute(1, 2, 0)
+            image = quantile_normalization(image)
+            axs[t].imshow(image)
+            axs[t].axis('off')
             if show_titles:
-                axs[ax].set_title(f'Image {ax + 1}')
+                axs[t].set_title(f'Image {t + 1}')
 
-        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none')
-        axs[ax + 1].axis('off')
+        axs[self.concat_seasons].imshow(
+            mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none'
+        )
+        axs[self.concat_seasons].axis('off')
         if show_titles:
-            axs[ax + 1].set_title('Mask')
+            axs[self.concat_seasons].set_title('Mask')
 
         if show_predictions:
-            axs[ax + 2].imshow(
+            axs[self.concat_seasons + 1].imshow(
                 prediction, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none'
             )
-            axs[ax + 2].axis('off')
+            axs[self.concat_seasons + 1].axis('off')
             if show_titles:
-                axs[ax + 2].set_title('Prediction')
+                axs[self.concat_seasons + 1].set_title('Prediction')
 
         if show_legend:
             lgd = np.unique(mask)

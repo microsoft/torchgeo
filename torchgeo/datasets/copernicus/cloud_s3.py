@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Copernicus-Bench Cloud-S3 dataset."""
@@ -8,9 +8,8 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 from matplotlib.colors import ListedColormap
-from torch import Tensor
 
-from ..utils import Path
+from ..utils import Path, Sample
 from .base import CopernicusBenchBase
 
 
@@ -117,7 +116,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         split: Literal['train', 'val', 'test'] = 'train',
         mode: Literal['binary', 'multi'] = 'multi',
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -142,7 +141,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
             self.cmap = ListedColormap(['red', 'gray', 'white'])
         super().__init__(root, split, bands, transforms, download, checksum)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -151,7 +150,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files[index]
+        file = str(self.files[index])
         image_path = os.path.join(self.root, self.directory, 's3_olci', file)
         mask_path = os.path.join(self.root, self.directory, f'cloud_{self.mode}', file)
         sample = self._load_image(image_path) | self._load_mask(mask_path)

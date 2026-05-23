@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SkyScript dataset."""
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar, Literal, NotRequired, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,14 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import Path, download_and_extract_archive, download_url, extract_archive
+
+
+class CaptionSample(TypedDict):
+    """Sample for image captioning."""
+
+    image: Tensor
+    caption: str
+    prediction: NotRequired[str]
 
 
 class SkyScript(NonGeoDataset):
@@ -63,8 +71,8 @@ class SkyScript(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[CaptionSample], CaptionSample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -102,7 +110,7 @@ class SkyScript(NonGeoDataset):
         """
         return len(self.captions)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> CaptionSample:  # ty: ignore[invalid-method-override]
         """Return an index within the dataset.
 
         Args:
@@ -118,7 +126,7 @@ class SkyScript(NonGeoDataset):
             array = rearrange(array, 'h w c -> c h w')
             image = torch.from_numpy(array)
 
-        sample = {'image': image, 'caption': title}
+        sample: CaptionSample = {'image': image, 'caption': title}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -155,14 +163,14 @@ class SkyScript(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: CaptionSample,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`RasterDataset.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

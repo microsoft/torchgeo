@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -76,6 +76,8 @@ class TestClassificationTask:
             'bigearthnet_all',
             'bigearthnet_s1',
             'bigearthnet_s2',
+            'dlrsd_multilabel',
+            'dlrsd_multilabel_no_val',
             'eurosat',
             'eurosat100',
             'eurosatspatial',
@@ -95,7 +97,7 @@ class TestClassificationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name.startswith('so2sat') or name == 'quakeset':
-            pytest.importorskip('h5py', minversion='3.6')
+            pytest.importorskip('h5py', minversion='3.10')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -234,7 +236,7 @@ class TestClassificationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_binary_predict(self, fast_dev_run: bool) -> None:
-        pytest.importorskip('h5py', minversion='3.6')
+        pytest.importorskip('h5py', minversion='3.10')
         datamodule = PredictBinaryDataModule(
             root='tests/data/quakeset', batch_size=1, num_workers=0
         )

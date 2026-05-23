@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
+import zipfile
 
 import numpy as np
 import rasterio
@@ -65,11 +65,11 @@ def create_file(path: str, dtype: str) -> None:
 if __name__ == '__main__':
     for year in years:
         filename = os.path.join(
-            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif'
-        ).format(year)
+            'tests', 'data', 'nlcd', f'Annual_NLCD_LndCov_{year}_CU_C1V1.tif'
+        )
         create_file(filename, dtype='int8')
-
-        # Compute checksums
-        with open(filename, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{filename}: {md5}')
+        zipfilename = os.path.join(
+            'tests', 'data', 'nlcd', f'Annual_NLCD_LndCov_{year}_CU_C1V1.zip'
+        )
+        with zipfile.ZipFile(zipfilename, 'w') as zip:
+            zip.write(filename, arcname=filename)

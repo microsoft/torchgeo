@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import zipfile
 from datetime import datetime, timedelta
 
@@ -70,8 +69,3 @@ if __name__ == '__main__':
                 f'times_test_{task}.npy',
             ]:
                 zip.write(file, arcname=file)
-
-        # Compute checksums
-        with open(data_file.format(task).replace('.hdf5', '.zip'), 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{task}: {md5}')

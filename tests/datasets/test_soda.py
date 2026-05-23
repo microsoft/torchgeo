@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -26,14 +26,8 @@ class TestSODAA:
         url = os.path.join('tests', 'data', 'soda', '{}')
         monkeypatch.setattr(SODAA, 'url', url)
         files = {
-            'images': {
-                'filename': 'Images.zip',
-                'md5sum': '8a3bb78816643dd1567e9664ac9c1b67',
-            },
-            'labels': {
-                'filename': 'Annotations.zip',
-                'md5sum': '73e84f03b96f94c92aeb46816e43d2c0',
-            },
+            'images': {'filename': 'Images.zip'},
+            'labels': {'filename': 'Annotations.zip'},
         }
         monkeypatch.setattr(SODAA, 'files', files)
         split, bbox_orientation = request.param
@@ -45,7 +39,6 @@ class TestSODAA:
             bbox_orientation=bbox_orientation,
             transforms=transforms,
             download=True,
-            checksum=True,
         )
 
     def test_already_downloaded(self, dataset: SODAA) -> None:
@@ -78,7 +71,7 @@ class TestSODAA:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'Images.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             SODAA(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:

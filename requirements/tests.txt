@@ -1,4 +1,0 @@
-# tests
-nbmake==1.5.5
-pytest==8.4.1
-pytest-cov==6.2.1

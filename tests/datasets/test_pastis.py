@@ -1,8 +1,9 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,31 +14,42 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import PASTIS, DatasetNotFoundError
+from torchgeo.datasets import PASTIS, PASTIS100, DatasetNotFoundError
 
 
 class TestPASTIS:
     @pytest.fixture(
-        params=[
-            {'folds': (1, 2), 'bands': 's2', 'mode': 'semantic'},
-            {'folds': (1, 2), 'bands': 's1a', 'mode': 'semantic'},
-            {'folds': (1, 2), 'bands': 's1d', 'mode': 'instance'},
-        ]
+        params=product(
+            [PASTIS, PASTIS100],
+            [
+                {'folds': (1, 2), 'bands': PASTIS.s2_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': ('B04', 'B03', 'B02'), 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1a_bands, 'mode': 'semantic'},
+                {'folds': (1, 2), 'bands': PASTIS.s1d_bands, 'mode': 'instance'},
+            ],
+        )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
-        md5 = '135a29fb8221241dde14f31579c07f45'
-        monkeypatch.setattr(PASTIS, 'md5', md5)
-        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
-        monkeypatch.setattr(PASTIS, 'url', url)
+        base_class: type[PASTIS] = request.param[0]
+        params: dict[str, str | tuple[str, ...]] = request.param[1]
+
         root = tmp_path
-        folds = request.param['folds']
-        bands = request.param['bands']
-        mode = request.param['mode']
+        bands = params['bands']
+        mode = params['mode']
+        assert isinstance(mode, str)
         transforms = nn.Identity()
-        return PASTIS(
-            root, folds, bands, mode, transforms, download=True, checksum=True
+
+        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
+        monkeypatch.setattr(base_class, 'url', url)
+        return base_class(
+            root=root,
+            folds=(1, 2),
+            bands=bands,
+            mode=mode,
+            transforms=transforms,
+            download=True,
         )
 
     def test_getitem_semantic(self, dataset: PASTIS) -> None:
@@ -64,7 +76,13 @@ class TestPASTIS:
         assert len(ds) == 4
 
     def test_already_extracted(self, dataset: PASTIS) -> None:
-        PASTIS(root=dataset.root, download=True)
+        type(dataset)(
+            root=dataset.root,
+            folds=dataset.folds,
+            bands=dataset.bands,
+            mode=dataset.mode,
+            download=True,
+        )
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
@@ -79,7 +97,7 @@ class TestPASTIS:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'PASTIS-R.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             PASTIS(root=tmp_path, checksum=True)
 
     def test_invalid_fold(self) -> None:
@@ -89,6 +107,14 @@ class TestPASTIS:
     def test_invalid_mode(self) -> None:
         with pytest.raises(AssertionError):
             PASTIS(mode='invalid')
+
+    def test_invalid_bands(self) -> None:
+        with pytest.raises(ValueError, match='bands must be a subset of'):
+            PASTIS(bands=('B01',))
+
+    def test_invalid_bands_empty(self) -> None:
+        with pytest.raises(ValueError, match='bands must not be empty'):
+            PASTIS(bands=())
 
     def test_plot(self, dataset: PASTIS) -> None:
         x = dataset[0].copy()
