@@ -1,45 +1,63 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+from typing import Any
+
 import pytest
 import torch
-import torch.nn as nn
 from lightning.pytorch import Trainer
+from torch.utils.data import Subset
 
 from torchgeo.datamodules import AirQualityDataModule
 from torchgeo.trainers import TemporalRegressionTask
 
 NUM_INPUT_STEPS = 3
 NUM_TARGET_STEPS = 1
-NUM_FEATURES = 12  
+NUM_FEATURES = 12
 
 
-def make_datamodule(**kwargs: object) -> AirQualityDataModule:
+def make_datamodule(
+    root: str = 'tests/data/air_quality',
+    batch_size: int = 4,
+    num_workers: int = 0,
+    num_input_steps: int = NUM_INPUT_STEPS,
+    num_target_steps: int = NUM_TARGET_STEPS,
+    val_split_pct: float = 0.2,
+    test_split_pct: float = 0.2,
+) -> AirQualityDataModule:
     """Return a datamodule configured to match the test fixture."""
-    defaults = dict(
-        root='tests/data/air_quality',
-        batch_size=4,
-        num_workers=0,
-        num_input_steps=NUM_INPUT_STEPS,
-        num_target_steps=NUM_TARGET_STEPS,
+    return AirQualityDataModule(
+        root=root,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        num_input_steps=num_input_steps,
+        num_target_steps=num_target_steps,
+        val_split_pct=val_split_pct,
+        test_split_pct=test_split_pct,
     )
-    defaults.update(kwargs)
-    return AirQualityDataModule(**defaults)
 
 
-def make_task(**kwargs: object) -> TemporalRegressionTask:
+def make_task(
+    in_channels: int = NUM_FEATURES,
+    num_outputs: int = NUM_TARGET_STEPS * NUM_FEATURES,
+    loss: str = 'mse',
+    n_head: int = 1,
+    d_k: int = 4,
+    d_model: int = 16,
+    n_neurons: tuple[int, ...] = (16, 8),
+    len_max_seq: int = NUM_INPUT_STEPS,
+) -> TemporalRegressionTask:
     """Return a task whose hyper-parameters are consistent with the fixture."""
-    defaults = dict(
-        in_channels=NUM_FEATURES,
-        num_outputs=NUM_TARGET_STEPS * NUM_FEATURES,
-        n_head=1,
-        d_k=4,
-        d_model=16,
-        n_neurons=(16, 8),
-        len_max_seq=NUM_INPUT_STEPS,
+    return TemporalRegressionTask(
+        in_channels=in_channels,
+        num_outputs=num_outputs,
+        loss=loss,
+        n_head=n_head,
+        d_k=d_k,
+        d_model=d_model,
+        n_neurons=n_neurons,
+        len_max_seq=len_max_seq,
     )
-    defaults.update(kwargs)
-    return TemporalRegressionTask(**defaults)
 
 
 class PredictAirQualityDataModule(AirQualityDataModule):
@@ -116,6 +134,9 @@ class TestAirQualityDataModule:
     def test_setup_splits(self) -> None:
         dm = make_datamodule()
         dm.setup('fit')
+        assert isinstance(dm.train_dataset, Subset)
+        assert isinstance(dm.val_dataset, Subset)
+        assert isinstance(dm.test_dataset, Subset)
         assert len(dm.train_dataset) > 0
         assert len(dm.val_dataset) > 0
         assert len(dm.test_dataset) > 0
