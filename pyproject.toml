@@ -107,6 +107,8 @@ datasets = [
     "webdataset>=0.2.4",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
+    # zarr 2.18+ required for numcodecs 0.13+ compatibility
+    "zarr>=2.18",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx

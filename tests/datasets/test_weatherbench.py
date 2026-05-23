@@ -12,6 +12,9 @@ import torch
 
 from torchgeo.datasets import DatasetNotFoundError, WeatherBench2
 
+pytest.importorskip('xarray', minversion='0.17')
+pytest.importorskip('zarr', minversion='2.18')
+
 # zarr v3 uses asyncio internally, which creates local Unix sockets.
 # Re-enable sockets for this module so --disable-socket doesn't block it.
 pytestmark = pytest.mark.enable_socket
@@ -19,9 +22,6 @@ pytestmark = pytest.mark.enable_socket
 
 def _load_fixture_module() -> Any:
     """Load ``tests/data/weatherbench/data.py`` as an importable module."""
-    pytest.importorskip('xarray', minversion='0.17')
-    pytest.importorskip('zarr', minversion='2.16')
-
     fixture = Path('tests/data/weatherbench/data.py')
     spec = importlib.util.spec_from_file_location('wb2_data', fixture)
     assert spec is not None and spec.loader is not None
@@ -103,11 +103,12 @@ class TestWeatherBench2:
     def test_skips_unreadable_store(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        import xarray as xr
+
         _make_store(tmp_path / 'good.zarr')
         bad = tmp_path / 'bad.zarr'
         bad.mkdir()
 
-        xr = pytest.importorskip('xarray')
         real_open_zarr = xr.open_zarr
 
         def fake_open_zarr(path: Any, **kwargs: Any) -> Any:
@@ -174,13 +175,15 @@ class TestWeatherBench2:
             assert '2m_temperature' in opened.data_vars
 
     def test_spatial_metadata_missing_coords(self) -> None:
-        xr = pytest.importorskip('xarray')
+        import xarray as xr
+
         empty = xr.Dataset()
         with pytest.raises(ValueError, match='missing longitude'):
             WeatherBench2._spatial_metadata(empty, None, None)
 
     def test_spatial_metadata_too_few_coords(self) -> None:
-        xr = pytest.importorskip('xarray')
+        import xarray as xr
+
         sparse = xr.Dataset(coords={'longitude': [0.0], 'latitude': [0.0]})
         with pytest.raises(ValueError, match='fewer than 2'):
             WeatherBench2._spatial_metadata(sparse, None, None)
@@ -191,7 +194,7 @@ class TestWeatherBench2:
         # to :func:`xarray.open_zarr`.
         pytest.importorskip('fsspec')
         pytest.importorskip('gcsfs')
-        xr = pytest.importorskip('xarray')
+        import xarray as xr
 
         real_open_zarr = xr.open_zarr
         captured: dict[str, Any] = {}
