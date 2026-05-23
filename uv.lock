@@ -3541,16 +3541,17 @@ wheels = [
 
 [[package]]
 name = "sphinx-github-changelog"
-version = "1.7.2"
+version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
-    { name = "requests" },
+    { name = "httpx" },
+    { name = "myst-parser" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/8a/e3b943c59927280c9c5bfb94064845a57f36bc2e021435adbfb7d3ecca1f/sphinx_github_changelog-1.7.2.tar.gz", hash = "sha256:79f11f30ec5b1ae52a1742a6dc702644203b164732a1af4b049ebe522ff484e4", size = 78662, upload-time = "2026-03-23T21:49:45.238Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b8/e5/acaa1a6aa5e0a6ac28078b0d47a0b0eba85ca891a89e6980cb167bb24396/sphinx_github_changelog-2.0.1.tar.gz", hash = "sha256:3ff7f3352bb3637f309571e45364a81e71b7840a4f23dc6dc171d72b5e0625d1", size = 70464, upload-time = "2026-05-16T09:41:26.129Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/6c/d8db14cbf2171cae049660eacddf858a35818343e618b442993a8b0a8885/sphinx_github_changelog-1.7.2-py3-none-any.whl", hash = "sha256:fef384fb9b60bfb8f1c4cc5941dab674b0e52456cd3fe05ef2c763833054d680", size = 11416, upload-time = "2026-03-23T21:49:43.74Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/e5/e038ae1bd8d8a2313d699108a18a3b0cabb87b514ea081db1b98d7e7bf97/sphinx_github_changelog-2.0.1-py3-none-any.whl", hash = "sha256:bd3b5a73a4d083d0ff5ce435396ffc5d426758945505a32ee0359ec4862e31bb", size = 11626, upload-time = "2026-05-16T09:41:24.264Z" },
 ]
 
 [[package]]
@@ -3812,7 +3813,7 @@ requires-dist = [
     { name = "lightning", specifier = ">=2.4,!=2.5.0,!=2.5.5,!=2.5.6" },
     { name = "matplotlib", specifier = ">=3.7.3" },
     { name = "microsoft-aurora", marker = "extra == 'models'", specifier = ">=1.6" },
-    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=4.0.0" },
+    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=4" },
     { name = "nbmake", marker = "extra == 'tests'", specifier = ">=1.4.5" },
     { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.8.5" },
     { name = "netcdf4", marker = "extra == 'datasets'", specifier = ">=1.6.5" },
@@ -3823,7 +3824,7 @@ requires-dist = [
     { name = "pandas", extras = ["parquet"], marker = "extra == 'datasets'", specifier = ">=2.1.1" },
     { name = "pandas-stubs", marker = "extra == 'style'", specifier = ">=2.1.1" },
     { name = "pillow", specifier = ">=10" },
-    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.18.0" },
+    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.18" },
     { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=7.3.2" },
     { name = "pytest-cov", marker = "extra == 'tests'", specifier = ">=4" },
@@ -3835,7 +3836,7 @@ requires-dist = [
     { name = "scipy", marker = "extra == 'datasets'", specifier = ">=1.11.2" },
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
     { name = "shapely", specifier = ">=2.0.2" },
-    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8" },
     { name = "sphinx-github-changelog", marker = "extra == 'docs'", specifier = ">=1.7.2" },
     { name = "timm", specifier = ">=1.0.3" },
     { name = "torch", specifier = ">=2.2" },
