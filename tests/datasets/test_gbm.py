@@ -44,11 +44,10 @@ class TestGlobalBuildingMap:
         sample['prediction'] = sample['mask']
         dataset.plot(sample, suptitle='Test')
         plt.close()
-
         sample = dataset[dataset.bounds]
         dataset.plot(sample, show_titles=False)
         plt.close()
-
+        sample = dataset[dataset.bounds]
         sample['prediction'] = sample['mask']
         dataset.plot(sample, show_titles=False)
         plt.close()
