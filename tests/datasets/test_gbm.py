@@ -45,6 +45,14 @@ class TestGlobalBuildingMap:
         dataset.plot(sample, suptitle='Test')
         plt.close()
 
+        sample = dataset[dataset.bounds]
+        dataset.plot(sample, show_titles=False)
+        plt.close()
+
+        sample['prediction'] = sample['mask']
+        dataset.plot(sample, show_titles=False)
+        plt.close()
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GlobalBuildingMap(tmp_path)
