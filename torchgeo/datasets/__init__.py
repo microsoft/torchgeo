@@ -61,6 +61,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
+from .dlrsd import DLRSD, DLRSDBase, DLRSDMultilabel
 from .dota import DOTA
 from .earth_embeddings import EarthEmbeddings
 from .earth_index import EarthIndexEmbeddings
@@ -141,6 +142,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .s2_100k import S2100k
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
@@ -199,6 +201,7 @@ __all__ = (
     'COWC',
     'DFC2022',
     'DIOR',
+    'DLRSD',
     'DOTA',
     'ETCI2021',
     'EUDEM',
@@ -272,6 +275,8 @@ __all__ = (
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
+    'DLRSDBase',
+    'DLRSDMultilabel',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
@@ -341,6 +346,7 @@ __all__ = (
     'RasterDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'S2100k',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
     'SeasoNet',

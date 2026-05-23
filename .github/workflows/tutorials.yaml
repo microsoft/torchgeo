@@ -35,7 +35,7 @@ jobs:
           uv sync --locked --extra docs --extra tests
           uv pip install planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run notebook checks
         run: pytest --force-enable-socket --nbmake --durations=10 docs/tutorials
 concurrency:

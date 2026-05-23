@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, which
+from .utils import GeoSlice, Path, Sample, quantile_normalization, which
 
 
 class AgriFieldNet(RasterDataset):
@@ -296,7 +296,7 @@ class AgriFieldNet(RasterDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].squeeze()
         ncols = 2
