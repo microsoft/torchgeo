@@ -55,10 +55,9 @@ class WeatherBench2(XarrayDataset):
     Each sample contains:
 
     * ``image``: tensor stacked from the requested ``data_vars`` in order, only
-      populated when all selected variables share the same shape (the
-      :class:`~torchgeo.datasets.XarrayDataset` contract). When mixing surface,
-      pressure-level, and static variables, this key is omitted; consume
-      ``variables`` instead.
+      populated when all selected variables share the same shape. When mixing
+      surface, pressure-level, and static variables, this key is omitted;
+      consume ``variables`` instead.
     * ``variables``: mapping from variable name to its tensor, with the
       original (possibly heterogeneous) per-variable shape preserved.
     * ``lat`` / ``lon``: 1-D coordinate tensors for the spatial slice.
@@ -149,11 +148,10 @@ class WeatherBench2(XarrayDataset):
         if not filepaths:
             raise DatasetNotFoundError(self)
 
-        # ``res`` is set inside the loop above (a missing value would have
-        # raised :class:`DatasetNotFoundError`), so it must be defined here.
-        assert res is not None
-        if isinstance(res, int | float):
-            res = (float(res), float(res))
+        # ``res`` is normalized to a tuple inside :meth:`_spatial_metadata`
+        # and a missing value would have raised :class:`DatasetNotFoundError`,
+        # so it must be a populated tuple here.
+        assert isinstance(res, tuple)
         self._res = res
         self.data_vars = list(data_vars) if data_vars is not None else []
         self.index = GeoDataFrame(

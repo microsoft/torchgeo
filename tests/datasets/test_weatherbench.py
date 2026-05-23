@@ -191,10 +191,20 @@ class TestWeatherBench2:
     def test_remote_uri(self, store: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         # Stand-in for a public WeatherBench2 store on GCS: the dataset
         # should treat ``gs://`` as opaque and forward ``storage_options``
-        # to :func:`xarray.open_zarr`.
-        pytest.importorskip('fsspec')
-        pytest.importorskip('gcsfs')
+        # to ``xarray.open_zarr``. Stub out the fsspec/gcsfs guard so the
+        # test runs even when those packages are not installed.
         import xarray as xr
+
+        from torchgeo.datasets import utils, weatherbench
+
+        real_lazy_import = utils.lazy_import
+
+        def stub_lazy_import(name: str) -> Any:
+            if name in {'fsspec', 'gcsfs'}:
+                return None
+            return real_lazy_import(name)
+
+        monkeypatch.setattr(weatherbench, 'lazy_import', stub_lazy_import)
 
         real_open_zarr = xr.open_zarr
         captured: dict[str, Any] = {}

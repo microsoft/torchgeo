@@ -114,6 +114,11 @@ VectorDataset
 
 .. autoclass:: VectorDataset
 
+XarrayDataset
+^^^^^^^^^^^^^
+
+.. autoclass:: XarrayDataset
+
 NonGeoDataset
 ^^^^^^^^^^^^^
 
