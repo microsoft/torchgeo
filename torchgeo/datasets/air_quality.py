@@ -8,6 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+import math
 from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
@@ -54,6 +55,7 @@ class AirQuality(NonGeoDataset):
         *,
         num_input_steps: int = 3,
         num_target_steps: int = 1,
+        features: list[str] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -62,6 +64,7 @@ class AirQuality(NonGeoDataset):
             root: root directory where dataset can be found
             num_input_steps: Number of input time steps to use.
             num_target_steps: Number of target time steps to use.
+            features: Optional list of feature names to keep. If None, all features are used.
             download: if True, download dataset and store it in the root directory
 
         Raises:
@@ -71,6 +74,7 @@ class AirQuality(NonGeoDataset):
         self.download = download
         self.num_input_steps = num_input_steps
         self.num_target_steps = num_target_steps
+        self.features = features
         self.data = self._load_data()
 
     def __len__(self) -> int:
@@ -125,17 +129,28 @@ class AirQuality(NonGeoDataset):
         # Interpolate missing values
         df.interpolate(inplace=True)
 
+        if self.features is not None:
+            invalid = set(self.features) - set(df.columns)
+            if invalid:
+                raise ValueError(f'Requested features not available in dataset: {invalid}')
+            df = df[self.features]
+
+        self.feature_names = list(df.columns)
+
         return df
 
-    def plot(self, sample: Sample) -> Figure:
+    def plot(self, sample: Sample, features: list[str] | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
+            features: optional list of feature names to plot.
+                If None, all features are plotted.
 
         Returns:
             a matplotlib Figure with the plotted sample
         """
+                
         ylabel = {
             'CO(GT)': 'CO (mg/m$^3$)',
             'PT08.S1(CO)': 'CO',
@@ -152,20 +167,39 @@ class AirQuality(NonGeoDataset):
             'AH': 'Absolute Humidity',
         }
 
-        input = sample['input']
-        target = sample['target']
+        x_in = sample['input']
+        x_out = sample['target']
 
-        fig, axes = plt.subplots(4, 3, figsize=(16, 12))
-        input_steps = range(input.shape[0])
-        target_steps = range(input.shape[0], input.shape[0] + target.shape[0])
+        # Normalize feature selection
+        features = features or self.feature_names
+        feature_indices = [self.feature_names.index(f) for f in features]
 
-        for i, ax in enumerate(axes.flatten()):
-            feature_name = self.data.columns[i]
-            ax.plot(input_steps, input[:, i], label='Input', marker='o')
-            ax.plot(target_steps, target[:, i], label='Target', marker='x')
-            ax.set_title(feature_name)
-            ax.set_ylabel(ylabel[feature_name])
+        n_features = len(features)
+        ncols = math.ceil(math.sqrt(n_features))
+        nrows = math.ceil(n_features / ncols)
+
+        fig, axes = plt.subplots(
+            nrows,
+            ncols,
+            figsize=(5 * ncols, 3 * nrows),
+            squeeze=False,
+        )
+        axes = axes.ravel()
+
+        input_steps = range(len(x_in))
+        target_steps = range(len(x_in), len(x_in) + len(x_out))
+
+        for ax, idx, feature in zip(axes, feature_indices, features):
+            ax.plot(input_steps, x_in[:, idx], label='Input', marker='o')
+            ax.plot(target_steps, x_out[:, idx], label='Target', marker='x')
+
+            ax.set_title(feature)
+            ax.set_ylabel(ylabel.get(feature, feature))
             ax.legend()
+
+        # Hide unused axes
+        for ax in axes[n_features:]:
+            ax.set_visible(False)
 
         fig.tight_layout()
         return fig
