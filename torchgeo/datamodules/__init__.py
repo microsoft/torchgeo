@@ -63,10 +63,17 @@ from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
 from .vhr10 import VHR10DataModule
+from .weatherbench import (
+    AuroraWeatherBench2Sequence,
+    WeatherBench2AuroraDataModule,
+    aurora_collate_fn,
+    aurora_predictions_to_xarray,
+)
 from .xbd import XView2DataModule, xBDDataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
+    'AuroraWeatherBench2Sequence',
     'BRIGHTDFC2025DataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
@@ -138,6 +145,9 @@ __all__ = (
     'USAVarsDataModule',
     'VHR10DataModule',
     'Vaihingen2DDataModule',
+    'WeatherBench2AuroraDataModule',
     'XView2DataModule',
+    'aurora_collate_fn',
+    'aurora_predictions_to_xarray',
     'xBDDataModule',
 )
