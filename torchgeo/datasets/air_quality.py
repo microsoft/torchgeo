@@ -4,9 +4,11 @@
 """Air Quality dataset."""
 
 import math
-import os
+import pathlib
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
@@ -53,52 +55,55 @@ class AirQuality(NonGeoDataset):
         self,
         root: Path = 'data',
         *,
-        num_input_steps: int = 3,
-        num_target_steps: int = 1,
-        features: list[str] | None = None,
+        input_steps: int = 3,
+        target_steps: int = 1,
+        input_features: Sequence[str] | None = None,
+        target_features: Sequence[str] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
-            num_input_steps: Number of input time steps to use.
-            num_target_steps: Number of target time steps to use.
-            features: Optional list of feature names to keep. If None, all features are used.
-            download: if True, download dataset and store it in the root directory
+            root: Root directory where dataset can be found.
+            input_steps: Number of input time steps to use.
+            target_steps: Number of target time steps to use.
+            input_features: List of input features to load
+                (uses all features by default).
+            target_features: List of target features to load
+                (uses all features by default).
+            download: If True, download dataset and store it in the root directory.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
+        self.root = pathlib.Path(root)
         self.download = download
-        self.num_input_steps = num_input_steps
-        self.num_target_steps = num_target_steps
-        self.features = features
-        self.data = self._load_data()
+        self.input_steps = input_steps
+        self.target_steps = target_steps
+        self.input_features = input_features
+        self.target_features = target_features
+        self._load_data()
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
 
         Returns:
-            length of the dataset
+            Length of the dataset.
         """
-        return len(self.data) - self.num_input_steps - self.num_target_steps + 1
+        return len(self.input_data) - self.input_steps - self.target_steps + 1
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
-            index: index to return
+            index: Index to return.
 
         Returns:
-            data at that index
+            Data at that index.
         """
-        input = self.data.iloc[index : index + self.num_input_steps]
-        target = self.data.iloc[
-            index + self.num_input_steps : index
-            + self.num_input_steps
-            + self.num_target_steps
+        input = self.input_data.iloc[index : index + self.input_steps]
+        target = self.target_data.iloc[
+            index + self.input_steps : index + self.input_steps + self.target_steps
         ]
 
         return {
@@ -106,49 +111,55 @@ class AirQuality(NonGeoDataset):
             'target': torch.tensor(target.values, dtype=torch.float32),
         }
 
-    def _load_data(self) -> pd.DataFrame:
-        """Load the dataset into a pandas dataframe.
+    def _parse_datetime(self, data: pd.DataFrame) -> None:
+        """Parse datetime columns into cyclical features.
 
-        Returns:
-            Dataframe containing the data.
+        Args:
+            data: Raw data.
         """
-        pathname = os.path.join(self.root, self.data_file_name)
-        if os.path.exists(pathname):
-            df = pd.read_csv(pathname, na_values=['-200'])
-        elif not self.download:
-            raise DatasetNotFoundError(self)
+        if {'Date', 'Time'} <= set(data.columns):
+            dt = pd.to_datetime(data['Date'] + ' ' + data['Time']).dt
+            doy = 2 * np.pi * dt.dayofyear / 365.25  # ty: ignore[unsupported-operator]
+            hod = 2 * np.pi * dt.hour / 24  # ty: ignore[unsupported-operator]
+            data['sin(DOY)'] = np.sin(doy)
+            data['cos(DOY)'] = np.cos(doy)
+            data['sin(HOD)'] = np.sin(hod)
+            data['cos(HOD)'] = np.cos(hod)
+
+        data.drop(columns=['Date', 'Time'], inplace=True, errors='ignore')
+
+    def _load_data(self) -> None:
+        """Load the dataset into a pandas dataframe."""
+        filepath = self.root / self.data_file_name
+        if filepath.is_file():
+            pass
+        elif self.download:
+            filepath = self.url
         else:
-            df = pd.read_csv(self.url, na_values=['-200'])
+            raise DatasetNotFoundError(self)
 
-        # Drop Date and Time, not yet using these inputs
-        df.drop(columns=['Date', 'Time'], inplace=True)
+        # Load twice in case target_features is not a subset of input_features
+        kwargs = {'na_values': -200}
+        self.input_data = pd.read_csv(filepath, usecols=self.input_features, **kwargs)  # ty: ignore[no-matching-overload]
+        self.target_data = pd.read_csv(filepath, usecols=self.target_features, **kwargs)  # ty: ignore[no-matching-overload]
 
-        # Drop NMHC(GT) column which has mostly missing values
-        df.drop(columns=['NMHC(GT)'], inplace=True)
+        # Encode cyclic features
+        self._parse_datetime(self.input_data)
+        self._parse_datetime(self.target_data)
 
-        # Interpolate missing values
-        df.interpolate(inplace=True)
+        # Interpolate missing values using linear interpolation
+        self.input_data.interpolate(inplace=True)
+        self.target_data.interpolate(inplace=True)
 
-        if self.features is not None:
-            invalid = set(self.features) - set(df.columns)
-            if invalid:
-                raise ValueError(f'Requested features not available in dataset: {invalid}')
-            df = df[self.features]
-
-        self.feature_names = list(df.columns)
-
-        return df
-
-    def plot(self, sample: Sample, features: list[str] | None = None) -> Figure:
+    def plot(self, sample: Sample, features: Sequence[str] | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
-            features: optional list of feature names to plot.
-                If None, all features are plotted.
+            sample: A sample returned by :meth:`__getitem__`.
+            features: List of features to plot (defaults to *target_features*).
 
         Returns:
-            a matplotlib Figure with the plotted sample
+            A matplotlib Figure with the plotted sample.
         """
         ylabel = {
             'CO(GT)': 'CO (mg/m$^3$)',
@@ -166,35 +177,46 @@ class AirQuality(NonGeoDataset):
             'AH': 'Absolute Humidity',
         }
 
-        x_in = sample['input']
-        x_out = sample['target']
+        input_steps = range(len(sample['input']))
+        target_steps = range(
+            len(sample['input']), len(sample['input']) + len(sample['target'])
+        )
 
-        # Normalize feature selection
-        features = features or self.feature_names
-        feature_indices = [self.feature_names.index(f) for f in features]
-
+        features = features or self.target_data.columns
         n_features = len(features)
+
         ncols = math.ceil(math.sqrt(n_features))
         nrows = math.ceil(n_features / ncols)
 
         fig, axes = plt.subplots(
-            nrows,
-            ncols,
-            figsize=(5 * ncols, 3 * nrows),
-            squeeze=False,
+            nrows, ncols, figsize=(5 * ncols, 3 * nrows), squeeze=False
         )
         axes = axes.ravel()
 
-        input_steps = range(len(x_in))
-        target_steps = range(len(x_in), len(x_in) + len(x_out))
-
-        for ax, idx, feature in zip(axes, feature_indices, features):
-            ax.plot(input_steps, x_in[:, idx], label='Input', marker='o')
-            ax.plot(target_steps, x_out[:, idx], label='Target', marker='x')
-
+        # For each axis, feature...
+        for ax, feature in zip(axes, features):
             ax.set_title(feature)
-            ax.set_ylabel(ylabel.get(feature, feature))
+
+            # Input data
+            if feature in self.input_data:
+                idx = self.input_data.columns.get_loc(feature)
+                data = sample['input'][:, idx]
+                ax.plot(input_steps, data, label='Input', marker='o')
+
+            # Target data
+            if feature in self.target_data:
+                idx = self.target_data.columns.get_loc(feature)
+                data = sample['target'][:, idx]
+                ax.plot(target_steps, data, label='Target', marker='x')
+
+                # Predicted data
+                if 'prediction' in sample:
+                    data = sample['prediction'][:, idx]
+                    ax.plot(target_steps, data, label='Prediction', marker='^')
+
             ax.legend()
+            if feature in ylabel:
+                ax.set_ylabel(ylabel[feature])
 
         # Hide unused axes
         for ax in axes[n_features:]:

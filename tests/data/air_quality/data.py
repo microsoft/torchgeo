@@ -6,10 +6,10 @@
 import numpy as np
 import pandas as pd
 
-nrows = 50
+nrows = 10
 
 timestamps = pd.date_range(start='2004-03-10 18:00:00', periods=nrows, freq='h')
-date_col = timestamps.strftime('%d/%m/%Y')
+date_col = timestamps.strftime('%m/%d/%Y')
 time_col = timestamps.strftime('%H:%M:%S')
 
 t = np.linspace(0, 3 * np.pi, nrows)

@@ -27,14 +27,14 @@ class TestAirQuality:
         x = item['input']
         y = item['target']
         assert isinstance(x, Tensor)
-        assert x.shape[1] == 12
-        assert x.shape[0] == dataset.num_input_steps
+        assert x.shape[1] == 17
+        assert x.shape[0] == dataset.input_steps
         assert isinstance(y, Tensor)
-        assert y.shape[1] == 12
-        assert y.shape[0] == dataset.num_target_steps
+        assert y.shape[1] == 17
+        assert y.shape[0] == dataset.target_steps
 
     def test_len(self, dataset: AirQuality) -> None:
-        assert len(dataset) == 47
+        assert len(dataset) == 7
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
