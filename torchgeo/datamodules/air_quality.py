@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import Subset
 
 from ..datasets import AirQuality
+from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
 
 
@@ -42,8 +43,6 @@ class AirQualityDataModule(NonGeoDataModule):
         super().__init__(AirQuality, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.mean: torch.Tensor = torch.tensor(0.0)
-        self.std: torch.Tensor = torch.tensor(1.0)
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
@@ -53,48 +52,36 @@ class AirQualityDataModule(NonGeoDataModule):
         """
         dataset = AirQuality(**self.kwargs)
 
-        window_size = dataset.num_input_steps + dataset.num_target_steps
-        n = len(dataset)
+        window_size = dataset.input_steps + dataset.target_steps
+        n = len(dataset) + window_size
 
-        train_split_pct = 1 - (self.val_split_pct + self.test_split_pct)
-        train_size = int(train_split_pct * n)
-        val_size = int(self.val_split_pct * n)
+        val_size = round(self.val_split_pct * n)
+        test_size = round(self.test_split_pct * n)
+        train_size = n - val_size - test_size
 
-        val_start = train_size + window_size
-        test_start = val_start + val_size + window_size
-
-        if test_start >= n:
-            raise ValueError(
-                f'Dataset too small ({n} samples) for the requested splits and '
-                f'window size ({window_size}). Reduce num_input_steps, '
-                f'num_target_steps, or the split percentages.'
-            )
-
-        train_indices = range(train_size)
-        val_indices = range(val_start, val_start + val_size)
-        test_indices = range(test_start, n)
+        # Be careful to avoid overlap between splits
+        train_indices = range(train_size - window_size)
+        val_indices = range(train_size, train_size + val_size - window_size)
+        test_indices = range(train_size + val_size, n - window_size)
 
         self.train_dataset = Subset(dataset, train_indices)
         self.val_dataset = Subset(dataset, val_indices)
         self.test_dataset = Subset(dataset, test_indices)
 
-        # Compute normalization stats from training data only.
-        # train_size is derived from len(dataset) which is in sample index space,
-        # but since sample index i corresponds to the window starting at raw row i,
-        # iloc[:train_size] correctly selects only the raw rows covered by the training samples.
-        train_data = torch.tensor(
-            dataset.data.iloc[:train_size].values, dtype=torch.float32
-        )
-        self.mean = train_data.mean(dim=0)
-        self.std = train_data.std(dim=0)
+        # Compute normalization statistics from training data only
+        input_data = torch.tensor(dataset.input_data.iloc[:train_size].values)
+        target_data = torch.tensor(dataset.target_data.iloc[:train_size].values)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, torch.Tensor], dataloader_idx: int
-    ) -> dict[str, torch.Tensor]:
+        self.input_mean = input_data.mean(dim=0)
+        self.input_std = input_data.std(dim=0)
+        self.target_mean = target_data.mean(dim=0)
+        self.target_std = target_data.std(dim=0)
+
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Normalize batch data and pass normalization stats to the model.
 
         Overrides the base class to skip Kornia augmentations and instead
-        apply dataset-level normalization to past and future targets using
+        apply dataset-level normalization to input and target using
         statistics computed from the training split.
 
         Args:
@@ -102,11 +89,8 @@ class AirQualityDataModule(NonGeoDataModule):
             dataloader_idx: The index of the dataloader to which the batch belongs.
 
         Returns:
-            A batch of data with normalized targets and normalization stats.
+            A batch of data with normalized input and target.
         """
-        batch['input'] = (batch['input'] - self.mean) / (self.std + 1e-12)
-        batch['target'] = (batch['target'] - self.mean) / (self.std + 1e-12)
-        # Pass stats along so the model can unnormalize predictions before metric computation
-        batch['mean'] = self.mean
-        batch['std'] = self.std
+        batch['input'] = (batch['input'] - self.input_mean) / self.input_std
+        batch['target'] = (batch['target'] - self.target_mean) / self.target_std
         return batch
