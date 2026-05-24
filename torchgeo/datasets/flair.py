@@ -886,15 +886,12 @@ class FLAIRHUB(NonGeoDataset):
         task = TASKS[self.dataset_type]
         class_names = task['classes']
         cmap = task['cmap']
-
         mask_np = mask.numpy()
-
         n_classes = len(class_names)
         bounds = np.arange(n_classes + 1) - 0.5
         norm = BoundaryNorm(bounds, n_classes)
         ax.imshow(mask_np, cmap=cmap, norm=norm)
         ax.set_title('Label Mask')
-
         if show_legend:
             present_classes = np.unique(mask_np)
             legend_elements = [
@@ -919,8 +916,6 @@ class FLAIRHUB(NonGeoDataset):
             title: Title for the subplot
         """
         data_np = data.numpy()
-
-        # Select RGB bands and transpose from (C, H, W) to (H, W, C) for matplotlib
         rgb_image = data_np[:3].transpose(1, 2, 0)
         rgb_image = rgb_image / 255.0
         rgb_image = np.clip(rgb_image, 0, 1)
@@ -950,10 +945,8 @@ class FLAIRHUB(NonGeoDataset):
             title: Title for the subplot
         """
         data_np = data.numpy()
-
         dsm = data_np[0]
         dtm = data_np[1]
-
         chm = dtm - dsm
         ax.imshow(chm, cmap='gray', vmin=np.min(chm), vmax=np.max(chm))
         ax.set_title(title)
@@ -988,14 +981,10 @@ class FLAIRHUB(NonGeoDataset):
         # The format of the data is T * C * H * W
         last_timepoint = data_np[-1]
 
-        # Map RGB band names to indices in sentinel2_ts_bands
         rgb_indices = [
             self.sentinel2_ts_bands.index(band) for band in self.sentinel2_ts_rgb_bands
         ]
-        # Select RGB bands and transpose from (C, H, W) to (H, W, C) for matplotlib
         rgb_image = last_timepoint[rgb_indices].transpose(1, 2, 0)
-        # Clip between 0 and 3000 (reflectance 0.0 to 0.3).
-        # Stretch that to 0-255 for display.
         rgb_image = np.clip(rgb_image, 0, 3000)
         rgb_image = (rgb_image / 3000.0) * 255.0
         rgb_image = np.clip(rgb_image, 0, 255).astype(np.uint8)
