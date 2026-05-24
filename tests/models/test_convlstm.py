@@ -146,6 +146,7 @@ class TestConvLSTM:
             num_layers=1,
             num_classes=num_classes,
             head_kernel_size=1,
+            convolutional_head=True,
         )
         y_hat = model(input_tensor, lengths=torch.tensor([4, 2]))
 

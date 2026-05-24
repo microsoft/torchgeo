@@ -8,7 +8,8 @@
 from typing import Literal, cast
 
 import torch
-from torch import nn
+import torch.nn as nn
+from timm.layers.classifier import ClassifierHead
 
 
 class ConvLSTMCell(nn.Module):
@@ -115,6 +116,7 @@ class ConvLSTM(nn.Module):
         return_all_layers: bool = False,
         num_classes: int = 1,
         head_kernel_size: int = 1,
+        convolutional_head: bool = False,
     ) -> None:
         """Initializes the ConvLSTM model.
 
@@ -173,12 +175,11 @@ class ConvLSTM(nn.Module):
             )
 
         self.cell_list = nn.ModuleList(cell_list)
-        padding = head_kernel_size // 2
-        self.head = nn.Conv2d(
-            in_channels=self.hidden_dim[-1],
-            out_channels=self.num_classes,
-            kernel_size=head_kernel_size,
-            padding=padding,
+        self.head = ClassifierHead(
+            in_features=self.hidden_dim[-1],
+            num_classes=self.num_classes,
+            use_conv=convolutional_head,
+            pool_type='' if convolutional_head else 'avg',
         )
 
     def forward_features(
