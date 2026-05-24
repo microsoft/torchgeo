@@ -3,12 +3,12 @@
 
 """Air Quality dataset."""
 
+import math
 import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
-import math
 from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
@@ -150,7 +150,6 @@ class AirQuality(NonGeoDataset):
         Returns:
             a matplotlib Figure with the plotted sample
         """
-                
         ylabel = {
             'CO(GT)': 'CO (mg/m$^3$)',
             'PT08.S1(CO)': 'CO',
