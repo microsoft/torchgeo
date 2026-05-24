@@ -1,8 +1,8 @@
 model:
   class_path: TemporalRegressionTask
   init_args:
-    in_features: 17
-    out_features: 17
+    in_channels: 17
+    num_outputs: 17
     loss: 'mae'
   dict_kwargs:
     len_max_seq: 3

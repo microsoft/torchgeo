@@ -8,6 +8,7 @@ from typing import Any, Literal
 import einops
 from torch import Tensor, nn
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
+from torchmetrics.wrappers import ClasswiseWrapper
 
 from ..datasets.utils import Sample
 from ..models import LTAE
@@ -23,8 +24,9 @@ class TemporalRegressionTask(BaseTask):
     def __init__(
         self,
         model: Literal['ltae'] = 'ltae',
-        in_features: int = 1,
-        out_features: int = 1,
+        in_channels: int = 1,
+        num_outputs: int = 1,
+        labels: list[str] | None = None,
         out_steps: int = 1,
         loss: Literal['mae', 'mse'] = 'mse',
         lr: float = 1e-3,
@@ -35,10 +37,11 @@ class TemporalRegressionTask(BaseTask):
 
         Args:
             model: Name of the model architecture.
-            in_features: Number of input features per time step
+            in_channels: Number of input features per time step
                 (the *C* dimension of the *(B, T, C)* input tensor).
-            out_features: Number of output features per time step
+            num_outputs: Number of output features per time step
                 (the *C* dimension of the *(B, T, C)* target tensor).
+            labels: List of feature names.
             out_steps: Number of output time steps
                 (the *T* dimension of the *(B, T, C)* target tensor).
             loss: Loss function.
@@ -55,8 +58,8 @@ class TemporalRegressionTask(BaseTask):
         """Initialize the model."""
         match self.hparams['model']:
             case 'ltae':
-                out = self.hparams['out_features'] * self.hparams['out_steps']
-                ltae = LTAE(in_channels=self.hparams['in_features'], **self.kwargs)
+                out = self.hparams['num_outputs'] * self.hparams['out_steps']
+                ltae = LTAE(in_channels=self.hparams['in_channels'], **self.kwargs)
                 linear = nn.Linear(ltae.n_neurons[-1], out)
                 self.model = nn.Sequential(ltae, linear)
 
@@ -75,11 +78,25 @@ class TemporalRegressionTask(BaseTask):
           (``RMSE``). Lower is better.
         * :class:`~torchmetrics.MeanAbsoluteError` (``MAE``). Lower is better.
         """
+        num_outputs = self.hparams['num_outputs']
+        labels = self.hparams['labels']
         metrics = MetricCollection(
             {
-                'RMSE': MeanSquaredError(squared=False),
-                'MSE': MeanSquaredError(squared=True),
-                'MAE': MeanAbsoluteError(),
+                'RMSE': ClasswiseWrapper(
+                    MeanSquaredError(squared=False, num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='RMSE_',
+                ),
+                'MSE': ClasswiseWrapper(
+                    MeanSquaredError(squared=True, num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='MSE_',
+                ),
+                'MAE': ClasswiseWrapper(
+                    MeanAbsoluteError(num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='MAE_',
+                ),
             }
         )
         self.train_metrics = metrics.clone(prefix='train_')
@@ -113,9 +130,11 @@ class TemporalRegressionTask(BaseTask):
         y = y * datamodule.target_mean + datamodule.target_std
         y_hat = y_hat * datamodule.target_mean + datamodule.target_std
 
+        y = einops.rearrange(y, 'b t c -> (b t) c')
+        y_hat = einops.rearrange(y_hat, 'b t c -> (b t) c')
+
         metrics = getattr(self, f'{stage}_metrics')
         metrics(y_hat, y)
-        self.log_dict(metrics, batch_size=batch_size)
 
         return loss
 
@@ -134,6 +153,11 @@ class TemporalRegressionTask(BaseTask):
         """
         return self._shared_step(batch, batch_idx, 'train')
 
+    def on_train_epoch_end(self) -> None:
+        """Log train metrics."""
+        self.log_dict(self.train_metrics.compute())
+        self.train_metrics.reset()
+
     def validation_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
@@ -146,6 +170,11 @@ class TemporalRegressionTask(BaseTask):
         """
         self._shared_step(batch, batch_idx, 'val')
 
+    def on_validation_epoch_end(self) -> None:
+        """Log validation metrics."""
+        self.log_dict(self.val_metrics.compute())
+        self.val_metrics.reset()
+
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
@@ -155,6 +184,11 @@ class TemporalRegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         self._shared_step(batch, batch_idx, 'test')
+
+    def on_test_epoch_end(self) -> None:
+        """Log test metrics."""
+        self.log_dict(self.test_metrics.compute())
+        self.test_metrics.reset()
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0

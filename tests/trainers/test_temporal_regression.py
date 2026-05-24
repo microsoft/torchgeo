@@ -42,7 +42,7 @@ class TestTemporalRegressionTask:
 
     def test_predict(self) -> None:
         root = os.path.join('tests', 'data', 'air_quality')
-        model = TemporalRegressionTask(in_features=17, out_features=17, len_max_seq=3)
+        model = TemporalRegressionTask(in_channels=17, num_outputs=17, len_max_seq=3)
         datamodule = AirQualityDataModule(root=root)
         datamodule.predict_dataset = AirQuality(root)
         trainer = Trainer(accelerator='cpu')
