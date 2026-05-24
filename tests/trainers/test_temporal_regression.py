@@ -4,9 +4,10 @@
 import os
 
 import pytest
-import torch
+from lightning.pytorch import Trainer
 
-from torchgeo.datamodules import MisconfigurationException
+from torchgeo.datamodules import AirQualityDataModule, MisconfigurationException
+from torchgeo.datasets import AirQuality
 from torchgeo.main import main
 from torchgeo.trainers import TemporalRegressionTask
 
@@ -40,6 +41,9 @@ class TestTemporalRegressionTask:
             pass
 
     def test_predict(self) -> None:
-        model = TemporalRegressionTask()
-        batch = {'input': torch.randn(2, 5, 1), 'target': torch.randn(2, 1, 1)}
-        model.predict_step(batch, 0)
+        root = os.path.join('tests', 'data', 'air_quality')
+        model = TemporalRegressionTask(in_features=17, out_features=17, len_max_seq=3)
+        datamodule = AirQualityDataModule(root=root)
+        datamodule.predict_dataset = AirQuality(root)
+        trainer = Trainer(accelerator='cpu')
+        trainer.predict(model=model, datamodule=datamodule)

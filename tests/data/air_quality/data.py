@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 
-nrows = 10
+nrows = 20
 
 timestamps = pd.date_range(start='2004-03-10 18:00:00', periods=nrows, freq='h')
 date_col = timestamps.strftime('%m/%d/%Y')

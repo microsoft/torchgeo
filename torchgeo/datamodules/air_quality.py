@@ -69,8 +69,12 @@ class AirQualityDataModule(NonGeoDataModule):
         self.test_dataset = Subset(dataset, test_indices)
 
         # Compute normalization statistics from training data only
-        input_data = torch.tensor(dataset.input_data.iloc[:train_size].values)
-        target_data = torch.tensor(dataset.target_data.iloc[:train_size].values)
+        input_data = torch.tensor(
+            dataset.input_data.iloc[:train_size].values, dtype=torch.float32
+        )
+        target_data = torch.tensor(
+            dataset.target_data.iloc[:train_size].values, dtype=torch.float32
+        )
 
         self.input_mean = input_data.mean(dim=0)
         self.input_std = input_data.std(dim=0)
