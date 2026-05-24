@@ -81,6 +81,26 @@ class AirQualityDataModule(NonGeoDataModule):
         self.target_mean = target_data.mean(dim=0)
         self.target_std = target_data.std(dim=0)
 
+    def transfer_batch_to_device(
+        self, batch: Sample, device: torch.device, dataloader_idx: int
+    ) -> Sample:
+        """Transfer batch and statistics to device.
+
+        Args:
+            batch: A batch of data that needs to be transferred to a new device.
+            device: The target device as defined in PyTorch.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A reference to the data on the new device.
+        """
+        self.input_mean = self.input_mean.to(device)
+        self.input_std = self.input_std.to(device)
+        self.target_mean = self.target_mean.to(device)
+        self.target_std = self.target_std.to(device)
+
+        return super().transfer_batch_to_device(batch, device, dataloader_idx)
+
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Normalize batch data and pass normalization stats to the model.
 
