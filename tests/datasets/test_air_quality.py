@@ -46,5 +46,6 @@ class TestAirQuality:
 
     def test_plot(self, dataset: AirQuality) -> None:
         sample = dataset[0]
+        sample['prediction'] = sample['target']
         dataset.plot(sample)
         plt.close()
