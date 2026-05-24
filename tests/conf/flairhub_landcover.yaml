@@ -19,7 +19,7 @@ data:
     download: False
     bands: ['AERIAL_RGBI']
     dataset_type: 'land_cover'
-    domain_years:
-      D006: ['2020']
-      D012: ['2019']
-      D032: ['2019']
+    # domain_years:
+    #   D006: ['2020']
+    #   D012: ['2019']
+    #   D032: ['2019']

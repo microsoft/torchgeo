@@ -19,7 +19,7 @@ data:
     download: False
     bands: ['AERIAL_RGBI', 'SPOT_RGBI']
     dataset_type: 'crop_type'
-    domain_years:
-      D006: ['2020']
-      D012: ['2019']
-      D032: ['2019']
+    # domain_years:
+    #   D006: ['2020']
+    #   D012: ['2019']
+    #   D032: ['2019']
