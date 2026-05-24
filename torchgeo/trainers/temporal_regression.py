@@ -82,54 +82,13 @@ class TemporalRegressionTask(BaseTask):
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
-    def _unnormalise(
-        self, y_hat: Tensor, y: Tensor, batch: Sample, H: int
-    ) -> tuple[Tensor, Tensor]:
-        """Optionally map predictions and targets back to the original scale.
-
-        When the datamodule supplies per-feature ``'mean'`` and ``'std'``
-        tensors in the batch (as :class:`~torchgeo.datamodules.AirQualityDataModule`
-        does), both ``y_hat`` and ``y`` are de-normalised before metric
-        computation so that reported values are interpretable in physical
-        units.
-
-        If neither key is present this method is a **no-op**, returning
-        ``y_hat`` and ``y`` unchanged.
-        Override this method to implement a different normalisation
-        convention (e.g. min-max scaling, per-sample stats).
-
-        Args:
-            y_hat: Model predictions ``(B, num_outputs)`` in normalised space.
-            y: Flattened ground-truth targets ``(B, H*C)`` in normalised space.
-            batch: The full batch dict; may contain ``'mean'`` and ``'std'``.
-            H: Number of future time steps being predicted.
-
-        Returns:
-            ``(y_hat_orig, y_orig)`` — tensors in the original scale, or the
-            inputs unchanged when no normalisation stats are available.
-        """
-        mean: Tensor | None = batch.get('mean')  # type: ignore[assignment]
-        std: Tensor | None = batch.get('std')  # type: ignore[assignment]
-
-        if mean is None or std is None:
-            return y_hat, y
-
-        mean_rep = mean.repeat(H).to(y_hat)  # (H*C,)
-        std_rep = std.repeat(H).to(y_hat)  # (H*C,)
-
-        y_hat_orig = y_hat * std_rep + mean_rep
-        y_orig = y * std_rep + mean_rep
-        return y_hat_orig, y_orig
-
     def _shared_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
         """Forward pass, loss computation, and metric update for all splits.
 
         Args:
-            batch: Output of the DataLoader.  Must contain at least
-                :attr:`input_key` and :attr:`target_key`.  Optionally
-                contains ``'mean'`` / ``'std'`` for unnormalised metrics.
-            batch_idx: Index of this batch within the epoch.
-            stage: One of ``'train'``, ``'val'``, or ``'test'``.
+            batch: The output of the DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            stage: One of 'train', 'val', or 'test'.
 
         Returns:
             Scalar loss tensor.
@@ -195,7 +154,7 @@ class TemporalRegressionTask(BaseTask):
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute predicted values, optionally unnormalised.
+        """Compute predicted values.
 
         Args:
             batch: The output of the DataLoader.
@@ -203,9 +162,7 @@ class TemporalRegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Predicted values of shape ``(B, num_outputs)``.  When the batch
-            contains ``'mean'`` / ``'std'`` the predictions are returned in
-            the *original* (unnormalised) scale via :meth:`_unnormalise`.
+            Predicted values of shape *(B, T, C)*.
         """
         x = batch['input']
 
