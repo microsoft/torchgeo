@@ -3,10 +3,10 @@
 
 """Trainers for temporal regression."""
 
-from typing import Any
+from typing import Any, Literal
 
-import torch.nn as nn
-from torch import Tensor
+import einops
+from torch import Tensor, nn
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 
 from ..datasets.utils import Sample
@@ -15,148 +15,61 @@ from .base import BaseTask
 
 
 class TemporalRegressionTask(BaseTask):
-    """Trainer for sequence-to-value temporal regression.
-
-    Accepts a fixed-length window of past observations ``(B, T, C)`` and
-    predicts one or more future values ``(B, num_outputs)``.  See
-    :meth:`__init__` for constructor arguments, :meth:`_prepare_targets`
-    for batch key conventions, and :meth:`configure_metrics` for logged
-    metrics.
+    """Trainer for sequence-to-sequence temporal regression.
 
     .. versionadded:: 0.10
     """
 
-    #: Batch key for the model input tensor ``(B, T, C)``.
-    input_key: str = 'input'
-
-    #: Batch key for the regression target tensor ``(B, H, C)``.
-    target_key: str = 'target'
-
     def __init__(
         self,
-        model: str = 'ltae',
-        in_channels: int = 12,
-        num_outputs: int = 1,
-        loss: str = 'mse',
+        model: Literal['ltae'] = 'ltae',
+        in_features: int = 1,
+        out_features: int = 1,
+        loss: Literal['mae', 'mse'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
-        **model_kwargs: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new TemporalRegressionTask instance.
 
         Args:
-            model: Name of the model architecture.  Currently ``'ltae'`` is
-                supported out of the box; add further architectures by
-                extending :meth:`configure_models`.
-            in_channels: Number of input features per time step (the ``C``
-                dimension of the ``(B, T, C)`` input tensor).
-            num_outputs: Total number of scalar values to predict per sample.
-                For a multi-step, multi-channel forecast this should be
-                ``num_future_steps x num_channels``.
-            loss: Loss function.  One of ``'mse'`` or ``'mae'``.
-            lr: Learning rate for the AdamW optimiser.
-            patience: Number of epochs without improvement after which
-                the learning rate is reduced (ReduceLROnPlateau).
-            **model_kwargs: Additional keyword arguments forwarded verbatim
-                to the model constructor inside :meth:`configure_models`.
-
-                **L-TAE defaults** (used when ``model='ltae'`` and no
-                override is provided):
-
-                * ``n_head`` (*int*) — number of attention heads (default 16).
-                * ``d_k`` (*int*) — key / query dimension (default 8).
-                * ``d_model`` (*int*) — projection dimension (default 256).
-                * ``n_neurons`` (*tuple[int, ...]*) — MLP widths; the first
-                  element must equal *d_model* (default ``(256, 128)``).
-                * ``dropout`` (*float*) — dropout rate (default 0.2).
-                * ``len_max_seq`` (*int*) — maximum sequence length for the
-                  positional encoding table (default 24).
-                * ``T`` (*int*) — period for sinusoidal positional encoding
-                  (default 1000).
-
-        Raises:
-            ValueError: If *model* or *loss* is not a recognised value.
+            model: Name of the model architecture.
+            in_features: Number of input features per time step
+                (the *C* dimension of the *(B, T, C)* input tensor).
+            out_features: Number of output features times the number of time steps
+                (the *T x C* dimension of the *(B, T, C)* target tensor).
+            loss: Loss function.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            **kwargs: Additional keyword arguments passed to the model constructor.
 
         .. versionadded:: 0.10
         """
+        self.kwargs = kwargs
         super().__init__()
 
-    # Configuration hooks (called by BaseTask.__init__ via super())
-
     def configure_models(self) -> None:
-        """Initialise the model.
-
-        Reads ``self.hparams['model']`` and builds the corresponding
-        architecture.  Model-specific hyper-parameters are retrieved from
-        ``self.hparams`` (they were stored there by
-        :meth:`~lightning.LightningModule.save_hyperparameters` via
-        ``**model_kwargs``).
-
-        Raises:
-            ValueError: If :attr:`hparams` ``['model']`` is not a supported
-                architecture name.
-        """
-        model: str = self.hparams['model']
-
-        match model:
+        """Initialize the model."""
+        match self.hparams['model']:
             case 'ltae':
-                n_head = self.hparams.get('n_head', 16)
-                d_k = self.hparams.get('d_k', 8)
-                d_model = self.hparams.get('d_model', 256)
-                n_neurons = self.hparams.get('n_neurons', (256, 128))
-                dropout = self.hparams.get('dropout', 0.2)
-                len_max_seq = self.hparams.get('len_max_seq', 24)
-                T = self.hparams.get('T', 1000)
-
-                self.model = nn.Sequential(
-                    LTAE(
-                        in_channels=self.hparams['in_channels'],
-                        n_head=n_head, d_k=d_k, d_model=d_model,
-                        n_neurons=n_neurons, dropout=dropout,
-                        len_max_seq=len_max_seq, T=T,
-                    ),
-                    nn.Linear(n_neurons[-1], self.hparams['num_outputs']),
-                )
-
-            case _:
-                raise ValueError(
-                    f"Model '{model}' is not supported. "
-                    "Currently only 'ltae' is available. "
-                    'Extend configure_models() to add further architectures.'
-                )
+                ltae = LTAE(in_channels=self.hparams['in_features'], **self.kwargs)
+                linear = nn.Linear(ltae.n_neurons[-1], self.hparams['out_features'])
+                self.model = nn.Sequential(ltae, linear)
 
     def configure_losses(self) -> None:
-        """Initialise the loss criterion.
-
-        Raises:
-            ValueError: If :attr:`hparams` ``['loss']`` is not valid.
-        """
-        loss: str = self.hparams['loss']
-        match loss:
+        """Initialize the loss criterion."""
+        match self.hparams['loss']:
             case 'mse':
                 self.criterion: nn.Module = nn.MSELoss()
             case 'mae':
                 self.criterion = nn.L1Loss()
-            case _:
-                raise ValueError(
-                    f"Loss type '{loss}' is not valid. "
-                    "Currently supports 'mse' or 'mae'."
-                )
 
     def configure_metrics(self) -> None:
-        """Initialise the performance metrics.
+        """Initialize the performance metrics.
 
-        The following metrics are tracked for every split
-        (``train_``, ``val_``, ``test_``):
-
-        * :class:`~torchmetrics.MeanSquaredError` (``MSE``) and its square
-          root (``RMSE``).  Lower is better.
-        * :class:`~torchmetrics.MeanAbsoluteError` (``MAE``).  Lower is
-          better.
-
-        When the datamodule passes ``'mean'`` / ``'std'`` in the batch the
-        metrics are evaluated in the unnormalised space via
-        :meth:`_unnormalise`.
+        * :class:`~torchmetrics.MeanSquaredError` (``MSE``) and its square root
+          (``RMSE``). Lower is better.
+        * :class:`~torchmetrics.MeanAbsoluteError` (``MAE``). Lower is better.
         """
         metrics = MetricCollection(
             {
@@ -168,35 +81,6 @@ class TemporalRegressionTask(BaseTask):
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
-
-    def _prepare_targets(self, batch: Sample) -> tuple[Tensor, Tensor, Tensor]:
-        """Extract and reshape input / target tensors from a batch.
-
-        This method encapsulates the assumptions the training loop makes
-        about *batch structure* and *model output shape*:
-
-        1. The model input is found at :attr:`input_key`.
-        2. The regression target is found at :attr:`target_key`.
-        3. The target is flattened to ``(B, H*C)`` so it aligns with the
-           flat ``(B, num_outputs)`` vector produced by sequence-to-value
-           models such as L-TAE.
-
-        Args:
-            batch: Output of the DataLoader.
-
-        Returns:
-            A three-tuple ``(x, y_flat, y_raw)`` where
-
-            * ``x``: input tensor ``(B, T, C)``
-            * ``y_flat``: flattened target ``(B, H*C)`` used for loss
-              computation and metric updates.
-            * ``y_raw``: original target ``(B, H, C)``; ``H`` is extracted 
-                and passed to :meth:`_unnormalise`.
-        """
-        x: Tensor = batch[self.input_key]  # (B, T, C)
-        y_raw: Tensor = batch[self.target_key]  # (B, H, C)
-        y_flat = y_raw.reshape(x.shape[0], -1)  # (B, H*C)
-        return x, y_flat, y_raw
 
     def _unnormalise(
         self, y_hat: Tensor, y: Tensor, batch: Sample, H: int
@@ -231,13 +115,13 @@ class TemporalRegressionTask(BaseTask):
             return y_hat, y
 
         mean_rep = mean.repeat(H).to(y_hat)  # (H*C,)
-        std_rep = std.repeat(H).to(y_hat)    # (H*C,)
+        std_rep = std.repeat(H).to(y_hat)  # (H*C,)
 
         y_hat_orig = y_hat * std_rep + mean_rep
         y_orig = y * std_rep + mean_rep
         return y_hat_orig, y_orig
 
-    def _common_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
+    def _shared_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
         """Forward pass, loss computation, and metric update for all splits.
 
         Args:
@@ -250,28 +134,26 @@ class TemporalRegressionTask(BaseTask):
         Returns:
             Scalar loss tensor.
         """
-        x, y, y_raw = self._prepare_targets(batch)
-        batch_size: int = x.shape[0]
+        x = batch['input']
+        y = batch['target']
+        y = einops.rearrange(y, 'b t c -> b (t c)')
+        batch_size = x.shape[0]
 
-        y_hat: Tensor = self.model(x)  # (B, num_outputs)
+        y_hat = self.model(x)  # (B, out_features)
 
-        loss: Tensor = self.criterion(y_hat, y)
-        self.log(
-            f'{stage}_loss', loss, on_step=False, on_epoch=True, batch_size=batch_size
-        )
+        loss = self.criterion(y_hat, y)
+        self.log(f'{stage}_loss', loss, batch_size=batch_size)
 
-        # Compute metrics in original space when normalisation stats are
-        # available; fall back to normalised space otherwise (no-op).
-        H: int = y_raw.shape[1]
-        y_hat_m, y_m = self._unnormalise(y_hat, y, batch, H)
+        # Denormalize before computing metrics
+        datamodule = self.trainer.datamodule
+        y = y * datamodule.target_mean + datamodule.target_std
+        y_hat = y_hat * datamodule.target_mean + datamodule.target_std
 
         metrics = getattr(self, f'{stage}_metrics')
-        metrics(y_hat_m, y_m)
+        metrics(y_hat, y)
         self.log_dict(metrics, batch_size=batch_size)
 
         return loss
-
-    # Lightning step methods
 
     def training_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
@@ -286,7 +168,7 @@ class TemporalRegressionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        return self._common_step(batch, batch_idx, 'train')
+        return self._shared_step(batch, batch_idx, 'train')
 
     def validation_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
@@ -298,7 +180,7 @@ class TemporalRegressionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        self._common_step(batch, batch_idx, 'val')
+        self._shared_step(batch, batch_idx, 'val')
 
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -308,7 +190,7 @@ class TemporalRegressionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        self._common_step(batch, batch_idx, 'test')
+        self._shared_step(batch, batch_idx, 'test')
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
@@ -325,9 +207,12 @@ class TemporalRegressionTask(BaseTask):
             contains ``'mean'`` / ``'std'`` the predictions are returned in
             the *original* (unnormalised) scale via :meth:`_unnormalise`.
         """
-        x: Tensor = batch[self.input_key]
-        y_hat: Tensor = self.model(x)
-        H: int = self.hparams['num_outputs'] // self.hparams['in_channels']
-        # y is unused in predict context; passing y_hat as a placeholder
-        y_hat, _ = self._unnormalise(y_hat, y_hat, batch, H)
+        x = batch['input']
+
+        y_hat = self.model(x)
+
+        # Denormalize before returning predictions
+        datamodule = self.trainer.datamodule
+        y_hat = y_hat * datamodule.target_mean + datamodule.target_std
+
         return y_hat

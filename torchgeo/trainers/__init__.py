@@ -19,7 +19,6 @@ from .simclr import SimCLRTask
 from .spatiotemporal_segmentation import SpatioTemporalSegmentationTask
 from .temporal_regression import TemporalRegressionTask
 
-
 __all__ = (
     'BYOLTask',
     'BaseTask',
