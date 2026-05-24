@@ -33,6 +33,11 @@ class AirQuality(NonGeoDataset):
       (2004-2005)
     * contains missing features, gap filled using linear interpolation
 
+    .. note:: There are actually two different versions of this dataset with major
+       formatting differences, including comma-delimited vs. semicolon-delimited,
+       empty rows and columns, and differences in datetime formatting. This dataset
+       currently only supports the comma-delimited version.
+
     If you use this dataset in your research, please cite:
 
     * https://doi.org/10.1016/J.SNB.2007.09.060
@@ -67,7 +72,6 @@ class AirQuality(NonGeoDataset):
         self.num_input_steps = num_input_steps
         self.num_target_steps = num_target_steps
         self.data = self._load_data()
-        self.feature_names = [c for c in self.data.columns if c != 'datetime']
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -156,7 +160,7 @@ class AirQuality(NonGeoDataset):
         target_steps = range(input.shape[0], input.shape[0] + target.shape[0])
 
         for i, ax in enumerate(axes.flatten()):
-            feature_name = self.feature_names[i]
+            feature_name = self.data.columns[i]
             ax.plot(input_steps, input[:, i], label='Input', marker='o')
             ax.plot(target_steps, target[:, i], label='Target', marker='x')
             ax.set_title(feature_name)
