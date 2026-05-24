@@ -16,7 +16,7 @@ from shapely.geometry import Point
 
 np.random.seed(0)
 
-# 3 Domains are necessary to enable having one sample per split (train, valid, test).
+# 3 Domains to have one sample per split (train, valid, test).
 DOMAIN_YEARS = {
     'D006-2020': {'TILE': 'FF-S1-14', 'COORDS': '5-5'},
     'D012-2019': {'TILE': 'AF-S1-27', 'COORDS': '5-10'},
@@ -28,20 +28,15 @@ OFFICIAL_SPLITS_PATCH_IDS = [
     f'{domain_year}_{info["TILE"]}_{info["COORDS"]}'
     for domain_year, info in DOMAIN_YEARS.items()
 ]
-# Toy data uses split_toy column (patch_id, split_toy, geometry)
 OFFICIAL_SPLITS_SPLIT = ['train', 'valid', 'test']
 
-# Modalities generated for all domain-years; others only for one domain-year (plotting).
-# Labels modality are necessary for training on each of them.
-# AERIAL_RGBI is necessary to represent the mono-temporal data.
-# SPOT_RGBI (could have been any other smaller modality) is necessary to trigger the resize operation.
-# SENTINEL_2_TS is necessary to represent the time series.
 REQUIRED_MODALITIES_PER_DOMAIN = [
     'AERIAL_LABEL-COSIA',
     'ALL_LABEL-LPIS',
     'AERIAL_RGBI',
     'SPOT_RGBI',
-    'SENTINEL2_TS',
+    'DEM_ELEV',
+    'AERIAL-RLT_PAN',
 ]
 PLOTTING_ONLY_DOMAIN_YEAR = 'D006-2020'
 

@@ -131,10 +131,14 @@ class FLAIRHUBDataModule(NonGeoDataModule):
             A batch of data with normalized modalities, and optionally concatenated
             mono-temporal modalities into an 'image' key.
         """
+        # Map band names to batch keys using the dataset's modality_key_map
+        key_map = self.dataset_class.modality_key_map
+
         # Apply modality-specific normalization
-        for key, normalizer in self.normalizers.items():
-            if key in batch:
-                batch[key] = normalizer(batch[key])
+        for band_name, normalizer in self.normalizers.items():
+            batch_key = key_map.get(band_name, band_name)
+            if batch_key in batch:
+                batch[batch_key] = normalizer(batch[batch_key])
 
         # Concatenate mono-temporal modalities if enabled
         if self.concatenate_modalities:
@@ -144,14 +148,18 @@ class FLAIRHUBDataModule(NonGeoDataModule):
                 'DEM_ELEV',
                 'AERIAL-RLT_PAN',
             ]
-            present_modalities = [k for k in mono_temporal_modalities if k in batch]
-            if present_modalities:
-                max_resolution = max(batch[k].shape[-1] for k in present_modalities)
+            present_keys = [
+                key_map.get(mod, mod)
+                for mod in mono_temporal_modalities
+                if key_map.get(mod, mod) in batch
+            ]
+            if present_keys:
+                max_resolution = max(batch[k].shape[-1] for k in present_keys)
 
                 # Resize and concatenate modalities for each sample in batch
                 concatenated_modalities = []
-                for modality_key in present_modalities:
-                    tensor = batch[modality_key]  # [B, C, H, W]
+                for batch_key in present_keys:
+                    tensor = batch[batch_key]  # [B, C, H, W]
                     if tensor.shape[-1] != max_resolution:
                         tensor = TF.interpolate(
                             tensor,
@@ -160,7 +168,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
                             align_corners=False,
                         )
                     concatenated_modalities.append(tensor)
-                    del batch[modality_key]
 
                 batch['image'] = torch.cat(concatenated_modalities, dim=1)
 

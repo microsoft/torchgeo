@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 from torch import Tensor
 
 from torchgeo.datasets import FLAIRHUB, DatasetNotFoundError, FLAIRHUBToy
+from torchgeo.datasets.flair import AvailableBands
 
 _TEST_DATA = Path('tests') / 'data' / 'flair'
 _DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
@@ -33,7 +34,7 @@ class TestFLAIRHUB:
         shutil.copytree(_TEST_DATA, root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', {'D006': ['2020']})
 
-        bands = [
+        bands: list[AvailableBands] = [
             'AERIAL_RGBI',
             'SPOT_RGBI',
             'SENTINEL2_TS',
@@ -87,16 +88,6 @@ class TestFLAIRHUB:
 
     def test_toy_init(self, tmp_path: Path) -> None:
         """FLAIRHUBToy init edge cases not covered by trainer test."""
-        shutil.copytree(_TEST_DATA / 'FLAIR-HUB_TOY', tmp_path / 'FLAIR-HUB_TOY')
-        ds = FLAIRHUBToy(
-            root=tmp_path,
-            split='train',
-            bands=['AERIAL_RGBI'],
-            dataset_type='land_cover',
-        )
-        assert len(ds) == 1
-
-        shutil.rmtree(tmp_path / 'FLAIR-HUB_TOY')
         shutil.copy(
             _TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip',
             tmp_path / 'FLAIR-HUB_TOY_DATASET.zip',

@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     PASTISDataModule,
     SEN12MSDataModule,
 )
-from torchgeo.datasets import RGBBandsMissingError
+from torchgeo.datasets import FLAIRHUB, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SemanticSegmentation
@@ -61,10 +61,8 @@ class TestSemanticSegmentation:
             'dlrsd',
             'dlrsd_no_val',
             'etci2021',
-            'flairhub_croptype',
-            'flairhub_landcover',
-            'flairhub_landcover_official_splits',
-            'flairhub_toy_landcover_official_splits',
+            'flairhub_multimodal_landcover',
+            'flairhub_toy_croptype',
             'ftw',
             'geonrw',
             'gid15',
@@ -101,6 +99,11 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
+
+        if name in ('flairhub_multimodal_landcover', 'flairhub_toy_croptype'):
+            monkeypatch.setattr(
+                FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+            )
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

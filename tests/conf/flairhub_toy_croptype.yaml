@@ -9,17 +9,13 @@ model:
     num_filters: 1
     ignore_index: 22
 data:
-  class_path: FLAIRHUBDataModule
+  class_path: FLAIRHUBToyDataModule
   init_args:
     batch_size: 1
     concatenate_modalities: true
-    official_splits: 'split_1'
+    official_splits: 'split_toy'
   dict_kwargs:
     root: 'tests/data/flair'
     download: False
     bands: ['AERIAL_RGBI', 'SPOT_RGBI']
     dataset_type: 'crop_type'
-    # domain_years:
-    #   D006: ['2020']
-    #   D012: ['2019']
-    #   D032: ['2019']
