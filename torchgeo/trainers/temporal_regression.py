@@ -25,6 +25,7 @@ class TemporalRegressionTask(BaseTask):
         model: Literal['ltae'] = 'ltae',
         in_features: int = 1,
         out_features: int = 1,
+        out_steps: int = 1,
         loss: Literal['mae', 'mse'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
@@ -36,8 +37,10 @@ class TemporalRegressionTask(BaseTask):
             model: Name of the model architecture.
             in_features: Number of input features per time step
                 (the *C* dimension of the *(B, T, C)* input tensor).
-            out_features: Number of output features times the number of time steps
-                (the *T x C* dimension of the *(B, T, C)* target tensor).
+            out_features: Number of output features per time step
+                (the *C* dimension of the *(B, T, C)* target tensor).
+            out_steps: Number of output time steps
+                (the *T* dimension of the *(B, T, C)* target tensor).
             loss: Loss function.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
@@ -52,8 +55,9 @@ class TemporalRegressionTask(BaseTask):
         """Initialize the model."""
         match self.hparams['model']:
             case 'ltae':
+                out = self.hparams['out_features'] * self.hparams['out_steps']
                 ltae = LTAE(in_channels=self.hparams['in_features'], **self.kwargs)
-                linear = nn.Linear(ltae.n_neurons[-1], self.hparams['out_features'])
+                linear = nn.Linear(ltae.n_neurons[-1], out)
                 self.model = nn.Sequential(ltae, linear)
 
     def configure_losses(self) -> None:
@@ -95,10 +99,11 @@ class TemporalRegressionTask(BaseTask):
         """
         x = batch['input']
         y = batch['target']
-        y = einops.rearrange(y, 'b t c -> b (t c)')
+        t = self.hparams['out_steps']
         batch_size = x.shape[0]
 
-        y_hat = self.model(x)  # (B, out_features)
+        y_hat = self.model(x)
+        y_hat = einops.rearrange(y_hat, 'b (t c) -> b t c', t=t)
 
         loss = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss, batch_size=batch_size)
@@ -165,8 +170,10 @@ class TemporalRegressionTask(BaseTask):
             Predicted values of shape *(B, T, C)*.
         """
         x = batch['input']
+        t = self.hparams['out_steps']
 
         y_hat = self.model(x)
+        y_hat = einops.rearrange(y_hat, 'b (t c) -> b t c', t=t)
 
         # Denormalize before returning predictions
         datamodule = self.trainer.datamodule

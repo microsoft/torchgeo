@@ -3,6 +3,7 @@ model:
   init_args:
     in_features: 17
     out_features: 17
+    out_steps: 2
     loss: 'mse'
   dict_kwargs:
     len_max_seq: 3
@@ -14,3 +15,5 @@ data:
     test_split_pct: 0.3
   dict_kwargs:
     root: 'tests/data/air_quality'
+    input_steps: 3
+    target_steps: 2
