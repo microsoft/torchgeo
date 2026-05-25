@@ -127,8 +127,8 @@ class TemporalRegressionTask(BaseTask):
 
         # Denormalize before computing metrics
         datamodule = self.trainer.datamodule
-        y = y * datamodule.target_mean + datamodule.target_std
-        y_hat = y_hat * datamodule.target_mean + datamodule.target_std
+        y = y * datamodule.target_std + datamodule.target_mean
+        y_hat = y_hat * datamodule.target_std + datamodule.target_mean
 
         y = einops.rearrange(y, 'b t c -> (b t) c')
         y_hat = einops.rearrange(y_hat, 'b t c -> (b t) c')
@@ -211,6 +211,6 @@ class TemporalRegressionTask(BaseTask):
 
         # Denormalize before returning predictions
         datamodule = self.trainer.datamodule
-        y_hat = y_hat * datamodule.target_mean + datamodule.target_std
+        y_hat = y_hat * datamodule.target_std + datamodule.target_mean
 
         return y_hat
