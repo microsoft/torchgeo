@@ -11,7 +11,7 @@ from .detection import ObjectDetectionTask
 from .instance_segmentation import InstanceSegmentationTask
 from .iobench import IOBenchTask
 from .mae import MAETask
-from .mixins import ClassificationMixin
+from .mixins import ClassificationMixin, RegressionMixin
 from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
@@ -32,6 +32,7 @@ __all__ = (
     'MultiLabelClassificationTask',
     'ObjectDetectionTask',
     'PixelwiseRegressionTask',
+    'RegressionMixin',
     'RegressionTask',
     'SemanticSegmentationTask',
     'SimCLRTask',
