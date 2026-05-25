@@ -7,15 +7,14 @@ from typing import Any, Literal
 
 import einops
 from torch import Tensor, nn
-from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
-from torchmetrics.wrappers import ClasswiseWrapper
 
 from ..datasets.utils import Sample
 from ..models import LTAE
 from .base import BaseTask
+from .mixins import RegressionMixin
 
 
-class TemporalRegressionTask(BaseTask):
+class TemporalRegressionTask(RegressionMixin, BaseTask):
     """Trainer for sequence-to-sequence temporal regression.
 
     .. versionadded:: 0.10
@@ -62,46 +61,6 @@ class TemporalRegressionTask(BaseTask):
                 ltae = LTAE(in_channels=self.hparams['in_channels'], **self.kwargs)
                 linear = nn.Linear(ltae.n_neurons[-1], out)
                 self.model = nn.Sequential(ltae, linear)
-
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        match self.hparams['loss']:
-            case 'mse':
-                self.criterion: nn.Module = nn.MSELoss()
-            case 'mae':
-                self.criterion = nn.L1Loss()
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.MeanSquaredError` (``MSE``) and its square root
-          (``RMSE``). Lower is better.
-        * :class:`~torchmetrics.MeanAbsoluteError` (``MAE``). Lower is better.
-        """
-        num_outputs = self.hparams['num_outputs']
-        labels = self.hparams['labels']
-        metrics = MetricCollection(
-            {
-                'RMSE': ClasswiseWrapper(
-                    MeanSquaredError(squared=False, num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='RMSE_',
-                ),
-                'MSE': ClasswiseWrapper(
-                    MeanSquaredError(squared=True, num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='MSE_',
-                ),
-                'MAE': ClasswiseWrapper(
-                    MeanAbsoluteError(num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='MAE_',
-                ),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
 
     def _shared_step(self, batch: Sample, batch_idx: int, stage: str) -> Tensor:
         """Forward pass, loss computation, and metric update for all splits.
@@ -153,11 +112,6 @@ class TemporalRegressionTask(BaseTask):
         """
         return self._shared_step(batch, batch_idx, 'train')
 
-    def on_train_epoch_end(self) -> None:
-        """Log train metrics."""
-        self.log_dict(self.train_metrics.compute())
-        self.train_metrics.reset()
-
     def validation_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
@@ -170,11 +124,6 @@ class TemporalRegressionTask(BaseTask):
         """
         self._shared_step(batch, batch_idx, 'val')
 
-    def on_validation_epoch_end(self) -> None:
-        """Log validation metrics."""
-        self.log_dict(self.val_metrics.compute())
-        self.val_metrics.reset()
-
     def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
@@ -184,11 +133,6 @@ class TemporalRegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         self._shared_step(batch, batch_idx, 'test')
-
-    def on_test_epoch_end(self) -> None:
-        """Log test metrics."""
-        self.log_dict(self.test_metrics.compute())
-        self.test_metrics.reset()
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
