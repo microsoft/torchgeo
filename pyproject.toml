@@ -108,6 +108,8 @@ datasets = [
     "webdataset>=0.2.4",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
+    # zarr 2.18+ required by WeatherBench2
+    "zarr>=2.18",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
