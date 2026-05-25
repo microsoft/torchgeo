@@ -65,6 +65,7 @@ from .vhr10 import VHR10DataModule
 from .weatherbench import (
     AuroraWeatherBench2Sequence,
     WeatherBench2AuroraDataModule,
+    aurora_batch_from_xarray,
     aurora_collate_fn,
     aurora_predictions_to_xarray,
 )
@@ -144,6 +145,7 @@ __all__ = (
     'Vaihingen2DDataModule',
     'WeatherBench2AuroraDataModule',
     'XView2DataModule',
+    'aurora_batch_from_xarray',
     'aurora_collate_fn',
     'aurora_predictions_to_xarray',
     'xBDDataModule',
