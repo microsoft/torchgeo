@@ -50,9 +50,8 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
-# https://github.com/sphinx-doc/sphinx/pull/10887
-needs_sphinx = '5.3'
+# Sphinx 8.0+ required by pydata-sphinx-theme 0.18.0+
+needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
@@ -127,6 +126,11 @@ html_theme_options = {
             'name': 'YouTube',
             'url': 'https://www.youtube.com/@TorchGeo',
             'icon': 'fa-brands fa-youtube',
+        },
+        {
+            'name': 'Hugging Face',
+            'url': 'https://huggingface.co/torchgeo',
+            'icon': 'fa-brands fa-hugging-face',
         },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
