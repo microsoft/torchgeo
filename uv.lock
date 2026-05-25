@@ -3840,7 +3840,7 @@ requires-dist = [
     { name = "timm", specifier = ">=1.0.3" },
     { name = "torch", specifier = ">=2.2" },
     { name = "torchgeo", extras = ["datasets", "docs", "models", "style", "tests"], marker = "extra == 'all'" },
-    { name = "torchmetrics", extras = ["detection"], specifier = ">=1.2" },
+    { name = "torchmetrics", extras = ["detection"], specifier = ">=1.5" },
     { name = "torchvision", specifier = ">=0.17" },
     { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.33" },
     { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
