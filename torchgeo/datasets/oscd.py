@@ -170,7 +170,7 @@ class OSCD(NonGeoDataset):
         return len(self.files)
 
     def _load_files(self) -> list[dict[str, str | Sequence[str]]]:
-        regions = []
+        regions: list[dict[str, str | Sequence[str]]] = []
         labels_root = os.path.join(
             self.root,
             f'Onera Satellite Change Detection dataset - {self.split.capitalize()} '
