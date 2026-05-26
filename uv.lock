@@ -3541,16 +3541,17 @@ wheels = [
 
 [[package]]
 name = "sphinx-github-changelog"
-version = "1.7.2"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
-    { name = "requests" },
+    { name = "httpx" },
+    { name = "myst-parser" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/8a/e3b943c59927280c9c5bfb94064845a57f36bc2e021435adbfb7d3ecca1f/sphinx_github_changelog-1.7.2.tar.gz", hash = "sha256:79f11f30ec5b1ae52a1742a6dc702644203b164732a1af4b049ebe522ff484e4", size = 78662, upload-time = "2026-03-23T21:49:45.238Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d0/cd/cae0c1a25a8f9f40d95c4816a66f88e964c5a68efee8f58d3678bd535f10/sphinx_github_changelog-2.2.0.tar.gz", hash = "sha256:ffbb65206c8be8e84f39b4de7a44e98e92312fe38b363e7f016277443d493700", size = 71178, upload-time = "2026-05-24T00:30:42.655Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/6c/d8db14cbf2171cae049660eacddf858a35818343e618b442993a8b0a8885/sphinx_github_changelog-1.7.2-py3-none-any.whl", hash = "sha256:fef384fb9b60bfb8f1c4cc5941dab674b0e52456cd3fe05ef2c763833054d680", size = 11416, upload-time = "2026-03-23T21:49:43.74Z" },
+    { url = "https://files.pythonhosted.org/packages/33/83/dde07b0dc2014a480cb2e0129cc0b5bb1a38b3fa1ffcdff24f804845c7b3/sphinx_github_changelog-2.2.0-py3-none-any.whl", hash = "sha256:ce37c30d6dd1772e4917314498935128307ff95671e6fb009d67937a83cb1287", size = 13504, upload-time = "2026-05-24T00:30:40.702Z" },
 ]
 
 [[package]]
