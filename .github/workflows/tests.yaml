@@ -18,10 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # rfdetr depends on opencv-python which ships only abi3 wheels — abi3 is
-        # incompatible with free-threaded Python, and no sdist is available to
-        # build from source, so 3.14t cannot install the models extras.
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.12', '3.13', '3.14', '3.14t']
     steps:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
