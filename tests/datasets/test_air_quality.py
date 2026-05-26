@@ -42,7 +42,7 @@ class TestAirQuality:
         assert y.shape[0] == dataset.target_steps
 
     def test_len(self, dataset: AirQuality) -> None:
-        assert len(dataset) == 7
+        assert len(dataset) == 17
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

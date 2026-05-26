@@ -7,7 +7,7 @@ import segmentation_models_pytorch as smp
 import torch
 from lightning.pytorch import LightningModule
 from torch import Tensor, nn
-from torchmetrics import Metric, MetricCollection
+from torchmetrics import MeanAbsoluteError, MeanSquaredError, Metric, MetricCollection
 from torchmetrics.classification import (
     Accuracy,
     F1Score,
@@ -106,6 +106,68 @@ class ClassificationMixin(LightningModule):
                 )
 
         metrics = MetricCollection(metrics_dict)
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
+
+    def on_train_epoch_end(self) -> None:
+        """Log train metrics."""
+        self.log_dict(self.train_metrics.compute())
+        self.train_metrics.reset()
+
+    def on_validation_epoch_end(self) -> None:
+        """Log validation metrics."""
+        self.log_dict(self.val_metrics.compute())
+        self.val_metrics.reset()
+
+    def on_test_epoch_end(self) -> None:
+        """Log test metrics."""
+        self.log_dict(self.test_metrics.compute())
+        self.test_metrics.reset()
+
+
+class RegressionMixin(LightningModule):
+    """Mix-in for regression-based tasks.
+
+    .. versionadded:: 0.10
+    """
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        match self.hparams['loss']:
+            case 'mse':
+                self.criterion: nn.Module = nn.MSELoss()
+            case 'mae':
+                self.criterion = nn.L1Loss()
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.MeanSquaredError` (``MSE``) and its square root
+          (``RMSE``). Lower is better.
+        * :class:`~torchmetrics.MeanAbsoluteError` (``MAE``). Lower is better.
+        """
+        num_outputs = self.hparams['num_outputs']
+        labels = self.hparams['labels']
+        metrics = MetricCollection(
+            {
+                'RMSE': ClasswiseWrapper(
+                    MeanSquaredError(squared=False, num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='RMSE_',
+                ),
+                'MSE': ClasswiseWrapper(
+                    MeanSquaredError(squared=True, num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='MSE_',
+                ),
+                'MAE': ClasswiseWrapper(
+                    MeanAbsoluteError(num_outputs=num_outputs),
+                    labels=labels,
+                    prefix='MAE_',
+                ),
+            }
+        )
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
