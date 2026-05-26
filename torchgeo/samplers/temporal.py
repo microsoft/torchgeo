@@ -215,7 +215,7 @@ class SequentialTimedeltaSampler(TemporalSampler):
 
         left = intervals.left.min()
         right = intervals.right.max()
-        length = convolution_arithmetic(right - left, self.delta)
+        length = convolution_arithmetic(right - left, self.delta, self.stride)
 
         x, y = location
         for _ in range(length):
