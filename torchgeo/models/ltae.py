@@ -82,7 +82,7 @@ class LTAE(nn.Module):
 
         assert self.n_neurons[0] == self.d_model
 
-        activation = nn.ReLU(inplace=True)
+        activation = nn.ReLU()
 
         layers = []
         for i in range(len(self.n_neurons) - 1):
@@ -95,7 +95,7 @@ class LTAE(nn.Module):
             )
 
         self.mlp = nn.Sequential(*layers)
-        self.dropout = nn.Dropout(dropout, inplace=True)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.

@@ -1,6 +1,7 @@
 Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`ADVANCE`,C,"Google Earth, Freesound","5,075",13,512x512,0.5,RGB,CC-BY-4.0
 :ref:`AgriFieldNet`,S,Sentinel-2,"7,081",14,"256x256",10,MSI,CC-BY-4.0
+:ref:`Air Quality`,R,"Pirelli Labs multi-sensor device","9,358",-,-,-,"air quality, weather",CC-BY-4.0
 :ref:`BRIGHT`,CD,"MAXAR, NAIP, Capella, Umbra",3239,4,1024x1024,"0.1--1","RGB, SAR",CC-BY-4.0 AND CC-BY-NC-4.0
 :ref:`Benin Cashew Plantations`,S,Airbus Pléiades,70,6,"1,122x1,186",10,MSI,CC-BY-4.0
 :ref:`BioMassters`,R,Sentinel-1/2 and Lidar,,,256x256,10,"SAR, MSI",CC-BY-4.0
