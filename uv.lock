@@ -3711,7 +3711,7 @@ source = { editable = "." }
 dependencies = [
     { name = "einops" },
     { name = "geopandas" },
-    { name = "jsonargparse", extra = ["signatures"] },
+    { name = "jsonargparse", extra = ["jsonnet", "signatures"] },
     { name = "kornia" },
     { name = "lightly" },
     { name = "lightning" },
