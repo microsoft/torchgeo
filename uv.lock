@@ -1310,9 +1310,28 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+jsonnet = [
+    { name = "jsonnet" },
+]
 signatures = [
     { name = "docstring-parser" },
     { name = "typeshed-client" },
+]
+
+[[package]]
+name = "jsonnet"
+version = "0.22.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/90/b35ecd8d60c910874a645d153d4084e07950bc746b4e77dbbe54e199d1cf/jsonnet-0.22.0.tar.gz", hash = "sha256:eae5d9bf23c778baad39390f88c13c03b2090dfb5dfa148d6e217df8c1448258", size = 529697, upload-time = "2026-03-24T14:51:45.956Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/8d/a8534c36284a9c58a60d7be3fc499e9ff226a62631c5b63fb0e0a728a4f3/jsonnet-0.22.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:772d6d9e85b7c296d5197b4b48d7fd1b36043c90b80b670e8a769bd21e2b1f25", size = 444362, upload-time = "2026-03-24T14:51:32.171Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/08/ff983e8161759cfdd393699cc18d80b0391ecd4b21cb839a705a34644516/jsonnet-0.22.0-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f52e8aebcedace2ecc0eeebbd10a18fd3fb2d66ada892acec571a8119eff5087", size = 6750829, upload-time = "2026-03-24T14:51:34.119Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/ee/071311a7a9cdc20e817a1419c02db509a829282fe6001dddca33ce7a5e97/jsonnet-0.22.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:f13c60dc93d682bdcd63f4db368ea6e7e6e9ef9d2efb5bcd1b8dd78818d4fa7d", size = 7534652, upload-time = "2026-03-24T14:51:36.107Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/91/29d5e9394766e123b42cd23d351b2945117706534a89060241238888d1b6/jsonnet-0.22.0-cp314-cp314t-win_amd64.whl", hash = "sha256:76086435dcfd973252cb3d56b22848009061a44413fa197e15b39decf5400b65", size = 315116, upload-time = "2026-03-24T14:51:37.587Z" },
+    { url = "https://files.pythonhosted.org/packages/48/b9/d0ead4a4a5fbcee2807127aed41063d7482aa969a41d6d6a7c0194cc2686/jsonnet-0.22.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:42d86e5b2740e31a5e970997d470f517d9073c8a743ddb09ae69069e37529aa6", size = 443379, upload-time = "2026-03-24T14:51:38.804Z" },
+    { url = "https://files.pythonhosted.org/packages/68/9a/b1bb5a0ce21a0fc1ace044d28e69003e63f88b15bc22fcb14ca7e74cf63b/jsonnet-0.22.0-cp38-abi3-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a1136eefea98f01d654984e868f10faac2749d062464881491ec79ae5c38dc0e", size = 6739976, upload-time = "2026-03-24T14:51:40.153Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/b7/3270203be535725bf4b1ded5574f07c5cf530a954e2e1b4760efb5bb1e55/jsonnet-0.22.0-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:aefd2c07038eb9412ae6c46e49b7cfec74f10c53007755b176f7e075e70646f4", size = 7524407, upload-time = "2026-03-24T14:51:42.027Z" },
+    { url = "https://files.pythonhosted.org/packages/90/b1/91bd98399359b255b906cfce28d898d96d52348e37502859ccb469c083fa/jsonnet-0.22.0-cp38-abi3-win_amd64.whl", hash = "sha256:46df8787b30b001b39d9d551b3d85892d99a699cf3311a63f7bcef080d8a18ff", size = 305494, upload-time = "2026-03-24T14:51:44.272Z" },
 ]
 
 [[package]]
