@@ -3805,7 +3805,7 @@ requires-dist = [
     { name = "geopandas", specifier = ">=1.0" },
     { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=3.10,<3.15" },
     { name = "ipywidgets", marker = "extra == 'docs'", specifier = ">=7" },
-    { name = "jsonargparse", extras = ["signatures"], specifier = ">=4.39" },
+    { name = "jsonargparse", extras = ["jsonnet", "signatures"], specifier = ">=4.39" },
     { name = "kornia", specifier = ">=0.8.2" },
     { name = "laspy", marker = "extra == 'datasets'", specifier = ">=2.5.3" },
     { name = "lightly", specifier = ">=1.5.1" },
