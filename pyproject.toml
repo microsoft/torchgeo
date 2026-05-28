@@ -42,7 +42,7 @@ dependencies = [
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "geopandas>=1.0",
     # jsonargparse 4.39+ required to match lightning's own jsonargparse dependency
-    "jsonargparse[signatures]>=4.39",
+    "jsonargparse[jsonnet,signatures]>=4.39",
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
