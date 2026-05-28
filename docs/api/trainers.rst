@@ -36,7 +36,7 @@ Supervised learning tasks have both inputs and labeled outputs.
      - :math:`\mathbb{Z}^{H \times W}`
      - :ref:`SemanticSegmentationTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
-     - :math:`\mathbb{Z}^{H \times W}`
+     - :math:`\mathbb{R}^{H \times W}`
      - :ref:`PixelwiseRegressionTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
      - :math:`\mathbb{R}^{O \times 4}`
@@ -90,7 +90,7 @@ Base Classes
 Abstract base classes that all other tasks inherit from.
 
 .. list-table:: Base Classes
-   : header-rows: 1
+   :header-rows: 1
 
    * - Task
    * - :ref:`BaseTask`
