@@ -1,4 +1,4 @@
-MOCOTask
+MoCoTask
 ========
 
-.. autoclass:: torchgeo.trainers.MOCOTask
+.. autoclass:: torchgeo.trainers.MoCoTask

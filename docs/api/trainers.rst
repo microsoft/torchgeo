@@ -3,6 +3,13 @@ torchgeo.trainers
 
 .. module:: torchgeo.trainers
 
+.. toctree::
+   :maxdepth: 0
+   :hidden:
+   :glob:
+
+   trainers/*
+
 TorchGeo provides `LightningModules <https://lightning.ai/docs/pytorch/stable/common/lightning_module.html>`__ for a number of common tasks in geospatial and geotemporal deep learning.
 
 Supervised Learning
@@ -60,7 +67,7 @@ Self-supervised learning (SSL) tasks have inputs and create their own labeled ou
    * - :math:`\mathbb{R}^{C \times H \times W}`
      - :ref:`MAETask`
    * - :math:`\mathbb{R}^{C \times H \times W}` or :math:`\mathbb{R}^{T \times C \times H \times W}`
-     - :ref:`MOCOTask`
+     - :ref:`MoCoTask`
    * - :math:`\mathbb{R}^{C \times H \times W}` or :math:`\mathbb{R}^{T \times C \times H \times W}`
      - :ref:`SimCLRTask`
 
