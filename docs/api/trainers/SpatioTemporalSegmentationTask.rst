@@ -1,4 +1,4 @@
-.. SpatioTemporalSegmentationTask:
+.. _SpatioTemporalSegmentationTask:
 
 SpatioTemporalSegmentationTask
 ==============================
