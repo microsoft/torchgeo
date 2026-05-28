@@ -1,3 +1,5 @@
+.. _IOBenchTask:
+
 IOBenchTask
 ===========
 

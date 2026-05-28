@@ -91,8 +91,12 @@ Abstract base classes that all other tasks inherit from.
 
 .. list-table:: Base Classes
    : header-rows: 1
-   * - Task
-   * - :ref:`BaseTask`
+   * - Input
+     - Output
+     - Task
+   * - Any
+     - Any
+     - :ref:`BaseTask`
 
 Mixins
 -------
