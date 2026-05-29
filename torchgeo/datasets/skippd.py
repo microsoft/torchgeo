@@ -163,10 +163,10 @@ class SKIPPD(NonGeoDataset):
         ) as f:
             arr = f[self.split]['images_log'][index]
 
-        # forecast has dimension [16, 64, 64, 3] but reshape to [48, 64, 64]
+        # forecast has dimension [16, 64, 64, 3] but rearrange to [16, 3, 64, 64]
         # https://github.com/yuhao-nie/Stanford-solar-forecasting-dataset/blob/main/models/SUNSET_forecast.ipynb
         if self.task == 'forecast':
-            arr = rearrange(arr, 't h w c-> (t c) h w')
+            arr = rearrange(arr, 't h w c -> t c h w')
         else:
             arr = rearrange(arr, 'h w c -> c h w')
 
@@ -246,7 +246,7 @@ class SKIPPD(NonGeoDataset):
             image, label = sample['image'].permute(1, 2, 0), sample['label'].item()
         else:
             image, label = (
-                sample['image'].permute(1, 2, 0).reshape(64, 64, 3, 16)[:, :, :, -1],
+                sample['image'][-1].permute(1, 2, 0),
                 sample['label'][-1].item(),
             )
 

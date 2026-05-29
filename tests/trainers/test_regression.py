@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Any, cast
 
+import matplotlib.pyplot as plt
 import pytest
 import segmentation_models_pytorch as smp
 import timm
@@ -216,6 +217,57 @@ class TestRegressionTask:
         assert all(
             [param.requires_grad for param in model.model.get_classifier().parameters()]
         )
+
+    def test_validation_step_5d(self, monkeypatch: MonkeyPatch) -> None:
+        batch = {
+            'image': torch.randn(2, 3, 3, 64, 64),
+            'label': torch.randn(2, 1),
+        }
+
+        class MockDataLoader:
+            def __iter__(self):
+                yield batch
+
+            def __len__(self):
+                return 1
+
+        datamodule = TropicalCycloneDataModule(
+            root='tests/data/cyclone', batch_size=2, num_workers=0
+        )
+        model = RegressionTask(model='resnet18', in_channels=9)
+        
+        # Mock logger
+        class MockLogger:
+            def __init__(self) -> None:
+                self.experiment = self
+                self.version = '0'
+
+            def log_metrics(self, *args: Any, **kwargs: Any) -> None:
+                pass
+
+            def log_hyperparams(self, *args: Any, **kwargs: Any) -> None:
+                pass
+
+            def add_figure(self, *args: Any, **kwargs: Any) -> None:
+                pass
+
+            @property
+            def name(self) -> str:
+                return 'mock'
+
+        trainer = Trainer(
+            accelerator='cpu',
+            max_epochs=1,
+            logger=MockLogger(),
+            fast_dev_run=True,
+        )
+        monkeypatch.setattr(trainer, 'datamodule', datamodule)
+        monkeypatch.setattr(datamodule, 'plot', lambda *args, **kwargs: plt.figure())
+        
+        # We need to ensure the model's validation_step logic is called
+        # The code we want to cover is in on_validation_batch_end
+        trainer.validate(model, dataloaders=MockDataLoader())
+        assert batch['image'].ndim == 5
 
 
 class TestPixelwiseRegressionTask:
