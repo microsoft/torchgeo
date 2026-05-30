@@ -35,6 +35,12 @@ The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/en/sta
 pip install torchgeo
 ```
 
+or with [uv](https://docs.astral.sh/uv/):
+
+```sh
+uv add torchgeo
+```
+
 For [conda](https://docs.conda.io/en/latest/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
 
 ## Documentation
