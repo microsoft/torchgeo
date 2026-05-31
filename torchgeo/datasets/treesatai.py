@@ -99,7 +99,7 @@ class TreeSatAI(NonGeoDataset):
 
     # https://zenodo.org/records/6780578/files/220629_doc_TreeSatAI_benchmark_archive.pdf
     all_sensors: tuple[Literal['aerial', 's1', 's2'], ...] = ('aerial', 's1', 's2')
-    all_bands: ClassVar[dict[str, list[str]]] = {
+    all_bands_dict: ClassVar[dict[str, list[str]]] = {
         'aerial': ['IR', 'G', 'B', 'R'],
         's1': ['VV', 'VH', 'VV/VH'],
         's2': [
@@ -117,7 +117,7 @@ class TreeSatAI(NonGeoDataset):
             'B09',
         ],
     }
-    rgb_bands: ClassVar[dict[str, list[str]]] = {
+    rgb_bands_dict: ClassVar[dict[str, list[str]]] = {
         'aerial': ['R', 'G', 'B'],
         's1': ['VV', 'VH', 'VV/VH'],
         's2': ['B04', 'B03', 'B02'],
@@ -253,7 +253,10 @@ class TreeSatAI(NonGeoDataset):
 
         for i, sensor in enumerate(self.sensors):
             image = sample[f'image_{sensor}']
-            bands = [self.all_bands[sensor].index(b) for b in self.rgb_bands[sensor]]
+            bands = [
+                self.all_bands_dict[sensor].index(b)
+                for b in self.rgb_bands_dict[sensor]
+            ]
             image = rearrange(image[bands], 'c h w -> h w c')
             image = quantile_normalization(image)
             ax[0, i].imshow(image)

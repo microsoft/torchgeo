@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import ClassVar, Literal, cast
+from typing import Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -27,6 +27,7 @@ import rasterio.merge
 import shapely
 import torch
 from geopandas import GeoDataFrame
+from matplotlib.colors import ListedColormap
 from PIL.Image import Image
 from pyproj import CRS
 from rasterio.enums import Resampling
@@ -40,6 +41,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .errors import DatasetNotFoundError
+from .mixins import PlottingMixin
 from .utils import (
     GeoSlice,
     Path,
@@ -54,7 +56,7 @@ from .utils import (
 )
 
 
-class GeoDataset(Dataset[Sample], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -382,15 +384,6 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
-    #: Names of all available bands in the dataset
-    all_bands: tuple[str, ...] = ()
-
-    #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: tuple[str, ...] = ()
-
-    #: Color map for the dataset, used for plotting
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
-
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -488,7 +481,7 @@ class RasterDataset(GeoDataset):
                     # See if file has a color map
                     if len(self.cmap) == 0:
                         try:
-                            self.cmap = vrt.colormap(1)  # ty: ignore[invalid-attribute-access]
+                            self.cmap = ListedColormap(vrt.colormap(1).values())
                         except ValueError:
                             pass
                     if crs is None:
@@ -1274,7 +1267,7 @@ class VectorDataset(GeoDataset):
         return 1
 
 
-class NonGeoDataset(Dataset[Sample], abc.ABC):
+class NonGeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
