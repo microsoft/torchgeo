@@ -6,15 +6,14 @@
 from typing import Any, Literal
 
 import torch
-import torch.nn as nn
 from torch import Tensor
-from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 
 from ..models import ConvLSTM
 from .base import BaseTask
+from .mixins import RegressionMixin
 
 
-class SpatioTemporalPixelwiseRegressionTask(BaseTask):
+class SpatioTemporalPixelwiseRegressionTask(RegressionMixin, BaseTask):
     """LightningModule for pixelwise regression over spatiotemporal image sequences.
 
     Uses a :class:`~torchgeo.models.ConvLSTM` encoder with a single-channel
@@ -28,6 +27,8 @@ class SpatioTemporalPixelwiseRegressionTask(BaseTask):
         self,
         model: Literal['convlstm'] = 'convlstm',
         in_channels: int = 3,
+        num_outputs: int = 1,
+        labels: list[str] | None = None,
         loss: Literal['mse', 'mae'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
@@ -40,6 +41,9 @@ class SpatioTemporalPixelwiseRegressionTask(BaseTask):
                 supported.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
+            num_outputs: Number of output channels. Defaults to ``1`` for
+                single-channel pixelwise regression.
+            labels: List of output channel names used when ``num_outputs > 1``.
             loss: Loss function, one of ``'mse'`` or ``'mae'``.
             lr: Learning rate for the optimizer.
             patience: Patience for the learning-rate scheduler.
@@ -56,35 +60,6 @@ class SpatioTemporalPixelwiseRegressionTask(BaseTask):
         self.model = ConvLSTM(
             input_dim=self.hparams['in_channels'], num_classes=1, **self.kwargs
         )
-
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        loss: str = self.hparams['loss']
-        if loss == 'mse':
-            self.criterion: nn.Module = nn.MSELoss()
-        else:
-            self.criterion = nn.L1Loss()
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
-          differences between the predicted and actual values (MSE) and its
-          square root (RMSE). Lower values are better.
-        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
-          differences between the predicted and actual values (MAE).
-          Lower values are better.
-        """
-        metrics = MetricCollection(
-            {
-                'RMSE': MeanSquaredError(squared=False),
-                'MSE': MeanSquaredError(squared=True),
-                'MAE': MeanAbsoluteError(),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
 
     def forward(self, x: Tensor, **kwargs: Any) -> Tensor:
         """Forward pass of the model.
@@ -127,7 +102,6 @@ class SpatioTemporalPixelwiseRegressionTask(BaseTask):
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss, batch_size=batch_size)
-        self.log_dict(metrics, batch_size=batch_size)
         return loss
 
     def training_step(
