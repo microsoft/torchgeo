@@ -149,25 +149,34 @@ class RegressionMixin(LightningModule):
         """
         num_outputs = self.hparams['num_outputs']
         labels = self.hparams['labels']
-        metrics = MetricCollection(
-            {
-                'RMSE': ClasswiseWrapper(
-                    MeanSquaredError(squared=False, num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='RMSE_',
-                ),
-                'MSE': ClasswiseWrapper(
-                    MeanSquaredError(squared=True, num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='MSE_',
-                ),
-                'MAE': ClasswiseWrapper(
-                    MeanAbsoluteError(num_outputs=num_outputs),
-                    labels=labels,
-                    prefix='MAE_',
-                ),
-            }
-        )
+        if num_outputs > 1:
+            metrics = MetricCollection(
+                {
+                    'RMSE': ClasswiseWrapper(
+                        MeanSquaredError(squared=False, num_outputs=num_outputs),
+                        labels=labels,
+                        prefix='RMSE_',
+                    ),
+                    'MSE': ClasswiseWrapper(
+                        MeanSquaredError(squared=True, num_outputs=num_outputs),
+                        labels=labels,
+                        prefix='MSE_',
+                    ),
+                    'MAE': ClasswiseWrapper(
+                        MeanAbsoluteError(num_outputs=num_outputs),
+                        labels=labels,
+                        prefix='MAE_',
+                    ),
+                }
+            )
+        else:
+            metrics = MetricCollection(
+                {
+                    'RMSE': MeanSquaredError(squared=False),
+                    'MSE': MeanSquaredError(squared=True),
+                    'MAE': MeanAbsoluteError(),
+                }
+            )
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
