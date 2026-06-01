@@ -196,6 +196,8 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/issues/12618
     "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
     "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
+    # https://github.com/pytorch/pytorch/pull/167669
+    'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS

@@ -4,16 +4,15 @@
 """Trainers for regression."""
 
 import os
+from typing import Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import timm
 import torch
-import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
@@ -22,9 +21,10 @@ from ..datasets.utils import Sample
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
+from .mixins import RegressionMixin
 
 
-class RegressionTask(BaseTask):
+class RegressionTask(RegressionMixin, BaseTask):
     """Regression."""
 
     target_key = 'label'
@@ -36,8 +36,9 @@ class RegressionTask(BaseTask):
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_outputs: int = 1,
+        labels: list[str] | None = None,
         num_filters: int = 3,
-        loss: str = 'mse',
+        loss: Literal['mae', 'mse'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -58,6 +59,7 @@ class RegressionTask(BaseTask):
                 or None for random weights, or the path to a saved model state dict.
             in_channels: Number of input channels to model.
             num_outputs: Number of prediction outputs.
+            labels: List of feature names.
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: One of 'mse' or 'mae'.
             lr: Learning rate for optimizer.
@@ -77,6 +79,9 @@ class RegressionTask(BaseTask):
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
+
+        .. versionadded:: 0.10
+           The *labels* parameter.
         """
         self.weights = weights
         super().__init__()
@@ -109,45 +114,6 @@ class RegressionTask(BaseTask):
             for param in self.model.get_classifier().parameters():  # ty: ignore[call-non-callable]
                 param.requires_grad = True
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
-        loss: str = self.hparams['loss']
-        if loss == 'mse':
-            self.criterion: nn.Module = nn.MSELoss()
-        elif loss == 'mae':
-            self.criterion = nn.L1Loss()
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'mse' or 'mae' loss."
-            )
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
-          differences between the predicted and actual values (MSE) and its
-          square root (RMSE). Lower values are better.
-        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
-          differences between the predicted and actual values (MAE).
-          Lower values are better.
-        """
-        metrics = MetricCollection(
-            # https://github.com/astral-sh/ty/issues/2985
-            {
-                'RMSE': MeanSquaredError(squared=False),
-                'MSE': MeanSquaredError(squared=True),
-                'MAE': MeanAbsoluteError(),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
-
     def training_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
@@ -171,7 +137,6 @@ class RegressionTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
@@ -195,7 +160,6 @@ class RegressionTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -251,7 +215,6 @@ class RegressionTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
