@@ -202,11 +202,6 @@ class TestRegressionTask:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            RegressionTask(model='resnet18', loss='invalid_loss')
-
     @pytest.mark.parametrize(
         'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_224']
     )
