@@ -119,8 +119,8 @@ class AirQuality(NonGeoDataset):
         """
         if {'Date', 'Time'} <= set(data.columns):
             dt = pd.to_datetime(data['Date'] + ' ' + data['Time']).dt
-            doy = 2 * np.pi * dt.dayofyear / 365.25  # ty: ignore[unsupported-operator]
-            hod = 2 * np.pi * dt.hour / 24  # ty: ignore[unsupported-operator]
+            doy = 2 * np.pi * dt.dayofyear / 365.25
+            hod = 2 * np.pi * dt.hour / 24
             data['sin(DOY)'] = np.sin(doy)
             data['cos(DOY)'] = np.cos(doy)
             data['sin(HOD)'] = np.sin(hod)

@@ -149,7 +149,7 @@ class QuakeSet(NonGeoDataset):
             the sample keys, patches, images, labels, and magnitudes
         """
         h5py = lazy_import('h5py')
-        data = []
+        data: list[Metadata] = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
                 if f[k].attrs['split'] != self.splits[self.split]:
