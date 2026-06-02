@@ -9,13 +9,16 @@ import torch
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
-from torchgeo.trainers import SpatioTemporalClassificationTask
+from torchgeo.trainers import SpatioTemporalRegressionTask
+
+# Temporarily set target_key to 'magnitude'
+SpatioTemporalRegressionTask.target_key = 'magnitude'
 
 pytest.importorskip('h5py', minversion='3.10')
 
 
-class TestSpatioTemporalClassificationTask:
-    @pytest.mark.parametrize('name', ['quakeset_classification'])
+class TestSpatioTemporalRegressionTask:
+    @pytest.mark.parametrize('name', ['quakeset_regression'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -42,41 +45,32 @@ class TestSpatioTemporalClassificationTask:
         except MisconfigurationException:
             pass
 
-    @pytest.mark.parametrize('task,num_classes', [('binary', 1), ('multiclass', 5)])
-    def test_predict_step(
-        self, task: Literal['binary', 'multiclass'], num_classes: int
-    ) -> None:
-        st_task = SpatioTemporalClassificationTask(
-            in_channels=4, task=task, num_classes=num_classes
-        )
+    def test_predict_step(self) -> None:
+        st_task = SpatioTemporalRegressionTask(in_channels=4)
         # (B=2, T=3, C=4, H=16, W=16)
         batch = {'image': torch.randn(2, 3, 4, 16, 16)}
         prediction = st_task.predict_step(batch, 0)
-        assert prediction.shape == (2, num_classes)
+        assert prediction.shape == (2, 1)
 
     def test_forward_shape(self) -> None:
-        task = SpatioTemporalClassificationTask(
-            in_channels=10, task='multiclass', num_classes=20
-        )
+        task = SpatioTemporalRegressionTask(in_channels=10, num_outputs=20)
         x = torch.randn(2, 9, 10, 32, 32)
         y_hat = task(x)
         assert y_hat.shape == (2, 20)
 
-    def test_binary_task(self) -> None:
-        model = SpatioTemporalClassificationTask(
-            in_channels=3, task='binary', num_classes=1
-        )
+    @pytest.mark.parametrize('loss', ['mse', 'mae'])
+    def test_losses(self, loss: Literal['mse', 'mae']) -> None:
+        task = SpatioTemporalRegressionTask(in_channels=3, loss=loss)
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
-            'label': torch.randint(0, 2, (2,), dtype=torch.float),
+            'magnitude': torch.randn(2),
             'length': torch.tensor([4, 4]),
         }
-        # Exercises y = y.float() for bce loss; self.log raises without a Trainer
         try:
-            model.training_step(batch, 0)
+            task.training_step(batch, 0)
         except MisconfigurationException:
             pass
-        probabilities = model.predict_step(batch, 0)
-        assert probabilities.shape == (2, 1)
-        assert torch.all(probabilities >= 0)
-        assert torch.all(probabilities <= 1)
+
+    def test_invalid_loss(self) -> None:
+        with pytest.raises(ValueError, match='not valid'):
+            SpatioTemporalRegressionTask(in_channels=3, loss='invalid')

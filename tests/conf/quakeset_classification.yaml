@@ -3,7 +3,7 @@ model:
   init_args:
     in_channels: 2
     task: 'binary'
-    loss: "bce"
+    loss: 'bce'
     num_classes: 1
 data:
   class_path: QuakeSetDataModule
