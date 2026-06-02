@@ -411,7 +411,7 @@ class SatCLIP_Weights(WeightsEnum):
             'publication': 'https://arxiv.org/abs/2311.17179',
             'repo': 'https://github.com/microsoft/satclip',
             'ssl_method': 'clip',
-            'image_encoder': 'vit16',
+            'image_encoder': 'vit16-l40',
             'legendre_polys': 40,
             'capacity': 512,
             'embed_dim': 256,
