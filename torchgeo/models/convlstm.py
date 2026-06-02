@@ -136,6 +136,8 @@ class ConvLSTM(nn.Module):
             num_classes: Optional number of segmentation classes for an attached
                 prediction head.
             head_kernel_size: Kernel size for the optional segmentation head.
+            convolutional_head: If ``True``, uses a convolutional head for
+                segmentation instead of a fully connected head.
         """
         super().__init__()
 

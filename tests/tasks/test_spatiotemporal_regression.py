@@ -73,4 +73,4 @@ class TestSpatioTemporalRegressionTask:
 
     def test_invalid_loss(self) -> None:
         with pytest.raises(ValueError, match='not valid'):
-            SpatioTemporalRegressionTask(in_channels=3, loss='invalid')
+            SpatioTemporalRegressionTask(in_channels=3, loss='invalid')  # type: ignore

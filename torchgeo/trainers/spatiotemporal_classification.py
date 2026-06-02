@@ -17,7 +17,7 @@ from .mixins import ClassificationMixin
 class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
     """Classification for spatiotemporal inputs."""
 
-    target_key = 'mask'
+    target_key = 'label'
 
     def __init__(
         self,
