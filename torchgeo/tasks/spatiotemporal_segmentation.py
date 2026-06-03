@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from torch import Tensor
 
-from ..models import ConvLSTM
+from ..models import UTAE, ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
 
@@ -21,7 +21,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
 
     def __init__(
         self,
-        model: Literal['convlstm'] = 'convlstm',
+        model: Literal['convlstm', 'utae'] = 'convlstm',
         in_channels: int = 3,
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
@@ -38,7 +38,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         """Initialize a new SpatioTemporalSegmentation instance.
 
         Args:
-            model: Spatiotemporal model name. Supported value is ``'convlstm'``.
+            model: Spatiotemporal model name. One of ``'convlstm'`` or
+                ``'utae'``.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
             task: One of 'binary', 'multiclass', or 'multilabel'.
@@ -72,23 +73,45 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         return self.model(x, **kwargs)
 
     def configure_models(self) -> None:
-        """Initialize the model."""
+        """Initialize the model.
+
+        Raises:
+            ValueError: If ``model`` is invalid.
+        """
         in_channels: int = self.hparams['in_channels']
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
-        self.model = ConvLSTM(
-            input_dim=in_channels, num_classes=num_classes, **self.kwargs
-        )
+        match self.hparams['model']:
+            case 'convlstm':
+                self.model = ConvLSTM(
+                    input_dim=in_channels, num_classes=num_classes, **self.kwargs
+                )
+            case 'utae':
+                kwargs = {'out_conv': (32, num_classes), **self.kwargs}
+                self.model = UTAE(input_dim=in_channels, **kwargs)
+            case _:
+                model = self.hparams['model']
+                raise ValueError(f"Model type '{model}' is not valid.")
+
+    def _model_kwargs(self, batch: Any) -> dict[str, Tensor]:
+        """Extract model-specific keyword arguments from a batch."""
+        kwargs: dict[str, Tensor] = {}
+        match self.hparams['model']:
+            case 'convlstm':
+                if (lengths := batch.get('length')) is not None:
+                    kwargs['lengths'] = lengths
+            case 'utae':
+                if (batch_positions := batch.get('batch_positions')) is not None:
+                    kwargs['batch_positions'] = batch_positions
+        return kwargs
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
         """Compute the loss and metrics for the given stage."""
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]
-        kwargs: dict[str, Tensor] = {}
-        if (lengths := batch.get('length')) is not None:
-            kwargs['lengths'] = lengths
+        kwargs = self._model_kwargs(batch)
         y_hat = self(x, **kwargs).squeeze(1)
 
         metrics = getattr(self, f'{stage}_metrics')
@@ -121,9 +144,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities."""
-        kwargs: dict[str, Tensor] = {}
-        if (lengths := batch.get('length')) is not None:
-            kwargs['lengths'] = lengths
+        kwargs = self._model_kwargs(batch)
         y_hat: Tensor = self(batch['image'], **kwargs)
 
         match self.hparams['task']:
