@@ -236,10 +236,7 @@ class TemporalAggregator(nn.Module):
                     )(attn)
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
                 attn = attn * (~pad_mask).float()[None, :, :, None, None]
-                if x.shape[2] % n_heads != 0:
-                    raise ValueError(
-                        'x.shape[2] must be divisible by n_heads for att_group aggregation'
-                    )
+                self._check_att_group_channels(x, n_heads)
                 out = torch.stack(
                     x.chunk(n_heads, dim=2)
                 )  # n_head x B x T x C/h x H x W
@@ -268,10 +265,7 @@ class TemporalAggregator(nn.Module):
                         size=x.shape[-2:], mode='bilinear', align_corners=False
                     )(attn)
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
-                if x.shape[2] % n_heads != 0:
-                    raise ValueError(
-                        'x.shape[2] must be divisible by n_heads for att_group aggregation'
-                    )
+                self._check_att_group_channels(x, n_heads)
                 out = torch.stack(x.chunk(n_heads, dim=2))
                 out = attn[:, :, :, None, :, :] * out
                 out = out.sum(dim=2)
@@ -285,6 +279,13 @@ class TemporalAggregator(nn.Module):
                 return (x * attn[:, :, None, :, :]).sum(dim=1)
             else:
                 return x.mean(dim=1)
+
+    def _check_att_group_channels(self, x: Tensor, n_heads: int) -> None:
+        """Validate channel grouping for ``att_group`` aggregation."""
+        if x.shape[2] % n_heads != 0:
+            raise ValueError(
+                'x.shape[2] must be divisible by n_heads for att_group aggregation'
+            )
 
 
 class TemporallySharedBlock(nn.Module):
@@ -308,13 +309,13 @@ class TemporallySharedBlock(nn.Module):
         """Apply this block to each timestep of a 5-D tensor.
 
         Args:
-            x: Input of shape ``(B, T, C, H, W)`` or ``(B, C, H, W)``.
+            x: Input of shape ``(B, T, C, H, W)``.
 
         Returns:
             Output matching the input rank.
         """
-        if x.ndim == 4:
-            return self.forward(x)
+        if x.ndim != 5:
+            raise ValueError('x must have shape (B, T, C, H, W)')
 
         b, t, c, h, w = x.shape
         out = x.view(b * t, c, h, w)

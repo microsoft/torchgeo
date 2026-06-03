@@ -228,6 +228,14 @@ class TestUTAE:
 
         assert torch.allclose(actual, expected)
 
+    def test_smart_forward_rejects_four_dimensional_input(self) -> None:
+        """smart_forward only supports temporal 5-D inputs."""
+        block = ConvBlock(nkernels=(1, 2), pad_value=None, norm='none')
+        x = torch.randn(3, 1, 8, 8)
+
+        with pytest.raises(ValueError, match='x must have shape'):
+            block.smart_forward(x)
+
     def test_smart_forward_skips_padded_batch_norm_stats(self) -> None:
         """Padded frames do not contribute to BatchNorm running stats."""
         block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
