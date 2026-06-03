@@ -1,13 +1,14 @@
 [build-system]
 requires = [
-    # setuptools 77.0.1+ required for PEP 639 support
-    "setuptools>=77.0.1",
+    # uv-build 0.7+ required for bdist reorganization
+    "uv_build>=0.7,<0.12",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "uv_build"
 
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 [project]
 name = "torchgeo"
+version = "0.10.0.dev0"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -87,7 +88,6 @@ dependencies = [
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
@@ -253,16 +253,6 @@ split-on-trailing-comma = false
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
-[tool.setuptools.dynamic]
-version = {attr = "torchgeo.__version__"}
-
-[tool.setuptools.package-data]
-torchgeo = ["py.typed"]
-
-[tool.setuptools.packages.find]
-include = ["torchgeo*"]
-
 [tool.ty.rules]
 deprecated = "ignore"
 unresolved-attribute = "ignore"
@@ -271,3 +261,6 @@ unresolved-import = "ignore"
 [tool.ty.src]
 include = ["torchgeo", "tests"]
 exclude = ["tests/data"]
+
+[tool.uv.build-backend]
+module-root = ""
