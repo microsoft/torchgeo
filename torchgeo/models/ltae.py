@@ -405,8 +405,9 @@ class LTAE2d(nn.Module):
 
         Args:
             x: Input tensor of shape ``(B, T, C, H, W)``.
-            batch_positions: Acquisition dates of shape ``(B, T)`` used for
-                positional encoding. Required when ``positional_encoding=True``.
+            batch_positions: Acquisition dates of shape ``(B, T)``. If provided
+                and positional encoding is enabled, these positions are encoded
+                and added to the temporal features.
             pad_mask: Boolean padding mask of shape ``(B, T)`` where ``True``
                 marks padded (invalid) timesteps.
 
