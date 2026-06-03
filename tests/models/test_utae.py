@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from torchgeo.models import UTAE
-from torchgeo.models.utae import ConvBlock
+from torchgeo.models.utae import ConvBlock, ConvLayer
 
 
 def _first_batch_norm(module: torch.nn.Module) -> torch.nn.BatchNorm2d:
@@ -169,6 +169,16 @@ class TestUTAE:
         )
         out = model(x)
         assert out.shape == (2, 3, 16, 16)
+
+    def test_conv_layer_last_relu_false_keeps_intermediate_relu(self) -> None:
+        """last_relu=False omits only the final ReLU."""
+        layer = ConvLayer(nkernels=(1, 2, 3), norm='none', last_relu=False)
+
+        relus = [module for module in layer.conv if isinstance(module, torch.nn.ReLU)]
+
+        assert len(relus) == 1
+        assert isinstance(layer.conv[1], torch.nn.ReLU)
+        assert not isinstance(layer.conv[-1], torch.nn.ReLU)
 
     def test_smart_forward_without_pad_value(self) -> None:
         """smart_forward applies the block when pad_value is None."""

@@ -423,7 +423,7 @@ class ConvLayer(nn.Module):
             )
             if nl is not None:
                 layers.append(nl(nkernels[i + 1]))
-            if last_relu:
+            if last_relu or i < len(nkernels) - 2:
                 layers.append(nn.ReLU())
         self.conv = nn.Sequential(*layers)
 
