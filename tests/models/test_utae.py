@@ -130,6 +130,20 @@ class TestUTAE:
         out = model(x)
         assert out.shape == (2, 3, 16, 16)
 
+    def test_width_lengths_must_match(self) -> None:
+        """Encoder and decoder widths must have the same number of stages."""
+        match = 'encoder_widths and decoder_widths must have the same length'
+
+        with pytest.raises(ValueError, match=match):
+            UTAE(input_dim=4, encoder_widths=(32, 64), decoder_widths=(16, 32, 64))
+
+    def test_final_widths_must_match(self) -> None:
+        """Encoder and decoder bottleneck widths must match."""
+        match = 'encoder_widths and decoder_widths must have the same final width'
+
+        with pytest.raises(ValueError, match=match):
+            UTAE(input_dim=4, encoder_widths=(32, 64), decoder_widths=(16, 32))
+
     def test_forward_with_positions(self, small_model: UTAE, x: torch.Tensor) -> None:
         """batch_positions triggers the date-based positional encoder in L-TAE 2D."""
         batch_positions = torch.randint(1, 366, (2, 4))
