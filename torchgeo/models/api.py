@@ -17,6 +17,7 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from .aurora import Aurora_Weights, aurora_swin_unet
+from .climplicit import Climplicit_Weights, climplicit
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -72,6 +73,7 @@ from .vit import (
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
+    'climplicit': climplicit,
     'copernicusfm_base': copernicusfm_base,
     'croma_base': croma_base,
     'croma_large': croma_large,
@@ -107,6 +109,7 @@ _model_weights: dict[
     str | Callable[..., nn.Module], WeightsEnum
 ] = {  # ty :ignore[invalid-assignment]
     aurora_swin_unet: Aurora_Weights,
+    climplicit: Climplicit_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
@@ -135,6 +138,7 @@ _model_weights: dict[
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
     'aurora_swin_unet': Aurora_Weights,
+    'climplicit': Climplicit_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,

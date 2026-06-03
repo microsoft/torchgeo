@@ -9,6 +9,7 @@
 
 from torchgeo.models import (
     aurora_swin_unet,
+    climplicit,
     convlstm,
     copernicusfm_base,
     croma_base,
@@ -42,6 +43,7 @@ from torchgeo.models import (
 
 __all__ = (
     'aurora_swin_unet',
+    'climplicit',
     'convlstm',
     'copernicusfm_base',
     'croma_base',

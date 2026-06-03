@@ -10,6 +10,16 @@ Model Architectures
 
 TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
 
+Geographic Coordinates (:math:`\scriptstyle B \times 2`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These location encoders map ``(lon, lat)`` coordinates to an embedding.
+
+.. toctree::
+   :maxdepth: 1
+
+   models/climplicit
+
 1D Time Series (:math:`\scriptstyle B \times T \times C`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -160,3 +170,15 @@ Atmospheric
    :header-rows: 1
    :align: center
    :file: weights/atmospheric.csv
+
+
+Geographic Coordinates
+^^^^^^^^^^^^^^^^^^^^^^^
+
+These weights are for location encoders that take ``(lon, lat)`` coordinates as input.
+
+.. csv-table::
+   :widths: 45 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/location.csv
