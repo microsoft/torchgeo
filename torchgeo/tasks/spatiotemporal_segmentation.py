@@ -73,11 +73,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         return self.model(x, **kwargs)
 
     def configure_models(self) -> None:
-        """Initialize the model.
-
-        Raises:
-            ValueError: If ``model`` is invalid.
-        """
+        """Initialize the model."""
         in_channels: int = self.hparams['in_channels']
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
@@ -93,9 +89,6 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
                     Sequence[int], kwargs.pop('out_conv', (32, num_classes))
                 )
                 self.model = UTAE(input_dim=in_channels, out_conv=out_conv, **kwargs)
-            case _:
-                model = self.hparams['model']
-                raise ValueError(f"Model type '{model}' is not valid.")
 
     def _model_kwargs(self, batch: Any) -> dict[str, Tensor]:
         """Extract model-specific keyword arguments from a batch."""

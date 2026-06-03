@@ -109,10 +109,3 @@ class TestSpatioTemporalSegmentation:
         assert probabilities.shape == (2, 4, 16, 16)
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
-
-    def test_invalid_model(self) -> None:
-        model = cast(Literal['convlstm', 'utae'], 'invalid')
-        match = "Model type 'invalid' is not valid."
-
-        with pytest.raises(ValueError, match=match):
-            SpatioTemporalSegmentation(model=model)
