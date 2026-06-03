@@ -56,6 +56,11 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
+
+        The input batch may include model-specific metadata. ConvLSTM uses
+        ``length`` with shape ``(B,)`` for sequence lengths. UTAE uses
+        ``batch_positions`` with shape ``(B, T)`` for temporal positions such as
+        acquisition day indices.
         """
         self.kwargs = kwargs
         super().__init__()
@@ -91,7 +96,11 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
                 self.model = UTAE(input_dim=in_channels, out_conv=out_conv, **kwargs)
 
     def _model_kwargs(self, batch: Any) -> dict[str, Tensor]:
-        """Extract model-specific keyword arguments from a batch."""
+        """Extract model-specific keyword arguments from a batch.
+
+        UTAE accepts ``batch_positions`` of shape ``(B, T)`` for date-aware
+        positional encoding in its temporal attention module.
+        """
         kwargs: dict[str, Tensor] = {}
         match self.hparams['model']:
             case 'convlstm':
