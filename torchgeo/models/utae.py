@@ -262,6 +262,10 @@ class TemporalAggregator(nn.Module):
                         size=x.shape[-2:], mode='bilinear', align_corners=False
                     )(attn)
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
+                if x.shape[2] % n_heads != 0:
+                    raise ValueError(
+                        'x.shape[2] must be divisible by n_heads for att_group aggregation'
+                    )
                 out = torch.stack(x.chunk(n_heads, dim=2))
                 out = attn[:, :, :, None, :, :] * out
                 out = out.sum(dim=2)

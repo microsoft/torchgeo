@@ -194,6 +194,16 @@ class TestUTAE:
         assert torch.all(out[0] == 0)
         assert torch.allclose(out[1], x[1, 0])
 
+    def test_temporal_aggregator_att_group_requires_divisible_channels(self) -> None:
+        """att_group raises a clear error when heads do not divide channels."""
+        aggregator = TemporalAggregator(mode='att_group')
+        x = torch.randn(2, 3, 5, 4, 4)
+        attn_mask = torch.rand(2, 2, 3, 4, 4)
+        match = 'x.shape\\[2\\] must be divisible by n_heads'
+
+        with pytest.raises(ValueError, match=match):
+            aggregator(x, attn_mask=attn_mask)
+
     def test_smart_forward_without_pad_value(self) -> None:
         """smart_forward applies the block when pad_value is None."""
         block = ConvBlock(nkernels=(1, 2), pad_value=None, norm='none')
