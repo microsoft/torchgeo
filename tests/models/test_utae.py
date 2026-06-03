@@ -7,6 +7,32 @@ import pytest
 import torch
 
 from torchgeo.models import UTAE
+from torchgeo.models.utae import ConvBlock
+
+
+def _first_batch_norm(module: torch.nn.Module) -> torch.nn.BatchNorm2d:
+    """Return the first BatchNorm2d module."""
+    for child in module.modules():
+        if isinstance(child, torch.nn.BatchNorm2d):
+            return child
+
+    msg = 'Expected module to contain BatchNorm2d'
+    raise AssertionError(msg)
+
+
+def _assert_batch_norm_state_equal(
+    actual: torch.nn.BatchNorm2d, expected: torch.nn.BatchNorm2d
+) -> None:
+    """Assert that two BatchNorm2d running states are equal."""
+    assert actual.running_mean is not None
+    assert expected.running_mean is not None
+    assert actual.running_var is not None
+    assert expected.running_var is not None
+    assert actual.num_batches_tracked is not None
+    assert expected.num_batches_tracked is not None
+    assert torch.allclose(actual.running_mean, expected.running_mean)
+    assert torch.allclose(actual.running_var, expected.running_var)
+    assert torch.equal(actual.num_batches_tracked, expected.num_batches_tracked)
 
 
 class TestUTAE:
@@ -143,3 +169,54 @@ class TestUTAE:
         )
         out = model(x)
         assert out.shape == (2, 3, 16, 16)
+
+    def test_smart_forward_without_pad_value(self) -> None:
+        """smart_forward applies the block when pad_value is None."""
+        block = ConvBlock(nkernels=(1, 2), pad_value=None, norm='none')
+        x = torch.randn(2, 3, 1, 8, 8)
+
+        expected = block.forward(x.view(6, 1, 8, 8)).view(2, 3, 2, 8, 8)
+        actual = block.smart_forward(x)
+
+        assert torch.allclose(actual, expected)
+
+    def test_smart_forward_skips_padded_batch_norm_stats(self) -> None:
+        """Padded frames do not contribute to BatchNorm running stats."""
+        block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
+        expected_block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
+        expected_block.load_state_dict(block.state_dict())
+        x = torch.randn(1, 2, 1, 8, 8)
+        x[:, 1] = 0
+
+        block.train()
+        expected_block.train()
+        block.smart_forward(x)
+        expected_block.forward(x[:, 0])
+
+        batch_norm = _first_batch_norm(block)
+        expected_batch_norm = _first_batch_norm(expected_block)
+        _assert_batch_norm_state_equal(batch_norm, expected_batch_norm)
+
+    def test_smart_forward_all_padded_preserves_batch_norm_stats(self) -> None:
+        """All-padded fallback infers shape without mutating BatchNorm state."""
+        block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
+        batch_norm = _first_batch_norm(block)
+        assert batch_norm.running_mean is not None
+        assert batch_norm.running_var is not None
+        assert batch_norm.num_batches_tracked is not None
+        running_mean = batch_norm.running_mean.clone()
+        running_var = batch_norm.running_var.clone()
+        num_batches_tracked = batch_norm.num_batches_tracked.clone()
+        x = torch.zeros(1, 2, 1, 8, 8)
+
+        block.train()
+        out = block.smart_forward(x)
+
+        assert out.shape == (1, 2, 1, 8, 8)
+        assert torch.all(out == 0)
+        assert batch_norm.running_mean is not None
+        assert batch_norm.running_var is not None
+        assert batch_norm.num_batches_tracked is not None
+        assert torch.equal(batch_norm.running_mean, running_mean)
+        assert torch.equal(batch_norm.running_var, running_var)
+        assert torch.equal(batch_norm.num_batches_tracked, num_batches_tracked)

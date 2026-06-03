@@ -231,7 +231,9 @@ class TemporalAggregator(nn.Module):
                 attn = attn.view(n_heads, b, t, *x.shape[-2:])
                 attn = attn * (~pad_mask).float()[None, :, :, None, None]
                 if x.shape[2] % n_heads != 0:
-                    raise ValueError('x.shape[2] must be divisible by n_heads for att_group aggregation')
+                    raise ValueError(
+                        'x.shape[2] must be divisible by n_heads for att_group aggregation'
+                    )
                 out = torch.stack(
                     x.chunk(n_heads, dim=2)
                 )  # n_head x B x T x C/h x H x W
@@ -286,10 +288,9 @@ class TemporallySharedBlock(nn.Module):
 
         Args:
             pad_value: If given, padded frames (all channels equal to this
-                value) are replaced by zeros before the forward pass.
+                value) are skipped and their outputs are filled with this value.
         """
         super().__init__()
-        self.out_shape: torch.Size | None = None
         self.pad_value = pad_value
 
     def smart_forward(self, x: Tensor) -> Tensor:
@@ -301,27 +302,70 @@ class TemporallySharedBlock(nn.Module):
         Returns:
             Output matching the input rank.
         """
-        b, t, c, h, w = x.shape
-        if self.pad_value is not None:
-            dummy = torch.zeros(x.shape, device=x.device)
-            self.out_shape = self.forward(dummy.view(b * t, c, h, w)).shape
+        if x.ndim == 4:
+            return self.forward(x)
 
+        b, t, c, h, w = x.shape
         out = x.view(b * t, c, h, w)
-        if self.pad_value is not None:
+        if self.pad_value is None:
+            out = self.forward(out)
+        else:
             pad_mask = (out == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)
             if pad_mask.any():
-                assert self.out_shape is not None
-                temp = (
-                    torch.ones(self.out_shape, device=x.device, requires_grad=False)
-                    * self.pad_value
-                )
-                temp[~pad_mask] = self.forward(out[~pad_mask])
-                out = temp
+                valid_mask = ~pad_mask
+                if valid_mask.any():
+                    valid_out = self.forward(out[valid_mask])
+                    out_shape = torch.Size([b * t, *valid_out.shape[1:]])
+                    temp = valid_out.new_full(out_shape, self.pad_value)
+                    temp[valid_mask] = valid_out
+                    out = temp
+                else:
+                    out_shape = self._infer_output_shape(out)
+                    out = out.new_full(out_shape, self.pad_value)
             else:
                 out = self.forward(out)
 
         _, c_out, h_out, w_out = out.shape
         return out.view(b, t, c_out, h_out, w_out)
+
+    def _infer_output_shape(self, x: Tensor) -> torch.Size:
+        """Infer output shape without leaving BatchNorm state changed."""
+        batch_norms = [
+            module for module in self.modules() if isinstance(module, nn.BatchNorm2d)
+        ]
+        batch_norm_states = [
+            (
+                module,
+                module.running_mean.clone()
+                if module.running_mean is not None
+                else None,
+                module.running_var.clone() if module.running_var is not None else None,
+                module.num_batches_tracked.clone()
+                if module.num_batches_tracked is not None
+                else None,
+            )
+            for module in batch_norms
+        ]
+
+        try:
+            with torch.no_grad():
+                return self.forward(x).shape
+        finally:
+            for (
+                module,
+                running_mean,
+                running_var,
+                num_batches_tracked,
+            ) in batch_norm_states:
+                if running_mean is not None:
+                    assert module.running_mean is not None
+                    module.running_mean.copy_(running_mean)
+                if running_var is not None:
+                    assert module.running_var is not None
+                    module.running_var.copy_(running_var)
+                if num_batches_tracked is not None:
+                    assert module.num_batches_tracked is not None
+                    module.num_batches_tracked.copy_(num_batches_tracked)
 
 
 class ConvLayer(nn.Module):
