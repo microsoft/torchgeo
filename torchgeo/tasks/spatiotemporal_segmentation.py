@@ -4,7 +4,7 @@
 """Tasks for spatiotemporal semantic segmentation."""
 
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from torch import Tensor
 
@@ -88,8 +88,11 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
                     input_dim=in_channels, num_classes=num_classes, **self.kwargs
                 )
             case 'utae':
-                kwargs = {'out_conv': (32, num_classes), **self.kwargs}
-                self.model = UTAE(input_dim=in_channels, **kwargs)
+                kwargs = dict(self.kwargs)
+                out_conv = cast(
+                    Sequence[int], kwargs.pop('out_conv', (32, num_classes))
+                )
+                self.model = UTAE(input_dim=in_channels, out_conv=out_conv, **kwargs)
             case _:
                 model = self.hparams['model']
                 raise ValueError(f"Model type '{model}' is not valid.")

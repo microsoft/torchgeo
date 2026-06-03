@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import pytest
 import torch
@@ -35,9 +35,9 @@ class TestSpatioTemporalSegmentation:
     )
     def model_config(
         self, request: pytest.FixtureRequest
-    ) -> tuple[str, dict[str, int | tuple[int, ...]]]:
+    ) -> tuple[Literal['convlstm', 'utae'], dict[str, Any]]:
         """Return spatiotemporal segmentation model configs."""
-        return request.param
+        return cast(tuple[Literal['convlstm', 'utae'], dict[str, Any]], request.param)
 
     @pytest.mark.parametrize(
         'name', ['pastis', 'pastis100', 'pastis_focal', 'pastis_jaccard']
@@ -70,7 +70,7 @@ class TestSpatioTemporalSegmentation:
 
     @pytest.mark.filterwarnings(r'ignore:You are trying to `self.log\(\)`')
     def test_binary_task(
-        self, model_config: tuple[str, dict[str, int | tuple[int, ...]]]
+        self, model_config: tuple[Literal['convlstm', 'utae'], dict[str, Any]]
     ) -> None:
         model_name, kwargs = model_config
         model = SpatioTemporalSegmentation(
@@ -93,7 +93,7 @@ class TestSpatioTemporalSegmentation:
         assert torch.all(probabilities <= 1)
 
     def test_multilabel_predict_step(
-        self, model_config: tuple[str, dict[str, int | tuple[int, ...]]]
+        self, model_config: tuple[Literal['convlstm', 'utae'], dict[str, Any]]
     ) -> None:
         model_name, kwargs = model_config
         model = SpatioTemporalSegmentation(
