@@ -65,7 +65,7 @@ class UTAE(nn.Module):
             agg_mode: Skip-connection aggregation mode. One of
                 ``'att_group'``, ``'att_mean'``, or ``'mean'``.
             encoder_norm: Normalisation layer for the encoder. One of
-                ``'group'``, ``'batch'``, or ``'instance'``.
+                ``'group'``, ``'batch'``, ``'instance'``, or ``'none'``.
             n_head: Number of attention heads in L-TAE.
             d_model: Projection dimension for L-TAE.
             d_k: Key/query dimension for L-TAE.
@@ -392,7 +392,7 @@ class ConvLayer(nn.Module):
         Args:
             nkernels: Channel widths ``[in, hidden..., out]``.
             norm: Normalisation type: ``'batch'``, ``'instance'``,
-                ``'group'``, or ``None``.
+                ``'group'``, or ``'none'``.
             k: Convolution kernel size.
             s: Convolution stride.
             p: Convolution padding.
