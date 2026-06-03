@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from torchgeo.models import UTAE
-from torchgeo.models.utae import ConvBlock, ConvLayer
+from torchgeo.models.utae import ConvBlock, ConvLayer, TemporalAggregator
 
 
 def _first_batch_norm(module: torch.nn.Module) -> torch.nn.BatchNorm2d:
@@ -179,6 +179,20 @@ class TestUTAE:
         assert len(relus) == 1
         assert isinstance(layer.conv[1], torch.nn.ReLU)
         assert not isinstance(layer.conv[-1], torch.nn.ReLU)
+
+    def test_temporal_aggregator_mean_all_padded_returns_zero(self) -> None:
+        """Mean aggregation handles all-padded sequences without NaNs."""
+        aggregator = TemporalAggregator(mode='mean')
+        x = torch.randn(2, 3, 4, 5, 5)
+        pad_mask = torch.tensor(
+            [[True, True, True], [False, True, True]], dtype=torch.bool
+        )
+
+        out = aggregator(x, pad_mask=pad_mask)
+
+        assert torch.isfinite(out).all()
+        assert torch.all(out[0] == 0)
+        assert torch.allclose(out[1], x[1, 0])
 
     def test_smart_forward_without_pad_value(self) -> None:
         """smart_forward applies the block when pad_value is None."""

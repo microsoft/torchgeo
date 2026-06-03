@@ -250,7 +250,8 @@ class TemporalAggregator(nn.Module):
                 return (x * attn[:, :, None, :, :]).sum(dim=1)
             else:
                 out = x * (~pad_mask).float()[:, :, None, None, None]
-                return out.sum(dim=1) / (~pad_mask).sum(dim=1)[:, None, None, None]
+                counts = (~pad_mask).sum(dim=1).clamp(min=1)
+                return out.sum(dim=1) / counts[:, None, None, None]
         else:
             if self.mode == 'att_group':
                 assert attn_mask is not None
