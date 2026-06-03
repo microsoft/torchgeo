@@ -122,3 +122,26 @@ class TestLTAE2d:
         x = torch.randn(2, 5, 32, 8, 8)
         out = model(x)
         assert out.shape == (2, 16, 8, 8)
+
+    def test_invalid_n_head(self) -> None:
+        """Invalid number of attention heads raises a clear error."""
+        with pytest.raises(ValueError, match='n_head must be positive'):
+            LTAE2d(in_channels=32, n_head=0, d_model=32, mlp=(32, 16))
+
+    def test_in_channels_must_be_divisible_by_n_head(self) -> None:
+        """Input channels must be divisible by the number of attention heads."""
+        match = 'in_channels must be divisible by n_head'
+        with pytest.raises(ValueError, match=match):
+            LTAE2d(in_channels=30, n_head=4, d_model=32, mlp=(32, 16))
+
+    def test_d_model_must_be_divisible_by_n_head(self) -> None:
+        """Attention projection width must be divisible by attention heads."""
+        match = 'd_model must be divisible by n_head'
+        with pytest.raises(ValueError, match=match):
+            LTAE2d(in_channels=32, n_head=4, d_model=30, mlp=(30, 16))
+
+    def test_mlp_output_must_be_divisible_by_n_head(self) -> None:
+        """Output channels must be divisible by attention heads."""
+        match = 'mlp\\[-1\\] must be divisible by n_head'
+        with pytest.raises(ValueError, match=match):
+            LTAE2d(in_channels=32, n_head=4, d_model=32, mlp=(32, 14))

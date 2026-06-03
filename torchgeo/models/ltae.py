@@ -355,12 +355,21 @@ class LTAE2d(nn.Module):
         self.n_head = n_head
         self.d_model = d_model if d_model is not None else in_channels
 
+        if n_head <= 0:
+            raise ValueError('n_head must be positive')
+        if in_channels % n_head != 0:
+            raise ValueError('in_channels must be divisible by n_head')
+        if self.d_model % n_head != 0:
+            raise ValueError('d_model must be divisible by n_head')
+
         self.inconv: nn.Conv1d | None = None
         if d_model is not None:
             self.inconv = nn.Conv1d(in_channels, d_model, 1)
 
         n_neurons = list(mlp)
         assert n_neurons[0] == self.d_model
+        if n_neurons[-1] % n_head != 0:
+            raise ValueError('mlp[-1] must be divisible by n_head')
 
         self.positional_encoder: _PositionalEncoder | None = None
         if positional_encoding:
