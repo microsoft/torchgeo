@@ -23,8 +23,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     This tabular style dataset contains fuel moisture
     (mass of water in vegetation) and remotely sensed variables
-    in the western United States. It contains 2615 datapoints and 138
-    variables. For more details see the
+    in the western United States. It contains 2615 datapoints, each with 34
+    variables observed at 4 time steps. For more details see the
     `dataset page <https://source.coop/stanford/sar-moisture-conent>`_.
 
     Dataset Format:
@@ -33,7 +33,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     Dataset Features:
 
-    * 138 remote sensing derived variables, some with a time dependency
+    * 34 remote sensing derived variables, each observed at 4 time steps
+      (``t``, ``t-1``, ``t-2``, ``t-3``)
     * 2615 datapoints with regression target of predicting fuel moisture
 
     If you use this dataset in your research, please cite the following paper:
@@ -48,158 +49,61 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
          dataset from Source Cooperative.
 
     .. versionadded:: 0.5
+
+    .. versionchanged:: 0.10
+       ``input`` is now returned as a ``T x C`` time-series tensor (time steps by
+       variables) instead of a flat vector, the point ``lat`` and ``lon`` are
+       returned under their own keys, and ``input_features`` now selects base
+       variable names, without the time-step suffix.
     """
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/su-sar-moisture-content'
 
     label_name = 'percent(t)'
 
-    all_variable_names = (
-        # "date",
-        'slope(t)',
-        'elevation(t)',
-        'canopy_height(t)',
-        'forest_cover(t)',
-        'silt(t)',
-        'sand(t)',
-        'clay(t)',
-        'vv(t)',
-        'vh(t)',
-        'red(t)',
-        'green(t)',
-        'blue(t)',
-        'swir(t)',
-        'nir(t)',
-        'ndvi(t)',
-        'ndwi(t)',
-        'nirv(t)',
-        'vv_red(t)',
-        'vv_green(t)',
-        'vv_blue(t)',
-        'vv_swir(t)',
-        'vv_nir(t)',
-        'vv_ndvi(t)',
-        'vv_ndwi(t)',
-        'vv_nirv(t)',
-        'vh_red(t)',
-        'vh_green(t)',
-        'vh_blue(t)',
-        'vh_swir(t)',
-        'vh_nir(t)',
-        'vh_ndvi(t)',
-        'vh_ndwi(t)',
-        'vh_nirv(t)',
-        'vh_vv(t)',
-        'slope(t-1)',
-        'elevation(t-1)',
-        'canopy_height(t-1)',
-        'forest_cover(t-1)',
-        'silt(t-1)',
-        'sand(t-1)',
-        'clay(t-1)',
-        'vv(t-1)',
-        'vh(t-1)',
-        'red(t-1)',
-        'green(t-1)',
-        'blue(t-1)',
-        'swir(t-1)',
-        'nir(t-1)',
-        'ndvi(t-1)',
-        'ndwi(t-1)',
-        'nirv(t-1)',
-        'vv_red(t-1)',
-        'vv_green(t-1)',
-        'vv_blue(t-1)',
-        'vv_swir(t-1)',
-        'vv_nir(t-1)',
-        'vv_ndvi(t-1)',
-        'vv_ndwi(t-1)',
-        'vv_nirv(t-1)',
-        'vh_red(t-1)',
-        'vh_green(t-1)',
-        'vh_blue(t-1)',
-        'vh_swir(t-1)',
-        'vh_nir(t-1)',
-        'vh_ndvi(t-1)',
-        'vh_ndwi(t-1)',
-        'vh_nirv(t-1)',
-        'vh_vv(t-1)',
-        'slope(t-2)',
-        'elevation(t-2)',
-        'canopy_height(t-2)',
-        'forest_cover(t-2)',
-        'silt(t-2)',
-        'sand(t-2)',
-        'clay(t-2)',
-        'vv(t-2)',
-        'vh(t-2)',
-        'red(t-2)',
-        'green(t-2)',
-        'blue(t-2)',
-        'swir(t-2)',
-        'nir(t-2)',
-        'ndvi(t-2)',
-        'ndwi(t-2)',
-        'nirv(t-2)',
-        'vv_red(t-2)',
-        'vv_green(t-2)',
-        'vv_blue(t-2)',
-        'vv_swir(t-2)',
-        'vv_nir(t-2)',
-        'vv_ndvi(t-2)',
-        'vv_ndwi(t-2)',
-        'vv_nirv(t-2)',
-        'vh_red(t-2)',
-        'vh_green(t-2)',
-        'vh_blue(t-2)',
-        'vh_swir(t-2)',
-        'vh_nir(t-2)',
-        'vh_ndvi(t-2)',
-        'vh_ndwi(t-2)',
-        'vh_nirv(t-2)',
-        'vh_vv(t-2)',
-        'slope(t-3)',
-        'elevation(t-3)',
-        'canopy_height(t-3)',
-        'forest_cover(t-3)',
-        'silt(t-3)',
-        'sand(t-3)',
-        'clay(t-3)',
-        'vv(t-3)',
-        'vh(t-3)',
-        'red(t-3)',
-        'green(t-3)',
-        'blue(t-3)',
-        'swir(t-3)',
-        'nir(t-3)',
-        'ndvi(t-3)',
-        'ndwi(t-3)',
-        'nirv(t-3)',
-        'vv_red(t-3)',
-        'vv_green(t-3)',
-        'vv_blue(t-3)',
-        'vv_swir(t-3)',
-        'vv_nir(t-3)',
-        'vv_ndvi(t-3)',
-        'vv_ndwi(t-3)',
-        'vv_nirv(t-3)',
-        'vh_red(t-3)',
-        'vh_green(t-3)',
-        'vh_blue(t-3)',
-        'vh_swir(t-3)',
-        'vh_nir(t-3)',
-        'vh_ndvi(t-3)',
-        'vh_ndwi(t-3)',
-        'vh_nirv(t-3)',
-        'vh_vv(t-3)',
-        'lat',
-        'lon',
+    time_steps = ('t', 't-1', 't-2', 't-3')
+
+    variable_names = (
+        'slope',
+        'elevation',
+        'canopy_height',
+        'forest_cover',
+        'silt',
+        'sand',
+        'clay',
+        'vv',
+        'vh',
+        'red',
+        'green',
+        'blue',
+        'swir',
+        'nir',
+        'ndvi',
+        'ndwi',
+        'nirv',
+        'vv_red',
+        'vv_green',
+        'vv_blue',
+        'vv_swir',
+        'vv_nir',
+        'vv_ndvi',
+        'vv_ndwi',
+        'vv_nirv',
+        'vh_red',
+        'vh_green',
+        'vh_blue',
+        'vh_swir',
+        'vh_nir',
+        'vh_ndvi',
+        'vh_ndwi',
+        'vh_nirv',
+        'vh_vv',
     )
 
     def __init__(
         self,
         root: Path = 'data',
-        input_features: Iterable[str] = all_variable_names,
+        input_features: Iterable[str] = variable_names,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
@@ -207,7 +111,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            input_features: which input features to include
+            input_features: which base variables to include, without the time-step
+                suffix (e.g. ``'ndvi'``); each one is returned across all *time_steps*
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -216,10 +121,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             AssertionError: if ``input_features`` contains invalid variable names
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert set(input_features) <= set(self.all_variable_names)
+        assert set(input_features) <= set(self.variable_names)
 
         self.root = root
-        self.input_features = input_features
+        self.input_features = tuple(input_features)
         self.transforms = transforms
         self.download = download
 
@@ -242,14 +147,20 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             index: index to return
 
         Returns:
-            input features and target at that index
+            input time series, point coordinates, and target at that index
         """
-        data = self.dataframe.iloc[index, :]
+        data = self.dataframe.iloc[index]
 
         sample = {
             'input': torch.tensor(
-                data.drop([self.label_name]).values, dtype=torch.float32
+                [
+                    [data[f'{name}({step})'] for name in self.input_features]
+                    for step in self.time_steps
+                ],
+                dtype=torch.float32,
             ),
+            'lon': torch.tensor(data['lon'], dtype=torch.float32),
+            'lat': torch.tensor(data['lat'], dtype=torch.float32),
             'label': torch.tensor(data[self.label_name], dtype=torch.float32),
         }
 
@@ -273,9 +184,13 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
                 data_dict['lat'] = content['geometry']['coordinates'][1]
                 data_rows.append(data_dict)
 
-        df = pd.DataFrame(data_rows)
-        df = df[[*self.input_features, self.label_name]]
-        return df
+        columns = [
+            f'{name}({step})'
+            for step in self.time_steps
+            for name in self.input_features
+        ]
+        columns += ['lon', 'lat', self.label_name]
+        return pd.DataFrame(data_rows)[columns]
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -320,47 +235,21 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         .. versionadded:: 0.8
         """
         if not variables_to_plot:
+            variables_to_plot = list(self.input_features)
+        else:
             variables_to_plot = [
-                'slope',
-                'elevation',
-                'canopy_height',
-                'forest_cover',
-                'silt',
-                'sand',
-                'clay',
-                'vv',
-                'vh',
-                'red',
-                'green',
-                'blue',
-                'swir',
-                'nir',
-                'ndvi',
-                'ndwi',
-                'nirv',
-                'vv_red',
-                'vv_green',
-                'vv_blue',
-                'vv_swir',
-                'vv_nir',
-                'vv_ndvi',
-                'vv_ndwi',
-                'vv_nirv',
-                'vh_red',
-                'vh_green',
-                'vh_blue',
-                'vh_swir',
-                'vh_nir',
-                'vh_ndvi',
-                'vh_ndwi',
-                'vh_nirv',
-                'vh_vv',
+                v for v in variables_to_plot if v in self.input_features
             ]
+            if not variables_to_plot:
+                raise ValueError(
+                    'None of the requested variables are in input_features: '
+                    f'{self.input_features}'
+                )
 
         input_data = sample['input'].numpy()
 
         # Time points to display on x-axis
-        time_labels = ['t', 't-1', 't-2', 't-3']
+        time_labels = list(self.time_steps)
 
         fig, axs = plt.subplots(
             len(variables_to_plot),
@@ -374,13 +263,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             axs = [axs]
 
         for i, var_base_name in enumerate(variables_to_plot):
-            values = []
-
-            # Extract data for each time point (t, t-1, t-2, t-3)
-            for t_label in time_labels:
-                full_var_name = f'{var_base_name}({t_label})'
-                var_position = self.all_variable_names.index(full_var_name)
-                values.append(input_data[var_position])
+            # Extract the variable's value at each time step (t, t-1, t-2, t-3)
+            position = self.input_features.index(var_base_name)
+            values = input_data[:, position]
 
             axs[i].plot(range(len(time_labels)), values, 'o-')
             axs[i].grid(True, alpha=0.3)
@@ -392,8 +277,8 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         axs[-1].set_xticklabels(time_labels)
 
         # add coordinate and label information below the plot
-        lon = input_data[-2]
-        lat = input_data[-1]
+        lon = sample['lon'].item()
+        lat = sample['lat'].item()
         lfmc_value = sample['label'].item()
 
         axs[-1].text(
