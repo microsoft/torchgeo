@@ -50,11 +50,12 @@ class CustomGeoDataset(GeoDataset):
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
+        data = {'filepath': ['file.tif'] * len(bounds)}
         geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
             [(b[4], b[5]) for b in bounds], closed='both', name='datetime'
         )
-        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
+        self.index = GeoDataFrame(data, index=index, geometry=geometry, crs=crs)
         self.res = res
         self.paths = paths or []
 
@@ -149,7 +150,7 @@ class TestGeoDataset:
         ds2 = CustomGeoDataset()
         ds3 = CustomGeoDataset()
         ds4 = CustomGeoDataset()
-        dataset = (ds1 & ds2) & (ds3 & ds4)
+        dataset = ds1 & ds2 & ds3 & ds4
         assert isinstance(dataset, IntersectionDataset)
         assert len(dataset) == 1
 
@@ -173,7 +174,7 @@ class TestGeoDataset:
         ds2 = CustomGeoDataset()
         ds3 = CustomGeoDataset()
         ds4 = CustomGeoDataset()
-        dataset = (ds1 | ds2) | (ds3 | ds4)
+        dataset = ds1 | ds2 | ds3 | ds4
         assert isinstance(dataset, UnionDataset)
         assert len(dataset) == 4
 
@@ -761,7 +762,7 @@ class TestNonGeoDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomNonGeoDataset()
         ds4 = CustomNonGeoDataset()
-        dataset = (ds1 + ds2) + (ds3 + ds4)
+        dataset = ds1 + ds2 + ds3 + ds4
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
@@ -815,7 +816,7 @@ class TestNonGeoClassificationDataset:
         ds2 = NonGeoClassificationDataset(root)
         ds3 = NonGeoClassificationDataset(root)
         ds4 = NonGeoClassificationDataset(root)
-        dataset = (ds1 + ds2) + (ds3 + ds4)
+        dataset = ds1 + ds2 + ds3 + ds4
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
