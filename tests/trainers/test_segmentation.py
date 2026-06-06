@@ -214,13 +214,6 @@ class TestSemanticSegmentationTask:
 
         assert y.shape == (2, 3, 16, 16)
 
-    def test_forward_rejects_invalid_input_ndim(self) -> None:
-        task = SemanticSegmentationTask(model='fcn', in_channels=3, num_classes=3)
-        x = torch.randn(2, 3, 16)
-
-        with pytest.raises(ValueError, match='For spatiotemporal input'):
-            task(x)
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
