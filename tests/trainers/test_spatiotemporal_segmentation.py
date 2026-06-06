@@ -39,6 +39,7 @@ class TestSpatioTemporalSegmentationTask:
         except MisconfigurationException:
             pass
 
+    @pytest.mark.filterwarnings(r'ignore:You are trying to `self.log\(\)`')
     def test_binary_task(self) -> None:
         model = SpatioTemporalSegmentationTask(
             in_channels=3, task='binary', loss='bce', hidden_dim=8, num_layers=1
