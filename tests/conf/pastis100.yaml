@@ -1,12 +1,16 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SpatioTemporalSegmentationTask
   init_args:
-    model: 'unet'
-    backbone: 'resnet18'
+    model: 'convlstm'
+    in_channels: 10
     task: 'multiclass'
-    in_channels: 90 # C * T (10 S2 channels * 9 timesteps)
     num_classes: 20
     loss: 'ce'
+  dict_kwargs:
+    hidden_dim: 8
+    num_layers: 1
+    kernel_size: 3
+    head_kernel_size: 1
 data:
   class_path: PASTIS100DataModule
   init_args:

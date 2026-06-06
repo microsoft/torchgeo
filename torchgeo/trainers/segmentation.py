@@ -116,15 +116,11 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
         """Forward pass of the model.
 
         Args:
-            x: Input tensor of shape ``(B, C, H, W)``. A 5-dimensional tensor of
-                shape ``(B, T, C, H, W)`` is deprecated but temporarily supported
-                for backward compatibility.
+            x: Input tensor of shape ``(B, C, H, W)``.
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
 
-        Raises:
-            ValueError: If ``x`` is not 4-dimensional or 5-dimensional.
         """
         if x.ndim == 5:
             warnings.warn(
@@ -135,11 +131,6 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
                 stacklevel=2,
             )
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        elif x.ndim != 4:
-            raise ValueError(
-                'SemanticSegmentationTask expects input with shape (B, C, H, W). '
-                'For spatiotemporal input, use SpatioTemporalSegmentationTask.'
-            )
         x = self.model(x)
         return x
 

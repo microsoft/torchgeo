@@ -12,7 +12,9 @@ from torchgeo.trainers import SpatioTemporalSegmentationTask
 
 
 class TestSpatioTemporalSegmentationTask:
-    @pytest.mark.parametrize('name', ['pastis', 'pastis_focal', 'pastis_jaccard'])
+    @pytest.mark.parametrize(
+        'name', ['pastis', 'pastis100', 'pastis_focal', 'pastis_jaccard']
+    )
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
