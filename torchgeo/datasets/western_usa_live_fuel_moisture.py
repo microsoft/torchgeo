@@ -281,17 +281,13 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         lat = sample['lat'].item()
         lfmc_value = sample['label'].item()
 
-        axs[-1].text(
-            x=0.5,
-            y=-0.7,
-            s=f'Live Fuel Moisture Content\nat {lon:.4f}, {lat:.4f}: {lfmc_value:.2f}%',
-            ha='center',
-            transform=axs[-1].transAxes,
+        fig.supxlabel(
+            f'Live Fuel Moisture Content\nat {lon:.4f}, {lat:.4f}: {lfmc_value:.2f}%'
         )
 
         if suptitle is not None:
-            fig.suptitle(t=suptitle, y=1.6, transform=axs[0].transAxes)
+            fig.suptitle(suptitle)
 
-        plt.tight_layout()
+        fig.tight_layout()
 
         return fig
