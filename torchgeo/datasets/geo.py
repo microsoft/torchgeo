@@ -383,6 +383,12 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
+    #: Names of all available bands in the dataset
+    all_bands: tuple[str, ...] = ()
+
+    #: Names of RGB bands in the dataset, used for plotting
+    rgb_bands: tuple[str, ...] = ()
+
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
