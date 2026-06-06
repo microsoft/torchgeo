@@ -124,6 +124,7 @@ from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
+from .mixins import PlottingMixin
 from .mmearth import MMEarth
 from .mmflood import MMFlood
 from .naip import NAIP
@@ -341,6 +342,7 @@ __all__ = (
     'OpenBuildings',
     'OpenStreetMap',
     'PatternNet',
+    'PlottingMixin',
     'Potsdam2D',
     'PrestoEmbeddings',
     'QuakeSet',
