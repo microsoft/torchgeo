@@ -128,7 +128,7 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
                 'SemanticSegmentationTask is deprecated and will be removed in a '
                 'future release. Use SpatioTemporalSegmentationTask instead.',
                 DeprecationWarning,
-                stacklevel=2,
+                stacklevel=1,
             )
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         x = self.model(x)
