@@ -74,6 +74,10 @@ class UTAE(nn.Module):
                 alongside the output.
             pad_value: Value used by the dataloader for temporal padding.
             padding_mode: Spatial padding strategy for convolutions.
+
+        Raises:
+            ValueError: If *encoder_widths* and *decoder_widths* have different
+                lengths or different final widths.
         """
         super().__init__()
         self.n_stages = len(encoder_widths)
@@ -280,7 +284,11 @@ class TemporalAggregator(nn.Module):
                 return x.mean(dim=1)
 
     def _check_att_group_channels(self, x: Tensor, n_heads: int) -> None:
-        """Validate channel grouping for ``att_group`` aggregation."""
+        """Validate channel grouping for ``att_group`` aggregation.
+
+        Raises:
+            ValueError: If the channel dimension of *x* is not divisible by *n_heads*.
+        """
         if x.shape[2] % n_heads != 0:
             raise ValueError(
                 'x.shape[2] must be divisible by n_heads for att_group aggregation'
@@ -312,6 +320,9 @@ class TemporallySharedBlock(nn.Module):
 
         Returns:
             Output matching the input rank.
+
+        Raises:
+            ValueError: If *x* does not have shape ``(B, T, C, H, W)``.
         """
         if x.ndim != 5:
             raise ValueError('x must have shape (B, T, C, H, W)')
