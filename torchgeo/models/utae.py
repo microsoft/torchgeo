@@ -341,43 +341,22 @@ class TemporallySharedBlock(nn.Module):
         return out.view(b, t, c_out, h_out, w_out)
 
     def _infer_output_shape(self, x: Tensor) -> torch.Size:
-        """Infer output shape without leaving BatchNorm state changed."""
-        batch_norms = [
-            module for module in self.modules() if isinstance(module, nn.BatchNorm2d)
-        ]
-        batch_norm_states = [
-            (
-                module,
-                module.running_mean.clone()
-                if module.running_mean is not None
-                else None,
-                module.running_var.clone() if module.running_var is not None else None,
-                module.num_batches_tracked.clone()
-                if module.num_batches_tracked is not None
-                else None,
-            )
-            for module in batch_norms
-        ]
+        """Infer output shape via a dummy forward pass.
 
+        Called only when every frame in a batch is padding, so there are no
+        valid frames to process but we still need the output shape to allocate
+        the output tensor.  BatchNorm2d updates its running statistics even
+        under ``torch.no_grad()``, so we snapshot and restore them to avoid
+        corrupting the model with padding data.
+        """
+        batch_norms = [m for m in self.modules() if isinstance(m, nn.BatchNorm2d)]
+        saved = [m.state_dict() for m in batch_norms]
         try:
             with torch.no_grad():
                 return self.forward(x).shape
         finally:
-            for (
-                module,
-                running_mean,
-                running_var,
-                num_batches_tracked,
-            ) in batch_norm_states:
-                if running_mean is not None:
-                    assert module.running_mean is not None
-                    module.running_mean.copy_(running_mean)
-                if running_var is not None:
-                    assert module.running_var is not None
-                    module.running_var.copy_(running_var)
-                if num_batches_tracked is not None:
-                    assert module.num_batches_tracked is not None
-                    module.num_batches_tracked.copy_(num_batches_tracked)
+            for m, state in zip(batch_norms, saved):
+                m.load_state_dict(state)
 
 
 class ConvLayer(nn.Module):
