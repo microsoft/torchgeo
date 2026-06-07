@@ -15,7 +15,6 @@ from torch import Tensor
 from .ltae import LTAE2d
 
 
-
 class UTAE(nn.Module):
     """U-Net with Lightweight Temporal Attention Encoder (U-TAE).
 

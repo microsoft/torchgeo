@@ -83,13 +83,43 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
+        # jsonargparse injects defaults for both ConvLSTM and UTAE into self.kwargs
+        # regardless of which model is selected, so we strip the other model's keys.
+        _convlstm_keys = {
+            'hidden_dim',
+            'kernel_size',
+            'num_layers',
+            'bias',
+            'return_all_layers',
+            'head_kernel_size',
+        }
+        _utae_keys = {
+            'encoder_widths',
+            'decoder_widths',
+            'out_conv',
+            'str_conv_k',
+            'str_conv_s',
+            'str_conv_p',
+            'agg_mode',
+            'encoder_norm',
+            'n_head',
+            'd_model',
+            'd_k',
+            'encoder',
+            'return_maps',
+            'pad_value',
+            'padding_mode',
+        }
         match self.hparams['model']:
             case 'convlstm':
+                kwargs = {k: v for k, v in self.kwargs.items() if k not in _utae_keys}
                 self.model = ConvLSTM(
-                    input_dim=in_channels, num_classes=num_classes, **self.kwargs
+                    input_dim=in_channels, num_classes=num_classes, **kwargs
                 )
             case 'utae':
-                kwargs = dict(self.kwargs)
+                kwargs = {
+                    k: v for k, v in self.kwargs.items() if k not in _convlstm_keys
+                }
                 out_conv = cast(
                     Sequence[int], kwargs.pop('out_conv', (32, num_classes))
                 )
