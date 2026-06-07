@@ -14,7 +14,6 @@ from torch import Tensor
 
 from .ltae import LTAE2d
 
-__all__ = ['UTAE']
 
 
 class UTAE(nn.Module):

@@ -12,8 +12,6 @@ from typing import cast
 import torch
 from torch import Tensor, nn
 
-__all__ = ['LTAE', 'LTAE2d']
-
 
 class LTAE(nn.Module):
     """Lightweight Temporal Attention Encoder (L-TAE).
