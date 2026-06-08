@@ -5,6 +5,7 @@ import os
 
 import pytest
 import torch
+from torch import Tensor
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
@@ -70,3 +71,47 @@ class TestSpatioTemporalSegmentation:
         assert probabilities.shape == (2, 4, 16, 16)
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
+
+    def test_utae_predict_step_forwards_batch_positions(self) -> None:
+        model = SpatioTemporalSegmentationTask(
+            model='utae',
+            in_channels=3,
+            num_classes=4,
+            encoder_widths=(4, 4),
+            decoder_widths=(4, 4),
+            out_conv=(4, 4),
+            n_head=1,
+            d_model=4,
+            d_k=4,
+        )
+        captured: list[Tensor] = []
+
+        # Hook the nested temporal encoder to verify the trainer forwards
+        # batch_positions while still exercising the real UTAE model.
+        def hook(
+            module: torch.nn.Module,
+            args: tuple[object, ...],
+            kwargs: dict[str, object],
+            output: object,
+        ) -> None:
+            """Record forwarded batch positions."""
+            batch_positions_kwarg = kwargs['batch_positions']
+            assert isinstance(batch_positions_kwarg, Tensor)
+            captured.append(batch_positions_kwarg)
+
+        handle = model.model.temporal_encoder.register_forward_hook(
+            hook, with_kwargs=True
+        )
+        batch_positions = torch.tensor([[1, 2, 3], [4, 5, 6]])
+        batch = {
+            'image': torch.randn(2, 3, 3, 16, 16),
+            'batch_positions': batch_positions,
+        }
+
+        try:
+            probabilities = model.predict_step(batch, 0)
+        finally:
+            handle.remove()
+
+        assert captured[0] is batch_positions
+        assert probabilities.shape == (2, 4, 16, 16)
