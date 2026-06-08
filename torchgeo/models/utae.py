@@ -359,7 +359,10 @@ class TemporallySharedBlock(nn.Module):
         corrupting the model with padding data.
         """
         batch_norms = [m for m in self.modules() if isinstance(m, nn.BatchNorm2d)]
-        saved = [m.state_dict() for m in batch_norms]
+        saved = [
+            {name: tensor.clone() for name, tensor in m.state_dict().items()}
+            for m in batch_norms
+        ]
         try:
             with torch.no_grad():
                 return self.forward(x).shape
