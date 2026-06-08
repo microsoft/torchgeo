@@ -83,3 +83,14 @@ class TestSpatioTemporalRegression:
         y_hat = model.predict_step(batch, 0)
 
         assert torch.all(y_hat == 2)
+
+    def test_predict_step_without_target_stats(self) -> None:
+        model = SpatioTemporalPixelwiseRegressionTask(
+            in_channels=3, hidden_dim=8, num_layers=1
+        )
+        model.model = ConstantRegressionModel()
+        batch = {'image': torch.randn(2, 4, 3, 16, 16)}
+
+        y_hat = model.predict_step(batch, 0)
+
+        assert torch.all(y_hat == 0)
