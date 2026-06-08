@@ -89,6 +89,9 @@ class TestSpatioTemporalRegression:
             in_channels=3, hidden_dim=8, num_layers=1
         )
         model.model = ConstantRegressionModel()
+        # Attach a datamodule with no target stats to exercise _target_stats()
+        # returning None after trainer lookup succeeds.
+        setattr(model, '_trainer', SimpleNamespace(datamodule=SimpleNamespace()))
         batch = {'image': torch.randn(2, 4, 3, 16, 16)}
 
         y_hat = model.predict_step(batch, 0)
