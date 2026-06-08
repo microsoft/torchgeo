@@ -20,7 +20,7 @@ class UTAE(nn.Module):
 
     Spatio-temporal encoder for satellite image time series. A shared L-TAE
     is applied at the U-Net bottleneck; per-head attention masks are
-    propagated to the skip connections via a :class:`TemporalAggregator`.
+    propagated to the skip connections via a *TemporalAggregator*.
 
     If you use this model in your research, please cite the following paper:
 
