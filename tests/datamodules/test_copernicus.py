@@ -8,7 +8,9 @@ import kornia.augmentation as K
 import torch
 
 from torchgeo.datamodules.copernicus.biomass_s3 import (
+    TARGET_MEAN,
     TARGET_SIZE,
+    TARGET_STD,
     CopernicusBenchBiomassS3DataModule,
 )
 from torchgeo.datasets import CopernicusBenchBiomassS3
@@ -101,3 +103,17 @@ def test_time_series_collate_pads_variable_sequence_lengths(tmp_path: Path) -> N
     assert batch['lat'].shape == (2, 2)
     assert batch['lon'].shape == (2, 2)
     assert sorted((batch['time'] != 0).sum(dim=1).tolist()) == [1, 2]
+
+
+def test_biomass_targets_are_normalized() -> None:
+    datamodule = CopernicusBenchBiomassS3DataModule(
+        root='tests/data/copernicus/l3_biomass_s3', batch_size=1, num_workers=0
+    )
+    batch = {
+        'image': torch.zeros(1, len(BANDS), *TARGET_SIZE),
+        'mask': torch.full((1, *TARGET_SIZE), (TARGET_MEAN + TARGET_STD).item()),
+    }
+
+    batch = datamodule.on_after_batch_transfer(batch, 0)
+
+    assert torch.allclose(batch['mask'], torch.ones_like(batch['mask']))

@@ -2,14 +2,24 @@
 # Licensed under the MIT License.
 
 import os
+from types import SimpleNamespace
 from typing import Literal
 
 import pytest
 import torch
+from torch import Tensor
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.tasks import SpatioTemporalRegression
+
+
+class ConstantRegressionModel(torch.nn.Module):
+    """Model that returns zero-valued normalized predictions."""
+
+    def forward(self, x: Tensor, **kwargs: Tensor) -> Tensor:
+        """Forward pass."""
+        return torch.zeros(x.shape[0], 1, x.shape[-2], x.shape[-1], device=x.device)
 
 
 class TestSpatioTemporalRegression:
@@ -58,3 +68,18 @@ class TestSpatioTemporalRegression:
             pass
         y_hat = model.predict_step(batch, 0)
         assert y_hat.shape == (2, 1, 16, 16)
+
+    def test_predict_step_denormalizes_targets(self) -> None:
+        model = SpatioTemporalRegression(
+            in_channels=3, hidden_dim=8, num_layers=1
+        )
+        model.model = ConstantRegressionModel()
+        datamodule = SimpleNamespace(
+            target_mean=torch.tensor(2.0), target_std=torch.tensor(3.0)
+        )
+        setattr(model, '_trainer', SimpleNamespace(datamodule=datamodule))
+        batch = {'image': torch.randn(2, 4, 3, 16, 16)}
+
+        y_hat = model.predict_step(batch, 0)
+
+        assert torch.all(y_hat == 2)
