@@ -1023,7 +1023,64 @@ def _list_vsi_files(root: Path) -> list[str]:
     return [e for e in entries if not e.endswith('/')]
 
 
-def find_files(path: Path, filename_glob: str = '*') -> list[str]:
+_ARCHIVE_VSI_PREFIXES = {
+    '.zip': '/vsizip/',
+    '.tar': '/vsitar/',
+    '.tar.gz': '/vsitar/',
+    '.tgz': '/vsitar/',
+    '.tar.bz2': '/vsitar/',
+    '.gz': '/vsigzip/',
+}
+
+
+def _expand_archives(files: Iterable[str]) -> list[str]:
+    """Replace each archive in *files* with the files it contains.
+
+    The contents are read by chaining the matching VSI handler (e.g.
+    ``/vsizip/``) onto the archive's path; GDAL does not descend on its own.
+
+    Args:
+        files: File paths to scan for archives.
+
+    Returns:
+        *files* with every archive (zip, tar, etc.) replaced by its contents.
+    """
+    expanded: list[str] = []
+    for f in files:
+        # Match the file against a VSI handler if it is a supported archive.
+        prefix = next(
+            (p for ext, p in _ARCHIVE_VSI_PREFIXES.items() if f.lower().endswith(ext)),
+            None,
+        )
+        if prefix:
+            expanded.extend(_list_vsi_files(prefix + f))
+        else:
+            expanded.append(f)
+    return expanded
+
+
+def _list_files(path: Path) -> list[str]:
+    """List every file under *path*.
+
+    Args:
+        path: A single file, a local directory, or a VSI path.
+
+    Returns:
+        All file paths under *path*, or an empty list if *path* does not exist.
+    """
+    if os.path.isfile(path):
+        return [str(path)]
+    if os.path.isdir(path):
+        pathname = os.path.join(path, '**', '*')
+        return list(glob.iglob(pathname, recursive=True))
+    if str(path).startswith('/vsi'):
+        return _list_vsi_files(path)
+    return []
+
+
+def find_files(
+    path: Path, filename_glob: str = '*', descend_into_archives: bool = False
+) -> list[str]:
     """Return all files under *path* that match *filename_glob*.
 
     Supports local directories, individual files, and VSI paths such as
@@ -1032,6 +1089,8 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
     Args:
         path: Local directory, local file, or VSI path.
         filename_glob: Glob pattern to match filenames against.
+        descend_into_archives: Also match files inside any archive (zip, tar, etc.)
+            found under *path*. Works for both local and VSI paths.
 
     Returns:
         Sorted list of matching file paths.
@@ -1039,13 +1098,20 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
     .. versionadded:: 0.10
     """
     files: set[str] = set()
-    if os.path.isdir(path):
+    if os.path.isfile(path) and not descend_into_archives:
+        if fnmatch.fnmatch(str(path), f'*{filename_glob}'):
+            files = {str(path)}
+    elif os.path.isdir(path) and not descend_into_archives:
+        # Fast path: let glob match directly, which supports path-style patterns.
         pathname = os.path.join(path, '**', filename_glob)
         files = set(glob.iglob(pathname, recursive=True))
-    elif os.path.isfile(path) and fnmatch.fnmatch(str(path), f'*{filename_glob}'):
-        files = {str(path)}
-    elif str(path).startswith('/vsi'):
-        all_files = _list_vsi_files(path)
+    else:
+        # A single file or local directory to descend into, or a VSI path. List
+        # everything once, then optionally descend into archives before matching
+        # each file's basename against filename_glob.
+        all_files = _list_files(path)
+        if descend_into_archives:
+            all_files = _expand_archives(all_files)
         files = {
             f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
         }
