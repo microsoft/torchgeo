@@ -3,11 +3,9 @@
 
 """Common dataset utilities."""
 
-# https://github.com/sphinx-doc/sphinx/issues/11327
-from __future__ import annotations
-
 import bz2
 import contextlib
+import datetime
 import hashlib
 import importlib
 import os
@@ -20,10 +18,10 @@ import warnings
 import zipfile
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
+import numpy.typing
 import pandas as pd
 import rasterio
 import shapely.affinity
@@ -48,9 +46,7 @@ from .errors import DependencyNotFoundError
 #:    ds[xmin:xmax, ymin:ymax, tmin:tmax]
 #:
 #: All values are optional and will default to the spatiotemporal extent of the dataset.
-GeoSlice: TypeAlias = (  # noqa: UP040
-    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
-)
+GeoSlice: TypeAlias = 'slice[float | None, float | None, float | None] | tuple[slice[float | None, float | None, float | None]] | tuple[slice[float | None, float | None, float | None], slice[float | None, float | None, float | None]] | tuple[slice[float | None, float | None, float | None], slice[float | None, float | None, float | None], slice[datetime.datetime | None, datetime.datetime | None, int | None]]'  # noqa: UP040
 
 #: Path-like object.
 #:
@@ -86,9 +82,9 @@ class BoundingBox:
     #: northern boundary
     maxy: float
     #: earliest boundary
-    mint: datetime
+    mint: datetime.datetime
     #: latest boundary
-    maxt: datetime
+    maxt: datetime.datetime
 
     def __post_init__(self) -> None:
         """Validate the arguments passed to :meth:`__init__`.
@@ -142,7 +138,7 @@ class BoundingBox:
         """
         yield from [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt]
 
-    def __contains__(self, other: BoundingBox) -> bool:
+    def __contains__(self, other: 'BoundingBox') -> bool:
         """Whether or not other is within the bounds of this bounding box.
 
         Args:
@@ -162,7 +158,7 @@ class BoundingBox:
             and (self.mint <= other.maxt <= self.maxt)
         )
 
-    def __or__(self, other: BoundingBox) -> BoundingBox:
+    def __or__(self, other: 'BoundingBox') -> 'BoundingBox':
         """The union operator.
 
         Args:
@@ -182,7 +178,7 @@ class BoundingBox:
             max(self.maxt, other.maxt),
         )
 
-    def __and__(self, other: BoundingBox) -> BoundingBox:
+    def __and__(self, other: 'BoundingBox') -> 'BoundingBox':
         """The intersection operator.
 
         Args:
@@ -222,7 +218,7 @@ class BoundingBox:
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
     @property
-    def volume(self) -> timedelta:
+    def volume(self) -> datetime.timedelta:
         """Volume of bounding box.
 
         Volume is defined as spatial area times temporal range.
@@ -234,7 +230,7 @@ class BoundingBox:
         """
         return self.area * (self.maxt - self.mint)
 
-    def intersects(self, other: BoundingBox) -> bool:
+    def intersects(self, other: 'BoundingBox') -> bool:
         """Whether or not two bounding boxes intersect.
 
         Args:
@@ -254,7 +250,7 @@ class BoundingBox:
 
     def split(
         self, proportion: float, horizontal: bool = True
-    ) -> tuple[BoundingBox, BoundingBox]:
+    ) -> tuple['BoundingBox', 'BoundingBox']:
         """Split BoundingBox in two.
 
         Args:
