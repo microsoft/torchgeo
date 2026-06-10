@@ -1143,7 +1143,9 @@ class FLAIRHUBToy(FLAIRHUB):
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         bands: list[AvailableBands] | None = None,
-        dataset_type: Literal['land_cover', 'crop_type'] = 'land_cover',
+        dataset_type: Literal[
+            'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
+        ] = 'land_cover',
     ) -> None:
         """Initialize a new FLAIRHUBToy dataset instance.
 
@@ -1160,13 +1162,20 @@ class FLAIRHUBToy(FLAIRHUB):
             bands: List of bands/modalities to load. See
                 :class:`~torchgeo.datasets.FLAIRHUB` for available options.
                 Defaults to None, which enables all bands.
-            dataset_type: ``land_cover`` (19 classes) or ``crop_type``
-                (23 classes).
+            dataset_type: Type of labels to use. Choose ``land_cover`` for
+                19-class COSIA labels or ``crop_type`` for 23-class LPIS crop
+                classification labels (baseline) or ``crop_type_2`` for 31-class
+                LPIS crop classification labels or ``crop_type_3`` for 46-class
+                LPIS crop classification labels. ``crop_type_2`` and
+                ``crop_type_3`` are deeper levels of the LPIS crop classification
+                labels.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ValueError: If *dataset_type* is not ``land_cover`` or ``crop_type``.
-            FileNotFoundError: Requested modality file is missing from the toy dataset.
+            ValueError: If *dataset_type* is not ``land_cover``, ``crop_type``,
+                ``crop_type_2``, or ``crop_type_3``.
+            ValueError: If no data modality is enabled.
+            ValueError: If an invalid band name is provided.
 
         See Also:
             :class:`~torchgeo.datasets.FLAIRHUB`: Full dataset class for
