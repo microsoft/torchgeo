@@ -83,6 +83,7 @@ from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .gbm import GlobalBuildingMap
+from .globalmangrovewatch import GlobalMangroveWatch
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -210,6 +211,7 @@ __all__ = (
     'FAIR1M',
     'GBIF',
     'GID15',
+    'GlobalMangroveWatch',
     'LEVIRCD',
     'MDAS',
     'NAIP',
