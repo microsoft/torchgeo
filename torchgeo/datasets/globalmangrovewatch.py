@@ -14,7 +14,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class GlobalMangroveWatch(RasterDataset):
@@ -30,7 +30,7 @@ class GlobalMangroveWatch(RasterDataset):
     * Binary mangrove extent maps at 25m resolution
     * 11 epochs: 1996, 2007-2010, 2015-2020
     * Global coverage in WGS84 geographic coordinates
-    * Tiled as 1° × 1° GeoTIFF files
+    * Tiled as 1° x 1° GeoTIFF files
 
     Dataset classes:
 
@@ -54,8 +54,17 @@ class GlobalMangroveWatch(RasterDataset):
     url = 'https://zenodo.org/records/6894273/files/gmw_v3_{}_gtiff.zip?download=1'
 
     all_years: ClassVar[list[int]] = [
-        1996, 2007, 2008, 2009, 2010,
-        2015, 2016, 2017, 2018, 2019, 2020,
+        1996,
+        2007,
+        2008,
+        2009,
+        2010,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
     ]
 
     md5s: ClassVar[dict[int, str]] = {
@@ -112,8 +121,7 @@ class GlobalMangroveWatch(RasterDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= set(self.all_years), (
-            'GMW data product only exists for the following years: '
-            f'{self.all_years}.'
+            f'GMW data product only exists for the following years: {self.all_years}.'
         )
 
         self.paths = paths
@@ -124,8 +132,7 @@ class GlobalMangroveWatch(RasterDataset):
         self._verify()
 
         super().__init__(
-            paths, crs, res, transforms=transforms, cache=cache,
-            time_series=time_series,
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
         )
 
     def _verify(self) -> None:
@@ -137,9 +144,7 @@ class GlobalMangroveWatch(RasterDataset):
         assert isinstance(self.paths, str | os.PathLike)
         paths = cast(Path, self.paths)
         for year in self.years:
-            pathname = os.path.join(
-                paths, self.zipfile_glob.replace('*', str(year))
-            )
+            pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):
                 exists.append(True)
                 self._extract()
@@ -176,10 +181,7 @@ class GlobalMangroveWatch(RasterDataset):
             extract_archive(pathname, paths)
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

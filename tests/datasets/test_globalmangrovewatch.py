@@ -23,9 +23,7 @@ from torchgeo.datasets import (
 
 class TestGlobalMangroveWatch:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> GlobalMangroveWatch:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> GlobalMangroveWatch:
         url = os.path.join(
             'tests', 'data', 'globalmangrovewatch', 'gmw_v3_{}_gtiff.zip'
         )

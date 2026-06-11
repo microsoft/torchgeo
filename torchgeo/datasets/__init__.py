@@ -83,7 +83,6 @@ from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .gbm import GlobalBuildingMap
-from .globalmangrovewatch import GlobalMangroveWatch
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -96,6 +95,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .globalmangrovewatch import GlobalMangroveWatch
 from .globbiomass import GlobBiomass
 from .gse import GoogleSatelliteEmbedding
 from .hyspecnet import HySpecNet11k
@@ -211,7 +211,6 @@ __all__ = (
     'FAIR1M',
     'GBIF',
     'GID15',
-    'GlobalMangroveWatch',
     'LEVIRCD',
     'MDAS',
     'NAIP',
@@ -305,6 +304,7 @@ __all__ = (
     'GeoNRW',
     'GlobBiomass',
     'GlobalBuildingMap',
+    'GlobalMangroveWatch',
     'GoogleSatelliteEmbedding',
     'HySpecNet11k',
     'IDTReeS',

@@ -36,14 +36,12 @@ def create_file(path: str) -> None:
 if __name__ == '__main__':
     for year in years:
         tif_filename = os.path.join(
-            'tests', 'data', 'globalmangrovewatch',
-            f'gmw_v3_{year}_N00E100.tif',
+            'tests', 'data', 'globalmangrovewatch', f'gmw_v3_{year}_N00E100.tif'
         )
         create_file(tif_filename)
 
         zip_filename = os.path.join(
-            'tests', 'data', 'globalmangrovewatch',
-            f'gmw_v3_{year}_gtiff.zip',
+            'tests', 'data', 'globalmangrovewatch', f'gmw_v3_{year}_gtiff.zip'
         )
         with zipfile.ZipFile(zip_filename, 'w') as zf:
             zf.write(tif_filename, arcname=os.path.basename(tif_filename))
