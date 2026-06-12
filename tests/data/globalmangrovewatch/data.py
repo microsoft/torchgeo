@@ -23,7 +23,7 @@ def create_file(path: str) -> None:
         'dtype': 'uint8',
         'count': 1,
         'crs': CRS.from_epsg(4326),
-        'transform': Affine(0.000223, 0.0, 100.0, 0.0, -0.000223, 1.0),
+        'transform': Affine(0.000223, 0.0, 8.0, 0.0, -0.000223, 1.0),
         'height': SIZE,
         'width': SIZE,
         'compress': 'lzw',
@@ -34,14 +34,17 @@ def create_file(path: str) -> None:
 
 
 if __name__ == '__main__':
+    root = os.path.join('tests', 'data', 'globalmangrovewatch')
     for year in years:
-        tif_filename = os.path.join(
-            'tests', 'data', 'globalmangrovewatch', f'gmw_v3_{year}_N00E100.tif'
-        )
+        directory = os.path.join(root, f'gmw_v3_{year}')
+        os.makedirs(directory, exist_ok=True)
+
+        tif_filename = os.path.join(directory, f'GMW_N00E008_{year}_v3.tif')
         create_file(tif_filename)
 
-        zip_filename = os.path.join(
-            'tests', 'data', 'globalmangrovewatch', f'gmw_v3_{year}_gtiff.zip'
-        )
+        zip_filename = os.path.join(root, f'gmw_v3_{year}_gtiff.zip')
         with zipfile.ZipFile(zip_filename, 'w') as zf:
-            zf.write(tif_filename, arcname=os.path.basename(tif_filename))
+            zf.write(
+                tif_filename,
+                arcname=os.path.join(f'gmw_v3_{year}', f'GMW_N00E008_{year}_v3.tif'),
+            )

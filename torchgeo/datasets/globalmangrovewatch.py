@@ -21,7 +21,7 @@ class GlobalMangroveWatch(RasterDataset):
     """Global Mangrove Watch (GMW) dataset.
 
     The `Global Mangrove Watch
-    <https://www.globalmangrovewatch.org>`_ dataset provides maps of global
+    <https://www.globalmangrovewatch.org>`_ Version 3.0 dataset provides maps of global
     mangrove extent for eleven epochs between 1996 and 2020, derived from
     L-band Synthetic Aperture Radar (SAR) and optical (Landsat) satellite data.
 
@@ -35,23 +35,23 @@ class GlobalMangroveWatch(RasterDataset):
     Dataset classes:
 
     0. Non-mangrove
-    #. Mangrove
+    1. Mangrove
 
     If you use this dataset in your research, please cite it using the
     following format:
 
     * https://doi.org/10.5281/zenodo.6894273
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
-    filename_glob = 'gmw_v3_*_*.tif'
-    filename_regex = r'gmw_v3_(?P<date>\d{4})_[NS]\d+[EW]\d+\.tif'
+    filename_glob = 'GMW_*_*_v3.tif'
+    filename_regex = r'GMW_[NS]\d+[EW]\d+_(?P<date>\d{4})_v3\.tif'
     zipfile_glob = 'gmw_v3_*_gtiff.zip'
     date_format = '%Y'
     is_image = False
 
-    url = 'https://zenodo.org/records/6894273/files/gmw_v3_{}_gtiff.zip?download=1'
+    url = 'https://zenodo.org/records/6894273/files/gmw_v3_{}_gtiff.zip'
 
     all_years: ClassVar[list[int]] = [
         1996,
