@@ -9,7 +9,7 @@ import os
 import pathlib
 import re
 import warnings
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence, Sized
 from contextlib import ExitStack
 from datetime import datetime
 from typing import ClassVar, Literal, cast
@@ -1706,3 +1706,91 @@ class UnionDataset(GeoDataset):
         """
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
+
+
+class PixelDatasetWrapper(Dataset):
+    """Wrap a GeoDataset to return pixel samples instead of patches."""
+
+    def __init__(
+        self,
+        dataset: Dataset,
+        sampler: Iterable[GeoSlice] | None = None,
+        ignore_index: int | None = None,
+        max_attempts: int | None = 64,
+    ) -> None:
+        """Initialize a new :class:`PixelDatasetWrapper` instance.
+
+        Args:
+            dataset: the dataset to wrap.
+            sampler: optional sampler used to draw replacement indices when retrying
+                ignored pixels with a :term:`GeoSlice` index. Required if
+                ``ignore_index`` is set and the wrapped dataset uses spatiotemporal
+                indexing. Ignored when ``index`` is an int.
+            ignore_index: label index to ignore.
+            max_attempts: maximum number of attempts to find a non-ignored label before raising an error. If None, try up to len(dataset) times.
+        """
+        self.dataset = dataset
+        self.sampler = sampler
+        self.ignore_index = ignore_index
+        self.max_attempts = max_attempts
+        self._sampler_iter = iter(sampler) if sampler is not None else None
+
+    def __getitem__(self, index: int | GeoSlice) -> dict[str, torch.Tensor]:
+        """Return a pixel sample from the wrapped dataset.
+
+        Args:
+            index: Index of the sample.
+
+        Returns:
+            Dictionary containing:
+                - 'pixel': Tensor of shape (C,)
+                - 'label': Tensor scalar
+
+        Raises:
+            RuntimeError: If a non-ignored label cannot be found within max_attempts.
+        """
+        sized = cast(Sized, self.dataset)
+        limit = self.max_attempts if self.max_attempts is not None else len(sized)
+
+        for attempt in range(limit):
+            if attempt == 0:
+                current_index = index
+            elif isinstance(index, int):
+                current_index = (index + attempt) % len(sized)
+            elif self._sampler_iter is not None:
+                current_index = next(self._sampler_iter)
+            else:
+                raise RuntimeError(
+                    'A sampler must be provided to retry with a GeoSlice index.'
+                )
+
+            sample = self.dataset[current_index]
+            image = sample['image']
+            mask = sample['mask']
+
+            if mask.ndim == 3:
+                mask = mask[0]
+
+            _, H, W = image.shape
+
+            if H != 1 or W != 1:
+                warnings.warn(
+                    f'Expected pixel-sized patch (1x1) but received ({H}x{W}). '
+                    'Using top-left pixel.',
+                    UserWarning,
+                )
+
+            pixel = image[:, 0, 0]
+            label = mask[0, 0]
+
+            if self.ignore_index is None or label != self.ignore_index:
+                return {'pixel': pixel, 'label': label}
+
+        raise RuntimeError(
+            f'Failed to find non-ignored label after {limit} attempts '
+            f'(ignore_index={self.ignore_index}).'
+        )
+
+    def __len__(self) -> int:
+        """Return the number of samples in the wrapped dataset."""
+        return len(cast(Sized, self.dataset))
