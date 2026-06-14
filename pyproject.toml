@@ -200,6 +200,8 @@ filterwarnings = [
     "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
     # https://github.com/pytorch/pytorch/pull/167669
     'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
+    # https://github.com/kornia/kornia/issues/3727
+    'ignore:`torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.:DeprecationWarning',
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
