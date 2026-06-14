@@ -71,16 +71,6 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     #: Date format string used to parse date from filename.
     date_format = '%Y%m%dT%H%M%S'
 
-    @property
-    @abstractmethod
-    def all_bands(self) -> tuple[str, ...]:
-        """All spectral channels."""
-
-    @property
-    @abstractmethod
-    def rgb_bands(self) -> tuple[str, ...]:
-        """Spectral channels used to make RGB plots."""
-
     #: Matplotlib color map for semantic segmentation and change detection plots.
     cmap: str | matplotlib.colors.Colormap
 
