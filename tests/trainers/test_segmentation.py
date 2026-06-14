@@ -16,7 +16,11 @@ from torch import Tensor
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
+from torchgeo.datamodules import (
+    MisconfigurationException,
+    PASTISDataModule,
+    SEN12MSDataModule,
+)
 from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
@@ -204,15 +208,14 @@ class TestSemanticSegmentationTask:
         assert task.hparams['class_weights'] is None
 
     def test_forward_deprecates_spatiotemporal_input(self) -> None:
-        task = SemanticSegmentationTask(model='fcn', in_channels=12, num_classes=3)
-        x = torch.randn(2, 4, 3, 16, 16)
-
-        with pytest.warns(
-            DeprecationWarning, match='Use SpatioTemporalSegmentationTask instead'
-        ):
-            y = task(x)
-
-        assert y.shape == (2, 3, 16, 16)
+        datamodule = PASTISDataModule(root='tests/data/pastis', batch_size=1)
+        model = SemanticSegmentationTask(model='fcn', in_channels=610, num_classes=20)
+        trainer = Trainer(
+            accelerator='cpu', fast_dev_run=True, log_every_n_steps=1, max_epochs=1
+        )
+        msg = 'Use SpatioTemporalSegmentationTask instead'
+        with pytest.warns(DeprecationWarning, match=msg):
+            trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
