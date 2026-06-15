@@ -117,14 +117,19 @@ class GlobalMangroveWatch(RasterDataset):
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
-            AssertionError: if ``years`` are invalid
+            AssertionError: If ``years`` are invalid or ``paths`` is not a single
+                root directory.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= set(self.all_years), (
             f'GMW data product only exists for the following years: {self.all_years}.'
         )
+        assert isinstance(paths, str | os.PathLike), (
+            'paths must be a single root directory for download/extraction'
+        )
 
         self.paths = paths
+        self._root = cast(Path, paths)
         self.years = years
         self.download = download
         self.checksum = checksum
@@ -141,13 +146,13 @@ class GlobalMangroveWatch(RasterDataset):
             return
 
         exists = []
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for year in self.years:
-            pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
+            pathname = os.path.join(
+                self._root, self.zipfile_glob.replace('*', str(year))
+            )
             if os.path.exists(pathname):
                 exists.append(True)
-                self._extract()
+                self._extract(year)
             else:
                 exists.append(False)
 
@@ -158,27 +163,31 @@ class GlobalMangroveWatch(RasterDataset):
             raise DatasetNotFoundError(self)
 
         self._download()
-        self._extract()
+        self._extract_all()
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                paths,
+                self._root,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
+    def _extract(self, year: int) -> None:
+        """Extract a single year of the dataset.
+
+        Args:
+            year: the year to extract
+        """
+        zipfile_name = self.zipfile_glob.replace('*', str(year))
+        pathname = os.path.join(self._root, zipfile_name)
+        extract_archive(pathname, self._root)
+
+    def _extract_all(self) -> None:
+        """Extract all years of the dataset."""
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace('*', str(year))
-            pathname = os.path.join(paths, zipfile_name)
-            extract_archive(pathname, paths)
+            self._extract(year)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
