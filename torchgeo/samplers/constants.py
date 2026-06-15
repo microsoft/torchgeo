@@ -9,8 +9,7 @@ from enum import Enum, auto
 class Units(Enum):
     """Enumeration defining units of ``size`` parameter.
 
-    Used by :class:`~torchgeo.samplers.GeoSampler` and
-    :class:`~torchgeo.samplers.BatchGeoSampler`.
+    Used by :class:`~torchgeo.samplers.SpatialSampler`.
     """
 
     #: Units in number of pixels

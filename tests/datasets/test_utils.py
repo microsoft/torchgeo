@@ -26,6 +26,7 @@ from torchgeo.datasets.utils import (
     download_and_extract_archive,
     download_url,
     extract_archive,
+    find_files,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -630,3 +631,43 @@ def test_pad_across_batches() -> None:
     assert out['bbox_xyxy'].shape[0] == len(batch)
     assert out['label'].shape[0] == len(batch)
     assert torch.equal(out['length'], torch.tensor([3, 2], device=out['length'].device))
+
+
+class TestFindFiles:
+    # find_files resolves a local directory and a zip of that same directory
+    # identically, so both are tested against the same data.
+    vector_dir = os.path.join('tests', 'data', 'vector')
+
+    def test_file(self) -> None:
+        """A file resolves to itself."""
+        path = os.path.join(self.vector_dir, 'vector_2024.geojson')
+        assert find_files(path) == [path]
+
+    def test_directory(self) -> None:
+        """A directory resolves to the files within it matching the glob."""
+        found = find_files(self.vector_dir, '*.geojson')
+        assert [Path(p).name for p in found] == ['vector_2024.geojson']
+
+    def test_non_existing(self) -> None:
+        """A path that does not exist resolves to nothing."""
+        assert find_files(os.path.join(self.vector_dir, 'non_existing')) == []
+
+    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
+    def test_archive_file(self, temp_archive: tuple[str, str]) -> None:
+        """A file inside an archive resolves to itself."""
+        _, archive = temp_archive
+        found = find_files(f'/vsizip/{archive}/vector_2024.geojson')
+        assert [Path(p).name for p in found] == ['vector_2024.geojson']
+
+    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
+    def test_archive(self, temp_archive: tuple[str, str]) -> None:
+        """An archive resolves to the files within it matching the glob."""
+        _, archive = temp_archive
+        found = find_files(f'/vsizip/{archive}', '*.geojson')
+        assert [Path(p).name for p in found] == ['vector_2024.geojson']
+
+    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
+    def test_archive_non_existing(self, temp_archive: tuple[str, str]) -> None:
+        """A path that does not exist inside an archive resolves to nothing."""
+        _, archive = temp_archive
+        assert find_files(f'/vsizip/{archive}/non_existing.tif') == []

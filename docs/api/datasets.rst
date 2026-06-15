@@ -134,6 +134,11 @@ UnionDataset
 
 .. autoclass:: UnionDataset
 
+Mixins
+------
+
+.. autoclass:: PlottingMixin
+
 Utilities
 ---------
 

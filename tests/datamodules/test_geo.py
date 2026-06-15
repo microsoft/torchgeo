@@ -21,17 +21,19 @@ from torchgeo.datamodules import (
 )
 from torchgeo.datasets import GeoDataset, NonGeoDataset
 from torchgeo.datasets.utils import GeoSlice, Sample
-from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
+from torchgeo.samplers import RandomBatchGeoSampler, RandomPatchSampler
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
+
+pytestmark = pytest.mark.filterwarnings('ignore:Use .* instead:DeprecationWarning')
 
 
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self, split: str = 'train', length: int = 1, download: bool = False
     ) -> None:
-        geometry = [shapely.box(0, 0, 1, 1)] * length
+        geometry = [shapely.box(0, 0, 2, 2)] * length
         index = pd.IntervalIndex([pd.Interval(MINT, MAXT)] * length, name='datetime')
         crs = CRS.from_epsg(4326)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
@@ -53,10 +55,10 @@ class CustomGeoDataModule(GeoDataModule):
 class SamplerGeoDataModule(CustomGeoDataModule):
     def setup(self, stage: str) -> None:
         self.dataset = CustomGeoDataset()
-        self.train_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.val_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.test_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.predict_sampler = RandomGeoSampler(self.dataset, 1, 1)
+        self.train_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.val_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.test_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.predict_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
 
 
 class BatchSamplerGeoDataModule(CustomGeoDataModule):
@@ -188,8 +190,8 @@ class TestGeoDataModule:
     def test_zero_length_sampler(self) -> None:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
-        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
-        dm.sampler.length = 0
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
+        dm.sampler._length = 0
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
             dm.train_dataloader()
@@ -203,7 +205,7 @@ class TestGeoDataModule:
     def test_drop_last(self) -> None:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset(length=2)
-        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
 
         assert dm.train_dataloader().drop_last
         assert not dm.val_dataloader().drop_last

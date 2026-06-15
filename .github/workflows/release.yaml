@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v8.2.0
         with:
           python-version: '3.14'
           enable-cache: true
@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v8.2.0
         with:
           python-version: '3.14'
           enable-cache: true

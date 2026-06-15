@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import bz2
 import contextlib
+import fnmatch
+import glob
 import hashlib
 import importlib
 import os
@@ -25,6 +27,7 @@ from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
 import pandas as pd
+import pyogrio
 import rasterio
 import shapely.affinity
 import torch
@@ -875,30 +878,6 @@ def quantile_normalization(
     return torch.clamp(img, 0, 1)
 
 
-def path_is_vsi(path: Path) -> bool:
-    """Checks if the given path is pointing to a Virtual File System.
-
-    .. note::
-       Does not check if the path exists, or if it is a dir or file.
-
-    VSI can for instance be Cloud Storage Blobs or zip-archives.
-    They will start with a prefix indicating this.
-    For examples of these, see references for the two accepted syntaxes.
-
-    * https://gdal.org/user/virtual_file_systems.html
-    * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
-
-    Args:
-        path: a directory or file
-
-    Returns:
-        True if path is on a virtual file system, else False
-
-    .. versionadded:: 0.6
-    """
-    return '://' in str(path) or str(path).startswith('/vsi')
-
-
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     """Converts a :class:`numpy.ndarray` to :class:`torch.Tensor`.
 
@@ -1010,3 +989,52 @@ def convert_poly_coords(
         ],
     )
     return xformed_shape
+
+
+def _list_vsi_files(root: Path) -> list[str]:
+    """List all files under a VSI path recursively.
+
+    Args:
+        root: VSI path to list (e.g., ``/vsiaz/container/`` for Azure Blob
+            Storage, ``/vsizip/archive.zip`` for zip archives).
+
+    Returns:
+        A list of all file paths under *root*, or an empty list if *root*
+        does not exist.
+    """
+    try:
+        entries = pyogrio.vsi_listtree(str(root))
+    except NotADirectoryError:
+        return [str(root)]
+    except FileNotFoundError:
+        return []
+    return [e for e in entries if not e.endswith('/')]
+
+
+def find_files(path: Path, filename_glob: str = '*') -> list[str]:
+    """Return all files under *path* that match *filename_glob*.
+
+    Supports local directories, individual files, and VSI paths such as
+    cloud storage buckets and local archives (zip, tar, etc.).
+
+    Args:
+        path: Local directory, local file, or VSI path.
+        filename_glob: Glob pattern to match filenames against.
+
+    Returns:
+        Sorted list of matching file paths.
+
+    .. versionadded:: 0.10
+    """
+    files: set[str] = set()
+    if os.path.isdir(path):
+        pathname = os.path.join(path, '**', filename_glob)
+        files = set(glob.iglob(pathname, recursive=True))
+    elif os.path.isfile(path) and fnmatch.fnmatch(str(path), f'*{filename_glob}'):
+        files = {str(path)}
+    elif str(path).startswith('/vsi'):
+        all_files = _list_vsi_files(path)
+        files = {
+            f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
+        }
+    return sorted(files)

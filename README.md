@@ -68,7 +68,7 @@ from torch.utils.data import DataLoader
 
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 from torchgeo.datasets import CDL, Landsat7, Landsat8, VHR10, stack_samples
-from torchgeo.samplers import RandomGeoSampler
+from torchgeo.samplers import RandomPatchSampler
 from torchgeo.trainers import SemanticSegmentationTask
 ```
 
@@ -96,7 +96,7 @@ dataset = landsat & cdl
 This dataset can now be used with a PyTorch data loader. Unlike benchmark datasets, geospatial datasets often include very large images. For example, the CDL dataset consists of a single image covering the entire continental United States. In order to sample from these datasets using geospatial coordinates, TorchGeo defines a number of [_samplers_](https://torchgeo.readthedocs.io/en/stable/api/samplers.html). In this example, we'll use a random sampler that returns 256 x 256 pixel images and 10,000 samples per epoch. We also use a custom collation function to combine each sample dictionary into a mini-batch of samples.
 
 ```python
-sampler = RandomGeoSampler(dataset, size=256, length=10000)
+sampler = RandomPatchSampler(dataset, size=256, length=10000)
 dataloader = DataLoader(dataset, batch_size=128, sampler=sampler, collate_fn=stack_samples)
 ```
 

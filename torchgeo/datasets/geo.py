@@ -4,9 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
-import fnmatch
 import functools
-import glob
 import os
 import pathlib
 import re
@@ -40,6 +38,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .errors import DatasetNotFoundError
+from .mixins import PlottingMixin
 from .utils import (
     GeoSlice,
     Path,
@@ -48,13 +47,13 @@ from .utils import (
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
+    find_files,
     lazy_import,
     merge_samples,
-    path_is_vsi,
 )
 
 
-class GeoDataset(Dataset[Sample], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -312,7 +311,6 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         .. versionadded:: 0.5
         """
-        # Make iterable
         if isinstance(self.paths, str | os.PathLike):
             paths: Iterable[Path] = [cast(Path, self.paths)]
         else:
@@ -321,20 +319,15 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         # Using set to remove any duplicates if directories are overlapping
         files: set[str] = set()
         for path in paths:
-            if os.path.isdir(path):
-                pathname = os.path.join(path, '**', self.filename_glob)
-                files |= set(glob.iglob(pathname, recursive=True))
-            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
-                str(path), f'*{self.filename_glob}'
-            ):
-                files.add(str(path))
-            elif not hasattr(self, 'download'):
+            found = set(find_files(path, self.filename_glob))
+            if found:
+                files.update(found)
+            elif not os.path.isdir(path) and not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
                     f'Path was ignored.',
                     UserWarning,
                 )
-
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
 
@@ -1274,7 +1267,7 @@ class VectorDataset(GeoDataset):
         return 1
 
 
-class NonGeoDataset(Dataset[Sample], abc.ABC):
+class NonGeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
@@ -1471,10 +1464,18 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatial intersection')
 
+        # Remove duplicate columns with a suffix
+        # Pandas does not allow suffixes of suffixes
+        columns = ['filepath_1', 'filepath_2']
+        self.index.drop(columns=columns, inplace=True, errors='ignore')
+
+        name = 'datetime'
+        datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
+        datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')), name=name)
+        self.index.index = datetime_1
+
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
-            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
