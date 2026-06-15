@@ -7,17 +7,10 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import pyproj
-import rasterio
-import rasterio.windows
-import shapely.geometry
-import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
@@ -531,20 +524,10 @@ class ChesapeakeCVPR(GeoDataset):
         'spatial_index.geojson',
     )
 
-    p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
-        'epsg:26917': pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ),
-        'epsg:26918': pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ),
-    }
-
     def __init__(
         self,
         root: Path = 'data',
-        splits: Sequence[str] = ['de-train'],
+        splits: Sequence[str] = ['de-test'],
         layers: Sequence[str] = ['naip-new', 'lc'],
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
@@ -583,21 +566,28 @@ class ChesapeakeCVPR(GeoDataset):
 
         self._verify()
 
-        # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint = pd.Timestamp.min
-        maxt = pd.Timestamp.max
-        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
-        gdf = gdf[gdf['split'].isin(splits)]
-        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
-            'lc'
-        ].str.replace(
-            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
-        )
-        datetimes = [(mint, maxt)] * len(gdf)
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        gdf.set_crs('EPSG:3857', inplace=True)
-        gdf.set_index(index, inplace=True)
-        self.index = gdf
+        split_datasets = []
+        for split in splits:
+            state, split_type = split.split('-')
+            structure = os.path.join(self.root, '**', f'{state}_*-{split_type}_tiles')
+            all_dir = glob.glob(structure, recursive=True)
+            state_dir = str(all_dir[0])
+            split_dataset = ChesapeakeCVPRHelperClass(
+                paths=state_dir, layer=self.layers[0], cache=self.cache
+            )
+            for layer in self.layers[1:]:
+                new_part = ChesapeakeCVPRHelperClass(
+                    paths=state_dir, layer=layer, cache=self.cache
+                )
+                split_dataset &= new_part
+                split_dataset.index = split_dataset.index[['geometry']]
+            split_datasets.append(split_dataset)
+        self.datasets = split_datasets[0]
+        for dataset in split_datasets[1:]:
+            self.datasets |= dataset
+        self.index = self.datasets.index
+        self.crs = self.datasets.crs
+        self.res = self.datasets.res
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -611,78 +601,11 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             IndexError: If *index* is not found in the dataset.
         """
-        x, y, t = self._disambiguate_slice(index)
-        interval = pd.Interval(t.start, t.stop)
-        df = self.index.iloc[self.index.index.overlaps(interval)]
-        df = df.iloc[:: t.step]
-        df = df.cx[x.start : x.stop, y.start : y.stop]
-
-        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: Sample = {
-            'bounds': self._slice_to_tensor(index),
-            'transform': torch.tensor(transform),
-        }
-
-        images = []
-        masks = []
-        if df.empty:
-            raise IndexError(
-                f'index: {index} not found in dataset with bounds: {self.bounds}'
-            )
-        elif len(df) == 1:
-            filenames = df.iloc[0]
-            query_box_transformed = None  # is set by the first layer
-
-            query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
-
-            for layer in self.layers:
-                fn = filenames[layer]
-
-                with rasterio.open(os.path.join(self.root, fn)) as f:
-                    dst_crs = f.crs.to_string().lower()
-
-                    if query_box_transformed is None:
-                        query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs].transform, query_box
-                        ).envelope
-
-                    # Use a boundless windowed read so the returned array
-                    # always matches the requested patch shape, even when
-                    # the query extends beyond the raster footprint. The
-                    # out-of-raster region is filled with nodata (or 0 if
-                    # the raster has no nodata defined).
-                    window = rasterio.windows.from_bounds(
-                        *query_box_transformed.bounds, transform=f.transform
-                    )
-                    out_height = round(window.height)
-                    out_width = round(window.width)
-                    fill_value = f.nodata if f.nodata is not None else 0
-                    data = f.read(
-                        window=window,
-                        boundless=True,
-                        fill_value=fill_value,
-                        out_shape=(f.count, out_height, out_width),
-                    )
-
-                if layer in [
-                    'naip-new',
-                    'naip-old',
-                    'landsat-leaf-on',
-                    'landsat-leaf-off',
-                ]:
-                    images.append(data)
-                elif layer in [
-                    'lc',
-                    'nlcd',
-                    'buildings',
-                    'prior_from_cooccurrences_101_31_no_osm_no_buildings',
-                ]:
-                    masks.append(data)
-        else:
-            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
-
-        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
-        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
+        sample = self.datasets[index]
+        if 'image' in sample:
+            sample['image'] = sample['image'].float()
+        if 'mask' in sample:
+            sample['mask'] = sample['mask'].squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -817,3 +740,27 @@ class ChesapeakeCVPR(GeoDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class ChesapeakeCVPRHelperClass(RasterDataset):
+    """This is a helper class for the ChesapeakeCVPR dataset."""
+
+    def __init__(self, paths: str, layer: str, **kwargs: Any) -> None:
+        """Initialise helper class."""
+        self.filename_glob = f'*_{layer}.tif'
+        self.filename_regex = rf'^m_\d+_[a-z]+_\d+_\d+_{layer}\.tif'
+
+        self.is_image = layer in [
+            'naip-new',
+            'naip-old',
+            'landsat-leaf-on',
+            'landsat-leaf-off',
+        ]
+        super().__init__(paths, **kwargs)
+
+    def __getitem__(self, index: GeoSlice) -> dict:
+        """Sample image or mask."""
+        sample = super().__getitem__(index)
+        if 'mask' in sample:
+            sample['mask'] = sample['mask'].unsqueeze(0)
+        return sample

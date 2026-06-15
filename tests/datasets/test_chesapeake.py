@@ -181,15 +181,6 @@ class TestChesapeakeCVPR:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_multiple_hits_index(self, dataset: ChesapeakeCVPR) -> None:
-        ds = ChesapeakeCVPR(
-            root=dataset.root, splits=['de-train', 'de-test'], layers=dataset.layers
-        )
-        with pytest.raises(
-            IndexError, match=r'index: .* spans multiple tiles which is not valid'
-        ):
-            ds[dataset.bounds]
-
     def test_plot(self, dataset: ChesapeakeCVPR) -> None:
         x = dataset[dataset.bounds].copy()
         dataset.plot(x, suptitle='Test')
@@ -221,3 +212,34 @@ class TestChesapeakeCVPR:
         # least one column on the right should be zero-filled.
         assert torch.all(sample['image'][..., -1] == 0)
         assert torch.all(sample['mask'][..., -1] == 0)
+
+    def test_dataset_splits(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setattr(
+            ChesapeakeCVPR,
+            'urls',
+            {
+                'base': os.path.join(
+                    'tests',
+                    'data',
+                    'chesapeake',
+                    'cvpr',
+                    'cvpr_chesapeake_landcover.zip',
+                ),
+                'prior_extension': os.path.join(
+                    'tests',
+                    'data',
+                    'chesapeake',
+                    'cvpr',
+                    'cvpr_chesapeake_landcover_prior_extension.zip',
+                ),
+            },
+        )
+        monkeypatch.setattr(
+            ChesapeakeCVPR,
+            '_files',
+            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
+        )
+        dataset = ChesapeakeCVPR(
+            root=tmp_path, splits=['de-test', 'de-test'], download=True
+        )
+        assert isinstance(dataset.datasets, UnionDataset)
