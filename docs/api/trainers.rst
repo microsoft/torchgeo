@@ -27,13 +27,13 @@ Supervised learning tasks have both inputs and labeled outputs.
      - :math:`\mathbb{R}^{T \times C}`
      - :ref:`TemporalRegressionTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
-     - :math:`\mathbb{Z}` or :math:`\mathbb{Z}^C`
+     - :math:`\mathbb{N}` or :math:`\mathbb{N}^C`
      - :ref:`ClassificationTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
      - :math:`\mathbb{R}` or :math:`\mathbb{R}^C`
      - :ref:`RegressionTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
-     - :math:`\mathbb{Z}^{H \times W}`
+     - :math:`\mathbb{N}^{H \times W}`
      - :ref:`SemanticSegmentationTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
      - :math:`\mathbb{R}^{H \times W}`
@@ -42,13 +42,13 @@ Supervised learning tasks have both inputs and labeled outputs.
      - :math:`\mathbb{R}^{O \times 4}`
      - :ref:`ObjectDetectionTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
-     - :math:`\mathbb{Z}^{O \times H \times W}`
+     - :math:`\mathbb{N}^{O \times H \times W}`
      - :ref:`InstanceSegmentationTask`
    * - :math:`\mathbb{R}^{2 \times C \times H \times W}`
-     - :math:`\mathbb{Z}^{H \times W}`
+     - :math:`\mathbb{N}^{H \times W}`
      - :ref:`ChangeDetectionTask`
    * - :math:`\mathbb{R}^{T \times C \times H \times W}`
-     - :math:`\mathbb{Z}^{H \times W}`
+     - :math:`\mathbb{N}^{H \times W}`
      - :ref:`SpatioTemporalSegmentationTask`
 
 
@@ -105,7 +105,7 @@ Mixins
 
    * - Output
      - Mixin
-   * - :math:`\mathbb{Z}` or :math:`\mathbb{Z}^C` or :math:`\mathbb{Z}^{H \times W}`
+   * - :math:`\mathbb{N}` or :math:`\mathbb{N}^C` or :math:`\mathbb{N}^{H \times W}`
      - :ref:`ClassificationMixin`
    * - :math:`\mathbb{R}` or :math:`\mathbb{R}^C` or :math:`\mathbb{R}^{T \times C}` or :math:`\mathbb{R}^{H \times W}`
      - :ref:`RegressionMixin`
