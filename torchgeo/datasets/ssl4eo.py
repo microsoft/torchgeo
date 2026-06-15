@@ -106,20 +106,20 @@ class SSL4EOL(SSL4EO):
 
     class _Metadata(TypedDict):
         all_bands: tuple[str, ...]
-        rgb_bands: tuple[int, ...]
+        rgb_bands: list[int]
 
     metadata: ClassVar[dict[str, _Metadata]] = {
         'tm_toa': {
             'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
-            'rgb_bands': (2, 1, 0),
+            'rgb_bands': [2, 1, 0],
         },
         'etm_toa': {
             'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B6', 'B7', 'B8'),
-            'rgb_bands': (2, 1, 0),
+            'rgb_bands': [2, 1, 0],
         },
         'etm_sr': {
             'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B7'),
-            'rgb_bands': (2, 1, 0),
+            'rgb_bands': [2, 1, 0],
         },
         'oli_tirs_toa': {
             'all_bands': (
@@ -135,11 +135,11 @@ class SSL4EOL(SSL4EO):
                 'B10',
                 'B11',
             ),
-            'rgb_bands': (3, 2, 1),
+            'rgb_bands': [3, 2, 1],
         },
         'oli_sr': {
             'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
-            'rgb_bands': (3, 2, 1),
+            'rgb_bands': [3, 2, 1],
         },
     }
 
