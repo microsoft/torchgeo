@@ -63,7 +63,7 @@ class TestForestChange:
     def test_dtypes(self, dataset: ForestChange, key: str, dtype: torch.dtype) -> None:
         assert dataset[0][key].dtype == dtype
 
-    def test_caption_selection(self, dataset: ForestChange):
+    def test_caption_selection(self, dataset: ForestChange) -> None:
         random.seed(0)
 
         tokens_seen = {tuple(dataset[0]['token'].numpy()) for _ in range(20)}
