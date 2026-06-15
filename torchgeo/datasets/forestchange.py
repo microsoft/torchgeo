@@ -519,7 +519,7 @@ class ForestChange(NonGeoDataset):
 
         files: list[dict[str, Any]] = []
         for name in img_ids:
-            if self.split == 'train' and '-' in name:
+            if '-' in name:
                 base_name = name.split('-')[0]
                 token_id: int | None = int(name.split('-')[-1])
             else:
