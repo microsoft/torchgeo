@@ -273,9 +273,18 @@ class IJEPATask(BaseTask):
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
 
-        vit = timm.create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
-        )
+        try:
+            vit = timm.create_model(
+                model,
+                in_chans=in_channels,
+                num_classes=0,
+                img_size=self.hparams['size'],
+                pretrained=weights is True,
+            )
+        except TypeError:
+            vit = timm.create_model(
+                model, in_chans=in_channels, num_classes=0, pretrained=weights is True
+            )
         if not isinstance(vit, VisionTransformer):
             raise ValueError(
                 f'Model {model} is not a ViT architecture, which is required for'
