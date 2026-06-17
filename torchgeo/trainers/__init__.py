@@ -8,6 +8,7 @@ from .byol import BYOLTask
 from .change import ChangeDetectionTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
+from .ijepa import IJEPATask
 from .instance_segmentation import InstanceSegmentationTask
 from .iobench import IOBenchTask
 from .mae import MAETask
@@ -25,6 +26,7 @@ __all__ = (
     'ChangeDetectionTask',
     'ClassificationMixin',
     'ClassificationTask',
+    'IJEPATask',
     'IOBenchTask',
     'InstanceSegmentationTask',
     'MAETask',
