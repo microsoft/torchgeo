@@ -213,7 +213,7 @@ class IJEPATask(BaseTask):
         predictor_depth: int = 6,
         predictor_num_heads: int = 12,
         lr: float = 1e-3,
-        weight_decay: float = 0.04,
+        weight_decay: float = 1e-2,
         warmup_epochs: int = 40,
         size: int = 224,
         enc_mask_scale: tuple[float, float] = (0.85, 1.0),
