@@ -286,7 +286,6 @@ class IJEPATask(BaseTask):
         if not isinstance(vit, VisionTransformer):
             raise ValueError('Model not compatible with IJEPA:', vit.__class__.__name__)
 
-
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
                 state_dict = weights.get_state_dict(progress=True)
