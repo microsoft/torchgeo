@@ -47,8 +47,8 @@ dependencies = [
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
-    # lightly 1.5.1+ required for lightly.models.modules.MAEDecoderTIMM
-    "lightly>=1.5.1",
+    # lightly 1.5.11+ required for lightly.models.modules.IJEPAPredictorTIMM
+    "lightly>=1.5.11",
     # lightning 2.4+ required for fastapi and pydantic v2 support in lightning
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
