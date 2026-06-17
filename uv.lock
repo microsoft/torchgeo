@@ -1556,7 +1556,7 @@ wheels = [
 
 [[package]]
 name = "lightly"
-version = "1.5.24"
+version = "1.5.25"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aenum" },
@@ -1574,9 +1574,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/ac/4f8c006500abe8ad50c61df543caaea60379ef904c172998365e6f34d5a3/lightly-1.5.24.tar.gz", hash = "sha256:86b7d53146cb7b404a5d27f63b647a3fb34e2a1ea05bc231c6a188dd26dfffce", size = 418098, upload-time = "2026-05-28T18:01:19.772Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/ad/8509b09169667d009ae1697159dc1f671aa995f3a0e82ece7e74bea317cc/lightly-1.5.25.tar.gz", hash = "sha256:8504fee639eb51b0baf44b18fc22c9e8c6956b64be60a531059380d089672c08", size = 419362, upload-time = "2026-06-17T18:13:52.793Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/f3/a08e60d3c9c7ca4b4fbc995605dfbacde2ac6cf429f3190793a547788732/lightly-1.5.24-py3-none-any.whl", hash = "sha256:be5934212f62188cf1a4670d3fd1816925ec6a089567e01904f618d8db64e084", size = 870706, upload-time = "2026-05-28T18:01:18.01Z" },
+    { url = "https://files.pythonhosted.org/packages/17/43/a97541d3768bcb48b6a81dd40131c2dddf76f00117f2c5f1219f4b1b2992/lightly-1.5.25-py3-none-any.whl", hash = "sha256:f3fa9c2bf67ac81947bbfee0082a2b355c68f15242ad8b52549ecb4c95d71805", size = 871757, upload-time = "2026-06-17T18:13:50.975Z" },
 ]
 
 [[package]]
