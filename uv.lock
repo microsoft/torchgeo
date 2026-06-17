@@ -3844,7 +3844,7 @@ requires-dist = [
     { name = "jsonargparse", extras = ["jsonnet", "signatures"], specifier = ">=4.39" },
     { name = "kornia", specifier = ">=0.8.2" },
     { name = "laspy", marker = "extra == 'datasets'", specifier = ">=2.5.3" },
-    { name = "lightly", specifier = ">=1.5.11" },
+    { name = "lightly", specifier = ">=1.5.17" },
     { name = "lightning", specifier = ">=2.4,!=2.5.0,!=2.5.5,!=2.5.6" },
     { name = "matplotlib", specifier = ">=3.7.3" },
     { name = "microsoft-aurora", marker = "extra == 'models'", specifier = ">=1.6" },
