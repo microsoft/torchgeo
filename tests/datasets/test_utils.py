@@ -7,12 +7,14 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 import torch
 from numpy.typing import NDArray
+from pytest import MonkeyPatch
 from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
@@ -381,6 +383,23 @@ def test_download_url(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match=r'Downloaded file .* is corrupted'):
         download_url(url, tmp_path, md5=md5 + '2')
+
+
+def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    filename = 'NWPU VHR-10 dataset.zip'
+
+    def interrupt(*args: Any, **kwargs: Any) -> None:
+        raise OSError('simulated network reset')
+
+    monkeypatch.setattr(shutil, 'copyfileobj', interrupt)
+
+    with pytest.raises(OSError, match='simulated network reset'):
+        download_url(url, tmp_path, filename=filename)
+
+    # Neither a truncated final file nor a leftover temporary file should remain.
+    assert not (tmp_path / filename).exists()
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_download_and_extract_archive(tmp_path: Path) -> None:
