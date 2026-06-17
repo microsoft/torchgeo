@@ -360,11 +360,7 @@ class IJEPATask(BaseTask):
             The momentum value for the current training step.
         """
         self._momentum_iter += 1
-        max_steps = 1
-        try:
-            max_steps = self.trainer.estimated_stepping_batches  # type: ignore[union-attr]
-        except RuntimeError:
-            pass
+        max_steps = self.trainer.estimated_stepping_batches
         progress = self._momentum_iter / max(max_steps, 1)
         progress = min(progress, 1.0)
         momentum: float = self.ema[0] + progress * (self.ema[1] - self.ema[0])
