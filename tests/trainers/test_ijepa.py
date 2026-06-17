@@ -51,7 +51,7 @@ class TestIJEPATask:
         main(['fit', *args])
 
     def test_wrong_model_type(self) -> None:
-        with pytest.raises(ValueError, match='is not a ViT architecture'):
+        with pytest.raises(ValueError, match='not compatible with IJEPA'):
             IJEPATask(model='resnet18', weights=None)
 
     def test_ijepa_to_changevit(self, tmp_path: Path) -> None:

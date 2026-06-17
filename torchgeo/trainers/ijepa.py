@@ -281,15 +281,11 @@ class IJEPATask(BaseTask):
                 img_size=self.hparams['size'],
                 pretrained=weights is True,
             )
-        except TypeError:
-            vit = timm.create_model(
-                model, in_chans=in_channels, num_classes=0, pretrained=weights is True
-            )
+        except Exception as e:
+            raise ValueError('Model not compatible with IJEPA:', e)
         if not isinstance(vit, VisionTransformer):
-            raise ValueError(
-                f'Model {model} is not a ViT architecture, which is required for'
-                ' IJEPA training.'
-            )
+            raise ValueError('Model not compatible with IJEPA:', vit.__class__.__name__)
+
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
