@@ -15,7 +15,6 @@ import pathlib
 import shutil
 import subprocess
 import tarfile
-import urllib.request
 import warnings
 import zipfile
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -26,6 +25,7 @@ from typing import Any, TypeAlias, cast, overload
 import numpy as np
 import pandas as pd
 import rasterio
+import requests
 import shapely.affinity
 import torch
 from pandas import Timedelta, Timestamp
@@ -392,6 +392,9 @@ def download_url(
 ) -> None:
     """Download a file from a url and place it in root.
 
+    Uses :mod:`requests` so that servers requiring a browser-like User-Agent
+    (e.g. Figshare) and multi-hop redirects are handled correctly.
+
     Examples:
         download_url(url, root)
         download_url(url, root, md5='...')
@@ -407,7 +410,7 @@ def download_url(
 
     Raises:
         RuntimeError: If checksum of downloaded file does not match.
-        urllib.error.URLError: If download fails.
+        requests.exceptions.RequestException: If download fails.
     """
     if not filename:
         filename = os.path.basename(url)
@@ -417,11 +420,31 @@ def download_url(
 
     fpath = os.path.join(root, filename)
     if not check_integrity(fpath, md5, **kwargs):
+        # Use requests so that:
+        # 1. A browser-like User-Agent is sent (required by Figshare and similar hosts
+        #    that return HTTP 403 to the default Python urllib agent).
+        # 2. Multi-hop redirects (e.g. Figshare → S3/CDN) are followed automatically.
         # TODO: use fsspec if we want AWS/Azure/GCS support
         # TODO: use gdown if we want Google Drive support
-        # TODO: use requests if we want redirect support
         # TODO: use tqdm if we want a progress bar
-        urllib.request.urlretrieve(url, fpath)
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/124.0.0.0 Safari/537.36'
+            )
+        }
+        response = requests.get(
+            url,
+            headers=headers,
+            stream=True,
+            allow_redirects=True,
+            timeout=60,
+        )
+        response.raise_for_status()
+        with open(fpath, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
         if not check_integrity(fpath, md5, **kwargs):
             raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
 

@@ -58,10 +58,14 @@ class NCCM(RasterDataset):
 
     date_format = '%Y'
     is_image = False
+    # The figshare.com/ndownloader/... frontend is protected by AWS WAF and
+    # returns HTTP 202 (JavaScript challenge) to programmatic clients.
+    # The public Figshare API endpoint bypasses the WAF and redirects directly
+    # to the underlying storage server.
     urls: ClassVar[dict[int, str]] = {
-        2019: 'https://figshare.com/ndownloader/files/25070540',
-        2018: 'https://figshare.com/ndownloader/files/25070624',
-        2017: 'https://figshare.com/ndownloader/files/25070582',
+        2019: 'https://api.figshare.com/v2/file/download/25070540',
+        2018: 'https://api.figshare.com/v2/file/download/25070624',
+        2017: 'https://api.figshare.com/v2/file/download/25070582',
     }
     md5s: ClassVar[dict[int, str]] = {
         2019: '0d062bbd42e483fdc8239d22dba7020f',
