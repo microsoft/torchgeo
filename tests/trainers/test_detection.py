@@ -166,29 +166,31 @@ class TestPointDetectionTask:
     def test_point_metrics(self) -> None:
         model = PointDetectionTask(
             backbone='resnet18',
-            num_classes=2,
+            num_classes=3,
             distance_threshold=5,
             score_threshold=0.5,
         )
         batch = {
             'image': torch.zeros(1, 3, 32, 32),
             'points': [torch.tensor([[5, 5], [20, 20]], dtype=torch.float32)],
-            'label': [torch.tensor([1, 1])],
+            'label': [torch.tensor([1, 2])],
         }
         predictions = [
             {
                 'boxes': torch.tensor(
-                    [[3, 3, 7, 7], [18, 18, 22, 22], [25, 25, 29, 29]],
+                    [[3, 3, 7, 7], [18, 18, 22, 22], [19, 19, 23, 23]],
                     dtype=torch.float32,
                 ),
-                'labels': torch.tensor([1, 1, 1]),
+                'labels': torch.tensor([1, 1, 2]),
                 'scores': torch.tensor([0.9, 0.8, 0.7]),
             }
         ]
 
         metrics = model._point_metrics(batch, predictions, prefix='val_')
 
+        assert torch.equal(metrics['val_point_tp'], torch.tensor(2.0))
+        assert torch.equal(metrics['val_point_fp'], torch.tensor(1.0))
+        assert torch.equal(metrics['val_point_fn'], torch.tensor(0.0))
         assert torch.isclose(metrics['val_point_precision'], torch.tensor(2 / 3))
         assert torch.equal(metrics['val_point_recall'], torch.tensor(1.0))
         assert torch.isclose(metrics['val_point_f1'], torch.tensor(0.8))
-        assert torch.equal(metrics['val_point_count_mae'], torch.tensor(1.0))

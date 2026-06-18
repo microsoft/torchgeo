@@ -448,7 +448,7 @@ class PointDetectionTask(ObjectDetectionTask):
     def _point_metrics(
         self, batch: Sample, predictions: list[dict[str, Tensor]], prefix: str
     ) -> dict[str, Tensor]:
-        """Compute point precision, recall, F1, and count MAE."""
+        """Compute point detection TP, FP, FN, precision, recall, and F1."""
         device = batch['image'].device
         score_threshold: float = self.hparams['score_threshold']
         distance_threshold: float = self.hparams['distance_threshold']
@@ -456,41 +456,61 @@ class PointDetectionTask(ObjectDetectionTask):
         total_tp = torch.tensor(0.0, device=device)
         total_fp = torch.tensor(0.0, device=device)
         total_fn = torch.tensor(0.0, device=device)
-        total_count_error = torch.tensor(0.0, device=device)
 
         for i, prediction in enumerate(predictions):
-            pred_scores = prediction['scores']
-            keep = pred_scores >= score_threshold
-            pred_points = boxes_to_points(prediction['boxes'][keep])
-            pred_labels = prediction['labels'][keep]
-            pred_scores = pred_scores[keep]
+            prediction = self._prediction_to_points(prediction, score_threshold)
+            pred_points = prediction['points']
+            pred_labels = prediction['labels']
 
             target_points = self._target_points(batch, i).to(device)
             target_labels = batch['label'][i].to(device)
 
-            tp, fp, fn = self._match_points(
+            matched_pred, unmatched_pred, unmatched_gt = self._match_points(
                 pred_points,
                 pred_labels,
-                pred_scores,
                 target_points,
                 target_labels,
                 distance_threshold,
             )
-            total_tp += tp
-            total_fp += fp
-            total_fn += fn
-            total_count_error += abs(len(pred_points) - len(target_points))
+            total_tp += matched_pred.numel()
+            total_fp += unmatched_pred.numel()
+            total_fn += unmatched_gt.numel()
 
         precision = total_tp / (total_tp + total_fp).clamp(min=1)
         recall = total_tp / (total_tp + total_fn).clamp(min=1)
         f1 = 2 * precision * recall / (precision + recall).clamp(min=1e-12)
-        count_mae = total_count_error / len(predictions)
 
         return {
+            f'{prefix}point_tp': total_tp,
+            f'{prefix}point_fp': total_fp,
+            f'{prefix}point_fn': total_fn,
             f'{prefix}point_precision': precision,
             f'{prefix}point_recall': recall,
             f'{prefix}point_f1': f1,
-            f'{prefix}point_count_mae': count_mae,
+        }
+
+    def _prediction_to_points(
+        self, prediction: dict[str, Tensor], score_threshold: float
+    ) -> dict[str, Tensor]:
+        """Convert an object detector prediction to point detections."""
+        scores = prediction.get(
+            'scores',
+            torch.ones(
+                (prediction['boxes'].shape[0],),
+                dtype=prediction['boxes'].dtype,
+                device=prediction['boxes'].device,
+            ),
+        )
+        keep = scores >= score_threshold
+        if 'points' in prediction:
+            points = prediction['points']
+        else:
+            points = boxes_to_points(prediction['boxes'])
+
+        return {
+            'points': points[keep],
+            'scores': scores[keep],
+            'labels': prediction['labels'][keep],
         }
 
     def _target_points(self, batch: Sample, index: int) -> Tensor:
@@ -503,34 +523,62 @@ class PointDetectionTask(ObjectDetectionTask):
         self,
         pred_points: Tensor,
         pred_labels: Tensor,
-        pred_scores: Tensor,
         target_points: Tensor,
         target_labels: Tensor,
         distance_threshold: float,
     ) -> tuple[Tensor, Tensor, Tensor]:
-        """Greedily match predicted points to target points by class and distance."""
+        """One-to-one match points by class and distance."""
         device = pred_points.device
-        true_positive = torch.tensor(0.0, device=device)
-        false_positive = torch.tensor(0.0, device=device)
-        matched = torch.zeros(len(target_points), dtype=torch.bool, device=device)
+        pred_count = pred_points.shape[0]
+        target_count = target_points.shape[0]
 
-        for idx in torch.argsort(pred_scores, descending=True):
-            same_class = target_labels == pred_labels[idx]
-            available = same_class & ~matched
-            if not available.any():
-                false_positive += 1
-                continue
-
-            target_indices = torch.where(available)[0]
-            distances = torch.linalg.vector_norm(
-                target_points[target_indices] - pred_points[idx], dim=1
+        if pred_count == 0:
+            return (
+                torch.empty(0, dtype=torch.int64, device=device),
+                torch.empty(0, dtype=torch.int64, device=device),
+                torch.arange(target_count, dtype=torch.int64, device=device),
             )
-            min_distance, min_index = distances.min(dim=0)
-            if min_distance <= distance_threshold:
-                matched[target_indices[min_index]] = True
-                true_positive += 1
-            else:
-                false_positive += 1
+        if target_count == 0:
+            return (
+                torch.empty(0, dtype=torch.int64, device=device),
+                torch.arange(pred_count, dtype=torch.int64, device=device),
+                torch.empty(0, dtype=torch.int64, device=device),
+            )
 
-        false_negative = (~matched).sum().float()
-        return true_positive, false_positive, false_negative
+        distances = torch.cdist(pred_points.float(), target_points.float())
+        same_class = pred_labels[:, None] == target_labels[None, :]
+        candidate_pred, candidate_target = torch.where(
+            same_class & (distances <= distance_threshold)
+        )
+        if candidate_pred.numel() == 0:
+            return (
+                torch.empty(0, dtype=torch.int64, device=device),
+                torch.arange(pred_count, dtype=torch.int64, device=device),
+                torch.arange(target_count, dtype=torch.int64, device=device),
+            )
+
+        candidate_distances = distances[candidate_pred, candidate_target]
+        order = torch.argsort(candidate_distances)
+        used_pred: set[int] = set()
+        used_target: set[int] = set()
+        matched_pred: list[int] = []
+
+        for idx in order.tolist():
+            pred_idx = int(candidate_pred[idx])
+            target_idx = int(candidate_target[idx])
+            if pred_idx in used_pred or target_idx in used_target:
+                continue
+            used_pred.add(pred_idx)
+            used_target.add(target_idx)
+            matched_pred.append(pred_idx)
+
+        unmatched_pred = [idx for idx in range(pred_count) if idx not in used_pred]
+        unmatched_target = [
+            idx for idx in range(target_count) if idx not in used_target
+        ]
+
+        return (
+            torch.tensor(matched_pred, dtype=torch.int64, device=device),
+            torch.tensor(unmatched_pred, dtype=torch.int64, device=device),
+            torch.tensor(unmatched_target, dtype=torch.int64, device=device),
+        )
