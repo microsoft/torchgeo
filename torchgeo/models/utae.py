@@ -196,8 +196,11 @@ class UTAE(nn.Module):
 class TemporalAggregator(nn.Module):
     """Aggregate a temporal sequence of feature maps into a single frame.
 
-    Uses per-head L-TAE attention masks to weight the corresponding channel
-    groups in the skip connection.
+    Builds the U-Net skip connection in U-TAE by collapsing the temporal
+    dimension of encoder feature maps. The aggregation uses per-head L-TAE
+    attention masks to weight the corresponding channel groups in the skip
+    connection.
+
     """
 
     def forward(
@@ -230,6 +233,8 @@ class TemporalAggregator(nn.Module):
         attn = attn.view(n_heads, b, t, *x.shape[-2:])
 
         if pad_mask is not None and pad_mask.any():
+            # Ignore temporally padded frames so fixed-length batches do not
+            # leak padding images into U-Net skip connections.
             attn = attn * (~pad_mask).float()[None, :, :, None, None]
 
         self._check_att_group_channels(x, n_heads)
