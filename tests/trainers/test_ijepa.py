@@ -155,24 +155,14 @@ class TestIJEPATask:
 
         ckpt_path = tmp_path / 'autosave.ckpt'
         trainer.save_checkpoint(str(ckpt_path))
-        checkpoint = torch.load(ckpt_path, map_location=torch.device('cpu'))
 
-        encoder_sd: dict[str, torch.Tensor] = {}
-        for k, v in checkpoint['state_dict'].items():
-            if k.startswith('model.encoder.'):
-                encoder_sd[k.replace('model.encoder.', 'model.')] = v
-
-        compatible_ckpt = {
-            'hyper_parameters': {'model': 'vit_tiny_patch16_224'},
-            'state_dict': encoder_sd,
-        }
-        compatible_path = tmp_path / 'compatible.ckpt'
-        torch.save(compatible_ckpt, compatible_path)
+        # This tests the on_load_checkpoint() overload
+        trainer.fit(ijepa, train_dataloaders=dataloader, ckpt_path=ckpt_path)
 
         change = ChangeDetectionTask(
             model='changevit',
             backbone='vit_tiny_patch16_224',
-            weights=str(compatible_path),
+            weights=str(ckpt_path),
             in_channels=3,
         )
         x = torch.randn(1, 2, 3, 256, 256)
@@ -180,4 +170,3 @@ class TestIJEPATask:
         assert y.shape == (1, 1, 256, 256)
 
         ckpt_path.unlink()
-        compatible_path.unlink()

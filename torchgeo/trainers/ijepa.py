@@ -4,6 +4,7 @@
 """IJEPA trainer for self-supervised learning (SSL)."""
 
 import copy
+from typing import Any
 
 import timm
 import torch
@@ -350,6 +351,33 @@ class IJEPATask(BaseTask):
             'optimizer': optim,
             'lr_scheduler': {'scheduler': scheduler, 'interval': 'epoch'},
         }
+
+    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Makes checkpoints compatible with other trainers' backbone weights.
+
+        Replaces 'model.encoder.' prefix with 'model.' for compatibility with utils.extract_backbone.
+        Replaces 'model.(predictor|target_encoder).' with '(predictor|target_encoder).' so they are
+        ignored in utils.extract_backbone.
+        """
+        sd: dict[str, Any] = checkpoint['state_dict']
+        sd_new = {}
+        for k, v in sd.items():
+            if k.startswith('model.predictor') or k.startswith('model.target_encoder'):
+                sd_new[k.removeprefix('model.')] = v
+            else:
+                sd_new[k.replace('model.encoder.', 'model.', 1)] = v
+        checkpoint['state_dict'] = sd_new
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Undoes the prefix removal from on_save_checkpoint."""
+        sd: dict[str, Any] = checkpoint['state_dict']
+        sd_new = {}
+        for k, v in sd.items():
+            if k.startswith('predictor') or k.startswith('target_encoder'):
+                sd_new[f'model.{k}'] = v
+            else:
+                sd_new[k.replace('model.', 'model.encoder.', 1)] = v
+        checkpoint['state_dict'] = sd_new
 
     def _get_momentum(self) -> float:
         """Get the current EMA momentum value.
