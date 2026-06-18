@@ -87,24 +87,22 @@ class STACDataset(RasterDataset):
         # read parquet file and apply pushdown filters
         uri = str(index_path)
         scheme = urlparse(uri).scheme.lower()
-        kwargs: dict[str, object] = {}
-        if filters:
-            kwargs['filters'] = filters
-        if intersects_bbox:
-            kwargs['bbox'] = intersects_bbox
+        parquet_filters = filters
+        parquet_bbox = intersects_bbox
+        parquet_filesystem: Any | None = None
 
         time_filters = None
         if time_range:
             t_start, t_end = pd.Timestamp(time_range[0]), pd.Timestamp(time_range[1])
             time_filters = [('datetime', '>=', t_start), ('datetime', '<=', t_end)]
-            if 'filters' not in kwargs:
-                kwargs['filters'] = time_filters
-            elif isinstance(kwargs['filters'], list) and len(kwargs['filters']) > 0:
-                base_filters = cast(list[Any], kwargs['filters'])
+            if parquet_filters is None:
+                parquet_filters = time_filters
+            elif len(parquet_filters) > 0:
+                base_filters = cast(list[Any], parquet_filters)
                 if isinstance(base_filters[0], tuple):
-                    kwargs['filters'] = base_filters + time_filters
+                    parquet_filters = base_filters + time_filters
                 elif isinstance(base_filters[0], list):
-                    kwargs['filters'] = [f + time_filters for f in base_filters]
+                    parquet_filters = [f + time_filters for f in base_filters]
 
         read_path = index_path
         if scheme:
@@ -118,7 +116,7 @@ class STACDataset(RasterDataset):
                 # fsspec raises ImportError when a scheme-specific backend like
                 # s3fs, gcsfs, or adlfs is not installed.
                 fs, read_path = fsspec.core.url_to_fs(uri, **opts)
-                kwargs['filesystem'] = fs
+                parquet_filesystem = fs
             except ImportError:
                 pkg = {
                     's3': 's3fs',
@@ -129,15 +127,27 @@ class STACDataset(RasterDataset):
                 }.get(scheme, 'fsspec')
                 raise DependencyNotFoundError(pkg)
 
+        def read_index() -> GeoDataFrame:
+            if parquet_filters is None:
+                return gpd.read_parquet(
+                    read_path, bbox=parquet_bbox, filesystem=parquet_filesystem
+                )
+            return gpd.read_parquet(
+                read_path,
+                bbox=parquet_bbox,
+                filters=parquet_filters,
+                filesystem=parquet_filesystem,
+            )
+
         try:
-            df = gpd.read_parquet(read_path, **kwargs)
+            df = read_index()
         except Exception as e:
             err_str = str(e)
             err_type = type(e).__name__
 
             if isinstance(e, ValueError) and 'bbox' in err_str and intersects_bbox:
-                kwargs.pop('bbox')
-                df = gpd.read_parquet(read_path, **kwargs)
+                parquet_bbox = None
+                df = read_index()
                 minx, miny, maxx, maxy = intersects_bbox
                 df = df.cx[minx:maxx, miny:maxy]
             elif time_filters and (
@@ -145,10 +155,8 @@ class STACDataset(RasterDataset):
             ):
                 # GeoPandas/PyArrow vary in how they fail timestamp pushdown,
                 # so retry without time filters and apply the exact filter below.
-                kwargs['filters'] = filters if filters else None
-                if kwargs['filters'] is None:
-                    kwargs.pop('filters')
-                df = gpd.read_parquet(read_path, **kwargs)
+                parquet_filters = filters
+                df = read_index()
             elif isinstance(e, ValueError) and 'Missing geo metadata' in err_str:
                 raise ValueError('STAC GeoParquet is missing geometry.')
             else:
