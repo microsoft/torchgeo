@@ -6,8 +6,12 @@
 import math
 from typing import overload
 
+import numpy as np
 import torch
+from numpy.typing import NDArray
+from pandas import Timedelta
 from torch import Generator
+from typing_extensions import deprecated
 
 
 @overload
@@ -33,6 +37,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
         return value
 
 
+@deprecated('Use geopandas.GeoSeries.sample_points instead')
 def get_random_bounding_box(
     bounds: tuple[float, float, float, float],
     size: tuple[float, float] | float,
@@ -78,6 +83,7 @@ def get_random_bounding_box(
     return slice(xmin, xmax), slice(ymin, ymax)
 
 
+@deprecated('Use torchgeo.samplers.utils.convolution_arithmetic instead')
 def tile_to_chips(
     bounds: tuple[float, float, float, float],
     size: tuple[float, float],
@@ -120,3 +126,74 @@ def tile_to_chips(
     cols = math.ceil((xmax - xmin - size[1]) / stride[1]) + 1
 
     return rows, cols
+
+
+def convolution_arithmetic[T: (float, Timedelta)](
+    input_size: T, kernel_size: T, stride: T | None = None
+) -> int:
+    r"""Compute number of spatial/temporal windows that can be sampled via convolution.
+
+    Let :math:`i` be the size of the input window.
+    Let :math:`k` be the requested size of the output window.
+    Let :math:`s` be the requested stride.
+    Let :math:`o` be the number of output windows sampled from each input.
+
+    :math:`o` can then be computed as:
+
+    .. math::
+
+       o = \left\lceil \frac{i - k}{s} \right\rceil + 1
+
+    This is almost identical to relationship 5 in
+    https://doi.org/10.48550/arXiv.1603.07285. However, we use ceiling instead of floor
+    because we want to include the final remaining window in each input when
+    *input_size* is not an integer multiple of *stride*.
+
+    Args:
+        input_size: Size of the input window.
+        kernel_size: Size of each output window.
+        stride: Stride with which to sample (defaults to *input_size*).
+
+    Returns:
+        The number of output windows that can be sampled.
+
+    .. versionadded:: 0.10
+    """
+    stride = stride or kernel_size
+    return math.ceil((input_size - kernel_size) / stride) + 1  # ty: ignore[no-matching-overload]
+
+
+def prism(x: NDArray, y: NDArray, z: NDArray) -> list[NDArray]:
+    """Convert x, y, z coordinates to the vertices of a prism.
+
+    Args:
+        x: All x coordinates of a Polygon.
+        y: All y coordinates of a Polygon.
+        z: Two z coordinates to project the Polygon into.
+
+    Returns:
+        The vertices of a 3D prism.
+
+    Raises:
+        AssertionError: If len(x) != len(y) or len(z) != 2.
+    """
+    assert len(x) == len(y)
+    assert len(z) == 2
+    verts = []
+
+    # Bottom face
+    z0 = z[0].repeat(len(x))
+    verts.append(np.stack([x, y, z0]).T)
+
+    # Top face
+    z1 = z[1].repeat(len(x))
+    verts.append(np.stack([x, y, z1]).T)
+
+    # Side faces
+    zi = np.array([z[0], z[0], z[1], z[1], z[0]])
+    for i in range(len(x) - 1):
+        xi = np.array([x[i], x[i + 1], x[i + 1], x[i], x[i]])
+        yi = np.array([y[i], y[i + 1], y[i + 1], y[i], y[i]])
+        verts.append(np.stack([xi, yi, zi]).T)
+
+    return verts

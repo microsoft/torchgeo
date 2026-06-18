@@ -1,0 +1,16 @@
+model:
+  class_path: TemporalRegressionTask
+  init_args:
+    in_channels: 17
+    num_outputs: 17
+    loss: 'mae'
+  dict_kwargs:
+    len_max_seq: 3
+data:
+  class_path: AirQualityDataModule
+  init_args:
+    batch_size: 2
+    val_split_pct: 0.3
+    test_split_pct: 0.3
+  dict_kwargs:
+    root: 'tests/data/air_quality'

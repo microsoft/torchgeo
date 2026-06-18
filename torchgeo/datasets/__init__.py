@@ -6,6 +6,7 @@
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .agrifieldnet import AgriFieldNet
+from .air_quality import AirQuality
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -61,6 +62,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
+from .dlrsd import DLRSD, DLRSDBase, DLRSDMultilabel
 from .dota import DOTA
 from .earth_embeddings import EarthEmbeddings
 from .earth_index import EarthIndexEmbeddings
@@ -122,6 +124,7 @@ from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
+from .mixins import PlottingMixin
 from .mmearth import MMEarth
 from .mmflood import MMFlood
 from .naip import NAIP
@@ -201,6 +204,7 @@ __all__ = (
     'COWC',
     'DFC2022',
     'DIOR',
+    'DLRSD',
     'DOTA',
     'ETCI2021',
     'EUDEM',
@@ -227,6 +231,7 @@ __all__ = (
     'VHR10',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
+    'AirQuality',
     'Airphen',
     'AsterGDEM',
     'BeninSmallHolderCashews',
@@ -274,6 +279,8 @@ __all__ = (
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
+    'DLRSDBase',
+    'DLRSDMultilabel',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
@@ -336,6 +343,7 @@ __all__ = (
     'OpenBuildings',
     'OpenStreetMap',
     'PatternNet',
+    'PlottingMixin',
     'Potsdam2D',
     'PrestoEmbeddings',
     'QuakeSet',

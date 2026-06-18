@@ -1,13 +1,14 @@
 [build-system]
 requires = [
-    # setuptools 77.0.1+ required for PEP 639 support
-    "setuptools>=77.0.1",
+    # uv-build 0.7+ required for bdist reorganization
+    "uv_build>=0.7,<0.12",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "uv_build"
 
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 [project]
 name = "torchgeo"
+version = "0.10.0.dev0"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -41,8 +42,8 @@ dependencies = [
     "einops>=0.3",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "geopandas>=1.0",
-    # jsonargparse 4.35+ required for Python 3.12.8+ support
-    "jsonargparse[signatures]>=4.35",
+    # jsonargparse 4.39+ required to match lightning's own jsonargparse dependency
+    "jsonargparse[jsonnet,signatures]>=4.39",
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
@@ -62,6 +63,8 @@ dependencies = [
     "pandas>=2.1.1",
     # pillow 10+ required for Python 3.12 wheels
     "pillow>=10",
+    # pyogrio 0.10+ required for pyogrio.vsi_listtree (VSI support)
+    "pyogrio>=0.10",
     # pyproj 3.6.1+ required for Python 3.12 wheels
     "pyproj>=3.6.1",
     # rasterio 1.4+ required for rasterio.merge.merge support for positive y-resolution
@@ -79,15 +82,14 @@ dependencies = [
     "timm>=1.0.3",
     # torch 2.2+ required for Python 3.12 wheels
     "torch>=2.2",
-    # torchmetrics 1.2+ required for average argument in mAP metric
-    "torchmetrics[detection]>=1.2",
+    # torchmetrics 1.5+ required for num_outputs parameter in MAE metric
+    "torchmetrics[detection]>=1.5",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
     # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
@@ -112,15 +114,14 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
-    # myst-parser 0.18.0+ required for sphinx 5.0+ compatibility
-    "myst-parser>=0.18.0",
+    # myst-parser 4+ required for sphinx 8+ compatibility
+    "myst-parser>=4",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
-    # pydata-sphinx-theme 0.14.0+ required for sphinx 5.0+ compatibility
-    "pydata-sphinx-theme>=0.14.0",
-    # sphinx 5.3+ required to allow section titles inside autodoc class docstrings
-    # https://github.com/sphinx-doc/sphinx/pull/10887
-    "sphinx>=5.3",
+    # pydata-sphinx-theme 0.18+ required for font awesome 7
+    "pydata-sphinx-theme>=0.18",
+    # sphinx 8+ required by pydata-sphinx-theme 0.18+
+    "sphinx>=8",
     # sphinx-github-changelog 1.7.2+ required for image URL fix
     "sphinx-github-changelog>=1.7.2",
 ]
@@ -135,8 +136,8 @@ style = [
     "pandas-stubs>=2.1.1",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
-    # ty 0.0.33+ required for latest type checking changes
-    "ty>=0.0.33",
+    # ty 0.0.40+ required for latest type checking changes
+    "ty>=0.0.40",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
     # requests 2.25+ required for urllib3 with Python 3.12 support
@@ -197,6 +198,10 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/issues/12618
     "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
     "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
+    # https://github.com/pytorch/pytorch/pull/167669
+    'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
+    # https://github.com/kornia/kornia/issues/3727
+    'ignore:`torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.:DeprecationWarning',
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -252,16 +257,6 @@ split-on-trailing-comma = false
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
-[tool.setuptools.dynamic]
-version = {attr = "torchgeo.__version__"}
-
-[tool.setuptools.package-data]
-torchgeo = ["py.typed"]
-
-[tool.setuptools.packages.find]
-include = ["torchgeo*"]
-
 [tool.ty.rules]
 deprecated = "ignore"
 unresolved-attribute = "ignore"
@@ -270,3 +265,6 @@ unresolved-import = "ignore"
 [tool.ty.src]
 include = ["torchgeo", "tests"]
 exclude = ["tests/data"]
+
+[tool.uv.build-backend]
+module-root = ""

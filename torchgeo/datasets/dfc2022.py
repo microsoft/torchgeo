@@ -313,7 +313,7 @@ class DFC2022(NonGeoDataset):
         image_arr = image.permute(1, 2, 0)
 
         dem = sample['image'][-1]
-        dem = quantile_normalization(dem, lower=0, upper=1)
+        dem = quantile_normalization(dem)
 
         showing_mask = 'mask' in sample
         showing_prediction = 'prediction' in sample

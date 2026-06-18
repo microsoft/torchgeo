@@ -14,6 +14,7 @@ import torch
 from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
+from typing_extensions import deprecated
 
 from ..datasets import GeoDataset
 from ..datasets.utils import GeoSlice
@@ -21,6 +22,12 @@ from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 
+# This class is deprecated, but we don't issue a deprecation warning because:
+#
+# 1. importing torchgeo.samplers would result in a warning due to subclass creation
+# 2. each subclass has its own more specific deprecation warning anyway
+#
+# TODO: we could directly subclass the new GeoSampler and delete this class.
 class GeoSampler(Sampler[GeoSlice], abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
@@ -79,6 +86,7 @@ class GeoSampler(Sampler[GeoSlice], abc.ABC):
         """
 
 
+@deprecated('Use torchgeo.samplers.RandomPatchSampler instead')
 class RandomGeoSampler(GeoSampler):
     """Samples elements from a region of interest randomly.
 
@@ -196,6 +204,7 @@ class RandomGeoSampler(GeoSampler):
         return self.length
 
 
+@deprecated('Use torchgeo.samplers.GriddedPatchSampler instead')
 class GridGeoSampler(GeoSampler):
     """Samples elements in a grid-like fashion.
 
@@ -301,6 +310,7 @@ class GridGeoSampler(GeoSampler):
         return self.length
 
 
+@deprecated('Use torchgeo.samplers.RandomPatchSampler instead')
 class PreChippedGeoSampler(GeoSampler):
     """Samples entire files at a time.
 

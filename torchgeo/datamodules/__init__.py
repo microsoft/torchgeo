@@ -4,6 +4,7 @@
 """TorchGeo datamodules."""
 
 from .agrifieldnet import AgriFieldNetDataModule
+from .air_quality import AirQualityDataModule
 from .bigearthnet import BigEarthNetDataModule
 from .bright import BRIGHTDFC2025DataModule
 from .cabuar import CaBuArDataModule
@@ -15,6 +16,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .digital_typhoon import DigitalTyphoonDataModule
+from .dlrsd import DLRSDDataModule, DLRSDMultilabelDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
@@ -66,6 +68,7 @@ from .xbd import XView2DataModule, xBDDataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
+    'AirQualityDataModule',
     'BRIGHTDFC2025DataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
@@ -75,6 +78,8 @@ __all__ = (
     'ChaBuDDataModule',
     'ChesapeakeCVPRDataModule',
     'CloudCoverDetectionDataModule',
+    'DLRSDDataModule',
+    'DLRSDMultilabelDataModule',
     'DeepGlobeLandCoverDataModule',
     'DigitalTyphoonDataModule',
     'ETCI2021DataModule',

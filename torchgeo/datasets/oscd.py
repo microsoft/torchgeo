@@ -170,7 +170,7 @@ class OSCD(NonGeoDataset):
         return len(self.files)
 
     def _load_files(self) -> list[dict[str, str | Sequence[str]]]:
-        regions = []
+        regions: list[dict[str, str | Sequence[str]]] = []
         labels_root = os.path.join(
             self.root,
             f'Onera Satellite Change Detection dataset - {self.split.capitalize()} '
@@ -185,7 +185,7 @@ class OSCD(NonGeoDataset):
             mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
             def get_image_paths(ind: int) -> list[str]:
-                return sorted(  # ty: ignore[invalid-return-type]
+                return sorted(
                     glob.glob(
                         os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
                     ),

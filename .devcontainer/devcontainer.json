@@ -10,7 +10,7 @@
   },
 
   // "postCreateCommand": "",
-  "postStartCommand": "pip install -e .[all]",
+  "postStartCommand": "uv sync --extra all",
 
   // Enable GPU support
   "hostRequirements": {

@@ -108,9 +108,9 @@ class ConvLSTM(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        hidden_dim: int | list[int],
-        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]],
-        num_layers: int,
+        hidden_dim: int | list[int] = 64,
+        kernel_size: int | tuple[int, int] | list[int | tuple[int, int]] = 3,
+        num_layers: int = 1,
         bias: bool = True,
         return_all_layers: bool = False,
         num_classes: int = 1,
@@ -246,7 +246,6 @@ class ConvLSTM(nn.Module):
 
         Returns:
             Output tensor of shape (B, num_classes, H, W).
-
         """
         layer_output_list, _ = self.forward_features(
             input_tensor, hidden_state=hidden_state

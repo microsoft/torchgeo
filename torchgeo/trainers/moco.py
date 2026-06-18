@@ -274,19 +274,11 @@ class MoCoTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
-        try:
-            self.criterion = NTXentLoss(
-                self.hparams['temperature'],
-                (self.hparams['memory_bank_size'], self.hparams['output_dim']),
-                self.hparams['gather_distributed'],
-            )
-        except TypeError:
-            # lightly 1.4.24 and older
-            self.criterion = NTXentLoss(
-                self.hparams['temperature'],
-                self.hparams['memory_bank_size'],
-                self.hparams['gather_distributed'],
-            )
+        self.criterion = NTXentLoss(
+            self.hparams['temperature'],
+            (self.hparams['memory_bank_size'], self.hparams['output_dim']),
+            self.hparams['gather_distributed'],
+        )
 
     def configure_optimizers(
         self,

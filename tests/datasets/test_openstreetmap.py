@@ -210,9 +210,7 @@ class TestOpenStreetMap:
             OpenStreetMap
         )  # Create instance without __init__
         dataset.bbox = bbox
-        dataset.classes: list[OSMClassConfig] = [
-            {'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}
-        ]
+        dataset.classes = [{'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}]
         dataset.root = pathlib.Path(root)
         assert not dataset._check_integrity()
 
@@ -509,9 +507,7 @@ class TestOpenStreetMap:
         # Direct call to _download_data
         dataset = OpenStreetMap.__new__(OpenStreetMap)
         dataset.bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        dataset.classes: list[OSMClassConfig] = [
-            {'name': 'building', 'selector': [{'building': '*'}]}
-        ]
+        dataset.classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
         dataset.root = tmp_path
 
         with pytest.raises(ValueError, match='No features found in the specified area'):

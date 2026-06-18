@@ -59,12 +59,14 @@ class TestCanadianBuildingFootprints:
         index = dataset.bounds
         x = dataset[index]
         dataset.plot(x, suptitle='Test')
+        plt.close()
 
     def test_plot_prediction(self, dataset: CanadianBuildingFootprints) -> None:
         index = dataset.bounds
         x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
+        plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

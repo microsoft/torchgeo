@@ -1,16 +1,41 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SpatioTemporalSegmentationTask
   init_args:
-    model: 'unet'
-    backbone: 'resnet18'
+    model: 'convlstm'
+    in_channels: 10
     task: 'multiclass'
-    in_channels: 90 # C * T (10 S2 channels * 9 timesteps)
     num_classes: 20
+    labels:
+      - 'background'
+      - 'meadow'
+      - 'soft_winter_wheat'
+      - 'corn'
+      - 'winter_barley'
+      - 'winter_rapeseed'
+      - 'spring_barley'
+      - 'sunflower'
+      - 'grapevine'
+      - 'beet'
+      - 'winter_triticale'
+      - 'winter_durum_wheat'
+      - 'fruits_vegetables_flowers'
+      - 'potatoes'
+      - 'leguminous_fodder'
+      - 'soybeans'
+      - 'orchard'
+      - 'mixed_cereal'
+      - 'sorghum'
+      - 'void_label'
     loss: 'ce'
+  dict_kwargs:
+    hidden_dim: 8
+    num_layers: 1
+    kernel_size: 3
+    head_kernel_size: 1
 data:
   class_path: PASTISDataModule
   init_args:
-    batch_size: 3
+    batch_size: 2
     val_split_pct: 0.2
     test_split_pct: 0.2
     padding_length: 9

@@ -44,7 +44,7 @@ class S2100k(NonGeoDataset):
     .. versionadded:: 0.10
     """
 
-    url = 'https://hf.co/datasets/kklmmr/s2-100k/resolve/fbdbb78ba57d22d5b6be203913f1e6020c2b4e0a'
+    url = 'https://hf.co/datasets/torchgeo/s2-100k/resolve/fbdbb78ba57d22d5b6be203913f1e6020c2b4e0a'
     index_sha256 = '9fdcdec776b331fcc2d9ab5af18355efc5bd0716df33ab78e1ff03f60cf343ad'
     data_sha256 = 'da1bae4e9dd44fb00e5f1fc537b752f5025ac908a73b5a9e24ff90bcbdd56edb'
 
