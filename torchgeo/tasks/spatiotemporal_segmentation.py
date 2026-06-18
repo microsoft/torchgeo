@@ -100,7 +100,6 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             'str_conv_k',
             'str_conv_s',
             'str_conv_p',
-            'agg_mode',
             'encoder_norm',
             'n_head',
             'd_model',

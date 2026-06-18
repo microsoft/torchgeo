@@ -100,9 +100,8 @@ class TestUTAE:
         assert isinstance(maps, list)
         assert len(maps) > 0
 
-    @pytest.mark.parametrize('agg_mode', ['att_group', 'att_mean', 'mean'])
-    def test_agg_modes(self, x: torch.Tensor, agg_mode: str) -> None:
-        """All skip-connection aggregation modes produce correct output shapes."""
+    def test_attention_group_aggregation(self, x: torch.Tensor) -> None:
+        """The hard-coded attention-group aggregation produces correct shapes."""
         model = UTAE(
             input_dim=4,
             encoder_widths=(32, 64),
@@ -111,7 +110,6 @@ class TestUTAE:
             n_head=16,
             d_model=64,
             d_k=4,
-            agg_mode=agg_mode,
         )
         out = model(x)
         assert out.shape == (2, 3, 16, 16)
@@ -150,8 +148,7 @@ class TestUTAE:
         out = small_model(x, batch_positions=batch_positions)
         assert out.shape == (2, 3, 16, 16)
 
-    @pytest.mark.parametrize('agg_mode', ['att_group', 'att_mean', 'mean'])
-    def test_forward_with_padding(self, agg_mode: str) -> None:
+    def test_forward_with_padding(self) -> None:
         """All-zero frames (matching pad_value=0) exercise the padding mask paths."""
         model = UTAE(
             input_dim=4,
@@ -161,7 +158,6 @@ class TestUTAE:
             n_head=16,
             d_model=64,
             d_k=4,
-            agg_mode=agg_mode,
         )
         x = torch.randn(2, 4, 4, 16, 16)
         x[:, 2:] = 0.0  # last two timesteps are padding
@@ -194,15 +190,16 @@ class TestUTAE:
         assert isinstance(layer.conv[1], torch.nn.ReLU)
         assert not isinstance(layer.conv[-1], torch.nn.ReLU)
 
-    def test_temporal_aggregator_mean_all_padded_returns_zero(self) -> None:
-        """Mean aggregation handles all-padded sequences without NaNs."""
-        aggregator = TemporalAggregator(mode='mean')
+    def test_temporal_aggregator_all_padded_returns_zero(self) -> None:
+        """Attention-group aggregation handles all-padded sequences without NaNs."""
+        aggregator = TemporalAggregator()
         x = torch.randn(2, 3, 4, 5, 5)
+        attn_mask = torch.ones(2, 2, 3, 5, 5)
         pad_mask = torch.tensor(
             [[True, True, True], [False, True, True]], dtype=torch.bool
         )
 
-        out = aggregator(x, pad_mask=pad_mask)
+        out = aggregator(x, pad_mask=pad_mask, attn_mask=attn_mask)
 
         assert torch.isfinite(out).all()
         assert torch.all(out[0] == 0)
@@ -210,13 +207,21 @@ class TestUTAE:
 
     def test_temporal_aggregator_att_group_requires_divisible_channels(self) -> None:
         """att_group raises a clear error when heads do not divide channels."""
-        aggregator = TemporalAggregator(mode='att_group')
+        aggregator = TemporalAggregator()
         x = torch.randn(2, 3, 5, 4, 4)
         attn_mask = torch.rand(2, 2, 3, 4, 4)
         match = 'x.shape\\[2\\] must be divisible by n_heads'
 
         with pytest.raises(ValueError, match=match):
             aggregator(x, attn_mask=attn_mask)
+
+    def test_temporal_aggregator_requires_attention_mask(self) -> None:
+        """Temporal aggregation requires L-TAE attention masks."""
+        aggregator = TemporalAggregator()
+        x = torch.randn(2, 3, 4, 5, 5)
+
+        with pytest.raises(ValueError, match='attn_mask is required'):
+            aggregator(x)
 
     def test_smart_forward_without_pad_value(self) -> None:
         """smart_forward applies the block when pad_value is None."""

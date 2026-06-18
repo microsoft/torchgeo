@@ -10,6 +10,7 @@ from typing import Literal, cast
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
 from .ltae import LTAE2d
@@ -38,7 +39,6 @@ class UTAE(nn.Module):
         str_conv_k: int = 4,
         str_conv_s: int = 2,
         str_conv_p: int = 1,
-        agg_mode: str = 'att_group',
         encoder_norm: str = 'group',
         n_head: int = 16,
         d_model: int = 256,
@@ -60,8 +60,6 @@ class UTAE(nn.Module):
             str_conv_k: Kernel size for strided up/down convolutions.
             str_conv_s: Stride for strided up/down convolutions.
             str_conv_p: Padding for strided up/down convolutions.
-            agg_mode: Skip-connection aggregation mode. One of
-                ``'att_group'``, ``'att_mean'``, or ``'mean'``.
             encoder_norm: Normalisation layer for the encoder. One of
                 ``'group'``, ``'batch'``, ``'instance'``, or ``'none'``.
             n_head: Number of attention heads in L-TAE.
@@ -139,7 +137,7 @@ class UTAE(nn.Module):
             return_att=True,
             d_k=d_k,
         )
-        self.temporal_aggregator = TemporalAggregator(mode=agg_mode)
+        self.temporal_aggregator = TemporalAggregator()
         self.out_conv = ConvBlock(
             nkernels=[self.decoder_widths[0], *out_conv], padding_mode=padding_mode
         )
@@ -198,19 +196,9 @@ class UTAE(nn.Module):
 class TemporalAggregator(nn.Module):
     """Aggregate a temporal sequence of feature maps into a single frame.
 
-    Supports attention-weighted aggregation (using L-TAE attention masks) or
-    simple temporal averaging.
+    Uses per-head L-TAE attention masks to weight the corresponding channel
+    groups in the skip connection.
     """
-
-    def __init__(self, mode: str = 'mean') -> None:
-        """Initialize TemporalAggregator.
-
-        Args:
-            mode: Aggregation mode. One of ``'att_group'``, ``'att_mean'``,
-                or ``'mean'``.
-        """
-        super().__init__()
-        self.mode = mode
 
     def forward(
         self, x: Tensor, pad_mask: Tensor | None = None, attn_mask: Tensor | None = None
@@ -221,66 +209,34 @@ class TemporalAggregator(nn.Module):
             x: Feature maps of shape ``(B, T, C, H, W)``.
             pad_mask: Boolean mask of shape ``(B, T)``.
             attn_mask: Attention weights of shape
-                ``(n_head, B, T, H_att, W_att)`` for ``'att_group'`` /
-                ``'att_mean'`` modes.
+                ``(n_head, B, T, H_att, W_att)``.
 
         Returns:
             Aggregated feature map of shape ``(B, C, H, W)``.
+
+        Raises:
+            ValueError: If *attn_mask* is missing or the channel dimension of
+                *x* is not divisible by the number of attention heads.
         """
+        if attn_mask is None:
+            raise ValueError('attn_mask is required for temporal aggregation')
+
+        n_heads, b, t, h, w = attn_mask.shape
+        attn = attn_mask.view(n_heads * b, t, h, w)
+        if x.shape[-2:] != (h, w):
+            attn = F.interpolate(
+                attn, size=x.shape[-2:], mode='bilinear', align_corners=False
+            )
+        attn = attn.view(n_heads, b, t, *x.shape[-2:])
+
         if pad_mask is not None and pad_mask.any():
-            if self.mode == 'att_group':
-                assert attn_mask is not None
-                n_heads, b, t, h, w = attn_mask.shape
-                attn = attn_mask.view(n_heads * b, t, h, w)
-                if x.shape[-2] > w:
-                    attn = nn.Upsample(
-                        size=x.shape[-2:], mode='bilinear', align_corners=False
-                    )(attn)
-                attn = attn.view(n_heads, b, t, *x.shape[-2:])
-                attn = attn * (~pad_mask).float()[None, :, :, None, None]
-                self._check_att_group_channels(x, n_heads)
-                out = torch.stack(
-                    x.chunk(n_heads, dim=2)
-                )  # n_head x B x T x C/h x H x W
-                out = attn[:, :, :, None, :, :] * out
-                out = out.sum(dim=2)
-                return torch.cat(list(out), dim=1)
-            elif self.mode == 'att_mean':
-                assert attn_mask is not None
-                attn = attn_mask.mean(dim=0)
-                attn = nn.Upsample(
-                    size=x.shape[-2:], mode='bilinear', align_corners=False
-                )(attn)
-                attn = attn * (~pad_mask).float()[:, :, None, None]
-                return (x * attn[:, :, None, :, :]).sum(dim=1)
-            else:
-                out = x * (~pad_mask).float()[:, :, None, None, None]
-                counts = (~pad_mask).sum(dim=1).clamp(min=1)
-                return out.sum(dim=1) / counts[:, None, None, None]
-        else:
-            if self.mode == 'att_group':
-                assert attn_mask is not None
-                n_heads, b, t, h, w = attn_mask.shape
-                attn = attn_mask.view(n_heads * b, t, h, w)
-                if x.shape[-2] > w:
-                    attn = nn.Upsample(
-                        size=x.shape[-2:], mode='bilinear', align_corners=False
-                    )(attn)
-                attn = attn.view(n_heads, b, t, *x.shape[-2:])
-                self._check_att_group_channels(x, n_heads)
-                out = torch.stack(x.chunk(n_heads, dim=2))
-                out = attn[:, :, :, None, :, :] * out
-                out = out.sum(dim=2)
-                return torch.cat(list(out), dim=1)
-            elif self.mode == 'att_mean':
-                assert attn_mask is not None
-                attn = attn_mask.mean(dim=0)
-                attn = nn.Upsample(
-                    size=x.shape[-2:], mode='bilinear', align_corners=False
-                )(attn)
-                return (x * attn[:, :, None, :, :]).sum(dim=1)
-            else:
-                return x.mean(dim=1)
+            attn = attn * (~pad_mask).float()[None, :, :, None, None]
+
+        self._check_att_group_channels(x, n_heads)
+        out = torch.stack(x.chunk(n_heads, dim=2))
+        out = attn[:, :, :, None, :, :] * out
+        out = out.sum(dim=2)
+        return torch.cat(list(out), dim=1)
 
     def _check_att_group_channels(self, x: Tensor, n_heads: int) -> None:
         """Validate channel grouping for ``att_group`` aggregation.
