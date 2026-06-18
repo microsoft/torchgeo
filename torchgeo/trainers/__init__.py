@@ -7,7 +7,7 @@ from .base import BaseTask
 from .byol import BYOLTask
 from .change import ChangeDetectionTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
-from .detection import ObjectDetectionTask
+from .detection import ObjectDetectionTask, PointDetectionTask
 from .instance_segmentation import InstanceSegmentationTask
 from .iobench import IOBenchTask
 from .mae import MAETask
@@ -32,6 +32,7 @@ __all__ = (
     'MultiLabelClassificationTask',
     'ObjectDetectionTask',
     'PixelwiseRegressionTask',
+    'PointDetectionTask',
     'RegressionMixin',
     'RegressionTask',
     'SemanticSegmentationTask',

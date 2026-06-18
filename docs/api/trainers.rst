@@ -42,6 +42,9 @@ Supervised learning tasks have both inputs and labeled outputs.
      - :math:`\mathbb{R}^{O \times 4}`
      - :ref:`ObjectDetectionTask`
    * - :math:`\mathbb{R}^{C \times H \times W}`
+     - :math:`\mathbb{R}^{O \times 2}`
+     - :ref:`PointDetectionTask`
+   * - :math:`\mathbb{R}^{C \times H \times W}`
      - :math:`\mathbb{N}^{O \times H \times W}`
      - :ref:`InstanceSegmentationTask`
    * - :math:`\mathbb{R}^{2 \times C \times H \times W}`

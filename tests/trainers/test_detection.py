@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import VHR10, NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
-from torchgeo.trainers import ObjectDetectionTask
+from torchgeo.trainers import ObjectDetectionTask, PointDetectionTask
 
 # MAP metric requires pycocotools to be installed
 pytest.importorskip('pycocotools')
@@ -137,3 +137,58 @@ class TestObjectDetectionTask:
         sample = [torch.randn(in_channels, 224, 224)]
         with torch.inference_mode():
             model(sample)
+
+
+class TestPointDetectionTask:
+    def test_invalid_distance_threshold(self) -> None:
+        with pytest.raises(ValueError, match='distance_threshold must be positive'):
+            PointDetectionTask(distance_threshold=0)
+
+    def test_invalid_score_threshold(self) -> None:
+        with pytest.raises(ValueError, match='score_threshold must be in the range'):
+            PointDetectionTask(score_threshold=1.1)
+
+    def test_add_prediction_points(self) -> None:
+        model = PointDetectionTask(backbone='resnet18', num_classes=2)
+        predictions = [
+            {
+                'boxes': torch.tensor([[0, 2, 10, 22]], dtype=torch.float32),
+                'labels': torch.tensor([1]),
+                'scores': torch.tensor([0.9]),
+            }
+        ]
+
+        outputs = model._add_prediction_points(predictions)
+
+        assert torch.equal(outputs[0]['points'], torch.tensor([[5, 12.0]]))
+        assert torch.equal(outputs[0]['boxes'], predictions[0]['boxes'])
+
+    def test_point_metrics(self) -> None:
+        model = PointDetectionTask(
+            backbone='resnet18',
+            num_classes=2,
+            distance_threshold=5,
+            score_threshold=0.5,
+        )
+        batch = {
+            'image': torch.zeros(1, 3, 32, 32),
+            'points': [torch.tensor([[5, 5], [20, 20]], dtype=torch.float32)],
+            'label': [torch.tensor([1, 1])],
+        }
+        predictions = [
+            {
+                'boxes': torch.tensor(
+                    [[3, 3, 7, 7], [18, 18, 22, 22], [25, 25, 29, 29]],
+                    dtype=torch.float32,
+                ),
+                'labels': torch.tensor([1, 1, 1]),
+                'scores': torch.tensor([0.9, 0.8, 0.7]),
+            }
+        ]
+
+        metrics = model._point_metrics(batch, predictions, prefix='val_')
+
+        assert torch.isclose(metrics['val_point_precision'], torch.tensor(2 / 3))
+        assert torch.equal(metrics['val_point_recall'], torch.tensor(1.0))
+        assert torch.isclose(metrics['val_point_f1'], torch.tensor(0.8))
+        assert torch.equal(metrics['val_point_count_mae'], torch.tensor(1.0))

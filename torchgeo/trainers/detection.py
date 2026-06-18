@@ -23,7 +23,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..datasets.utils import Sample
+from ..datasets.utils import Sample, boxes_to_points
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -344,3 +344,193 @@ class ObjectDetectionTask(BaseTask):
         x = batch['image']
         y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
+
+
+class PointDetectionTask(ObjectDetectionTask):
+    """Point detection using object detection proxy boxes.
+
+    Point annotations are trained as fixed-size proxy boxes. At prediction and
+    evaluation time, predicted boxes are collapsed back to center points.
+
+    .. versionadded:: 0.10
+    """
+
+    monitor = 'val_point_f1'
+    mode = 'max'
+
+    def __init__(
+        self,
+        model: str = 'faster-rcnn',
+        backbone: str = 'resnet50',
+        weights: WeightsEnum | None = None,
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        trainable_layers: int = 3,
+        lr: float = 1e-3,
+        patience: int = 10,
+        freeze_backbone: bool = False,
+        distance_threshold: float = 20.0,
+        score_threshold: float = 0.5,
+    ) -> None:
+        """Initialize a new PointDetectionTask instance.
+
+        Args:
+            model: Name of the torchvision object detection model to use.
+            backbone: Name of the torchvision backbone to use.
+            weights: Initial model weights.
+            in_channels: Number of input channels to model.
+            num_classes: Number of prediction classes (including the background).
+            trainable_layers: Number of trainable layers.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            freeze_backbone: Freeze the backbone network to fine-tune the detection
+                head.
+            distance_threshold: Maximum pixel distance for matching a predicted point
+                to a target point.
+            score_threshold: Minimum prediction score used for point metrics.
+
+        Raises:
+            ValueError: If *distance_threshold* or *score_threshold* is invalid.
+        """
+        if distance_threshold <= 0:
+            raise ValueError('distance_threshold must be positive')
+        if not 0 <= score_threshold <= 1:
+            raise ValueError('score_threshold must be in the range [0, 1]')
+
+        super().__init__(
+            model=model,
+            backbone=backbone,
+            weights=weights,
+            in_channels=in_channels,
+            num_classes=num_classes,
+            trainable_layers=trainable_layers,
+            lr=lr,
+            patience=patience,
+            freeze_backbone=freeze_backbone,
+        )
+
+    def validation_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation metrics."""
+        x = batch['image']
+        batch_size = x.shape[0]
+        y_hat = self(x)
+        metrics = self._point_metrics(batch, y_hat, prefix='val_')
+        self.log_dict(metrics, batch_size=batch_size)
+
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test metrics."""
+        x = batch['image']
+        batch_size = x.shape[0]
+        y_hat = self(x)
+        metrics = self._point_metrics(batch, y_hat, prefix='test_')
+        self.log_dict(metrics, batch_size=batch_size)
+
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> list[dict[str, Tensor]]:
+        """Compute predicted boxes and center points."""
+        y_hat = super().predict_step(batch, batch_idx, dataloader_idx)
+        return self._add_prediction_points(y_hat)
+
+    def _add_prediction_points(
+        self, predictions: list[dict[str, Tensor]]
+    ) -> list[dict[str, Tensor]]:
+        """Add center points to object detection predictions."""
+        outputs: list[dict[str, Tensor]] = []
+        for prediction in predictions:
+            output = dict(prediction)
+            output['points'] = boxes_to_points(prediction['boxes'])
+            outputs.append(output)
+        return outputs
+
+    def _point_metrics(
+        self, batch: Sample, predictions: list[dict[str, Tensor]], prefix: str
+    ) -> dict[str, Tensor]:
+        """Compute point precision, recall, F1, and count MAE."""
+        device = batch['image'].device
+        score_threshold: float = self.hparams['score_threshold']
+        distance_threshold: float = self.hparams['distance_threshold']
+
+        total_tp = torch.tensor(0.0, device=device)
+        total_fp = torch.tensor(0.0, device=device)
+        total_fn = torch.tensor(0.0, device=device)
+        total_count_error = torch.tensor(0.0, device=device)
+
+        for i, prediction in enumerate(predictions):
+            pred_scores = prediction['scores']
+            keep = pred_scores >= score_threshold
+            pred_points = boxes_to_points(prediction['boxes'][keep])
+            pred_labels = prediction['labels'][keep]
+            pred_scores = pred_scores[keep]
+
+            target_points = self._target_points(batch, i).to(device)
+            target_labels = batch['label'][i].to(device)
+
+            tp, fp, fn = self._match_points(
+                pred_points,
+                pred_labels,
+                pred_scores,
+                target_points,
+                target_labels,
+                distance_threshold,
+            )
+            total_tp += tp
+            total_fp += fp
+            total_fn += fn
+            total_count_error += abs(len(pred_points) - len(target_points))
+
+        precision = total_tp / (total_tp + total_fp).clamp(min=1)
+        recall = total_tp / (total_tp + total_fn).clamp(min=1)
+        f1 = 2 * precision * recall / (precision + recall).clamp(min=1e-12)
+        count_mae = total_count_error / len(predictions)
+
+        return {
+            f'{prefix}point_precision': precision,
+            f'{prefix}point_recall': recall,
+            f'{prefix}point_f1': f1,
+            f'{prefix}point_count_mae': count_mae,
+        }
+
+    def _target_points(self, batch: Sample, index: int) -> Tensor:
+        """Get target points from a batch."""
+        if 'points' in batch:
+            return batch['points'][index]
+        return boxes_to_points(batch['bbox_xyxy'][index])
+
+    def _match_points(
+        self,
+        pred_points: Tensor,
+        pred_labels: Tensor,
+        pred_scores: Tensor,
+        target_points: Tensor,
+        target_labels: Tensor,
+        distance_threshold: float,
+    ) -> tuple[Tensor, Tensor, Tensor]:
+        """Greedily match predicted points to target points by class and distance."""
+        device = pred_points.device
+        true_positive = torch.tensor(0.0, device=device)
+        false_positive = torch.tensor(0.0, device=device)
+        matched = torch.zeros(len(target_points), dtype=torch.bool, device=device)
+
+        for idx in torch.argsort(pred_scores, descending=True):
+            same_class = target_labels == pred_labels[idx]
+            available = same_class & ~matched
+            if not available.any():
+                false_positive += 1
+                continue
+
+            target_indices = torch.where(available)[0]
+            distances = torch.linalg.vector_norm(
+                target_points[target_indices] - pred_points[idx], dim=1
+            )
+            min_distance, min_index = distances.min(dim=0)
+            if min_distance <= distance_threshold:
+                matched[target_indices[min_index]] = True
+                true_positive += 1
+            else:
+                false_positive += 1
+
+        false_negative = (~matched).sum().float()
+        return true_positive, false_positive, false_negative
