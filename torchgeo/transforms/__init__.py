@@ -6,9 +6,11 @@
 from .color import RandomGrayscale
 from .indices import (
     AppendBNDVI,
+    AppendEVI,
     AppendGBNDVI,
     AppendGNDVI,
     AppendGRNDVI,
+    AppendMNDWI,
     AppendNBR,
     AppendNDBI,
     AppendNDRE,
@@ -17,6 +19,7 @@ from .indices import (
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
     AppendRBNDVI,
+    AppendSAVI,
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
@@ -26,9 +29,11 @@ from .temporal import Rearrange
 
 __all__ = (
     'AppendBNDVI',
+    'AppendEVI',
     'AppendGBNDVI',
     'AppendGNDVI',
     'AppendGRNDVI',
+    'AppendMNDWI',
     'AppendNBR',
     'AppendNDBI',
     'AppendNDRE',
@@ -37,6 +42,7 @@ __all__ = (
     'AppendNDWI',
     'AppendNormalizedDifferenceIndex',
     'AppendRBNDVI',
+    'AppendSAVI',
     'AppendSWI',
     'AppendTriBandNormalizedDifferenceIndex',
     'LeeFilter',
