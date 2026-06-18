@@ -26,6 +26,7 @@ class DetectionSample(TypedDict):
     bbox_xyxy: NotRequired[list[Tensor]]
     label: NotRequired[list[Tensor]]
     mask: NotRequired[list[Tensor]]
+    points: NotRequired[list[Tensor]]
 
 
 def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
@@ -52,6 +53,8 @@ def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
         ]
     if 'mask' in batch[0]:
         collated['mask'] = [sample['mask'] for sample in batch]
+    if 'points' in batch[0]:
+        collated['points'] = [sample['points'].float() for sample in batch]
     return collated
 
 

@@ -69,10 +69,148 @@ Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 #: * mask: expected output semantic segmentation mask
 #: * label: expected output classification or regression label
 #: * bbox_xyxy: expected output bounding box in (x1, y1, x2, y2) format
+#: * points: expected output point coordinates in (x, y) format
 #: * prediction: predicted output
 #:
 #: Values are usually of type torch.Tensor.
 Sample: TypeAlias = dict[str, Any]  # noqa: UP040
+
+
+def boxes_to_points(boxes: Tensor) -> Tensor:
+    """Convert bounding boxes to center points.
+
+    Args:
+        boxes: Bounding boxes of shape ``(N, 4)`` in ``xyxy`` format.
+
+    Returns:
+        Center points of shape ``(N, 2)`` in ``xy`` format.
+
+    Raises:
+        ValueError: If *boxes* does not have shape ``(N, 4)``.
+    """
+    if boxes.ndim != 2 or boxes.shape[1] != 4:
+        raise ValueError('boxes must have shape (N, 4)')
+
+    x = (boxes[:, 0] + boxes[:, 2]) / 2
+    y = (boxes[:, 1] + boxes[:, 3]) / 2
+    return torch.stack((x, y), dim=1)
+
+
+def _box_size_to_tuple(box_size: int | tuple[int, int]) -> tuple[int, int]:
+    """Convert a box size to ``(width, height)``."""
+    if isinstance(box_size, int):
+        width = height = box_size
+    else:
+        width, height = box_size
+
+    if width <= 0 or height <= 0:
+        raise ValueError('box_size must be positive')
+    return width, height
+
+
+def points_to_boxes(
+    points: Tensor, image_size: tuple[int, int], box_size: int | tuple[int, int]
+) -> Tensor:
+    """Convert points to fixed-size proxy bounding boxes.
+
+    The generated boxes are centered on point annotations and clipped to image
+    bounds. They are training proxies for object detectors, not object extents.
+
+    Args:
+        points: Point coordinates of shape ``(N, 2)`` in ``xy`` format.
+        image_size: Image size as ``(height, width)``.
+        box_size: Proxy box size as pixels or ``(width, height)``.
+
+    Returns:
+        Bounding boxes of shape ``(N, 4)`` in ``xyxy`` format.
+
+    Raises:
+        ValueError: If *points* does not have shape ``(N, 2)``, if
+            *image_size* is invalid, or if *box_size* is not positive.
+    """
+    if points.ndim != 2 or points.shape[1] != 2:
+        raise ValueError('points must have shape (N, 2)')
+
+    image_height, image_width = image_size
+    if image_height <= 0 or image_width <= 0:
+        raise ValueError('image_size must be positive')
+
+    box_width, box_height = _box_size_to_tuple(box_size)
+    half_width = box_width / 2
+    half_height = box_height / 2
+
+    x = points[:, 0]
+    y = points[:, 1]
+    xmin = (x - half_width).clamp(min=0, max=image_width)
+    ymin = (y - half_height).clamp(min=0, max=image_height)
+    xmax = (x + half_width).clamp(min=0, max=image_width)
+    ymax = (y + half_height).clamp(min=0, max=image_height)
+    return torch.stack((xmin, ymin, xmax, ymax), dim=1)
+
+
+class PointToBoundingBoxAdapter:
+    """Add fixed-size proxy boxes to a point-detection sample.
+
+    This adapter makes point annotations compatible with standard object
+    detection trainers. It preserves the original points and adds
+    ``bbox_xyxy`` boxes centered on them.
+
+    .. versionadded:: 0.10
+    """
+
+    def __init__(
+        self,
+        box_size: int | tuple[int, int],
+        point_key: str = 'points',
+        box_key: str = 'bbox_xyxy',
+        label_key: str = 'label',
+        image_key: str = 'image',
+        default_label: int = 1,
+    ) -> None:
+        """Initialize a new point-to-box adapter.
+
+        Args:
+            box_size: Proxy box size as pixels or ``(width, height)``.
+            point_key: Sample key containing point coordinates.
+            box_key: Sample key used to store generated bounding boxes.
+            label_key: Sample key containing object labels.
+            image_key: Sample key containing the image tensor.
+            default_label: Label assigned when *label_key* is missing.
+        """
+        _box_size_to_tuple(box_size)
+        self.box_size = box_size
+        self.point_key = point_key
+        self.box_key = box_key
+        self.label_key = label_key
+        self.image_key = image_key
+        self.default_label = default_label
+
+    def __call__(self, sample: Sample) -> Sample:
+        """Add proxy boxes and labels to a point-detection sample.
+
+        Args:
+            sample: Sample containing image and point tensors.
+
+        Returns:
+            Sample with generated bounding boxes and labels.
+
+        Raises:
+            KeyError: If *point_key* or *image_key* is missing.
+            ValueError: If the point tensor or proxy box configuration is invalid.
+        """
+        points = cast(Tensor, sample[self.point_key])
+        image = cast(Tensor, sample[self.image_key])
+        image_size = cast(tuple[int, int], tuple(image.shape[-2:]))
+        sample[self.box_key] = points_to_boxes(points, image_size, self.box_size)
+
+        if self.label_key not in sample:
+            sample[self.label_key] = torch.full(
+                (len(points),),
+                self.default_label,
+                dtype=torch.long,
+                device=points.device,
+            )
+        return sample
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')

@@ -185,8 +185,11 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    PointToBoundingBoxAdapter,
+    boxes_to_points,
     concat_samples,
     merge_samples,
+    points_to_boxes,
     stack_samples,
     unbind_samples,
 )
@@ -343,6 +346,7 @@ __all__ = (
     'OpenStreetMap',
     'PatternNet',
     'PlottingMixin',
+    'PointToBoundingBoxAdapter',
     'Potsdam2D',
     'PrestoEmbeddings',
     'QuakeSet',
@@ -386,8 +390,10 @@ __all__ = (
     'XView2',
     'XarrayDataset',
     'ZueriCrop',
+    'boxes_to_points',
     'concat_samples',
     'merge_samples',
+    'points_to_boxes',
     'random_bbox_assignment',
     'random_bbox_splitting',
     'random_grid_cell_assignment',

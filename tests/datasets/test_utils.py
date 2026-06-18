@@ -18,8 +18,10 @@ from torch import Tensor
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
+    PointToBoundingBoxAdapter,
     Sample,
     array_to_tensor,
+    boxes_to_points,
     check_integrity,
     concat_samples,
     disambiguate_timestamp,
@@ -31,6 +33,7 @@ from torchgeo.datasets.utils import (
     merge_samples,
     pad_across_batches,
     percentile_normalization,
+    points_to_boxes,
     quantile_normalization,
     stack_samples,
     unbind_samples,
@@ -40,6 +43,89 @@ from torchgeo.datasets.utils import (
 
 MINT = datetime(2025, 4, 24)
 MAXT = datetime(2025, 4, 25)
+
+
+def test_boxes_to_points() -> None:
+    boxes = torch.tensor([[0, 2, 10, 22], [4, 8, 8, 16]], dtype=torch.float32)
+
+    points = boxes_to_points(boxes)
+
+    assert torch.equal(points, torch.tensor([[5, 12], [6, 12]], dtype=torch.float32))
+
+
+def test_boxes_to_points_invalid_shape() -> None:
+    boxes = torch.ones(4)
+
+    with pytest.raises(ValueError, match='boxes must have shape'):
+        boxes_to_points(boxes)
+
+
+def test_points_to_boxes() -> None:
+    points = torch.tensor([[20, 20], [2, 38]], dtype=torch.float32)
+
+    boxes = points_to_boxes(points, image_size=(40, 50), box_size=(10, 20))
+
+    expected = torch.tensor([[15, 10, 25, 30], [0, 28, 7, 40]], dtype=torch.float32)
+    assert torch.equal(boxes, expected)
+
+
+def test_points_to_boxes_empty() -> None:
+    points = torch.empty(0, 2)
+
+    boxes = points_to_boxes(points, image_size=(40, 50), box_size=10)
+
+    assert torch.equal(boxes, torch.empty(0, 4))
+
+
+def test_points_to_boxes_invalid_shape() -> None:
+    points = torch.ones(2)
+
+    with pytest.raises(ValueError, match='points must have shape'):
+        points_to_boxes(points, image_size=(40, 50), box_size=10)
+
+
+def test_points_to_boxes_invalid_image_size() -> None:
+    points = torch.ones(1, 2)
+
+    with pytest.raises(ValueError, match='image_size must be positive'):
+        points_to_boxes(points, image_size=(0, 50), box_size=10)
+
+
+def test_points_to_boxes_invalid_box_size() -> None:
+    points = torch.ones(1, 2)
+
+    with pytest.raises(ValueError, match='box_size must be positive'):
+        points_to_boxes(points, image_size=(40, 50), box_size=0)
+
+
+def test_point_to_bounding_box_adapter() -> None:
+    adapter = PointToBoundingBoxAdapter(box_size=10)
+    sample: Sample = {
+        'image': torch.zeros(3, 40, 50),
+        'points': torch.tensor([[20, 20], [2, 38]], dtype=torch.float32),
+    }
+
+    out = adapter(sample)
+
+    expected_boxes = torch.tensor(
+        [[15, 15, 25, 25], [0, 33, 7, 40]], dtype=torch.float32
+    )
+    assert torch.equal(out['bbox_xyxy'], expected_boxes)
+    assert torch.equal(out['label'], torch.tensor([1, 1]))
+
+
+def test_point_to_bounding_box_adapter_preserves_labels() -> None:
+    adapter = PointToBoundingBoxAdapter(box_size=10)
+    labels = torch.tensor([2])
+    sample: Sample = {
+        'image': torch.zeros(3, 40, 50),
+        'points': torch.tensor([[20, 20]], dtype=torch.float32),
+        'label': labels,
+    }
+
+    out = adapter(sample)
+
+    assert out['label'] is labels
 
 
 @pytest.mark.filterwarnings(

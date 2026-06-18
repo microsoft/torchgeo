@@ -5,8 +5,9 @@ import re
 
 import numpy as np
 import pytest
+import torch
 
-from torchgeo.datamodules.utils import group_shuffle_split
+from torchgeo.datamodules.utils import collate_fn_detection, group_shuffle_split
 
 
 def test_group_shuffle_split() -> None:
@@ -44,3 +45,27 @@ def test_group_shuffle_split() -> None:
 
         assert len(set(train_indices1) & set(test_indices1)) == 0
         assert len(set(groups[train_indices1])) == 2
+
+
+def test_collate_fn_detection_points() -> None:
+    batch = [
+        {
+            'image': torch.zeros(3, 8, 8),
+            'points': torch.tensor([[2, 3]], dtype=torch.float32),
+            'bbox_xyxy': torch.tensor([[0, 1, 4, 5]], dtype=torch.float32),
+            'label': torch.tensor([1]),
+        },
+        {
+            'image': torch.ones(3, 8, 8),
+            'points': torch.tensor([[4, 5], [6, 7]], dtype=torch.float32),
+            'bbox_xyxy': torch.tensor([[2, 3, 6, 7], [4, 5, 8, 8]]),
+            'label': torch.tensor([1, 1]),
+        },
+    ]
+
+    collated = collate_fn_detection(batch)
+
+    assert collated['image'].shape == (2, 3, 8, 8)
+    assert len(collated['points']) == 2
+    assert len(collated['bbox_xyxy']) == 2
+    assert len(collated['label']) == 2
