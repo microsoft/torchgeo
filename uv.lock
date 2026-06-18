@@ -3769,6 +3769,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "fsspec", extra = ["http"] },
     { name = "h5py", marker = "python_full_version < '3.14'" },
     { name = "ipywidgets" },
     { name = "laspy" },
@@ -3798,6 +3799,7 @@ all = [
     { name = "xarray" },
 ]
 datasets = [
+    { name = "fsspec", extra = ["http"] },
     { name = "h5py", marker = "python_full_version < '3.14'" },
     { name = "laspy" },
     { name = "netcdf4" },
@@ -3838,6 +3840,7 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "einops", specifier = ">=0.3" },
+    { name = "fsspec", extras = ["http"], marker = "extra == 'datasets'", specifier = ">=2024.6" },
     { name = "geopandas", specifier = ">=1.0" },
     { name = "h5py", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=3.10,<3.15" },
     { name = "ipywidgets", marker = "extra == 'docs'", specifier = ">=7" },

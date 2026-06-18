@@ -177,6 +177,7 @@ from .splits import (
 )
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
+from .stac import STACDataset
 from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .tessera import TesseraEmbeddings
@@ -352,6 +353,7 @@ __all__ = (
     'RwandaFieldBoundary',
     'S2100k',
     'SSL4EOLBenchmark',
+    'STACDataset',
     'SatlasPretrain',
     'SeasoNet',
     'SeasonalContrastS2',
