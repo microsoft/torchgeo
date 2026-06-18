@@ -382,7 +382,7 @@ def test_download_url(tmp_path: Path) -> None:
 
 
 def test_download_and_extract_archive(tmp_path: Path) -> None:
-    url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
     md5 = '91dd532523a543fb8dee0887e4188e9b'
     sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
 

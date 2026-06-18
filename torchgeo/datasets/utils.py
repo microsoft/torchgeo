@@ -15,6 +15,8 @@ import pathlib
 import shutil
 import subprocess
 import tarfile
+import urllib.parse
+import urllib.request
 import warnings
 import zipfile
 from collections.abc import Iterable, Iterator, Mapping, Sequence
@@ -32,6 +34,7 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
+from tqdm import tqdm
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
 
@@ -387,13 +390,13 @@ def download_url(
     root: Path,
     filename: Path | None = None,
     md5: str | None = None,
-    max_redirect_hops: int = 3,
     **kwargs: str,
 ) -> None:
     """Download a file from a url and place it in root.
 
-    Uses :mod:`requests` so that servers requiring a browser-like User-Agent
-    (e.g. Figshare) and multi-hop redirects are handled correctly.
+    Uses :mod:`requests` for HTTP/HTTPS downloads so that servers requiring a
+    browser-like User-Agent (e.g. Figshare) and multi-hop redirects are handled
+    correctly. ``file://`` URIs are copied directly without a network request.
 
     Examples:
         download_url(url, root)
@@ -405,28 +408,31 @@ def download_url(
         root: Root directory to save downloaded file to.
         filename: File path to save to. Defaults to the basename of the URL.
         md5: Expected MD5 checksum.
-        max_redirect_hops: Maximum number of allowed redirection attempts.
         **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
 
     Raises:
         RuntimeError: If checksum of downloaded file does not match.
-        requests.exceptions.RequestException: If download fails.
+        requests.exceptions.RequestException: If HTTP/HTTPS download fails.
     """
+    parsed = urllib.parse.urlparse(url)
     if not filename:
-        filename = os.path.basename(url)
+        filename = os.path.basename(parsed.path or url)
 
     root = os.path.expanduser(root)
     os.makedirs(root, exist_ok=True)
 
     fpath = os.path.join(root, filename)
-    if not check_integrity(fpath, md5, **kwargs):
+    if check_integrity(fpath, md5, **kwargs):
+        return
+
+    if parsed.scheme == 'file':
+        # Local file URI - copy without a network request (used in tests).
+        shutil.copy(urllib.request.url2pathname(parsed.path), fpath)
+    else:
         # Use requests so that:
         # 1. A browser-like User-Agent is sent (required by Figshare and similar hosts
-        #    that return HTTP 403 to the default Python urllib agent).
-        # 2. Multi-hop redirects (e.g. Figshare → S3/CDN) are followed automatically.
-        # TODO: use fsspec if we want AWS/Azure/GCS support
-        # TODO: use gdown if we want Google Drive support
-        # TODO: use tqdm if we want a progress bar
+        #    that return HTTP 403/202 to the default Python urllib agent).
+        # 2. Multi-hop redirects (e.g. Figshare API → S3/CDN) are followed automatically.
         headers = {
             'User-Agent': (
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -442,11 +448,29 @@ def download_url(
             timeout=60,
         )
         response.raise_for_status()
-        with open(fpath, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
+
+        total = response.headers.get('Content-Length')
+        total_bytes = int(total) if total is not None else None
+
+        chunk_size = 8192
+        with (
+            open(fpath, 'wb') as f,
+            tqdm(
+                total=total_bytes,
+                unit='B',
+                unit_scale=True,
+                unit_divisor=1024,
+                miniters=1,
+                desc=str(filename),
+                leave=True,
+            ) as progress,
+        ):
+            for chunk in response.iter_content(chunk_size=chunk_size):
                 f.write(chunk)
-        if not check_integrity(fpath, md5, **kwargs):
-            raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
+                progress.update(len(chunk))
+
+    if not check_integrity(fpath, md5, **kwargs):
+        raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
 
 
 def download_and_extract_archive(
@@ -479,7 +503,7 @@ def download_and_extract_archive(
     filename = filename or os.path.basename(url)
     from_path = os.path.join(download_root, filename)
 
-    download_url(url, download_root, filename, md5, 3, **kwargs)
+    download_url(url, download_root, filename, md5, **kwargs)
     extract_archive(from_path, extract_root, remove_finished)
 
 
