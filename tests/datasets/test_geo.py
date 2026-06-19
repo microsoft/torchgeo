@@ -35,7 +35,7 @@ from torchgeo.datasets import (
     VectorDataset,
     XarrayDataset,
 )
-from torchgeo.datasets.utils import GeoSlice, Sample
+from torchgeo.datasets.utils import GeoSlice, Sample, _split_grid
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -61,6 +61,11 @@ class CustomGeoDataset(GeoDataset):
         self.paths = paths or []
 
     def __getitem__(self, index: GeoSlice) -> Sample:
+        index, out_crs, _ = _split_grid(index)
+        if out_crs is not None and out_crs != self.crs:
+            raise NotImplementedError(
+                f'{type(self).__name__} cannot read into a non-native CRS.'
+            )
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]
@@ -124,6 +129,17 @@ class TestGeoDataset:
         assert isinstance(sample, dict)
         assert isinstance(sample['bounds'], Tensor)
 
+    def test_getitem_foreign_crs(self, dataset: GeoDataset) -> None:
+        index = (slice(0, 1, 1), slice(2, 3, 1), slice(MINT, MAXT, 1))
+        # Reading into its own CRS works
+        own = dataset._grid_key(index, dataset.crs, (1.0, 1.0))
+        assert isinstance(dataset[own], dict)
+        # A trailing (out_crs, out_res) grid spec in the key is peeled by __getitem__
+        # and forwarded to _getitem; a dataset that can't read into an arbitrary CRS
+        # refuses loudly rather than silently misaligning when combined onto another CRS.
+        with pytest.raises(NotImplementedError, match='non-native CRS'):
+            dataset[dataset._grid_key(index, CRS.from_epsg(4326), (1.0, 1.0))]
+
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
 
@@ -178,6 +194,16 @@ class TestGeoDataset:
         dataset = ds1 | ds2 | ds3 | ds4
         assert isinstance(dataset, UnionDataset)
         assert len(dataset) == 4
+
+    def test_or_nested_disjoint(self) -> None:
+        # A nested union whose inner datasets have no data at the query is skipped
+        ds1 = CustomGeoDataset()
+        ds2 = CustomGeoDataset()
+        ds3 = CustomGeoDataset(bounds=[(10, 11, 12, 13, MINT, MAXT)])
+        dataset = (ds1 | ds2) | ds3
+        index = (slice(10, 11, 1), slice(12, 13, 1), slice(MINT, MAXT, 1))
+        sample = dataset[index]
+        assert isinstance(sample['bounds'], Tensor)
 
     def test_str(self, dataset: GeoDataset) -> None:
         out = str(dataset)
@@ -529,12 +555,30 @@ class TestRasterDataset:
         assert sample['bounds'][5].item() == 3.0
         assert sample['image'].shape[-2:] == (size, size)
 
-    def test_intersection_unpins_native_crs(self) -> None:
-        ds1 = NAIP(self.naip_dir, prefer_native_crs=True)
-        ds2 = NAIP(self.naip_dir, prefer_native_crs=True)
-        ds1 & ds2
-        assert ds1._prefer_native_crs is False
-        assert ds2._prefer_native_crs is False
+    def test_combine_reads_anchor_native_crs(self) -> None:
+        # Combined datasets read every child onto the left-most (anchor) child's
+        # native grid. Simulate the anchor having a foreign native CRS + res.
+        size = 8
+
+        def query(ds: GeoDataset) -> GeoSlice:
+            x, y, t = ds.bounds
+            return (
+                slice(x.start, x.start + size * x.step, x.step),
+                slice(y.start, y.start + size * y.step, y.step),
+                t,
+            )
+
+        for combine in (NAIP.__and__, NAIP.__or__):
+            ds1 = NAIP(self.naip_dir, prefer_native_crs=True)
+            ds2 = NAIP(self.naip_dir)
+            combined = combine(ds1, ds2)
+            n = len(ds1.index)
+            ds1.index['native_crs'] = CRS.from_epsg(4326)  # ty: ignore[invalid-assignment]
+            ds1.index['native_res'] = [(2.0, 3.0)] * n  # ty: ignore[invalid-assignment]
+
+            sample = combined[query(combined)]
+            assert sample['crs'] == CRS.from_epsg(4326)
+            assert sample['image'].shape[-2:] == (size, size)
 
     def test_cached_load_warp_file_keyed_on_crs(self) -> None:
         ds = NAIP(self.naip_dir)
@@ -711,6 +755,17 @@ class TestVectorDataset:
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(x['mask'].unique(), torch.tensor([0, 1], dtype=torch.uint8))
         assert x['crs'] == dataset.crs
+
+    def test_getitem_foreign_crs(self, dataset: CustomVectorDataset) -> None:
+        # Rasterize into a caller-specified CRS via a CRS-tagged key (used when
+        # combined onto another dataset's grid)
+        dataset.task = 'semantic_segmentation'
+        out_crs = CRS.from_epsg(32631)
+        assert dataset.crs != out_crs
+        key = dataset._grid_key(dataset.bounds, out_crs, (10.0, 10.0))
+        x = dataset[key]
+        assert isinstance(x['mask'], torch.Tensor)
+        assert x['crs'] == out_crs
 
     def test_getitem_obj_det(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'object_detection'

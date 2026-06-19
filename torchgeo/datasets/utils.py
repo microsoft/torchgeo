@@ -53,9 +53,49 @@ from .errors import DependencyNotFoundError
 #:    ds[xmin:xmax, ymin:ymax, tmin:tmax]
 #:
 #: All values are optional and will default to the spatiotemporal extent of the dataset.
+#:
+#: A fully-specified slice may be tagged with a trailing ``(out_crs, out_res)`` grid
+#: spec, letting :class:`IntersectionDataset`/:class:`UnionDataset` drive every child
+#: onto one grid through the public ``__getitem__`` (so subclass overrides are honored).
+#: The bounds stay in the index CRS (each child reprojects them) and the slice steps
+#: keep carrying the query resolution (its pixel count); *out_res* is the separate read
+#: resolution in *out_crs*. Requiring all three slices avoids a combinatorial union over
+#: partial arities.
 GeoSlice: TypeAlias = (  # noqa: UP040
-    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
+    slice
+    | tuple[slice]
+    | tuple[slice, slice]
+    | tuple[slice, slice, slice]
+    | tuple[slice, slice, slice, pyproj.CRS, tuple[float, float]]
 )
+
+
+def _split_grid(
+    index: GeoSlice,
+) -> tuple[GeoSlice, pyproj.CRS | None, tuple[float, float] | None]:
+    """Peel an optional trailing ``(out_crs, out_res)`` grid spec off a slice.
+
+    A trailing CRS + resolution extends the key with the grid to read into, so dataset
+    combiners can align children through the public ``__getitem__`` rather than a side
+    channel, which means subclass ``__getitem__`` overrides see it for free. The CRS and
+    resolution are separate from the slice steps: the steps still encode the query's
+    pixel count, which is independent of the target read resolution.
+
+    Args:
+        index: A spatiotemporal slice, optionally tagged with a trailing CRS + res.
+
+    Returns:
+        The slice with the grid spec removed, the CRS, and the resolution (the latter
+        two ``None`` if absent).
+    """
+    if (
+        isinstance(index, tuple)
+        and len(index) == 5
+        and isinstance(index[3], pyproj.CRS)
+    ):
+        return index[:3], index[3], index[4]
+    return index, None, None
+
 
 #: Path-like object.
 #:

@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, quantile_normalization, which
+from .utils import GeoSlice, Path, Sample, _split_grid, quantile_normalization, which
 
 
 class AgriFieldNet(RasterDataset):
@@ -188,14 +188,22 @@ class AgriFieldNet(RasterDataset):
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index,
+                optionally tagged with a trailing ``(out_crs, out_res)`` grid spec;
+                only the index CRS is supported.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
             IndexError: If *index* is not found in the dataset.
+            NotImplementedError: If asked to read into a non-index CRS.
         """
+        index, out_crs, _ = _split_grid(index)
+        if out_crs is not None and out_crs != self.crs:
+            raise NotImplementedError(
+                f'{type(self).__name__} cannot read into a non-index CRS.'
+            )
         assert isinstance(self.paths, str | os.PathLike)
         paths = cast(Path, self.paths)
 

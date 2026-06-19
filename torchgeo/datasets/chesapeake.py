@@ -26,7 +26,7 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, _split_grid, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -508,14 +508,24 @@ class ChesapeakeCVPR(GeoDataset):
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index,
+                optionally tagged with a trailing ``(out_crs, out_res)`` grid spec;
+                only the index CRS is supported.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
             IndexError: If *index* is not found in the dataset.
+            NotImplementedError: If asked to read into a non-index CRS.
         """
+        # Each layer is reprojected internally to the dataset CRS, so CRS-aligned
+        # combination (reading into a foreign CRS) is not supported.
+        index, out_crs, _ = _split_grid(index)
+        if out_crs is not None and out_crs != self.crs:
+            raise NotImplementedError(
+                f'{type(self).__name__} cannot read into a non-index CRS.'
+            )
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]

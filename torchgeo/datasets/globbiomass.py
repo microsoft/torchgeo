@@ -22,6 +22,7 @@ from .utils import (
     GeoSlice,
     Path,
     Sample,
+    _split_grid,
     check_integrity,
     disambiguate_timestamp,
     extract_archive,
@@ -197,14 +198,22 @@ class GlobBiomass(RasterDataset):
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index,
+                optionally tagged with a trailing ``(out_crs, out_res)`` grid spec;
+                only the index CRS is supported.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
             IndexError: If *index* is not found in the dataset.
+            NotImplementedError: If asked to read into a non-index CRS.
         """
+        index, out_crs, _ = _split_grid(index)
+        if out_crs is not None and out_crs != self.crs:
+            raise NotImplementedError(
+                f'{type(self).__name__} cannot read into a non-index CRS.'
+            )
         x, y, t = self._disambiguate_slice(index)
         interval = pd.Interval(t.start, t.stop)
         df = self.index.iloc[self.index.index.overlaps(interval)]
