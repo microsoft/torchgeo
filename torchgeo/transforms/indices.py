@@ -196,7 +196,7 @@ class AppendMNDWI(AppendNormalizedDifferenceIndex):
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.1016/S0034-4257(96)00067-3
+    * https://doi.org/10.1080/01431160600589179
 
     .. versionadded:: 0.10
     """
@@ -515,7 +515,7 @@ class AppendEVI(IntensityAugmentationBase2D):
 
     If you use this index in your research, please cite the following paper:
 
-    * https://doi.org/10.1016/S0034-4257(96)00016-8
+    * https://doi.org/10.1016/S0034-4257(96)00112-5
 
     .. versionadded:: 0.10
     """
