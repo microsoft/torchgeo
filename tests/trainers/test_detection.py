@@ -235,6 +235,21 @@ class TestPointDetectionTask:
         assert torch.equal(unmatched_pred, torch.tensor([0, 1]))
         assert torch.equal(unmatched_target, torch.empty(0, dtype=torch.int64))
 
+    def test_match_points_without_candidates(self) -> None:
+        model = PointDetectionTask(backbone='resnet18', num_classes=3)
+
+        matched_pred, unmatched_pred, unmatched_target = model._match_points(
+            pred_points=torch.tensor([[5, 5], [10, 10]], dtype=torch.float32),
+            pred_labels=torch.tensor([1, 1]),
+            target_points=torch.tensor([[5, 5], [10, 10]], dtype=torch.float32),
+            target_labels=torch.tensor([2, 2]),
+            distance_threshold=5,
+        )
+
+        assert torch.equal(matched_pred, torch.empty(0, dtype=torch.int64))
+        assert torch.equal(unmatched_pred, torch.tensor([0, 1]))
+        assert torch.equal(unmatched_target, torch.tensor([0, 1]))
+
     def test_steps(self, monkeypatch: MonkeyPatch) -> None:
         predictions = [
             {
