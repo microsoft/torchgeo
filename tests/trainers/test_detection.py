@@ -33,7 +33,13 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 class TestObjectDetectionTask:
     @pytest.mark.parametrize(
-        'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
+        'name',
+        [
+            'nasa_marine_debris',
+            'nasa_marine_debris_point',
+            'reforestree',
+            'vhr10_obj_det',
+        ],
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
@@ -194,3 +200,41 @@ class TestPointDetectionTask:
         assert torch.isclose(metrics['val_point_precision'], torch.tensor(2 / 3))
         assert torch.equal(metrics['val_point_recall'], torch.tensor(1.0))
         assert torch.isclose(metrics['val_point_f1'], torch.tensor(0.8))
+
+    def test_steps(self, monkeypatch: MonkeyPatch) -> None:
+        predictions = [
+            {
+                'boxes': torch.tensor([[3, 3, 7, 7]], dtype=torch.float32),
+                'labels': torch.tensor([1]),
+                'scores': torch.tensor([0.9]),
+            }
+        ]
+        model = PointDetectionTask(
+            backbone='resnet18',
+            num_classes=2,
+            distance_threshold=5,
+            score_threshold=0.5,
+        )
+        logged: list[dict[str, torch.Tensor]] = []
+
+        def forward(x: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+            return predictions
+
+        def log_dict(metrics: dict[str, torch.Tensor], batch_size: int) -> None:
+            logged.append(metrics)
+
+        monkeypatch.setattr(model, 'forward', forward)
+        monkeypatch.setattr(model, 'log_dict', log_dict)
+        batch = {
+            'image': torch.zeros(1, 3, 32, 32),
+            'points': [torch.tensor([[5, 5]], dtype=torch.float32)],
+            'label': [torch.tensor([1])],
+        }
+
+        model.validation_step(batch, batch_idx=0)
+        model.test_step(batch, batch_idx=0)
+        output = model.predict_step(batch, batch_idx=0)
+
+        assert 'val_point_f1' in logged[0]
+        assert 'test_point_f1' in logged[1]
+        assert torch.equal(output[0]['points'], torch.tensor([[5, 5.0]]))
