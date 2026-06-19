@@ -201,6 +201,25 @@ class TestPointDetectionTask:
         assert torch.equal(metrics['val_point_recall'], torch.tensor(1.0))
         assert torch.isclose(metrics['val_point_f1'], torch.tensor(0.8))
 
+    def test_prediction_to_points_uses_existing_points(self) -> None:
+        model = PointDetectionTask(backbone='resnet18', num_classes=2)
+        prediction = {
+            'boxes': torch.tensor(
+                [[0, 0, 10, 10], [20, 20, 30, 30]], dtype=torch.float32
+            ),
+            'points': torch.tensor([[1, 2], [3, 4]], dtype=torch.float32),
+            'labels': torch.tensor([1, 1]),
+            'scores': torch.tensor([0.4, 0.9]),
+        }
+
+        output = model._prediction_to_points(prediction, score_threshold=0.5)
+
+        assert torch.equal(
+            output['points'], torch.tensor([[3, 4]], dtype=torch.float32)
+        )
+        assert torch.equal(output['labels'], torch.tensor([1]))
+        assert torch.equal(output['scores'], torch.tensor([0.9]))
+
     def test_steps(self, monkeypatch: MonkeyPatch) -> None:
         predictions = [
             {
