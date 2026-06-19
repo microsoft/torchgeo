@@ -286,6 +286,7 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            pin_memory=torch.cuda.is_available(),
             # drop_last is incompatible with batch sampler
             drop_last=split == 'train' and batch_sampler is None,
             persistent_workers=self.num_workers > 0,
