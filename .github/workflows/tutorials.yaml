@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
       - name: Set up uv
         id: setup-uv
         uses: astral-sh/setup-uv@v8.2.0
