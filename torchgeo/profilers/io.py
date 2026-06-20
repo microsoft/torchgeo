@@ -50,7 +50,10 @@ class IOBenchProfiler(Profiler):
                 total_time = self._action_total[action_name]
                 count = self._action_count[action_name]
                 total_patches = count * self.batch_size
-                rate = total_patches / total_time
+                if total_time == 0:
+                    rate = 0
+                else:
+                    rate = total_patches / total_time
                 label = 'Training (random)' if train else 'Validation (grid)'
                 res += f'| {label:<19} | {total_time:>15.5f} | {rate:>20.5f} |\n'
         res += f'\nTotal duration: {duration:.5f} seconds\n'
