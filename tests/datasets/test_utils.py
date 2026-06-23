@@ -488,7 +488,8 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
@@ -513,7 +514,8 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [
             {'image': torch.tensor([1, 2, 0])},
             {'mask': torch.tensor([0, 0, 3]), 'other': 5},
