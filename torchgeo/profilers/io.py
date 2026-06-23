@@ -9,7 +9,10 @@ from lightning.pytorch.profilers import Profiler
 
 
 class IOBenchProfiler(Profiler):
-    """A custom profiler for I/O benchmark."""
+    """A custom profiler for I/O benchmark.
+
+    .. versionadded:: 0.10
+    """
 
     def __init__(
         self,
