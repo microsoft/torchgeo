@@ -145,7 +145,6 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
 
         geoslice = tuple(out)
         assert len(geoslice) == 3
-        geoslice = cast(tuple[slice, slice, slice], geoslice)
         return geoslice
 
     def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
@@ -1617,7 +1616,7 @@ class UnionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])  # ty: ignore[invalid-assignment]
+        self.index = pd.concat([dataset1.index, dataset2.index])
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
