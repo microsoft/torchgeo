@@ -5,7 +5,9 @@ import enum
 from collections.abc import Callable
 
 import pytest
+import torch
 import torch.nn as nn
+from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
@@ -31,6 +33,7 @@ from torchgeo.models import (
     Tessera_Weights,
     TileNet_Weights,
     Unet_Weights,
+    UniverSat_Base_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
     ViTHuge14_Weights,
@@ -65,6 +68,7 @@ from torchgeo.models import (
     tessera,
     tilenet,
     unet,
+    universat,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
     vit_huge_patch14_224,
@@ -98,6 +102,7 @@ builders = [
     tilenet,
     tessera,
     unet,
+    universat,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
     vit_huge_patch14_224,
@@ -128,6 +133,7 @@ enums = [
     TileNet_Weights,
     Tessera_Weights,
     Unet_Weights,
+    UniverSat_Base_Weights,
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
     ViTHuge14_Weights,
@@ -138,11 +144,15 @@ enums = [
 
 
 @pytest.mark.parametrize('builder', builders)
-def test_get_model(builder: Callable[..., nn.Module]) -> None:
+def test_get_model(builder: Callable[..., nn.Module], monkeypatch: MonkeyPatch) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
     if builder == olmoearth_v1:
         pytest.importorskip('olmoearth_pretrain_minimal')
+    if builder == universat:
+        # universat is loaded through its Torch Hub entrypoint; avoid the
+        # network round-trip by stubbing out torch.hub.load.
+        monkeypatch.setattr(torch.hub, 'load', lambda *args, **kwargs: nn.Identity())
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)

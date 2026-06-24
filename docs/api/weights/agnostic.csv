@@ -12,3 +12,4 @@ OlmoEarthV1_Weights.TINY,`link <https://github.com/allenai/olmoearth_pretrain>`_
 OlmoEarthV1_Weights.BASE,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2511.13655>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 OlmoEarthV1_Weights.LARGE,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2511.13655>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 Tessera_Weights.TESSERA,`link <https://github.com/ucam-eo/tessera>`__,`link <https://arxiv.org/abs/2506.20380>`__,CC0-1.0,-,explicit,-,,,,,,,,,,,
+UniverSat_Base_Weights.GEOPLEX,`link <https://github.com/gastruc/UniverSat>`__,`link <https://arxiv.org/abs/2606.23503>`__,MIT,explicit,explicit,explicit,,,,,,,,,,,

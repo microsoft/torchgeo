@@ -40,6 +40,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
    models/swin-transformer
    models/tilenet
    models/u-net
+   models/universat
    models/vision-transformer
 
 TorchGeo also supports most `timm <https://huggingface.co/docs/timm/en/index>`__ encoders and `SMP <https://segmentation-modelspytorch.readthedocs.io/en/latest/>`__ decoders.

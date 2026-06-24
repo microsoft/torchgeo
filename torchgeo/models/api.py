@@ -55,6 +55,7 @@ from .swin import (
 from .tessera import Tessera_Weights, tessera
 from .tilenet import TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
+from .universat import UniverSat_Base_Weights, universat
 from .vit import (
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -95,6 +96,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'tilenet': tilenet,
     'tessera': tessera,
     'unet': unet,
+    'universat': universat,
     'vit_small_patch16_224': vit_small_patch16_224,
     'vit_base_patch14_dinov2': vit_base_patch14_dinov2,
     'vit_base_patch16_224': vit_base_patch16_224,
@@ -128,6 +130,7 @@ _model_weights: dict[
     tilenet: TileNet_Weights,
     tessera: Tessera_Weights,
     unet: Unet_Weights,
+    universat: UniverSat_Base_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
     vit_base_patch16_224: ViTBase16_Weights,
@@ -156,6 +159,7 @@ _model_weights: dict[
     'tilenet': TileNet_Weights,
     'tessera': Tessera_Weights,
     'unet': Unet_Weights,
+    'universat': UniverSat_Base_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
     'vit_base_patch14_dinov2': ViTBase14_DINOv2_Weights,
     'vit_base_patch16_224': ViTBase16_Weights,
