@@ -266,5 +266,8 @@ unresolved-import = "ignore"
 include = ["torchgeo", "tests"]
 exclude = ["tests/data"]
 
+[tool.ty.terminal]
+error-on-warning = false
+
 [tool.uv.build-backend]
 module-root = ""

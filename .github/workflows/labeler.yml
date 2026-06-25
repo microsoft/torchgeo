@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
       - name: Add label
         uses: actions/labeler@v6.1.0
         with:
