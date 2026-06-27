@@ -35,6 +35,8 @@ class TestGeoTIFFWriter:
         with writer:
             writer.write_chunk(data, 0, 0)
 
+        writer.finalize()
+
         with rasterio.open(output) as src:
             assert src.width == 64
             assert src.height == 64
@@ -62,6 +64,8 @@ class TestGeoTIFFWriter:
             writer.write_chunk(np.ones((64, 64), dtype=np.uint8) * 3, 64, 0)
             writer.write_chunk(np.ones((64, 64), dtype=np.uint8) * 4, 64, 64)
 
+        writer.finalize()
+
         with rasterio.open(output) as src:
             data = src.read(1)
             assert data[0, 0] == 1
@@ -87,26 +91,28 @@ class TestGeoTIFFWriter:
         with pytest.raises(RuntimeError, match='Writer not opened'):
             writer.write_chunk(data, 0, 0)
 
-    def test_finalize_with_overviews(self, tmp_path: Path) -> None:
-        """Test finalize creates overviews when configured."""
+    def test_finalize_creates_cog(self, tmp_path: Path) -> None:
+        """Test finalize produces a valid Cloud-Optimized GeoTIFF."""
         output = tmp_path / 'test_cog.tif'
-        transform = Affine(1, 0, 0, 0, -1, 256)
+        transform = Affine(1, 0, 0, 0, -1, 1024)
 
         writer = GeoTIFFWriter(
             output_path=output,
-            width=256,
-            height=256,
+            width=1024,
+            height=1024,
             num_bands=1,
             crs='EPSG:32631',
             transform=transform,
-            cog_config={'overviews': [2, 4], 'overview_resampling': 'nearest'},
+            cog_config={'overview_resampling': 'nearest'},
         )
 
-        data = np.ones((256, 256), dtype=np.uint8)
+        data = np.ones((1024, 1024), dtype=np.uint8)
         with writer:
             writer.write_chunk(data, 0, 0)
 
         writer.finalize()
 
+        assert not writer.tmp_path.exists()
         with rasterio.open(output) as src:
-            assert src.overviews(1) == [2, 4]
+            assert src.tags(ns='IMAGE_STRUCTURE')['LAYOUT'] == 'COG'
+            assert src.overviews(1)

@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 import rasterio
+import rasterio.shutil
 from rasterio.transform import Affine
 from rasterio.windows import Window
 
@@ -68,6 +69,7 @@ class GeoTIFFWriter:
         self.dtype = dtype
         self.cog_config = cog_config or {}
 
+        self.tmp_path = self.output_path.with_suffix('.tmp.tif')
         self.dataset: Any = None
 
     def __enter__(self) -> GeoTIFFWriter:
@@ -86,9 +88,10 @@ class GeoTIFFWriter:
             'transform': self.transform,
             'tiled': True,
             'compress': self.cog_config.get('compress', 'lzw'),
+            'BIGTIFF': 'IF_SAFER',
         }
 
-        self.dataset = rasterio.open(self.output_path, 'w', **kwargs)
+        self.dataset = rasterio.open(self.tmp_path, 'w', **kwargs)
         return self
 
     def write_chunk(
@@ -120,29 +123,18 @@ class GeoTIFFWriter:
             self.dataset.close()
 
     def finalize(self) -> None:
-        """Build overview pyramids for Cloud-Optimized GeoTIFF.
+        """Translate the written GTiff into a Cloud-Optimized GeoTIFF.
 
-        Builds internal overviews at the specified levels using the configured
-        resampling method. Overviews enable efficient visualization at multiple
-        zoom levels without loading the full resolution image.
+        Streams the temporary GTiff through the GDAL COG driver, which builds
+        overviews so it validates as a COG, without loading the full resolution
+        image into memory.
         """
-        if self.cog_config.get('overviews'):
-            overview_levels = self.cog_config['overviews']
-            resampling = self.cog_config.get('overview_resampling', 'nearest')
-
-            from rasterio.enums import Resampling
-
-            resampling_map = {
-                'nearest': Resampling.nearest,
-                'bilinear': Resampling.bilinear,
-                'cubic': Resampling.cubic,
-                'average': Resampling.average,
-                'mode': Resampling.mode,
-            }
-
-            resampling_method = resampling_map.get(
-                resampling.lower(), Resampling.nearest
-            )
-
-            with rasterio.open(self.output_path, 'r+') as dst:
-                dst.build_overviews(overview_levels, resampling_method)
+        rasterio.shutil.copy(
+            self.tmp_path,
+            self.output_path,
+            driver='COG',
+            compress=self.cog_config.get('compress', 'lzw'),
+            overview_resampling=self.cog_config.get('overview_resampling', 'nearest'),
+            BIGTIFF='IF_SAFER',
+        )
+        self.tmp_path.unlink()
