@@ -24,6 +24,7 @@ index = [
     'GeoDeep',
     'rs-embed',
     'torchange',
+    'py4dgeo',
 ]
 
 # Sort by date of first commit (update_timeline.py)
@@ -67,6 +68,7 @@ name_to_github = {
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
     'rs-embed': ('cybergis', 'rs-embed'),
+    'py4dgeo': ('3dgeo-heidelberg', 'py4dgeo'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
@@ -113,6 +115,7 @@ name_to_pypi = {
     'GeoTessera': 'geotessera',
     'torchange': 'torchange',
     'rs-embed': 'rs-embed',
+    'py4dgeo': 'py4dgeo',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {
