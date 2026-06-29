@@ -1,0 +1,29 @@
+model:
+  class_path: TemporalRegressionTask
+  init_args:
+    model: 'presto'
+    in_channels: 17
+    num_outputs: 17
+    out_steps: 2
+    loss: 'mse'
+  dict_kwargs:
+    encoder_embedding_size: 16
+    channel_embed_ratio: 0.25
+    month_embed_ratio: 0.25
+    encoder_depth: 1
+    mlp_ratio: 2
+    encoder_num_heads: 2
+    decoder_embedding_size: 16
+    decoder_depth: 1
+    decoder_num_heads: 2
+    max_sequence_length: 3
+data:
+  class_path: AirQualityDataModule
+  init_args:
+    batch_size: 2
+    val_split_pct: 0.3
+    test_split_pct: 0.3
+  dict_kwargs:
+    root: 'tests/data/air_quality'
+    input_steps: 3
+    target_steps: 2
