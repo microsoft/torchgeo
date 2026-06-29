@@ -185,6 +185,32 @@ class AppendNDWI(AppendNormalizedDifferenceIndex):
         super().__init__(index_a=index_green, index_b=index_nir)
 
 
+class AppendMNDWI(AppendNormalizedDifferenceIndex):
+    r"""Modified Normalized Difference Water Index (MNDWI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{MNDWI} = \frac{\text{G} - \text{SWIR}}{\text{G} + \text{SWIR}}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1080/01431160600589179
+
+    .. versionadded:: 0.10
+    """
+
+    def __init__(self, index_green: int, index_swir: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_green: index of the Green band in the image
+            index_swir: index of the Short-Wave Infrared (SWIR) band in the image
+        """
+        super().__init__(index_a=index_green, index_b=index_swir)
+
+
 class AppendSWI(AppendNormalizedDifferenceIndex):
     r"""Standardized Water-Level Index (SWI).
 
@@ -422,3 +448,115 @@ class AppendRBNDVI(AppendTriBandNormalizedDifferenceIndex):
             index_blue: index of the Blue band, B2 in Sentinel 2 imagery
         """
         super().__init__(index_a=index_nir, index_b=index_red, index_c=index_blue)
+
+
+class AppendSAVI(IntensityAugmentationBase2D):
+    r"""Soil-Adjusted Vegetation Index (SAVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{SAVI} = \frac{1.5 \times (\text{NIR} - \text{R})}
+           {\text{NIR} + \text{R} + 0.5}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/0034-4257(88)90106-X
+
+    .. versionadded:: 0.10
+    """
+
+    def __init__(self, index_nir: int, index_red: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_red: index of the Red band in the image
+        """
+        super().__init__(p=1)
+        self.flags = {'index_nir': index_nir, 'index_red': index_red}
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, int],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
+
+        Returns:
+            the augmented input
+        """
+        nir = input[..., flags['index_nir'], :, :]
+        red = input[..., flags['index_red'], :, :]
+        savi = 1.5 * (nir - red) / (nir + red + 0.5 + _EPSILON)
+        savi = torch.unsqueeze(savi, -3)
+        input = torch.cat((input, savi), dim=-3)
+        return input
+
+
+class AppendEVI(IntensityAugmentationBase2D):
+    r"""Enhanced Vegetation Index (EVI).
+
+    Computes the following index:
+
+    .. math::
+
+       \text{EVI} = \frac{2.5 \times (\text{NIR} - \text{R})}
+           {\text{NIR} + 6 \times \text{R} - 7.5 \times \text{B} + 1}
+
+    If you use this index in your research, please cite the following paper:
+
+    * https://doi.org/10.1016/S0034-4257(96)00112-5
+
+    .. versionadded:: 0.10
+    """
+
+    def __init__(self, index_nir: int, index_red: int, index_blue: int) -> None:
+        """Initialize a new transform instance.
+
+        Args:
+            index_nir: index of the Near Infrared (NIR) band in the image
+            index_red: index of the Red band in the image
+            index_blue: index of the Blue band in the image
+        """
+        super().__init__(p=1)
+        self.flags = {
+            'index_nir': index_nir,
+            'index_red': index_red,
+            'index_blue': index_blue,
+        }
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, int],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
+
+        Returns:
+            the augmented input
+        """
+        nir = input[..., flags['index_nir'], :, :]
+        red = input[..., flags['index_red'], :, :]
+        blue = input[..., flags['index_blue'], :, :]
+        evi = 2.5 * (nir - red) / (nir + 6 * red - 7.5 * blue + 1 + _EPSILON)
+        evi = torch.unsqueeze(evi, -3)
+        input = torch.cat((input, evi), dim=-3)
+        return input
