@@ -71,3 +71,8 @@ class TestTemporalRegression:
         datamodule.predict_dataset = AirQuality(root)
         trainer = Trainer(accelerator='cpu')
         trainer.predict(model=model, datamodule=datamodule)
+
+    def test_presto_channel_validation(self) -> None:
+        match = 'Presto expected 17 input channels, got 3.'
+        with pytest.raises(ValueError, match=match):
+            TemporalRegressionTask(model='presto', in_channels=3)
