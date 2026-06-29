@@ -76,10 +76,10 @@ class TestTemporalRegression:
     def test_presto_channel_validation(self) -> None:
         match = 'Presto expected 17 input channels, got 3.'
         with pytest.raises(ValueError, match=match):
-            TemporalRegressionTask(model='presto', in_channels=3)
+            TemporalRegression(model='presto', in_channels=3)
 
     def test_presto_optional_batch_fields(self) -> None:
-        model = TemporalRegressionTask(
+        model = TemporalRegression(
             model='presto',
             in_channels=17,
             num_outputs=17,

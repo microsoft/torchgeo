@@ -95,6 +95,12 @@ class TemporalRegression(RegressionMixin, BaseTask):
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
+
+        .. note::
+           When using ``model='presto'``, ``in_channels`` must match the number of
+           channels defined by the model's band groups. Batches may also include
+           ``dynamic_world``, ``latlons``, ``mask``, and ``month`` entries, which
+           are forwarded to the Presto encoder when present.
         """
         self.kwargs = kwargs
         super().__init__()

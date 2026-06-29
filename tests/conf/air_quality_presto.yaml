@@ -1,5 +1,5 @@
 model:
-  class_path: TemporalRegressionTask
+  class_path: TemporalRegression
   init_args:
     model: 'presto'
     in_channels: 17
