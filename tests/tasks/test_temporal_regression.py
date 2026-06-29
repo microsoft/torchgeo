@@ -4,6 +4,7 @@
 import os
 
 import pytest
+import torch
 from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import AirQualityDataModule, MisconfigurationException
@@ -76,3 +77,31 @@ class TestTemporalRegression:
         match = 'Presto expected 17 input channels, got 3.'
         with pytest.raises(ValueError, match=match):
             TemporalRegressionTask(model='presto', in_channels=3)
+
+    def test_presto_optional_batch_fields(self) -> None:
+        model = TemporalRegressionTask(
+            model='presto',
+            in_channels=17,
+            num_outputs=17,
+            encoder_embedding_size=16,
+            channel_embed_ratio=0.25,
+            month_embed_ratio=0.25,
+            encoder_depth=1,
+            mlp_ratio=2,
+            encoder_num_heads=2,
+            decoder_embedding_size=16,
+            decoder_depth=1,
+            decoder_num_heads=2,
+            max_sequence_length=3,
+        )
+        batch = {
+            'input': torch.randn(2, 3, 17),
+            'dynamic_world': torch.zeros(2, 3, dtype=torch.long),
+            'latlons': torch.zeros(2, 2),
+            'mask': torch.zeros(2, 3, 17),
+            'month': torch.zeros(2, dtype=torch.long),
+        }
+
+        y_hat = model._forward_model(batch)
+
+        assert y_hat.shape == torch.Size([2, 17])
