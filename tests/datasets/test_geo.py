@@ -597,10 +597,8 @@ class TestXarrayDataset:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_getitem_returns_source_data(self) -> None:
-        pytest.importorskip('h5py', minversion='3.10')
-        ds = XarrayDataset(os.path.join('tests', 'data', 'hdf5'))
-        image = ds[ds.bounds]['image']
+    def test_getitem_returns_source_data(self, dataset: XarrayDataset) -> None:
+        image = dataset[dataset.bounds]['image']
         assert (image > 0).any()
 
     def test_no_data(self, tmp_path: Path) -> None:
