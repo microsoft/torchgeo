@@ -321,7 +321,7 @@ class AgriFieldNet(IntersectionDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
         kwargs = {
-            'cmap': self.cmap,
+            'cmap': self.mask.cmap,
             'vmin': self.mask.valid_classes[0],
             'vmax': self.mask.valid_classes[-1],
             'interpolation': 'none',
