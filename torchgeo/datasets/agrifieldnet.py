@@ -9,8 +9,6 @@ from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import rasterio
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
@@ -242,7 +240,9 @@ class AgriFieldNet(IntersectionDataset):
         self.index = self.image.index
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        self.ordinal_map = torch.zeros(self.mask.valid_classes[-1] + 1, dtype=self.mask.dtype)
+        self.ordinal_map = torch.zeros(
+            self.mask.valid_classes[-1] + 1, dtype=self.mask.dtype
+        )
         self.inverse_map = torch.zeros(len(classes), dtype=self.mask.dtype)
         for v, k in enumerate(classes):
             self.ordinal_map[k] = v
