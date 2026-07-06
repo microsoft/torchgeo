@@ -8,7 +8,9 @@ from collections.abc import Callable, Iterable
 from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -29,8 +31,7 @@ class NLCD(RasterDataset):
 
     The dataset contains the following 17 classes:
 
-    0. Background
-    #. Open Water
+    0. Open Water
     #. Perennial Ice/Snow
     #. Developed, Open Space
     #. Developed, Low Intensity
@@ -46,6 +47,7 @@ class NLCD(RasterDataset):
     #. Cultivated Crops
     #. Woody Wetlands
     #. Emergent Herbaceous Wetlands
+    #. Background
 
     Detailed descriptions of the classes can be found
     `here <https://www.mrlc.gov/data/legends/national-land-cover-database-class-legend-and-description>`__.
@@ -113,25 +115,289 @@ class NLCD(RasterDataset):
         2024: '3e0ded4eb7bb5d355743abe9552b3588',
     }
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 0),
-        11: (70, 107, 159, 255),
-        12: (209, 222, 248, 255),
-        21: (222, 197, 197, 255),
-        22: (217, 146, 130, 255),
-        23: (235, 0, 0, 255),
-        24: (171, 0, 0, 255),
-        31: (179, 172, 159, 255),
-        41: (104, 171, 95, 255),
-        42: (28, 95, 44, 255),
-        43: (181, 197, 143, 255),
-        52: (204, 184, 121, 255),
-        71: (223, 223, 194, 255),
-        81: (220, 217, 57, 255),
-        82: (171, 108, 40, 255),
-        90: (184, 217, 235, 255),
-        95: (108, 159, 184, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (70, 107, 159, 255),
+                (209, 222, 248, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (222, 197, 197, 255),
+                (217, 146, 130, 255),
+                (235, 0, 0, 255),
+                (171, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (179, 172, 159, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (104, 171, 95, 255),
+                (28, 95, 44, 255),
+                (181, 197, 143, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (204, 184, 121, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (223, 223, 194, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (220, 217, 57, 255),
+                (171, 108, 40, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (184, 217, 235, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (108, 159, 184, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 0),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+            ]
+        )
+        / 255
+    )
+
+    valid_classes = (
+        11,
+        12,
+        21,
+        22,
+        23,
+        24,
+        31,
+        41,
+        42,
+        43,
+        52,
+        71,
+        81,
+        82,
+        90,
+        95,
+        250,
+    )
 
     def __init__(
         self,
@@ -139,7 +405,7 @@ class NLCD(RasterDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         years: list[int] = [2024],
-        classes: list[int] = list(cmap.keys()),
+        classes: list[int] = list(valid_classes),
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -177,18 +443,18 @@ class NLCD(RasterDataset):
             'NLCD data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'
         )
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= set(self.valid_classes), (
+            f'Only the following classes are valid: {self.valid_classes}.'
         )
-        assert 0 in classes, 'Classes must include the background class: 0'
+        assert 250 in classes, 'Classes must include the background class: 250'
 
         self.paths = paths
         self.years = years
         self.classes = classes
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(self.valid_classes[-1] + 1, dtype=self.dtype)
+        self.inverse_map = torch.zeros(len(classes), dtype=self.dtype)
 
         self._verify()
 
@@ -199,7 +465,7 @@ class NLCD(RasterDataset):
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -278,26 +544,25 @@ class NLCD(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample['mask'].squeeze()
+        mask = self.inverse_map[sample['mask']]
         ncols = 1
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze()
+            pred = self.inverse_map[sample['prediction']]
             ncols = 2
 
-        fig, axs = plt.subplots(
-            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
-        )
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 4, 4), squeeze=False)
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 255, 'interpolation': 'none'}
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis('off')
 
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')
