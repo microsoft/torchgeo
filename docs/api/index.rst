@@ -13,3 +13,4 @@ Complete API documentation for all TorchGeo modules.
    samplers
    trainers
    transforms
+   profilers

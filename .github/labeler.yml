@@ -20,6 +20,9 @@ trainers:
 transforms:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/transforms/**'
+profilers:
+  - changed-files:
+      - any-glob-to-any-file: 'torchgeo/profilers/**'
 
 # Other
 dependencies:

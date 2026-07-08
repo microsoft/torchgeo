@@ -39,3 +39,6 @@ changelog:
     - title: Testing
       labels:
         - testing
+    - title: Profilers
+      labels:
+        - profilers
