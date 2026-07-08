@@ -116,9 +116,6 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             case 'time-series':
                 paths = os.path.join(self.root, self.directory, 's3_olci', pid, '*.tif')
                 samples = [self._load_image(path) for path in sorted(glob.glob(paths))]
-                if not samples:
-                    msg = f'No Sentinel-3 samples found for {pid}.'
-                    raise FileNotFoundError(msg)
 
                 # stack_samples requires a consistent spatial shape across timestamps.
                 max_h = max(sample['image'].shape[-2] for sample in samples)
