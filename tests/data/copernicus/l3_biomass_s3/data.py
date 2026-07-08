@@ -22,7 +22,10 @@ LOCATIONS = [
         'mask_hw': (MASK_SIZE, MASK_SIZE),
         'files': [
             ('S3A_20200319T233546_20200319T233846.tif', (IMAGE_SIZE, IMAGE_SIZE)),
-            ('S3B_20200514T234457_20200514T234757.tif', (IMAGE_SIZE, IMAGE_SIZE + 2)),
+            (
+                'S3B_20200514T234457_20200514T234757.tif',
+                (IMAGE_SIZE + 2, IMAGE_SIZE + 2),
+            ),
         ],
         'static_file': 'S3B_20200514T234457_20200514T234757.tif',
     },
