@@ -24,7 +24,7 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
        Synonym for :term:`spatial reference system (SRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
 
    index
-       The lookup table of a geospatial dataset (``GeoDataset.index``): a mapping from each file's spatiotemporal footprint to its path, used to find which files a :term:`query` overlaps. It is bookkeeping and sampling space, not pixel data. Unrelated to a :term:`spectral index`; and note that the ``index`` argument of ``__getitem__`` is, despite its name, a :term:`query`.
+       The lookup table of a geospatial dataset (``GeoDataset.index``): a mapping from each file's spatiotemporal footprint to its path, used to find which files a :term:`query` overlaps. It is metadata, not pixel data. Unrelated to a :term:`spectral index`; and note that the ``index`` argument of ``__getitem__`` is, despite its name, a :term:`query`.
 
    instance segmentation
        A computer vision task that involves predicting labels for each pixel in an image such that each object has a unique label.
