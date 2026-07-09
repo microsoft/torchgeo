@@ -66,13 +66,18 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
     filename = 'landcover.ai.v1.zip'
     md5 = '3268c89070e8734b4e91d531c0617e03'
     classes = ('Background', 'Building', 'Woodland', 'Water', 'Road')
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 0),
-        1: (97, 74, 74, 255),
-        2: (38, 115, 0, 255),
-        3: (0, 197, 255, 255),
-        4: (207, 207, 207, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 0),
+                (97, 74, 74, 255),
+                (38, 115, 0, 255),
+                (0, 197, 255, 255),
+                (207, 207, 207, 255),
+            ]
+        )
+        / 255
+    )
 
     def __init__(
         self, root: Path = 'data', download: bool = False, checksum: bool = False
@@ -93,10 +98,6 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         self.root = root
         self.download = download
         self.checksum = checksum
-
-        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4))
-        lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
-        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
         self._verify()
 
@@ -156,7 +157,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation='none')
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self.cmap, interpolation='none')
         axs[1].axis('off')
         if show_titles:
             axs[0].set_title('Image')
@@ -164,7 +165,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation='none'
+                predictions, vmin=0, vmax=4, cmap=self.cmap, interpolation='none'
             )
             axs[2].axis('off')
             if show_titles:

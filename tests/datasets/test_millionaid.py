@@ -18,7 +18,8 @@ class TestMillionAID:
     @pytest.fixture(
         scope='class', params=zip(['train', 'test'], ['multi-class', 'multi-label'])
     )
-    def dataset(self, request: SubRequest) -> MillionAID:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> MillionAID:
         root = os.path.join('tests', 'data', 'millionaid')
         split, task = request.param
         transforms = nn.Identity()

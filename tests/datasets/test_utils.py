@@ -488,7 +488,8 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
@@ -513,7 +514,8 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [
             {'image': torch.tensor([1, 2, 0])},
             {'mask': torch.tensor([0, 0, 3]), 'other': 5},
@@ -582,7 +584,7 @@ def test_quantile_normalization(img: Tensor) -> None:
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+def test_array_to_tensor(array_dtype: np.dtype[Any]) -> None:
     array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max

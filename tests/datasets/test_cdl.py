@@ -41,7 +41,7 @@ class TestCDL:
 
     def test_classes(self) -> None:
         root = os.path.join('tests', 'data', 'cdl')
-        classes = list(CDL.cmap.keys())[:5]
+        classes = list(CDL.valid_classes)[:5]
         ds = CDL(root, years=[2023], classes=classes)
         sample = ds[ds.bounds]
         mask = sample['mask']
