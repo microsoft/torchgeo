@@ -39,7 +39,7 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
        A geometric transformation for portraying the surface of a 3D Earth onto a 2D planar image.
 
    query
-       The spatiotemporal bounding box passed to a geospatial dataset's ``__getitem__`` (a ``GeoSlice``), describing *what to sample*. Distinct from the dataset's :term:`index`, which is *how* files are found. When a query is read in a file's native :term:`coordinate reference system (CRS)`, its box may align to a different grid than the index.
+       The spatiotemporal bounding box passed to a geospatial dataset's ``__getitem__`` (a ``GeoSlice``), describing *where and when to sample*. Distinct from the dataset's :term:`index`, which is *how* files are found. When a query is read in a file's native :term:`coordinate reference system (CRS)`, its box may align to a different grid than the index.
 
    region of interest (ROI)
        Synonym for :term:`area of interest (AOI)`. A particular spatial region to focus on.
