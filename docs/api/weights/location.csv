@@ -1,2 +1,2 @@
 Weight,Source,Citation,License,Training data,Image encoder,Embedding dimension
-SatCLIP_Weights.SATCLIP_VIT16_L40,`link <https://github.com/microsoft/satclip>`__,`link <https://arxiv.org/abs/2311.17179>`__,MIT,S2-100K,ViT-16,256
+SatCLIP_Weights.SATCLIP_VIT16_L40,`link <https://github.com/microsoft/satclip>`__,`link <https://arxiv.org/abs/2311.17179>`__,MIT,S2-100K,ViT16-L40,256
