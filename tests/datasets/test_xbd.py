@@ -12,7 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch import nn
 
-from torchgeo.datasets import DatasetNotFoundError, xBD
+from torchgeo.datasets import DatasetNotFoundError, xBD, xBDDistShift
 
 
 class TestxBD:
@@ -82,3 +82,60 @@ class TestxBD:
         x['prediction'] = x['mask']
         dataset.plot(x)
         plt.close()
+
+
+class TestxBDDistShift:
+    @pytest.fixture(params=['train', 'test'])
+    def dataset(self, request: SubRequest) -> xBDDistShift:
+        root = os.path.join('tests', 'data', 'xbd')
+        split = request.param
+        transforms = nn.Identity()
+        return xBDDistShift(
+            root=root,
+            split=split,
+            id_disaster='hurricane-harvey',
+            ood_disaster='hurricane-michael',
+            transforms=transforms,
+        )
+
+    def test_getitem(self, dataset: xBDDistShift) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        # Damage classes are reformulated as a binary building mask
+        assert set(torch.unique(x['mask']).tolist()) <= {0, 1}
+
+    def test_len(self, dataset: xBDDistShift) -> None:
+        assert len(dataset) == 2
+
+    def test_pre_post_both(self) -> None:
+        dataset = xBDDistShift(
+            root=os.path.join('tests', 'data', 'xbd'),
+            split='train',
+            id_disaster='hurricane-harvey',
+            id_pre_post='both',
+            ood_disaster='hurricane-michael',
+        )
+        assert len(dataset) == 4
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            xBDDistShift(
+                root=os.path.join('tests', 'data', 'xbd'),
+                split='foo',  # ty: ignore[invalid-argument-type]
+                id_disaster='hurricane-harvey',
+                ood_disaster='hurricane-michael',
+            )
+
+    def test_invalid_disaster(self) -> None:
+        with pytest.raises(ValueError, match='Invalid disaster name'):
+            xBDDistShift(
+                root=os.path.join('tests', 'data', 'xbd'),
+                id_disaster='not-a-real-disaster',
+                ood_disaster='hurricane-michael',
+            )
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            xBDDistShift(tmp_path)

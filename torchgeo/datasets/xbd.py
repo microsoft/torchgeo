@@ -298,3 +298,175 @@ class xBD(NonGeoDataset):
 @deprecated('Use torchgeo.datasets.xBD instead')
 class XView2(xBD):
     """Deprecated alias for the xBD dataset."""
+
+
+class xBDDistShift(xBD):
+    """xBD dataset with a custom, disaster-based train/test split.
+
+    This subclass of :class:`xBD` reformulates the original train/test splits to enable
+    domain adaptation and out-of-distribution (OOD) detection experiments, similar to
+    :class:`EuroSATSpatial`. One disaster is used as the in-distribution (ID) training
+    set and a different disaster as the out-of-distribution (OOD) test set, so that a
+    model can be trained on one disaster type and evaluated on another. This tests the
+    ability of models trained on one disaster to generalize to a different one.
+
+    The multiclass damage masks are reformulated as a binary building segmentation task,
+    where minor-damage and no-damage buildings are mapped to the *building* class and
+    major-damage and destroyed buildings are mapped to the *background* class.
+
+    .. versionadded:: 0.10
+    """
+
+    binary_classes = ('background', 'building')
+
+    valid_disasters = (
+        'hurricane-harvey',
+        'socal-fire',
+        'hurricane-matthew',
+        'mexico-earthquake',
+        'guatemala-volcano',
+        'santa-rosa-wildfire',
+        'palu-tsunami',
+        'hurricane-florence',
+        'hurricane-michael',
+        'midwest-flooding',
+    )
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        split: Literal['train', 'test'] = 'train',
+        id_disaster: str = 'hurricane-matthew',
+        id_pre_post: Literal['pre', 'post', 'both'] = 'post',
+        ood_disaster: str = 'mexico-earthquake',
+        ood_pre_post: Literal['pre', 'post', 'both'] = 'post',
+        transforms: Callable[[Sample], Sample] | None = None,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new xBDDistShift dataset instance.
+
+        Args:
+            root: Root directory where the dataset can be found.
+            split: One of "train" (in-distribution) or "test" (out-of-distribution).
+            id_disaster: Name of the disaster used as the in-distribution (training)
+                set. Must be one of *valid_disasters*.
+            id_pre_post: Which imagery of the in-distribution disaster to use: "pre"
+                (before the event), "post" (after the event), or "both".
+            ood_disaster: Name of the disaster used as the out-of-distribution (test)
+                set. Must be one of *valid_disasters*.
+            ood_pre_post: Which imagery of the out-of-distribution disaster to use:
+                "pre" (before the event), "post" (after the event), or "both".
+            transforms: A function/transform that takes an input sample and returns a
+                transformed version.
+            checksum: If True, check the MD5 of the downloaded files (may be slow).
+
+        Raises:
+            AssertionError: If *split* is invalid.
+            ValueError: If *id_disaster* or *ood_disaster* is not one of
+                *valid_disasters*.
+            DatasetNotFoundError: If dataset is not found.
+        """
+        assert split in ('train', 'test')
+        for disaster in (id_disaster, ood_disaster):
+            if disaster not in self.valid_disasters:
+                raise ValueError(
+                    f'Invalid disaster name: {disaster}. '
+                    f'Valid options are: {", ".join(self.valid_disasters)}.'
+                )
+
+        self.root = root
+        self.split = split
+        self.transforms = transforms
+        self.checksum = checksum
+
+        self._verify()
+
+        files = self._gather_files(root)
+        self.split_files = {
+            'train': self._filter_files(files, id_disaster, id_pre_post),
+            'test': self._filter_files(files, ood_disaster, ood_pre_post),
+        }
+
+    def __getitem__(self, index: int) -> Sample:
+        """Return an index within the dataset.
+
+        Args:
+            index: Index to return.
+
+        Returns:
+            Data and label at that index, with the mask reformulated as a binary
+            building segmentation target.
+        """
+        files = self.split_files[self.split][index]
+        image = self._load_image(files['image'])
+        mask = self._load_target(files['mask'])
+
+        # Reformulate the multiclass damage mask as a binary building mask
+        mask[mask == 2] = 1  # minor-damage -> building
+        mask[(mask == 3) | (mask == 4)] = 0  # major-damage, destroyed -> background
+
+        sample = {'image': image, 'mask': mask}
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the current split.
+
+        Returns:
+            Length of the current split.
+        """
+        return len(self.split_files[self.split])
+
+    def _gather_files(self, root: Path) -> list[dict[str, str]]:
+        """Return the image and mask paths for every disaster across both splits.
+
+        Args:
+            root: Root directory of the dataset.
+
+        Returns:
+            List of dicts, each with the image path, mask path, disaster name, and
+            pre/post type of a single sample.
+        """
+        files = []
+        for split_info in self.metadata.values():
+            directory = split_info['directory']
+            image_root = os.path.join(root, directory, 'images')
+            mask_root = os.path.join(root, directory, 'targets')
+            for image in sorted(glob.glob(os.path.join(image_root, '*.png'))):
+                basename = os.path.basename(image)
+                disaster = basename.split('_')[0]
+                pre_post = 'pre' if 'pre_disaster' in basename else 'post'
+                mask = os.path.join(mask_root, basename.replace('.png', '_target.png'))
+                files.append(
+                    {
+                        'image': image,
+                        'mask': mask,
+                        'disaster': disaster,
+                        'pre_post': pre_post,
+                    }
+                )
+        return files
+
+    def _filter_files(
+        self,
+        files: list[dict[str, str]],
+        disaster: str,
+        pre_post: Literal['pre', 'post', 'both'],
+    ) -> list[dict[str, str]]:
+        """Select the files matching a disaster and pre/post type.
+
+        Args:
+            files: List of all files as returned by :meth:`_gather_files`.
+            disaster: Disaster name to select.
+            pre_post: Which imagery to select: "pre", "post", or "both".
+
+        Returns:
+            List of dicts with the image and mask paths of the matching samples.
+        """
+        return [
+            {'image': file['image'], 'mask': file['mask']}
+            for file in files
+            if file['disaster'] == disaster and pre_post in ('both', file['pre_post'])
+        ]
