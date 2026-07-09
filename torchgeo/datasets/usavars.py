@@ -218,7 +218,11 @@ class USAVars(NonGeoDataset):
         for f_name in self.label_urls:
             download_url(self.label_urls[f_name], self.root, filename=f_name + '.csv')
 
-        download_url(self.data_url, self.root, md5=self.md5 if self.checksum else None)
+        download_url(
+            self.data_url.format(self.dirname + '.zip'),
+            self.root,
+            md5=self.md5 if self.checksum else None,
+        )
 
         for metadata in self.split_metadata.values():
             download_url(
