@@ -365,7 +365,7 @@ class SatCLIP(nn.Module):
         """
         super().__init__()
         if legendre_polys < 1:
-            raise ValueError('legendre_polys must be positive')  # pragma: no cover
+            raise ValueError('legendre_polys must be positive')
         if capacity < 1:
             raise ValueError('capacity must be positive')  # pragma: no cover
         if embed_dim < 1:

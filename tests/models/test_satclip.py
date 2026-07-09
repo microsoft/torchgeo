@@ -71,6 +71,10 @@ class TestSatCLIP:
 
         assert torch.isfinite(embeddings).all()
 
+    def test_satclip_invalid_legendre_polys(self) -> None:
+        with pytest.raises(ValueError, match='legendre_polys must be positive'):
+            satclip(legendre_polys=0)
+
     def test_satclip_weights(self, mocked_weights: SatCLIP_Weights) -> None:
         model = satclip(weights=mocked_weights)
         coords = torch.tensor([[0.0, 0.0]])
