@@ -140,7 +140,7 @@ class SkyScript(NonGeoDataset):
             index: Index to return.
 
         Returns:
-            A dict containing image and caption at index.
+            A dict containing image and tokenized caption at index.
         """
         filepath, title = self.captions.iloc[index][:2]
         output = self.tokenizer.encode(title)
