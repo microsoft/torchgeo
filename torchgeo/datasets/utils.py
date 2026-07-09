@@ -36,7 +36,7 @@ from pandas import Timedelta, Timestamp
 from rasterio import Affine, DatasetReader
 from rasterio.features import shapes, sieve
 from rasterio.vrt import WarpedVRT
-from shapely import Geometry, MultiPolygon, Polygon
+from shapely import Geometry, MultiPolygon, Polygon, box
 from torch import Tensor
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
@@ -1052,7 +1052,7 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
     return sorted(files)
 
 
-def clean_binary_mask(
+def _clean_binary_mask(
     mask: np.typing.NDArray[np.number], threshold: int = 1
 ) -> np.typing.NDArray[np.uint8]:
     """Convert any rasterio mask to a clean binary mask (uint8 0 or 255).
@@ -1069,8 +1069,6 @@ def clean_binary_mask(
     Returns:
         Binary mask of dtype uint8 with 255 = valid pixels, 0 = invalid.
         If input is 3D, masks are combined (OR) before thresholding.
-
-    .. versionadded:: 0.9
     """
     if mask.ndim == 3:
         combined = np.any(mask >= threshold, axis=0)
@@ -1081,10 +1079,10 @@ def clean_binary_mask(
     return binary_mask
 
 
-def calculate_valid_footprint_from_binary_mask(
+def _binary_mask_to_polygon(
     mask: np.typing.NDArray[np.uint8], transform: Affine, raster_resolution_x: float
 ) -> Polygon | MultiPolygon:
-    """Calculates valid data footprint from a binary raster mask.
+    """Vectorize a binary raster mask into a polygon.
 
     Args:
         mask: binary mask where 255 representing valid pixels
@@ -1093,9 +1091,7 @@ def calculate_valid_footprint_from_binary_mask(
         raster_resolution_x: pixel size in the x direction in CRS units
 
     Returns:
-        A `Polygon` or `MultiPolygon` representing the valid data footprint of the raster
-
-    .. versionadded:: 0.9
+        A `Polygon` or `MultiPolygon` representing the valid data mask
     """
     # Fill small nodata holes (< 0.2% of pixels, capped at 800) so minor
     # sensor artifacts don't fragment the footprint. Cap prevents the threshold
@@ -1110,7 +1106,7 @@ def calculate_valid_footprint_from_binary_mask(
     geoms = [g for g, v in shapes(sieved_mask, transform=transform) if v > 0]
 
     # coordinates[0] = exterior ring, coordinates[1:] = interior holes (if any).
-    vector_footprint = MultiPolygon(
+    vector_mask = MultiPolygon(
         [
             Polygon(feature['coordinates'][0], feature['coordinates'][1:])
             for feature in geoms
@@ -1121,68 +1117,33 @@ def calculate_valid_footprint_from_binary_mask(
     # removes jaggedness without distorting the actual shape. Works for any CRS
     # since the tolerance is expressed directly in CRS units.
     simplification_tolerance = 2 * raster_resolution_x
-    return cast(
-        Polygon | MultiPolygon, vector_footprint.simplify(simplification_tolerance)
-    )
+    return cast(Polygon | MultiPolygon, vector_mask.simplify(simplification_tolerance))
 
 
 def get_valid_footprint_from_datasource(
     src: DatasetReader | WarpedVRT,
 ) -> MultiPolygon | Polygon:
-    """Compute the valid data footprint of a raster dataset.
+    """Compute the valid (non-NoData) data footprint of a raster in its CRS.
 
     .. note::
-       If your dataset relies on nodata-value to create the masks, this might
-       add overhead. Consider writing nodata masks to file.
-
-    Analyzes the raster's mask band to determine the spatial extent of valid
-    (non-NoData) pixels, returning the result as a `Polygon` or `MultiPolygon`
-    in the dataset's coordinate reference system.
-
-    For large datasets it is more efficient to pre-compute footprints once and
-    store them, then look them up in
-    :meth:`~torchgeo.datasets.RasterDataset._footprint_from_datasource`
-    rather than recomputing on every dataset initialisation. Pre-compute to a
-    GeoPackage and then load the lookup table before ``super().__init__()``,
-    which is when ``_footprint_from_datasource`` is called for each file:
-
-    Examples:
-        # Pre-compute once
-        rows = []
-        for path in Path('data/').rglob('*.tif'):
-            with rasterio.open(path) as src:
-                rows.append({'filename': path.name,
-                             'geometry': get_valid_footprint_from_datasource(src)})
-        gpd.GeoDataFrame(rows, crs=src.crs).to_file('footprints.gpkg')
-
-        # Use in a RasterDataset subclass
-        class MyDataset(RasterDataset):
-            def __init__(self, root, footprints='footprints.gpkg', **kwargs):
-                gdf = gpd.read_file(footprints).set_index('filename')
-                self._footprints = gdf['geometry'].to_dict()
-                super().__init__(root, **kwargs)
-
-            def _footprint_from_datasource(self, src):
-                name = os.path.basename(src.name)
-                return self._footprints.get(name) or super()._footprint_from_datasource(src)
+       Deriving masks from a nodata value adds overhead. For large datasets,
+       pre-compute footprints once and look them up in
+       :meth:`~torchgeo.datasets.RasterDataset._footprint_from_datasource`
+       instead of recomputing on every initialisation.
 
     Args:
-        src: An open raster dataset, either a `DatasetReader` (from `rasterio.open`)
-            or a `WarpedVRT` instance.
+        src: An open raster dataset (`DatasetReader` or `WarpedVRT`).
 
     Returns:
-        A `Polygon` or `MultiPolygon` representing the footprint of valid data
-        in the raster's CRS.
+        A `Polygon` or `MultiPolygon` of the valid data footprint.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
-    import shapely
-
     valid_data_mask = src.dataset_mask()
-    binary_mask = clean_binary_mask(valid_data_mask)
+    binary_mask = _clean_binary_mask(valid_data_mask)
 
     if (binary_mask == 255).all():
-        return shapely.box(*src.bounds)
+        return box(*src.bounds)
 
     if (binary_mask == 0).all():
         warnings.warn(
@@ -1193,6 +1154,6 @@ def get_valid_footprint_from_datasource(
         return Polygon()
 
     res_x = src.res[0] if isinstance(src.res, tuple) else src.res
-    return calculate_valid_footprint_from_binary_mask(
+    return _binary_mask_to_polygon(
         mask=binary_mask, transform=src.transform, raster_resolution_x=res_x
     )
