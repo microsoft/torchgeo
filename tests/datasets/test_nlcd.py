@@ -41,7 +41,7 @@ class TestNLCD:
 
     def test_classes(self) -> None:
         root = os.path.join('tests', 'data', 'nlcd')
-        classes = list(NLCD.cmap.keys())[:5]
+        classes = list(NLCD.valid_classes)[5:]
         ds = NLCD(root, years=[2019], classes=classes)
         sample = ds[ds.bounds]
         mask = sample['mask']

@@ -160,7 +160,7 @@ def convolution_arithmetic[T: (float, Timedelta)](
     .. versionadded:: 0.10
     """
     stride = stride or kernel_size
-    return math.ceil((input_size - kernel_size) / stride) + 1  # ty: ignore[no-matching-overload]
+    return math.ceil((input_size - kernel_size) / stride) + 1
 
 
 def prism(x: NDArray, y: NDArray, z: NDArray) -> list[NDArray]:

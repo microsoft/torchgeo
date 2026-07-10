@@ -6,12 +6,14 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import cast
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import rasterio
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 from torch import Tensor
@@ -107,28 +109,58 @@ class AgriFieldNet(RasterDataset):
         'B12',
     )
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (255, 211, 0, 255),
-        2: (255, 37, 37, 255),
-        3: (0, 168, 226, 255),
-        4: (255, 158, 9, 255),
-        5: (37, 111, 0, 255),
-        6: (255, 255, 0, 255),
-        8: (111, 166, 0, 255),
-        9: (0, 175, 73, 255),
-        13: (222, 166, 9, 255),
-        14: (222, 166, 9, 255),
-        15: (124, 211, 255, 255),
-        16: (226, 0, 124, 255),
-        36: (137, 96, 83, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (255, 211, 0, 255),
+                (255, 37, 37, 255),
+                (0, 168, 226, 255),
+                (255, 158, 9, 255),
+                (37, 111, 0, 255),
+                (255, 255, 0, 255),
+                (0, 0, 0, 255),
+                (111, 166, 0, 255),
+                (0, 175, 73, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (222, 166, 9, 255),
+                (222, 166, 9, 255),
+                (124, 211, 255, 255),
+                (226, 0, 124, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (137, 96, 83, 255),
+            ]
+        )
+        / 255
+    )
+
+    valid_classes = (0, 1, 2, 3, 4, 5, 6, 8, 9, 13, 14, 15, 16, 36)
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        classes: list[int] = list(cmap.keys()),
+        classes: list[int] = list(valid_classes),
         bands: Sequence[str] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
@@ -157,8 +189,8 @@ class AgriFieldNet(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= set(self.valid_classes), (
+            f'Only the following classes are valid: {self.valid_classes}.'
         )
         assert 0 in classes, 'Classes must include the background class: 0'
 
@@ -178,11 +210,11 @@ class AgriFieldNet(RasterDataset):
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(self.valid_classes[-1] + 1, dtype=self.dtype)
+        self.inverse_map = torch.zeros(len(classes), dtype=self.dtype)
         for v, k in enumerate(classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -298,25 +330,32 @@ class AgriFieldNet(RasterDataset):
         image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = quantile_normalization(image)
 
-        mask = sample['mask'].squeeze()
+        mask = self.inverse_map[sample['mask']]
         ncols = 2
 
         showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample['prediction'].squeeze()
+            pred = self.inverse_map[sample['prediction']]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        kwargs = {
+            'cmap': self.cmap,
+            'vmin': self.valid_classes[0],
+            'vmax': self.valid_classes[-1],
+            'interpolation': 'none',
+        }
+
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].imshow(mask, **kwargs)
         axs[1].axis('off')
         if show_titles:
             axs[0].set_title('Image')
             axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[2].imshow(pred, **kwargs)
             axs[2].axis('off')
             if show_titles:
                 axs[2].set_title('Prediction')
