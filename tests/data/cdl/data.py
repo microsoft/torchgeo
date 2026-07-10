@@ -66,7 +66,7 @@ if __name__ == '__main__':
         for e in raster_extensions:
             create_file(
                 os.path.join(dir, filename.replace('.zip', e)),
-                dtype='int8',
+                dtype='uint8',
                 num_channels=1,
             )
 

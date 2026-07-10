@@ -425,7 +425,17 @@ def download_url(
         # TODO: use gdown if we want Google Drive support
         # TODO: use requests if we want redirect support
         # TODO: use tqdm if we want a progress bar
-        urllib.request.urlretrieve(url, fpath)
+        request = urllib.request.Request(url, headers={'User-Agent': 'torchgeo'})
+        # Stream to a temporary file and atomically replace on success so an
+        # interrupted download cannot leave a truncated file behind.
+        tmp = f'{fpath}.tmp'
+        try:
+            with urllib.request.urlopen(request) as response, open(tmp, 'wb') as f:
+                shutil.copyfileobj(response, f)
+            os.replace(tmp, fpath)
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)
         if not check_integrity(fpath, md5, **kwargs):
             raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
 

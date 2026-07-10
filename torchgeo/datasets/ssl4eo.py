@@ -105,24 +105,24 @@ class SSL4EOL(SSL4EO):
     """
 
     class _Metadata(TypedDict):
-        all_bands: list[str]
+        all_bands: tuple[str, ...]
         rgb_bands: list[int]
 
     metadata: ClassVar[dict[str, _Metadata]] = {
         'tm_toa': {
-            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+            'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
             'rgb_bands': [2, 1, 0],
         },
         'etm_toa': {
-            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B6', 'B7', 'B8'],
+            'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B6', 'B7', 'B8'),
             'rgb_bands': [2, 1, 0],
         },
         'etm_sr': {
-            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+            'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B7'),
             'rgb_bands': [2, 1, 0],
         },
         'oli_tirs_toa': {
-            'all_bands': [
+            'all_bands': (
                 'B1',
                 'B2',
                 'B3',
@@ -134,11 +134,11 @@ class SSL4EOL(SSL4EO):
                 'B9',
                 'B10',
                 'B11',
-            ],
+            ),
             'rgb_bands': [3, 2, 1],
         },
         'oli_sr': {
-            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+            'all_bands': ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'),
             'rgb_bands': [3, 2, 1],
         },
     }
@@ -434,16 +434,16 @@ class SSL4EOS12(SSL4EO):
     size = 264
 
     class _Metadata(TypedDict):
-        bands: list[str]
+        bands: tuple[str, ...]
         filename_regex: str
 
     metadata: ClassVar[dict[str, _Metadata]] = {
         's1': {
-            'bands': ['VV', 'VH'],
+            'bands': ('VV', 'VH'),
             'filename_regex': r'^.{16}_(?P<date>\d{8}T\d{6})',
         },
         's2c': {
-            'bands': [
+            'bands': (
                 'B1',
                 'B2',
                 'B3',
@@ -457,11 +457,11 @@ class SSL4EOS12(SSL4EO):
                 'B10',
                 'B11',
                 'B12',
-            ],
+            ),
             'filename_regex': r'^(?P<date>\d{8}T\d{6})',
         },
         's2a': {
-            'bands': [
+            'bands': (
                 'B1',
                 'B2',
                 'B3',
@@ -474,7 +474,7 @@ class SSL4EOS12(SSL4EO):
                 'B9',
                 'B11',
                 'B12',
-            ],
+            ),
             'filename_regex': r'^(?P<date>\d{8}T\d{6})',
         },
     }
