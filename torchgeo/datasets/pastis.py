@@ -100,28 +100,33 @@ class PASTIS(NonGeoDataset):
         'sorghum',
         'void_label',  # for parcels mostly outside their patch
     )
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (174, 199, 232, 255),
-        2: (255, 127, 14, 255),
-        3: (255, 187, 120, 255),
-        4: (44, 160, 44, 255),
-        5: (152, 223, 138, 255),
-        6: (214, 39, 40, 255),
-        7: (255, 152, 150, 255),
-        8: (148, 103, 189, 255),
-        9: (197, 176, 213, 255),
-        10: (140, 86, 75, 255),
-        11: (196, 156, 148, 255),
-        12: (227, 119, 194, 255),
-        13: (247, 182, 210, 255),
-        14: (127, 127, 127, 255),
-        15: (199, 199, 199, 255),
-        16: (188, 189, 34, 255),
-        17: (219, 219, 141, 255),
-        18: (23, 190, 207, 255),
-        19: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (174, 199, 232, 255),
+                (255, 127, 14, 255),
+                (255, 187, 120, 255),
+                (44, 160, 44, 255),
+                (152, 223, 138, 255),
+                (214, 39, 40, 255),
+                (255, 152, 150, 255),
+                (148, 103, 189, 255),
+                (197, 176, 213, 255),
+                (140, 86, 75, 255),
+                (196, 156, 148, 255),
+                (227, 119, 194, 255),
+                (247, 182, 210, 255),
+                (127, 127, 127, 255),
+                (199, 199, 199, 255),
+                (188, 189, 34, 255),
+                (219, 219, 141, 255),
+                (23, 190, 207, 255),
+                (255, 255, 255, 255),
+            ]
+        )
+        / 255
+    )
     directory = 'PASTIS-R'
     filename = 'PASTIS-R.zip'
     url = 'https://zenodo.org/records/5735646/files/PASTIS-R.zip?download=1'
@@ -207,17 +212,6 @@ class PASTIS(NonGeoDataset):
         self.checksum = checksum
         self._verify()
         self.files = self._load_files()
-
-        colors = []
-        for i in range(len(self.cmap)):
-            colors.append(
-                (
-                    self.cmap[i][0] / 255.0,
-                    self.cmap[i][1] / 255.0,
-                    self.cmap[i][2] / 255.0,
-                )
-            )
-        self._cmap = ListedColormap(colors)
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -417,13 +411,13 @@ class PASTIS(NonGeoDataset):
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
         axs[0].imshow(images[0])
         axs[1].imshow(images[1])
-        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self._cmap, interpolation='none')
+        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
         axs[0].axis('off')
         axs[1].axis('off')
         axs[2].axis('off')
         if showing_predictions:
             axs[3].imshow(
-                predictions, vmin=0, vmax=19, cmap=self._cmap, interpolation='none'
+                predictions, vmin=0, vmax=19, cmap=self.cmap, interpolation='none'
             )
             axs[3].axis('off')
 

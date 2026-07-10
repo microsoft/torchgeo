@@ -3,6 +3,8 @@
 
 """Mixins for dataset classes."""
 
+from matplotlib.colors import Colormap
+
 
 class PlottingMixin:
     """Mixin for dataset plotting.
@@ -15,3 +17,6 @@ class PlottingMixin:
 
     #: Names of RGB bands in the dataset
     rgb_bands: tuple[str, ...] = ()
+
+    #: Color map for the dataset
+    cmap: str | Colormap | None = None

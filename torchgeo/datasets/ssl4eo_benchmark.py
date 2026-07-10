@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -104,9 +105,10 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     split_percentages = (0.7, 0.15, 0.15)
 
-    cmaps: ClassVar[dict[str, dict[int, tuple[int, int, int, int]]]] = {
-        'nlcd': NLCD.cmap,
-        'cdl': CDL.cmap,
+    cmaps: ClassVar[dict[str, Colormap]] = {'nlcd': NLCD.cmap, 'cdl': CDL.cmap}
+    valid_classes: ClassVar[dict[str, tuple[int, ...]]] = {
+        'nlcd': NLCD.valid_classes,
+        'cdl': CDL.valid_classes,
     }
 
     def __init__(
@@ -153,20 +155,22 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         self.cmap = self.cmaps[product]
         if classes is None:
-            classes = list(self.cmap.keys())
+            self.classes = self.valid_classes[product]
+        else:
+            self.classes = classes
 
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(self.classes) <= set(self.valid_classes[product]), (
+            f'Only the following classes are valid: {self.valid_classes[product]}.'
         )
-        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.root = root
-        self.classes = classes
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=torch.long)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(
+            self.valid_classes[product][-1] + 1, dtype=torch.long
+        )
+        self.inverse_map = torch.zeros(len(self.classes), dtype=torch.long)
         self.img_dir_name = self.image_root.format(self.sensor)
         self.mask_dir_name = self.mask_dir_dict[self.sensor].format(self.product)
 
@@ -192,7 +196,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -345,24 +349,26 @@ class SSL4EOLBenchmark(NonGeoDataset):
         image = sample['image'][self.rgb_indices[self.sensor]].permute(1, 2, 0)
         image = image / 255
 
-        mask = sample['mask'].squeeze(0)
+        mask = self.inverse_map[sample['mask']]
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze(0)
+            pred = self.inverse_map[sample['prediction']]
             ncols = 3
 
         fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 255, 'interpolation': 'none'}
+
         ax[0].imshow(image)
         ax[0].axis('off')
-        ax[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        ax[1].imshow(mask, **kwargs)
         ax[1].axis('off')
         if show_titles:
             ax[0].set_title('Image')
             ax[1].set_title('Mask')
 
         if showing_predictions:
-            ax[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            ax[2].imshow(pred, **kwargs)
             if show_titles:
                 ax[2].set_title('Prediction')
 

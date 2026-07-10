@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable
 from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
-import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -74,13 +74,9 @@ class NCCM(RasterDataset):
         2017: 'CDL2017_clip.tif',
     }
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 255, 0, 255),
-        1: (255, 0, 0, 255),
-        2: (255, 255, 0, 255),
-        3: (128, 128, 128, 255),
-        15: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        [(0, 1, 0, 1), (1, 0, 0, 1), (1, 1, 0, 1), (0.5, 0.5, 0.5, 1), (1, 1, 1, 1)]
+    )
 
     def __init__(
         self,
@@ -126,17 +122,11 @@ class NCCM(RasterDataset):
         self.years = years
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.full((max(self.cmap.keys()) + 1,), 4, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((5, 4), dtype=torch.uint8)
 
         self._verify()
         super().__init__(
             paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
         )
-
-        for i, (k, v) in enumerate(self.cmap.items()):
-            self.ordinal_map[k] = i
-            self.ordinal_cmap[i] = torch.tensor(v)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -151,7 +141,10 @@ class NCCM(RasterDataset):
             IndexError: If *index* is not found in the dataset.
         """
         sample = super().__getitem__(index)
-        sample['mask'] = self.ordinal_map[sample['mask']]
+
+        # Convert nodata class (15) to 4 so there are no gaps in our ordinal mapping
+        sample['mask'][sample['mask'] == 15] = 4
+
         return sample
 
     def _verify(self) -> None:
@@ -192,26 +185,25 @@ class NCCM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample['mask'].squeeze()
+        mask = sample['mask']
         ncols = 1
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze()
+            pred = sample['prediction']
             ncols = 2
 
-        fig, axs = plt.subplots(
-            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
-        )
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 4, 4), squeeze=False)
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 4, 'interpolation': 'none'}
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis('off')
 
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')
