@@ -794,7 +794,7 @@ class RasterDataset(GeoDataset):
         return dst_transform, dst_width, dst_height, needs_warp
 
     def footprint_from_datasource(
-        self, dataset: DatasetReader | WarpedVRT
+        self, datasource: DatasetReader | WarpedVRT
     ) -> MultiPolygon | Polygon:
         """Compute the spatial footprint of the dataset from a file handle.
 
@@ -803,7 +803,7 @@ class RasterDataset(GeoDataset):
         just the raster bounds (e.g. by reading a metadata file).
 
         Args:
-            dataset: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
+            datasource: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
                 or a :class:`rasterio.vrt.WarpedVRT`.
 
         Returns:
@@ -813,7 +813,7 @@ class RasterDataset(GeoDataset):
 
         .. versionadded:: 0.10
         """
-        return shapely.box(*dataset.bounds)
+        return shapely.box(*datasource.bounds)
 
 
 class XarrayDataset(GeoDataset):

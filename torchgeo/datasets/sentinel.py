@@ -469,7 +469,7 @@ class Sentinel2(Sentinel):
         return fig
 
     def footprint_from_datasource(
-        self, dataset: DatasetReader | WarpedVRT
+        self, datasource: DatasetReader | WarpedVRT
     ) -> MultiPolygon | Polygon:
         """Extract the true geometric footprint from a Sentinel-2 datasource.
 
@@ -478,25 +478,25 @@ class Sentinel2(Sentinel):
         geographic coordinates (EPSG:4326) into the CRS of the given dataset.
 
         Args:
-            dataset: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
+            datasource: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
                 or a :class:`rasterio.vrt.WarpedVRT`, from which the footprint will
                 be derived.
 
         .. versionadded:: 0.10
         """
-        if hasattr(dataset, 'src_dataset'):
+        if hasattr(datasource, 'src_dataset'):
             # When dataset is a WarpedVRT
-            filepath = dataset.src_dataset.name
+            filepath = datasource.src_dataset.name
         else:
-            filepath = dataset.name
+            filepath = datasource.name
         metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
         if not os.path.exists(metadata_path):
-            return super().footprint_from_datasource(dataset)
+            return super().footprint_from_datasource(datasource)
         with rasterio.open(metadata_path) as metadata_src:
             tags = metadata_src.tags()
         # The FOOTPRINT tag in MTD_MSIL1C.xml is always stored in EPSG:4326.
         return (
             gpd.GeoSeries.from_wkt([tags['FOOTPRINT']], crs='EPSG:4326')
-            .to_crs(dataset.crs)
+            .to_crs(datasource.crs)
             .iloc[0]
         )
