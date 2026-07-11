@@ -24,11 +24,13 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
 import pyogrio
 import rasterio
+import requests
 import shapely.affinity
 import torch
 from numpy.typing import NDArray
@@ -37,6 +39,7 @@ from rasterio import Affine
 from shapely import Geometry
 from torch import Tensor
 from torchvision.utils import draw_segmentation_masks
+from tqdm import tqdm
 from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
@@ -423,15 +426,54 @@ def download_url(
     if not check_integrity(fpath, md5, **kwargs):
         # TODO: use fsspec if we want AWS/Azure/GCS support
         # TODO: use gdown if we want Google Drive support
-        # TODO: use requests if we want redirect support
-        # TODO: use tqdm if we want a progress bar
-        request = urllib.request.Request(url, headers={'User-Agent': 'torchgeo'})
-        # Stream to a temporary file and atomically replace on success so an
-        # interrupted download cannot leave a truncated file behind.
         tmp = f'{fpath}.tmp'
+        parsed_url = urlparse(url)
         try:
-            with urllib.request.urlopen(request) as response, open(tmp, 'wb') as f:
-                shutil.copyfileobj(response, f)
+            if parsed_url.scheme in ('http', 'https'):
+                response = requests.get(
+                    url,
+                    stream=True,
+                    headers={'User-Agent': 'torchgeo'},
+                    allow_redirects=True,
+                )
+                response.raise_for_status()
+                total_size = int(response.headers.get('content-length', 0))
+
+                with (
+                    open(tmp, 'wb') as f,
+                    tqdm(
+                        desc=str(filename),
+                        total=total_size,
+                        unit='iB',
+                        unit_scale=True,
+                        unit_divisor=1024,
+                    ) as bar,
+                ):
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            bar.update(len(chunk))
+            else:
+                # file:// and other non-HTTP schemes: urllib handles these
+                # natively, requests does not.
+                request = urllib.request.Request(
+                    url, headers={'User-Agent': 'torchgeo'}
+                )
+                with urllib.request.urlopen(request) as response:
+                    total_size = int(response.headers.get('Content-Length', 0))
+                    with (
+                        open(tmp, 'wb') as f,
+                        tqdm(
+                            desc=str(filename),
+                            total=total_size,
+                            unit='iB',
+                            unit_scale=True,
+                            unit_divisor=1024,
+                        ) as bar,
+                    ):
+                        while chunk := response.read(8192):
+                            f.write(chunk)
+                            bar.update(len(chunk))
             os.replace(tmp, fpath)
         finally:
             if os.path.exists(tmp):
