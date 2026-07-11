@@ -74,6 +74,7 @@ dependencies = [
     "rasterio>=1.4.3",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "requests>=2.25",
+    "tqdm>=4.60",
     # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
     "segmentation-models-pytorch>=0.5",
     # shapely 2.0.2+ required for Python 3.12 wheels
