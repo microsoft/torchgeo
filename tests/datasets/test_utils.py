@@ -402,6 +402,34 @@ def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> N
     assert list(tmp_path.iterdir()) == []
 
 
+def test_download_url_http(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    url = 'https://example.com/test.zip'
+    filename = 'test.zip'
+    content = b'test_data'
+
+    class MockResponse:
+        def __init__(self) -> None:
+            self.headers = {'content-length': str(len(content))}
+
+        def raise_for_status(self) -> None:
+            pass
+
+        def iter_content(self, chunk_size: int = 8192) -> Any:
+            yield content
+            yield b''  # test empty chunk handling
+
+    def mock_get(*args: Any, **kwargs: Any) -> MockResponse:
+        return MockResponse()
+
+    monkeypatch.setattr('torchgeo.datasets.utils.requests.get', mock_get)
+
+    download_url(url, tmp_path, filename=filename)
+
+    assert (tmp_path / filename).exists()
+    with open(tmp_path / filename, 'rb') as f:
+        assert f.read() == content
+
+
 def test_download_and_extract_archive(tmp_path: Path) -> None:
     url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
     md5 = '91dd532523a543fb8dee0887e4188e9b'
