@@ -392,7 +392,7 @@ def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> N
     def interrupt(*args: Any, **kwargs: Any) -> None:
         raise OSError('simulated network reset')
 
-    monkeypatch.setattr(shutil, 'copyfileobj', interrupt)
+    monkeypatch.setattr('torchgeo.datasets.utils.tqdm.update', interrupt)
 
     with pytest.raises(OSError, match='simulated network reset'):
         download_url(url, tmp_path, filename=filename)
