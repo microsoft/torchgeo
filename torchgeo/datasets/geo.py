@@ -806,8 +806,8 @@ class RasterDataset(GeoDataset):
                 or a :class:`rasterio.vrt.WarpedVRT`.
 
         Returns:
-            A :class:`shapely.geometry.Polygon` or
-            :class:`shapely.geometry.MultiPolygon` representing the footprint
+            A :class:`shapely.Polygon` or
+            :class:`shapely.MultiPolygon` representing the footprint
             in the dataset's CRS.
 
         .. versionadded:: 0.10
