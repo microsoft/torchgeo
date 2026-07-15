@@ -20,20 +20,16 @@ class GeoTIFFWriter:
 
     Example::
 
-        writer = GeoTIFFWriter(
+        with GeoTIFFWriter(
             output_path='output.tif',
             width=1024,
             height=1024,
             num_bands=1,
             crs='EPSG:32631',
             transform=Affine(...),
-        )
-
-        with writer:
+        ) as writer:
             for chunk_y, chunk_x, chunk_data in chunks:
                 writer.write_chunk(chunk_data, chunk_y, chunk_x)
-
-        writer.finalize()
 
     """
 
@@ -112,7 +108,7 @@ class GeoTIFFWriter:
         self.dataset.write(data, 1, window=window)
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Close dataset on exit.
+        """Finalize the COG on exit and clean up the temporary file.
 
         Args:
             exc_type: Exception type.
@@ -121,20 +117,31 @@ class GeoTIFFWriter:
         """
         if self.dataset:
             self.dataset.close()
+            self.dataset = None
 
-    def finalize(self) -> None:
+        if exc_type is not None:
+            self.tmp_path.unlink(missing_ok=True)
+            return
+
+        self._finalize()
+
+    def _finalize(self) -> None:
         """Translate the written GTiff into a Cloud-Optimized GeoTIFF.
 
         Streams the temporary GTiff through the GDAL COG driver, which builds
         overviews so it validates as a COG, without loading the full resolution
         image into memory.
         """
-        rasterio.shutil.copy(
-            self.tmp_path,
-            self.output_path,
-            driver='COG',
-            compress=self.cog_config.get('compress', 'lzw'),
-            overview_resampling=self.cog_config.get('overview_resampling', 'nearest'),
-            BIGTIFF='IF_SAFER',
-        )
-        self.tmp_path.unlink()
+        try:
+            rasterio.shutil.copy(
+                self.tmp_path,
+                self.output_path,
+                driver='COG',
+                compress=self.cog_config.get('compress', 'lzw'),
+                overview_resampling=self.cog_config.get(
+                    'overview_resampling', 'nearest'
+                ),
+                BIGTIFF='IF_SAFER',
+            )
+        finally:
+            self.tmp_path.unlink(missing_ok=True)
