@@ -14,12 +14,12 @@ import segmentation_models_pytorch as smp
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
 from ..models import FCN, get_weight
+from ..models._weights import WeightsEnum
 from . import utils
 from .base import BaseTask
 from .mixins import ClassificationMixin
@@ -98,7 +98,8 @@ class SemanticSegmentationTask(ClassificationMixin, BaseTask):
            The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
-           The *weights* parameter now supports WeightEnums and checkpoint paths.
+           The *weights* parameter now supports pretrained weight configurations
+           and checkpoint paths.
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
 

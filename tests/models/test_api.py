@@ -3,10 +3,13 @@
 
 import enum
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+import timm
+import torch
 import torch.nn as nn
-from torchvision.models._api import WeightsEnum
+from pytest import MonkeyPatch
 
 from torchgeo.models import (
     Aurora_Weights,
@@ -72,6 +75,7 @@ from torchgeo.models import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+from torchgeo.models._weights import WeightsEnum
 
 builders = [
     aurora_swin_unet,
@@ -169,6 +173,28 @@ def test_get_weight(enum: WeightsEnum) -> None:
 def test_list_models() -> None:
     models = [builder.__name__ for builder in builders]
     assert set(models) == set(list_models())
+
+
+def test_timm_registry(
+    tmp_path: Path, load_state_dict_from_url: None, monkeypatch: MonkeyPatch
+) -> None:
+    model_name = 'torchgeo_resnet18.sentinel2_all_moco'
+    assert model_name in timm.list_models(pretrained=True, include_tags=True)
+
+    cfg = timm.get_pretrained_cfg(model_name)
+    assert cfg is not None
+    assert cfg.input_size == (13, 224, 224)
+    assert cfg.meta['model'] == 'resnet18'
+
+    model = timm.create_model('torchgeo_resnet18', in_chans=13)
+    assert isinstance(model, nn.Module)
+
+    weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
+    path = tmp_path / 'weights.pth'
+    torch.save(timm.create_model('resnet18', in_chans=13).state_dict(), path)
+    monkeypatch.setattr(weights.value, 'url', str(path))
+    model = timm.create_model(model_name, pretrained=True)
+    assert model.conv1.in_channels == 13
 
 
 def test_invalid_model() -> None:

@@ -13,7 +13,8 @@ from typing import Any
 import torch
 from einops import rearrange
 from torch import Tensor, einsum, nn
-from torchvision.models._api import Weights, WeightsEnum
+
+from ._weights import Weights, WeightsEnum
 
 
 class CROMA(nn.Module):

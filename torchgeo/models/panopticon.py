@@ -9,9 +9,9 @@ import timm
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
+from ._weights import Weights, WeightsEnum
 from .copernicusfm import resize_abs_pos_embed
 
 

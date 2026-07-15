@@ -15,7 +15,8 @@ import torch
 import torch.nn as nn
 from einops import repeat
 from timm.models.vision_transformer import Block
-from torchvision.models._api import Weights, WeightsEnum
+
+from ._weights import Weights, WeightsEnum
 
 BANDS_GROUPS_IDX: dict[str, Sequence[int]] = {
     'S1': (0, 1),

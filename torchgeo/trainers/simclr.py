@@ -18,12 +18,12 @@ from lightly.models.modules import SimCLRProjectionHead
 from lightly.utils.lars import LARS
 from torch import Tensor
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
-from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
 from ..datasets.utils import Sample
 from ..models import get_weight
+from ..models._weights import WeightsEnum
 from . import utils
 from .base import BaseTask
 

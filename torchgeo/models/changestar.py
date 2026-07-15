@@ -10,7 +10,6 @@ import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
-from torchvision.models._api import WeightsEnum
 
 from .farseg import FarSeg
 
@@ -189,14 +188,15 @@ class ChangeStarFarSeg(ChangeStar):
         self,
         backbone: str = 'resnet50',
         classes: int = 1,
-        backbone_weights: WeightsEnum | None = None,
+        backbone_weights: str | None = None,
     ) -> None:
         """Initializes a new ChangeStarFarSeg model.
 
         Args:
             backbone: name of ResNet backbone
             classes: number of output segmentation classes
-            backbone_weights: Pre-trained model weights to use.
+            backbone_weights: Name of the pre-trained encoder weights to use, as
+                supported by SMP.
 
         .. versionadded:: 0.9
            The *backbone_weights* parameter.

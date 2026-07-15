@@ -1,21 +1,16 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""APIs for querying and loading pre-trained model weights.
-
-See the following references for design details:
-
-* https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
-* https://docs.pytorch.org/vision/stable/models.html
-* https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
-"""
+"""APIs for querying and loading pre-trained model weights."""
 
 from collections.abc import Callable
 from typing import Any
 
 import torch.nn as nn
-from torchvision.models._api import WeightsEnum
 
+from ._timm import create_model, get_model_name, register_models
+from ._timm import get_weight as get_timm_weight
+from ._weights import WeightsEnum
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -103,9 +98,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
 }
 
-_model_weights: dict[
-    str | Callable[..., nn.Module], WeightsEnum
-] = {  # ty :ignore[invalid-assignment]
+_model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     aurora_swin_unet: Aurora_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
@@ -164,6 +157,8 @@ _model_weights: dict[
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
 }
 
+register_models(_model, _model_weights)
+
 
 def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     """Get an instantiated model from its name.
@@ -178,11 +173,11 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     Returns:
         An instantiated model.
     """
-    model: nn.Module = _model[name](*args, **kwargs)
+    model: nn.Module = create_model(get_model_name(name), *args, **kwargs)
     return model
 
 
-def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
+def get_model_weights(name: Callable[..., nn.Module] | str) -> type[WeightsEnum]:
     """Get the weights enum class associated with a given model.
 
     .. versionadded:: 0.4
@@ -210,13 +205,7 @@ def get_weight(name: str) -> WeightsEnum:
     Raises:
         ValueError: If *name* is not a valid WeightsEnum.
     """
-    for weight_name, weight_enum in _model_weights.items():
-        if isinstance(weight_name, str):
-            for sub_weight_enum in weight_enum:  # ty: ignore[not-iterable]
-                if name == str(sub_weight_enum):
-                    return sub_weight_enum
-
-    raise ValueError(f'{name} is not a valid WeightsEnum')
+    return get_timm_weight(name)
 
 
 def list_models() -> list[str]:

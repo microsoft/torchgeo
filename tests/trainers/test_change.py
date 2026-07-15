@@ -14,12 +14,12 @@ import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, OSCDDataModule
 from torchgeo.datasets import OSCD, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
+from torchgeo.models._weights import WeightsEnum
 from torchgeo.trainers import ChangeDetectionTask
 
 

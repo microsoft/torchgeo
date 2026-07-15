@@ -12,12 +12,12 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models._api import WeightsEnum
 from torchvision.models.detection import maskrcnn_resnet50_fpn
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
+from ..models._weights import WeightsEnum
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 

@@ -12,7 +12,8 @@ import torch
 import torchvision.transforms.v2 as T
 from einops import rearrange
 from torch import Tensor, nn
-from torchvision.models._api import Weights, WeightsEnum
+
+from ._weights import Weights, WeightsEnum
 
 # Normalization statistics from https://github.com/ucam-eo/tessera/blob/b994972f637d1985185725153b55cf1624a7a445/tessera_infer/src/datasets/ssl_dataset.py#L20-L26
 # These values are aligned to Tessera's non-conventional Sentinel-2 channel order

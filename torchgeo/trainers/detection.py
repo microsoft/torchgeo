@@ -15,7 +15,6 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models._api import WeightsEnum
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
@@ -24,6 +23,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
+from ..models._weights import WeightsEnum
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 

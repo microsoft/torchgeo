@@ -10,11 +10,11 @@ import timm
 import torch
 from pytest import MonkeyPatch
 from torch.nn import Module
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
+from torchgeo.models._weights import WeightsEnum
 from torchgeo.trainers import SimCLRTask
 
 from .test_classification import ClassificationTestModel

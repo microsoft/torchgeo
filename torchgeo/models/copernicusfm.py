@@ -17,9 +17,9 @@ import torch.nn.init as init
 from einops import rearrange
 from timm.models.vision_transformer import Block
 from torch import Tensor, vmap
-from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
+from ._weights import Weights, WeightsEnum
 from .dofa import FCResLayer, TransformerWeightGenerator
 
 

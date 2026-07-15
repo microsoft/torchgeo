@@ -13,7 +13,8 @@ import torch.nn.init as init
 import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
 from torch import Tensor
-from torchvision.models._api import Weights, WeightsEnum
+
+from ._weights import Weights, WeightsEnum
 
 
 def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:

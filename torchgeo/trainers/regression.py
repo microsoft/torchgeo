@@ -13,12 +13,12 @@ import timm
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
 from ..models import FCN, get_weight
+from ..models._weights import WeightsEnum
 from . import utils
 from .base import BaseTask
 from .mixins import RegressionMixin
