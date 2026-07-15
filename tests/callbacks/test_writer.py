@@ -69,6 +69,53 @@ class TestGeoTIFFWriter:
             assert data[127, 0] == 3
             assert data[127, 127] == 4
 
+    def test_write_multi_band(self, tmp_path: Path) -> None:
+        """Test writing multi-band chunks."""
+        output = tmp_path / 'test.tif'
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=3,
+            crs='EPSG:32631',
+            transform=transform,
+        )
+
+        data = np.arange(3 * 64 * 64, dtype=np.uint8).reshape(3, 64, 64)
+
+        with writer:
+            writer.write_chunk(data, 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.count == 3
+            np.testing.assert_array_equal(src.read(), data)
+
+    def test_write_float(self, tmp_path: Path) -> None:
+        """Test writing float chunks."""
+        output = tmp_path / 'test.tif'
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+            dtype='float32',
+        )
+
+        data = np.random.rand(64, 64).astype(np.float32)
+
+        with writer:
+            writer.write_chunk(data, 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.dtypes[0] == 'float32'
+            np.testing.assert_array_equal(src.read(1), data)
+
     def test_write_without_context_raises(self, tmp_path: Path) -> None:
         """Test writing without context manager raises error."""
         output = tmp_path / 'test.tif'

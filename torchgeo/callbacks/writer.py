@@ -91,21 +91,24 @@ class GeoTIFFWriter:
         return self
 
     def write_chunk(
-        self, data: np.typing.NDArray[np.uint8], y_offset: int, x_offset: int
+        self, data: np.typing.NDArray[Any], y_offset: int, x_offset: int
     ) -> None:
         """Write a chunk to the output GeoTIFF.
 
         Args:
-            data: Chunk data of shape (H, W) for single band.
+            data: Chunk data of shape (H, W) for single band or (C, H, W) for
+                multi-band.
             y_offset: Row offset in output.
             x_offset: Column offset in output.
         """
         if self.dataset is None:
             raise RuntimeError('Writer not opened. Use with statement.')
 
-        h, w = data.shape
+        if data.ndim == 2:
+            data = data[np.newaxis]
+        _, h, w = data.shape
         window = Window(x_offset, y_offset, w, h)  # ty: ignore[too-many-positional-arguments]
-        self.dataset.write(data, 1, window=window)
+        self.dataset.write(data, window=window)
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Finalize the COG on exit and clean up the temporary file.
