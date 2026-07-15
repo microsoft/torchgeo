@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""timm registry integration."""
+"""Register TorchGeo models and pretrained weights with timm."""
 
 from collections.abc import Callable
 from dataclasses import replace
@@ -18,13 +18,14 @@ from torch import nn
 
 from ._weights import WeightsEnum
 
+# timm looks for this mapping in the module that defines each entrypoint.
 default_cfgs: dict[str, PretrainedCfg] = {}
 _model_names: dict[str, str] = {}
 _weights_by_name: dict[str, WeightsEnum] = {}
 
 
-def _cfg_input_size(weight: WeightsEnum) -> tuple[int, int, int]:
-    """Infer an input size from TorchGeo metadata."""
+def _get_input_size(weight: WeightsEnum) -> tuple[int, int, int]:
+    """Get a timm input size from TorchGeo weight metadata."""
     input_size = weight.input_size
     in_chans = weight.meta.get('in_chans', input_size[0])
     image_size = weight.meta.get('img_size', weight.meta.get('image_size'))
@@ -33,30 +34,29 @@ def _cfg_input_size(weight: WeightsEnum) -> tuple[int, int, int]:
     return (in_chans, image_size, image_size)
 
 
-def _get_weight(
-    model_name: str,
-    pretrained_cfg: str | PretrainedCfg | WeightsEnum | None,
+def _resolve_weight(
+    model_name: str, pretrained_cfg: str | PretrainedCfg | WeightsEnum | None
 ) -> WeightsEnum:
-    """Resolve a timm pretrained configuration to a TorchGeo weight."""
+    """Resolve a timm configuration or tag to a TorchGeo weight."""
     if isinstance(pretrained_cfg, WeightsEnum):
         return pretrained_cfg
 
-    if isinstance(pretrained_cfg, str) and pretrained_cfg in _weights_by_name:
-        return _weights_by_name[pretrained_cfg]
-
-    if pretrained_cfg is None:
+    if isinstance(pretrained_cfg, str):
+        weight = _weights_by_name.get(pretrained_cfg)
+        if weight is not None:
+            return weight
+        key = f'{model_name}.{pretrained_cfg}'
+    elif pretrained_cfg is None:
         cfg = get_pretrained_cfg(model_name)
         if cfg is None:
             raise ValueError(f'{model_name} does not have pretrained weights')
-        key = f'{model_name}.{cfg.tag}' if cfg.tag else model_name
-    elif isinstance(pretrained_cfg, str):
-        key = f'{model_name}.{pretrained_cfg}'
-    elif isinstance(pretrained_cfg, PretrainedCfg):
+        if cfg.tag is None:
+            raise ValueError(f'{model_name} does not have a tagged pretrained weight')
+        key = f'{model_name}.{cfg.tag}'
+    else:
         if pretrained_cfg.tag is None:
             raise ValueError(f'{model_name} does not have a tagged pretrained weight')
         key = f'{model_name}.{pretrained_cfg.tag}'
-    else:
-        raise TypeError(f'Unsupported pretrained configuration: {pretrained_cfg!r}')
 
     try:
         return _weights_by_name[key]
@@ -64,71 +64,79 @@ def _get_weight(
         raise ValueError(f'{key} is not a valid TorchGeo pretrained weight') from ex
 
 
+def _register_weights(
+    model_name: str, weights: type[WeightsEnum]
+) -> dict[str, PretrainedCfg]:
+    """Convert TorchGeo weight members to timm tags and configurations."""
+    configs: dict[str, PretrainedCfg] = {}
+
+    for index, weight in enumerate(weights):
+        tag = weight.name.lower()
+        cfg_name = f'{model_name}.{tag}'
+        if index == 0:
+            cfg_name += '*'
+
+        configs[cfg_name] = replace(weight.value, input_size=_get_input_size(weight))
+        _weights_by_name[f'{model_name}.{tag}'] = weight
+        _weights_by_name[str(weight)] = weight
+
+    return configs
+
+
+def _create_entrypoint(
+    model_name: str, builder: Callable[..., nn.Module]
+) -> Callable[..., nn.Module]:
+    """Create a timm entrypoint around an existing TorchGeo builder."""
+
+    def entrypoint(
+        pretrained: bool = False,
+        pretrained_cfg: str | PretrainedCfg | WeightsEnum | None = None,
+        pretrained_cfg_overlay: dict[str, Any] | None = None,
+        cache_dir: str | None = None,
+        **kwargs: Any,
+    ) -> nn.Module:
+        """Adapt timm arguments to the TorchGeo builder API."""
+        # These arguments are consumed by timm before it calls the entrypoint.
+        del pretrained_cfg_overlay, cache_dir
+
+        # Keep accepting the old TorchGeo ``weights=`` spelling.
+        if 'weights' in kwargs:
+            pretrained_cfg = kwargs.pop('weights')
+            pretrained = True
+
+        if not pretrained:
+            return builder(**kwargs)
+
+        weight = _resolve_weight(model_name, pretrained_cfg)
+        return builder(weights=weight, **kwargs)
+
+    entrypoint.__name__ = model_name
+    entrypoint.__module__ = __name__
+    return entrypoint
+
+
 def register_models(
     models: dict[str, Callable[..., nn.Module]],
-    model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]],
+    model_weights: dict[str, type[WeightsEnum]],
 ) -> None:
-    """Register TorchGeo models and weights with timm."""
-    cfg_dict: dict[str, Any] = {}
-    weights_by_model: dict[str, dict[str, WeightsEnum]] = {}
+    """Register TorchGeo builders, tags, and default configurations with timm."""
+    configs: dict[str, PretrainedCfg | dict[str, Any]] = {}
+    entrypoints: list[Callable[..., nn.Module]] = []
 
-    for name in models:
-        timm_name = f'torchgeo_{name}'
-        _model_names[name] = timm_name
-        weights = model_weights.get(name)
-        if weights is None:
-            continue
-
-        model_weights_by_tag: dict[str, WeightsEnum] = {}
-        for index, weight in enumerate(weights):
-            tag = weight.name.lower()
-            if index == 0:
-                tag += '*'
-            cfg = replace(weight.value, input_size=_cfg_input_size(weight))
-            cfg_dict[f'{timm_name}.{tag}'] = cfg
-            clean_tag = tag.rstrip('*')
-            key = f'{timm_name}.{clean_tag}'
-            model_weights_by_tag[clean_tag] = weight
-            _weights_by_name[key] = weight
-            _weights_by_name[str(weight)] = weight
-        weights_by_model[timm_name] = model_weights_by_tag
-
-    default_cfgs.update(generate_default_cfgs(cfg_dict))
-
+    # Build all configs before registering entrypoints so timm can find the
+    # complete default_cfgs mapping during registration.
     for name, builder in models.items():
-        timm_name = _model_names[name]
-        model_weights_by_tag = weights_by_model.get(timm_name, {})
+        model_name = f'torchgeo_{name}'
+        _model_names[name] = model_name
 
-        def entrypoint(
-            pretrained: bool = False,
-            pretrained_cfg: Any = None,
-            pretrained_cfg_overlay: dict[str, Any] | None = None,
-            cache_dir: str | None = None,
-            _builder: Callable[..., nn.Module] = builder,
-            _model_name: str = timm_name,
-            _weights_by_tag: dict[str, WeightsEnum] = model_weights_by_tag,
-            **kwargs: Any,
-        ) -> nn.Module:
-            del pretrained_cfg_overlay, cache_dir
+        weights = model_weights.get(name)
+        if weights is not None:
+            configs.update(_register_weights(model_name, weights))
 
-            legacy_weights = kwargs.pop('weights', None)
-            if legacy_weights is not None:
-                pretrained_cfg = legacy_weights
-                pretrained = True
+        entrypoints.append(_create_entrypoint(model_name, builder))
 
-            if pretrained:
-                if isinstance(pretrained_cfg, str):
-                    weight = _weights_by_tag.get(pretrained_cfg)
-                    if weight is None:
-                        weight = _get_weight(_model_name, pretrained_cfg)
-                else:
-                    weight = _get_weight(_model_name, pretrained_cfg)
-                return _builder(weights=weight, **kwargs)
-
-            return _builder(**kwargs)
-
-        entrypoint.__name__ = timm_name
-        entrypoint.__module__ = __name__
+    default_cfgs.update(generate_default_cfgs(configs))
+    for entrypoint in entrypoints:
         register_model(entrypoint)
 
 
@@ -143,7 +151,7 @@ def create_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
 
 
 def get_weight(name: str) -> WeightsEnum:
-    """Return a TorchGeo weight by legacy or timm name."""
+    """Return a TorchGeo weight by its legacy or timm name."""
     try:
         return _weights_by_name[name]
     except KeyError as ex:

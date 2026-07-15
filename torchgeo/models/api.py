@@ -98,35 +98,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
 }
 
-_model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
-    aurora_swin_unet: Aurora_Weights,
-    copernicusfm_base: CopernicusFM_Base_Weights,
-    croma_base: CROMABase_Weights,
-    croma_large: CROMALarge_Weights,
-    dofa_base_patch16_224: DOFABase16_Weights,
-    dofa_large_patch16_224: DOFALarge16_Weights,
-    earthloc: EarthLoc_Weights,
-    olmoearth_v1: OlmoEarthV1_Weights,
-    panopticon_vitb14: Panopticon_Weights,
-    presto: Presto_Weights,
-    resnet18: ResNet18_Weights,
-    resnet50: ResNet50_Weights,
-    resnet152: ResNet152_Weights,
-    scalemae_large_patch16: ScaleMAELarge16_Weights,
-    swin_t: Swin_T_Weights,
-    swin_s: Swin_S_Weights,
-    swin_b: Swin_B_Weights,
-    swin_v2_t: Swin_V2_T_Weights,
-    swin_v2_b: Swin_V2_B_Weights,
-    tilenet: TileNet_Weights,
-    tessera: Tessera_Weights,
-    unet: Unet_Weights,
-    vit_small_patch16_224: ViTSmall16_Weights,
-    vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
-    vit_base_patch16_224: ViTBase16_Weights,
-    vit_huge_patch14_224: ViTHuge14_Weights,
-    vit_large_patch16_224: ViTLarge16_Weights,
-    vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
+_model_weights: dict[str, type[WeightsEnum]] = {
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
@@ -188,7 +160,8 @@ def get_model_weights(name: Callable[..., nn.Module] | str) -> type[WeightsEnum]
     Returns:
         The weights enum class associated with the model.
     """
-    return _model_weights[name]
+    model_name = name.__name__ if callable(name) else name
+    return _model_weights[model_name]
 
 
 def get_weight(name: str) -> WeightsEnum:
