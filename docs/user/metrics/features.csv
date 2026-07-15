@@ -20,3 +20,4 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `GeoDeep`_,ONNX,GDAL,-,-,0,7,✅,❌,✅,❌,❌
 `rs-embed`_,PyTorch,"Earth Engine, tifffile, xarray, pandas, pillow","pyproj, affine",-,0,19,✅,❌,❌,❌,✅
 `torchange`_,PyTorch,"Apache Arrow, skimage",-,Albumentations,8,8,❌,❌,❌,❌,✅
+`py4dgeo`_,-,"laspy, numpy",scipy,-,0,0,❌,❌,❌,❌,✅

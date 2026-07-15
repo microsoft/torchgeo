@@ -75,6 +75,7 @@ name_to_codecov = {
     'spopt': ('gh', 'pysal', 'spopt'),
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
+    'py4dgeo': ('gh', '3dgeo-heidelberg', 'py4dgeo'),
 }
 # TODO: remove these as coverage statistics are reported
 # Manually computed using `pytest --cov=<src>` or `coverage run`
