@@ -7,6 +7,7 @@ from pathlib import Path
 
 from torchgeo.datamodules import GeoDataModule
 from torchgeo.datasets import CDL, GeoDataset, TesseraEmbeddings
+from torchgeo.datasets.utils import Sample
 from torchgeo.samplers import GriddedPatchSampler, RandomPatchSampler
 
 from .utils import collate_fn_embeddings
@@ -78,6 +79,22 @@ class TesseraCDLDataModule(GeoDataModule):
         self.val_dir = val_dir
         self.test_dir = test_dir
         self.collate_fn = collate_fn_embeddings
+
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
+        """Return the batch unaltered.
+
+        ``collate_fn_embeddings`` flattens each batch into per-pixel
+        ``embeddings``/``labels`` pairs, so the image-based Kornia
+        augmentations applied by the base class do not apply here.
+
+        Args:
+            batch: A batch of data.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            The batch, unmodified.
+        """
+        return batch
 
     def _build_dataset(self, split: str, cdl: CDL) -> GeoDataset | None:
         """Build a dataset for the given split if the data directory exists."""
