@@ -222,6 +222,16 @@ class TestGetBlendMask:
         with pytest.raises(ValueError, match='Unknown blend method'):
             get_blend_mask(64, overlap=8, delta=0, method='invalid')
 
+    def test_delta_crops_entire_patch_raises(self) -> None:
+        """Test delta that crops away the entire patch raises error."""
+        with pytest.raises(ValueError, match='delta crops away the entire patch'):
+            get_blend_mask(64, overlap=0, delta=32, method='cosine')
+
+    def test_overlap_exceeds_cropped_patch_raises(self) -> None:
+        """Test overlap larger than the cropped patch raises error."""
+        with pytest.raises(ValueError, match='overlap exceeds cropped patch'):
+            get_blend_mask(64, overlap=50, delta=8, method='cosine')
+
     def test_edge_deltas_suppresses_ramp(self) -> None:
         """Edges with delta=0 in edge_deltas get no blend ramp (weight=1)."""
         edge_deltas = (0, 8, 0, 8)
@@ -630,6 +640,35 @@ class TestDatasetBoundsMode:
         assert np.all(data[-1, :] == expected_class), 'Bottom edge has wrong values'
         assert np.all(data[:, 0] == expected_class), 'Left edge has wrong values'
         assert np.all(data[:, -1] == expected_class), 'Right edge has wrong values'
+
+
+class TestWeightedMergeValidation:
+    """Tests for weighted_merge argument validation."""
+
+    def test_missing_output_path_raises(self, tmp_path: Path) -> None:
+        """Test weighted_merge without output_path raises error."""
+        patch_size = 64
+        transform = [1.0, 0, 0.0, 0, -1.0, 64.0]
+        logits = torch.zeros(2, patch_size, patch_size)
+        patch_file = tmp_path / 'patch_000000.tif'
+        _save_test_patch(patch_file, logits, transform)
+
+        patch_metadata = [
+            {
+                'patch_id': 0,
+                'file': patch_file,
+                'geo_bbox': (0.0, 0.0, 64.0, 64.0),
+                'transform': transform,
+            }
+        ]
+
+        with pytest.raises(ValueError, match='output_path is required'):
+            weighted_merge(
+                patch_metadata=patch_metadata,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+                num_classes=2,
+                overlap=0,
+                delta=0,
+            )
 
 
 class TestSinglePatchScene:
