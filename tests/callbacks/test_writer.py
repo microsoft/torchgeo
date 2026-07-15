@@ -116,6 +116,47 @@ class TestGeoTIFFWriter:
             assert src.dtypes[0] == 'float32'
             np.testing.assert_array_equal(src.read(1), data)
 
+    def test_nodata(self, tmp_path: Path) -> None:
+        """Test nodata value is written to the output."""
+        output = tmp_path / 'test.tif'
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+            nodata=0,
+        )
+
+        with writer:
+            writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.nodata == 0
+
+    def test_nodata_default_none(self, tmp_path: Path) -> None:
+        """Test the default nodata of None does not break writing."""
+        output = tmp_path / 'test.tif'
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+        )
+
+        with writer:
+            writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.nodata is None
+
     def test_write_without_context_raises(self, tmp_path: Path) -> None:
         """Test writing without context manager raises error."""
         output = tmp_path / 'test.tif'

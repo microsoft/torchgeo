@@ -42,6 +42,7 @@ class GeoTIFFWriter:
         crs: Any,
         transform: Affine,
         dtype: str = 'uint8',
+        nodata: float | None = None,
         cog_config: dict[str, Any] | None = None,
     ) -> None:
         """Initialize writer.
@@ -54,6 +55,7 @@ class GeoTIFFWriter:
             crs: Coordinate reference system.
             transform: Affine transform.
             dtype: Output data type.
+            nodata: Value to use for nodata pixels.
             cog_config: Optional COG configuration.
         """
         self.output_path = Path(output_path)
@@ -63,6 +65,7 @@ class GeoTIFFWriter:
         self.crs = crs
         self.transform = transform
         self.dtype = dtype
+        self.nodata = nodata
         self.cog_config = cog_config or {}
 
         self.tmp_path = self.output_path.with_suffix('.tmp.tif')
@@ -82,6 +85,7 @@ class GeoTIFFWriter:
             'dtype': self.dtype,
             'crs': self.crs,
             'transform': self.transform,
+            'nodata': self.nodata,
             'tiled': True,
             'compress': self.cog_config.get('compress', 'lzw'),
             'BIGTIFF': 'IF_SAFER',
