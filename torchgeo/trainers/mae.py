@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 
 from ..datasets.utils import Sample
 from ..models import get_weight
-from ..models._weights import WeightsEnum
+from ..models.registry import WeightsEnum
 from .base import BaseTask
 from .utils import load_state_dict
 

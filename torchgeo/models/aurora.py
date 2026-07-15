@@ -8,7 +8,7 @@ from typing import Any, cast
 import torch.nn as nn
 
 from ..datasets.utils import lazy_import
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 # Aurora operates on the raw unnormalized data.
 _aurora_transforms = nn.Identity()

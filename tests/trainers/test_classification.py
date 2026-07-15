@@ -22,7 +22,7 @@ from torchgeo.datamodules import (
 from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.models._weights import WeightsEnum
+from torchgeo.models.registry import WeightsEnum
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 

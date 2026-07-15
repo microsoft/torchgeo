@@ -12,7 +12,7 @@ import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 _mean = [0.485, 0.456, 0.406]
 _std = [0.229, 0.224, 0.225]

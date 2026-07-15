@@ -9,7 +9,7 @@ import timm
 import torchvision.transforms.v2 as T
 from torch import nn
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 from .resnet import (
     _landsat_etm_sr_bands,
     _landsat_etm_toa_bands,

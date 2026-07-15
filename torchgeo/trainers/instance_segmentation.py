@@ -17,7 +17,7 @@ from torchvision.models.detection import maskrcnn_resnet50_fpn
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
-from ..models._weights import WeightsEnum
+from ..models.registry import WeightsEnum
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 

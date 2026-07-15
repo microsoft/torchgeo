@@ -19,8 +19,8 @@ from timm.models.vision_transformer import Block
 from torch import Tensor, vmap
 
 from ..samplers.utils import _to_tuple
-from ._weights import Weights, WeightsEnum
 from .dofa import FCResLayer, TransformerWeightGenerator
+from .registry import Weights, WeightsEnum
 
 
 def resize_abs_pos_embed(

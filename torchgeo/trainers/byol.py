@@ -15,7 +15,7 @@ from torch import Tensor
 
 from ..datasets.utils import Sample
 from ..models import get_weight
-from ..models._weights import WeightsEnum
+from ..models.registry import WeightsEnum
 from . import utils
 from .base import BaseTask
 

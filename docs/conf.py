@@ -69,7 +69,7 @@ nitpick_ignore = [
     ('py:class', 'timm.models.resnet.ResNet'),
     ('py:class', 'timm.models.vision_transformer.VisionTransformer'),
     ('py:class', 'torch.optim.lr_scheduler.LRScheduler'),
-    ('py:class', 'torchgeo.models._weights.WeightsEnum'),
+    ('py:class', 'torchgeo.models.registry.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose

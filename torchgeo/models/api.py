@@ -8,9 +8,6 @@ from typing import Any
 
 import torch.nn as nn
 
-from ._timm import create_model, get_model_name, register_models
-from ._timm import get_weight as get_timm_weight
-from ._weights import WeightsEnum
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -26,6 +23,8 @@ from .earthloc import EarthLoc_Weights, earthloc
 from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
+from .registry import WeightsEnum, create_model, get_model_name, register_models
+from .registry import get_weight as get_timm_weight
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,

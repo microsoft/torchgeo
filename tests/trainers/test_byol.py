@@ -14,7 +14,7 @@ from torchvision.models import resnet18
 from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.models._weights import WeightsEnum
+from torchgeo.models.registry import WeightsEnum
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
 

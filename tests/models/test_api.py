@@ -41,7 +41,6 @@ from torchgeo.models import (
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
-    _timm,
     aurora_swin_unet,
     copernicusfm_base,
     croma_base,
@@ -58,6 +57,7 @@ from torchgeo.models import (
     olmoearth_v1,
     panopticon_vitb14,
     presto,
+    registry,
     resnet18,
     resnet50,
     resnet152,
@@ -77,8 +77,7 @@ from torchgeo.models import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from torchgeo.models._timm import _resolve_weight
-from torchgeo.models._weights import Weights, WeightsEnum
+from torchgeo.models.registry import Weights, WeightsEnum, _resolve_weight
 
 builders = [
     aurora_swin_unet,
@@ -220,7 +219,9 @@ def test_resolve_weight(monkeypatch: MonkeyPatch) -> None:
 
     with pytest.raises(ValueError, match='bad_model does not have pretrained weights'):
         _resolve_weight('bad_model', None)
-    monkeypatch.setattr(_timm, 'get_pretrained_cfg', lambda _: PretrainedCfg(tag=None))
+    monkeypatch.setattr(
+        registry, 'get_pretrained_cfg', lambda _: PretrainedCfg(tag=None)
+    )
     with pytest.raises(
         ValueError, match='torchgeo_resnet18 does not have a tagged pretrained weight'
     ):

@@ -9,7 +9,7 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 import torchvision.transforms.v2 as T
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
 # First 4 S2 bands are for image t1 and last 4 bands are for image t2

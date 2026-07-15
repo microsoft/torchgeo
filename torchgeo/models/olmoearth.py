@@ -8,7 +8,7 @@ from typing import Any
 import torch.nn as nn
 
 from ..datasets.utils import lazy_import
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 _olmoearth_transforms = nn.Identity()
 

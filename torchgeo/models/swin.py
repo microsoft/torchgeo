@@ -11,7 +11,7 @@ import torchvision
 import torchvision.transforms.v2 as T
 from torchvision.models import SwinTransformer
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 # All Satlas transforms include:
 # https://github.com/allenai/satlas/blob/main/satlas/cmd/model/train.py#L49

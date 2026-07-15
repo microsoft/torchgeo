@@ -18,7 +18,7 @@ from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataM
 from torchgeo.datasets import RGBBandsMissingError, TropicalCyclone
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.models._weights import WeightsEnum
+from torchgeo.models.registry import WeightsEnum
 from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
 
 from .test_classification import ClassificationTestModel

@@ -13,7 +13,7 @@ import torchvision.transforms.v2 as T
 from einops import rearrange
 from torch import Tensor
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 # Note the images used are Sentinel-2 Cloudless RGB Mosaics from https://s2maps.eu/
 _earthloc_sentinel2_bands = ['B4', 'B3', 'B2']

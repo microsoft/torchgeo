@@ -15,7 +15,7 @@ import torch.nn.functional as F
 import torchvision.transforms.v2 as T
 from torch import nn
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 
 class TileNet_Weights(WeightsEnum):

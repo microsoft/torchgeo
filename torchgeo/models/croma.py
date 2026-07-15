@@ -14,7 +14,7 @@ import torch
 from einops import rearrange
 from torch import Tensor, einsum, nn
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 
 
 class CROMA(nn.Module):

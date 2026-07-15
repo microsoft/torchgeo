@@ -11,8 +11,8 @@ import torch.nn as nn
 from torch import Tensor
 
 from ..samplers.utils import _to_tuple
-from ._weights import Weights, WeightsEnum
 from .copernicusfm import resize_abs_pos_embed
+from .registry import Weights, WeightsEnum
 
 
 class PanopticonPE(nn.Module):

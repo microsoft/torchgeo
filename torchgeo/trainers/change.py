@@ -18,7 +18,7 @@ from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
 from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
-from ..models._weights import WeightsEnum
+from ..models.registry import WeightsEnum
 from . import utils
 from .base import BaseTask
 from .mixins import ClassificationMixin

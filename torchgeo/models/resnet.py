@@ -10,7 +10,7 @@ import timm
 import torchvision.transforms.v2 as T
 from torch import nn
 
-from ._weights import Weights, WeightsEnum
+from .registry import Weights, WeightsEnum
 from .swin import (
     _satlas_bands,
     _satlas_sentinel2_bands,
