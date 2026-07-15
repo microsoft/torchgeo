@@ -12,7 +12,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import ClassVar, Literal, cast
+from typing import Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -25,6 +25,7 @@ import rasterio.merge
 import shapely
 import torch
 from geopandas import GeoDataFrame
+from matplotlib.colors import ListedColormap
 from PIL.Image import Image
 from pyproj import CRS
 from rasterio.enums import Resampling
@@ -374,9 +375,6 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
-    #: Color map for the dataset, used for plotting
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
-
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -472,9 +470,10 @@ class RasterDataset(GeoDataset):
                 try:
                     vrt = self._load_warp_file(filepath=filepath, crs=crs)
                     # See if file has a color map
-                    if len(self.cmap) == 0:
+                    if self.cmap is None:
                         try:
-                            self.cmap = vrt.colormap(1)  # ty: ignore[invalid-attribute-access]
+                            colors = np.array(list(vrt.colormap(1).values())) / 255
+                            self.cmap = ListedColormap(colors)
                         except ValueError:
                             pass
                     if crs is None:
