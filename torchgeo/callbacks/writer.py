@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 import rasterio
 import rasterio.shutil
+from pyproj import CRS
 from rasterio.transform import Affine
 from rasterio.windows import Window
 
@@ -31,6 +32,7 @@ class GeoTIFFWriter:
             for chunk_y, chunk_x, chunk_data in chunks:
                 writer.write_chunk(chunk_data, chunk_y, chunk_x)
 
+    .. versionadded:: 0.10
     """
 
     def __init__(
@@ -39,7 +41,7 @@ class GeoTIFFWriter:
         width: int,
         height: int,
         num_bands: int,
-        crs: Any,
+        crs: CRS | str,
         transform: Affine,
         dtype: str = 'uint8',
         nodata: float | None = None,
