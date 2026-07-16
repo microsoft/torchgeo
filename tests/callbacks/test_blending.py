@@ -12,6 +12,7 @@ import torch
 from rasterio.transform import Affine
 
 from torchgeo.callbacks.blending import (
+    PatchMetadata,
     _build_grid_index,
     _get_edge_deltas,
     _query_grid_index,
@@ -357,7 +358,7 @@ class TestExtentMismatch:
         origin_x, origin_y = 1000.0, 2000.0
         res = 1.0
 
-        meta = []
+        meta: list[PatchMetadata] = []
         for row in range(3):
             for col in range(3):
                 geo_xmin = origin_x + col * stride * res
@@ -368,6 +369,7 @@ class TestExtentMismatch:
                 meta.append(
                     {
                         'patch_id': row * 3 + col,
+                        'file': Path('unused'),
                         'geo_bbox': (geo_xmin, geo_ymin, geo_xmax, geo_ymax),
                         'transform': [res, 0, geo_xmin, 0, -res, geo_ymax],
                     }
@@ -404,7 +406,7 @@ class TestBlackBorder:
         origin_x, origin_y = 0.0, 128.0
         res = 1.0
 
-        patch_metadata = []
+        patch_metadata: list[PatchMetadata] = []
         for row in range(2):
             for col in range(2):
                 patch_id = row * 2 + col
@@ -482,7 +484,7 @@ class TestNonOverlappingPatches:
         res = 1.0
         origin_y = 564.0
 
-        patch_metadata = []
+        patch_metadata: list[PatchMetadata] = []
         positions = [(0, 0), (500, 500)]
         for patch_id, (col_offset, row_offset) in enumerate(positions):
             geo_xmin = float(col_offset)
@@ -538,7 +540,7 @@ class TestDatasetBoundsMode:
         dataset_bounds = (0.0, 0.0, 128.0, 128.0)
         dataset_res = (1.0, 1.0)
 
-        patch_metadata = []
+        patch_metadata: list[PatchMetadata] = []
         for row in range(2):
             for col in range(2):
                 patch_id = row * 2 + col
@@ -594,7 +596,7 @@ class TestDatasetBoundsMode:
         dataset_bounds = (0.0, 0.0, 96.0, 96.0)
         dataset_res = (1.0, 1.0)
 
-        patch_metadata = []
+        patch_metadata: list[PatchMetadata] = []
         for row in range(2):
             for col in range(2):
                 patch_id = row * 2 + col
