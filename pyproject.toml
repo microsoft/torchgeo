@@ -133,8 +133,8 @@ models = [
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
     "olmoearth-pretrain-minimal>=0.0.2",
-    # rfdetr 1.7+ required for RF-DETR object detection support
-    "rfdetr>=1.7.0",
+    # RF-DETR develop branch required for object detection support
+    "rfdetr @ git+https://github.com/roboflow/rf-detr.git@develop",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels

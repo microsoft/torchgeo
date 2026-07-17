@@ -248,7 +248,8 @@ class ObjectDetection(BaseTask):
     def _missing_rf_detr_dependency_error() -> ImportError:
         return ImportError(
             "RF-DETR support requires the optional 'rfdetr' dependency. "
-            'Install it with `pip install rfdetr`.'
+            'Install it with `pip install '
+            'git+https://github.com/roboflow/rf-detr.git@develop`.'
         )
 
     @staticmethod
