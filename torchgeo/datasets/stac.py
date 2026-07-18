@@ -168,13 +168,15 @@ class STACDataset(RasterDataset):
             raise ValueError('STAC GeoParquet is missing geometry.')
         if 'assets' not in cols:
             raise ValueError('STAC GeoParquet is missing required assets column.')
-        if 'datetime' not in cols and not {'start_datetime', 'end_datetime'} <= cols:
+        if 'datetime' not in cols and not {'start_datetime', 'end_datetime'}.issubset(
+            cols
+        ):
             raise ValueError(
                 'STAC GeoParquet must include datetime or start_datetime/end_datetime.'
             )
 
         # normalize datetime columns to a single start/end pair, filling missing values
-        has_interval = {'start_datetime', 'end_datetime'} <= cols
+        has_interval = {'start_datetime', 'end_datetime'}.issubset(cols)
         dt_col = (
             pd.to_datetime(df['datetime'], utc=True, format='ISO8601', errors='coerce')
             if 'datetime' in cols
@@ -192,11 +194,11 @@ class STACDataset(RasterDataset):
                 start = start.fillna(dt_col)
                 end = end.fillna(dt_col)
         else:
-            start = dt_col
-            end = dt_col
-
-        start = cast(pd.Series, start)
-        end = cast(pd.Series, end)
+            # We checked above that if the interval columns are missing,
+            # 'datetime' must be present — so here dt_col is always a real
+            # Series, never None.
+            assert dt_col is not None
+            start = end = dt_col
 
         if start.isna().any() or end.isna().any():
             if not has_interval:
@@ -224,11 +226,7 @@ class STACDataset(RasterDataset):
             df, start, end = df[time_mask], start[time_mask], end[time_mask]
 
         if df.empty:
-            raise ValueError(
-                'No STAC items matched the requested time_range.'
-                if time_range
-                else 'No STAC items matched the requested filters.'
-            )
+            raise ValueError('No STAC items matched the requested filters.')
 
         if max_index_items is not None and len(df) > max_index_items:
             raise ValueError(
@@ -241,7 +239,7 @@ class STACDataset(RasterDataset):
         for key in self.asset_keys:
             col = df['assets'].str.get(key).str.get('href')
             hrefs[key] = col
-            valid_rows &= col.notna() & (col != '')
+            valid_rows &= col.fillna('').str.strip() != ''
 
         dropped = int((~valid_rows).sum())
         if dropped == len(df):

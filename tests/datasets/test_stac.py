@@ -307,7 +307,7 @@ class TestSTACDataset:
                 time_range=('2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z'),
             )
         with pytest.raises(
-            ValueError, match='No STAC items matched the requested time'
+            ValueError, match='No STAC items matched the requested filters'
         ):
             STACDataset(
                 ITEMS,
