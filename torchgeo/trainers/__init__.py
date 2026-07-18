@@ -25,7 +25,7 @@ from ..tasks import (
 
 
 @deprecated('Use torchgeo.tasks.Classification instead')
-class ClassificationTask(Classification):
+class Classification(Classification):
     """Deprecated alias of torchgeo.tasks.Classification."""
 
 
@@ -80,7 +80,7 @@ class RegressionTask(Regression):
 
 
 @deprecated('Use torchgeo.tasks.SemanticSegmentation instead')
-class SemanticSegmentationTask(SemanticSegmentation):
+class SemanticSegmentation(SemanticSegmentation):
     """Deprecated alias of torchgeo.tasks.SemanticSegmentation."""
 
 
@@ -90,7 +90,7 @@ class SimCLRTask(SimCLR):
 
 
 @deprecated('Use torchgeo.tasks.Classification instead')
-class MultiLabelClassificationTask(Classification):
+class MultiLabelClassification(Classification):
     """Deprecated alias of torchgeo.tasks.Classification."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -9,7 +9,7 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 
 
-class TestClassificationTask:
+class TestClassification:
     @pytest.mark.parametrize('name', ['iobench'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')

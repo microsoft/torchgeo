@@ -23,7 +23,7 @@ from .base import BaseTask
 from .mixins import ClassificationMixin
 
 
-class ClassificationTask(ClassificationMixin, BaseTask):
+class Classification(ClassificationMixin, BaseTask):
     """Image classification."""
 
     def __init__(
@@ -43,7 +43,7 @@ class ClassificationTask(ClassificationMixin, BaseTask):
         patience: int = 10,
         freeze_backbone: bool = False,
     ) -> None:
-        """Initialize a new ClassificationTask instance.
+        """Initialize a new Classification instance.
 
         Args:
             model: Name of the `timm

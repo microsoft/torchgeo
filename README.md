@@ -219,7 +219,7 @@ torchgeo --help
 # See valid trainer options
 torchgeo fit --help
 # See valid model options
-torchgeo fit --model.help ClassificationTask
+torchgeo fit --model.help Classification
 # See valid data options
 torchgeo fit --data.help EuroSAT100DataModule
 ```
@@ -230,7 +230,7 @@ Using the following config file:
 trainer:
   max_epochs: 20
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     model: 'resnet18'
     in_channels: 13

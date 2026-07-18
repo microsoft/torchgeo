@@ -210,7 +210,7 @@ class TestSemanticSegmentation:
         trainer = Trainer(
             accelerator='cpu', fast_dev_run=True, log_every_n_steps=1, max_epochs=1
         )
-        msg = 'Use SpatioTemporalSegmentationTask instead'
+        msg = 'Use SpatioTemporalSegmentation instead'
         with pytest.warns(DeprecationWarning, match=msg):
             trainer.validate(model=model, datamodule=datamodule)
 
