@@ -23,7 +23,8 @@ from torchgeo.datamodules import (
 from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.tasks import Classification, MultiLabelClassification
+from torchgeo.tasks import Classification
+from torchgeo.trainers import MultiLabelClassificationTask
 
 
 class ClassificationTestModel(Module):
@@ -300,14 +301,14 @@ class TestClassification:
         )
 
 
-class TestMultiLabelClassification:
+class TestMultiLabelClassificationTask:
     def test_trainer(self, fast_dev_run: bool) -> None:
         datamodule = BigEarthNetDataModule(
             root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
         )
 
         with pytest.deprecated_call():
-            model = MultiLabelClassification(
+            model = MultiLabelClassificationTask(
                 model='resnet18', in_channels=14, num_classes=19, loss='bce'
             )
         trainer = Trainer(

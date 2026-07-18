@@ -11,7 +11,8 @@ import torch
 from pytest import MonkeyPatch
 from torch import nn
 from torch.nn.modules import Module
-from torchgeo.trainers.utils import (
+
+from torchgeo.tasks.utils import (
     _get_input_layer_name_and_module,
     extract_backbone,
     load_state_dict,

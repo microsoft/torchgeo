@@ -90,7 +90,7 @@ class SimCLRTask(SimCLR):
 
 
 @deprecated('Use torchgeo.tasks.Classification instead')
-class MultiLabelClassification(Classification):
+class MultiLabelClassificationTask(Classification):
     """Deprecated alias of torchgeo.tasks.Classification."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

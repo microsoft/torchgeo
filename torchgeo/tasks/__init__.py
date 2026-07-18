@@ -6,7 +6,7 @@
 from .base import BaseTask
 from .byol import BYOL
 from .change import ChangeDetection
-from .classification import Classification, MultiLabelClassification
+from .classification import Classification
 from .detection import ObjectDetection
 from .instance_segmentation import InstanceSegmentation
 from .iobench import IOBench
@@ -29,7 +29,6 @@ __all__ = (
     'IOBench',
     'InstanceSegmentation',
     'MoCo',
-    'MultiLabelClassification',
     'ObjectDetection',
     'PixelwiseRegression',
     'Regression',
