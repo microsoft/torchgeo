@@ -3,4 +3,4 @@
 ClassificationMixin
 ===================
 
-.. autoclass:: torchgeo.trainers.ClassificationMixin
+.. autoclass:: torchgeo.tasks.ClassificationMixin

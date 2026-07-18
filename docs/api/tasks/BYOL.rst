@@ -3,4 +3,4 @@
 BYOL
 ====
 
-.. autoclass:: torchgeo.trainers.BYOL
+.. autoclass:: torchgeo.tasks.BYOL

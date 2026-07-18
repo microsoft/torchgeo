@@ -3,4 +3,4 @@
 SpatioTemporalSegmentation
 ==========================
 
-.. autoclass:: torchgeo.trainers.SpatioTemporalSegmentation
+.. autoclass:: torchgeo.tasks.SpatioTemporalSegmentation

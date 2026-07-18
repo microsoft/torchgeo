@@ -3,4 +3,4 @@
 RegressionMixin
 ===============
 
-.. autoclass:: torchgeo.trainers.RegressionMixin
+.. autoclass:: torchgeo.tasks.RegressionMixin

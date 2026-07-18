@@ -3,4 +3,4 @@
 BaseTask
 ========
 
-.. autoclass:: torchgeo.trainers.BaseTask
+.. autoclass:: torchgeo.tasks.BaseTask

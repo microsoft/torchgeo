@@ -3,4 +3,4 @@
 PixelwiseRegression
 ===================
 
-.. autoclass:: torchgeo.trainers.PixelwiseRegression
+.. autoclass:: torchgeo.tasks.PixelwiseRegression

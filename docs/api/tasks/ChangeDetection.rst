@@ -3,4 +3,4 @@
 ChangeDetection
 ===============
 
-.. autoclass:: torchgeo.trainers.ChangeDetection
+.. autoclass:: torchgeo.tasks.ChangeDetection

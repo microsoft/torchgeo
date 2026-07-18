@@ -3,4 +3,4 @@
 SemanticSegmentation
 ====================
 
-.. autoclass:: torchgeo.trainers.SemanticSegmentation
+.. autoclass:: torchgeo.tasks.SemanticSegmentation

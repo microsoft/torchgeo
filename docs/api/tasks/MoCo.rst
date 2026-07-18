@@ -3,4 +3,4 @@
 MoCo
 ====
 
-.. autoclass:: torchgeo.trainers.MoCo
+.. autoclass:: torchgeo.tasks.MoCo

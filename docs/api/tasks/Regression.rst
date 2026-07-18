@@ -3,4 +3,4 @@
 Regression
 ==========
 
-.. autoclass:: torchgeo.trainers.Regression
+.. autoclass:: torchgeo.tasks.Regression

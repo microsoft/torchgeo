@@ -3,4 +3,4 @@
 TemporalRegression
 ==================
 
-.. autoclass:: torchgeo.trainers.TemporalRegression
+.. autoclass:: torchgeo.tasks.TemporalRegression

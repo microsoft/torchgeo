@@ -3,4 +3,4 @@
 SimCLR
 ======
 
-.. autoclass:: torchgeo.trainers.SimCLR
+.. autoclass:: torchgeo.tasks.SimCLR

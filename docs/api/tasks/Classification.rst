@@ -3,4 +3,4 @@
 Classification
 ==============
 
-.. autoclass:: torchgeo.trainers.Classification
+.. autoclass:: torchgeo.tasks.Classification

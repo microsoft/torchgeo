@@ -3,4 +3,4 @@
 MAE
 ===
 
-.. autoclass:: torchgeo.trainers.MAE
+.. autoclass:: torchgeo.tasks.MAE

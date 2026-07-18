@@ -3,4 +3,4 @@
 InstanceSegmentation
 ====================
 
-.. autoclass:: torchgeo.trainers.InstanceSegmentation
+.. autoclass:: torchgeo.tasks.InstanceSegmentation

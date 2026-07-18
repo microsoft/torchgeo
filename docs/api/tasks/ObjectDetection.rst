@@ -3,4 +3,4 @@
 ObjectDetection
 ===============
 
-.. autoclass:: torchgeo.trainers.ObjectDetection
+.. autoclass:: torchgeo.tasks.ObjectDetection

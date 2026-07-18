@@ -3,4 +3,4 @@
 IOBench
 =======
 
-.. autoclass:: torchgeo.trainers.IOBench
+.. autoclass:: torchgeo.tasks.IOBench

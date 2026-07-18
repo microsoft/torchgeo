@@ -16,7 +16,7 @@ from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks.byol import BYOLModule, SimCLRAugmentation
-from torchgeo.trainers import BYOL
+from torchgeo.tasks import BYOL
 
 
 class TestBYOLModule:
