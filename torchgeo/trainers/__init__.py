@@ -25,7 +25,7 @@ from ..tasks import (
 
 
 @deprecated('Use torchgeo.tasks.Classification instead')
-class Classification(Classification):
+class ClassificationTask(Classification):
     """Deprecated alias of torchgeo.tasks.Classification."""
 
 
@@ -80,7 +80,7 @@ class RegressionTask(Regression):
 
 
 @deprecated('Use torchgeo.tasks.SemanticSegmentation instead')
-class SemanticSegmentation(SemanticSegmentation):
+class SemanticSegmentationTask(SemanticSegmentation):
     """Deprecated alias of torchgeo.tasks.SemanticSegmentation."""
 
 
