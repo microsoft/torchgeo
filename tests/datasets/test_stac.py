@@ -5,7 +5,7 @@ import copy
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import geopandas as gpd
 import pandas as pd
@@ -20,6 +20,11 @@ from torchgeo.datasets.errors import DependencyNotFoundError
 pytest.importorskip('pyarrow')
 DATA = Path(__file__).parents[1] / 'data' / 'stac'
 ITEMS = DATA / 'items.parquet'
+
+
+def _raise(exc: BaseException) -> NoReturn:
+    """Raise ``exc`` — lets a monkeypatched callable fail from inside a lambda."""
+    raise exc
 
 
 def _editable_table() -> GeoDataFrame:
@@ -248,8 +253,6 @@ class TestSTACDataset:
                 table = table.drop(columns=[col])
         if 'geometry' not in columns:
             table = pd.DataFrame(table.drop(columns=['geometry']))
-        if 'geometry' in columns and 'geometry' not in table.columns:
-            pass
         table.to_parquet(tmp_path / 'items.parquet')
         with pytest.raises(ValueError, match=message):
             STACDataset(tmp_path / 'items.parquet', ('B04',))
@@ -274,9 +277,7 @@ class TestSTACDataset:
         monkeypatch.setattr(
             gpd,
             'read_parquet',
-            lambda *args, **kwargs: (_ for _ in ()).throw(
-                ValueError('Missing geo metadata')
-            ),
+            lambda *args, **kwargs: _raise(ValueError('Missing geo metadata')),
         )
         with pytest.raises(ValueError, match='missing geometry'):
             STACDataset('items.parquet', ('B04',))
@@ -287,7 +288,7 @@ class TestSTACDataset:
         monkeypatch.setattr(
             gpd,
             'read_parquet',
-            lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('bad read')),
+            lambda *args, **kwargs: _raise(RuntimeError('bad read')),
         )
         with pytest.raises(RuntimeError, match='bad read'):
             STACDataset('items.parquet', ('B04',))
@@ -366,7 +367,7 @@ class TestSTACDataset:
             'fsspec',
             SimpleNamespace(
                 core=SimpleNamespace(
-                    url_to_fs=lambda *args, **kwargs: (_ for _ in ()).throw(ImportError)
+                    url_to_fs=lambda *args, **kwargs: _raise(ImportError())
                 )
             ),
         )
