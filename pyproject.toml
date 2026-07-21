@@ -202,6 +202,8 @@ filterwarnings = [
     'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
     # https://github.com/kornia/kornia/issues/3727
     'ignore:`torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.:DeprecationWarning',
+    # https://github.com/rasterio/rasterio/issues/3592
+    "ignore:Setting the shape on a NumPy array has been deprecated in NumPy 2.5:DeprecationWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
