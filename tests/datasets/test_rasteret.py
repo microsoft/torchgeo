@@ -5,12 +5,9 @@ import pickle
 from datetime import UTC, datetime
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock, create_autospec
 
-import geopandas as gpd
-import pandas as pd
+import numpy as np
 import pytest
-import shapely
 import torch
 from pyproj import CRS
 
@@ -22,50 +19,6 @@ if TYPE_CHECKING:
     from rasteret import Collection
 
 Collection = import_module('rasteret').Collection
-
-
-class _DummyRasteretGeoDataset:
-    """Minimal stand-in for rasteret.integrations.torchgeo.RasteretGeoDataset."""
-
-    def __init__(self) -> None:
-        interval_index = pd.IntervalIndex.from_tuples(
-            [(datetime(2024, 6, 1, tzinfo=UTC), datetime(2024, 6, 1, tzinfo=UTC))],
-            closed='both',
-            name='datetime',
-        )
-        geometry = [shapely.box(399960, 5390220, 400600, 5390860)]
-        self.index = gpd.GeoDataFrame(
-            {'rid': [0]},
-            index=interval_index,
-            geometry=geometry,
-            crs=CRS.from_epsg(32632),
-        )
-        self._res = (10.0, 10.0)
-        self.closed = False
-
-    @property
-    def crs(self) -> CRS:
-        return CRS.from_user_input(self.index.crs)
-
-    @property
-    def res(self) -> tuple[float, float]:
-        return self._res
-
-    @res.setter
-    def res(self, new_res: float | tuple[float, float]) -> None:
-        if isinstance(new_res, int | float):
-            new_res = (float(new_res), float(new_res))
-        self._res = new_res
-
-    def __getitem__(self, _index: Any) -> dict[str, torch.Tensor]:
-        return {
-            'image': torch.ones((3, 16, 16), dtype=torch.float32),
-            'bounds': torch.zeros(9, dtype=torch.float64),
-            'transform': torch.zeros(9, dtype=torch.float64),
-        }
-
-    def close(self) -> None:
-        self.closed = True
 
 
 def _non_epsg_crs() -> CRS:
@@ -87,8 +40,8 @@ def _band_metadata(
     }
 
 
-def _make_real_collection() -> Collection:
-    table = pa.table(
+def _real_table() -> Any:
+    return pa.table(
         {
             'id': ['first', 'second'],
             'datetime': [
@@ -106,117 +59,147 @@ def _make_real_collection() -> Collection:
             ],
         }
     )
-    return Collection(dataset=pads.dataset(table), data_source='test-rasteret')
+
+
+def _make_real_collection() -> Collection:
+    return Collection(dataset=pads.dataset(_real_table()), data_source='test-rasteret')
+
+
+def _make_file_backed_collection(path: Any) -> Collection:
+    """Persist to parquet so the dataset (and thus the Collection) is picklable."""
+    import pyarrow.parquet as pq
+
+    pq.write_table(_real_table(), str(path))
+    return Collection(dataset=pads.dataset(str(path)), data_source='test-rasteret')
 
 
 class TestRasteretDataset:
     """Tests for :class:`torchgeo.datasets.RasteretDataset`."""
 
     @pytest.fixture
-    def delegate(self) -> _DummyRasteretGeoDataset:
-        return _DummyRasteretGeoDataset()
-
-    @pytest.fixture
-    def collection(self, delegate: _DummyRasteretGeoDataset) -> MagicMock:
-        collection = create_autospec(Collection, instance=True)
-        collection.to_torchgeo_dataset.return_value = delegate
-        return collection
-
-    @pytest.fixture
-    def real_collection(self) -> Collection:
+    def collection(self) -> Collection:
         return _make_real_collection()
 
-    def test_init(
-        self, collection: MagicMock, delegate: _DummyRasteretGeoDataset
-    ) -> None:
-        """RasteretDataset delegates creation to collection.to_torchgeo_dataset."""
+    def test_init_builds_index_from_footprints(self, collection: Collection) -> None:
+        """The index and grid are derived from collection metadata, no raster open."""
         from torchgeo.datasets import RasteretDataset
 
-        ds = RasteretDataset(collection=collection, bands=['B04', 'B03', 'B02'])
+        ds = RasteretDataset(collection=collection, bands=['B04'])
 
-        call = collection.to_torchgeo_dataset.call_args
-        assert call is not None
-        assert call.kwargs['bands'] == ['B04', 'B03', 'B02']
-        assert call.kwargs['target_crs'] is None
-        assert len(ds.index) == 1
-        assert ds.bands == ('B04', 'B03', 'B02')
+        assert len(ds.index) == 2
+        assert list(ds.index['id']) == ['first', 'second']
+        assert ds.bands == ('B04',)
         assert ds.crs == CRS.from_epsg(32632)
-        assert ds.res == delegate.res
+        assert ds.res == (10.0, 10.0)
 
-    def test_init_custom_crs_res(self, collection: MagicMock) -> None:
-        """CRS and resolution overrides are forwarded correctly."""
+    def test_init_custom_crs_res(self, collection: Collection) -> None:
+        """CRS and resolution overrides are honored."""
         from torchgeo.datasets import RasteretDataset
 
         ds = RasteretDataset(
             collection=collection, bands=['B04'], crs=CRS.from_epsg(4326), res=0.0001
         )
 
-        call = collection.to_torchgeo_dataset.call_args
-        assert call is not None
-        assert call.kwargs['target_crs'] == 4326
+        assert ds.crs == CRS.from_epsg(4326)
         assert ds.res == (0.0001, 0.0001)
 
-    def test_init_non_epsg_crs(self, collection: MagicMock) -> None:
+    def test_init_non_epsg_crs(self, collection: Collection) -> None:
         """CRS overrides must be EPSG-resolvable."""
         from torchgeo.datasets import RasteretDataset
 
         with pytest.raises(ValueError, match='EPSG'):
             RasteretDataset(collection=collection, bands=['B04'], crs=_non_epsg_crs())
 
-    def test_init_requires_collection_adapter(self) -> None:
-        """Collection must implement to_torchgeo_dataset."""
+    def test_init_requires_collection_boundary(self) -> None:
+        """Collection must expose the Rasteret integration boundary."""
         from torchgeo.datasets import RasteretDataset
 
-        with pytest.raises(TypeError, match='to_torchgeo_dataset'):
+        with pytest.raises(TypeError, match='footprints'):
             RasteretDataset(collection=object(), bands=['B04'])
 
-    def test_init_requires_callable_collection_adapter(self) -> None:
-        """Collection adapter attribute must be callable."""
-        from torchgeo.datasets import RasteretDataset
-
-        class _NotCallableAdapter:
-            to_torchgeo_dataset = 'not-callable'
-
-        with pytest.raises(TypeError, match='to_torchgeo_dataset'):
-            RasteretDataset(collection=_NotCallableAdapter(), bands=['B04'])
-
-    def test_init_requires_bands(self, collection: MagicMock) -> None:
+    def test_init_requires_bands(self, collection: Collection) -> None:
         """At least one band is required."""
         from torchgeo.datasets import RasteretDataset
 
         with pytest.raises(ValueError, match='At least one band'):
             RasteretDataset(collection=collection, bands=[])
 
-    def test_getitem(self, collection: MagicMock) -> None:
-        """__getitem__ delegates to Rasteret's dataset implementation."""
+    def test_len_and_files(self, collection: Collection) -> None:
+        """len reflects the index; files lists the collection's COG hrefs."""
         from torchgeo.datasets import RasteretDataset
 
-        ds = RasteretDataset(collection=collection, bands=['B04', 'B03', 'B02'])
+        ds = RasteretDataset(collection=collection, bands=['B04'])
+        assert len(ds) == 2
+        assert ds.files == ['memory://first.tif', 'memory://second.tif']
+
+    def test_getitem(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """__getitem__ reads through collection.read_window onto the query grid."""
+        from torchgeo.datasets import RasteretDataset
+
+        captured: dict[str, Any] = {}
+
+        def fake_read_window(**kwargs: Any) -> np.ndarray:
+            captured.update(kwargs)
+            return np.ones((1, 16, 16), dtype=np.uint16)
+
+        monkeypatch.setattr(collection, 'read_window', fake_read_window)
+        ds = RasteretDataset(collection=collection, bands=['B04'])
         sample = ds[ds.bounds]
 
-        assert 'image' in sample
-        assert sample['image'].shape == (3, 16, 16)
+        assert sample['image'].shape == (1, 16, 16)
+        assert sample['image'].dtype == torch.float32
+        assert 'bounds' in sample and 'transform' in sample
+        assert captured['bands'] == ['B04']
+        assert captured['target_crs'] == 32632
+        assert sorted(captured['record_ids']) == ['first', 'second']
 
-    def test_res_setter(self, collection: MagicMock) -> None:
-        """Resolution changes stay delegated to the Rasteret dataset."""
+    def test_getitem_no_match_raises(self, collection: Collection) -> None:
+        """Queries that intersect no records raise IndexError."""
+        from torchgeo.datasets import RasteretDataset
+
+        ds = RasteretDataset(collection=collection, bands=['B04'])
+        _, _, t = ds.bounds
+        with pytest.raises(IndexError, match='not found in dataset'):
+            ds[1_000_000:1_000_010:10, 1_000_000:1_000_010:10, t]
+
+    def test_time_series_passes_group_by(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """time_series=True groups the read by datetime."""
+        from torchgeo.datasets import RasteretDataset
+
+        captured: dict[str, Any] = {}
+
+        def fake_read_window(**kwargs: Any) -> np.ndarray:
+            captured.update(kwargs)
+            return np.ones((2, 1, 16, 16), dtype=np.uint16)
+
+        monkeypatch.setattr(collection, 'read_window', fake_read_window)
+        ds = RasteretDataset(collection=collection, bands=['B04'], time_series=True)
+        sample = ds[ds.bounds]
+
+        assert captured['group_by'] == 'datetime'
+        assert sample['image'].shape == (2, 1, 16, 16)
+
+    def test_res_setter(self, collection: Collection) -> None:
+        """Resolution can be overridden post-init."""
         from torchgeo.datasets import RasteretDataset
 
         ds = RasteretDataset(collection=collection, bands=['B04'])
         ds.res = 20.0
-
         assert ds.res == (20.0, 20.0)
-        assert ds._delegate.res == (20.0, 20.0)
 
-    def test_crs_setter_rejected(self, collection: MagicMock) -> None:
+    def test_crs_setter_rejected(self, collection: Collection) -> None:
         """Post-init CRS mutation is rejected because Rasteret binds target CRS."""
         from torchgeo.datasets import RasteretDataset
 
         ds = RasteretDataset(collection=collection, bands=['B04'])
-
         with pytest.raises(AttributeError, match='fixed after construction'):
             ds.crs = CRS.from_epsg(4326)
 
-    def test_dtype_property(self, collection: MagicMock) -> None:
+    def test_dtype_property(self, collection: Collection) -> None:
         """dtype defaults correctly for image and mask styles."""
         from torchgeo.datasets import RasteretDataset
 
@@ -225,23 +208,33 @@ class TestRasteretDataset:
         ds.is_image = False
         assert ds.dtype == torch.long
 
-    def test_pickling(self, collection: MagicMock) -> None:
-        """Dataset survives pickle round-trip for multiprocessing support."""
+    def test_pickling(self, tmp_path: Any) -> None:
+        """Dataset survives a pickle round-trip for multiprocessing support."""
         from torchgeo.datasets import RasteretDataset
 
+        collection = _make_file_backed_collection(tmp_path / 'collection.parquet')
         ds = RasteretDataset(collection=collection, bands=['B04'])
         restored = pickle.loads(pickle.dumps(ds))
 
         assert len(restored.index) == len(ds.index)
         assert restored.bands == ds.bands
-        sample = restored[restored.bounds]
-        assert sample['image'].shape == (3, 16, 16)
+        assert restored.crs == ds.crs
 
-    def test_close(self, collection: MagicMock) -> None:
-        """close forwards to delegate close when available."""
+    def test_close(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """close is a safe no-op and forwards to the collection when supported."""
         from torchgeo.datasets import RasteretDataset
 
         ds = RasteretDataset(collection=collection, bands=['B04'])
-        ds.close()
+        ds.close()  # collection exposes no close(): must not raise
 
-        assert ds._delegate.closed is True
+        closed = {'value': False}
+        monkeypatch.setattr(
+            collection,
+            'close',
+            lambda: closed.__setitem__('value', True),
+            raising=False,
+        )
+        ds.close()
+        assert closed['value'] is True

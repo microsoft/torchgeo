@@ -132,8 +132,9 @@ models = [
     "olmoearth-pretrain-minimal>=0.0.2",
 ]
 rasteret = [
-    # rasteret 0.3.7+ required for current adapter behavior and schema contract
-    "rasteret>=0.3.7",
+    # 0.4.0 is the first release with the integration boundary RasteretDataset
+    # uses: Collection.footprints(), .native_res(), and .read_window().
+    "rasteret>=0.4.0",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels

@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: Install Rasteret
-        run: uv pip install --upgrade 'rasteret>=0.3.7'
+        run: uv pip install --upgrade 'rasteret>=0.4.0'
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: Install Rasteret
-        run: uv pip install --resolution lowest-direct --upgrade 'rasteret>=0.3.7' 'numpy>=1.26,<2'
+        run: uv pip install --resolution lowest-direct --upgrade 'rasteret>=0.4.0' 'numpy>=1.26,<2'
       - name: List installed dependencies
         run: uv tree
       - name: Run checks
