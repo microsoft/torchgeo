@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from typing import Any
 
-import numpy as np
 import pandas as pd
 import rasterio
 import torch
@@ -16,7 +15,7 @@ from geopandas import GeoDataFrame
 from pyproj import CRS
 
 from torchgeo.datasets.geo import RasterDataset, Sample
-from torchgeo.datasets.utils import GeoSlice, lazy_import
+from torchgeo.datasets.utils import GeoSlice, array_to_tensor, lazy_import
 
 
 class RasteretDataset(RasterDataset):
@@ -192,7 +191,9 @@ class RasteretDataset(RasterDataset):
         )
 
         sample: Sample = {
-            'image': torch.from_numpy(np.ascontiguousarray(array)).to(self.dtype),
+            # array_to_tensor (like RasterDataset) casts uint16/uint32 arrays, which
+            # torch.from_numpy rejects, to a supported dtype without precision loss.
+            'image': array_to_tensor(array).to(self.dtype),
             'bounds': self._slice_to_tensor(index),
             'transform': torch.tensor(
                 rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
