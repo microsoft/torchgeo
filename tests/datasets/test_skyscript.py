@@ -13,6 +13,8 @@ from torch import Tensor
 
 from torchgeo.datasets import DatasetNotFoundError, SkyScript
 
+tokenizers = pytest.importorskip('tokenizers', minversion='0.14')
+
 
 class TestSkyScript:
     @pytest.fixture
@@ -26,10 +28,18 @@ class TestSkyScript:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], Tensor)
-        assert isinstance(x['caption'], str)
+        assert isinstance(x['caption'], Tensor)
 
     def test_len(self, dataset: SkyScript) -> None:
         assert len(dataset) == 2
+
+    def test_tokenizer(self, dataset: SkyScript) -> None:
+        tokenizer = tokenizers.Tokenizer(tokenizers.models.BPE())
+        dataset = SkyScript(dataset.root, tokenizer=tokenizer)
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], Tensor)
+        assert isinstance(x['caption'], Tensor)
 
     def test_already_downloaded(self, dataset: SkyScript) -> None:
         shutil.rmtree(os.path.join(dataset.root, 'images2'))
