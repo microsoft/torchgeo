@@ -74,7 +74,7 @@ Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 #: * bbox_xyxy: expected output bounding box in (x1, y1, x2, y2) format
 #: * prediction: predicted output
 #:
-#: Values are usually of type torch.Tensor.
+#: Values are of type torch.Tensor.
 Sample: TypeAlias = dict[str, Tensor]  # noqa: UP040
 
 
