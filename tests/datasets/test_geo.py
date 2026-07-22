@@ -548,6 +548,11 @@ class TestRasterDataset:
         ):
             RasterDataset(root)
 
+    def test_cmap(self) -> None:
+        root = os.path.join('tests', 'data', 'cdl')
+        ds = RasterDataset(root)
+        assert ds.cmap is not None
+
 
 class TestXarrayDataset:
     pytest.importorskip('rioxarray', minversion='0.14.1')
@@ -557,7 +562,8 @@ class TestXarrayDataset:
         scope='class',
         params=itertools.product(['hdf5', 'netcdf'], [None, CRS.from_epsg(4979)]),
     )
-    def dataset(self, request: SubRequest) -> XarrayDataset:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> XarrayDataset:
         root = os.path.join('tests', 'data', request.param[0])
         transforms = nn.Identity()
         match request.param[0]:
@@ -597,19 +603,22 @@ class TestXarrayDataset:
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomVectorDataset:
+    @classmethod
+    def dataset(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def dataset_parquet(self) -> CustomVectorParquetDataset:
+    @classmethod
+    def dataset_parquet(cls) -> CustomVectorParquetDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorParquetDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def multilabel(self) -> CustomVectorDataset:
+    @classmethod
+    def multilabel(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(
@@ -757,7 +766,8 @@ class TestVectorDataset:
 
 class TestNonGeoDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> NonGeoDataset:
+    @classmethod
+    def dataset(cls) -> NonGeoDataset:
         return CustomNonGeoDataset()
 
     def test_getitem(self, dataset: NonGeoDataset) -> None:
@@ -801,12 +811,14 @@ class TestNonGeoDataset:
 
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope='class')
-    def dataset(self, root: str) -> NonGeoClassificationDataset:
+    @classmethod
+    def dataset(cls, root: str) -> NonGeoClassificationDataset:
         transforms = nn.Identity()
         return NonGeoClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def root(self) -> str:
+    @classmethod
+    def root(cls) -> str:
         root = os.path.join('tests', 'data', 'nongeoclassification')
         return root
 
@@ -851,7 +863,8 @@ class TestNonGeoClassificationDataset:
 
 class TestIntersectionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> IntersectionDataset:
+    @classmethod
+    def dataset(cls) -> IntersectionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
@@ -1127,7 +1140,8 @@ class TestIntersectionDataset:
 
 class TestUnionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> UnionDataset:
+    @classmethod
+    def dataset(cls) -> UnionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )

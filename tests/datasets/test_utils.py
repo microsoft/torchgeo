@@ -7,12 +7,14 @@ import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
 import torch
 from numpy.typing import NDArray
+from pytest import MonkeyPatch
 from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
@@ -383,6 +385,23 @@ def test_download_url(tmp_path: Path) -> None:
         download_url(url, tmp_path, md5=md5 + '2')
 
 
+def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    filename = 'NWPU VHR-10 dataset.zip'
+
+    def interrupt(*args: Any, **kwargs: Any) -> None:
+        raise OSError('simulated network reset')
+
+    monkeypatch.setattr(shutil, 'copyfileobj', interrupt)
+
+    with pytest.raises(OSError, match='simulated network reset'):
+        download_url(url, tmp_path, filename=filename)
+
+    # Neither a truncated final file nor a leftover temporary file should remain.
+    assert not (tmp_path / filename).exists()
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_download_and_extract_archive(tmp_path: Path) -> None:
     url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
     md5 = '91dd532523a543fb8dee0887e4188e9b'
@@ -469,7 +488,8 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'image': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:
@@ -494,7 +514,8 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
-    def samples(self) -> list[Sample]:
+    @classmethod
+    def samples(cls) -> list[Sample]:
         return [
             {'image': torch.tensor([1, 2, 0])},
             {'mask': torch.tensor([0, 0, 3]), 'other': 5},
@@ -563,7 +584,7 @@ def test_quantile_normalization(img: Tensor) -> None:
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_array_to_tensor(array_dtype: np.typing.DTypeLike) -> None:
+def test_array_to_tensor(array_dtype: np.dtype[Any]) -> None:
     array = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max

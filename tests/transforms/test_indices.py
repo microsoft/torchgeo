@@ -8,9 +8,11 @@ import torch
 from torchgeo.datasets.utils import Sample
 from torchgeo.transforms import (
     AppendBNDVI,
+    AppendEVI,
     AppendGBNDVI,
     AppendGNDVI,
     AppendGRNDVI,
+    AppendMNDWI,
     AppendNBR,
     AppendNDBI,
     AppendNDRE,
@@ -19,6 +21,7 @@ from torchgeo.transforms import (
     AppendNDWI,
     AppendNormalizedDifferenceIndex,
     AppendRBNDVI,
+    AppendSAVI,
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
@@ -78,6 +81,7 @@ def test_append_triband_index_batch(batch: Sample) -> None:
         AppendNDSI,
         AppendNDVI,
         AppendNDWI,
+        AppendMNDWI,
         AppendSWI,
         AppendGNDVI,
     ],
@@ -97,5 +101,21 @@ def test_append_tri_band_normalized_difference_indices(
 ) -> None:
     c, h, w = sample['image'].shape
     aug = K.AugmentationSequential(index(0, 1, 2), data_keys=None)
+    output = aug(sample)
+    assert output['image'].shape == (1, c + 1, h, w)
+
+
+def test_append_savi(sample: Sample) -> None:
+    c, h, w = sample['image'].shape
+    aug = K.AugmentationSequential(AppendSAVI(index_nir=0, index_red=1), data_keys=None)
+    output = aug(sample)
+    assert output['image'].shape == (1, c + 1, h, w)
+
+
+def test_append_evi(sample: Sample) -> None:
+    c, h, w = sample['image'].shape
+    aug = K.AugmentationSequential(
+        AppendEVI(index_nir=0, index_red=1, index_blue=2), data_keys=None
+    )
     output = aug(sample)
     assert output['image'].shape == (1, c + 1, h, w)

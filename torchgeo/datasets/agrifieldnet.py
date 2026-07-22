@@ -4,24 +4,115 @@
 """AgriFieldNet India Challenge dataset."""
 
 import os
-import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import cast
 
 import matplotlib.pyplot as plt
-import pandas as pd
-import rasterio
+import numpy as np
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
-from .geo import RasterDataset
+from .geo import IntersectionDataset, RasterDataset
 from .utils import GeoSlice, Path, Sample, quantile_normalization, which
 
 
-class AgriFieldNet(RasterDataset):
+class AgriFieldNetImage(RasterDataset):
+    """AgriFieldNet Sentinel-2 imagery.
+
+    .. versionadded:: 0.10
+    """
+
+    filename_glob = 'ref_agrifieldnet_competition_v1_source_*_{}_10m.*'
+    filename_regex = r"""
+        ^ref_agrifieldnet_competition_v1_source_
+        (?P<unique_folder_id>[a-f0-9]{5})
+        _(?P<band>B[0-9A]{2})_10m
+    """
+    separate_files = True
+
+    rgb_bands = ('B04', 'B03', 'B02')
+    all_bands = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+    )
+
+
+class AgriFieldNetMask(RasterDataset):
+    """AgriFieldNet masks.
+
+    .. versionadded:: 0.10
+    """
+
+    filename_glob = 'ref_agrifieldnet_competition_v1_labels_*'
+    filename_regex = r"""
+        ^ref_agrifieldnet_competition_v1_labels_
+        (?P<split>train|test)_
+        (?P<unique_folder_id>[a-f0-9]{5})\.
+    """
+    is_image = False
+
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (255, 211, 0, 255),
+                (255, 37, 37, 255),
+                (0, 168, 226, 255),
+                (255, 158, 9, 255),
+                (37, 111, 0, 255),
+                (255, 255, 0, 255),
+                (0, 0, 0, 255),
+                (111, 166, 0, 255),
+                (0, 175, 73, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (222, 166, 9, 255),
+                (222, 166, 9, 255),
+                (124, 211, 255, 255),
+                (226, 0, 124, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 255),
+                (137, 96, 83, 255),
+            ]
+        )
+        / 255
+    )
+
+    valid_classes = (0, 1, 2, 3, 4, 5, 6, 8, 9, 13, 14, 15, 16, 36)
+
+
+class AgriFieldNet(IntersectionDataset):
     """AgriFieldNet India Challenge dataset.
 
     The `AgriFieldNet India Challenge
@@ -84,52 +175,13 @@ class AgriFieldNet(RasterDataset):
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1'
 
-    filename_glob = 'ref_agrifieldnet_competition_v1_source_*_{}_10m.*'
-    filename_regex = r"""
-        ^ref_agrifieldnet_competition_v1_source_
-        (?P<unique_folder_id>[a-z0-9]{5})
-        _(?P<band>B[0-9A-Z]{2})_10m
-    """
-
-    rgb_bands = ('B04', 'B03', 'B02')
-    all_bands = (
-        'B01',
-        'B02',
-        'B03',
-        'B04',
-        'B05',
-        'B06',
-        'B07',
-        'B08',
-        'B8A',
-        'B09',
-        'B11',
-        'B12',
-    )
-
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (255, 211, 0, 255),
-        2: (255, 37, 37, 255),
-        3: (0, 168, 226, 255),
-        4: (255, 158, 9, 255),
-        5: (37, 111, 0, 255),
-        6: (255, 255, 0, 255),
-        8: (111, 166, 0, 255),
-        9: (0, 175, 73, 255),
-        13: (222, 166, 9, 255),
-        14: (222, 166, 9, 255),
-        15: (124, 211, 255, 255),
-        16: (226, 0, 124, 255),
-        36: (137, 96, 83, 255),
-    }
-
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        classes: list[int] = list(cmap.keys()),
-        bands: Sequence[str] = all_bands,
+        res: float | tuple[float, float] | None = None,
+        classes: list[int] = list(AgriFieldNetMask.valid_classes),
+        bands: Sequence[str] = AgriFieldNetImage.all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -141,6 +193,8 @@ class AgriFieldNet(RasterDataset):
             paths: one or more root directories to search for files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
             classes: list of classes to include, the rest will be mapped to 0
                 (defaults to all classes)
             bands: the subset of bands to load
@@ -154,35 +208,45 @@ class AgriFieldNet(RasterDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
 
+        .. versionadded:: 0.10
+           The *res* parameter.
+
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= set(AgriFieldNetMask.valid_classes), (
+            f'Only the following classes are valid: {AgriFieldNetMask.valid_classes}.'
         )
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.download = download
-        self.filename_glob = self.filename_glob.format(bands[0])
+        AgriFieldNetImage.filename_glob = AgriFieldNetImage.filename_glob.format(
+            bands[0]
+        )
 
         self._verify()
 
-        super().__init__(
-            paths=paths,
-            crs=crs,
-            bands=bands,
-            transforms=transforms,
-            cache=cache,
-            time_series=time_series,
+        self.image = AgriFieldNetImage(
+            paths, crs, res, bands, transforms, cache, time_series
+        )
+        self.mask = AgriFieldNetMask(
+            paths, crs, res, None, transforms, cache, time_series
         )
 
+        super().__init__(self.image, self.mask)
+
+        # Ignore unintentional partial overlap
+        self.index = self.image.index
+
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(
+            self.mask.valid_classes[-1] + 1, dtype=self.mask.dtype
+        )
+        self.inverse_map = torch.zeros(len(classes), dtype=self.mask.dtype)
         for v, k in enumerate(classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -196,59 +260,8 @@ class AgriFieldNet(RasterDataset):
         Raises:
             IndexError: If *index* is not found in the dataset.
         """
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-
-        x, y, t = self._disambiguate_slice(index)
-        interval = pd.Interval(t.start, t.stop)
-        df = self.index.iloc[self.index.index.overlaps(interval)]
-        df = df.iloc[:: t.step]
-        df = df.cx[x.start : x.stop, y.start : y.stop]
-
-        if df.empty:
-            raise IndexError(
-                f'index: {index} not found in dataset with bounds: {self.bounds}'
-            )
-
-        data_list: list[Tensor] = []
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for band in self.bands:
-            band_filepaths = []
-            for filepath in df.filepath:
-                filename = os.path.basename(filepath)
-                directory = os.path.dirname(filepath)
-                match = re.match(filename_regex, filename)
-                if match:
-                    if 'band' in match.groupdict():
-                        start = match.start('band')
-                        end = match.end('band')
-                        filename = filename[:start] + band + filename[end:]
-                filepath = os.path.join(directory, filename)
-                band_filepaths.append(filepath)
-            data_list.append(self._merge_or_stack(band_filepaths, index))
-        image = torch.cat(data_list, dim=-3)
-
-        mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(paths, 'train_labels')):
-            for file in files:
-                if not file.endswith('_field_ids.tif') and file.endswith('.tif'):
-                    file_path = os.path.join(root, file)
-                    mask_filepaths.append(file_path)
-
-        mask = self._merge_or_stack(mask_filepaths, index)
-        mask = self.ordinal_map[mask.squeeze().long()]
-
-        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample = {
-            'bounds': self._slice_to_tensor(index),
-            'image': image.float(),
-            'mask': mask.long(),
-            'transform': torch.tensor(transform),
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
+        sample = super().__getitem__(index)
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
@@ -289,34 +302,41 @@ class AgriFieldNet(RasterDataset):
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
+        for band in self.image.rgb_bands:
+            if band in self.image.bands:
+                rgb_indices.append(self.image.bands.index(band))
             else:
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = quantile_normalization(image)
 
-        mask = sample['mask'].squeeze()
+        mask = self.inverse_map[sample['mask']]
         ncols = 2
 
         showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample['prediction'].squeeze()
+            pred = self.inverse_map[sample['prediction']]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        kwargs = {
+            'cmap': self.mask.cmap,
+            'vmin': self.mask.valid_classes[0],
+            'vmax': self.mask.valid_classes[-1],
+            'interpolation': 'none',
+        }
+
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].imshow(mask, **kwargs)
         axs[1].axis('off')
         if show_titles:
             axs[0].set_title('Image')
             axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[2].imshow(pred, **kwargs)
             axs[2].axis('off')
             if show_titles:
                 axs[2].set_title('Prediction')

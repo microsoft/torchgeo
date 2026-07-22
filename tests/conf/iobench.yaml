@@ -4,6 +4,6 @@ data:
   class_path: IOBenchDataModule
   init_args:
     batch_size: 1
-    patch_size: 16
+    patch_size: 8
   dict_kwargs:
     root: 'tests/data/iobench'

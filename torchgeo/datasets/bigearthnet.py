@@ -300,7 +300,7 @@ class BigEarthNet(NonGeoDataset):
         assert num_classes in [43, 19]
         self.root = root
         self.split = split
-        self.bands = bands
+        self.bands: Literal['s1', 's2', 'all'] = bands
         self.num_classes = num_classes
         self.transforms = transforms
         self.download = download
@@ -715,7 +715,7 @@ class BigEarthNetV2(NonGeoDataset):
         assert bands in ['s1', 's2', 'all']
         self.root = root
         self.split = split
-        self.bands = bands
+        self.bands: Literal['s1', 's2', 'all'] = bands
         self.transforms = transforms
         self.num_classes = 19
         self.download = download

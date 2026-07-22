@@ -478,7 +478,7 @@ class MMEarth(NonGeoDataset):
 
         Args:
             modality: modality name
-            bands: bands aviailable for the modality
+            bands: bands available for the modality
 
         Returns:
             list of band indices

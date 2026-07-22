@@ -110,8 +110,8 @@ class TestCopernicusBench:
         plt.close()
 
     def test_not_rgb(self, dataset: CopernicusBench) -> None:
-        all_bands = list(dataset.all_bands)
-        rgb_bands = list(dataset.rgb_bands)
+        all_bands = list(dataset.dataset.all_bands)
+        rgb_bands = list(dataset.dataset.rgb_bands)
         for band in rgb_bands:
             all_bands.remove(band)
 

@@ -69,7 +69,7 @@ class TestSSL4EOLBenchmark:
         self, product: Literal['nlcd', 'cdl'], base_class: RasterDataset
     ) -> None:
         root = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat')
-        classes = list(base_class.cmap.keys())[:5]
+        classes = list(base_class.valid_classes)[5:]
         ds = SSL4EOLBenchmark(root, product=product, classes=classes)
         sample = ds[0]
         mask = sample['mask']
@@ -78,9 +78,6 @@ class TestSSL4EOLBenchmark:
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
             SSL4EOLBenchmark(classes=[-1])
-
-        with pytest.raises(AssertionError):
-            SSL4EOLBenchmark(classes=[11])
 
     def test_add(self, dataset: SSL4EOLBenchmark) -> None:
         ds = dataset + dataset
