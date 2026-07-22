@@ -132,9 +132,10 @@ models = [
     "olmoearth-pretrain-minimal>=0.0.2",
 ]
 rasteret = [
-    # 0.4.0 is the first release with the integration boundary RasteretDataset
-    # uses: Collection.footprints(), .native_res(), and .read_window().
-    "rasteret>=0.4.0",
+    # 0.4.1 is the first release with the integration boundary RasteretDataset
+    # uses: Collection.footprints(), .native_res(), .read_window(), and the
+    # read_window(group_by="id") one-timestep-per-scene time-series mode.
+    "rasteret>=0.4.1",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels

@@ -188,7 +188,7 @@ class RasteretDataset(RasterDataset):
             target_crs=self._target_crs,
             max_concurrent=self._max_concurrent,
             backend=self._backend,
-            group_by='datetime' if self.time_series else None,
+            group_by='id' if self.time_series else None,
         )
 
         sample: Sample = {

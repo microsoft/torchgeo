@@ -167,7 +167,8 @@ class TestRasteretDataset:
     def test_time_series_passes_group_by(
         self, collection: Collection, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """time_series=True groups the read by datetime."""
+        """time_series=True stacks one timestep per record (group_by='id'), which
+        matches TorchGeo RasterDataset's one-T-per-file time_series stacking."""
         from torchgeo.datasets import RasteretDataset
 
         captured: dict[str, Any] = {}
@@ -180,7 +181,7 @@ class TestRasteretDataset:
         ds = RasteretDataset(collection=collection, bands=['B04'], time_series=True)
         sample = ds[ds.bounds]
 
-        assert captured['group_by'] == 'datetime'
+        assert captured['group_by'] == 'id'
         assert sample['image'].shape == (2, 1, 16, 16)
 
     def test_res_setter(self, collection: Collection) -> None:
