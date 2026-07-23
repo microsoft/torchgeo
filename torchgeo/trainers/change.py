@@ -13,12 +13,12 @@ import segmentation_models_pytorch as smp
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchvision.models._api import WeightsEnum
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
 from ..models import BTC, FCN, ChangeViT, FCSiamConc, FCSiamDiff, get_weight
+from ..models.registry import WeightsEnum
 from . import utils
 from .base import BaseTask
 from .mixins import ClassificationMixin

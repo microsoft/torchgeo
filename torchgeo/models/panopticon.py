@@ -9,10 +9,10 @@ import timm
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
 from .copernicusfm import resize_abs_pos_embed
+from .registry import Weights, WeightsEnum
 
 
 class PanopticonPE(nn.Module):

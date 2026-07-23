@@ -8,8 +8,8 @@ from typing import Any, cast
 import timm
 import torchvision.transforms.v2 as T
 from torch import nn
-from torchvision.models._api import Weights, WeightsEnum
 
+from .registry import Weights, WeightsEnum
 from .resnet import (
     _landsat_etm_sr_bands,
     _landsat_etm_toa_bands,

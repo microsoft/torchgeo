@@ -27,12 +27,12 @@ from torch.optim.lr_scheduler import (
     MultiStepLR,
     SequentialLR,
 )
-from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
 from ..datasets.utils import Sample
 from ..models import get_weight
+from ..models.registry import WeightsEnum
 from . import utils
 from .base import BaseTask
 

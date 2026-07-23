@@ -6,9 +6,9 @@
 from typing import Any, cast
 
 import torch.nn as nn
-from torchvision.models._api import Weights, WeightsEnum
 
 from ..datasets.utils import lazy_import
+from .registry import Weights, WeightsEnum
 
 # Aurora operates on the raw unnormalized data.
 _aurora_transforms = nn.Identity()

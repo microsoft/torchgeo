@@ -11,11 +11,11 @@ import torch
 from pytest import MonkeyPatch
 from timm.models import VisionTransformer
 from torch.nn import Module
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.datasets import SSL4EOS12
 from torchgeo.main import main
 from torchgeo.models import ViTSmall16_Weights
+from torchgeo.models.registry import WeightsEnum
 from torchgeo.trainers import MAETask
 
 

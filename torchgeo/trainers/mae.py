@@ -12,10 +12,10 @@ from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from timm.models import VisionTransformer
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
-from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import Sample
 from ..models import get_weight
+from ..models.registry import WeightsEnum
 from .base import BaseTask
 from .utils import load_state_dict
 

@@ -3,10 +3,14 @@
 
 import enum
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+import timm
+import torch
 import torch.nn as nn
-from torchvision.models._api import WeightsEnum
+from pytest import MonkeyPatch
+from timm.models import PretrainedCfg
 
 from torchgeo.models import (
     Aurora_Weights,
@@ -53,6 +57,7 @@ from torchgeo.models import (
     olmoearth_v1,
     panopticon_vitb14,
     presto,
+    registry,
     resnet18,
     resnet50,
     resnet152,
@@ -72,6 +77,7 @@ from torchgeo.models import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+from torchgeo.models.registry import Weights, WeightsEnum, _resolve_weight
 
 builders = [
     aurora_swin_unet,
@@ -171,6 +177,77 @@ def test_list_models() -> None:
     assert set(models) == set(list_models())
 
 
+def test_timm_registry(
+    tmp_path: Path, load_state_dict_from_url: None, monkeypatch: MonkeyPatch
+) -> None:
+    model_name = 'torchgeo_resnet18.sentinel2_all_moco'
+    assert model_name in timm.list_models(pretrained=True, include_tags=True)
+
+    cfg = timm.get_pretrained_cfg(model_name)
+    assert cfg is not None
+    assert cfg.input_size == (13, 224, 224)
+    assert cfg.meta['model'] == 'resnet18'
+
+    model = timm.create_model('torchgeo_resnet18', in_chans=13)
+    assert isinstance(model, nn.Module)
+
+    weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
+    path = tmp_path / 'weights.pth'
+    torch.save(timm.create_model('resnet18', in_chans=13).state_dict(), path)
+    monkeypatch.setattr(weights.value, 'url', str(path))
+    model = timm.create_model(model_name, pretrained=True)
+    assert model.conv1.in_channels == 13
+
+    model = timm.create_model('torchgeo_resnet18', weights=weights)
+    assert model.conv1.in_channels == 13
+
+
+def test_resolve_weight(monkeypatch: MonkeyPatch) -> None:
+    default_weight = ResNet18_Weights.LANDSAT_TM_TOA_MOCO
+    weight = ResNet18_Weights.SENTINEL2_ALL_MOCO
+
+    assert _resolve_weight('torchgeo_resnet18', weight) is weight
+    assert (
+        _resolve_weight('torchgeo_resnet18', 'torchgeo_resnet18.sentinel2_all_moco')
+        is weight
+    )
+    assert _resolve_weight('torchgeo_resnet18', None) is default_weight
+    assert (
+        _resolve_weight('torchgeo_resnet18', PretrainedCfg(tag='sentinel2_all_moco'))
+        is weight
+    )
+
+    with pytest.raises(ValueError, match='bad_model does not have pretrained weights'):
+        _resolve_weight('bad_model', None)
+    monkeypatch.setattr(
+        registry, 'get_pretrained_cfg', lambda _: PretrainedCfg(tag=None)
+    )
+    with pytest.raises(
+        ValueError, match='torchgeo_resnet18 does not have a tagged pretrained weight'
+    ):
+        _resolve_weight('torchgeo_resnet18', None)
+    with pytest.raises(
+        ValueError, match='torchgeo_resnet18 does not have a tagged pretrained weight'
+    ):
+        _resolve_weight('torchgeo_resnet18', PretrainedCfg())
+    with pytest.raises(
+        ValueError,
+        match=r'torchgeo_resnet18\.bad is not a valid TorchGeo pretrained weight',
+    ):
+        _resolve_weight('torchgeo_resnet18', 'bad')
+
+
 def test_invalid_model() -> None:
     with pytest.raises(ValueError, match='bad_model is not a valid WeightsEnum'):
         get_weight('bad_model')
+
+
+def test_weights_enum_missing_value() -> None:
+    weight = object.__new__(WeightsEnum)
+    with pytest.raises(AttributeError, match='missing'):
+        weight.__getattr__('missing')
+
+
+def test_weights_without_url() -> None:
+    with pytest.raises(ValueError, match='No URL is available for these weights'):
+        Weights().get_state_dict()

@@ -12,10 +12,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
 from torch import Tensor
-from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import Sample
 from ..models import get_weight
+from ..models.registry import WeightsEnum
 from . import utils
 from .base import BaseTask
 

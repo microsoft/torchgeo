@@ -6,9 +6,9 @@
 from typing import Any
 
 import torch.nn as nn
-from torchvision.models._api import Weights, WeightsEnum
 
 from ..datasets.utils import lazy_import
+from .registry import Weights, WeightsEnum
 
 _olmoearth_transforms = nn.Identity()
 

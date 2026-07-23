@@ -1,20 +1,12 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""APIs for querying and loading pre-trained model weights.
-
-See the following references for design details:
-
-* https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
-* https://docs.pytorch.org/vision/stable/models.html
-* https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
-"""
+"""APIs for querying and loading pre-trained model weights."""
 
 from collections.abc import Callable
 from typing import Any
 
 import torch.nn as nn
-from torchvision.models._api import WeightsEnum
 
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
@@ -31,6 +23,8 @@ from .earthloc import EarthLoc_Weights, earthloc
 from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
+from .registry import WeightsEnum, create_model, get_model_name, register_models
+from .registry import get_weight as get_timm_weight
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -103,37 +97,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
 }
 
-_model_weights: dict[
-    str | Callable[..., nn.Module], WeightsEnum
-] = {  # ty :ignore[invalid-assignment]
-    aurora_swin_unet: Aurora_Weights,
-    copernicusfm_base: CopernicusFM_Base_Weights,
-    croma_base: CROMABase_Weights,
-    croma_large: CROMALarge_Weights,
-    dofa_base_patch16_224: DOFABase16_Weights,
-    dofa_large_patch16_224: DOFALarge16_Weights,
-    earthloc: EarthLoc_Weights,
-    olmoearth_v1: OlmoEarthV1_Weights,
-    panopticon_vitb14: Panopticon_Weights,
-    presto: Presto_Weights,
-    resnet18: ResNet18_Weights,
-    resnet50: ResNet50_Weights,
-    resnet152: ResNet152_Weights,
-    scalemae_large_patch16: ScaleMAELarge16_Weights,
-    swin_t: Swin_T_Weights,
-    swin_s: Swin_S_Weights,
-    swin_b: Swin_B_Weights,
-    swin_v2_t: Swin_V2_T_Weights,
-    swin_v2_b: Swin_V2_B_Weights,
-    tilenet: TileNet_Weights,
-    tessera: Tessera_Weights,
-    unet: Unet_Weights,
-    vit_small_patch16_224: ViTSmall16_Weights,
-    vit_base_patch14_dinov2: ViTBase14_DINOv2_Weights,
-    vit_base_patch16_224: ViTBase16_Weights,
-    vit_huge_patch14_224: ViTHuge14_Weights,
-    vit_large_patch16_224: ViTLarge16_Weights,
-    vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
+_model_weights: dict[str, type[WeightsEnum]] = {
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
@@ -164,6 +128,8 @@ _model_weights: dict[
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
 }
 
+register_models(_model, _model_weights)
+
 
 def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     """Get an instantiated model from its name.
@@ -178,11 +144,11 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     Returns:
         An instantiated model.
     """
-    model: nn.Module = _model[name](*args, **kwargs)
+    model: nn.Module = create_model(get_model_name(name), *args, **kwargs)
     return model
 
 
-def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
+def get_model_weights(name: Callable[..., nn.Module] | str) -> type[WeightsEnum]:
     """Get the weights enum class associated with a given model.
 
     .. versionadded:: 0.4
@@ -193,7 +159,8 @@ def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
     Returns:
         The weights enum class associated with the model.
     """
-    return _model_weights[name]
+    model_name = name.__name__ if callable(name) else name
+    return _model_weights[model_name]
 
 
 def get_weight(name: str) -> WeightsEnum:
@@ -210,13 +177,7 @@ def get_weight(name: str) -> WeightsEnum:
     Raises:
         ValueError: If *name* is not a valid WeightsEnum.
     """
-    for weight_name, weight_enum in _model_weights.items():
-        if isinstance(weight_name, str):
-            for sub_weight_enum in weight_enum:  # ty: ignore[not-iterable]
-                if name == str(sub_weight_enum):
-                    return sub_weight_enum
-
-    raise ValueError(f'{name} is not a valid WeightsEnum')
+    return get_timm_weight(name)
 
 
 def list_models() -> list[str]:

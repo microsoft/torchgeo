@@ -7,6 +7,7 @@ import math
 from collections import OrderedDict
 from typing import cast
 
+import segmentation_models_pytorch as smp
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.modules import (
@@ -20,8 +21,6 @@ from torch.nn.modules import (
     Sigmoid,
     UpsamplingBilinear2d,
 )
-from torchvision.models import resnet
-from torchvision.models._api import WeightsEnum
 from torchvision.ops import FeaturePyramidNetwork as FPN
 
 
@@ -43,7 +42,7 @@ class FarSeg(Module):
         self,
         backbone: str = 'resnet50',
         classes: int = 16,
-        backbone_weights: WeightsEnum | None = None,
+        backbone_weights: str | None = None,
     ) -> None:
         """Initialize a new FarSeg model.
 
@@ -51,7 +50,8 @@ class FarSeg(Module):
             backbone: name of ResNet backbone, one of ["resnet18", "resnet34",
                 "resnet50", "resnet101"]
             classes: number of output segmentation classes
-            backbone_weights: Pre-trained model weights to use.
+            backbone_weights: Name of the pre-trained encoder weights to use, as
+                supported by SMP.
 
         .. versionadded:: 0.9
            The *backbone_weights* parameter.
@@ -64,7 +64,9 @@ class FarSeg(Module):
         else:
             raise ValueError(f'unknown backbone: {backbone}.')
 
-        self.backbone = getattr(resnet, backbone)(weights=backbone_weights)
+        self.backbone = smp.encoders.get_encoder(
+            backbone, depth=5, weights=backbone_weights
+        )
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
@@ -82,16 +84,7 @@ class FarSeg(Module):
         Returns:
             output prediction
         """
-        x = self.backbone.conv1(x)
-        x = self.backbone.bn1(x)
-        x = self.backbone.relu(x)
-        x = self.backbone.maxpool(x)
-
-        c2 = self.backbone.layer1(x)
-        c3 = self.backbone.layer2(c2)
-        c4 = self.backbone.layer3(c3)
-        c5 = self.backbone.layer4(c4)
-        features = [c2, c3, c4, c5]
+        features = self.backbone(x)[2:]
 
         coarsest_features = features[-1]
         scene_embedding = F.adaptive_avg_pool2d(coarsest_features, 1)
