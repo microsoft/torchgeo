@@ -70,7 +70,7 @@ class QuakeSet(NonGeoDataset):
 
     filename = 'earthquakes.h5'
     url = 'https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5'
-    md5 = '76fc7c76b7ca56f4844d852e175e1560'
+    sha256 = '11527e6a21c425b787d0952443e434f53d90a22ee16b75d20e17d54c2b091a78'
     splits: ClassVar[dict[str, str]] = {
         'train': 'train',
         'val': 'validation',
@@ -94,7 +94,7 @@ class QuakeSet(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If ``split`` argument is invalid.
@@ -230,7 +230,7 @@ class QuakeSet(NonGeoDataset):
                 self.url,
                 self.root,
                 filename=self.filename,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
 
     def plot(

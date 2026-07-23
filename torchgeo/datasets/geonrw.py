@@ -159,7 +159,7 @@ class GeoNRW(NonGeoDataset):
     url = 'https://hf.co/datasets/torchgeo/geonrw/resolve/3cb6bdf2a615b9e526c7dcff85fd1f20728081b7/{}'
 
     filename = 'nrw_dataset.tar.gz'
-    md5 = 'd56ab50098d5452c33d08ff4e99ce281'
+    sha256 = 'de3cdda6a5718a8ae7f0e1479829a06c0fcebdab4eaf70274c56adfde696b972'
 
     def __init__(
         self,
@@ -177,7 +177,7 @@ class GeoNRW(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -274,7 +274,7 @@ class GeoNRW(NonGeoDataset):
         download_and_extract_archive(
             self.url.format(self.filename),
             download_root=self.root,
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def plot(

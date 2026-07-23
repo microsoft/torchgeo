@@ -64,7 +64,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
 
     url = 'https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip'
     filename = 'landcover.ai.v1.zip'
-    md5 = '3268c89070e8734b4e91d531c0617e03'
+    sha256 = 'dd448287ff3a76291f2b159084b8a265f2ba4559bb80b0551fc8c6c0eb149a4b'
     classes = ('Background', 'Building', 'Woodland', 'Water', 'Road')
     cmap = ListedColormap(
         np.array(
@@ -90,7 +90,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
                 entry and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -126,7 +126,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+        download_url(self.url, self.root, sha256=self.sha256 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
@@ -211,7 +211,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
                 entry and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
             time_series: if True, stack data along the time series dimension
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
@@ -296,11 +296,20 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     url = 'https://hf.co/datasets/dragon7/LandCover.ai/resolve/262c75fbbf77d107f0a8335e9eef1f6234481d08/output.zip'
     filename = 'output.zip'
-    md5 = 'e0cf2403116dc08c97a69604bd0cdb74'
+    sha256 = '0edd6b7049d089519e63450e371037890b5e9552b1df056dbbddcc88770fd0da'
     metadata: ClassVar[dict[str, dict[str, str]]] = {
-        'train': {'filename': 'train.txt', 'md5': '059d87b49390d557d15090167493f758'},
-        'val': {'filename': 'val.txt', 'md5': '3f3ff579b050d1fcd12e66ce48f73d67'},
-        'test': {'filename': 'test.txt', 'md5': 'b019a7607a10166a81f4e243c456c212'},
+        'train': {
+            'filename': 'train.txt',
+            'sha256': '3db55adca08bb2161448875e7798102a313a9bd4b7a2caf60892293f0ca98450',
+        },
+        'val': {
+            'filename': 'val.txt',
+            'sha256': '521d28411921e97602eb619a55058ddb3702a743f9b4c3aefd56130ae122c6ea',
+        },
+        'test': {
+            'filename': 'test.txt',
+            'sha256': 'df381ab217cb7bfd526cca4249bc863cb11d8b99edbe6837b086f513fe9c123f',
+        },
     }
 
     def __init__(
@@ -319,7 +328,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -410,14 +419,16 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and split files."""
         # Download the main output.zip file
-        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+        download_url(self.url, self.root, sha256=self.sha256 if self.checksum else None)
 
         # Download split files from the same base location
         # Simply replace the filename in the URL
         for split_info in self.metadata.values():
             split_url = self.url.replace(self.filename, split_info['filename'])
             download_url(
-                split_url, self.root, md5=split_info['md5'] if self.checksum else None
+                split_url,
+                self.root,
+                sha256=split_info['sha256'] if self.checksum else None,
             )
 
 
@@ -433,7 +444,7 @@ class LandCoverAI100(LandCoverAI):
 
     url = 'https://hf.co/datasets/isaaccorley/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
-    md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
+    sha256 = 'bfe5bcf501a54cfd8ebf985346da50be5e8b751d3491812cd0c226b5a3abff41'
 
     def _download(self) -> None:
         """Download the dataset.
@@ -441,4 +452,4 @@ class LandCoverAI100(LandCoverAI):
         Unlike the parent LandCoverAI class, LandCoverAI100 includes split files
         in the zip, so we don't need to download them separately.
         """
-        download_url(self.url, self.root, md5=self.md5 if self.checksum else None)
+        download_url(self.url, self.root, sha256=self.sha256 if self.checksum else None)

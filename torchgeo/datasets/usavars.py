@@ -53,7 +53,7 @@ class USAVars(NonGeoDataset):
     data_url = 'https://hf.co/datasets/torchgeo/usavars/resolve/01377abfaf50c0cc8548aaafb79533666bbf288f/{}'
     dirname = 'uar'
 
-    md5 = '677e89fd20e5dd0fe4d29b61827c2456'
+    sha256 = 'a202ed19a720bccc0cb313bb43145ef5b546a6c2a5cbf54955e1e9506a5f3b0b'
 
     label_urls: ClassVar[dict[str, str]] = {
         'housing': data_url.format('housing.csv'),
@@ -69,17 +69,17 @@ class USAVars(NonGeoDataset):
         'train': {
             'url': data_url.format('train_split.txt'),
             'filename': 'train_split.txt',
-            'md5': '3f58fffbf5fe177611112550297200e7',
+            'sha256': 'd1a7a3be2b9328e03affd62d23347eb7e76e786079c012107ad65cb652d97d93',
         },
         'val': {
             'url': data_url.format('val_split.txt'),
             'filename': 'val_split.txt',
-            'md5': 'bca7183b132b919dec0fc24fb11662a0',
+            'sha256': 'edec887529ce83b3ae1fb9b549621b6d16df356fb9e83a4134f073761d147660',
         },
         'test': {
             'url': data_url.format('test_split.txt'),
             'filename': 'test_split.txt',
-            'md5': '97bb36bc003ae0bf556a8d6e8f77141a',
+            'sha256': '364f7ae1de7803a026e41a8624b540bfab756dcc2fe87a04f036b4def27d93fb',
         },
     }
 
@@ -107,7 +107,7 @@ class USAVars(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if invalid labels are provided
@@ -221,14 +221,14 @@ class USAVars(NonGeoDataset):
         download_url(
             self.data_url.format(self.dirname + '.zip'),
             self.root,
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
         for metadata in self.split_metadata.values():
             download_url(
                 metadata['url'],
                 self.root,
-                md5=metadata['md5'] if self.checksum else None,
+                sha256=metadata['sha256'] if self.checksum else None,
             )
 
     def _extract(self) -> None:
