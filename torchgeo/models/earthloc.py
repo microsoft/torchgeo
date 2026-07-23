@@ -256,7 +256,9 @@ def earthloc(
             'pretrained': False,
         }
         model = EarthLoc(*args, **kwargs)
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+        model.load_state_dict(
+            weights.get_state_dict(progress=True, weights_only=True), strict=True
+        )
     else:
         model = EarthLoc(*args, **kwargs)
 

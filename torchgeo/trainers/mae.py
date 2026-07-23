@@ -119,9 +119,11 @@ class MAETask(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True)
+                state_dict = weights.get_state_dict(progress=True, weights_only=True)
             else:
-                state_dict = get_weight(weights).get_state_dict(progress=True)
+                state_dict = get_weight(weights).get_state_dict(
+                    progress=True, weights_only=True
+                )
             load_state_dict(vit, state_dict)  # type: ignore[invalid-argument-type]
 
         self.patch_size = vit.patch_embed.patch_size[0]

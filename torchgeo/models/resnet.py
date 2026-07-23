@@ -889,7 +889,7 @@ def resnet18(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
@@ -924,7 +924,7 @@ def resnet50(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         # used when features_only = True
@@ -959,7 +959,7 @@ def resnet152(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         # used when features_only = True
