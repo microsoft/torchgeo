@@ -509,7 +509,7 @@ def panopticon_vitb14(
     patch_size = 14  # fixed
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
         state_dict.pop('mask_token')
 
         # interpolate positional embeddings (timm==0.9.2) does not support this yet

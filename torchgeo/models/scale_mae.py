@@ -237,7 +237,7 @@ def scalemae_large_patch16(
     )
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
 
         if 'img_size' in kwargs and weights.meta['img_size'] != kwargs['img_size']:
             state_dict = interpolate_pos_embed(model, state_dict)
