@@ -473,7 +473,7 @@ def dofa_base_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
@@ -511,7 +511,7 @@ def dofa_large_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {

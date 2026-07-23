@@ -340,11 +340,13 @@ class BYOLTask(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True)
+                state_dict = weights.get_state_dict(progress=True, weights_only=True)
             elif os.path.exists(weights):
                 _, state_dict = utils.extract_backbone(weights)
             else:
-                state_dict = get_weight(weights).get_state_dict(progress=True)
+                state_dict = get_weight(weights).get_state_dict(
+                    progress=True, weights_only=True
+                )
             utils.load_state_dict(backbone, state_dict)
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
