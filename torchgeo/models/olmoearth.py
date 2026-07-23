@@ -90,7 +90,9 @@ def olmoearth_v1(
     model_size = kwargs.pop('model_size', 'nano')
     if weights is not None:
         model_size = weights.meta.get('model_size', model_size)
-    model: nn.Module = olmoearth.OlmoEarthPretrain_v1(model_size=model_size, **kwargs)
+    model: nn.Module = olmoearth.OlmoEarthPretrain_v1(
+        model_size=model_size, model_version='v1', **kwargs
+    )
     if weights is not None:
         state_dict = weights.get_state_dict(progress=True)
         model.load_state_dict(state_dict, strict=False)
