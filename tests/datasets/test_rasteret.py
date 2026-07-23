@@ -13,6 +13,8 @@ from pyproj import CRS
 
 pa = pytest.importorskip('pyarrow')
 pads = pytest.importorskip('pyarrow.dataset')
+gpd = pytest.importorskip('geopandas')
+shapely_geometry = pytest.importorskip('shapely.geometry')
 pytest.importorskip('rasteret')
 
 if TYPE_CHECKING:
@@ -28,6 +30,20 @@ def _non_epsg_crs() -> CRS:
         'AXIS["x",east,ORDER[1]],AXIS["y",north,ORDER[2]],'
         'LENGTHUNIT["metre",1]]'
     )
+
+
+def _footprints(crs: Any, n: int = 2) -> Any:
+    """Build a footprints GeoDataFrame like ``Collection.footprints()`` returns.
+
+    Used to stand in for collections the real fixtures cannot easily produce:
+    empty (``n=0``), multi-CRS (``crs=None``), or non-EPSG CRS.
+    """
+    ids = ['first', 'second'][:n]
+    times = [datetime(2024, 6, 1, tzinfo=UTC), datetime(2024, 6, 2, tzinfo=UTC)][:n]
+    geoms = [shapely_geometry.box(0, 0, 20, 20), shapely_geometry.box(10, 0, 30, 20)][
+        :n
+    ]
+    return gpd.GeoDataFrame({'id': ids, 'datetime': times}, geometry=geoms, crs=crs)
 
 
 def _band_metadata(
@@ -124,6 +140,47 @@ class TestRasteretDataset:
         with pytest.raises(ValueError, match='At least one band'):
             RasteretDataset(collection=collection, bands=[])
 
+    def test_init_anisotropic_res(self, collection: Collection) -> None:
+        """A (xres, yres) tuple sets independent x and y resolutions."""
+        from torchgeo.datasets import RasteretDataset
+
+        ds = RasteretDataset(collection=collection, bands=['B04'], res=(10.0, 20.0))
+        assert ds.res == (10.0, 20.0)
+
+    def test_init_empty_collection(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A collection whose query yields no footprints is rejected."""
+        from torchgeo.datasets import RasteretDataset
+
+        monkeypatch.setattr(
+            collection, 'footprints', lambda **_: _footprints(32632, n=0)
+        )
+        with pytest.raises(ValueError, match='no footprints'):
+            RasteretDataset(collection=collection, bands=['B04'])
+
+    def test_init_mixed_crs_requires_override(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A multi-CRS collection has no single footprint CRS; crs= is required."""
+        from torchgeo.datasets import RasteretDataset
+
+        monkeypatch.setattr(collection, 'footprints', lambda **_: _footprints(None))
+        with pytest.raises(ValueError, match='mixed CRS'):
+            RasteretDataset(collection=collection, bands=['B04'])
+
+    def test_init_collection_crs_not_epsg(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A collection whose native CRS has no EPSG code is rejected."""
+        from torchgeo.datasets import RasteretDataset
+
+        monkeypatch.setattr(
+            collection, 'footprints', lambda **_: _footprints(_non_epsg_crs())
+        )
+        with pytest.raises(ValueError, match='not EPSG-resolvable'):
+            RasteretDataset(collection=collection, bands=['B04'])
+
     def test_len_and_files(self, collection: Collection) -> None:
         """len reflects the index; files lists the collection's COG hrefs."""
         from torchgeo.datasets import RasteretDataset
@@ -131,6 +188,41 @@ class TestRasteretDataset:
         ds = RasteretDataset(collection=collection, bands=['B04'])
         assert len(ds) == 2
         assert ds.files == ['memory://first.tif', 'memory://second.tif']
+
+    def test_files_empty_when_assets_unavailable(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """files returns [] when the collection exposes no assets column."""
+        from torchgeo.datasets import RasteretDataset
+
+        ds = RasteretDataset(collection=collection, bands=['B04'])
+
+        def _no_assets_column(**_: Any) -> Any:
+            raise KeyError('assets')
+
+        monkeypatch.setattr(ds._collection, 'to_table', _no_assets_column)
+        assert ds.files == []
+
+    def test_files_skips_rows_without_the_band(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """files skips rows whose assets are null or lack an href for the band."""
+        from torchgeo.datasets import RasteretDataset
+
+        ds = RasteretDataset(collection=collection, bands=['B04'])
+        table = pa.table(
+            {
+                'assets': pa.array(
+                    [
+                        {'B04': {'href': 'memory://a.tif'}},  # kept
+                        None,  # null row -> skipped
+                        {'B04': {'href': None}},  # no href -> skipped
+                    ]
+                )
+            }
+        )
+        monkeypatch.setattr(ds._collection, 'to_table', lambda **_: table)
+        assert ds.files == ['memory://a.tif']
 
     def test_getitem(
         self, collection: Collection, monkeypatch: pytest.MonkeyPatch
@@ -184,13 +276,33 @@ class TestRasteretDataset:
         assert captured['group_by'] == 'id'
         assert sample['image'].shape == (2, 1, 16, 16)
 
+    def test_transforms_applied(
+        self, collection: Collection, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A transforms callable is applied to each returned sample."""
+        from torchgeo.datasets import RasteretDataset
+
+        monkeypatch.setattr(
+            collection, 'read_window', lambda **_: np.ones((1, 16, 16), dtype=np.uint16)
+        )
+
+        def double(sample: dict[str, Any]) -> dict[str, Any]:
+            sample['image'] = sample['image'] * 2
+            return sample
+
+        ds = RasteretDataset(collection=collection, bands=['B04'], transforms=double)
+        sample = ds[ds.bounds]
+        assert torch.equal(sample['image'], torch.full((1, 16, 16), 2.0))
+
     def test_res_setter(self, collection: Collection) -> None:
-        """Resolution can be overridden post-init."""
+        """Resolution can be overridden post-init, as a scalar or (xres, yres)."""
         from torchgeo.datasets import RasteretDataset
 
         ds = RasteretDataset(collection=collection, bands=['B04'])
         ds.res = 20.0
         assert ds.res == (20.0, 20.0)
+        ds.res = (30.0, 40.0)
+        assert ds.res == (30.0, 40.0)
 
     def test_crs_setter_rejected(self, collection: Collection) -> None:
         """Post-init CRS mutation is rejected because Rasteret binds target CRS."""
