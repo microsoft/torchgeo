@@ -50,7 +50,7 @@ MAXT = pd.Timestamp(2025, 4, 25)
 class TestBoundingBox:
     def test_repr_str(self) -> None:
         bbox = BoundingBox(0, 1, 2.0, 3.0, MINT, MAXT)
-        expected = 'BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=datetime.datetime(2025, 4, 24, 0, 0), maxt=datetime.datetime(2025, 4, 25, 0, 0))'
+        expected = "BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=Timestamp('2025-04-24 00:00:00'), maxt=Timestamp('2025-04-25 00:00:00'))"
         assert repr(bbox) == expected
         assert str(bbox) == expected
 
