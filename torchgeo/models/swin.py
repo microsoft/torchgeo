@@ -368,7 +368,7 @@ def swin_t(
     Returns:
         A Swin Transformer Tiny model.
     """
-    model: SwinTransformer = torchvision.models.swin_t(weights=None, *args, **kwargs)
+    model: SwinTransformer = torchvision.models.swin_t(*args, weights=None, **kwargs)
 
     if weights:
         num_channels = weights.meta['in_chans']
@@ -413,7 +413,7 @@ def swin_s(
     Returns:
         A Swin Transformer Small model.
     """
-    model: SwinTransformer = torchvision.models.swin_s(weights=None, *args, **kwargs)
+    model: SwinTransformer = torchvision.models.swin_s(*args, weights=None, **kwargs)
 
     if weights:
         num_channels = weights.meta['in_chans']
@@ -489,7 +489,7 @@ def swin_b(
         }
         assert not unexpected_keys
     else:
-        model = torchvision.models.swin_b(weights=None, *args, **kwargs)
+        model = torchvision.models.swin_b(*args, weights=None, **kwargs)
 
     return model
 
@@ -515,7 +515,7 @@ def swin_v2_t(
     Returns:
         A Swin Transformer Tiny model.
     """
-    model: SwinTransformer = torchvision.models.swin_v2_t(weights=None, *args, **kwargs)
+    model: SwinTransformer = torchvision.models.swin_v2_t(*args, weights=None, **kwargs)
 
     if weights:
         num_channels = weights.meta['in_chans']
@@ -554,7 +554,7 @@ def swin_v2_b(
     Returns:
         A Swin Transformer Base model.
     """
-    model: SwinTransformer = torchvision.models.swin_v2_b(weights=None, *args, **kwargs)
+    model: SwinTransformer = torchvision.models.swin_v2_b(*args, weights=None, **kwargs)
 
     if weights:
         num_channels = weights.meta['in_chans']

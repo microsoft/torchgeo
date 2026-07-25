@@ -225,6 +225,7 @@ def scalemae_large_patch16(
         A Scale-MAE Large patch16 model.
     """
     model = ScaleMAE(
+        *args,
         patch_size=16,
         embed_dim=1024,
         depth=24,
@@ -232,7 +233,6 @@ def scalemae_large_patch16(
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
 

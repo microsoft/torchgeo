@@ -7,7 +7,6 @@ import abc
 import glob
 import os
 from collections.abc import Callable
-from functools import lru_cache
 from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
@@ -359,7 +358,6 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         """
         return len(self.ids)
 
-    @lru_cache
     def _load_image(self, id_: str) -> Tensor:
         """Load a single image.
 
@@ -377,7 +375,6 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    @lru_cache
     def _load_target(self, id_: str) -> Tensor:
         """Load the target mask for a single image.
 
