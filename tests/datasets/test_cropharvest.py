@@ -17,8 +17,17 @@ pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestCropHarvest:
-    @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
+    @pytest.fixture(params=['train', 'test'])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: pytest.FixtureRequest
+    ) -> CropHarvest:
+        split = request.param
+        monkeypatch.setitem(
+            CropHarvest.file_dict['features'], 'md5', 'ef6f4f00c0b3b50ed8380b0044928572'
+        )
+        monkeypatch.setitem(
+            CropHarvest.file_dict['labels'], 'md5', 'f990f1bdfd9dc7efe99e94a9f511efde'
+        )
         monkeypatch.setitem(
             CropHarvest.file_dict['features'],
             'url',
@@ -33,7 +42,9 @@ class TestCropHarvest:
         root = tmp_path
         transforms = nn.Identity()
 
-        dataset = CropHarvest(root, transforms, download=True)
+        dataset = CropHarvest(
+            root, split=split, transforms=transforms, download=True, checksum=True
+        )
         return dataset
 
     def test_getitem(self, dataset: CropHarvest) -> None:
@@ -42,11 +53,12 @@ class TestCropHarvest:
         assert isinstance(x['array'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
         assert x['array'].shape == (12, 18)
-        y = dataset[2]
-        assert y['label'] == 1
 
     def test_len(self, dataset: CropHarvest) -> None:
-        assert len(dataset) == 5
+        if dataset.split == 'train':
+            assert len(dataset) == 3
+        else:
+            assert len(dataset) == 2
 
     def test_already_downloaded(self, dataset: CropHarvest, tmp_path: Path) -> None:
         CropHarvest(root=tmp_path, download=False)

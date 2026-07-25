@@ -7,7 +7,7 @@ import glob
 import json
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,7 @@ class CropHarvest(NonGeoDataset):
 
     * single pixel time series with crop-type labels
     * 18 bands per image over 12 months
+    * 351 crop type labels
 
     Dataset format:
 
@@ -78,26 +79,29 @@ class CropHarvest(NonGeoDataset):
     )
     rgb_bands = ('B4', 'B3', 'B2')
 
-    features_url = 'https://zenodo.org/records/7257688/files/features.tar.gz?download=1'
-    labels_url = 'https://zenodo.org/records/7257688/files/labels.geojson?download=1'
+    features_url = (
+        'https://zenodo.org/records/10251170/files/features.tar.gz?download=1'
+    )
+    labels_url = 'https://zenodo.org/records/10251170/files/labels.geojson?download=1'
     file_dict: ClassVar[dict[str, dict[str, str]]] = {
         'features': {
             'url': features_url,
             'filename': 'features.tar.gz',
             'extracted_filename': os.path.join('features', 'arrays'),
-            'md5': 'cad4df655c75caac805a80435e46ee3e',
+            'sha256': 'f88d688bac805e1c7ae8bd518ed6d14528b3811f46c47a8f95ec0669ce772a68',
         },
         'labels': {
             'url': labels_url,
             'filename': 'labels.geojson',
             'extracted_filename': 'labels.geojson',
-            'md5': 'bf7bae6812fc7213481aff6a2e34517d',
+            'sha256': '57e71cf88c6ed2069748ad8f5fcd29bdaf82b8279f560b275164f80e2093157f',
         },
     }
 
     def __init__(
         self,
         root: Path = 'data',
+        split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -106,6 +110,7 @@ class CropHarvest(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
+            split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -118,14 +123,15 @@ class CropHarvest(NonGeoDataset):
         lazy_import('h5py')
 
         self.root = root
+        self.split = split
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
 
         self._verify()
 
-        self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
+        self.files = self._load_features(self.root)
         classes = self.labels['properties.label'].unique()
         classes = classes[classes != np.array(None)]
         self.classes = np.insert(classes, 0, ['None', 'Other'])
@@ -168,17 +174,24 @@ class CropHarvest(NonGeoDataset):
             list of dicts containing path for each of hd5 single pixel time series and
             its key for associated data
         """
+        is_test = self.split == 'test'
         files = []
         chips = glob.glob(
             os.path.join(root, self.file_dict['features']['extracted_filename'], '*.h5')
         )
         chips = sorted(os.path.basename(chip) for chip in chips)
         for chip in chips:
+            index = chip.split('_')[0]
+            dataset = chip.split('_')[1][:-3]
+            row = self.labels[
+                (self.labels['properties.index'] == int(index))
+                & (self.labels['properties.dataset'] == dataset)
+            ]
+            if row.empty or row.iloc[0]['properties.is_test'] != is_test:
+                continue
             chip_path = os.path.join(
                 root, self.file_dict['features']['extracted_filename'], chip
             )
-            index = chip.split('_')[0]
-            dataset = chip.split('_')[1][:-3]
             files.append(dict(chip=chip_path, index=index, dataset=dataset))
         return files
 
