@@ -254,7 +254,9 @@ class Attention(nn.Module):
         """
         x = self.input_norm(x)
         q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = (rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v))
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
+        )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
         attention_scores = attention_scores + relative_position_bias
@@ -316,7 +318,9 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = (rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v))
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
+        )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
         attention_scores = attention_scores + relative_position_bias

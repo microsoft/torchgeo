@@ -167,7 +167,9 @@ class xBD(NonGeoDataset):
             image2 = os.path.join(image_root, f'{name}_post_disaster.png')
             mask1 = os.path.join(mask_root, f'{name}_pre_disaster_target.png')
             mask2 = os.path.join(mask_root, f'{name}_post_disaster_target.png')
-            files.append({'image1': image1, 'image2': image2, 'mask1': mask1, 'mask2': mask2})
+            files.append(
+                {'image1': image1, 'image2': image2, 'mask1': mask1, 'mask2': mask2}
+            )
         return files
 
     def _load_image(self, path: Path) -> Tensor:

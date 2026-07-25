@@ -287,7 +287,7 @@ class LEVIRCD(LEVIRCDBase):
         """
         return all(
             os.path.exists(os.path.join(self.root, directory))
-                for directory in self.directories
+            for directory in self.directories
         )
 
     def _download(self) -> None:
