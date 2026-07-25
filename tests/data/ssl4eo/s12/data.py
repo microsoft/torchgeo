@@ -113,9 +113,7 @@ def create_file(path: str) -> None:
             -0.0005278320358784425,
             18.588322889892943,
         )
-    elif (
-        path.endswith(('B5.tif', 'B6.tif', 'B7.tif', 'B8A.tif', 'B11.tif', 'B12.tif'))
-    ):
+    elif path.endswith(('B5.tif', 'B6.tif', 'B7.tif', 'B8A.tif', 'B11.tif', 'B12.tif')):
         profile['width'] = profile['height'] = SIZE // 2
         profile['transform'] = Affine(
             0.00018443154209298504,
