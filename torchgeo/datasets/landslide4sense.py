@@ -31,25 +31,24 @@ class Landslide4Sense(NonGeoDataset):
     * ``val``: images only
     * ``test``: images only
 
-    .. note::
+     .. note::
 
-       In the public release, only the training split includes masks.
+         In the public release, only the training split includes masks.
 
-        The public dataset can be downloaded from:
-        https://www.kaggle.com/datasets/tekbahadurkshetri/landslide4sense
+         The public dataset can be downloaded from:
+         https://www.kaggle.com/datasets/tekbahadurkshetri/landslide4sense
 
-        Secondary source:
-        https://github.com/iarai/Landslide4Sense-2022/tree/main
+         Secondary source:
+         https://github.com/iarai/Landslide4Sense-2022/tree/main
 
-        Additional dependencies:
+         Additional dependencies:
 
-        * ``h5py`` for reading the dataset files.
+         * ``h5py`` for reading the dataset files.
 
-    If you use this dataset in your research, please cite it using the following
-    format:
+     If you use this dataset in your research, please cite it using the following
+     link:
 
-
-    you can also cite the original dataset paper: https://arxiv.org/abs/2206.00515
+     * https://arxiv.org/abs/2206.00515
 
     .. versionadded:: 0.10.0
 
