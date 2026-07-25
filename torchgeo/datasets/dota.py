@@ -366,9 +366,8 @@ class DOTA(NonGeoDataset):
         for filename, md5 in files_needed:
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
-                if self.checksum:
-                    if not check_integrity(filepath, md5):
-                        raise RuntimeError(f'Archive {filename} corrupted')
+                if self.checksum and not check_integrity(filepath, md5):
+                    raise RuntimeError(f'Archive {filename} corrupted')
                 exists.append(True)
                 self._extract([(filename, md5)])
             else:

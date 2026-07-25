@@ -216,11 +216,10 @@ class TestBigEarthNetV2:
     ) -> None:
         def rm_files(file_list: list[str]) -> None:
             for key, val in dataset.metadata_locs.items():
-                if key in file_list:
-                    if key != 'metadata':
-                        shutil.rmtree(
-                            os.path.join(dataset.root, dataset.dir_file_names[key])
-                        )
+                if key in file_list and key != 'metadata':
+                    shutil.rmtree(
+                        os.path.join(dataset.root, dataset.dir_file_names[key])
+                    )
 
         if dataset.bands == 'all':
             rm_files(['s1', 's2', 'maps', 'metadata'])

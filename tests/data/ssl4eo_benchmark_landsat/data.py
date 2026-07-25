@@ -142,7 +142,7 @@ def create_img_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
-            if any([x in key for x in filenames.keys()]):
+            if any([x in key for x in filenames]):
                 key = f'ssl4eo_l_{key}_benchmark'
             path = os.path.join(directory, key)
             os.makedirs(path, exist_ok=True)

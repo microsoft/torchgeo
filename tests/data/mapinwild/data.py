@@ -118,7 +118,7 @@ for source in modality_download_list:
                 f.write(data, j)
 
 # Mimic the two-part structure of the dataset
-for key in dict_all.keys():
+for key in dict_all:
     path_list = dict_all[key]
     path_list_dir_p1 = os.path.join(folder_path, path_list[0])
     path_list_dir_p2 = os.path.join(folder_path, path_list[1])
