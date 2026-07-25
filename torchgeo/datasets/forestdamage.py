@@ -57,7 +57,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
             label = 'other'
         bboxes.append(bbox)
         labels.append(label)
-    return dict(filename=filename, bboxes=bboxes, labels=labels)
+    return {'filename': filename, 'bboxes': bboxes, 'labels': labels}
 
 
 class ForestDamage(NonGeoDataset):
@@ -184,7 +184,7 @@ class ForestDamage(NonGeoDataset):
         )
 
         files = [
-            dict(image=image, annotation=annotation)
+            {'image': image, 'annotation': annotation}
             for image, annotation in zip(images, annotations)
         ]
 

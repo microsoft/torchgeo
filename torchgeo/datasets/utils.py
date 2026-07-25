@@ -496,28 +496,28 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Times
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
-    if not any([f'%{c}' in format for c in 'yYcxG']):
+    if not any(f'%{c}' in format for c in 'yYcxG'):
         # No temporal info
         return Timestamp.min, Timestamp.max
-    elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
+    elif not any(f'%{c}' in format for c in 'bBmjUWcxV'):
         # Year resolution
         maxt = Timestamp(year=mint.year + 1, month=1, day=1)
-    elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
+    elif not any(f'%{c}' in format for c in 'aAwdjcxV'):
         # Month resolution
         if mint.month == 12:
             maxt = Timestamp(year=mint.year + 1, month=1, day=1)
         else:
             maxt = Timestamp(year=mint.year, month=mint.month + 1, day=1)
-    elif not any([f'%{c}' in format for c in 'HIcX']):
+    elif not any(f'%{c}' in format for c in 'HIcX'):
         # Day resolution
         maxt = mint + Timedelta(days=1)
-    elif not any([f'%{c}' in format for c in 'McX']):
+    elif not any(f'%{c}' in format for c in 'McX'):
         # Hour resolution
         maxt = mint + Timedelta(hours=1)
-    elif not any([f'%{c}' in format for c in 'ScX']):
+    elif not any(f'%{c}' in format for c in 'ScX'):
         # Minute resolution
         maxt = mint + Timedelta(minutes=1)
-    elif not any([f'%{c}' in format for c in 'f']):
+    elif not any(f'%{c}' in format for c in 'f'):
         # Second resolution
         maxt = mint + Timedelta(seconds=1)
     else:

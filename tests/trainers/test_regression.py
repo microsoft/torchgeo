@@ -207,9 +207,9 @@ class TestRegressionTask:
     )
     def test_freeze_backbone(self, model_name: str) -> None:
         model = RegressionTask(model=model_name, freeze_backbone=True)
-        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert not all(param.requires_grad for param in model.model.parameters())
         assert all(
-            [param.requires_grad for param in model.model.get_classifier().parameters()]
+            param.requires_grad for param in model.model.get_classifier().parameters()
         )
 
 
@@ -334,14 +334,12 @@ class TestPixelwiseRegressionTask:
             model=model_name, backbone=backbone, freeze_backbone=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.encoder.parameters()]
+            param.requires_grad is False for param in model.model.encoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.decoder.parameters()])
+        assert all(param.requires_grad for param in model.model.decoder.parameters())
         assert all(
-            [
-                param.requires_grad
+            param.requires_grad
                 for param in model.model.segmentation_head.parameters()
-            ]
         )
 
     @pytest.mark.parametrize(
@@ -352,14 +350,12 @@ class TestPixelwiseRegressionTask:
             model=model_name, backbone='resnet18', freeze_decoder=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.decoder.parameters()]
+            param.requires_grad is False for param in model.model.decoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.encoder.parameters()])
+        assert all(param.requires_grad for param in model.model.encoder.parameters())
         assert all(
-            [
-                param.requires_grad
+            param.requires_grad
                 for param in model.model.segmentation_head.parameters()
-            ]
         )
 
     def test_vit_backbone(self) -> None:

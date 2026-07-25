@@ -198,7 +198,7 @@ class ReforesTree(NonGeoDataset):
     def _verify(self) -> None:
         """Checks the integrity of the dataset structure."""
         filepaths = [os.path.join(self.root, dir) for dir in ['tiles', 'mapping']]
-        if all([os.path.exists(filepath) for filepath in filepaths]):
+        if all(os.path.exists(filepath) for filepath in filepaths):
             return
 
         filepath = os.path.join(self.root, self.zipfilename)

@@ -194,9 +194,9 @@ class LoveDA(NonGeoDataset):
 
         if self.split != 'test':
             masks = [image.replace('images_png', 'masks_png') for image in images]
-            files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
+            files = [{'image': image, 'mask': mask} for image, mask in zip(images, masks)]
         else:
-            files = [dict(image=image) for image in images]
+            files = [{'image': image} for image in images]
 
         return files
 
