@@ -9,10 +9,10 @@ from collections.abc import Callable
 from typing import Any, ClassVar, Literal, cast
 from xml.etree.ElementTree import Element, parse
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor

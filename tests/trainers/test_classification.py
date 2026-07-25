@@ -8,9 +8,9 @@ from typing import Any
 import pytest
 import timm
 import torch
-import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torch import nn
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 

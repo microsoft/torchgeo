@@ -9,10 +9,9 @@ import pytest
 import segmentation_models_pytorch as smp
 import timm
 import torch
-import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 

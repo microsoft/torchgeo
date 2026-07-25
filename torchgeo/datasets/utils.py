@@ -318,8 +318,7 @@ class Executable:
         Returns:
             The completed process.
         """
-        kwargs['check'] = True
-        return subprocess.run((self.name, *args), **kwargs)
+        return subprocess.run((self.name, *args), check=True, **kwargs)
 
 
 def check_integrity(fpath: Path, md5: str | None = None, **kwargs: str | None) -> bool:

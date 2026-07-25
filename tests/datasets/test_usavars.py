@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import DatasetNotFoundError, USAVars

@@ -5,7 +5,7 @@
 
 from typing import Any
 
-import torch.nn as nn
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..datasets.utils import lazy_import
