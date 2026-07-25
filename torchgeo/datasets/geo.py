@@ -195,7 +195,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -211,7 +211,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -1427,7 +1427,7 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             RuntimeError: if datasets have no spatiotemporal intersection
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.8
            The *spatial_only* parameter.
@@ -1441,7 +1441,7 @@ class IntersectionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('IntersectionDataset only supports GeoDatasets')
+                raise TypeError('IntersectionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -1599,7 +1599,7 @@ class UnionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
             The *transforms* parameter.
@@ -1610,7 +1610,7 @@ class UnionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('UnionDataset only supports GeoDatasets')
+                raise TypeError('UnionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
