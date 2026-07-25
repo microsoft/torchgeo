@@ -269,7 +269,7 @@ class OpenStreetMap(VectorDataset):
 
             except ValueError:
                 raise
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 last_exception = e
                 continue
 
