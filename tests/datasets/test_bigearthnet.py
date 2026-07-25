@@ -215,7 +215,7 @@ class TestBigEarthNetV2:
         self, dataset: BigEarthNetV2, tmp_path: Path
     ) -> None:
         def rm_files(file_list: list[str]) -> None:
-            for key, val in dataset.metadata_locs.items():
+            for key in dataset.metadata_locs:
                 if key in file_list and key != 'metadata':
                     shutil.rmtree(
                         os.path.join(dataset.root, dataset.dir_file_names[key])
