@@ -100,10 +100,10 @@ def create_file(path: str) -> None:
         ),
     }
 
-    if path.endswith('VH.tif') or path.endswith('VV.tif'):
+    if path.endswith(('VH.tif', 'VV.tif')):
         profile['dtype'] = 'float32'
 
-    if path.endswith('B1.tif') or path.endswith('B9.tif') or path.endswith('B10.tif'):
+    if path.endswith(('B1.tif', 'B9.tif', 'B10.tif')):
         profile['width'] = profile['height'] = SIZE // 6
         profile['transform'] = Affine(
             0.0005532946262789551,
@@ -114,12 +114,7 @@ def create_file(path: str) -> None:
             18.588322889892943,
         )
     elif (
-        path.endswith('B5.tif')
-        or path.endswith('B6.tif')
-        or path.endswith('B7.tif')
-        or path.endswith('B8A.tif')
-        or path.endswith('B11.tif')
-        or path.endswith('B12.tif')
+        path.endswith(('B5.tif', 'B6.tif', 'B7.tif', 'B8A.tif', 'B11.tif', 'B12.tif'))
     ):
         profile['width'] = profile['height'] = SIZE // 2
         profile['transform'] = Affine(
