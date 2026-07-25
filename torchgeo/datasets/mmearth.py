@@ -390,7 +390,7 @@ class MMEarth(NonGeoDataset):
             dictionary containing the specific band names for each modality
         """
         date_str = tile_info['S2_DATE']
-        date_obj = pd.Timestamp.strptime(date_str, '%Y-%m-%d')
+        date_obj = pd.to_datetime(date_str, format='%Y-%m-%d')
         curr_month_str = date_obj.strftime('%Y%m')
         # set to first day of month and subtract one day to get previous month
         prev_month_obj = date_obj.replace(day=1) - pd.Timedelta(days=1)

@@ -268,7 +268,17 @@ class TestBoundingBox:
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, pd.Timestamp(2025, 4, 26), pd.Timestamp(2025, 4, 27)), False),
+            (
+                (
+                    0.5,
+                    1.5,
+                    0.5,
+                    1.5,
+                    pd.Timestamp(2025, 4, 26),
+                    pd.Timestamp(2025, 4, 27),
+                ),
+                False,
+            ),
             ((0.5, 1.5, 2, 3, MINT, MAXT), False),
             ((2, 3, 0.5, 1.5, MINT, MAXT), False),
             ((2, 3, 2, 3, MINT, MAXT), False),

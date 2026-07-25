@@ -156,7 +156,7 @@ def create_hd5f(dataset_name: str, px_dim: tuple[int]) -> list[dict[str, str]]:
             tile_meta['S2_type'] = S2_type.decode('utf-8')
             # in all_Modality_bands era5 contains the data instead `prev` and `curr` prefixes
             date_str = tile_meta['S2_DATE']
-            date_obj = pd.Timestamp.strptime(date_str, '%Y-%m-%d')
+            date_obj = pd.to_datetime(date_str, format='%Y-%m-%d')
             curr_month_str = date_obj.strftime('%Y%m')
             prev_month_obj = date_obj.replace(day=1) - pd.Timedelta(days=1)
             prev_month_str = prev_month_obj.strftime('%Y%m')
