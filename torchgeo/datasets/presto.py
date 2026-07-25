@@ -3,9 +3,9 @@
 
 """Presto Embeddings dataset."""
 
-from datetime import datetime
 
 import einops
+import pandas as pd
 import torch
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -46,8 +46,8 @@ class PrestoEmbeddings(RasterDataset):
 
     # Timestamp in filename is when embeddings were released, not the dates they cover
     # TODO: source code shows ±31 days being added to this range?
-    mint = datetime(2019, 3, 1)
-    maxt = datetime(2020, 3, 1)
+    mint = pd.Timestamp(2019, 3, 1)
+    maxt = pd.Timestamp(2020, 3, 1)
 
     all_bands = tuple(map(str, range(128)))
 
