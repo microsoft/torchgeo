@@ -34,7 +34,9 @@ def page_count(response: Response) -> int:
     Returns:
         Total number of pages.
     """
-    if 'Link' in response.headers and (match := re.search(r'&page=(\d+)>; rel="last"', response.headers['Link'])):
+    if 'Link' in response.headers and (
+        match := re.search(r'&page=(\d+)>; rel="last"', response.headers['Link'])
+    ):
         return int(match.group(1))
     return 0
 

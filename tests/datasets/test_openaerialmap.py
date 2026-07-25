@@ -257,7 +257,10 @@ class TestOpenAerialMap:
             lambda *args, **kwargs: MockResponse(),
         )
 
-        with pytest.warns(UserWarning, match='No imagery found'), pytest.raises(DatasetNotFoundError):
+        with (
+            pytest.warns(UserWarning, match='No imagery found'),
+            pytest.raises(DatasetNotFoundError),
+        ):
             OpenAerialMap(tmp_path, bbox=mock_bbox, download=True)
 
     def test_fetch_item_id_variations(
