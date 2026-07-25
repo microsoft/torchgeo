@@ -143,6 +143,8 @@ style = [
     "ty>=0.0.62",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
+    # oldest version of package
+    "types-rasterio>=1.5",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
