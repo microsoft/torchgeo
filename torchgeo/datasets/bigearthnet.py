@@ -139,8 +139,8 @@ class BigEarthNet(NonGeoDataset):
             'Permanent crops',
             'Pastures',
             'Complex cultivation patterns',
-            'Land principally occupied by agriculture, with significant areas of'
-            ' natural vegetation',
+            ('Land principally occupied by agriculture, with significant areas of'
+            ' natural vegetation'),
             'Agro-forestry areas',
             'Broad-leaved forest',
             'Coniferous forest',
@@ -175,8 +175,8 @@ class BigEarthNet(NonGeoDataset):
             'Pastures',
             'Annual crops associated with permanent crops',
             'Complex cultivation patterns',
-            'Land principally occupied by agriculture, with significant areas of'
-            ' natural vegetation',
+            ('Land principally occupied by agriculture, with significant areas of'
+            ' natural vegetation'),
             'Agro-forestry areas',
             'Broad-leaved forest',
             'Coniferous forest',

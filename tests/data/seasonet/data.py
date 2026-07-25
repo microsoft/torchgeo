@@ -40,8 +40,8 @@ stop = {
 }
 
 meta_lines = [
-    'Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
-    'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n'
+    ('Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
+    'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n')
 ]
 seasons = ['spring', 'summer', 'fall', 'winter', 'snow']
 grids = [1, 2]
