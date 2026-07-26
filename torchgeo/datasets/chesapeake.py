@@ -573,7 +573,7 @@ class ChesapeakeCVPR(GeoDataset):
         """
         for split in splits:
             assert split in self.splits
-        assert all([layer in self.valid_layers for layer in layers])
+        assert all(layer in self.valid_layers for layer in layers)
         self.root = root
         self.layers = layers
         self.transforms = transforms
@@ -701,10 +701,8 @@ class ChesapeakeCVPR(GeoDataset):
 
         # Check if the zip files have already been downloaded
         if all(
-            [
-                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
-                for subdataset in self.subdatasets
-            ]
+            os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+            for subdataset in self.subdatasets
         ):
             self._extract()
             return

@@ -122,7 +122,7 @@ class TestObjectDetectionTask:
         model = ObjectDetectionTask(
             model=model_name, backbone='resnet18', freeze_backbone=True
         )
-        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert not all(param.requires_grad for param in model.model.parameters())
 
     @pytest.mark.parametrize('model_name', ['faster-rcnn', 'fcos', 'retinanet'])
     @pytest.mark.parametrize('in_channels', [1, 4])

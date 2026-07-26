@@ -290,7 +290,7 @@ class EverWatch(NonGeoDataset):
                 label,
                 color='white',
                 fontsize=8,
-                bbox=dict(facecolor=color, alpha=box_alpha),
+                bbox={'facecolor': color, 'alpha': box_alpha},
             )
 
         if suptitle is not None:

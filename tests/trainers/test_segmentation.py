@@ -264,14 +264,11 @@ class TestSemanticSegmentationTask:
             model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.encoder.parameters()]
+            param.requires_grad is False for param in model.model.encoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.decoder.parameters()])
+        assert all(param.requires_grad for param in model.model.decoder.parameters())
         assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
+            param.requires_grad for param in model.model.segmentation_head.parameters()
         )
 
     @pytest.mark.parametrize(
@@ -284,14 +281,11 @@ class TestSemanticSegmentationTask:
             model=model_name, backbone='resnet18', num_classes=10, freeze_decoder=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.decoder.parameters()]
+            param.requires_grad is False for param in model.model.decoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.encoder.parameters()])
+        assert all(param.requires_grad for param in model.model.encoder.parameters())
         assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
+            param.requires_grad for param in model.model.segmentation_head.parameters()
         )
 
     def test_vit_backbone(self) -> None:
