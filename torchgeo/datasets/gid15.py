@@ -223,9 +223,7 @@ class GID15(NonGeoDataset):
             True if the dataset directories and split files are found, else False
         """
         filepath = os.path.join(self.root, self.directory)
-        if not os.path.exists(filepath):
-            return False
-        return True
+        return os.path.exists(filepath)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""

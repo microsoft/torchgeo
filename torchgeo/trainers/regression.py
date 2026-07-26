@@ -295,19 +295,16 @@ class PixelwiseRegressionTask(RegressionTask):
                     classes=1,
                 )
 
-        if model != 'fcn':
-            if weights and weights is not True:
-                if isinstance(weights, WeightsEnum):
-                    state_dict = weights.get_state_dict(
-                        progress=True, weights_only=True
-                    )
-                elif os.path.exists(weights):
-                    _, state_dict = utils.extract_backbone(weights)
-                else:
-                    state_dict = get_weight(weights).get_state_dict(
-                        progress=True, weights_only=True
-                    )
-                self.model.encoder.load_state_dict(state_dict)
+        if model != 'fcn' and weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
+            else:
+                state_dict = get_weight(weights).get_state_dict(
+                    progress=True, weights_only=True
+                )
+            self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
         if self.hparams.get('freeze_backbone', False) and model != 'fcn':

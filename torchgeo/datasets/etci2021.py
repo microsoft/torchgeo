@@ -102,7 +102,7 @@ class ETCI2021(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in self.metadata.keys()
+        assert split in self.metadata
 
         self.root = root
         self.split = split
@@ -241,9 +241,7 @@ class ETCI2021(NonGeoDataset):
         """
         directory = self.metadata[self.split]['directory']
         dirpath = os.path.join(self.root, directory)
-        if not os.path.exists(dirpath):
-            return False
-        return True
+        return os.path.exists(dirpath)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""

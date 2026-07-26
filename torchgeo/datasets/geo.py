@@ -611,11 +611,10 @@ class RasterDataset(GeoDataset):
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         match = re.match(self.filename_regex, filename, re.VERBOSE)
-        if match:
-            if 'band' in match.groupdict():
-                start = match.start('band')
-                end = match.end('band')
-                filename = filename[:start] + band + filename[end:]
+        if match and 'band' in match.groupdict():
+            start = match.start('band')
+            end = match.end('band')
+            filename = filename[:start] + band + filename[end:]
         filepath = os.path.join(directory, filename)
         return filepath
 

@@ -218,9 +218,8 @@ def main() -> None:
         elif directory == 'Reference_Maps':
             # For Reference_Maps, create only one split with suffix "aa"
             split_name = f'{directory}.tar.gzaa'
-            with open(tar_path, 'rb') as f:
-                with open(split_name, 'wb') as g:
-                    g.write(f.read())
+            with open(tar_path, 'rb') as f, open(split_name, 'wb') as g:
+                g.write(f.read())
             split_paths.append(split_name)
 
         os.remove(tar_path)

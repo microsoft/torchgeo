@@ -119,9 +119,9 @@ class InriaAerialImageLabeling(NonGeoDataset):
                 if match := pattern.search(fname):
                     idx = int(match.group(2))
                     # For validation, use the first 5 images of every location
-                    if self.split == 'train' and idx > 5:
-                        files.append({'image': img, 'label': lbl})
-                    elif self.split == 'val' and idx < 6:
+                    if (self.split == 'train' and idx > 5) or (
+                        self.split == 'val' and idx < 6
+                    ):
                         files.append({'image': img, 'label': lbl})
         else:
             for img in images:
