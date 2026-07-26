@@ -40,8 +40,8 @@ from torchgeo.datasets.utils import (
     working_dir,
 )
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 @pytest.mark.filterwarnings(
@@ -50,7 +50,7 @@ MAXT = datetime(2025, 4, 25)
 class TestBoundingBox:
     def test_repr_str(self) -> None:
         bbox = BoundingBox(0, 1, 2.0, 3.0, MINT, MAXT)
-        expected = 'BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=datetime.datetime(2025, 4, 24, 0, 0), maxt=datetime.datetime(2025, 4, 25, 0, 0))'
+        expected = "BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=Timestamp('2025-04-24 00:00:00'), maxt=Timestamp('2025-04-25 00:00:00'))"
         assert repr(bbox) == expected
         assert str(bbox) == expected
 
@@ -187,7 +187,7 @@ class TestBoundingBox:
         'test_input',
         [
             # No overlap
-            (0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)),
+            (0.5, 1.5, 0.5, 1.5, pd.Timestamp(2025, 4, 26), pd.Timestamp(2025, 4, 27)),
             (0.5, 1.5, 2, 3, MINT, MAXT),
             (2, 3, 0.5, 1.5, MINT, MAXT),
             (2, 3, 2, 3, MINT, MAXT),
@@ -268,7 +268,17 @@ class TestBoundingBox:
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)), False),
+            (
+                (
+                    0.5,
+                    1.5,
+                    0.5,
+                    1.5,
+                    pd.Timestamp(2025, 4, 26),
+                    pd.Timestamp(2025, 4, 27),
+                ),
+                False,
+            ),
             ((0.5, 1.5, 2, 3, MINT, MAXT), False),
             ((2, 3, 0.5, 1.5, MINT, MAXT), False),
             ((2, 3, 2, 3, MINT, MAXT), False),
@@ -419,62 +429,62 @@ def test_download_and_extract_archive(tmp_path: Path) -> None:
         (
             '2021',
             '%Y',
-            datetime(2021, 1, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 1, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09',
             '%Y-%m',
-            datetime(2021, 9, 1, 0, 0, 0, 0),
-            datetime(2021, 9, 30, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 9, 30, 23, 59, 59, 999999),
         ),
         (
             'Dec 21',
             '%b %y',
-            datetime(2021, 12, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 12, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13',
             '%Y-%m-%d',
-            datetime(2021, 9, 13, 0, 0, 0, 0),
-            datetime(2021, 9, 13, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 0, 0, 0, 0),
+            pd.Timestamp(2021, 9, 13, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13 17',
             '%Y-%m-%d %H',
-            datetime(2021, 9, 13, 17, 0, 0, 0),
-            datetime(2021, 9, 13, 17, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 0, 0, 0),
+            pd.Timestamp(2021, 9, 13, 17, 59, 59, 999999),
         ),
         (
             '2021-09-13 17:21',
             '%Y-%m-%d %H:%M',
-            datetime(2021, 9, 13, 17, 21, 0, 0),
-            datetime(2021, 9, 13, 17, 21, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 0, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 59, 999999),
         ),
         (
             '2021-09-13 17:21:53',
             '%Y-%m-%d %H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0),
-            datetime(2021, 9, 13, 17, 21, 53, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021-09-13 17:21:53:000123',
             '%Y-%m-%d %H:%M:%S:%f',
-            datetime(2021, 9, 13, 17, 21, 53, 123),
-            datetime(2021, 9, 13, 17, 21, 53, 123),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 123),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 123),
         ),
         (
             '2021-09-13%2017:21:53',
             '%Y-%m-%d%%20%H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0),
-            datetime(2021, 9, 13, 17, 21, 53, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021%m',
             '%Y%%m',
-            datetime(2021, 1, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 1, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
     ],
 )
