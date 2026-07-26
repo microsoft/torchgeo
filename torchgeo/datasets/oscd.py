@@ -202,13 +202,13 @@ class OSCD(NonGeoDataset):
                 )
 
             regions.append(
-                dict(
-                    region=region,
-                    images1=images1,
-                    images2=images2,
-                    mask=mask,
-                    dates=dates,
-                )
+                {
+                    'region': region,
+                    'images1': images1,
+                    'images2': images2,
+                    'mask': mask,
+                    'dates': dates,
+                }
             )
 
         return regions

@@ -160,25 +160,25 @@ class QuakeSet(NonGeoDataset):
                         # positive sample
                         magnitude = float(f[k].attrs['magnitude'])
                         data.append(
-                            dict(
-                                key=k,
-                                patch=patch,
-                                images=('pre', 'post'),
-                                label=1,
-                                magnitude=magnitude,
-                            )
+                            {
+                                'key': k,
+                                'patch': patch,
+                                'images': ('pre', 'post'),
+                                'label': 1,
+                                'magnitude': magnitude,
+                            }
                         )
 
                         # hard negative sample
                         if 'before' in f[k][patch]:
                             data.append(
-                                dict(
-                                    key=k,
-                                    patch=patch,
-                                    images=('before', 'pre'),
-                                    label=0,
-                                    magnitude=0.0,
-                                )
+                                {
+                                    'key': k,
+                                    'patch': patch,
+                                    'images': ('before', 'pre'),
+                                    'label': 0,
+                                    'magnitude': 0.0,
+                                }
                             )
         return data
 

@@ -186,11 +186,16 @@ class ETCI2021(NonGeoDataset):
                     vvs, vhs, flood_masks, water_masks
                 ):
                     files.append(
-                        dict(vv=vv, vh=vh, flood_mask=flood_mask, water_mask=water_mask)
+                        {
+                            'vv': vv,
+                            'vh': vh,
+                            'flood_mask': flood_mask,
+                            'water_mask': water_mask,
+                        }
                     )
             else:
                 for vv, vh, water_mask in zip(vvs, vhs, water_masks):
-                    files.append(dict(vv=vv, vh=vh, water_mask=water_mask))
+                    files.append({'vv': vv, 'vh': vh, 'water_mask': water_mask})
 
         return files
 

@@ -4,10 +4,10 @@
 # Licensed under the MIT License.
 
 import zipfile
-from datetime import datetime, timedelta
 
 import h5py
 import numpy as np
+import pandas as pd
 
 # max rgb image
 RGB_MAX = 255
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         # create time stamps
         for split in splits:
             time_stamps = np.array(
-                [datetime.now() - timedelta(days=i) for i in range(NUM_SAMPLES)]
+                [pd.Timestamp.now() - pd.Timedelta(days=i) for i in range(NUM_SAMPLES)]
             )
             np.save(f'times_{split}_{task}.npy', time_stamps)
 
