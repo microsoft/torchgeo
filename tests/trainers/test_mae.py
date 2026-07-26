@@ -97,7 +97,7 @@ class TestMAETask:
         return weights
 
     def test_wrong_model_type(self) -> None:
-        with pytest.raises(ValueError, match='is not a ViT architecture'):
+        with pytest.raises(TypeError, match='is not a ViT architecture'):
             MAETask(model='resnet18', weights=None)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:

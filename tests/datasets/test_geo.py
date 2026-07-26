@@ -199,7 +199,7 @@ class TestGeoDataset:
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # ty: ignore[unsupported-operator]
 
@@ -891,7 +891,7 @@ class TestIntersectionDataset:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             IntersectionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
 
@@ -1289,11 +1289,11 @@ class TestUnionDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomGeoDataset()
         msg = 'UnionDataset only supports GeoDatasets'
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds3)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds3, ds1)  # ty: ignore[invalid-argument-type]
 
     def test_invalid_index(self, dataset: UnionDataset) -> None:
