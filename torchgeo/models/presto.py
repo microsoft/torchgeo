@@ -12,9 +12,9 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 from einops import repeat
 from timm.models.vision_transformer import Block
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 BANDS_GROUPS_IDX: dict[str, Sequence[int]] = {

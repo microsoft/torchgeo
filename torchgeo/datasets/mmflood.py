@@ -272,7 +272,6 @@ class MMFlood(IntersectionDataset):
             if not os.path.exists(path):
                 md5 = self._md5[filename] if self.checksum else None
                 download_url(url, self.root, filename, md5)
-            return
 
         filename = self.metadata['filename']
         filepath = os.path.join(self.root, filename)

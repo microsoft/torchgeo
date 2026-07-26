@@ -7,8 +7,7 @@ from typing import Any
 
 import timm
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple

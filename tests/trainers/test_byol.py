@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import timm
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 

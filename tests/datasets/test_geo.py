@@ -13,12 +13,11 @@ import pandas as pd
 import pytest
 import shapely
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (

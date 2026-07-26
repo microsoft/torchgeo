@@ -6,9 +6,9 @@
 from typing import Any
 
 import torch
-import torch.nn as nn
 import torchvision
 import torchvision.transforms.v2 as T
+from torch import nn
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
 

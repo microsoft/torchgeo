@@ -8,9 +8,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
-import torch.nn as nn
 from pytest import MonkeyPatch
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, HySpecNet11k, RGBBandsMissingError
 

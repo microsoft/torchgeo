@@ -8,8 +8,8 @@ from typing import cast
 import pytest
 import timm
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (

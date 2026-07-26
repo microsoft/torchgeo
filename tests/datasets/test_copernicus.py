@@ -8,10 +8,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     CopernicusBench,

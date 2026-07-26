@@ -7,12 +7,11 @@ from functools import partial
 from typing import Any
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
 import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
-from torch import Tensor
+from torch import Tensor, nn
+from torch.nn import init
 from torchvision.models._api import Weights, WeightsEnum
 
 
@@ -286,8 +285,6 @@ class DOFA(nn.Module):
         self.mlp_ratio = mlp_ratio
 
         if self.global_pool:
-            norm_layer = norm_layer
-            embed_dim = embed_dim
             self.fc_norm = norm_layer(embed_dim)
         else:
             self.norm = norm_layer(embed_dim)

@@ -7,10 +7,9 @@ from functools import partial
 from typing import Any
 
 import torch
-import torch.nn as nn
 import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import VisionTransformer
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 _mean = [0.485, 0.456, 0.406]

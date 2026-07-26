@@ -3,8 +3,7 @@
 
 """Simple fully convolutional neural network (FCN) implementations."""
 
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 
 
