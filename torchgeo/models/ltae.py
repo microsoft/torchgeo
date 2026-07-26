@@ -9,8 +9,7 @@ import math
 from collections.abc import Sequence
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 
 class LTAE(nn.Module):

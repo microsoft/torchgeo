@@ -11,12 +11,11 @@ import kornia.augmentation as K
 import lightning.pytorch.utilities.types
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
 from lightly.utils.lars import LARS
-from torch import Tensor
+from torch import Tensor, nn
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
