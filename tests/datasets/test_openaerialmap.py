@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import pytest
 import requests
 import torch
-import torch.nn as nn
 from rasterio.errors import RasterioIOError
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,

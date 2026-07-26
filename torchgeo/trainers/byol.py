@@ -8,10 +8,9 @@ from typing import Any
 
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import Sample

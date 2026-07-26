@@ -6,8 +6,8 @@
 from typing import Any
 
 import segmentation_models_pytorch as smp
-import torch.nn as nn
 import torchvision.transforms.v2 as T
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
