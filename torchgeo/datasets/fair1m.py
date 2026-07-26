@@ -50,7 +50,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
         label = name.text
         labels.append(label)
         points.append(tup_points)
-    return dict(filename=filename, points=points, labels=labels)
+    return {'filename': filename, 'points': points, 'labels': labels}
 
 
 class FAIR1M(NonGeoDataset):

@@ -202,9 +202,9 @@ class TestChangeDetectionTask:
             model=model_name, backbone=backbone, freeze_backbone=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.encoder.parameters()]
+            param.requires_grad is False for param in model.model.encoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.decoder.parameters()])
+        assert all(param.requires_grad for param in model.model.decoder.parameters())
 
     @pytest.mark.parametrize(
         'model_name,backbone',
@@ -240,9 +240,9 @@ class TestChangeDetectionTask:
             model=model_name, backbone=backbone, freeze_decoder=True
         )
         assert all(
-            [param.requires_grad is False for param in model.model.decoder.parameters()]
+            param.requires_grad is False for param in model.model.decoder.parameters()
         )
-        assert all([param.requires_grad for param in model.model.encoder.parameters()])
+        assert all(param.requires_grad for param in model.model.encoder.parameters())
 
     def test_vit_backbone(self) -> None:
         ChangeDetectionTask(model='dpt', backbone='tu-vit_base_patch16_224')

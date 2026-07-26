@@ -55,7 +55,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
         bboxes.append(bbox)
         labels.append(label)
 
-    return dict(filename=filename, bboxes=bboxes, labels=labels)
+    return {'filename': filename, 'bboxes': bboxes, 'labels': labels}
 
 
 class DIOR(NonGeoDataset):
@@ -382,7 +382,7 @@ class DIOR(NonGeoDataset):
                 label,
                 color='white',
                 fontsize=8,
-                bbox=dict(facecolor=color, alpha=box_alpha),
+                bbox={'facecolor': color, 'alpha': box_alpha},
             )
 
         if suptitle is not None:
