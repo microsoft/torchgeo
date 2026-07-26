@@ -170,7 +170,7 @@ class QuakeSet(NonGeoDataset):
                         )
 
                         # hard negative sample
-                        if 'before' in f[k][patch].keys():
+                        if 'before' in f[k][patch]:
                             data.append(
                                 {
                                     'key': k,

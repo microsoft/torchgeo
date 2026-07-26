@@ -44,8 +44,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> None:
             {'file_name': img_name, 'height': 8, 'width': 8, 'id': img_id - 1}
         )
 
-    ann = 0
-    for _, img in enumerate(ANNOTATION_FILE['images']):
+    for ann, img in enumerate(ANNOTATION_FILE['images']):
         annot = {
             'id': ann,
             'image_id': img['id'],
@@ -56,7 +55,6 @@ def generate_test_data(root: str, n_imgs: int = 3) -> None:
             'iscrowd': 0,
         }
         ANNOTATION_FILE['annotations'].append(annot)
-        ann += 1
 
     with open(ann_file, 'w') as j:
         json.dump(ANNOTATION_FILE, j)

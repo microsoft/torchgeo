@@ -135,12 +135,13 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
             images.append(image)
 
             # Time (every ptype)
-            if match := re.match(self.filename_regex, os.path.basename(filepath)):
-                if 'date' in match.groupdict():
-                    date_str = match.group('date')
-                    mint, maxt = disambiguate_timestamp(date_str, self.date_format)
-                    time = (mint.timestamp() + maxt.timestamp()) / 2
-                    times.append(time)
+            if (
+                match := re.match(self.filename_regex, os.path.basename(filepath))
+            ) and 'date' in match.groupdict():
+                date_str = match.group('date')
+                mint, maxt = disambiguate_timestamp(date_str, self.date_format)
+                time = (mint.timestamp() + maxt.timestamp()) / 2
+                times.append(time)
 
         # Location (only once)
         with rio.open(filepath) as f:
