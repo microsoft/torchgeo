@@ -60,12 +60,12 @@ class xBD(NonGeoDataset):
     metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train_images_labels_targets.tar.gz',
-            'sha1': 'b37a4ef4ee9c909e2b19d046e49d42ee3965714b',
+            'sha256': 'a5941b7a3e523eafc4aeaa740a1c83f1af6a18c894e7e8c62dd830a76921ecd4',
             'directory': 'train',
         },
         'test': {
             'filename': 'test_images_labels_targets.tar.gz',
-            'sha1': '86ed3dba2f8d16ceceb75d451005054fefa9616f',
+            'sha256': '0fcdbfe3ee7d0842729dd2230217e74b2f12be35546ff666df4dae5388e2541c',
             'directory': 'test',
         },
     }
@@ -225,7 +225,7 @@ class xBD(NonGeoDataset):
             filepath = os.path.join(self.root, split_info['filename'])
             if os.path.isfile(filepath):
                 if self.checksum and not check_integrity(
-                    filepath, sha1=split_info['sha1']
+                    filepath, sha256=split_info['sha256']
                 ):
                     raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
