@@ -119,7 +119,6 @@ for split in ['train', 'val', 'test']:
 
     # Create file list
     with open(os.path.join('splits', filename), 'w') as f:
-        for i in range(index):
-            f.write(str(i) + '\n')
+        f.writelines(str(i) + '\n' for i in range(index))
 
 shutil.make_archive('splits', 'zip', '.', 'splits')
