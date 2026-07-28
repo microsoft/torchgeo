@@ -68,8 +68,10 @@ for split, count in splits:
 
         filename = os.path.join(directories[0], subdir, 'dates.txt')
         with open(filename, 'w') as f:
-            for key, value in [('date_1', '20161130'), ('date_2', '20170829')]:
-                f.write(f'{key}: {value}\n')
+            f.writelines(
+                f'{key}: {value}\n'
+                for key, value in [('date_1', '20161130'), ('date_2', '20170829')]
+            )
 
         # Create labels
         directory = os.path.join(directories[split_to_dir[split]], subdir, 'cm')
