@@ -91,14 +91,9 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
             ((0.5, 1.5, 2, 3, MINT, MAXT), False),
             ((2, 3, 0.5, 1.5, MINT, MAXT), False),
             ((2, 3, 2, 3, MINT, MAXT), False),
@@ -126,14 +121,9 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
             ((0.5, 1.5, 2, 3, MINT, MAXT), (0, 1.5, 0, 3, MINT, MAXT)),
             ((2, 3, 0.5, 1.5, MINT, MAXT), (0, 3, 0, 1.5, MINT, MAXT)),
             ((2, 3, 2, 3, MINT, MAXT), (0, 3, 0, 3, MINT, MAXT)),
@@ -165,10 +155,6 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
         ],
@@ -211,11 +197,11 @@ class TestBoundingBox:
             ((0, 1, 0, 1, MINT, MAXT), 1),
             ((0, 2, 0, 3, MINT, MAXT), 6),
             # Plane
-            ((0, 0, 0, 1, MINT, MAXT), 0),
+            ((0, 1, 0, 1, MINT, MINT), 1),
             # Line
-            ((0, 0, 0, 0, MINT, MAXT), 0),
+            ((0, 1, 0, 0, MINT, MINT), 0),
             # Point
-            ((0, 0, 0, 0, MINT, MAXT), 0),
+            ((0, 0, 0, 0, MINT, MINT), 0),
         ],
     )
     def test_area(
@@ -233,11 +219,11 @@ class TestBoundingBox:
             ((0, 1, 0, 1, MINT, MAXT), timedelta(days=1)),
             ((0, 2, 0, 3, MINT, MAXT), timedelta(days=6)),
             # Plane
-            ((0, 0, 0, 1, MINT, MAXT), timedelta(days=0)),
+            ((0, 1, 0, 1, MINT, MINT), timedelta(days=0)),
             # Line
-            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
+            ((0, 1, 0, 0, MINT, MINT), timedelta(days=0)),
             # Point
-            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
+            ((0, 0, 0, 0, MINT, MINT), timedelta(days=0)),
         ],
     )
     def test_volume(
@@ -261,10 +247,6 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             # No overlap
