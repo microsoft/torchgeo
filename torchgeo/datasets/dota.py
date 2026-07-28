@@ -123,7 +123,7 @@ class DOTA(NonGeoDataset):
                 },
                 '2.0': {
                     'filename': 'dotav2.0_images_val.tar.gz',
-                    'sha256': '66cde2e76f131a55243904884b68ef450a73b1404668001df92bc94dde4a2e25',
+                    'sha256': '76005d65bc1d0e8ee2dd4b4c2922b47fddc73d07dd93a87eb5f022d22727a0fd',
                 },
             },
             'annotations': {

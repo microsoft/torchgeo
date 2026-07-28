@@ -83,7 +83,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         },
         'oli': {
             'cdl': '60463aecd7e96e7528cd3d888767e619b02e33760d9c340b4f2d1a0b021b24bb',
-            'nlcd': '2371109835f8f2667409109d872ca3bea58840d3fc6d232757bc0692b1d982dd',
+            'nlcd': '42e13f84eb22f1776f544b92e5e78942357fe80beb38d1550847759fd4cb1e18',
         },
     }
 
