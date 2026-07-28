@@ -12,7 +12,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -648,7 +648,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
-        kwargs = {
+        kwargs: dict[str, Any] = {
             'bounds': (x.start, y.start, x.stop, y.stop),
             'res': (x.step, y.step),
             'indexes': band_indexes,

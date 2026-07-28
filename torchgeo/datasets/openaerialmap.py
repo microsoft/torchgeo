@@ -454,7 +454,6 @@ class OpenAerialMap(RasterDataset):
                     dataset.width,
                     dataset.height,
                 )
-                dataset.crs = CRS.from_epsg(4326)
                 dataset.update_tags(
                     ns='rio_georeference',
                     georeferencing_applied='True',
