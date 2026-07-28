@@ -665,7 +665,7 @@ class RasterDataset(GeoDataset):
         return tensor
 
     @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader | WarpedVRT:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -678,7 +678,7 @@ class RasterDataset(GeoDataset):
 
     def _load_warp_file(
         self, filepath: Path, crs: PROJ_CRS | None = None
-    ) -> DatasetReader:
+    ) -> DatasetReader | WarpedVRT:
         """Load and warp a file to the correct CRS and resolution.
 
         If the dataset has no CRS/transform but has 4 corner GCPs, we derive an affine
@@ -735,7 +735,7 @@ class RasterDataset(GeoDataset):
         return src
 
     def _compute_affine_georeferencing(
-        self, src: DatasetReader
+        self, src: DatasetReader | WarpedVRT
     ) -> tuple[RIO_CRS, Affine]:
         """Computes transform from Ground Control Points.
 

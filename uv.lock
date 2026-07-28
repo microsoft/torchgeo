@@ -3879,7 +3879,7 @@ requires-dist = [
     { name = "torchvision", specifier = ">=0.17" },
     { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.62" },
     { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
-    { name = "types-rasterio", marker = "extra == 'style'", specifier = ">=1.5" },
+    { name = "types-rasterio", marker = "extra == 'style'", specifier = ">=1.5.0.20260728" },
     { name = "types-requests", marker = "extra == 'style'", specifier = ">=2.25" },
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
     { name = "typing-extensions", specifier = ">=4.8" },
@@ -4059,15 +4059,15 @@ wheels = [
 
 [[package]]
 name = "types-rasterio"
-version = "1.5.0.20260724"
+version = "1.5.0.20260728"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/ae/35331087d824d791041621ccaf4a9674af90545ff22c6708b435f432cf33/types_rasterio-1.5.0.20260724.tar.gz", hash = "sha256:1faf43b5c6c56918b6391ba390f0808462131308b034b5b96d66ba43bd9b2c58", size = 26176, upload-time = "2026-07-24T04:59:41.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/27/39bedd54ec2174a55a40af904c5e3994ebd45bba20d3eaaa43d1edf26e31/types_rasterio-1.5.0.20260728.tar.gz", hash = "sha256:634fad70698a3a7c566539e0cfee66eb2ef32f7f2e08bad06fb548b987e85322", size = 26880, upload-time = "2026-07-28T04:51:45.237Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3d/ff/3588fcec10956436e4e38e3c18cc8018a19437caedf51fb6ea9374cece41/types_rasterio-1.5.0.20260724-py3-none-any.whl", hash = "sha256:1d41aa46da9c315aa000b077b066ece09f91d9f7b5c3c721e00f455dc68f010d", size = 38343, upload-time = "2026-07-24T04:59:40.505Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/b7/88926f6b1d017dbc89b725d7c65b0f369eb863ad0d7670330d22ccc80d85/types_rasterio-1.5.0.20260728-py3-none-any.whl", hash = "sha256:00b62bd1335fb49b8a137d97e90604b6356bcaa7a32d8678bb3e414c5966115d", size = 38653, upload-time = "2026-07-28T04:51:44.371Z" },
 ]
 
 [[package]]
