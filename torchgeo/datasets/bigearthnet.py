@@ -890,7 +890,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the required tarball parts using the URL template and md5 sums."""
-        for key, meta in self.metadata_locs.items():
+        for meta in self.metadata_locs.values():
             for fname, md5 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
