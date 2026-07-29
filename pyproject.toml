@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # uv-build 0.7+ required for bdist reorganization
-    "uv_build>=0.7,<0.12",
+    "uv_build>=0.7,<0.13",
 ]
 build-backend = "uv_build"
 
