@@ -545,7 +545,9 @@ def load_weights(model: CROMA, weights: WeightsEnum) -> None:
     Raises:
         AssertionError: If there are missing or unexpected keys.
     """
-    state_dict = weights.get_state_dict(progress=True, weights_only=True)
+    state_dict = weights.get_state_dict(
+        progress=True, check_hash=True, weights_only=True
+    )
     missing_keys, unexpected_keys = [], []
 
     if 'sar' in model.modalities:

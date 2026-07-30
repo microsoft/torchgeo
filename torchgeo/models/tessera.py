@@ -406,17 +406,20 @@ def tessera(
 
     if weights == Tessera_Weights.TESSERA:
         model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         return model
     elif weights == Tessera_Weights.TESSERA_SENTINEL2_ENCODER:
         model.s2_backbone.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         return model.s2_backbone
     elif weights == Tessera_Weights.TESSERA_SENTINEL1_ENCODER:
         model.s1_backbone.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         return model.s1_backbone
     else:

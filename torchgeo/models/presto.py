@@ -835,7 +835,7 @@ def presto(weights: Presto_Weights | None = None, *args: Any, **kwargs: Any) -> 
     if weights:
         model.load_state_dict(
             weights.get_state_dict(
-                progress=True, map_location='cpu', weights_only=True
+                progress=True, map_location='cpu', check_hash=True, weights_only=True
             ),
             strict=True,
         )

@@ -173,7 +173,8 @@ from torchgeo.models import ResNet18_Weights
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
 model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'], num_classes=10)
 model.load_state_dict(
-    weights.get_state_dict(progress=True, weights_only=True), strict=False
+    weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+    strict=False,
 )
 ```
 
