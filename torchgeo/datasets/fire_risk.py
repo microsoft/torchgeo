@@ -71,7 +71,7 @@ class FireRisk(NonGeoClassificationDataset):
         split: Literal['train', 'val'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new FireRisk dataset instance.
 

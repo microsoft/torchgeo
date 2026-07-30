@@ -120,7 +120,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SSL4EO Landsat Benchmark instance.
 
