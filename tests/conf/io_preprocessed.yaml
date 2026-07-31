@@ -12,4 +12,4 @@ trainer:
   max_epochs: 1
   num_sanity_val_steps: 0
   profiler:
-    class_path: IOBenchProfiler
+    class_path: IOProfiler

@@ -21,6 +21,9 @@ changelog:
     - title: Models
       labels:
         - models
+    - title: Profilers
+      labels:
+        - profilers
     - title: Samplers
       labels:
         - samplers
@@ -39,6 +42,3 @@ changelog:
     - title: Testing
       labels:
         - testing
-    - title: Profilers
-      labels:
-        - profilers

@@ -3,6 +3,6 @@
 
 """TorchGeo Profilers."""
 
-from .io import IOBenchProfiler
+from .io import IOProfiler
 
-__all__ = ('IOBenchProfiler',)
+__all__ = ('IOProfiler',)

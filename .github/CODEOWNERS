@@ -5,10 +5,10 @@ datamodules/ @nilsleh @robmarkcole
 datasets/ @nilsleh @adamjstewart
 losses/ @calebrob6 @adamjstewart
 models/ @isaaccorley @ashnair1
+profilers/ @adamjstewart
 samplers/ @adamjstewart @nilsleh
 trainers/ @robmarkcole @calebrob6
 transforms/ @ashnair1 @isaaccorley @calebrob6
-profilers/ @adamjstewart
 
 # Policy documents, requires 2/3 approval
 /.github/* @adamjstewart @calebrob6 @isaaccorley @nilsleh @ashnair1 @robmarkcole

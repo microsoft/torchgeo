@@ -229,16 +229,16 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
    $ python -m torchgeo fit --config tests/conf/io_raw.yaml
    $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
 
-This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the sampling rate for ``Train (random)`` (RandomPatchSampler) and ``Validation (grid)`` (GriddedPatchSampler). With this, you can create a table on your PR like:
+This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the sampling rate for ``Train (random)`` (RandomPatchSampler) and ``Validation (grid)`` (GriddedPatchSampler). With this, you can add two tables before and after on your PR:
 
-======  ============  ==========  =====================  ===================
- state  raw (random)  raw (grid)  preprocessed (random)  preprocessed (grid)
-======  ============  ==========  =====================  ===================
-before      43.32153   112.87498              106.87363            197.57038
- after      43.22781   111.97093              174.89302            197.48845
-======  ============  ==========  =====================  ===================
+===================  =========  =========  ==================
+ Action               Samples    Time(s)    Rate (samples/s)
+===================  =========  =========  ==================
+Train (random)        928        8.35074    111.12790
+Validation (grid)     992        4.97084    199.56398
+===================  =========  =========  ==================
 
-In this example, we see a 60% speed-up for RandomPatchSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
+All other numbers are more or less the same across multiple runs.
 
 Related Libraries
 -----------------

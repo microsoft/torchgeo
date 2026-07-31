@@ -10,7 +10,7 @@ Complete API documentation for all TorchGeo modules.
    datasets
    losses
    models
+   profilers
    samplers
    trainers
    transforms
-   profilers
