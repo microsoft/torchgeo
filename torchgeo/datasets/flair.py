@@ -1049,10 +1049,8 @@ class FLAIRHUB(NonGeoDataset):
             title: Title for the subplot
         """
         # T * C * H * W -> take last timepoint, VV band (index 0)
-        vv = data[-1, 0].numpy()
-        p2, p98 = np.percentile(vv, (2, 98))
-        vv_norm = np.clip((vv - p2) / (p98 - p2 + 1e-6), 0, 1)
-        ax.imshow(vv_norm, cmap='gray')
+        vv = quantile_normalization(data[-1, 0])
+        ax.imshow(vv.numpy(), cmap='gray')
         ax.set_title(title)
 
     def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
