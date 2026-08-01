@@ -229,7 +229,7 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
    $ python -m torchgeo fit --config tests/conf/io_raw.yaml
    $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
 
-This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the sampling rate for ``Train (random)`` (RandomPatchSampler) and ``Validation (grid)`` (GriddedPatchSampler). With this, you can add two tables before and after on your PR:
+This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). Each run will output a table like below. You can add these two tables to your PR to describe I/O performance before and after your change.
 
 ===================  =========  =========  ==================
  Action               Samples    Time(s)    Rate (samples/s)
