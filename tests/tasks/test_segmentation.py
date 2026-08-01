@@ -100,9 +100,9 @@ class TestSemanticSegmentation:
             case 'ftw':
                 pytest.importorskip('pyarrow')
             case _ if name.startswith('flairhub'):
-                 monkeypatch.setattr(
-                     FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
-                 )
+                monkeypatch.setattr(
+                    FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+                )
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

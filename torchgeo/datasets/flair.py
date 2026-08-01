@@ -375,10 +375,8 @@ class FLAIRHUB(NonGeoDataset):
     Dataset structure:
 
     The dataset is organized by domains (geographical areas) and years.
-    Each domain-year combination has multiple modalities available for
-    download.
-    The full dataset contains
-    66 unique domains (D004-D091, non-consecutive), with years ranging from 2017-2022.
+    Each domain-year combination has multiple modalities available for download.
+    The full dataset contains 66 unique domains (D004-D091, non-consecutive), with years ranging from 2017-2022.
     Most domains have data for a single year, but some have multiple years available.
 
     Available modalities (100% coverage across all domains):
@@ -393,12 +391,6 @@ class FLAIRHUB(NonGeoDataset):
     - ``SENTINEL2_MSK-SC``: Sentinel-2 scene classification mask — key: ``mask_sentinel2_snowcloud``
     - ``AERIAL_LABEL-COSIA``: Land cover labels (19 classes)
     - ``ALL_LABEL-LPIS``: Crop type labels (23 classes)
-
-    Automatic download:
-
-    Set ``download=True`` to automatically download requested modalities from
-    HuggingFace. Only the modalities you select will be downloaded, saving
-    bandwidth and storage.
 
     Dataset classes:
 
@@ -868,6 +860,7 @@ class FLAIRHUB(NonGeoDataset):
 
         Args:
             path: path to the image
+
         Returns:
             Tensor: the loaded image
         """
