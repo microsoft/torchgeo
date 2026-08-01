@@ -29,11 +29,11 @@ class IOProfiler(Profiler):
             batch_size: batch size used by data loader
         """
         super().__init__(dirpath=dirpath, filename=filename)
-        self.start_time: dict[str, float] = {}
-        self.action_count: defaultdict[str, int] = defaultdict(int)
+        self.start_time = {}
+        self.action_count = defaultdict(int)
         self.batch_size = batch_size
-        self.end_time: dict[str, float] = {}
-        self.action_total_time: defaultdict[str, float] = defaultdict(float)
+        self.end_time = {}
+        self.action_total_time = defaultdict(float)
 
     @override
     def start(self, action_name: str) -> None:
@@ -62,11 +62,11 @@ class IOProfiler(Profiler):
         """Print summary.
 
         Returns:
-             summary table containing action name, number of samples, time (s), and sampling rate (samples/s)
+             summary table containing split, strategy, number of samples, time (s), and sampling rate (samples/s)
         """
         res = '\nProfile Summary \n'
-        res += '\n| Action | Samples | Time(s) | Rate (samples/s) |'
-        res += '\n| ----------- | --------- | --------- | --------- |'
+        res += f'\n| {"Split":<10} | {"Strategy":<10} | {"Samples":<10} | {"Time(s)":<10} | {"Rate (samples/s)":<16} |'
+        res += f'\n| {":":-<10} | {":":-<10} | {":":->10} | {":":->10} | {":":->16} |'
         for action_name in self.action_count:
             train = 'train_dataloader_next' in action_name
             val = 'val_next' in action_name
@@ -75,20 +75,8 @@ class IOProfiler(Profiler):
                 action_count = self.action_count[action_name]
                 samples = action_count * self.batch_size
                 rate = 0.0 if total_time == 0 else samples / total_time
-                label = 'Train (random)' if train else 'Validation (grid)'
-                res += f'\n| {label} | {samples} | {total_time:.5f} | {rate:.5f} |'
+                split = 'Train' if train else 'Validation'
+                strategy = 'Random' if train else 'Grid'
+                res += f'\n| {split:<10} | {strategy:<10} | {samples:>10} | {total_time:>10.3f} | {rate:>16.3f} |'
 
         return res
-
-    @override
-    def teardown(self, stage: str | None) -> None:
-        """Post-profiling tear-down.
-
-        Args:
-            stage: current training stage
-        """
-        self.start_time = {}
-        self.action_count.clear()
-        self.end_time = {}
-        self.action_total_time.clear()
-        super().teardown(stage=stage)
