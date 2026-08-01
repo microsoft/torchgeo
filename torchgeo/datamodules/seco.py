@@ -7,9 +7,10 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from einops import repeat
+from einops import rearrange, repeat
 
 from ..datasets import SeasonalContrastS2
+from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
 
 
@@ -34,6 +35,7 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
 
         bands = kwargs.get('bands', SeasonalContrastS2.rgb_bands)
         seasons = kwargs.get('seasons', 1)
+        self.seasons = seasons
 
         # Normalization only available for RGB dataset, defined here:
         # https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py
@@ -63,3 +65,23 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = SeasonalContrastS2(**self.kwargs)
+
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
+        """Reshape seasonal views after applying batch augmentations.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        batch = super().on_after_batch_transfer(batch, dataloader_idx)
+
+        image = batch['image']
+        if image.ndim == 4 and self.seasons > 1:
+            batch['image'] = rearrange(
+                image, 'b (t c) h w -> b t c h w', t=self.seasons
+            )
+
+        return batch

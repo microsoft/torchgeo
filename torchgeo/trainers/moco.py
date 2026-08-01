@@ -49,7 +49,7 @@ def moco_augmentations(
     Returns:
         Data augmentation pipelines.
     """
-    # https://github.com/facebookresearch/moco/blob/main/main_moco.py#L326
+    # https://github.com/facebookresearch/moco/tree/132aea9/main_moco.py#L326
     # https://github.com/facebookresearch/moco-v3/blob/main/main_moco.py#L261
     ks = size // 10 // 2 * 2 + 1
     if version == 1:
@@ -372,16 +372,12 @@ class MoCoTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
-
-        in_channels = self.hparams['in_channels']
-        assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
-
-        if x.size(1) == in_channels:
+        if x.ndim == 5:  # (B, 2, C, H, W)
+            x1 = x[:, 0]
+            x2 = x[:, 1]
+        else:  # (B, C, H, W)
             x1 = x
             x2 = x
-        else:
-            x1 = x[:, :in_channels]
-            x2 = x[:, in_channels:]
 
         with torch.no_grad():
             x1 = self.augmentation1(x1)

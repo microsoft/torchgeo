@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.datasets import SSL4EOL, SSL4EOS12, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SimCLRTask
@@ -30,11 +30,8 @@ class TestSimCLRTask:
         [
             'chesapeake_cvpr_prior_simclr',
             'hyspecnet_simclr',
-            'seco_simclr_1',
             'seco_simclr_2',
-            'ssl4eo_l_simclr_1',
             'ssl4eo_l_simclr_2',
-            'ssl4eo_s12_simclr_1',
             'ssl4eo_s12_simclr_2',
         ],
     )
@@ -45,7 +42,8 @@ class TestSimCLRTask:
 
         if name.startswith('seco'):
             monkeypatch.setattr(SeasonalContrastS2, '__len__', lambda self: 2)
-
+        if name.startswith('ssl4eo_l'):
+            monkeypatch.setattr(SSL4EOL, '__len__', lambda self: 2)
         if name.startswith('ssl4eo_s12'):
             monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
 

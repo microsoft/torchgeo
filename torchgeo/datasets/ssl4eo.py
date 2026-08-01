@@ -277,7 +277,7 @@ class SSL4EOL(SSL4EO):
                 wavelengths.extend(self.wavelengths)
 
         sample = {
-            'image': torch.cat(images),
+            'image': images[0] if self.seasons == 1 else torch.stack(images),
             'x': torch.tensor(xs),
             'y': torch.tensor(ys),
             't': torch.tensor(ts),
@@ -359,14 +359,17 @@ class SSL4EOL(SSL4EO):
         Returns:
             a matplotlib Figure with the rendered sample
         """
+        images = sample['image']
+        if images.ndim == 3:
+            images = images.unsqueeze(0)
+
         fig, axes = plt.subplots(
-            ncols=self.seasons, squeeze=False, figsize=(4 * self.seasons, 4)
+            ncols=images.shape[0], squeeze=False, figsize=(4 * images.shape[0], 4)
         )
-        num_bands = len(self.metadata[self.split]['all_bands'])
         rgb_bands = self.metadata[self.split]['rgb_bands']
 
-        for i in range(self.seasons):
-            image = sample['image'][i * num_bands : (i + 1) * num_bands].byte()
+        for i, image in enumerate(images):
+            image = image.byte()
 
             image = image[rgb_bands].permute(1, 2, 0)
             axes[0, i].imshow(image)
@@ -581,7 +584,7 @@ class SSL4EOS12(SSL4EO):
         subdirs = random.sample(subdirs, self.seasons)
         filename_regex = self.metadata[self.split]['filename_regex']
 
-        images = []
+        timesteps = []
         xs = []
         ys = []
         ts = []
@@ -596,6 +599,7 @@ class SSL4EOS12(SSL4EO):
                     case 's2c' | 's2a':
                         date_format = Sentinel2.date_format
                 mint, maxt = disambiguate_timestamp(date_str, date_format)
+                bands = []
                 for band in self.bands:
                     match self.split:
                         case 's1':
@@ -608,13 +612,14 @@ class SSL4EOS12(SSL4EO):
                         minx, maxx = f.bounds.left, f.bounds.right
                         miny, maxy = f.bounds.bottom, f.bounds.top
                         image = f.read(out_shape=(1, self.size, self.size))
-                        images.append(torch.from_numpy(image.astype(np.float32)))
+                        bands.append(torch.from_numpy(image.astype(np.float32)))
+                timesteps.append(torch.cat(bands))
                 xs.append((minx + maxx) / 2)
                 ys.append((miny + maxy) / 2)
                 ts.append((mint.timestamp() + maxt.timestamp()) / 2)
 
         sample = {
-            'image': torch.cat(images),
+            'image': timesteps[0] if self.seasons == 1 else torch.stack(timesteps),
             'x': torch.tensor(xs),
             'y': torch.tensor(ys),
             't': torch.tensor(ts),
@@ -698,17 +703,19 @@ class SSL4EOS12(SSL4EO):
         Returns:
             a matplotlib Figure with the rendered sample
         """
+        images = sample['image']
+        if images.ndim == 3:
+            images = images.unsqueeze(0)
+
         nrows = 2 if self.split == 's1' else 1
         fig, axes = plt.subplots(
             nrows=nrows,
-            ncols=self.seasons,
+            ncols=images.shape[0],
             squeeze=False,
-            figsize=(4 * self.seasons, 4 * nrows),
+            figsize=(4 * images.shape[0], 4 * nrows),
         )
 
-        for i in range(self.seasons):
-            image = sample['image'][i * len(self.bands) : (i + 1) * len(self.bands)]
-
+        for i, image in enumerate(images):
             if self.split == 's1':
                 axes[0, i].imshow(image[0])
                 axes[1, i].imshow(image[1])
