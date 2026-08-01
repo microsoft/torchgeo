@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 import kornia.augmentation as K
 import torch
-import torch.nn.functional as TF
+from kornia.geometry.transform import resize
 
 from ..datasets import FLAIRHUB, FLAIRHUBToy
 from ..datasets.utils import Sample
@@ -161,10 +161,10 @@ class FLAIRHUBDataModule(NonGeoDataModule):
                 for batch_key in present_keys:
                     tensor = batch[batch_key]  # [B, C, H, W]
                     if tensor.shape[-1] != max_resolution:
-                        tensor = TF.interpolate(
+                        tensor = resize(
                             tensor,
                             size=(max_resolution, max_resolution),
-                            mode='bilinear',
+                            interpolation='bilinear',
                             align_corners=False,
                         )
                     concatenated_modalities.append(tensor)
