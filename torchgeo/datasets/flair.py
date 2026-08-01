@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""FLAIRHUB dataset."""
+"""FLAIR (French Land cover from Aerospace ImageRy) datasets."""
 
 import pathlib
 from collections.abc import Callable
