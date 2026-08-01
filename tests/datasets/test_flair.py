@@ -86,6 +86,16 @@ class TestFLAIRHUB:
         assert not (root / 'D006-2020_AERIAL_RGBI.zip').exists()
         assert ds is not None
 
+    def test_corrupted(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        root = tmp_path / 'flair'
+        shutil.copytree(_TEST_DATA, root)
+        monkeypatch.setattr(FLAIRHUB, 'domain_years', {'D006': ['2020']})
+
+        shutil.rmtree(root / 'GLOBAL_ALL_MTD')
+        (root / 'GLOBAL_ALL_MTD.zip').write_text('breaking_SHA256')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            FLAIRHUB(root=root, checksum=True, bands=['AERIAL_RGBI'])
+
     def test_toy_init(self, tmp_path: Path) -> None:
         """FLAIRHUBToy init edge cases not covered by trainer test."""
         shutil.copy(
