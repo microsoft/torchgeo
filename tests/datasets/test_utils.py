@@ -651,6 +651,12 @@ class TestFindFiles:
     # identically, so both are tested against the same data.
     vector_dir = os.path.join('tests', 'data', 'vector')
 
+    @pytest.fixture(scope='class')
+    def archive(self, tmp_path_factory: pytest.TempPathFactory) -> str:
+        """A zip archive of the vector fixture directory."""
+        base = tmp_path_factory.mktemp('archive') / 'vector'
+        return shutil.make_archive(str(base), 'zip', root_dir=self.vector_dir)
+
     def test_file(self) -> None:
         """A file resolves to itself."""
         path = os.path.join(self.vector_dir, 'vector_2024.geojson')
@@ -665,22 +671,40 @@ class TestFindFiles:
         """A path that does not exist resolves to nothing."""
         assert find_files(os.path.join(self.vector_dir, 'non_existing')) == []
 
-    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
-    def test_archive_file(self, temp_archive: tuple[str, str]) -> None:
+    def test_archive_file(self, archive: str) -> None:
         """A file inside an archive resolves to itself."""
-        _, archive = temp_archive
         found = find_files(f'/vsizip/{archive}/vector_2024.geojson')
         assert [Path(p).name for p in found] == ['vector_2024.geojson']
 
-    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
-    def test_archive(self, temp_archive: tuple[str, str]) -> None:
+    def test_archive(self, archive: str) -> None:
         """An archive resolves to the files within it matching the glob."""
-        _, archive = temp_archive
         found = find_files(f'/vsizip/{archive}', '*.geojson')
         assert [Path(p).name for p in found] == ['vector_2024.geojson']
 
-    @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
-    def test_archive_non_existing(self, temp_archive: tuple[str, str]) -> None:
+    def test_archive_non_existing(self, archive: str) -> None:
         """A path that does not exist inside an archive resolves to nothing."""
-        _, archive = temp_archive
         assert find_files(f'/vsizip/{archive}/non_existing.tif') == []
+
+    def test_descend_into_archive_in_a_directory(
+        self, archive: str, tmp_path: Path
+    ) -> None:
+        """Allow listing files inside of archives found in a directory without the
+        need of pointing directly to the archive with prefix /vsizip/."""
+        shutil.copy(archive, tmp_path)  # an archive in a directory...
+        (tmp_path / 'loose.geojson').touch()  # ...next to a loose file
+        # Without descending, only the loose file matches; the archive is opaque.
+        assert find_files(tmp_path, '*.geojson') == [str(tmp_path / 'loose.geojson')]
+        # When descending, the files inside the archive are matched too.
+        found = find_files(tmp_path, '*.geojson', descend_into_archives=True)
+        assert sorted(Path(p).name for p in found) == [
+            'loose.geojson',
+            'vector_2024.geojson',
+        ]
+
+    def test_descend_into_file_archive(self, archive: str) -> None:
+        """Allow listing when path points directly to an archive without prefix /vsizip/."""
+        # Without descending, the archive itself doesn't match the glob.
+        assert find_files(archive, '*.geojson') == []
+        # When descending, the files inside it are matched.
+        found = find_files(archive, '*.geojson', descend_into_archives=True)
+        assert [Path(p).name for p in found] == ['vector_2024.geojson']
