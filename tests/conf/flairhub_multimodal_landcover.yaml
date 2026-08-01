@@ -13,9 +13,9 @@ data:
   init_args:
     batch_size: 1
     concatenate_modalities: true
-    official_splits: 'split_1'
   dict_kwargs:
     root: 'tests/data/flair'
+    split_column: 'split_1'
     download: False
     bands: ['AERIAL_RGBI', 'SPOT_RGBI', 'DEM_ELEV', 'AERIAL-RLT_PAN']
     dataset_type: 'land_cover'

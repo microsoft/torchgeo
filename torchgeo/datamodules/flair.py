@@ -3,7 +3,7 @@
 
 """FLAIRHUB datamodule."""
 
-from typing import Any, Literal
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -45,15 +45,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        official_splits: Literal[
-            'split_1',
-            'split_2',
-            'split_3',
-            'split_4',
-            'split_5',
-            'split_flairchallenge',
-            'split_toy',
-        ] = 'split_1',
         concatenate_modalities: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -62,9 +53,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            official_splits: Official splits from the research paper.
-                Choose from 'split_1', 'split_2', 'split_3', 'split_4', 'split_5',
-                or 'split_flairchallenge'.
             concatenate_modalities: If True, concatenate all mono-temporal modalities
                 (AERIAL_RGBI, SPOT_RGBI, DEM_ELEV, AERIAL-RLT_PAN) into an 'image' key.
                 Modalities will be resized to the maximum resolution before concatenation.
@@ -74,7 +62,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
         """
         super().__init__(FLAIRHUB, batch_size, num_workers, **kwargs)
 
-        self.official_splits = official_splits
         self.concatenate_modalities = concatenate_modalities
 
         # Create K.Normalize instances for each modality
@@ -90,33 +77,6 @@ class FLAIRHUBDataModule(NonGeoDataModule):
                 mean=AERIAL_RLT_PAN_MEAN, std=AERIAL_RLT_PAN_STD, keepdim=True
             ),
         }
-
-    def setup(self, stage: str) -> None:
-        """Set up datasets.
-
-        Args:
-            stage: Either 'fit', 'validate', 'test', or 'predict'.
-        """
-        train_kwargs = {
-            **self.kwargs,
-            'split': 'train',
-            'split_column': self.official_splits,
-        }
-        val_kwargs = {
-            **self.kwargs,
-            'split': 'val',
-            'split_column': self.official_splits,
-        }
-        test_kwargs = {
-            **self.kwargs,
-            'split': 'test',
-            'split_column': self.official_splits,
-        }
-        if stage in ['fit', 'validate']:
-            self.train_dataset = self.dataset_class(**train_kwargs)
-            self.val_dataset = self.dataset_class(**val_kwargs)
-        if stage in ['test']:
-            self.test_dataset = self.dataset_class(**test_kwargs)
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply normalization to specific modalities in the batch.
@@ -186,7 +146,6 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        official_splits: Literal['split_toy'] = 'split_toy',
         concatenate_modalities: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -195,7 +154,6 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            official_splits: Official splits column for the toy dataset.
             concatenate_modalities: If True, concatenate all mono-temporal modalities
                 (aerial_rgbi, spot_rgbi, dem_elev, aerial_rlt_pan) into an 'image' key.
                 Modalities will be resized to the maximum resolution before concatenation.
@@ -206,7 +164,6 @@ class FLAIRHUBToyDataModule(FLAIRHUBDataModule):
         super().__init__(
             batch_size=batch_size,
             num_workers=num_workers,
-            official_splits=official_splits,
             concatenate_modalities=concatenate_modalities,
             **kwargs,
         )
