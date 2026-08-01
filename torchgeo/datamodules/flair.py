@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""FLAIRHUB datamodule."""
+"""FLAIR (French Land cover from Aerospace ImageRy) datamodules."""
 
 from typing import Any
 
