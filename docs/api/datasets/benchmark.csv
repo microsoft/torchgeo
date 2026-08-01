@@ -63,6 +63,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`South Africa Crop Type`,S,Sentinel-2,,10,"256x256",10,MSI,CC-BY-4.0
 :ref:`Substation`,S,OpenStreetMap & Sentinel-2,27K,2,228x228,10,MSI,CC-BY-4.0
 :ref:`SustainBench Crop Yield`,R,MODIS,11k,-,32x32,-,MSI,CC-BY-SA-4.0
+:ref:`TimeSen2Crop`,C,Sentinel-2,"1,212,224",16,1x1xT,10,MSI,CC-BY-4.0
 :ref:`TreeSatAI`,"C, R, S","Aerial, Sentinel-1/2",50K,"12, 15, 20","6, 20, 304","0.2, 10","CIR, MSI, SAR",CC-BY-4.0
 :ref:`Tropical Cyclone`,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI,CC-BY-4.0
 :ref:`UC Merced`,C,USGS National Map,"2,100",21,256x256,0.3,RGB,public domain

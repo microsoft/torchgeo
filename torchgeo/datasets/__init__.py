@@ -180,6 +180,7 @@ from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .tessera import TesseraEmbeddings
+from .timesen2crop import TimeSen2Crop
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -375,6 +376,7 @@ __all__ = (
     'Substation',
     'SustainBenchCropYield',
     'TesseraEmbeddings',
+    'TimeSen2Crop',
     'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
