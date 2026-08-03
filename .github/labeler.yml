@@ -11,6 +11,9 @@ losses:
 models:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/models/**'
+profilers:
+  - changed-files:
+      - any-glob-to-any-file: 'torchgeo/profilers/**'
 samplers:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/samplers/**'

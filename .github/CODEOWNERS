@@ -5,6 +5,7 @@ datamodules/ @nilsleh @robmarkcole
 datasets/ @nilsleh @adamjstewart
 losses/ @calebrob6 @adamjstewart
 models/ @isaaccorley @ashnair1
+profilers/ @adamjstewart
 samplers/ @adamjstewart @nilsleh
 tasks/ @robmarkcole @calebrob6
 transforms/ @ashnair1 @isaaccorley @calebrob6
