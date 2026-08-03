@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 import rasterio
 import requests
 from matplotlib.figure import Figure
-from pyproj import CRS
+from pyproj import CRS as PROJ_CRS
+from rasterio.crs import CRS as RIO_CRS
 from rasterio.transform import from_bounds
 
 from .geo import RasterDataset
@@ -205,7 +206,7 @@ class OpenAerialMap(RasterDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bbox: tuple[float, float, float, float] | None = None,
         zoom: int = 19,
@@ -262,7 +263,7 @@ class OpenAerialMap(RasterDataset):
                 print('Download complete.')
 
         if crs is None:
-            crs = CRS.from_epsg(4326)
+            crs = PROJ_CRS.from_epsg(4326)
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
@@ -454,6 +455,7 @@ class OpenAerialMap(RasterDataset):
                     dataset.width,
                     dataset.height,
                 )
+                dataset.crs = RIO_CRS.from_epsg(4326)
                 dataset.update_tags(
                     ns='rio_georeference',
                     georeferencing_applied='True',
