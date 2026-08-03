@@ -941,7 +941,8 @@ class XarrayDataset(GeoDataset):
 
         x, y, t = self._disambiguate_slice(index)
         bounds = (x.start, y.start, x.stop, y.stop)
-        res = (x.step, y.step)
+        # merge_datasets requires a positive resolution
+        res = (abs(x.step), abs(y.step))
 
         with ExitStack() as stack:
             datasets = []
@@ -953,8 +954,14 @@ class XarrayDataset(GeoDataset):
                 if src.rio.crs is None:
                     src = src.rio.write_crs(self.crs)
 
-                if src.rio.crs != self.crs or res != src.rio.resolution():
-                    src = src.rio.reproject(self.crs, resolution=res)
+                # Flip to north-up if the y-axis is ascending or merge_datasets
+                # will silently return an all-nodata array.
+                y_dim = src.rio.y_dim
+                if src[y_dim][0] < src[y_dim][-1]:
+                    src = src.isel({y_dim: slice(None, None, -1)})
+
+                if src.rio.crs != self.crs:
+                    src = src.rio.reproject(self.crs)
 
                 datasets.append(src)
 
