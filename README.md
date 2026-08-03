@@ -69,7 +69,7 @@ from torch.utils.data import DataLoader
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 from torchgeo.datasets import CDL, Landsat7, Landsat8, VHR10, stack_samples
 from torchgeo.samplers import RandomPatchSampler
-from torchgeo.trainers import SemanticSegmentationTask
+from torchgeo.tasks import SemanticSegmentation
 ```
 
 ### Geospatial datasets and samplers
@@ -181,13 +181,13 @@ These weights can also directly be used in TorchGeo Lightning modules that are s
 
 ### Reproducibility with Lightning
 
-In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [_datamodules_](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [_trainers_](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
+In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [_datamodules_](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [_tasks_](https://torchgeo.readthedocs.io/en/stable/api/tasks.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
 
 ```python
 datamodule = InriaAerialImageLabelingDataModule(
     root='...', batch_size=64, num_workers=6
 )
-task = SemanticSegmentationTask(
+task = SemanticSegmentation(
     model='unet',
     backbone='resnet50',
     weights=True,
@@ -219,7 +219,7 @@ torchgeo --help
 # See valid trainer options
 torchgeo fit --help
 # See valid model options
-torchgeo fit --model.help ClassificationTask
+torchgeo fit --model.help Classification
 # See valid data options
 torchgeo fit --data.help EuroSAT100DataModule
 ```
@@ -230,7 +230,7 @@ Using the following config file:
 trainer:
   max_epochs: 20
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     model: 'resnet18'
     in_channels: 13

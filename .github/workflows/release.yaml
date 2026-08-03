@@ -35,7 +35,7 @@ jobs:
       - name: Run integration checks
         run: |
           pytest -m slow --force-enable-socket --durations=10 tests/samplers
-          pytest -m slow --force-enable-socket --durations=10 tests/trainers
+          pytest -m slow --force-enable-socket --durations=10 tests/tasks
           python -m torchgeo --help
           torchgeo --help
   notebooks:

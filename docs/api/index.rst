@@ -11,5 +11,5 @@ Complete API documentation for all TorchGeo modules.
    losses
    models
    samplers
-   trainers
+   tasks
    transforms

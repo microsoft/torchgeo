@@ -11,9 +11,12 @@ import torchgeo
 
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules
+import torchgeo.tasks
+
+# Backwards-compatibility
 import torchgeo.trainers
 from torchgeo.datamodules import BaseDataModule
-from torchgeo.trainers import BaseTask
+from torchgeo.tasks import BaseTask
 
 
 def main(args: ArgsType = None) -> None:
