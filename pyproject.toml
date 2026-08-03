@@ -137,8 +137,8 @@ models = [
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
-    # ruff 0.9+ required for 2025 style guide
-    "ruff>=0.9",
+    # ruff 0.16+ required for 2026 style guide
+    "ruff>=0.16",
     # ty 0.0.46+ required for latest type checking changes
     "ty>=0.0.62",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
@@ -238,7 +238,6 @@ tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/
 [tool.ruff]
-extend-include = ["*.ipynb"]
 fix = true
 
 [tool.ruff.format]
@@ -247,7 +246,7 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "B019", "BLE", "D", "I", "RUF", "UP"]
+extend-select = ["ANN"]
 ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]

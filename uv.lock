@@ -3863,7 +3863,7 @@ requires-dist = [
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "requests", specifier = ">=2.25" },
     { name = "rioxarray", marker = "extra == 'datasets'", specifier = ">=0.14.1" },
-    { name = "ruff", marker = "extra == 'style'", specifier = ">=0.9" },
+    { name = "ruff", marker = "extra == 'style'", specifier = ">=0.16" },
     { name = "scipy", marker = "extra == 'datasets'", specifier = ">=1.11.2" },
     { name = "segmentation-models-pytorch", specifier = ">=0.5" },
     { name = "shapely", specifier = ">=2.0.2" },
