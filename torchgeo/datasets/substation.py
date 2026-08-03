@@ -48,8 +48,10 @@ class Substation(NonGeoDataset):
     * https://doi.org/10.48550/arXiv.2409.17363
     """
 
-    # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue) = indices 3, 2, 1
-    rgb_bands = (3, 2, 1)
+    # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue).
+    # Unlike most datasets, *bands* are channel indices rather than names, so this
+    # cannot use PlottingMixin.rgb_bands, which holds band names.
+    _rgb_indices: tuple[int, int, int] = (3, 2, 1)
 
     directory = 'Substation'
     filename_images = 'image_stack.tar.gz'
@@ -182,7 +184,7 @@ class Substation(NonGeoDataset):
         is_time_series = sample['image'].ndim == 4
 
         rgb_indices = []
-        for band in self.rgb_bands:
+        for band in self._rgb_indices:
             if band in self.bands:
                 rgb_indices.append(list(self.bands).index(band))
             else:

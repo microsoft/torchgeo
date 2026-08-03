@@ -76,6 +76,10 @@ class TestSimCLR:
         with pytest.warns(UserWarning, match='SimCLR v2 uses a memory bank'):
             SimCLR(version=2, layers=3, memory_bank_size=0)
 
+    def test_grayscale_weights_tensor(self) -> None:
+        task = SimCLR(in_channels=4, grayscale_weights=torch.ones(4))
+        assert task.augmentations is not None
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO

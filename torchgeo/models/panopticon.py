@@ -229,11 +229,16 @@ class ChnEmb(torch.nn.Module):
 
         Returns:
             Embeddings of shape (B,C,embed_dim).
+
+        Raises:
+            ValueError: If the input is not 2D or 3D.
         """
         if input.ndim == 2:  # B,C (mus)
             mus = input
         elif input.ndim == 3:  # B,C,2 (mus, sigmas)
             mus = input[:, :, 0]
+        else:
+            raise ValueError('input must be a 2D or 3D tensor')
         sar_indices = mus < 0
         opt_indices = torch.logical_not(sar_indices)
         device = mus.device

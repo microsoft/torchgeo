@@ -218,10 +218,11 @@ class MoCo(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
-        self.augmentation1 = augmentation1 or aug1
-        self.augmentation2 = augmentation2 or aug2
+        self.augmentation1 = aug1 if augmentation1 is None else augmentation1
+        self.augmentation2 = aug2 if augmentation2 is None else augmentation2
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -388,20 +389,21 @@ class MoCo(BaseTask):
             x2 = self.augmentation2(x2)
 
         m = self.hparams['moco_momentum']
-        if self.hparams['version'] == 1:
+        version: int = self.hparams['version']
+        if version == 1:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
             loss: Tensor = self.criterion(q, k)
-        elif self.hparams['version'] == 2:
+        elif version == 2:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
-        if self.hparams['version'] == 3:
+        else:  # version 3, guaranteed by the assert in __init__
             max_steps = self.trainer.max_epochs or 200
             m = cosine_schedule(self.current_epoch, max_steps, m, 1)
             q1, h1 = self.forward(x1)

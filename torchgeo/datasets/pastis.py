@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -158,7 +158,7 @@ class PASTIS(NonGeoDataset):
         root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: Sequence[str] = s2_bands,
-        mode: str = 'semantic',
+        mode: Literal['semantic', 'instance'] = 'semantic',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -226,7 +226,7 @@ class PASTIS(NonGeoDataset):
         if self.mode == 'semantic':
             mask = self._load_semantic_targets(index)
             sample = {'image': image, 'mask': mask}
-        elif self.mode == 'instance':
+        else:  # instance
             mask, boxes, labels = self._load_instance_targets(index)
             sample = {'image': image, 'mask': mask, 'bbox_xyxy': boxes, 'label': labels}
 

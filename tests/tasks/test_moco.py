@@ -78,6 +78,12 @@ class TestMoCo:
         with pytest.warns(UserWarning, match='MoCo v3 does not use a memory bank'):
             MoCo(version=3, layers=3, memory_bank_size=10)
 
+    def test_grayscale_weights_tensor(self) -> None:
+        weights = torch.ones(4)
+        task = MoCo(in_channels=4, grayscale_weights=weights)
+        assert task.augmentation1 is not None
+        assert task.augmentation2 is not None
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO

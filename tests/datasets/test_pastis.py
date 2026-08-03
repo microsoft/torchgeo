@@ -5,6 +5,7 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
+from typing import Literal, cast
 
 import matplotlib.pyplot as plt
 import pytest
@@ -37,8 +38,7 @@ class TestPASTIS:
 
         root = tmp_path
         bands = params['bands']
-        mode = params['mode']
-        assert isinstance(mode, str)
+        mode = cast(Literal['semantic', 'instance'], params['mode'])
         transforms = nn.Identity()
 
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
@@ -106,7 +106,7 @@ class TestPASTIS:
 
     def test_invalid_mode(self) -> None:
         with pytest.raises(AssertionError):
-            PASTIS(mode='invalid')
+            PASTIS(mode='invalid')  # ty: ignore[invalid-argument-type]
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError, match='bands must be a subset of'):

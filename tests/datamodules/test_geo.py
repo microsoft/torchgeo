@@ -142,6 +142,10 @@ class TestGeoDataModule:
         batch = datamodule.transfer_batch_to_device(batch, torch.device('cpu'), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
 
+    def test_inactive_trainer(self, datamodule: CustomGeoDataModule) -> None:
+        batch = {'image': torch.ones(1)}
+        assert datamodule.on_after_batch_transfer(batch, 0) is batch
+
     def test_plot(self, datamodule: CustomGeoDataModule) -> None:
         datamodule.setup('validate')
         datamodule.plot()
