@@ -1,5 +1,5 @@
 model:
-  class_path: MAETask
+  class_path: MAE
   init_args:
     model: 'vit_small_patch16_224'
     in_channels: 2
