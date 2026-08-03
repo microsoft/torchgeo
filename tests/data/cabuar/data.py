@@ -56,7 +56,6 @@ for filename, uri, fold in zip(files, uris, folds):
         sample.attrs.create(
             name='fold', data=np.int64(fold) if fold != 'chabud' else fold
         )
-        sample.create_dataset
         sample.create_dataset('pre_fire', data=data)
         sample.create_dataset('post_fire', data=data)
         sample.create_dataset('mask', data=gt)

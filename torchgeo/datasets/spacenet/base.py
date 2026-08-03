@@ -107,7 +107,7 @@ class SpaceNet(NonGeoDataset, ABC):
         self,
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
-        aois: list[int] = [],
+        aois: list[int] | None = None,
         image: str | None = None,
         mask: str | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -131,6 +131,8 @@ class SpaceNet(NonGeoDataset, ABC):
             AssertionError: If any invalid arguments are passed.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if aois is None:
+            aois = []
         self.root = root
         self.split = split
         self.aois = aois or self.valid_aois[split]
