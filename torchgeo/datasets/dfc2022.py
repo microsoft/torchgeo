@@ -225,9 +225,9 @@ class DFC2022(NonGeoDataset):
             if self.split == 'train':
                 target = image.replace(self.image_root, self.target_root)
                 target = f'{os.path.splitext(target)[0]}_UA2012.tif'
-                files.append(dict(image=image, dem=dem, target=target))
+                files.append({'image': image, 'dem': dem, 'target': target})
             else:
-                files.append(dict(image=image, dem=dem))
+                files.append({'image': image, 'dem': dem})
 
         return files
 

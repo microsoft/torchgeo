@@ -11,10 +11,9 @@ from typing import Any
 
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 
 

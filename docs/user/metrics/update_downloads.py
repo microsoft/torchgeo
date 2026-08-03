@@ -45,7 +45,7 @@ def pypistats(package: str) -> tuple[int, int]:
                 # Other
                 print(response.status_code)
                 print(response.text)
-                raise
+                response.raise_for_status()
 
 
 def pepytech(package: str, api_key: str) -> int:
@@ -76,7 +76,7 @@ def pepytech(package: str, api_key: str) -> int:
                 # Other
                 print(response.status_code)
                 print(response.text)
-                raise
+                response.raise_for_status()
 
 
 def cranlogs(package: str) -> tuple[int, int, int]:

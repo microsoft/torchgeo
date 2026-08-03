@@ -42,10 +42,10 @@ class IOBench(IntersectionDataset):
 
     url = 'https://hf.co/datasets/torchgeo/io/resolve/c9d9d268cf0b61335941bdc2b6963bf16fc3a6cf/{}.tar.gz'
 
-    md5s: ClassVar[dict[str, str]] = {
-        'original': 'e3a908a0fd1c05c1af2f4c65724d59b3',
-        'raw': 'e9603990441007ce7bba73bb8ba7d217',
-        'preprocessed': '9801f1240b238cb17525c865e413d1fd',
+    sha256s: ClassVar[dict[str, str]] = {
+        'original': 'a346f1ce4331ba0b75f1554a34d0ff0635732e59102f2ad9fdb0b28b00a74dc3',
+        'raw': 'af3fd271b98fd88abbca30bf43b07718b40d32eb40eff0eebf6446da11f43086',
+        'preprocessed': 'ab4eaa5f48cda9e6bf74f77b266990c787c45c2ec5dacb4889d90c9a3fbc9a9d',
     }
 
     def __init__(
@@ -55,7 +55,7 @@ class IOBench(IntersectionDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
-        classes: list[int] = [0],
+        classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -77,13 +77,15 @@ class IOBench(IntersectionDataset):
                 and returns a transformed version.
             cache: If True, cache file handle to speed up repeated sampling.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             AssertionError: If *split* argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in self.md5s
+        if classes is None:
+            classes = list(CDL.valid_classes)
+        assert split in self.sha256s
 
         self.root = root
         self.split = split
@@ -127,7 +129,7 @@ class IOBench(IntersectionDataset):
         download_url(
             self.url.format(self.split),
             self.root,
-            md5=self.md5s[self.split] if self.checksum else None,
+            sha256=self.sha256[self.split] if self.checksum else None,
         )
 
     def _extract(self) -> None:
@@ -161,12 +163,18 @@ class IOBench(IntersectionDataset):
         mask = sample['mask'].squeeze()
 
         image = quantile_normalization(image)
-        mask = self.cdl.ordinal_cmap[mask]
+        mask = self.cdl.inverse_map[mask]
 
         fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+        kwargs = {
+            'cmap': self.cdl.cmap,
+            'vmin': 0,
+            'vmax': 255,
+            'interpolation': 'none',
+        }
 
         axes[0].imshow(image)
-        axes[1].imshow(mask, interpolation='none')
+        axes[1].imshow(mask, **kwargs)
 
         axes[0].axis('off')
         axes[1].axis('off')

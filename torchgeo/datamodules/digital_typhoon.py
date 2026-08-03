@@ -69,7 +69,7 @@ class DigitalTyphoonDataModule(NonGeoDataModule):
             train_indices = []
             val_indices = []
 
-            for id, sequences in grouped_sequences.items():
+            for sequences in grouped_sequences.values():
                 split_idx = int(len(sequences) * 0.8)
                 train_sequences = sequences[:split_idx]
                 val_sequences = sequences[split_idx:]

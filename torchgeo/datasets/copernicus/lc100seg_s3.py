@@ -111,7 +111,7 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_lc100_s3/lc100_s3.zip'
-    md5 = '967d1da6286e0d0e346e425a8f3800e9'
+    sha256 = '04114d37732aad190b867553d1d45eb094009528521dd54d4ad0045d06e3a51d'
     zipfile = 'lc100_s3.zip'
     filename = 'multilabel-{}.csv'
     directory = 'lc100_s3'
@@ -238,7 +238,7 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.

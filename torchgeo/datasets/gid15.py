@@ -175,9 +175,11 @@ class GID15(NonGeoDataset):
                 image.replace('img_dir', 'ann_dir').replace('.tif', '_15label.png')
                 for image in images
             ]
-            files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
+            files = [
+                {'image': image, 'mask': mask} for image, mask in zip(images, masks)
+            ]
         else:
-            files = [dict(image=image) for image in images]
+            files = [{'image': image} for image in images]
 
         return files
 
@@ -221,9 +223,7 @@ class GID15(NonGeoDataset):
             True if the dataset directories and split files are found, else False
         """
         filepath = os.path.join(self.root, self.directory)
-        if not os.path.exists(filepath):
-            return False
-        return True
+        return os.path.exists(filepath)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""

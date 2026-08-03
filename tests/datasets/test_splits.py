@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 from collections.abc import Sequence
-from datetime import datetime
 from math import floor, isclose
 
 import pandas as pd
@@ -23,8 +22,8 @@ from torchgeo.datasets import (
 )
 from torchgeo.datasets.utils import GeoSlice, Sample
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 def total_area(dataset: GeoDataset) -> float:
@@ -272,10 +271,10 @@ def test_time_series_split(
     ]
     index = pd.IntervalIndex.from_tuples(
         [
-            (datetime(2025, 4, 25), datetime(2025, 4, 26)),
-            (datetime(2025, 4, 26), datetime(2025, 4, 27)),
-            (datetime(2025, 4, 27), datetime(2025, 4, 28)),
-            (datetime(2025, 4, 28), datetime(2025, 4, 29)),
+            (pd.Timestamp(2025, 4, 25), pd.Timestamp(2025, 4, 26)),
+            (pd.Timestamp(2025, 4, 26), pd.Timestamp(2025, 4, 27)),
+            (pd.Timestamp(2025, 4, 27), pd.Timestamp(2025, 4, 28)),
+            (pd.Timestamp(2025, 4, 28), pd.Timestamp(2025, 4, 29)),
         ],
         closed='neither',
         name='datetime',

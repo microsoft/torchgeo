@@ -67,5 +67,4 @@ for split in ['train', 'test']:
 
     # Create file list
     with open(filename, 'w') as f:
-        for fname in file_list:
-            f.write(f'{fname}\n')
+        f.writelines(f'{fname}\n' for fname in file_list)

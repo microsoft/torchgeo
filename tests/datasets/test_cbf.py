@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     CanadianBuildingFootprints,

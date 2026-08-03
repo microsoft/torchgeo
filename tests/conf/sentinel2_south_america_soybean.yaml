@@ -1,5 +1,5 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SemanticSegmentation
   init_args:
     model: 'deeplabv3+'
     backbone: 'resnet18'

@@ -27,9 +27,9 @@ changelog:
     - title: Samplers
       labels:
         - samplers
-    - title: Trainers
+    - title: Tasks
       labels:
-        - trainers
+        - tasks
     - title: Transforms
       labels:
         - transforms
