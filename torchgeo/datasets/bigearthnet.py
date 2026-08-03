@@ -602,14 +602,14 @@ class BigEarthNetV2(NonGeoDataset):
     metadata_locs: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         's1': {
             'files': {
-                'BigEarthNet-S1.tar.gzaa': '039b9ce305fc6582b2c3d60d1573f5b7',
-                'BigEarthNet-S1.tar.gzab': 'e94f0ea165d04992ca91d8e58e82ec6d',
+                'BigEarthNet-S1.tar.gzaa': '073255325113a90cc03a68b81adeea66e27c2ad6ad986f5926935c5639386a69',
+                'BigEarthNet-S1.tar.gzab': '0b5a53fec6cd77bb7375b46370b6608bbee10d65a20bb0d26dd89765b4bf951c',
             }
         },
         's2': {
             'files': {
-                'BigEarthNet-S2.tar.gzaa': '94e8ed32065234d3ab46353d814778d1',
-                'BigEarthNet-S2.tar.gzab': '24c223d9e36166136c13b24a27debe34',
+                'BigEarthNet-S2.tar.gzaa': 'a44e4c9d8dde1affd7107640dd0070b811ca848205363f8dd8f75bebccea0ed3',
+                'BigEarthNet-S2.tar.gzab': 'e0bfe57038e07ff09add42e5bff108d221da10a6e45533fd2eb4ac05e6d90dc2',
             }
         },
         'maps': {
@@ -709,7 +709,7 @@ class BigEarthNetV2(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -893,16 +893,16 @@ class BigEarthNetV2(NonGeoDataset):
         self._extract()
 
     def _download(self) -> None:
-        """Download the required tarball parts using the URL template and md5 sums."""
+        """Download the required tarball parts using the URL template and sha256 sums."""
         for meta in self.metadata_locs.values():
-            for fname, md5 in meta['files'].items():
+            for fname, sha256 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
                     download_url(
                         self.url.format(fname),
                         self.root,
                         filename=fname,
-                        md5=md5 if self.checksum else None,
+                        sha256=sha256 if self.checksum else None,
                     )
 
     def _extract(self) -> None:

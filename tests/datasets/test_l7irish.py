@@ -26,10 +26,10 @@ from torchgeo.datasets import (
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
-        md5s = {'austral': '', 'boreal': ''}
+        sha256s = {'austral': '', 'boreal': ''}
         url = os.path.join('tests', 'data', 'l7irish', '{}.tar.gz')
         monkeypatch.setattr(L7Irish, 'url', url)
-        monkeypatch.setattr(L7Irish, 'md5s', md5s)
+        monkeypatch.setattr(L7Irish, 'sha256s', sha256s)
         root = tmp_path
         transforms = nn.Identity()
         return L7Irish(root, transforms=transforms, download=True)

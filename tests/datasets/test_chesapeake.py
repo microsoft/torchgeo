@@ -33,8 +33,8 @@ class TestChesapeakeDC:
             '{state}_lulc_{year}_2022-Edition.zip',
         )
         monkeypatch.setattr(ChesapeakeDC, 'url', url)
-        md5s = {2018: ''}
-        monkeypatch.setattr(ChesapeakeDC, 'md5s', md5s)
+        sha256s = {2018: ''}
+        monkeypatch.setattr(ChesapeakeDC, 'sha256s', sha256s)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         transforms = nn.Identity()
         return ChesapeakeDC(tmp_path, transforms=transforms, download=True)

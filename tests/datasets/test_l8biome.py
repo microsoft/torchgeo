@@ -26,10 +26,10 @@ from torchgeo.datasets import (
 class TestL8Biome:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
-        md5s = {'barren': '', 'forest': ''}
+        sha256s = {'barren': '', 'forest': ''}
         url = os.path.join('tests', 'data', 'l8biome', '{}.tar.gz')
         monkeypatch.setattr(L8Biome, 'url', url)
-        monkeypatch.setattr(L8Biome, 'md5s', md5s)
+        monkeypatch.setattr(L8Biome, 'sha256s', sha256s)
         root = tmp_path
         transforms = nn.Identity()
         return L8Biome(root, transforms=transforms, download=True)

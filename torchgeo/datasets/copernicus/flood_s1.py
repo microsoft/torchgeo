@@ -37,7 +37,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l3_flood_s1/flood_s1.zip'
-    md5 = 'f4337fee5e90203c6d0c3efeb0b97b8a'
+    sha256 = 'aecaa4437dcc6575900531d7ade8752c1883d721782020d188b9d1df626762fd'
     zipfile = 'flood_s1.zip'
     directory = 'flood_s1'
     filename = 'grid_dict_{}.json'
@@ -68,7 +68,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
