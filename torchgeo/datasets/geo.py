@@ -958,7 +958,9 @@ class XarrayDataset(GeoDataset):
 
                 datasets.append(src)
 
-            nodata = datasets[0][self.data_vars[0]].rio.nodata or 0
+            nodata = datasets[0][self.data_vars[0]].rio.nodata
+            if nodata is None:
+                nodata = 0
 
             dataset = rioxr.merge.merge_datasets(
                 datasets, bounds=bounds, res=res, nodata=nodata, crs=self.crs
