@@ -92,6 +92,9 @@ class MAETask(BaseTask):
             norm_pix_loss: If True, normalize each target patch to zero mean and unit
                 variance before computing MSE. Recommended by the original MAE paper.
             warmup_epochs: Number of linear warmup epochs before cosine annealing.
+
+        Raises:
+            TypeError: If *model* is not a ViT architecture.
         """
         self.weights = weights
         super().__init__()
@@ -112,7 +115,7 @@ class MAETask(BaseTask):
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
         if not isinstance(vit, VisionTransformer):
-            raise ValueError(
+            raise TypeError(
                 f'Model {model} is not a ViT architecture, which is required for MAE training.'
             )
 

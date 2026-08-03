@@ -115,7 +115,7 @@ class MapInWild(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
+        modality: list[str] | None = None,
         split: Literal['train', 'validation', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -137,6 +137,8 @@ class MapInWild(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if modality is None:
+            modality = ['mask', 'esa_wc', 'viirs', 's2_summer']
         assert split in ['train', 'validation', 'test']
 
         self.checksum = checksum

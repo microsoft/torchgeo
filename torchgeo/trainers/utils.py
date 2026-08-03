@@ -7,8 +7,7 @@ import warnings
 from typing import cast
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Conv2d, Module
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 

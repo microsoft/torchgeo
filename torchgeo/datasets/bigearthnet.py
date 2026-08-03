@@ -139,8 +139,10 @@ class BigEarthNet(NonGeoDataset):
             'Permanent crops',
             'Pastures',
             'Complex cultivation patterns',
-            'Land principally occupied by agriculture, with significant areas of'
-            ' natural vegetation',
+            (
+                'Land principally occupied by agriculture, '
+                'with significant areas of natural vegetation'
+            ),
             'Agro-forestry areas',
             'Broad-leaved forest',
             'Coniferous forest',
@@ -175,8 +177,10 @@ class BigEarthNet(NonGeoDataset):
             'Pastures',
             'Annual crops associated with permanent crops',
             'Complex cultivation patterns',
-            'Land principally occupied by agriculture, with significant areas of'
-            ' natural vegetation',
+            (
+                'Land principally occupied by agriculture, with significant areas of'
+                ' natural vegetation'
+            ),
             'Agro-forestry areas',
             'Broad-leaved forest',
             'Coniferous forest',
@@ -890,7 +894,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the required tarball parts using the URL template and md5 sums."""
-        for key, meta in self.metadata_locs.items():
+        for meta in self.metadata_locs.values():
             for fname, md5 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
@@ -910,7 +914,7 @@ class BigEarthNetV2(NonGeoDataset):
         for key, meta in self.metadata_locs.items():
             if key == 'metadata':
                 continue
-            parts = [os.path.join(self.root, f) for f in meta['files'].keys()]
+            parts = [os.path.join(self.root, f) for f in meta['files']]
             concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
             with open(concat_path, 'wb') as outfile:
                 for part in parts:

@@ -237,44 +237,43 @@ class ChangeDetectionTask(ClassificationMixin, BaseTask):
         if metrics:
             metrics(y_hat, y)
 
-        if stage == 'val':
-            if (
-                batch_idx < 10
-                and hasattr(self.trainer, 'datamodule')
-                and isinstance(self.trainer.datamodule, BaseDataModule)
-                and self.logger
-                and hasattr(self.logger, 'experiment')
-                and hasattr(self.logger.experiment, 'add_figure')
-            ):
-                datamodule = self.trainer.datamodule
-                aug = K.AugmentationSequential(
-                    K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
-                    data_keys=None,
-                    keepdim=True,
-                )
-                batch = aug(batch)
-                match self.hparams['task']:
-                    case 'binary' | 'multilabel':
-                        batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
-                    case 'multiclass':
-                        batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
+        if stage == 'val' and (
+            batch_idx < 10
+            and hasattr(self.trainer, 'datamodule')
+            and isinstance(self.trainer.datamodule, BaseDataModule)
+            and self.logger
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
+        ):
+            datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
+            match self.hparams['task']:
+                case 'binary' | 'multilabel':
+                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                case 'multiclass':
+                    batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
 
-                for key in ['image', 'mask', 'prediction']:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
+            for key in ['image', 'mask', 'prediction']:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
 
-                fig: Figure | None = None
-                try:
-                    fig = datamodule.plot(sample)
-                except RGBBandsMissingError:
-                    pass
+            fig: Figure | None = None
+            try:
+                fig = datamodule.plot(sample)
+            except RGBBandsMissingError:
+                pass
 
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f'image/{batch_idx}', fig, global_step=self.global_step
-                    )  # ty: ignore[call-non-callable]
-                    plt.close()
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )  # ty: ignore[call-non-callable]
+                plt.close()
 
         return loss
 

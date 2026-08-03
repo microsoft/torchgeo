@@ -8,9 +8,9 @@ from typing import Any
 import pytest
 import timm
 import torch
-import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torch import nn
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
@@ -296,9 +296,9 @@ class TestClassificationTask:
         model = ClassificationTask(
             model=model_name, num_classes=10, freeze_backbone=True
         )
-        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert not all(param.requires_grad for param in model.model.parameters())
         assert all(
-            [param.requires_grad for param in model.model.get_classifier().parameters()]
+            param.requires_grad for param in model.model.get_classifier().parameters()
         )
 
 

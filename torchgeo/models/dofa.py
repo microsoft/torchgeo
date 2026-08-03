@@ -4,15 +4,14 @@
 """Dynamic One-For-All (DOFA) models."""
 
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
 import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
-from torch import Tensor
+from torch import Tensor, nn
+from torch.nn import init
 from torchvision.models._api import Weights, WeightsEnum
 
 
@@ -255,7 +254,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # ty: ignore[invalid-parameter-default]
+        norm_layer: type[nn.Module] | None = None,
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -274,6 +273,9 @@ class DOFA(nn.Module):
         """
         super().__init__()
 
+        if norm_layer is None:
+            norm_layer = cast(type[nn.Module], partial(nn.LayerNorm, eps=1e-6))
+
         self.img_size = img_size
         self.patch_size = patch_size
         self.drop_rate = drop_rate
@@ -286,8 +288,6 @@ class DOFA(nn.Module):
         self.mlp_ratio = mlp_ratio
 
         if self.global_pool:
-            norm_layer = norm_layer
-            embed_dim = embed_dim
             self.fc_norm = norm_layer(embed_dim)
         else:
             self.norm = norm_layer(embed_dim)

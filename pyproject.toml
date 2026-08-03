@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # uv-build 0.7+ required for bdist reorganization
-    "uv_build>=0.7,<0.12",
+    "uv_build>=0.7,<0.13",
 ]
 build-backend = "uv_build"
 
@@ -249,7 +249,7 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "D", "I", "RUF", "UP"]
+extend-select = ["ANN", "B019", "D", "I", "RUF", "UP"]
 ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]

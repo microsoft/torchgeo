@@ -198,7 +198,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -214,7 +214,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -615,11 +615,10 @@ class RasterDataset(GeoDataset):
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         match = re.match(self.filename_regex, filename, re.VERBOSE)
-        if match:
-            if 'band' in match.groupdict():
-                start = match.start('band')
-                end = match.end('band')
-                filename = filename[:start] + band + filename[end:]
+        if match and 'band' in match.groupdict():
+            start = match.start('band')
+            end = match.end('band')
+            filename = filename[:start] + band + filename[end:]
         filepath = os.path.join(directory, filename)
         return filepath
 
@@ -664,7 +663,7 @@ class RasterDataset(GeoDataset):
         tensor = array_to_tensor(dest)
         return tensor
 
-    @functools.lru_cache(maxsize=128)
+    @functools.lru_cache(maxsize=128)  # noqa: B019
     def _cached_load_warp_file(self, filepath: Path) -> DatasetReader | WarpedVRT:
         """Cached version of :meth:`_load_warp_file`.
 
@@ -1435,7 +1434,7 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             RuntimeError: if datasets have no spatiotemporal intersection
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.8
            The *spatial_only* parameter.
@@ -1449,7 +1448,7 @@ class IntersectionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('IntersectionDataset only supports GeoDatasets')
+                raise TypeError('IntersectionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -1607,7 +1606,7 @@ class UnionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
             The *transforms* parameter.
@@ -1618,7 +1617,7 @@ class UnionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('UnionDataset only supports GeoDatasets')
+                raise TypeError('UnionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res

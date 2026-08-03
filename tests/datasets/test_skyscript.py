@@ -6,10 +6,9 @@ import shutil
 from pathlib import Path
 
 import pytest
-import torch.nn as nn
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, SkyScript
 

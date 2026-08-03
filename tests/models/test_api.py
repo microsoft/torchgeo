@@ -5,7 +5,7 @@ import enum
 from collections.abc import Callable
 
 import pytest
-import torch.nn as nn
+from torch import nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (

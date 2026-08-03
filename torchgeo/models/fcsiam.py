@@ -98,7 +98,7 @@ class FCSiamConc(SegmentationModel):
             n_blocks=encoder_depth,
             use_norm=decoder_use_batchnorm,
             attention_type=decoder_attention_type,
-            add_center_block=True if encoder_name.startswith('vgg') else False,
+            add_center_block=bool(encoder_name.startswith('vgg')),
         )
 
         self.segmentation_head = smp.base.SegmentationHead(

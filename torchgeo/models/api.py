@@ -13,7 +13,7 @@ See the following references for design details:
 from collections.abc import Callable
 from typing import Any
 
-import torch.nn as nn
+from torch import nn
 from torchvision.models._api import WeightsEnum
 
 from .aurora import Aurora_Weights, aurora_swin_unet

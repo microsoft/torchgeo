@@ -380,7 +380,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Check if the tar.gz files have already been downloaded
         exists = []
-        for suffix in self.md5sums.keys():
+        for suffix in self.md5sums:
             path = os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             exists.append(os.path.exists(path))
 
@@ -406,7 +406,7 @@ class DigitalTyphoon(NonGeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         # Extract tarball
-        for suffix in self.md5sums.keys():
+        for suffix in self.md5sums:
             with tarfile.open(
                 os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             ) as tar:

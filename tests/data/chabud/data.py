@@ -57,7 +57,6 @@ with h5py.File(filename, 'w') as f:
     for uri, fold in zip(uris, folds):
         sample = f.create_group(uri)
         sample.attrs.create(name='fold', data=np.int64(fold))
-        sample.create_dataset
         sample.create_dataset('pre_fire', data=data)
         sample.create_dataset('post_fire', data=data)
         sample.create_dataset('mask', data=gt)
