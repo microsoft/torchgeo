@@ -4,7 +4,7 @@
 """Dynamic One-For-All (DOFA) models."""
 
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as F
@@ -254,7 +254,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # ty: ignore[invalid-parameter-default]
+        norm_layer: type[nn.Module] | None = None,
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -272,6 +272,9 @@ class DOFA(nn.Module):
             norm_layer: Normalization layer.
         """
         super().__init__()
+
+        if norm_layer is None:
+            norm_layer = cast(type[nn.Module], partial(nn.LayerNorm, eps=1e-6))
 
         self.img_size = img_size
         self.patch_size = patch_size
