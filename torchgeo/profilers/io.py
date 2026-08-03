@@ -65,7 +65,7 @@ class IOProfiler(Profiler):
              summary table containing split, strategy, number of samples, time (s), and sampling rate (samples/s)
         """
         res = '\nProfile Summary \n'
-        res += f'\n| {"Split":<10} | {"Strategy":<10} | {"Samples":<10} | {"Time(s)":<10} | {"Rate (samples/s)":<16} |'
+        res += f'\n| {"Split":<10} | {"Strategy":<10} | {"Samples":<10} | {"Time (s)":<10} | {"Rate (samples/s)":<16} |'
         res += f'\n| {":":-<10} | {":":-<10} | {":":->10} | {":":->10} | {":":->16} |'
         for action_name in self.action_count:
             train = 'train_dataloader_next' in action_name
