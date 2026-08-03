@@ -81,15 +81,15 @@ Many remote sensing applications involve working with [_geospatial datasets_](ht
 In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
 ```python
-landsat7 = Landsat7(paths="...", bands=["B1", ..., "B7"])
-landsat8 = Landsat8(paths="...", bands=["B2", ..., "B8"])
+landsat7 = Landsat7(paths='...', bands=['B1', ..., 'B7'])
+landsat8 = Landsat8(paths='...', bands=['B2', ..., 'B8'])
 landsat = landsat7 | landsat8
 ```
 
 Next, we take the intersection between this dataset and the CDL dataset. We want to take the intersection instead of the union to ensure that we only sample from regions that have both Landsat and CDL data. Note that we can automatically download and checksum CDL data. Also note that each of these datasets may contain files in different coordinate reference systems (CRS) or resolutions, but TorchGeo automatically ensures that a matching CRS and resolution is used.
 
 ```python
-cdl = CDL(paths="...", download=True, checksum=True)
+cdl = CDL(paths='...', download=True, checksum=True)
 dataset = landsat & cdl
 ```
 
@@ -97,15 +97,17 @@ This dataset can now be used with a PyTorch data loader. Unlike benchmark datase
 
 ```python
 sampler = RandomPatchSampler(dataset, size=256, length=10000)
-dataloader = DataLoader(dataset, batch_size=128, sampler=sampler, collate_fn=stack_samples)
+dataloader = DataLoader(
+    dataset, batch_size=128, sampler=sampler, collate_fn=stack_samples
+)
 ```
 
 This data loader can now be used in your normal training/evaluation pipeline.
 
 ```python
 for batch in dataloader:
-    image = batch["image"]
-    mask = batch["mask"]
+    image = batch['image']
+    mask = batch['mask']
 
     # train a model, or make predictions using a pre-trained model
 ```
@@ -135,7 +137,7 @@ from torchgeo.datamodules.utils import collate_fn_detection
 from torchgeo.datasets import VHR10
 
 # Initialize the dataset
-dataset = VHR10(root="...", download=True, checksum=True)
+dataset = VHR10(root='...', download=True, checksum=True)
 
 # Initialize the dataloader with the custom collate function
 dataloader = DataLoader(
@@ -148,10 +150,10 @@ dataloader = DataLoader(
 
 # Training loop
 for batch in dataloader:
-    image = batch["image"]  # list of images
-    bbox_xyxy = batch["bbox_xyxy"]  # list of boxes
-    label = batch["label"]  # list of labels
-    mask = batch["mask"]  # list of masks
+    image = batch['image']  # list of images
+    bbox_xyxy = batch['bbox_xyxy']  # list of boxes
+    label = batch['label']  # list of labels
+    mask = batch['mask']  # list of masks
 
     # train a model, or make predictions using a pre-trained model
 ```
@@ -169,8 +171,10 @@ import timm
 from torchgeo.models import ResNet18_Weights
 
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
-model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_classes=10)
-model.load_state_dict(weights.get_state_dict(progress=True, weights_only=True), strict=False)
+model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'], num_classes=10)
+model.load_state_dict(
+    weights.get_state_dict(progress=True, weights_only=True), strict=False
+)
 ```
 
 These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
@@ -180,16 +184,18 @@ These weights can also directly be used in TorchGeo Lightning modules that are s
 In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [_datamodules_](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [_trainers_](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
 
 ```python
-datamodule = InriaAerialImageLabelingDataModule(root="...", batch_size=64, num_workers=6)
+datamodule = InriaAerialImageLabelingDataModule(
+    root='...', batch_size=64, num_workers=6
+)
 task = SemanticSegmentationTask(
-    model="unet",
-    backbone="resnet50",
+    model='unet',
+    backbone='resnet50',
     weights=True,
     in_channels=3,
-    task="binary",
-    loss="bce",
+    task='binary',
+    loss='bce',
 )
-trainer = Trainer(default_root_dir="...")
+trainer = Trainer(default_root_dir='...')
 
 trainer.fit(model=task, datamodule=datamodule)
 ```
@@ -253,7 +259,7 @@ It can also be imported and used in a Python script if you need to extend it to 
 ```python
 from torchgeo.main import main
 
-main(["fit", "--config", "config.yaml"])
+main(['fit', '--config', 'config.yaml'])
 ```
 
 See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html) for more details.
