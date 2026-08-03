@@ -224,8 +224,7 @@ class MapInWild(NonGeoDataset):
             the raster image or target
         """
         with rasterio.open(os.path.join(self.root, source, f'{filename}.tif')) as f:
-            raw_array = f.read()
-            array: np.typing.NDArray[np.int_] = np.stack(raw_array, axis=0)
+            array = f.read()
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
             tensor = torch.from_numpy(array).float()

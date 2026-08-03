@@ -3786,6 +3786,7 @@ all = [
     { name = "tokenizers", marker = "python_full_version < '3.14'" },
     { name = "ty" },
     { name = "types-geopandas" },
+    { name = "types-rasterio" },
     { name = "types-requests" },
     { name = "types-shapely" },
     { name = "webdataset" },
@@ -3819,6 +3820,7 @@ style = [
     { name = "ruff" },
     { name = "ty" },
     { name = "types-geopandas" },
+    { name = "types-rasterio" },
     { name = "types-requests" },
     { name = "types-shapely" },
 ]
@@ -3877,6 +3879,7 @@ requires-dist = [
     { name = "torchvision", specifier = ">=0.17" },
     { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.62" },
     { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
+    { name = "types-rasterio", marker = "extra == 'style'", specifier = ">=1.5.0.20260728" },
     { name = "types-requests", marker = "extra == 'style'", specifier = ">=2.25" },
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
     { name = "typing-extensions", specifier = ">=4.8" },
@@ -4052,6 +4055,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e6/4e/d2b939b984991bfa5c2b2776d0e9e46b306d9f64bb2b7d58e719d2d45668/types_geopandas-1.1.4.20260728.tar.gz", hash = "sha256:b3c534e2a3c66a579a3db86ad6e9b0bfaef5694f89683067e610c375c4d14bb1", size = 24471, upload-time = "2026-07-28T04:52:10.669Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5d/f4/797a55aef7ffc48d02a571a9edd32d76e08a676122d87d04eef95d603794/types_geopandas-1.1.4.20260728-py3-none-any.whl", hash = "sha256:91a7f3f0a2d408ddc88130ac4a0b83f5091086ba474d3b44cb75fadab9995a94", size = 31882, upload-time = "2026-07-28T04:52:09.602Z" },
+]
+
+[[package]]
+name = "types-rasterio"
+version = "1.5.0.20260728"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4f/27/39bedd54ec2174a55a40af904c5e3994ebd45bba20d3eaaa43d1edf26e31/types_rasterio-1.5.0.20260728.tar.gz", hash = "sha256:634fad70698a3a7c566539e0cfee66eb2ef32f7f2e08bad06fb548b987e85322", size = 26880, upload-time = "2026-07-28T04:51:45.237Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/b7/88926f6b1d017dbc89b725d7c65b0f369eb863ad0d7670330d22ccc80d85/types_rasterio-1.5.0.20260728-py3-none-any.whl", hash = "sha256:00b62bd1335fb49b8a137d97e90604b6356bcaa7a32d8678bb3e414c5966115d", size = 38653, upload-time = "2026-07-28T04:51:44.371Z" },
 ]
 
 [[package]]
