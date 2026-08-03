@@ -75,6 +75,8 @@ class DLRSDBase(NonGeoDataset):
 
     directory = 'DLRSD'
 
+    image_fns: list[str]
+
     classes = (
         'airplane',
         'bare soil',
