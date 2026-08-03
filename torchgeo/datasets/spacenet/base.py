@@ -175,7 +175,10 @@ class SpaceNet(NonGeoDataset, ABC):
                 out_shape = (img.count, *self.chip_size[self.image])
             array = img.read(out_shape=out_shape, resampling=Resampling.bilinear)
             tensor = torch.from_numpy(array.astype(np.float32))
-            return tensor, img.transform, img.crs
+            # https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#rasterio
+            with rio.Env(OSR_WKT_FORMAT='WKT2_2018'):
+                crs = CRS.from_user_input(img.crs)
+            return tensor, img.transform, crs
 
     def _load_mask(
         self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
