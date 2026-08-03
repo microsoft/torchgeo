@@ -26,7 +26,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_eurosat_s1s2/eurosat_s1.zip'
-    md5 = 'e7e7f8fc68fc55a7a689cb654912ff3f'
+    sha256 = 'aa52080b365c45b21097b0d3d190fc5953ad6639d211023c9689be57aed636cf'
     zipfile = 'eurosat_s1.zip'
     directory = 'eurosat_s1'
     filename = 'eurosat-{}.txt'

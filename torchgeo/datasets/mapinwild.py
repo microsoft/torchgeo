@@ -74,23 +74,23 @@ class MapInWild(NonGeoDataset):
         'split_IDs': {'split_IDs/split_IDs.csv'},
     }
 
-    md5s: ClassVar[dict[str, str]] = {
-        'ESA_WC.zip': '72b2ee578fe10f0df85bdb7f19311c92',
-        'VIIRS.zip': '4eff014bae127fe536f8a5f17d89ecb4',
-        'mask.zip': '87c83a23a73998ad60d448d240b66225',
-        's1_part1.zip': 'd8a911f5c76b50eb0760b8f0047e4674',
-        's1_part2.zip': 'a30369d17c62d2af5aa52a4189590e3c',
-        's2_temporal_subset_part1.zip': '78c2d05514458a036fe133f1e2f11d2a',
-        's2_temporal_subset_part2.zip': '076cd3bd00eb5b7f5d80c9e0a0de0275',
-        's2_autumn_part1.zip': '6ee7d1ac44b5107e3663636269aecf68',
-        's2_autumn_part2.zip': '4fc5e1d5c772421dba553722433ac3b9',
-        's2_spring_part1.zip': '2a89687d8fafa7fc7f5e641bfa97d472',
-        's2_spring_part2.zip': '5845dcae0ab3cdc174b7c41edd4283a9',
-        's2_summer_part1.zip': '73ca8291d3f4fb7533636220a816bb71',
-        's2_summer_part2.zip': '5b5816bbd32987619bf72cde5cacd032',
-        's2_winter_part1.zip': 'ca958f7cd98e37cb59d6f3877573ee6d',
-        's2_winter_part2.zip': 'e7aacb0806d6d619b6abc408e6b09fdc',
-        'split_IDs.csv': 'cb5c6c073702acee23544e1e6fe5856f',
+    sha256s: ClassVar[dict[str, str]] = {
+        'ESA_WC.zip': '2705d4b37d6fef5941fe28c3e0897218972374bc821df30d16fe8c149dd65c21',
+        'VIIRS.zip': '9e629ca6c7be148bffbbb7468b0b2df541c8da7f629c5bfe4b32bc3f781b45f1',
+        'mask.zip': '0d41675fa4b90c2f6400a802e3e0c15a6c2035c7530e3e183bfc9336c5acf458',
+        's1_part1.zip': '304287a8356d03cb4a30e2c26d569aa1e1b69a00539f977f701955c17b72a4d1',
+        's1_part2.zip': 'cc00d739ed8580ca1f3865b9eb7938b2f48ee0d2f7db39b1590902157818e889',
+        's2_temporal_subset_part1.zip': 'd2e1e1d9c821e90a8df3371502c3fa555dd131b6261e9843077f08fa96c418b3',
+        's2_temporal_subset_part2.zip': '61f48e485bc3f2c5e4a8cf681a681470979723242e9cd46468994d0637627af4',
+        's2_autumn_part1.zip': '119598477923e8c3a71ece56c3e0d85438574c7b70a9c892ede6d9b1e7e89dd8',
+        's2_autumn_part2.zip': '31cf7d1d033250b41e7db23b69ceb5f41481c2d10499707eb52c3decb15a2f74',
+        's2_spring_part1.zip': '00f5fe8e7cfa982b166d1d83ef5e2d16ae4d89ff60046296193c3e5cbd5227fb',
+        's2_spring_part2.zip': '1f2fe86dd908d8c4b41a6478855cba27a9b0ddf46b97d7cf18d239c3be49f2f2',
+        's2_summer_part1.zip': 'dfb757efbcc5791c6aaaa1e7b62de3f7bbf51f651b4c9ae94f4d84b771ac65aa',
+        's2_summer_part2.zip': '7241882579d5be88364e1ed2bc9fca427a1aef4192c39b037d45af88972d0e06',
+        's2_winter_part1.zip': '8876d54eddfe708325d94c5efd89278fcc4ad78b7b992bb73f6a9084d0a9a93a',
+        's2_winter_part2.zip': '725ff6d7b2b1ff6bfe7c3e41ccb64e1b878a4d8ba6f5baf224d70978b1696396',
+        'split_IDs.csv': 'c8b2c5f343fc592b9c50e5be6a24ffa06970313a92a20e16c7114ffc70fcb0fe',
     }
 
     mask_cmap: ClassVar[dict[int, tuple[int, int, int]]] = {
@@ -131,7 +131,7 @@ class MapInWild(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -152,7 +152,8 @@ class MapInWild(NonGeoDataset):
             for modality_link in self.modality_urls[mode]:
                 modality_url = os.path.join(self.url, modality_link)
                 self._verify(
-                    url=modality_url, md5=self.md5s[os.path.split(modality_link)[-1]]
+                    url=modality_url,
+                    sha256=self.sha256s[os.path.split(modality_link)[-1]],
                 )
 
             # Merge modalities downloaded in two parts
@@ -230,12 +231,12 @@ class MapInWild(NonGeoDataset):
             tensor = torch.from_numpy(array).float()
             return tensor
 
-    def _verify(self, url: str, md5: str | None = None) -> None:
+    def _verify(self, url: str, sha256: str | None = None) -> None:
         """Verify the integrity of the dataset.
 
         Args:
             url: url to the file
-            md5: md5 of the file to be verified
+            sha256: sha256 of the file to be verified
         """
         modality_folder_name = url.split('/')[-1]
         mod_fold_no_ext = modality_folder_name.split('.')[0]
@@ -251,7 +252,7 @@ class MapInWild(NonGeoDataset):
         # Check if the zip files have already been downloaded, if so, extract
         filepath = os.path.join(self.root, url.split('/')[-1])
         if os.path.isfile(filepath) and filepath.endswith('.zip'):
-            if self.checksum and not check_integrity(filepath, md5):
+            if self.checksum and not check_integrity(filepath, sha256=sha256):
                 raise RuntimeError('Dataset found, but corrupted.')
             self._extract(url)
             return
@@ -261,22 +262,22 @@ class MapInWild(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         # Download the dataset
-        self._download(url, md5)
+        self._download(url, sha256)
         if not url.endswith('.csv'):
             self._extract(url)
 
-    def _download(self, url: str, md5: str | None) -> None:
+    def _download(self, url: str, sha256: str | None) -> None:
         """Downloads a modality.
 
         Args:
             url: download url of a modality
-            md5: md5 of a modality
+            sha256: sha256 of a modality
         """
         download_url(
             url,
             self.root,
             filename=os.path.split(url)[1],
-            md5=md5 if self.checksum else None,
+            sha256=sha256 if self.checksum else None,
         )
 
     def _extract(self, path: Path) -> None:
