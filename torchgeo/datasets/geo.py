@@ -718,9 +718,6 @@ class RasterDataset(GeoDataset):
         )
 
         if needs_warp or self.nodata_value is not None:
-            nodata = (
-                {} if self.nodata_value is None else {'src_nodata': self.nodata_value}
-            )
             vrt = WarpedVRT(
                 src,
                 crs=dst_crs,
@@ -729,7 +726,7 @@ class RasterDataset(GeoDataset):
                 width=dst_width,
                 src_crs=src_crs,
                 src_transform=src_transform,
-                **nodata,
+                src_nodata=self.nodata_value,
             )
             src.close()
             return vrt
