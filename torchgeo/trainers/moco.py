@@ -12,13 +12,12 @@ import kornia.augmentation as K
 import lightning.pytorch.utilities.types
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
-from torch import Tensor
+from torch import Tensor, nn
 from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,

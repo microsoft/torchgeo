@@ -366,9 +366,8 @@ class DOTA(NonGeoDataset):
         for filename, md5 in files_needed:
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
-                if self.checksum:
-                    if not check_integrity(filepath, md5):
-                        raise RuntimeError(f'Archive {filename} corrupted')
+                if self.checksum and not check_integrity(filepath, md5):
+                    raise RuntimeError(f'Archive {filename} corrupted')
                 exists.append(True)
                 self._extract([(filename, md5)])
             else:
@@ -473,7 +472,7 @@ class DOTA(NonGeoDataset):
                     label,
                     color='white',
                     fontsize=8,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
+                    bbox={'facecolor': color, 'alpha': box_alpha},
                 )
             else:
                 # Oriented box: [x1,y1,x2,y2,x3,y3,x4,y4]
@@ -496,7 +495,7 @@ class DOTA(NonGeoDataset):
                     label,
                     color='white',
                     fontsize=8,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
+                    bbox={'facecolor': color, 'alpha': box_alpha},
                     ha='center',
                     va='center',
                 )

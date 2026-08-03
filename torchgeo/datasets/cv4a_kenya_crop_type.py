@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Callable, Sequence
-from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -192,7 +191,6 @@ class CV4AKenyaCropType(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    @lru_cache(maxsize=128)
     def _load_label_tile(self, tile: str) -> tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
@@ -214,7 +212,6 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return labels, field_ids
 
-    @lru_cache(maxsize=128)
     def _load_all_image_tiles(self, tile: str) -> Tensor:
         """Load all the imagery (across time) for a single _tile_.
 
@@ -240,7 +237,6 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return img
 
-    @lru_cache(maxsize=128)
     def _load_single_image_tile(self, tile: str, date: str) -> Tensor:
         """Load the imagery for a single tile for a single date.
 

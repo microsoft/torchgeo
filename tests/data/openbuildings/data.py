@@ -86,9 +86,8 @@ if __name__ == '__main__':
         w.writerows(buildings_data)
 
     # archive the csv to gzip
-    with open(csvname, 'rb') as f_in:
-        with gzip.open(zipfilename, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with open(csvname, 'rb') as f_in, gzip.open(zipfilename, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
 
     # remove csv file
     os.remove(csvname)

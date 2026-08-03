@@ -534,7 +534,7 @@ class TestOpenStreetMap:
 
         # Make all requests fail
         def mock_post_fail(*_: Any, **__: Any) -> NoReturn:
-            raise Exception('Connection failed')
+            raise RuntimeError('Connection failed')
 
         monkeypatch.setattr(
             'torchgeo.datasets.openstreetmap.requests.post', mock_post_fail
@@ -576,9 +576,9 @@ class TestOpenStreetMap:
             # Valid case - should not raise
             ([{'name': 'building', 'selector': [{'building': '*'}]}], None, None),
             # Invalid cases
-            ([], ValueError, 'classes must be a non-empty list'),
-            ('invalid', ValueError, 'classes must be a non-empty list'),
-            (['invalid'], ValueError, 'Class 0 must be a dictionary'),
+            ([], TypeError, 'classes must be a non-empty list'),
+            ('invalid', TypeError, 'classes must be a non-empty list'),
+            (['invalid'], TypeError, 'Class 0 must be a dictionary'),
             (
                 [{'name': 'test'}],
                 ValueError,
@@ -586,12 +586,12 @@ class TestOpenStreetMap:
             ),
             (
                 [{'name': 'test', 'selector': 'invalid'}],
-                ValueError,
+                TypeError,
                 'Class 0 selector must be a list',
             ),
             (
                 [{'name': 'test', 'selector': ['invalid']}],
-                ValueError,
+                TypeError,
                 'Class 0 selector 0 must be a dictionary',
             ),
         ],

@@ -60,7 +60,7 @@ class SustainBenchCropYield(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'dev', 'test'] = 'train',
-        countries: list[Literal['usa', 'brazil', 'argentina']] = ['usa'],
+        countries: list[Literal['usa', 'brazil', 'argentina']] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -81,6 +81,8 @@ class SustainBenchCropYield(NonGeoDataset):
                 is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if countries is None:
+            countries = ['usa']
         assert set(countries).issubset(self.valid_countries), (
             f'Please choose a subset of these valid countried: {self.valid_countries}.'
         )
