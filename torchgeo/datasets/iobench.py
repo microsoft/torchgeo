@@ -55,7 +55,7 @@ class IOBench(IntersectionDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
-        classes: list[int] = list(CDL.valid_classes),
+        classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -83,6 +83,8 @@ class IOBench(IntersectionDataset):
             AssertionError: If *split* argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if classes is None:
+            classes = list(CDL.valid_classes)
         assert split in self.sha256s
 
         self.root = root

@@ -22,7 +22,7 @@ class PanopticonPE(nn.Module):
         attn_dim: int,
         embed_dim: int,
         patch_size: int,
-        chnfus_cfg: dict[str, Any] = {},
+        chnfus_cfg: dict[str, Any] | None = None,
         img_size: int = 224,
     ) -> None:
         """Initialize a new Panopticon instance.
@@ -34,6 +34,8 @@ class PanopticonPE(nn.Module):
             chnfus_cfg: Keyword arguments defining the channel attention.
             img_size: Image size.
         """
+        if chnfus_cfg is None:
+            chnfus_cfg = {}
         super().__init__()
 
         self.conv3d = Conv3dWrapper(patch_size=patch_size, embed_dim=attn_dim)
@@ -125,8 +127,8 @@ class ChnAttn(nn.Module):
     def __init__(
         self,
         dim: int,
-        chnemb_cfg: dict[str, Any] = {},
-        attn_cfg: dict[str, Any] = {},
+        chnemb_cfg: dict[str, Any] | None = None,
+        attn_cfg: dict[str, Any] | None = None,
         layer_norm: bool = False,
     ) -> None:
         """Initialize a channel attention module.
@@ -137,6 +139,10 @@ class ChnAttn(nn.Module):
             attn_cfg: Key-value pairs for the channel attention.
             layer_norm: Whether to apply layer norm after channel attention.
         """
+        if attn_cfg is None:
+            attn_cfg = {}
+        if chnemb_cfg is None:
+            chnemb_cfg = {}
         super().__init__()
 
         self.chnemb = ChnEmb(**chnemb_cfg, embed_dim=dim)

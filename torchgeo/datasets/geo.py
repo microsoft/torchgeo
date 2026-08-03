@@ -659,7 +659,7 @@ class RasterDataset(GeoDataset):
         tensor = array_to_tensor(dest)
         return tensor
 
-    @functools.lru_cache(maxsize=128)
+    @functools.lru_cache(maxsize=128)  # noqa: B019
     def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
         """Cached version of :meth:`_load_warp_file`.
 
