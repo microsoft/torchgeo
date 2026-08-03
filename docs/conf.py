@@ -222,7 +222,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         if sourcefile is None:
             return None
         source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     # Make path relative to the repo root
