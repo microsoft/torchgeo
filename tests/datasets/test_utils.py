@@ -12,15 +12,22 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
+import rasterio
 import torch
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
+from rasterio import Affine, MemoryFile
+from rasterio.transform import from_origin
+from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon, box
 from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     Sample,
+    _binary_mask_to_polygon,
+    _clean_binary_mask,
     array_to_tensor,
     check_integrity,
     concat_samples,
@@ -29,6 +36,7 @@ from torchgeo.datasets.utils import (
     download_url,
     extract_archive,
     find_files,
+    get_valid_footprint_from_datasource,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -684,3 +692,89 @@ class TestFindFiles:
         """A path that does not exist inside an archive resolves to nothing."""
         _, archive = temp_archive
         assert find_files(f'/vsizip/{archive}/non_existing.tif') == []
+
+
+@pytest.mark.parametrize(
+    'res',
+    [
+        10.0,  # meters (e.g. UTM)
+        0.0001,  # degrees (e.g. WGS84)
+    ],
+)
+@pytest.mark.parametrize('north_up', [True, False])
+def test_binary_mask_to_polygon(res: float, north_up: bool) -> None:
+    # Left half valid, right half nodata.
+    image_shape = (100, 100)
+    mask = np.zeros(image_shape, dtype=np.uint8)
+    mask[:, :50] = 255
+    y_res = -res if north_up else res
+    transform = Affine(res, 0.0, 0.0, 0.0, y_res, 0.0)
+
+    footprint = _binary_mask_to_polygon(mask, transform, res)
+
+    assert isinstance(footprint, Polygon | MultiPolygon)
+    assert footprint.is_valid
+    # The straight nodata edge yields an exact rectangle covering half the extent.
+    expected_area = (image_shape[0] * res) * (image_shape[1] * res) / 2
+    assert footprint.area == expected_area
+
+
+# A Sentinel-2 tile whose fake data includes a nodata corner.
+# The .SAFE format omits the nodata value from the raster profile,
+# so we declare it via a WarpedVRT.
+SENTINEL2_TILE = os.path.join(
+    'tests/data/sentinel2',
+    'S2A_MSIL1C_20220412T162841_N0400_R083_T16TFM_20220412T202300.SAFE',
+    'GRANULE/L1C_T16TFM_A035544_20220412T163959/IMG_DATA',
+    'T16TFM_20220412T162841_B02.jp2',
+)
+
+
+def test_get_valid_footprint_all_valid() -> None:
+    # When nodata value is not declared in the raster,
+    # every pixel is valid and the calculated footprint becomes its bounds.
+    with rasterio.open(SENTINEL2_TILE) as dataset:
+        footprint = get_valid_footprint_from_datasource(dataset)
+        assert footprint.equals(box(*dataset.bounds))
+
+
+def test_get_valid_footprint_partial_nodata() -> None:
+    # The .SAFE profile omits the nodata value, so we declare it via src_nodata
+    with (
+        rasterio.open(SENTINEL2_TILE) as raster,
+        WarpedVRT(raster, src_nodata=0) as dataset,
+    ):
+        # _clean_binary_mask's 3D read_masks OR-combine must match the 2D dataset_mask.
+        assert np.array_equal(
+            _clean_binary_mask(dataset.dataset_mask()),
+            _clean_binary_mask(dataset.read_masks()),
+        )
+
+        footprint = get_valid_footprint_from_datasource(dataset)
+        assert isinstance(footprint, Polygon | MultiPolygon)
+        assert footprint.is_valid
+
+        bounds = box(*dataset.bounds)
+        # The footprint must not extend beyond the raster bounds.
+        assert bounds.covers(footprint)
+        # The nodata corner removes ~1/8 of the tile, leaving ~7/8 valid.
+        assert footprint.area / bounds.area == pytest.approx(7 / 8, abs=0.02)
+
+
+def test_get_valid_footprint_all_nodata_warns() -> None:
+    # Real acquisitions are never entirely nodata, so build a small all-nodata raster.
+    with MemoryFile() as memfile:
+        with memfile.open(
+            driver='GTiff',
+            height=4,
+            width=4,
+            count=1,
+            dtype='uint8',
+            transform=from_origin(0, 40, 10, 10),
+            nodata=0,
+        ) as dataset:
+            dataset.write(np.zeros((1, 4, 4), dtype=np.uint8))
+        with memfile.open() as dataset:
+            with pytest.warns(UserWarning, match='All pixels are nodata'):
+                footprint = get_valid_footprint_from_datasource(dataset)
+            assert footprint.is_empty

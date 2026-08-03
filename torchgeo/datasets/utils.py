@@ -33,8 +33,10 @@ import shapely.affinity
 import torch
 from numpy.typing import NDArray
 from pandas import Timedelta, Timestamp
-from rasterio import Affine
-from shapely import Geometry
+from rasterio import Affine, DatasetReader
+from rasterio.features import shapes, sieve
+from rasterio.vrt import WarpedVRT
+from shapely import Geometry, MultiPolygon, Polygon, box
 from torch import Tensor
 from torchvision.utils import draw_segmentation_masks
 from typing_extensions import deprecated
@@ -1047,3 +1049,110 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
             f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
         }
     return sorted(files)
+
+
+def _clean_binary_mask(
+    mask: np.typing.NDArray[np.number], threshold: int = 1
+) -> np.typing.NDArray[np.uint8]:
+    """Convert any rasterio mask to a clean binary mask (uint8 0 or 255).
+
+    Args:
+        mask: input mask array from `DatasetReader.dataset_mask()`
+              or `DatasetReader.read_masks()`.
+              Can be 2D or 3D with values between 0 and 255.
+        threshold: pixel values >= threshold are considered valid.
+            This is needed when/if the mask is based on alpha channel.
+            Defaults to 1 as we assume pixels outside the valid footprint will
+            also have 0 alpha.
+
+    Returns:
+        Binary mask of dtype uint8 with 255 = valid pixels, 0 = invalid.
+        If input is 3D, masks are combined (OR) before thresholding.
+    """
+    if mask.ndim == 3:
+        combined = np.any(mask >= threshold, axis=0)
+    else:
+        combined = mask >= threshold
+
+    binary_mask: np.typing.NDArray[np.uint8] = (combined.astype(np.uint8)) * 255
+    return binary_mask
+
+
+def _binary_mask_to_polygon(
+    mask: np.typing.NDArray[np.uint8], transform: Affine, raster_resolution_x: float
+) -> Polygon | MultiPolygon:
+    """Vectorize a binary raster mask into a polygon.
+
+    Args:
+        mask: binary mask where 255 representing valid pixels
+            and 0 representing nodata pixels
+        transform: affine transform for the raster
+        raster_resolution_x: pixel size in the x direction in CRS units
+
+    Returns:
+        A `Polygon` or `MultiPolygon` representing the valid data mask
+    """
+    # Fill small nodata holes (< 0.2% of pixels, capped at 800) so minor
+    # sensor artifacts don't fragment the footprint. Cap prevents the threshold
+    # from exceeding the raster size on large images; `or 1` guards against
+    # mask.size being zero.
+    # See https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
+    max_hole_size = min(int(mask.size * 0.002), 800) or 1
+    sieved_mask = sieve(mask, max_hole_size)
+
+    # Extract one polygon per contiguous valid-data region (value > 0).
+    # Multiple disjoint regions are collected here and merged into a MultiPolygon below.
+    geoms = [g for g, v in shapes(sieved_mask, transform=transform) if v > 0]
+
+    # coordinates[0] = exterior ring, coordinates[1:] = interior holes (if any).
+    vector_mask = MultiPolygon(
+        [
+            Polygon(feature['coordinates'][0], feature['coordinates'][1:])
+            for feature in geoms
+        ]
+    )
+    # Collapse pixel-staircase edges into straight lines. A staircase step deviates
+    # at most ~1 pixel from the true boundary, so 2 pixels of tolerance cleanly
+    # removes jaggedness without distorting the actual shape. Works for any CRS
+    # since the tolerance is expressed directly in CRS units.
+    simplification_tolerance = 2 * raster_resolution_x
+    return cast(Polygon | MultiPolygon, vector_mask.simplify(simplification_tolerance))
+
+
+def get_valid_footprint_from_datasource(
+    src: DatasetReader | WarpedVRT,
+) -> MultiPolygon | Polygon:
+    """Compute the valid (non-NoData) data footprint of a raster in its CRS.
+
+    .. note::
+       Deriving masks from a nodata value adds overhead. For large datasets,
+       pre-compute footprints once and look them up in
+       :meth:`~torchgeo.datasets.RasterDataset._footprint_from_datasource`
+       instead of recomputing on every initialisation.
+
+    Args:
+        src: An open raster dataset (`DatasetReader` or `WarpedVRT`).
+
+    Returns:
+        A `Polygon` or `MultiPolygon` of the valid data footprint.
+
+    .. versionadded:: 0.10
+    """
+    valid_data_mask = src.dataset_mask()
+    binary_mask = _clean_binary_mask(valid_data_mask)
+
+    if (binary_mask == 255).all():
+        return box(*src.bounds)
+
+    if (binary_mask == 0).all():
+        warnings.warn(
+            'All pixels are nodata; returning an empty geometry.',
+            UserWarning,
+            stacklevel=2,
+        )
+        return Polygon()
+
+    res_x = src.res[0] if isinstance(src.res, tuple) else src.res
+    return _binary_mask_to_polygon(
+        mask=binary_mask, transform=src.transform, raster_resolution_x=res_x
+    )
