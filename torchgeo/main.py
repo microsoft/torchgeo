@@ -11,6 +11,7 @@ import torchgeo
 
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules
+import torchgeo.profilers
 import torchgeo.tasks
 
 # Backwards-compatibility
