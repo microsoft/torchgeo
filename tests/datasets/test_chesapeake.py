@@ -126,7 +126,7 @@ class TestChesapeakeCVPR:
         transforms = nn.Identity()
         return ChesapeakeCVPR(
             root,
-            splits=['de-test'],
+            splits=['de-test', 'de-test'],
             layers=request.param,
             transforms=transforms,
             download=True,
@@ -138,7 +138,7 @@ class TestChesapeakeCVPR:
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: ChesapeakeCVPR) -> None:
-        assert len(dataset) == 1
+        assert len(dataset) == 2
 
     def test_and(self, dataset: ChesapeakeCVPR) -> None:
         ds = dataset & dataset
@@ -149,7 +149,7 @@ class TestChesapeakeCVPR:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
-        ChesapeakeCVPR(root=dataset.root, download=True)
+        ChesapeakeCVPR(root=dataset.root, splits=['de-test'], download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         root = tmp_path
@@ -169,7 +169,7 @@ class TestChesapeakeCVPR:
             ),
             root,
         )
-        ChesapeakeCVPR(root)
+        ChesapeakeCVPR(root, splits=['de-test'])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -212,34 +212,3 @@ class TestChesapeakeCVPR:
         # least one column on the right should be zero-filled.
         assert torch.all(sample['image'][..., -1] == 0)
         assert torch.all(sample['mask'][..., -1] == 0)
-
-    def test_dataset_splits(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        monkeypatch.setattr(
-            ChesapeakeCVPR,
-            'urls',
-            {
-                'base': os.path.join(
-                    'tests',
-                    'data',
-                    'chesapeake',
-                    'cvpr',
-                    'cvpr_chesapeake_landcover.zip',
-                ),
-                'prior_extension': os.path.join(
-                    'tests',
-                    'data',
-                    'chesapeake',
-                    'cvpr',
-                    'cvpr_chesapeake_landcover_prior_extension.zip',
-                ),
-            },
-        )
-        monkeypatch.setattr(
-            ChesapeakeCVPR,
-            '_files',
-            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
-        )
-        dataset = ChesapeakeCVPR(
-            root=tmp_path, splits=['de-test', 'de-test'], download=True
-        )
-        assert isinstance(dataset.datasets, UnionDataset)
