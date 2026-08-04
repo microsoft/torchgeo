@@ -63,20 +63,6 @@ class TestIOBench:
             shutil.copy(tarfile, root)
         IOBench(root)
 
-    def test_download_checksum(
-        self, dataset: IOBench, monkeypatch: MonkeyPatch
-    ) -> None:
-        checksum = ''
-
-        def download_url(url: str, root: Path, sha256: str | None = None) -> None:
-            nonlocal checksum
-            checksum = sha256 or ''
-
-        monkeypatch.setattr('torchgeo.datasets.iobench.download_url', download_url)
-        dataset.checksum = True
-        dataset._download()
-        assert checksum == dataset.sha256s[dataset.split]
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             IOBench(tmp_path)

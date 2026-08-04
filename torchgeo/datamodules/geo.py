@@ -134,8 +134,6 @@ class BaseDataModule(LightningDataModule):
                 split = 'test'
             elif self.trainer.predicting:
                 split = 'predict'
-            else:
-                return batch
 
             aug = self._valid_attribute(f'{split}_aug', 'aug')
             batch = aug(batch)

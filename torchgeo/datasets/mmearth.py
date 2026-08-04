@@ -568,7 +568,11 @@ class MMEarth(NonGeoDataset):
             data = data.astype(np.int32)
             # no data value also 255 for biome and 65535 for eco_region
             tensor = torch.from_numpy(data).long()
-        else:  # sentinel2_cloudmask, sentinel2_cloudprod, sentinel2_scl
+        elif modality in [
+            'sentinel2_cloudmask',
+            'sentinel2_cloudprod',
+            'sentinel2_scl',
+        ]:
             tensor = torch.from_numpy(data.astype(np.int32)).long()
 
         # TODO: tensor might still contain nans, how to handle this?

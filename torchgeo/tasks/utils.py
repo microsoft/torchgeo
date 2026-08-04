@@ -82,7 +82,6 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
     if not children:
         raise ValueError('model must contain at least one child module')
 
-    module = model
     while children != []:
         name, module = children[0]
         keys.append(name)
@@ -133,8 +132,10 @@ def load_state_dict(
             f'num classes {num_classes} != num classes in pretrained model'
             f' {expected_num_classes}. Overriding with new num classes'
         )
-        del state_dict[output_module_key + '.weight']
-        del state_dict[output_module_key + '.bias']
+        del (
+            state_dict[output_module_key + '.weight'],
+            state_dict[output_module_key + '.bias'],
+        )
 
     missing_keys: list[str]
     unexpected_keys: list[str]
@@ -167,11 +168,9 @@ def reinit_initial_conv_layer(
         a Conv2d layer with new kernel weights
     """
     use_bias = layer.bias is not None
-    w_old: Tensor | None = None
-    b_old: Tensor | None = None
     if keep_rgb_weights:
         w_old = layer.weight.data[:, :3, :, :].clone()
-        if layer.bias is not None:
+        if use_bias:
             b_old = layer.bias.data.clone()
 
     updated_stride = layer.stride if new_stride is None else new_stride
@@ -190,9 +189,9 @@ def reinit_initial_conv_layer(
     )
     nn.init.kaiming_normal_(new_layer.weight, mode='fan_out', nonlinearity='relu')
 
-    if w_old is not None:
+    if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old
-        if b_old is not None:
+        if use_bias:
             cast(Tensor, new_layer.bias).data = b_old
 
     return new_layer

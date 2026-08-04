@@ -389,21 +389,20 @@ class MoCo(BaseTask):
             x2 = self.augmentation2(x2)
 
         m = self.hparams['moco_momentum']
-        version: int = self.hparams['version']
-        if version == 1:
+        if self.hparams['version'] == 1:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
             loss: Tensor = self.criterion(q, k)
-        elif version == 2:
+        elif self.hparams['version'] == 2:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
-        else:  # version 3, guaranteed by the assert in __init__
+        if self.hparams['version'] == 3:
             max_steps = self.trainer.max_epochs or 200
             m = cosine_schedule(self.current_epoch, max_steps, m, 1)
             q1, h1 = self.forward(x1)

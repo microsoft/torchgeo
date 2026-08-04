@@ -153,6 +153,8 @@ class PASTIS(NonGeoDataset):
     s1a_bands: ClassVar[tuple[str, ...]] = ('S1A_VV', 'S1A_VH', 'S1A_VV_VH')
     s1d_bands: ClassVar[tuple[str, ...]] = ('S1D_VV', 'S1D_VH', 'S1D_VV_VH')
 
+    mode: Literal['semantic', 'instance']
+
     def __init__(
         self,
         root: Path = 'data',
@@ -226,7 +228,7 @@ class PASTIS(NonGeoDataset):
         if self.mode == 'semantic':
             mask = self._load_semantic_targets(index)
             sample = {'image': image, 'mask': mask}
-        else:  # instance
+        elif self.mode == 'instance':
             mask, boxes, labels = self._load_instance_targets(index)
             sample = {'image': image, 'mask': mask, 'bbox_xyxy': boxes, 'label': labels}
 
