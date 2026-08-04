@@ -14,9 +14,10 @@ import pandas as pd
 import pytest
 import rasterio
 import torch
+from affine import Affine
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
-from rasterio import Affine, MemoryFile
+from rasterio import MemoryFile
 from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from shapely import MultiPolygon, Polygon, box
@@ -774,7 +775,7 @@ def test_get_valid_footprint_all_nodata_warns() -> None:
             nodata=0,
         ) as dataset:
             dataset.write(np.zeros((1, 4, 4), dtype=np.uint8))
-        with memfile.open() as dataset:
+        with rasterio.open(memfile.name) as dataset:
             with pytest.warns(UserWarning, match='All pixels are nodata'):
                 footprint = get_valid_footprint_from_datasource(dataset)
             assert footprint.is_empty
