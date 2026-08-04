@@ -427,13 +427,6 @@ class ChesapeakeCVPRHelper(RasterDataset):
         ]
         super().__init__(paths, *args, **kwargs)
 
-    def __getitem__(self, index: GeoSlice) -> dict:
-        """Sample image or mask."""
-        sample = super().__getitem__(index)
-        if 'mask' in sample:
-            sample['mask'] = sample['mask'].unsqueeze(0)
-        return sample
-
 
 class ChesapeakeCVPR(GeoDataset):
     """CVPR 2019 Chesapeake Land Cover dataset.
