@@ -160,7 +160,7 @@ class GlobalMangroveWatch(RasterDataset):
 
     @property
     def files(self) -> list[str]:
-        """A list of all files in the dataset, restricted to :attr:`years`.
+        """A list of all files in the dataset, restricted to *years*.
 
         Returns:
             All files belonging to one of the requested years.
