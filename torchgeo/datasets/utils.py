@@ -561,7 +561,7 @@ def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Any]]:
 
     .. versionadded:: 0.2
     """
-    collated = {}
+    collated: dict[str, list[Any]] = {}
     for sample in samples:
         for key, value in sample.items():
             if key not in collated:
@@ -658,7 +658,7 @@ def stack_samples(samples: Iterable[Sample]) -> Sample:
     .. versionadded:: 0.2
     """
     uncollated = _list_dict_to_dict_list(samples)
-    collated = {}
+    collated: Sample = {}
     for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
@@ -738,7 +738,7 @@ def unbind_samples(sample: Sample) -> list[Sample]:
     return _dict_list_to_list_dict(uncollated)
 
 
-def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
+def rasterio_loader(path: Path) -> np.typing.NDArray[np.int32]:
     """Load an image file using rasterio.
 
     Args:
@@ -748,7 +748,7 @@ def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
         the image
     """
     with rasterio.open(path) as f:
-        array: np.typing.NDArray[np.int_] = f.read().astype(np.int32)
+        array: np.typing.NDArray[np.int32] = f.read().astype(np.int32)
         # NonGeoClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array

@@ -161,8 +161,8 @@ def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
 
 
 @pytest.mark.parametrize('enum', enums)
-def test_get_weight(enum: WeightsEnum) -> None:
-    for weight in enum:  # ty: ignore[not-iterable]
+def test_get_weight(enum: type[WeightsEnum]) -> None:
+    for weight in enum:
         assert weight == get_weight(str(weight))
 
 

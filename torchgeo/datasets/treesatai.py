@@ -290,7 +290,7 @@ class TreeSatAI(NonGeoDataset):
         labels: list[tuple[str, float]] = []
         for i, pct in enumerate(multilabel):
             if pct > 0.001:
-                labels.append((self.classes[i], pct))
+                labels.append((self.classes[i], pct.item()))
 
         labels.sort(key=lambda label: label[1], reverse=True)
         return ', '.join([f'{genus}: {pct:.1%}' for genus, pct in labels])
