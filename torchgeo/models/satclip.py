@@ -2,12 +2,7 @@
 # Licensed under the MIT License.
 # Adapted from https://github.com/microsoft/satclip. Copyright (c) Microsoft Corporation.
 
-"""SatCLIP location encoder.
-
-Reference:
-    Klemmer et al., SatCLIP: Global, General-Purpose Location Embeddings with
-    Satellite Imagery
-"""
+"""SatCLIP location encoder."""
 
 import math
 from typing import Any
@@ -195,9 +190,9 @@ class SineActivation(nn.Module):
 class Siren(nn.Module):
     """SIREN linear layer with sine activation.
 
-    Reference:
-        Sitzmann et al., Implicit Neural Representations with Periodic
-        Activation Functions
+    If you use this model in your research, please cite the following paper:
+
+    * https://doi.org/10.48550/arXiv.2006.09661
 
     .. versionadded:: 0.10
     """
@@ -337,6 +332,10 @@ class SirenNet(nn.Module):
 class SatCLIP(nn.Module):
     """SatCLIP location encoder.
 
+    If you use this model in your research, please cite the following paper:
+
+    * https://doi.org/10.1609/aaai.v39i4.32457
+
     .. versionadded:: 0.10
     """
 
@@ -408,7 +407,7 @@ class SatCLIP_Weights(WeightsEnum):
         meta={
             'dataset': 'S2-100K',
             'model': 'satclip',
-            'publication': 'https://arxiv.org/abs/2311.17179',
+            'publication': 'https://doi.org/10.1609/aaai.v39i4.32457',
             'repo': 'https://github.com/microsoft/satclip',
             'ssl_method': 'clip',
             'image_encoder': 'vit16-l40',
@@ -427,7 +426,7 @@ def satclip(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2311.17179
+    * https://doi.org/10.1609/aaai.v39i4.32457
 
     .. versionadded:: 0.10
 
