@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import zipfile
 from typing import Literal
 
 import numpy as np
@@ -12,6 +13,7 @@ import numpy as np
 # Parameters
 SIZE = 32  # Image dimensions
 NUM_SAMPLES = 5  # Number of samples
+NUM_PARTS = 3  # Number of parts of the images archive
 np.random.seed(0)
 
 # Define directory hierarchy
@@ -65,8 +67,24 @@ if __name__ == '__main__':
     # Generate directory structure and data
     create_directory('.', filenames)
 
-    # Create zip archives of dataset folders
-    filename_images = 'image_stack.tar.gz'
-    filename_masks = 'mask.tar.gz'
-    shutil.make_archive('image_stack', 'gztar', '.', 'image_stack')
+    # The real images live in an 'images' directory of a multi-part zip archive
+    with zipfile.ZipFile('images.zip', 'w', zipfile.ZIP_DEFLATED) as f:
+        f.mkdir('images')
+        for name in sorted(os.listdir('image_stack')):
+            f.write(os.path.join('image_stack', name), os.path.join('images', name))
+
+    # Split the archive the way 'zip -s' does: a spanning signature followed by the
+    # archive itself, cut at fixed-size boundaries. The central directory offsets are
+    # not rewritten to be relative to each part, but the dataset never reads them.
+    with open('images.zip', 'rb') as f:
+        data = b'PK\x07\x08' + f.read()
+
+    chunk_size = len(data) // NUM_PARTS + 1
+    for i in range(NUM_PARTS - 1):
+        with open(f'images.z{i + 1:02}', 'wb') as f:
+            f.write(data[i * chunk_size : (i + 1) * chunk_size])
+
+    with open('images.zip', 'wb') as f:
+        f.write(data[(NUM_PARTS - 1) * chunk_size :])
+
     shutil.make_archive('mask', 'gztar', '.', 'mask')
