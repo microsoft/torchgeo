@@ -11,6 +11,10 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 SIZE = 32
+
+# Real tiles cover 1 degree with 4,500 x 4,500 pixels (~25 m)
+RES = 0.000222222222222
+
 np.random.seed(0)
 
 years = [1996, 2020]
@@ -21,9 +25,11 @@ def create_file(path: str) -> None:
     profile = {
         'driver': 'GTiff',
         'dtype': 'uint8',
+        'nodata': 0,
         'count': 1,
         'crs': CRS.from_epsg(4326),
-        'transform': Affine(0.000223, 0.0, 8.0, 0.0, -0.000223, 1.0),
+        # Upper left corner of the N00E008 tile
+        'transform': Affine(RES, 0.0, 8.0, 0.0, -RES, 0.0),
         'height': SIZE,
         'width': SIZE,
         'compress': 'lzw',

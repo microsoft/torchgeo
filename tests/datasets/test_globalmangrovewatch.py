@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -58,6 +58,33 @@ class TestGlobalMangroveWatch:
     def test_already_extracted(self, dataset: GlobalMangroveWatch) -> None:
         GlobalMangroveWatch(dataset.paths, years=[1996, 2020])
 
+    def test_years(self, dataset: GlobalMangroveWatch) -> None:
+        ds = GlobalMangroveWatch(dataset.paths, years=[1996])
+        assert len(ds) == 1
+        for filepath in ds.files:
+            assert '1996' in os.path.basename(filepath)
+
+    def test_multiple_paths(self, dataset: GlobalMangroveWatch) -> None:
+        root = str(dataset.paths)
+        paths = [os.path.join(root, f'gmw_v3_{year}') for year in (1996, 2020)]
+        ds = GlobalMangroveWatch(paths, years=[1996, 2020])
+        assert len(ds) == 2
+
+    def test_time_series(self, dataset: GlobalMangroveWatch) -> None:
+        ds = GlobalMangroveWatch(dataset.paths, years=[1996, 2020], time_series=True)
+        x = ds[ds.bounds]
+        assert x['mask'].ndim == 3
+        assert x['mask'].shape[0] == 2
+        ds.plot(x, suptitle='Time series')
+        plt.close()
+
+    def test_time_series_prediction(self, dataset: GlobalMangroveWatch) -> None:
+        ds = GlobalMangroveWatch(dataset.paths, years=[1996, 2020], time_series=True)
+        x = ds[ds.bounds]
+        x['prediction'] = x['mask'].clone()
+        ds.plot(x, suptitle='Time series prediction')
+        plt.close()
+
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
             'tests', 'data', 'globalmangrovewatch', 'gmw_v3_*_gtiff.zip'
@@ -65,6 +92,27 @@ class TestGlobalMangroveWatch:
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, tmp_path)
         GlobalMangroveWatch(tmp_path, years=[2020])
+
+    def test_partially_extracted(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        url = os.path.join(
+            'tests', 'data', 'globalmangrovewatch', 'gmw_v3_{}_gtiff.zip'
+        )
+        monkeypatch.setattr(GlobalMangroveWatch, 'url', url)
+        GlobalMangroveWatch(tmp_path, years=[1996], download=True)
+        ds = GlobalMangroveWatch(tmp_path, years=[1996, 2020], download=True)
+        assert len(ds) == 2
+
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(os.path.join(tmp_path, 'gmw_v3_2020_gtiff.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+            GlobalMangroveWatch(tmp_path, years=[2020], checksum=True)
+
+    def test_multiple_paths_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(AssertionError, match='paths must be a single root'):
+            GlobalMangroveWatch([tmp_path], years=[2020], download=True)
 
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
