@@ -25,6 +25,7 @@ index = [
     'rs-embed',
     'GeoDeep',
     'torchange',
+    'EVer',
 ]
 
 # Sort by date of first commit (update_timeline.py)
@@ -53,6 +54,7 @@ name_to_github = {
     'TorchGeo': ('torchgeo', 'torchgeo'),
     'geo-bench': ('ServiceNow', 'geo-bench'),
     'torchrs': ('isaaccorley', 'torchrs'),
+    'EVer': ('Z-Zheng', 'ever'),
     'Myria3D': ('IGNF', 'myria3d'),
     'PaddleRS': ('PaddlePaddle', 'PaddleRS'),
     'GeoTorchAI': ('wherobots', 'GeoTorchAI'),
@@ -97,6 +99,7 @@ hardcoded_coverage = {
     'torchange': 0,
     'AIDE': 0,
     'rs-embed': 61,
+    'EVer': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',
@@ -117,6 +120,7 @@ name_to_pypi = {
     'torchange': 'torchange',
     'rs-embed': 'rs-embed',
     'py4dgeo': 'py4dgeo',
+    'EVer': 'ever-beta',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {
@@ -130,4 +134,5 @@ name_to_conda = {
     'GeoAI': 'geoai',
     'TerraTorch': 'terratorch',
     'torchange': 'torchange',
+    'EVer': 'ever-beta',
 }

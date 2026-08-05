@@ -15,7 +15,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the below information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: November 2025*
+   *Last updated: July 2026*
 
 Features
 --------
@@ -126,3 +126,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _AIDE: https://github.com/microsoft/aerial_wildlife_detection
 .. _rs-embed: https://github.com/cybergis/rs-embed
 .. _py4dgeo: https://github.com/3dgeo-heidelberg/py4dgeo
+.. _EVer: https://github.com/Z-Zheng/ever
