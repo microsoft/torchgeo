@@ -497,8 +497,5 @@ class Sentinel2(Sentinel):
         with rasterio.open(metadata_path) as metadata_src:
             tags = metadata_src.tags()
         # The FOOTPRINT tag in MTD_MSIL1C.xml is always stored in EPSG:4326.
-        return (
-            gpd.GeoSeries.from_wkt([tags['FOOTPRINT']], crs='EPSG:4326')
-            .to_crs(datasource.crs)
-            .iloc[0]
-        )
+        footprint = gpd.GeoSeries.from_wkt([tags['FOOTPRINT']], crs='EPSG:4326')
+        return footprint.to_crs(datasource.crs).iloc[0]
