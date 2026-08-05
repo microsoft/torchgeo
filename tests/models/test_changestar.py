@@ -5,7 +5,7 @@ from typing import Literal
 
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn
 
 from torchgeo.models import ChangeMixin, ChangeStar, ChangeStarFarSeg
 

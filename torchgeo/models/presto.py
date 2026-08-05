@@ -12,9 +12,9 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 from einops import repeat
 from timm.models.vision_transformer import Block
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 BANDS_GROUPS_IDX: dict[str, Sequence[int]] = {
@@ -834,7 +834,10 @@ def presto(weights: Presto_Weights | None = None, *args: Any, **kwargs: Any) -> 
 
     if weights:
         model.load_state_dict(
-            weights.get_state_dict(progress=True, map_location='cpu'), strict=True
+            weights.get_state_dict(
+                progress=True, map_location='cpu', weights_only=True
+            ),
+            strict=True,
         )
 
     return model

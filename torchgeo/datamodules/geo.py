@@ -157,9 +157,8 @@ class BaseDataModule(LightningDataModule):
         dataset = self.dataset or self.val_dataset
         if isinstance(dataset, Subset):
             dataset = dataset.dataset
-        if dataset is not None:
-            if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
+        if dataset is not None and hasattr(dataset, 'plot'):
+            fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
         return fig
 
 

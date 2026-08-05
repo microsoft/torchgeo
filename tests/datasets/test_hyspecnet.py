@@ -8,21 +8,20 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
-import torch.nn as nn
 from pytest import MonkeyPatch
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, HySpecNet11k, RGBBandsMissingError
 
 root = os.path.join('tests', 'data', 'hyspecnet')
-md5s = {'hyspecnet-11k-01.tar.gz': '', 'hyspecnet-11k-splits.tar.gz': ''}
+sha256s = {'hyspecnet-11k-01.tar.gz': '', 'hyspecnet-11k-splits.tar.gz': ''}
 
 
 class TestHySpecNet11k:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch) -> HySpecNet11k:
         monkeypatch.setattr(HySpecNet11k, 'url', root + os.sep)
-        monkeypatch.setattr(HySpecNet11k, 'md5s', md5s)
+        monkeypatch.setattr(HySpecNet11k, 'sha256s', sha256s)
         transforms = nn.Identity()
         return HySpecNet11k(root, transforms=transforms)
 

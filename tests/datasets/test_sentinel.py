@@ -12,10 +12,10 @@ import rasterio
 import shapely
 import shapely.wkt
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoSeries
 from geopandas.testing import assert_geoseries_equal
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,

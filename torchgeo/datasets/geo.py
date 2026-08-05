@@ -12,7 +12,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import geopandas as gpd
 import numpy as np
@@ -27,7 +27,10 @@ import torch
 from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from PIL.Image import Image
-from pyproj import CRS
+
+# https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#rasterio
+from pyproj import CRS as PROJ_CRS
+from rasterio.crs import CRS as RIO_CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.transform import Affine, array_bounds, from_gcps
@@ -196,7 +199,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -212,7 +215,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -253,17 +256,17 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
         return slice(xmin, xmax, xres), slice(ymin, ymax, yres), slice(tmin, tmax, tres)
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of the dataset.
 
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        _crs = cast(CRS, self.index.crs)
+        _crs = cast(PROJ_CRS, self.index.crs)
         return _crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
         If ``new_crs == self.crs``, does nothing, otherwise updates the index.
@@ -414,7 +417,7 @@ class RasterDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -478,7 +481,8 @@ class RasterDataset(GeoDataset):
                         except ValueError:
                             pass
                     if crs is None:
-                        crs = vrt.crs
+                        with rasterio.Env(OSR_WKT_FORMAT='WKT2_2018'):
+                            crs = PROJ_CRS.from_user_input(vrt.crs)
                     geometries.append(self.footprint_from_datasource(vrt))
                     if res is None:
                         res = vrt.res
@@ -612,11 +616,10 @@ class RasterDataset(GeoDataset):
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         match = re.match(self.filename_regex, filename, re.VERBOSE)
-        if match:
-            if 'band' in match.groupdict():
-                start = match.start('band')
-                end = match.end('band')
-                filename = filename[:start] + band + filename[end:]
+        if match and 'band' in match.groupdict():
+            start = match.start('band')
+            end = match.end('band')
+            filename = filename[:start] + band + filename[end:]
         filepath = os.path.join(directory, filename)
         return filepath
 
@@ -645,7 +648,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
-        kwargs = {
+        kwargs: dict[str, Any] = {
             'bounds': (x.start, y.start, x.stop, y.stop),
             'res': (x.step, y.step),
             'indexes': band_indexes,
@@ -661,8 +664,8 @@ class RasterDataset(GeoDataset):
         tensor = array_to_tensor(dest)
         return tensor
 
-    @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
+    @functools.lru_cache(maxsize=128)  # noqa: B019
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader | WarpedVRT:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -673,7 +676,9 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: Path, crs: CRS | None = None) -> DatasetReader:
+    def _load_warp_file(
+        self, filepath: Path, crs: PROJ_CRS | None = None
+    ) -> DatasetReader | WarpedVRT:
         """Load and warp a file to the correct CRS and resolution.
 
         If the dataset has no CRS/transform but has 4 corner GCPs, we derive an affine
@@ -705,7 +710,7 @@ class RasterDataset(GeoDataset):
                 raise
 
         try:  # Use externally chosen crs
-            dst_crs = crs or self.crs
+            dst_crs = RIO_CRS.from_user_input(crs or self.crs)
         except AttributeError:
             dst_crs = src_crs
 
@@ -729,7 +734,9 @@ class RasterDataset(GeoDataset):
             return vrt
         return src
 
-    def _compute_affine_georeferencing(self, src: DatasetReader) -> tuple[CRS, Affine]:
+    def _compute_affine_georeferencing(
+        self, src: DatasetReader | WarpedVRT
+    ) -> tuple[RIO_CRS, Affine]:
         """Computes transform from Ground Control Points.
 
         Args:
@@ -752,7 +759,7 @@ class RasterDataset(GeoDataset):
         return gcp_crs, from_gcps(gcps)
 
     def _compute_affine_warp_grid(
-        self, crs: CRS, transform: Affine, width: int, height: int, dst_crs: CRS
+        self, crs: RIO_CRS, transform: Affine, width: int, height: int, dst_crs: RIO_CRS
     ) -> tuple[Affine, int, int, bool]:
         """Compute the output grid (affine, width, height) for warping a raster.
 
@@ -829,7 +836,7 @@ class XarrayDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] | None = None,
         data_vars: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -863,7 +870,7 @@ class XarrayDataset(GeoDataset):
         for filepath in self.files:
             try:
                 with xr.open_dataset(filepath, decode_coords='all') as src:
-                    crs = crs or src.rio.crs or CRS.from_epsg(4326)
+                    crs = crs or src.rio.crs or PROJ_CRS.from_epsg(4326)
                     res = res or src.rio.resolution()
                     data_vars = data_vars or list(src.data_vars.keys())
                     tmin = pd.Timestamp(src.time.values.min())
@@ -956,7 +963,8 @@ class XarrayDataset(GeoDataset):
 
         x, y, t = self._disambiguate_slice(index)
         bounds = (x.start, y.start, x.stop, y.stop)
-        res = (x.step, y.step)
+        # merge_datasets requires a positive resolution
+        res = (abs(x.step), abs(y.step))
 
         with ExitStack() as stack:
             datasets = []
@@ -968,8 +976,14 @@ class XarrayDataset(GeoDataset):
                 if src.rio.crs is None:
                     src = src.rio.write_crs(self.crs)
 
-                if src.rio.crs != self.crs or res != src.rio.resolution():
-                    src = src.rio.reproject(self.crs, resolution=res)
+                # Flip to north-up if the y-axis is ascending or merge_datasets
+                # will silently return an all-nodata array.
+                y_dim = src.rio.y_dim
+                if src[y_dim][0] < src[y_dim][-1]:
+                    src = src.isel({y_dim: slice(None, None, -1)})
+
+                if src.rio.crs != self.crs:
+                    src = src.rio.reproject(self.crs)
 
                 datasets.append(src)
 
@@ -1018,7 +1032,7 @@ class VectorDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
         label_name: str | None = None,
@@ -1083,7 +1097,7 @@ class VectorDataset(GeoDataset):
                         src = gpd.read_parquet(filepath)
                     else:
                         src = gpd.read_file(filepath, layer=layer)
-                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    crs = crs or src.crs or PROJ_CRS.from_epsg(4326)
                     if src.crs is None:
                         src.set_crs(crs, inplace=True)
                     elif src.crs != crs:
@@ -1449,7 +1463,7 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             RuntimeError: if datasets have no spatiotemporal intersection
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.8
            The *spatial_only* parameter.
@@ -1463,7 +1477,7 @@ class IntersectionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('IntersectionDataset only supports GeoDatasets')
+                raise TypeError('IntersectionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -1540,7 +1554,7 @@ class IntersectionDataset(GeoDataset):
     size: {len(self)}"""
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of both datasets.
 
         Returns:
@@ -1549,7 +1563,7 @@ class IntersectionDataset(GeoDataset):
         return self.datasets[0].crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of both datasets.
 
         Args:
@@ -1621,7 +1635,7 @@ class UnionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
             The *transforms* parameter.
@@ -1632,7 +1646,7 @@ class UnionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('UnionDataset only supports GeoDatasets')
+                raise TypeError('UnionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -1684,7 +1698,7 @@ class UnionDataset(GeoDataset):
     size: {len(self)}"""
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of both datasets.
 
         Returns:
@@ -1693,7 +1707,7 @@ class UnionDataset(GeoDataset):
         return self.datasets[0].crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of both datasets.
 
         Args:

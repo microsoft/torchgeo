@@ -74,7 +74,6 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
-    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -179,6 +178,7 @@ intersphinx_mapping = {
     'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
+    'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
@@ -222,7 +222,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         if sourcefile is None:
             return None
         source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     # Make path relative to the repo root

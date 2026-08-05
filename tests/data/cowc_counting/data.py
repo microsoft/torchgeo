@@ -65,6 +65,5 @@ for split in ['train', 'test']:
         csvwriter.writerows(data_list[split])
 
     # Compress labels
-    with open(filename, 'rb') as src:
-        with bz2.open(filename + '.bz2', 'wb') as dst:
-            dst.write(src.read())
+    with open(filename, 'rb') as src, bz2.open(filename + '.bz2', 'wb') as dst:
+        dst.write(src.read())

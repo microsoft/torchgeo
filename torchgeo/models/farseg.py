@@ -178,7 +178,7 @@ class _LightWeightDecoder(Module):
         in_channels: int,
         out_channels: int,
         num_classes: int,
-        in_feature_output_strides: list[int] = [4, 8, 16, 32],
+        in_feature_output_strides: list[int] | None = None,
         out_feature_output_stride: int = 4,
     ) -> None:
         """Initialize the _LightWeightDecoder module.
@@ -191,6 +191,8 @@ class _LightWeightDecoder(Module):
                 levels
             out_feature_output_stride: output stride of output feature maps
         """
+        if in_feature_output_strides is None:
+            in_feature_output_strides = [4, 8, 16, 32]
         super().__init__()
 
         self.blocks = ModuleList()

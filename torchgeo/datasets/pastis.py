@@ -388,9 +388,11 @@ class PASTIS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # Keep the RGB bands and quantile-normalize the displayed frames.
+        # Keep the RGB bands and quantile-normalize each frame independently.
         rgb_frames = sample['image'][:, [2, 1, 0], :, :]
-        rgb_frames = quantile_normalization(rgb_frames)
+        rgb_frames = torch.stack(
+            [quantile_normalization(frame) for frame in rgb_frames]
+        )
         images = rgb_frames.numpy().transpose(0, 2, 3, 1)
         mask = sample['mask'].numpy()
 
