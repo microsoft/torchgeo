@@ -799,11 +799,10 @@ class RasterDataset(GeoDataset):
 
         Called during indexing for each file in the dataset.
         Override this in subclasses to compute a more precise footprint than
-        just the raster bounds (e.g. by reading a metadata file).
+        just the raster bounds (e.g., by reading a metadata file).
 
         Args:
-            datasource: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
-                or a :class:`rasterio.vrt.WarpedVRT`.
+            datasource: An open raster dataset.
 
         Returns:
             A :class:`shapely.Polygon` or
