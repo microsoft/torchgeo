@@ -470,7 +470,7 @@ class Sentinel2(Sentinel):
 
     def footprint_from_datasource(
         self, datasource: DatasetReader | WarpedVRT
-    ) -> MultiPolygon | Polygon:
+    ) -> MultiPolygon | Polygon | None:
         """Extract the true geometric footprint from a Sentinel-2 datasource.
 
         This method reads the original footprint geometry from the associated
@@ -478,9 +478,11 @@ class Sentinel2(Sentinel):
         geographic coordinates (EPSG:4326) into the CRS of the given dataset.
 
         Args:
-            datasource: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
-                or a :class:`rasterio.vrt.WarpedVRT`, from which the footprint will
-                be derived.
+            datasource: An open raster dataset.
+
+        Returns:
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
 
         .. versionadded:: 0.10
         """
@@ -491,7 +493,7 @@ class Sentinel2(Sentinel):
             filepath = datasource.name
         metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
         if not os.path.exists(metadata_path):
-            return super().footprint_from_datasource(datasource)
+            return None
         with rasterio.open(metadata_path) as metadata_src:
             tags = metadata_src.tags()
         # The FOOTPRINT tag in MTD_MSIL1C.xml is always stored in EPSG:4326.

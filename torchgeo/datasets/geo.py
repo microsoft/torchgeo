@@ -483,7 +483,10 @@ class RasterDataset(GeoDataset):
                     if crs is None:
                         with rasterio.Env(OSR_WKT_FORMAT='WKT2_2018'):
                             crs = PROJ_CRS.from_user_input(vrt.crs)
-                    geometries.append(self.footprint_from_datasource(vrt))
+                    footprint = self.footprint_from_datasource(vrt)
+                    if footprint is None:
+                        footprint = shapely.box(*vrt.bounds)
+                    geometries.append(footprint)
                     if res is None:
                         res = vrt.res
                 except rasterio.errors.RasterioIOError:
@@ -801,7 +804,7 @@ class RasterDataset(GeoDataset):
 
     def footprint_from_datasource(
         self, datasource: DatasetReader | WarpedVRT
-    ) -> MultiPolygon | Polygon:
+    ) -> MultiPolygon | Polygon | None:
         """Compute the spatial footprint of the dataset from a file handle.
 
         Called during indexing for each file in the dataset.
@@ -812,13 +815,12 @@ class RasterDataset(GeoDataset):
             datasource: An open raster dataset.
 
         Returns:
-            A :class:`shapely.Polygon` or
-            :class:`shapely.MultiPolygon` representing the footprint
-            in the dataset's CRS.
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
 
         .. versionadded:: 0.10
         """
-        return shapely.box(*datasource.bounds)
+        return None
 
 
 class XarrayDataset(GeoDataset):

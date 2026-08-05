@@ -182,7 +182,7 @@ class TestSentinel2:
         ).to_crs(ds.crs)
         assert_geoseries_equal(ds.index.geometry, expected)
 
-    def test_footprint_falls_back_to_bbox(
+    def test_footprint_none_without_metadata(
         self, dataset: Sentinel2, tmp_path: Path
     ) -> None:
         filepath = next(iter(dataset.files))
@@ -191,5 +191,4 @@ class TestSentinel2:
         link.symlink_to(Path(filepath).resolve())
 
         with rasterio.open(link) as src:
-            result = dataset.footprint_from_datasource(src)
-            assert result.equals_exact(shapely.box(*src.bounds), tolerance=1e-9)
+            assert dataset.footprint_from_datasource(src) is None
