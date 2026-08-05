@@ -9,8 +9,10 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import pytest
+import rasterio
 import shapely
 import torch
 import torch.nn as nn
@@ -527,32 +529,42 @@ class TestRasterDataset:
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
 
-    @pytest.mark.parametrize(
-        'crs,res',
-        [
-            (CRS.from_epsg(4326), (0.0001, 0.0001)),  # reprojected (needs warp)
-            (CRS.from_epsg(32616), (10.0, 10.0)),  # native grid (no warp)
-        ],
-    )
-    def test_nodata_value_masks_zero_fill(
-        self, crs: CRS, res: tuple[float, float]
-    ) -> None:
-        root = os.path.join('tests', 'data', 'sentinel2')
-        bands = ('B04', 'B03', 'B02')
+    def test_nodata_value(self, tmp_path: Path) -> None:
+        """Nodata handling across the read path."""
+        nodata = np.finfo(np.float32).min
+        profile = {
+            'driver': 'GTiff',
+            'height': 8,
+            'width': 8,
+            'count': 1,
+            'dtype': 'float32',
+            'crs': CRS.from_epsg(32616),
+            'transform': rasterio.transform.from_origin(0, 80, 10, 10),
+            'nodata': nodata,
+        }
+        data = np.full((1, 8, 8), 5.0, dtype='float32')
+        data[0, 0, 0] = nodata  # one genuine nodata pixel
+        with rasterio.open(tmp_path / 'image.tif', 'w', **profile) as src:
+            src.write(data)
 
-        class Sentinel2WithNodata(Sentinel2):
-            nodata_value: float | None = 0.0
+        # real pixels read correctly (not all zeros) with no intervention.
+        ds = RasterDataset(tmp_path)
+        image = ds[ds.bounds]['image']
+        assert (image[image != nodata] == 5).all()
+        with ds._load_warp_file(ds.files[0]) as src:
+            assert (src.dataset_mask() == 0).sum() == 1
 
-        ds = Sentinel2(root, crs=crs, res=res, bands=bands)
-        with ds._load_warp_file(ds.files[0]) as vrt:
-            masked_default = (vrt.dataset_mask() == 0).sum()
+        # Warping must not erase the file's own nodata.
+        with ds._load_warp_file(ds.files[0], crs=CRS.from_epsg(4326)) as vrt:
+            assert vrt.nodata == nodata
 
-        ds_nodata = Sentinel2WithNodata(root, crs=crs, res=res, bands=bands)
-        with ds_nodata._load_warp_file(ds_nodata.files[0]) as vrt:
-            masked_override = (vrt.dataset_mask() == 0).sum()
+        # nodata_value override remaps which value is treated as nodata.
+        class Override(RasterDataset):
+            nodata_value = 5.0
 
-        assert masked_default == 0
-        assert masked_override > 0
+        ds_override = Override(tmp_path)
+        with ds_override._load_warp_file(ds_override.files[0]) as vrt:
+            assert (vrt.dataset_mask() == 0).sum() > 1
 
     @pytest.mark.parametrize('x,y', [(-2, 2), (2, -2), (-2, -2)])
     def test_malformed_res(self, x: int, y: int) -> None:

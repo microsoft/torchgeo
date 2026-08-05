@@ -647,11 +647,21 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
+
+        # rasterio.merge rejects a nodata equal to the dtype's own min because it
+        # runs np.min_scalar_type() on a float64 Python float internally.
+        # We cast it to np.dtype as a workaround.
+        fh = vrt_fhs[0]
+        nodata = self.nodata_value if self.nodata_value is not None else fh.nodata
+        if nodata is not None:
+            nodata = np.dtype(fh.dtypes[0]).type(nodata)
+
         kwargs = {
             'bounds': (x.start, y.start, x.stop, y.stop),
             'res': (x.step, y.step),
             'indexes': band_indexes,
             'resampling': self.resampling,
+            'nodata': nodata,
         }
 
         if self.time_series:
@@ -718,6 +728,10 @@ class RasterDataset(GeoDataset):
         )
 
         if needs_warp or self.nodata_value is not None:
+            # Only override the source nodata when explicitly set, else uses src.nodata.
+            override: dict[str, float] = {}
+            if self.nodata_value is not None:
+                override['src_nodata'] = self.nodata_value
             vrt = WarpedVRT(
                 src,
                 crs=dst_crs,
@@ -726,7 +740,7 @@ class RasterDataset(GeoDataset):
                 width=dst_width,
                 src_crs=src_crs,
                 src_transform=src_transform,
-                src_nodata=self.nodata_value,
+                **override,
             )
             src.close()
             return vrt
