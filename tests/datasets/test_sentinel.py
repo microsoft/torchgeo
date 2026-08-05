@@ -192,4 +192,4 @@ class TestSentinel2:
 
         with rasterio.open(link) as src:
             result = dataset.footprint_from_datasource(src)
-            assert result.equals_exact(shapely.box(*src.bounds), tolerance=1e-9)  # type: ignore[arg-type]
+            assert result.equals_exact(shapely.box(*src.bounds), tolerance=1e-9)
