@@ -328,10 +328,9 @@ class DOFA(nn.Module):
         Args:
             x: Input mini-batch.
             wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1
-                VV/VH, the DOFA v1 weights currently provided by TorchGeo use
+                VV/VH, the DOFA v1 weights use
                 ``[3.75, 3.75]`` as modality placeholders rather than physical
-                wavelengths. DOFA v2 instead uses ``[5.405, 5.405]``; its weights
-                are not currently provided by TorchGeo.    
+                wavelengths.
 
         Returns:
             Output mini-batch.
@@ -380,11 +379,10 @@ class DOFA(nn.Module):
         Args:
             x: Input mini-batch.
             wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1
-                VV/VH, the DOFA v1 weights currently provided by TorchGeo use
+                VV/VH, the DOFA v1 weights use
                 ``[3.75, 3.75]`` as modality placeholders rather than physical
-                wavelengths. DOFA v2 instead uses ``[5.405, 5.405]``; its weights
-                are not currently provided by TorchGeo.
-        
+                wavelengths.
+
         Returns:
             Output mini-batch.
         """
