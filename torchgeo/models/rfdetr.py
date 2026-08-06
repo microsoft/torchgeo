@@ -30,8 +30,6 @@ class RFDETR(nn.Module):
             freeze_backbone: Freeze the model encoder.
             **kwargs: Additional RF-DETR model configuration parameters.
 
-        Raises:
-            ValueError: If *variant* or *num_classes* is invalid.
         """
         super().__init__()
         from rfdetr.config import (
@@ -54,11 +52,6 @@ class RFDETR(nn.Module):
             'rf-detr-medium': RFDETRMediumConfig,
             'rf-detr-large': RFDETRLargeConfig,
         }
-        if variant not in variants:
-            raise ValueError(f"Model type '{variant}' is not valid.")
-        if num_classes < 2:
-            raise ValueError('num_classes must include at least one foreground class.')
-
         kwargs.setdefault('num_channels', in_channels)
         kwargs.setdefault('freeze_encoder', freeze_backbone)
         model_config = variants[variant](num_classes=num_classes - 1, **kwargs)
