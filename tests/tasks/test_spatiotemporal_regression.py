@@ -70,9 +70,7 @@ class TestSpatioTemporalRegression:
         assert y_hat.shape == (2, 1, 16, 16)
 
     def test_predict_step_denormalizes_targets(self) -> None:
-        model = SpatioTemporalRegression(
-            in_channels=3, hidden_dim=8, num_layers=1
-        )
+        model = SpatioTemporalRegression(in_channels=3, hidden_dim=8, num_layers=1)
         model.model = ConstantRegressionModel()
         datamodule = SimpleNamespace(
             target_mean=torch.tensor(2.0), target_std=torch.tensor(3.0)
@@ -85,9 +83,7 @@ class TestSpatioTemporalRegression:
         assert torch.all(y_hat == 2)
 
     def test_predict_step_without_target_stats(self) -> None:
-        model = SpatioTemporalPixelwiseRegressionTask(
-            in_channels=3, hidden_dim=8, num_layers=1
-        )
+        model = SpatioTemporalRegression(in_channels=3, hidden_dim=8, num_layers=1)
         model.model = ConstantRegressionModel()
         # Attach a datamodule with no target stats to exercise _target_stats()
         # returning None after trainer lookup succeeds.

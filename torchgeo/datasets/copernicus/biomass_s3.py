@@ -11,7 +11,6 @@ from typing import Literal
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from torch import Tensor
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase

@@ -120,9 +120,7 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
         """Compute the validation loss and additional metrics."""
         self._shared_step(batch, 'val')
 
-    def test_step(
-        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics."""
         self._shared_step(batch, 'test')
 
