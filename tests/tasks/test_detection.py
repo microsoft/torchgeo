@@ -452,9 +452,7 @@ class TestObjectDetection:
 
         match = "RF-DETR support requires the optional 'rfdetr' dependency"
         with pytest.raises(ImportError, match=match):
-            ObjectDetection(
-                model='rf-detr-nano', num_classes=2, pretrain_weights=None
-            )
+            ObjectDetection(model='rf-detr-nano', num_classes=2, pretrain_weights=None)
 
     def test_rf_detr_initializes_runtime_and_loads_pretrain_weights(
         self, monkeypatch: MonkeyPatch
@@ -941,9 +939,7 @@ class TestObjectDetection:
             "RF-DETR requires num_classes >= 2 when using TorchGeo's num_classes API"
         )
         with pytest.raises(ValueError, match=match):
-            ObjectDetection(
-                model='rf-detr-nano', num_classes=1, pretrain_weights=None
-            )
+            ObjectDetection(model='rf-detr-nano', num_classes=1, pretrain_weights=None)
 
     def test_rf_detr_requires_rgb(self) -> None:
         match = 'RF-DETR currently requires in_channels=3.'
