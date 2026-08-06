@@ -3,10 +3,11 @@
 
 import os
 from types import SimpleNamespace
-from typing import Literal
+from typing import Literal, cast
 
 import pytest
 import torch
+from lightning.pytorch import Trainer
 from torch import Tensor
 
 from torchgeo.datamodules import MisconfigurationException
@@ -75,7 +76,7 @@ class TestSpatioTemporalRegression:
         datamodule = SimpleNamespace(
             target_mean=torch.tensor(2.0), target_std=torch.tensor(3.0)
         )
-        setattr(model, '_trainer', SimpleNamespace(datamodule=datamodule))
+        model._trainer = cast(Trainer, SimpleNamespace(datamodule=datamodule))
         batch = {'image': torch.randn(2, 4, 3, 16, 16)}
 
         y_hat = model.predict_step(batch, 0)
@@ -87,7 +88,9 @@ class TestSpatioTemporalRegression:
         model.model = ConstantRegressionModel()
         # Attach a datamodule with no target stats to exercise _target_stats()
         # returning None after trainer lookup succeeds.
-        setattr(model, '_trainer', SimpleNamespace(datamodule=SimpleNamespace()))
+        model._trainer = cast(
+            Trainer, SimpleNamespace(datamodule=SimpleNamespace())
+        )
         batch = {'image': torch.randn(2, 4, 3, 16, 16)}
 
         y_hat = model.predict_step(batch, 0)
