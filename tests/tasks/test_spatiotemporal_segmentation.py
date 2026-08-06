@@ -73,7 +73,7 @@ class TestSpatioTemporalSegmentation:
         assert torch.all(probabilities <= 1)
 
     def test_utae_predict_step_forwards_batch_positions(self) -> None:
-        model = SpatioTemporalSegmentationTask(
+        model = SpatioTemporalSegmentation(
             model='utae',
             in_channels=3,
             num_classes=4,
@@ -86,7 +86,7 @@ class TestSpatioTemporalSegmentation:
         )
         captured: list[Tensor] = []
 
-        # Hook the nested temporal encoder to verify the trainer forwards
+        # Hook the nested temporal encoder to verify the task forwards
         # batch_positions while still exercising the real UTAE model.
         def hook(
             module: torch.nn.Module,

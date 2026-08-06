@@ -9,9 +9,8 @@ from collections.abc import Callable, Sequence
 from typing import Literal, cast
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
+from torch import Tensor, nn
 
 from .ltae import LTAE2d
 
