@@ -54,7 +54,8 @@ class CustomGeoDataset(GeoDataset):
 
 class TestGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 100, 100)]
         return CustomGeoDataset(geometry)
 
@@ -83,7 +84,8 @@ class TestGeoSampler:
 
 class TestRandomGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
         return CustomGeoDataset(geometry)
 
@@ -168,7 +170,8 @@ class TestRandomGeoSampler:
 
 class TestGridGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
         return CustomGeoDataset(geometry)
 
@@ -266,7 +269,8 @@ class TestGridGeoSampler:
 
 class TestPreChippedGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 20, 20), shapely.box(0, 0, 30, 30)]
         return CustomGeoDataset(geometry)
 

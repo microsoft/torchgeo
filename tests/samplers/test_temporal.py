@@ -24,7 +24,8 @@ TMAX = Timestamp(2025, 4, 30)
 
 class TestRandomTimestampSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> RandomTimestampSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> RandomTimestampSampler:
         return RandomTimestampSampler(dataset)
 
     def test_iter(self, sampler: RandomTimestampSampler) -> None:
@@ -52,7 +53,8 @@ class TestRandomTimestampSampler:
 
 class TestSequentialTimestampSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> SequentialTimestampSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> SequentialTimestampSampler:
         return SequentialTimestampSampler(dataset)
 
     def test_iter(self, sampler: SequentialTimestampSampler) -> None:
@@ -80,7 +82,8 @@ class TestSequentialTimestampSampler:
 
 class TestRandomTimedeltaSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> RandomTimedeltaSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> RandomTimedeltaSampler:
         delta = Timedelta('1W')
         return RandomTimedeltaSampler(dataset, delta=delta)
 
@@ -109,7 +112,8 @@ class TestRandomTimedeltaSampler:
 
 class TestSequentialTimedeltaSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> SequentialTimedeltaSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> SequentialTimedeltaSampler:
         delta = Timedelta('1W')
         return SequentialTimedeltaSampler(dataset, delta=delta)
 
@@ -138,7 +142,8 @@ class TestSequentialTimedeltaSampler:
 
 class TestRandomPeriodSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> RandomPeriodSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> RandomPeriodSampler:
         return RandomPeriodSampler(dataset, freq='M', length=1)
 
     def test_iter(self, sampler: RandomPeriodSampler) -> None:
@@ -166,7 +171,8 @@ class TestRandomPeriodSampler:
 
 class TestSequentialPeriodSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> SequentialPeriodSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> SequentialPeriodSampler:
         return SequentialPeriodSampler(dataset, freq='M')
 
     def test_iter(self, sampler: SequentialPeriodSampler) -> None:

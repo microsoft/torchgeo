@@ -11,12 +11,11 @@ from typing import Any, Literal
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
 from einops import rearrange
 from timm.models.vision_transformer import Block
-from torch import Tensor, vmap
+from torch import Tensor, nn, vmap
+from torch.nn import init
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
@@ -60,7 +59,7 @@ def resize_abs_pos_embed(
             pos_embed[:, num_prefix_tokens:],
         )
     else:
-        posemb_prefix, pos_embed = None, pos_embed
+        posemb_prefix = None
 
     # Interpolate position embedding
     pos_embed = pos_embed.reshape(1, old_size[0], old_size[1], -1).permute(0, 3, 1, 2)
@@ -450,8 +449,6 @@ class CopernicusFM(nn.Module):
         self.hyper_dim = hyper_dim
         self.global_pool = global_pool
         if self.global_pool:
-            norm_layer = norm_layer
-            embed_dim = embed_dim
             self.fc_norm = norm_layer(embed_dim)
         else:
             self.norm = norm_layer(embed_dim)
@@ -760,7 +757,7 @@ def copernicusfm_base(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
 
         # Both fc_norm and head are generated dynamically

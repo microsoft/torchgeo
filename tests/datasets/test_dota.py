@@ -9,9 +9,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DOTA, DatasetNotFoundError
 
@@ -31,26 +31,44 @@ class TestDOTA:
         file_info = {
             'train': {
                 'images': {
-                    '1.0': {'filename': 'dotav1.0_images_train.tar.gz', 'md5': ''},
-                    '1.5': {'filename': 'dotav1.0_images_train.tar.gz', 'md5': ''},
-                    '2.0': {'filename': 'dotav2.0_images_train.tar.gz', 'md5': ''},
+                    '1.0': {'filename': 'dotav1.0_images_train.tar.gz', 'sha256': ''},
+                    '1.5': {'filename': 'dotav1.0_images_train.tar.gz', 'sha256': ''},
+                    '2.0': {'filename': 'dotav2.0_images_train.tar.gz', 'sha256': ''},
                 },
                 'annotations': {
-                    '1.0': {'filename': 'dotav1.0_annotations_train.tar.gz', 'md5': ''},
-                    '1.5': {'filename': 'dotav1.5_annotations_train.tar.gz', 'md5': ''},
-                    '2.0': {'filename': 'dotav2.0_annotations_train.tar.gz', 'md5': ''},
+                    '1.0': {
+                        'filename': 'dotav1.0_annotations_train.tar.gz',
+                        'sha256': '',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.5_annotations_train.tar.gz',
+                        'sha256': '',
+                    },
+                    '2.0': {
+                        'filename': 'dotav2.0_annotations_train.tar.gz',
+                        'sha256': '',
+                    },
                 },
             },
             'val': {
                 'images': {
-                    '1.0': {'filename': 'dotav1.0_images_val.tar.gz', 'md5': ''},
-                    '1.5': {'filename': 'dotav1.0_images_val.tar.gz', 'md5': ''},
-                    '2.0': {'filename': 'dotav2.0_images_val.tar.gz', 'md5': ''},
+                    '1.0': {'filename': 'dotav1.0_images_val.tar.gz', 'sha256': ''},
+                    '1.5': {'filename': 'dotav1.0_images_val.tar.gz', 'sha256': ''},
+                    '2.0': {'filename': 'dotav2.0_images_val.tar.gz', 'sha256': ''},
                 },
                 'annotations': {
-                    '1.0': {'filename': 'dotav1.0_annotations_val.tar.gz', 'md5': ''},
-                    '1.5': {'filename': 'dotav1.5_annotations_val.tar.gz', 'md5': ''},
-                    '2.0': {'filename': 'dotav2.0_annotations_val.tar.gz', 'md5': ''},
+                    '1.0': {
+                        'filename': 'dotav1.0_annotations_val.tar.gz',
+                        'sha256': '',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.5_annotations_val.tar.gz',
+                        'sha256': '',
+                    },
+                    '2.0': {
+                        'filename': 'dotav2.0_annotations_val.tar.gz',
+                        'sha256': '',
+                    },
                 },
             },
         }

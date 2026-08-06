@@ -61,7 +61,8 @@ class CustomTemporalSampler(TemporalSampler):
 
 class TestGeoSampler:
     @pytest.fixture(scope='class', params=[None, 5])
-    def sampler(self, dataset: GeoDataset, request: SubRequest) -> CustomGeoSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset, request: SubRequest) -> CustomGeoSampler:
         return CustomGeoSampler(dataset, length=request.param)
 
     def test_iter(self, sampler: CustomGeoSampler) -> None:
@@ -86,7 +87,8 @@ class TestGeoSampler:
 
 class TestSpatialSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> CustomSpatialSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> CustomSpatialSampler:
         return CustomSpatialSampler(dataset)
 
     def test_iter(self, sampler: CustomSpatialSampler) -> None:
@@ -131,7 +133,8 @@ class TestSpatialSampler:
 
 class TestTemporalSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> CustomTemporalSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> CustomTemporalSampler:
         return CustomTemporalSampler(dataset)
 
     def test_iter(self, sampler: CustomTemporalSampler) -> None:
@@ -175,24 +178,27 @@ class TestTemporalSampler:
 
 class TestSpatioTemporalSampler:
     @pytest.fixture(scope='class', params=['random', 'sequential'])
+    @classmethod
     def spatial_sampler(
-        self, dataset: GeoDataset, request: SubRequest
+        cls, dataset: GeoDataset, request: SubRequest
     ) -> CustomSpatialSampler:
         sampler = CustomSpatialSampler(dataset)
         sampler.strategy = request.param
         return sampler
 
     @pytest.fixture(scope='class', params=['random', 'sequential'])
+    @classmethod
     def temporal_sampler(
-        self, dataset: GeoDataset, request: SubRequest
+        cls, dataset: GeoDataset, request: SubRequest
     ) -> CustomTemporalSampler:
         sampler = CustomTemporalSampler(dataset)
         sampler.strategy = request.param
         return sampler
 
     @pytest.fixture(scope='class')
+    @classmethod
     def sampler(
-        self,
+        cls,
         spatial_sampler: CustomSpatialSampler,
         temporal_sampler: CustomTemporalSampler,
     ) -> SpatioTemporalSampler:

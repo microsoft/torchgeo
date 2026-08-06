@@ -7,11 +7,10 @@ import math
 from typing import Any
 
 import timm
-import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.v2 as T
 from einops import rearrange
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 # Note the images used are Sentinel-2 Cloudless RGB Mosaics from https://s2maps.eu/
@@ -256,7 +255,9 @@ def earthloc(
             'pretrained': False,
         }
         model = EarthLoc(*args, **kwargs)
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+        model.load_state_dict(
+            weights.get_state_dict(progress=True, weights_only=True), strict=True
+        )
     else:
         model = EarthLoc(*args, **kwargs)
 

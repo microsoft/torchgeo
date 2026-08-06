@@ -1,5 +1,5 @@
 model:
-  class_path: PixelwiseRegressionTask
+  class_path: PixelwiseRegression
   init_args:
     model: 'deeplabv3+'
     backbone: 'resnet18'

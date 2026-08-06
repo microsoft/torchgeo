@@ -20,7 +20,8 @@ from torchgeo.datasets import (
 
 class TestGBIF:
     @pytest.fixture(scope='class')
-    def dataset(self) -> GBIF:
+    @classmethod
+    def dataset(cls) -> GBIF:
         root = os.path.join('tests', 'data', 'gbif')
         return GBIF(root)
 

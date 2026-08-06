@@ -1,5 +1,5 @@
 model:
-  class_path: InstanceSegmentationTask
+  class_path: InstanceSegmentation
   init_args:
     model: 'mask-rcnn'
     backbone: 'resnet50'

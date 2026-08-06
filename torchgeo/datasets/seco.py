@@ -99,7 +99,7 @@ class SeasonalContrastS2(NonGeoDataset):
             AssertionError: if ``version`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert version in self.metadata.keys()
+        assert version in self.metadata
         assert seasons in range(5)
         for band in bands:
             assert band in self.all_bands

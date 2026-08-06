@@ -13,13 +13,12 @@ import pandas as pd
 import pytest
 import shapely
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.vrt import WarpedVRT
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -47,10 +46,12 @@ class CustomGeoDataset(GeoDataset):
         bounds: Sequence[
             tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]
         ] = [(0, 1, 2, 3, MINT, MAXT)],
-        crs: CRS = CRS.from_epsg(4087),
+        crs: CRS | None = None,
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
+        if crs is None:
+            crs = CRS.from_epsg(4087)
         data = {'filepath': ['file.tif'] * len(bounds)}
         geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
@@ -200,7 +201,7 @@ class TestGeoDataset:
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # ty: ignore[unsupported-operator]
 
@@ -563,6 +564,11 @@ class TestRasterDataset:
         ):
             RasterDataset(root)
 
+    def test_cmap(self) -> None:
+        root = os.path.join('tests', 'data', 'cdl')
+        ds = RasterDataset(root)
+        assert ds.cmap is not None
+
 
 class TestXarrayDataset:
     pytest.importorskip('rioxarray', minversion='0.14.1')
@@ -572,7 +578,8 @@ class TestXarrayDataset:
         scope='class',
         params=itertools.product(['hdf5', 'netcdf'], [None, CRS.from_epsg(4979)]),
     )
-    def dataset(self, request: SubRequest) -> XarrayDataset:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> XarrayDataset:
         root = os.path.join('tests', 'data', request.param[0])
         transforms = nn.Identity()
         match request.param[0]:
@@ -605,6 +612,10 @@ class TestXarrayDataset:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
+    def test_getitem_returns_source_data(self, dataset: XarrayDataset) -> None:
+        image = dataset[dataset.bounds]['image']
+        assert (image > 0).any()
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             XarrayDataset(tmp_path)
@@ -612,19 +623,22 @@ class TestXarrayDataset:
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomVectorDataset:
+    @classmethod
+    def dataset(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def dataset_parquet(self) -> CustomVectorParquetDataset:
+    @classmethod
+    def dataset_parquet(cls) -> CustomVectorParquetDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorParquetDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def multilabel(self) -> CustomVectorDataset:
+    @classmethod
+    def multilabel(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(
@@ -772,7 +786,8 @@ class TestVectorDataset:
 
 class TestNonGeoDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> NonGeoDataset:
+    @classmethod
+    def dataset(cls) -> NonGeoDataset:
         return CustomNonGeoDataset()
 
     def test_getitem(self, dataset: NonGeoDataset) -> None:
@@ -816,12 +831,14 @@ class TestNonGeoDataset:
 
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope='class')
-    def dataset(self, root: str) -> NonGeoClassificationDataset:
+    @classmethod
+    def dataset(cls, root: str) -> NonGeoClassificationDataset:
         transforms = nn.Identity()
         return NonGeoClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def root(self) -> str:
+    @classmethod
+    def root(cls) -> str:
         root = os.path.join('tests', 'data', 'nongeoclassification')
         return root
 
@@ -866,7 +883,8 @@ class TestNonGeoClassificationDataset:
 
 class TestIntersectionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> IntersectionDataset:
+    @classmethod
+    def dataset(cls) -> IntersectionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
@@ -893,7 +911,7 @@ class TestIntersectionDataset:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             IntersectionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
 
@@ -1142,7 +1160,8 @@ class TestIntersectionDataset:
 
 class TestUnionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> UnionDataset:
+    @classmethod
+    def dataset(cls) -> UnionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
@@ -1290,11 +1309,11 @@ class TestUnionDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomGeoDataset()
         msg = 'UnionDataset only supports GeoDatasets'
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds3)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds3, ds1)  # ty: ignore[invalid-argument-type]
 
     def test_invalid_index(self, dataset: UnionDataset) -> None:
