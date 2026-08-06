@@ -354,7 +354,7 @@ class TestObjectDetection:
         self, monkeypatch: MonkeyPatch
     ) -> None:
         patch_fake_rfdetr_configs(monkeypatch)
-        model = ObjectDetectionTask(
+        model = ObjectDetection(
             model='rf-detr-nano',
             num_classes=2,
             freeze_backbone=True,
@@ -392,7 +392,7 @@ class TestObjectDetection:
         self, monkeypatch: MonkeyPatch
     ) -> None:
         patch_fake_rfdetr_configs(monkeypatch)
-        model = ObjectDetectionTask(
+        model = ObjectDetection(
             model='rf-detr-nano', num_classes=2, pretrain_weights=None
         )
         error = ImportError('cached RF-DETR runtime error')

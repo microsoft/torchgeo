@@ -405,7 +405,7 @@ class ObjectDetection(BaseTask):
         if 'num_classes' in model_kwargs:
             raise ValueError(
                 'Do not pass num_classes through RF-DETR kwargs. '
-                'Use ObjectDetectionTask(num_classes=...), which TorchGeo '
+                'Use ObjectDetection(num_classes=...), which TorchGeo '
                 'interprets as including background.'
             )
 
