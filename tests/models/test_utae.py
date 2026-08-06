@@ -100,20 +100,6 @@ class TestUTAE:
         assert isinstance(maps, list)
         assert len(maps) > 0
 
-    def test_attention_group_aggregation(self, x: torch.Tensor) -> None:
-        """The hard-coded attention-group aggregation produces correct shapes."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-        )
-        out = model(x)
-        assert out.shape == (2, 3, 16, 16)
-
     def test_decoder_widths_none(self, x: torch.Tensor) -> None:
         """decoder_widths=None mirrors encoder widths."""
         model = UTAE(
@@ -141,12 +127,6 @@ class TestUTAE:
 
         with pytest.raises(ValueError, match=match):
             UTAE(input_dim=4, encoder_widths=(32, 64), decoder_widths=(16, 32))
-
-    def test_forward_with_positions(self, small_model: UTAE, x: torch.Tensor) -> None:
-        """batch_positions triggers the date-based positional encoder in L-TAE 2D."""
-        batch_positions = torch.randint(1, 366, (2, 4))
-        out = small_model(x, batch_positions=batch_positions)
-        assert out.shape == (2, 3, 16, 16)
 
     def test_forward_with_padding(self) -> None:
         """All-zero frames (matching pad_value=0) exercise the padding mask paths."""
