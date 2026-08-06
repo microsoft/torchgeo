@@ -3309,15 +3309,15 @@ name = "rfdetr"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
-    { name = "pydantic" },
-    { name = "pydeprecate" },
-    { name = "requests" },
-    { name = "supervision" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "tqdm" },
-    { name = "transformers" },
+    { name = "numpy", marker = "python_full_version < '3.14'" },
+    { name = "pydantic", marker = "python_full_version < '3.14'" },
+    { name = "pydeprecate", marker = "python_full_version < '3.14'" },
+    { name = "requests", marker = "python_full_version < '3.14'" },
+    { name = "supervision", marker = "python_full_version < '3.14'" },
+    { name = "torch", marker = "python_full_version < '3.14'" },
+    { name = "torchvision", marker = "python_full_version < '3.14'" },
+    { name = "tqdm", marker = "python_full_version < '3.14'" },
+    { name = "transformers", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/69/7a/81011b281c9270740550649311bd6441bc320deb5c5e533ff4ad05eee86a/rfdetr-1.9.1.tar.gz", hash = "sha256:f85469808d370defe75975df3256b0067cf4479dbc5cb995ff5c2826c3f81e17", size = 444536, upload-time = "2026-08-04T12:47:19.558Z" }
 wheels = [
@@ -3832,7 +3832,7 @@ name = "tokenizers"
 version = "0.22.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "huggingface-hub" },
+    { name = "huggingface-hub", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/73/6f/f80cfef4a312e1fb34baf7d85c72d4411afde10978d4657f8cdd811d3ccc/tokenizers-0.22.2.tar.gz", hash = "sha256:473b83b915e547aa366d1eee11806deaf419e17be16310ac0a14077f1e28f917", size = 372115, upload-time = "2026-01-05T10:45:15.988Z" }
 wheels = [
@@ -3938,7 +3938,7 @@ all = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-socket" },
-    { name = "rfdetr" },
+    { name = "rfdetr", marker = "python_full_version < '3.14'" },
     { name = "rioxarray" },
     { name = "ruff" },
     { name = "scipy" },
@@ -3976,7 +3976,7 @@ docs = [
 models = [
     { name = "microsoft-aurora" },
     { name = "olmoearth-pretrain-minimal" },
-    { name = "rfdetr" },
+    { name = "rfdetr", marker = "python_full_version < '3.14'" },
     { name = "supervision" },
 ]
 style = [
@@ -4028,7 +4028,7 @@ requires-dist = [
     { name = "pytest-socket", marker = "extra == 'tests'", specifier = ">=0.3.4" },
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "requests", specifier = ">=2.25" },
-    { name = "rfdetr", marker = "extra == 'models'", specifier = ">=1.9.1" },
+    { name = "rfdetr", marker = "python_full_version < '3.14' and extra == 'models'", specifier = ">=1.9.1" },
     { name = "rioxarray", marker = "extra == 'datasets'", specifier = ">=0.14.1" },
     { name = "ruff", marker = "extra == 'style'", specifier = ">=0.16" },
     { name = "scipy", marker = "extra == 'datasets'", specifier = ">=1.11.2" },
@@ -4146,15 +4146,15 @@ name = "transformers"
 version = "5.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "huggingface-hub" },
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pyyaml" },
-    { name = "regex" },
-    { name = "safetensors" },
-    { name = "tokenizers" },
-    { name = "tqdm" },
-    { name = "typer" },
+    { name = "huggingface-hub", marker = "python_full_version < '3.14'" },
+    { name = "numpy", marker = "python_full_version < '3.14'" },
+    { name = "packaging", marker = "python_full_version < '3.14'" },
+    { name = "pyyaml", marker = "python_full_version < '3.14'" },
+    { name = "regex", marker = "python_full_version < '3.14'" },
+    { name = "safetensors", marker = "python_full_version < '3.14'" },
+    { name = "tokenizers", marker = "python_full_version < '3.14'" },
+    { name = "tqdm", marker = "python_full_version < '3.14'" },
+    { name = "typer", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fc/1a/70e830d53ecc96ce69cfa8de38f163712d2b43ac52fbd743f39f56025c31/transformers-5.3.0.tar.gz", hash = "sha256:009555b364029da9e2946d41f1c5de9f15e6b1df46b189b7293f33a161b9c557", size = 8830831, upload-time = "2026-03-04T17:41:46.119Z" }
 wheels = [

@@ -134,7 +134,8 @@ models = [
     # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
     "olmoearth-pretrain-minimal>=0.0.2",
     # RF-DETR 1.9.1+ required for object detection support
-    "rfdetr>=1.9.1",
+    # RF-DETR depends on tokenizers, which does not provide Python 3.14t wheels
+    "rfdetr>=1.9.1; python_version<'3.14'",
     # supervision 0.30+ required for RF-DETR 1.9.1 compatibility
     "supervision>=0.30.0",
 ]
