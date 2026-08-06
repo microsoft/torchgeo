@@ -136,8 +136,6 @@ models = [
     # RF-DETR 1.9.1+ required for object detection support
     # RF-DETR depends on tokenizers, which does not provide Python 3.14t wheels
     "rfdetr>=1.9.1; python_version<'3.14'",
-    # supervision 0.30+ required for RF-DETR 1.9.1 compatibility
-    "supervision>=0.30.0",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
