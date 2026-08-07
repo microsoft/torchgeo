@@ -68,7 +68,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/7c5ef3454d9b1cccfa7ccde0c01fc8f00a45909a/'
     filename = 'UCMerced_LandUse.zip'
-    md5 = '5b7ec56793786b6dc8a908e8854ac0e4'
+    sha256 = '06c539ef28703a58fb07bd2837991ac7c48b813b00bb12ac197efd813a18daeb'
 
     base_dir = os.path.join('UCMerced_LandUse', 'Images')
 
@@ -78,10 +78,10 @@ class UCMerced(NonGeoClassificationDataset):
         'val': 'uc_merced-val.txt',
         'test': 'uc_merced-test.txt',
     }
-    split_md5s: ClassVar[dict[str, str]] = {
-        'train': 'f2fb12eb2210cfb53f93f063a35ff374',
-        'val': '11ecabfc52782e5ea6a9c7c0d263aca0',
-        'test': '046aff88472d8fc07c4678d03749e28d',
+    split_sha256s: ClassVar[dict[str, str]] = {
+        'train': 'd625ea884cb2870e007774c1d64e904e9ae71ba3e7b4b92a9e8aa6065e2cd8cc',
+        'val': '4459da518e2c1486471b4ea57734950c9c7c449611fe3468c0d1ca34a4bd3a56',
+        'test': '0d3b64706fd2a9f9faaa1d7dade934ec8b4fd258a9853f037983b1f2db239220',
     }
 
     def __init__(
@@ -100,7 +100,7 @@ class UCMerced(NonGeoClassificationDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -143,10 +143,11 @@ class UCMerced(NonGeoClassificationDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset files are found and/or MD5s match, else False
+            True if dataset files are found and/or checksums match, else False
         """
         integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
+            os.path.join(self.root, self.filename),
+            sha256=self.sha256 if self.checksum else None,
         )
         return integrity
 
@@ -173,13 +174,15 @@ class UCMerced(NonGeoClassificationDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-            self.url + self.filename, self.root, md5=self.md5 if self.checksum else None
+            self.url + self.filename,
+            self.root,
+            sha256=self.sha256 if self.checksum else None,
         )
         for split in self.splits:
             download_url(
                 self.url + self.split_filenames[split],
                 self.root,
-                md5=self.split_md5s[split] if self.checksum else None,
+                sha256=self.split_sha256s[split] if self.checksum else None,
             )
 
     def _extract(self) -> None:

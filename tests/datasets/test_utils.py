@@ -12,15 +12,23 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
+import rasterio
 import torch
+from affine import Affine
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
+from rasterio import MemoryFile
+from rasterio.transform import from_origin
+from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon, box
 from torch import Tensor
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     Sample,
+    _binary_mask_to_polygon,
+    _clean_binary_mask,
     array_to_tensor,
     check_integrity,
     concat_samples,
@@ -29,6 +37,7 @@ from torchgeo.datasets.utils import (
     download_url,
     extract_archive,
     find_files,
+    get_valid_footprint_from_datasource,
     lazy_import,
     merge_samples,
     pad_across_batches,
@@ -40,8 +49,8 @@ from torchgeo.datasets.utils import (
     working_dir,
 )
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 @pytest.mark.filterwarnings(
@@ -50,7 +59,7 @@ MAXT = datetime(2025, 4, 25)
 class TestBoundingBox:
     def test_repr_str(self) -> None:
         bbox = BoundingBox(0, 1, 2.0, 3.0, MINT, MAXT)
-        expected = 'BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=datetime.datetime(2025, 4, 24, 0, 0), maxt=datetime.datetime(2025, 4, 25, 0, 0))'
+        expected = "BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=Timestamp('2025-04-24 00:00:00'), maxt=Timestamp('2025-04-25 00:00:00'))"
         assert repr(bbox) == expected
         assert str(bbox) == expected
 
@@ -91,14 +100,9 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
             ((0.5, 1.5, 2, 3, MINT, MAXT), False),
             ((2, 3, 0.5, 1.5, MINT, MAXT), False),
             ((2, 3, 2, 3, MINT, MAXT), False),
@@ -126,14 +130,9 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
             ((0.5, 1.5, 2, 3, MINT, MAXT), (0, 1.5, 0, 3, MINT, MAXT)),
             ((2, 3, 0.5, 1.5, MINT, MAXT), (0, 3, 0, 1.5, MINT, MAXT)),
             ((2, 3, 2, 3, MINT, MAXT), (0, 3, 0, 3, MINT, MAXT)),
@@ -165,10 +164,6 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
         ],
@@ -187,7 +182,7 @@ class TestBoundingBox:
         'test_input',
         [
             # No overlap
-            (0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)),
+            (0.5, 1.5, 0.5, 1.5, pd.Timestamp(2025, 4, 26), pd.Timestamp(2025, 4, 27)),
             (0.5, 1.5, 2, 3, MINT, MAXT),
             (2, 3, 0.5, 1.5, MINT, MAXT),
             (2, 3, 2, 3, MINT, MAXT),
@@ -211,11 +206,11 @@ class TestBoundingBox:
             ((0, 1, 0, 1, MINT, MAXT), 1),
             ((0, 2, 0, 3, MINT, MAXT), 6),
             # Plane
-            ((0, 0, 0, 1, MINT, MAXT), 0),
+            ((0, 1, 0, 1, MINT, MINT), 1),
             # Line
-            ((0, 0, 0, 0, MINT, MAXT), 0),
+            ((0, 1, 0, 0, MINT, MINT), 0),
             # Point
-            ((0, 0, 0, 0, MINT, MAXT), 0),
+            ((0, 0, 0, 0, MINT, MINT), 0),
         ],
     )
     def test_area(
@@ -233,11 +228,11 @@ class TestBoundingBox:
             ((0, 1, 0, 1, MINT, MAXT), timedelta(days=1)),
             ((0, 2, 0, 3, MINT, MAXT), timedelta(days=6)),
             # Plane
-            ((0, 0, 0, 1, MINT, MAXT), timedelta(days=0)),
+            ((0, 1, 0, 1, MINT, MINT), timedelta(days=0)),
             # Line
-            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
+            ((0, 1, 0, 0, MINT, MINT), timedelta(days=0)),
             # Point
-            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
+            ((0, 0, 0, 0, MINT, MINT), timedelta(days=0)),
         ],
     )
     def test_volume(
@@ -261,14 +256,20 @@ class TestBoundingBox:
             # One corner of bbox1 within bbox2
             ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
             ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
-            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
-            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
-            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
-            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
             ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)), False),
+            (
+                (
+                    0.5,
+                    1.5,
+                    0.5,
+                    1.5,
+                    pd.Timestamp(2025, 4, 26),
+                    pd.Timestamp(2025, 4, 27),
+                ),
+                False,
+            ),
             ((0.5, 1.5, 2, 3, MINT, MAXT), False),
             ((2, 3, 0.5, 1.5, MINT, MAXT), False),
             ((2, 3, 2, 3, MINT, MAXT), False),
@@ -419,62 +420,62 @@ def test_download_and_extract_archive(tmp_path: Path) -> None:
         (
             '2021',
             '%Y',
-            datetime(2021, 1, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 1, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09',
             '%Y-%m',
-            datetime(2021, 9, 1, 0, 0, 0, 0),
-            datetime(2021, 9, 30, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 9, 30, 23, 59, 59, 999999),
         ),
         (
             'Dec 21',
             '%b %y',
-            datetime(2021, 12, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 12, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13',
             '%Y-%m-%d',
-            datetime(2021, 9, 13, 0, 0, 0, 0),
-            datetime(2021, 9, 13, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 0, 0, 0, 0),
+            pd.Timestamp(2021, 9, 13, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13 17',
             '%Y-%m-%d %H',
-            datetime(2021, 9, 13, 17, 0, 0, 0),
-            datetime(2021, 9, 13, 17, 59, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 0, 0, 0),
+            pd.Timestamp(2021, 9, 13, 17, 59, 59, 999999),
         ),
         (
             '2021-09-13 17:21',
             '%Y-%m-%d %H:%M',
-            datetime(2021, 9, 13, 17, 21, 0, 0),
-            datetime(2021, 9, 13, 17, 21, 59, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 0, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 59, 999999),
         ),
         (
             '2021-09-13 17:21:53',
             '%Y-%m-%d %H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0),
-            datetime(2021, 9, 13, 17, 21, 53, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021-09-13 17:21:53:000123',
             '%Y-%m-%d %H:%M:%S:%f',
-            datetime(2021, 9, 13, 17, 21, 53, 123),
-            datetime(2021, 9, 13, 17, 21, 53, 123),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 123),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 123),
         ),
         (
             '2021-09-13%2017:21:53',
             '%Y-%m-%d%%20%H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0),
-            datetime(2021, 9, 13, 17, 21, 53, 999999),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 0),
+            pd.Timestamp(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021%m',
             '%Y%%m',
-            datetime(2021, 1, 1, 0, 0, 0, 0),
-            datetime(2021, 12, 31, 23, 59, 59, 999999),
+            pd.Timestamp(2021, 1, 1, 0, 0, 0, 0),
+            pd.Timestamp(2021, 12, 31, 23, 59, 59, 999999),
         ),
     ],
 )
@@ -692,3 +693,89 @@ class TestFindFiles:
         """A path that does not exist inside an archive resolves to nothing."""
         _, archive = temp_archive
         assert find_files(f'/vsizip/{archive}/non_existing.tif') == []
+
+
+@pytest.mark.parametrize(
+    'res',
+    [
+        10.0,  # meters (e.g. UTM)
+        0.0001,  # degrees (e.g. WGS84)
+    ],
+)
+@pytest.mark.parametrize('north_up', [True, False])
+def test_binary_mask_to_polygon(res: float, north_up: bool) -> None:
+    # Left half valid, right half nodata.
+    image_shape = (100, 100)
+    mask = np.zeros(image_shape, dtype=np.uint8)
+    mask[:, :50] = 255
+    y_res = -res if north_up else res
+    transform = Affine(res, 0.0, 0.0, 0.0, y_res, 0.0)
+
+    footprint = _binary_mask_to_polygon(mask, transform, res)
+
+    assert isinstance(footprint, Polygon | MultiPolygon)
+    assert footprint.is_valid
+    # The straight nodata edge yields an exact rectangle covering half the extent.
+    expected_area = (image_shape[0] * res) * (image_shape[1] * res) / 2
+    assert footprint.area == expected_area
+
+
+# A Sentinel-2 tile whose fake data includes a nodata corner.
+# The .SAFE format omits the nodata value from the raster profile,
+# so we declare it via a WarpedVRT.
+SENTINEL2_TILE = os.path.join(
+    'tests/data/sentinel2',
+    'S2A_MSIL1C_20220412T162841_N0400_R083_T16TFM_20220412T202300.SAFE',
+    'GRANULE/L1C_T16TFM_A035544_20220412T163959/IMG_DATA',
+    'T16TFM_20220412T162841_B02.jp2',
+)
+
+
+def test_get_valid_footprint_all_valid() -> None:
+    # When nodata value is not declared in the raster,
+    # every pixel is valid and the calculated footprint becomes its bounds.
+    with rasterio.open(SENTINEL2_TILE) as dataset:
+        footprint = get_valid_footprint_from_datasource(dataset)
+        assert footprint.equals(box(*dataset.bounds))
+
+
+def test_get_valid_footprint_partial_nodata() -> None:
+    # The .SAFE profile omits the nodata value, so we declare it via src_nodata
+    with (
+        rasterio.open(SENTINEL2_TILE) as raster,
+        WarpedVRT(raster, src_nodata=0) as dataset,
+    ):
+        # _clean_binary_mask's 3D read_masks OR-combine must match the 2D dataset_mask.
+        assert np.array_equal(
+            _clean_binary_mask(dataset.dataset_mask()),
+            _clean_binary_mask(dataset.read_masks()),
+        )
+
+        footprint = get_valid_footprint_from_datasource(dataset)
+        assert isinstance(footprint, Polygon | MultiPolygon)
+        assert footprint.is_valid
+
+        bounds = box(*dataset.bounds)
+        # The footprint must not extend beyond the raster bounds.
+        assert bounds.covers(footprint)
+        # The nodata corner removes ~1/8 of the tile, leaving ~7/8 valid.
+        assert footprint.area / bounds.area == pytest.approx(7 / 8, abs=0.02)
+
+
+def test_get_valid_footprint_all_nodata_warns() -> None:
+    # Real acquisitions are never entirely nodata, so build a small all-nodata raster.
+    with MemoryFile() as memfile:
+        with memfile.open(
+            driver='GTiff',
+            height=4,
+            width=4,
+            count=1,
+            dtype='uint8',
+            transform=from_origin(0, 40, 10, 10),
+            nodata=0,
+        ) as dataset:
+            dataset.write(np.zeros((1, 4, 4), dtype=np.uint8))
+        with rasterio.open(memfile.name) as dataset:
+            with pytest.warns(UserWarning, match='All pixels are nodata'):
+                footprint = get_valid_footprint_from_datasource(dataset)
+            assert footprint.is_empty

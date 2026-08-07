@@ -284,7 +284,7 @@ class EnviroAtlas(GeoDataset):
         """
         for split in splits:
             assert split in self.splits
-        assert all([layer in self.valid_layers for layer in layers])
+        assert all(layer in self.valid_layers for layer in layers)
         self.root = root
         self.layers = layers
         self.transforms = transforms

@@ -180,7 +180,7 @@ class AgriFieldNet(IntersectionDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        classes: list[int] = list(AgriFieldNetMask.valid_classes),
+        classes: list[int] | None = None,
         bands: Sequence[str] = AgriFieldNetImage.all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
@@ -214,6 +214,8 @@ class AgriFieldNet(IntersectionDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
+        if classes is None:
+            classes = list(AgriFieldNetMask.valid_classes)
         assert set(classes) <= set(AgriFieldNetMask.valid_classes), (
             f'Only the following classes are valid: {AgriFieldNetMask.valid_classes}.'
         )

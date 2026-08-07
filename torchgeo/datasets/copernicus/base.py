@@ -49,8 +49,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def url(self) -> str:
         """Download URL."""
 
-    #: MD5 checksum.
-    md5: str
+    #: SHA256 checksum.
+    sha256: str
 
     #: Zip file name.
     zipfile: str
@@ -95,7 +95,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -202,8 +202,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        md5 = self.md5 if self.checksum else None
-        download_and_extract_archive(self.url, self.root, md5=md5)
+        sha256 = self.sha256 if self.checksum else None
+        download_and_extract_archive(self.url, self.root, sha256=sha256)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

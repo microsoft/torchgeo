@@ -477,8 +477,8 @@ class CDL(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2023],
-        classes: list[int] = list(valid_classes),
+        years: list[int] | None = None,
+        classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -518,6 +518,10 @@ class CDL(RasterDataset):
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
+        if classes is None:
+            classes = list(self.valid_classes)
+        if years is None:
+            years = [2023]
         assert set(years) <= self.md5s.keys(), (
             'CDL data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'
