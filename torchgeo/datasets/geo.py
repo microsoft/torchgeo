@@ -820,7 +820,7 @@ class RasterDataset(GeoDataset):
 
         .. versionadded:: 0.10
         """
-        return None
+        return
 
 
 class XarrayDataset(GeoDataset):
