@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +15,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, Sample, quantile_normalization, which
+from .utils import GeoSlice, Path, Sample, find_files, quantile_normalization, which
 
 
 class AgriFieldNetImage(RasterDataset):
@@ -269,7 +268,7 @@ class AgriFieldNet(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the files already exist
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the user requested to download the dataset
@@ -281,11 +280,9 @@ class AgriFieldNet(IntersectionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-        os.makedirs(paths, exist_ok=True)
+        os.makedirs(self._download_root_path, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', self._download_root_path, '--recursive=true')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

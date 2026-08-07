@@ -10,7 +10,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Literal, NotRequired, TypedDict, cast
+from typing import Literal, NotRequired, TypedDict
 
 import matplotlib.pyplot as plt
 import rasterio
@@ -280,10 +280,9 @@ class OpenAerialMap(RasterDataset):
             True if download is attempted, False if skipped due to missing imagery
             or existing local tiles.
         """
-        root = cast(str | os.PathLike[str], self.paths)
+        root = self._download_root_path
 
-        if isinstance(root, (str, os.PathLike)):
-            os.makedirs(root, exist_ok=True)
+        os.makedirs(root, exist_ok=True)
 
         existing = glob.glob(os.path.join(root, self.filename_glob))
         if existing:
@@ -405,7 +404,7 @@ class OpenAerialMap(RasterDataset):
             tiles_url: URL template for tiles
             tile: mercantile tile to download
         """
-        root = cast(str | os.PathLike[str], self.paths)
+        root = self._download_root_path
 
         url = (
             tiles_url.replace('{z}', str(tile.z))

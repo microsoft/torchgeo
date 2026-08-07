@@ -315,7 +315,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
         .. versionadded:: 0.5
         """
         if isinstance(self.paths, str | os.PathLike):
-            paths: Iterable[Path] = [cast(Path, self.paths)]
+            paths: list[Path] = [cast(Path, self.paths)]
         else:
             paths = self.paths
 
@@ -325,14 +325,36 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
             found = set(find_files(path, self.filename_glob))
             if found:
                 files.update(found)
-            elif not os.path.isdir(path) and not hasattr(self, 'download'):
+            elif not os.path.isdir(path):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
                     f'Path was ignored.',
                     UserWarning,
                 )
+        if len(files) == 0:
+            raise DatasetNotFoundError(self)
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
+
+    @functools.cached_property
+    def _download_root_path(self) -> Path:
+        """Single root path used as the destination for download operations.
+
+        Returns:
+            The root path to download into.
+        """
+        if isinstance(self.paths, str | os.PathLike):
+            return cast(Path, self.paths)
+        # Cast is safe: __init__ normalises self.paths to list[Path], so
+        # indexing is always valid at runtime. The correct type for paths is Sequence.
+        # A broader refactor for this should happen in a different PR.
+        paths = cast(Sequence[Path], self.paths)
+        warnings.warn(
+            f'{self.__class__.__name__} only supports a single path for download; '
+            f'using {paths[0]!r}.',
+            UserWarning,
+        )
+        return paths[0]
 
 
 class RasterDataset(GeoDataset):

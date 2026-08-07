@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -196,7 +196,7 @@ class L8Biome(IntersectionDataset):
         if not isinstance(self.paths, str | os.PathLike):
             return
 
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
 
         for classname in [L8BiomeImage, L8BiomeMask]:
             pathname = os.path.join(paths, '**', classname.filename_glob)
@@ -221,18 +221,16 @@ class L8Biome(IntersectionDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for biome, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(biome), paths, sha246=sha256 if self.checksum else None
+                self.url.format(biome),
+                self._download_root_path,
+                sha246=sha256 if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-        pathname = os.path.join(paths, '*.tar.gz')
+        pathname = os.path.join(self._download_root_path, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 

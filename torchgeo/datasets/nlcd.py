@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive, find_files
 
 
 class NLCD(RasterDataset):
@@ -489,13 +489,12 @@ class NLCD(RasterDataset):
 
     def _verify(self) -> None:
         # Check if the extracted files already exist
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
         for year in self.years:
             pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):
@@ -517,23 +516,19 @@ class NLCD(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                paths,
+                self._download_root_path,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
-            pathname = os.path.join(paths, zipfile_name)
-            extract_archive(pathname, paths)
+            pathname = os.path.join(self._download_root_path, zipfile_name)
+            extract_archive(pathname, self._download_root_path)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

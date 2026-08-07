@@ -3,9 +3,8 @@
 
 """Northeastern China Crop Map Dataset."""
 
-import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -14,7 +13,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url
+from .utils import GeoSlice, Path, Sample, download_url, find_files
 
 
 class NCCM(RasterDataset):
@@ -152,7 +151,7 @@ class NCCM(RasterDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the files already exist
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the user requested to download the dataset
@@ -164,12 +163,10 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.urls[year],
-                paths,
+                self._download_root_path,
                 filename=self.fnames[year],
                 md5=self.md5s[year] if self.checksum else None,
             )

@@ -360,9 +360,7 @@ class OpenBuildings(VectorDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-        pathname = os.path.join(paths, self.zipfile_glob)
+        pathname = os.path.join(self._download_root_path, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)

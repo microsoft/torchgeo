@@ -11,7 +11,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, Sample
+from .utils import Path, Sample, find_files
 
 
 class AsterGDEM(RasterDataset):
@@ -90,7 +90,7 @@ class AsterGDEM(RasterDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exists
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         raise DatasetNotFoundError(self)

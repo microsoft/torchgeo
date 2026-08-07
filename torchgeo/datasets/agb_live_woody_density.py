@@ -6,7 +6,6 @@
 import json
 import os
 from collections.abc import Callable, Iterable
-from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -14,7 +13,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, Sample, download_url
+from .utils import Path, Sample, download_url, find_files
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -102,7 +101,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the user requested to download the dataset
@@ -114,17 +113,15 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-        download_url(self.url, paths, self.base_filename)
+        download_url(self.url, self._download_root_path, self.base_filename)
 
-        with open(os.path.join(paths, self.base_filename)) as f:
+        with open(os.path.join(self._download_root_path, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content['features']:
             download_url(
                 item['properties']['Mg_px_1_download'],
-                paths,
+                self._download_root_path,
                 item['properties']['tile_id'] + '.tif',
             )
 

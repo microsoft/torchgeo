@@ -6,7 +6,6 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import GeoSlice, Path, Sample, quantile_normalization, which
+from .utils import GeoSlice, Path, Sample, find_files, quantile_normalization, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -221,15 +220,13 @@ class SouthAfricaCropType(RasterDataset):
                     imagery_dates[field_id][band_type] = date
 
         # Create Tensors for each band using stored dates
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
                 filepath = os.path.join(
-                    paths,
+                    self._download_root_path,
                     'train',
                     'imagery',
                     band_type,
@@ -245,7 +242,7 @@ class SouthAfricaCropType(RasterDataset):
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
-                paths, 'train', 'labels', f'{field_id}.tif'
+                self._download_root_path, 'train', 'labels', f'{field_id}.tif'
             )
             mask_filepaths.append(file_path)
 
@@ -267,7 +264,7 @@ class SouthAfricaCropType(RasterDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the files already exist
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the user requested to download the dataset
@@ -279,11 +276,9 @@ class SouthAfricaCropType(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
-        os.makedirs(paths, exist_ok=True)
+        os.makedirs(self._download_root_path, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', self._download_root_path, '--recursive=true')
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

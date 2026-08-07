@@ -287,11 +287,15 @@ class TestGeoDataset:
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
         paths = [tmp_path, tmp_path / 'non_existing_file.tif']
-        with pytest.warns(UserWarning, match='Path was ignored.'):
-            assert len(CustomGeoDataset(paths=paths).files) == 0
+        with (
+            pytest.warns(UserWarning, match='Path was ignored.'),
+            pytest.raises(DatasetNotFoundError),
+        ):
+            _ = CustomGeoDataset(paths=paths).files
 
-    def test_files_property_empty_dir_no_warning(self, tmp_path: Path) -> None:
-        assert len(CustomGeoDataset(paths=[tmp_path]).files) == 0
+    def test_files_property_empty_dir_raises(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError):
+            _ = CustomGeoDataset(paths=[tmp_path]).files
 
     def test_files_property_ordered(self, tmp_path: Path) -> None:
         """Ensure that the list of files is ordered."""
@@ -323,6 +327,16 @@ class TestGeoDataset:
         bar.touch()
         ds = CustomGeoDataset(paths=[str(foo), bar])
         assert ds.files == [str(bar), str(foo)]
+
+    def test_download_root_path_single(self) -> None:
+        ds = CustomGeoDataset(paths='foo')
+        assert ds._download_root_path == 'foo'
+
+    def test_download_root_path_multiple_warns(self) -> None:
+        # Multiple paths can't all be a download destination: warn and use the first.
+        ds = CustomGeoDataset(paths=['foo', 'bar'])
+        with pytest.warns(UserWarning, match='only supports a single path'):
+            assert ds._download_root_path == 'foo'
 
     @pytest.mark.parametrize(
         'temp_archive',

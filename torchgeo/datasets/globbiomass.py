@@ -7,7 +7,7 @@ import glob
 import os
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -25,6 +25,7 @@ from .utils import (
     check_integrity,
     disambiguate_timestamp,
     extract_archive,
+    find_files,
 )
 
 
@@ -238,12 +239,11 @@ class GlobBiomass(RasterDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
-        if self.files:
+        if find_files(self._download_root_path, self.filename_glob):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str | os.PathLike)
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
         pathname = os.path.join(paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
