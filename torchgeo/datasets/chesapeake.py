@@ -415,7 +415,7 @@ class ChesapeakeCVPRHelper(RasterDataset):
 
         Args:
             paths: directory, where dataset is located
-            layer: data layers to load
+            layer: data layer to load
             *args: optional arguments
             **kwargs: optional keyword arguments
         """
