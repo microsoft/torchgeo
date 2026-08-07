@@ -3,7 +3,9 @@
 
 """Cheasapeake Bay Program Land Use/Land Cover Data Project datasets."""
 
+import functools
 import glob
+import operator
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
@@ -11,12 +13,13 @@ from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
 from .errors import DatasetNotFoundError
-from .geo import GeoDataset, RasterDataset
+from .geo import RasterDataset, UnionDataset
 from .nlcd import NLCD
 from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
@@ -428,7 +431,7 @@ class ChesapeakeCVPRHelper(RasterDataset):
         super().__init__(paths, *args, **kwargs)
 
 
-class ChesapeakeCVPR(GeoDataset):
+class ChesapeakeCVPR(UnionDataset):
     """CVPR 2019 Chesapeake Land Cover dataset.
 
     The `CVPR 2019 Chesapeake Land Cover
@@ -577,9 +580,9 @@ class ChesapeakeCVPR(GeoDataset):
             AssertionError: if ``splits`` or ``layers`` are not valid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        for split in splits:
-            assert split in self.splits
-        assert all([layer in self.valid_layers for layer in layers])
+        assert set(splits) <= set(self.splits)
+        assert set(layers) <= set(self.valid_layers)
+
         self.root = root
         self.layers = layers
         self.transforms = transforms
@@ -592,46 +595,21 @@ class ChesapeakeCVPR(GeoDataset):
         split_datasets = []
         for split in splits:
             state, split_type = split.split('-')
-            structure = os.path.join(self.root, '**', f'{state}_*-{split_type}_tiles')
-            all_dir = glob.glob(structure, recursive=True)
-            state_dir = str(all_dir[0])
-            split_dataset = ChesapeakeCVPRHelper(
-                paths=state_dir, layer=self.layers[0], cache=self.cache
-            )
-            for layer in self.layers[1:]:
-                new_part = ChesapeakeCVPRHelper(
-                    paths=state_dir, layer=layer, cache=self.cache
-                )
-                split_dataset &= new_part
-                split_dataset.index = split_dataset.index[['geometry']]
-            split_datasets.append(split_dataset)
-        self.datasets = split_datasets[0]
-        for dataset in split_datasets[1:]:
-            self.datasets |= dataset
-        self.index = self.datasets.index
+            directory = os.path.join(self.root, '**', f'{state}_*-{split_type}_tiles')
+            directory = glob.glob(directory, recursive=True)[0]
 
-    def __getitem__(self, index: GeoSlice) -> Sample:
-        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+            layer_datasets = []
+            for layer in self.layers:
+                dataset = ChesapeakeCVPRHelper(directory, layer, cache=self.cache)
+                layer_datasets.append(dataset)
 
-        Args:
-            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            dataset = functools.reduce(operator.and_, layer_datasets)
+            split_datasets.append(dataset)
 
-        Returns:
-            Sample of input, target, and/or metadata at that index.
-
-        Raises:
-            IndexError: If *index* is not found in the dataset.
-        """
-        sample = self.datasets[index]
-        if 'image' in sample:
-            sample['image'] = sample['image'].float()
-        if 'mask' in sample:
-            sample['mask'] = sample['mask'].squeeze(0)
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        dataset = functools.reduce(operator.or_, split_datasets)
+        self.index = dataset.index
+        self.datasets = dataset.datasets
+        self.collate_fn = dataset.collate_fn
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
