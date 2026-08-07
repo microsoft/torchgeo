@@ -23,7 +23,7 @@ class GlobalMangroveWatch(RasterDataset):
     """Global Mangrove Watch (GMW) dataset.
 
     The `Global Mangrove Watch
-    <https://www.globalmangrovewatch.org>`_ Version 3.0 dataset provides maps of global
+    <https://www.globalmangrovewatch.org>`__ Version 3.0 dataset provides maps of global
     mangrove extent for eleven epochs between 1996 and 2020, derived from
     L-band Synthetic Aperture Radar (SAR) and optical (Landsat) satellite data.
 
@@ -37,7 +37,6 @@ class GlobalMangroveWatch(RasterDataset):
     Dataset format:
 
     * single-channel uint8 GeoTIFFs, one ZIP archive per epoch
-    * 0 is used as the nodata value
 
     Dataset classes:
 
@@ -74,21 +73,21 @@ class GlobalMangroveWatch(RasterDataset):
         2020,
     )
 
-    md5s: ClassVar[dict[int, str]] = {
-        1996: '7bc81d3aa514d3db5da61e20a36670ca',
-        2007: '4d14ca9a5ce2ae605623a1fdcf01d2ef',
-        2008: '2643d1b88618da62742dd3ba75fbe4ae',
-        2009: '650d969fed2bf85f794db97ff92237a5',
-        2010: '99aa8a3c627cd580495ddc2e776385ed',
-        2015: 'bf5c888e78db0ce62c86d0bfd2e56b4f',
-        2016: '0bc2c9eacf36d9b67aa3a50265a7b74e',
-        2017: '9aea4660e3a40e5c3a9ff21de4d8bba6',
-        2018: '6bda7daf2b7a3f31451c2d2713d3318b',
-        2019: 'd3017880056c6045305b0631058c8cc7',
-        2020: 'c85f7528de7df83e5701f3b162ac37b4',
+    sha256s: ClassVar[dict[int, str]] = {
+        1996: '00923d94d3861bb847faf0a91311d39d49242e824f63672e4dbec514df9e46c9',
+        2007: 'f150c316f682de58cb58e7d32834472d889a0ff709b66a5b9a82b9bea8a05d9b',
+        2008: 'bf73e12e50c085a1bf6093d99b5b76abf85fc6c0c5925ac302bc555db114d635',
+        2009: '8850e43e2455d73cea10a09d1bf14445c83f8eb0c4c89b1dfacd8030c7470c15',
+        2010: '5da7f9d1bfd28aa2002db36153ef7407abb4926fb96474eb3647b4df070f1e15',
+        2015: '7c8945377261c5ef37fd5a3e3a791d4c48ad0b10c7e81feabc605b569ae08166',
+        2016: 'c02e04a88cbf83bc74ee7e99e42c7902b27183505d525d93c5170d2049ae5a7f',
+        2017: 'bf9fb170d147b0fa9b6d2e67c644c09427394207416ab240932bcca6b426548b',
+        2018: 'b65fe68ce921c2e4e3ef199b3ec9e840231ef33cdecf768252eaa33286bbe720',
+        2019: '5a6e31dcd808e5efd19eb85cbc97275b70a5861847d28cdc076030aae33df102',
+        2020: '97d783a0904fc97738d50bcb3b0a3e2ec0bfc87a2d5d09e349d59a330619f66b',
     }
 
-    # Non-mangrove is nodata in the source files, mangrove uses their palette color
+    # Mangrove uses the color from the official GMW palette
     cmap = ListedColormap(np.array([(255, 255, 255, 255), (0, 150, 0, 255)]) / 255)
 
     def __init__(
@@ -117,7 +116,7 @@ class GlobalMangroveWatch(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of downloaded and existing archives
+            checksum: if True, check the SHA256 of downloaded and existing archives
                 (may be slow)
             time_series: if True, stack data along the time series dimension
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
@@ -144,21 +143,6 @@ class GlobalMangroveWatch(RasterDataset):
         )
 
     @property
-    def _root(self) -> Path:
-        """The single root directory used to download and extract the dataset.
-
-        Returns:
-            The root directory.
-
-        Raises:
-            AssertionError: If *paths* is not a single root directory.
-        """
-        assert isinstance(self.paths, str | os.PathLike), (
-            'paths must be a single root directory to download or extract data'
-        )
-        return cast(Path, self.paths)
-
-    @property
     def files(self) -> list[str]:
         """A list of all files in the dataset, restricted to *years*.
 
@@ -180,17 +164,6 @@ class GlobalMangroveWatch(RasterDataset):
         match = re.match(self.filename_regex, os.path.basename(filepath), re.VERBOSE)
         return int(match.group('date')) if match else None
 
-    def _zipfile(self, year: int) -> Path:
-        """Path of the archive of a single year of the dataset.
-
-        Args:
-            year: the year of the archive
-
-        Returns:
-            The path of the archive.
-        """
-        return os.path.join(self._root, self.zipfile_glob.replace('*', str(year)))
-
     def _verify(self) -> None:
         """Verify dataset integrity.
 
@@ -204,48 +177,30 @@ class GlobalMangroveWatch(RasterDataset):
         if not todo:
             return
 
-        # Check if the zip files of the remaining years have already been downloaded
-        missing = []
-        for year in todo:
-            filepath = self._zipfile(year)
-            if os.path.exists(filepath):
-                if self.checksum and not check_integrity(filepath, self.md5s[year]):
-                    raise RuntimeError('Dataset found, but corrupted.')
-                self._extract(year)
-            else:
-                missing.append(year)
-
-        if not missing:
-            return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise DatasetNotFoundError(self)
-
-        # Download and extract the missing years
-        for year in missing:
-            self._download(year)
-            self._extract(year)
-
-    def _download(self, year: int) -> None:
-        """Download a single year of the dataset.
-
-        Args:
-            year: the year to download
-        """
-        download_url(
-            self.url.format(year),
-            self._root,
-            md5=self.md5s[year] if self.checksum else None,
+        assert isinstance(self.paths, str | os.PathLike), (
+            'paths must be a single root directory to download or extract data'
         )
+        paths = cast(Path, self.paths)
 
-    def _extract(self, year: int) -> None:
-        """Extract a single year of the dataset.
+        for year in todo:
+            filepath = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
 
-        Args:
-            year: the year to extract
-        """
-        extract_archive(self._zipfile(year), self._root)
+            # Check if the zip file has already been downloaded
+            if os.path.exists(filepath):
+                if self.checksum and not check_integrity(
+                    filepath, sha256=self.sha256s[year]
+                ):
+                    raise RuntimeError('Dataset found, but corrupted.')
+            elif self.download:
+                download_url(
+                    self.url.format(year),
+                    paths,
+                    sha256=self.sha256s[year] if self.checksum else None,
+                )
+            else:
+                raise DatasetNotFoundError(self)
+
+            extract_archive(filepath, paths)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None

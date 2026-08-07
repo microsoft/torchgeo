@@ -1,7 +1,7 @@
-.. _GlobalMangroveWatch:
+.. _Global Mangrove Watch:
 
-GlobalMangroveWatch
-===================
+Global Mangrove Watch
+=====================
 
 .. currentmodule:: torchgeo.datasets
 
