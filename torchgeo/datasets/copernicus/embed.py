@@ -40,7 +40,7 @@ class CopernicusEmbed(RasterDataset):
     filename_glob = 'embed_map_*'
 
     url = 'https://hf.co/datasets/torchgeo/copernicus_embed/resolve/435b4a7bdce6f6fdbf4272f9d6e54f2604f35fdb/embed_map_310k.tif'
-    md5 = '63de14ab9f5eeffb785066f3013a40b4'
+    sha256 = '38f6fd15b20153f7b3ba2d7b38fb9ef56b751dfcb42e17cc1b02aad1580a59ad'
 
     def __init__(
         self,
@@ -66,7 +66,7 @@ class CopernicusEmbed(RasterDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
             time_series: if True, stack data along the time series dimension
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
@@ -95,7 +95,7 @@ class CopernicusEmbed(RasterDataset):
             download_url(
                 self.url,
                 self._download_root_path,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
         else:
             raise DatasetNotFoundError(self)

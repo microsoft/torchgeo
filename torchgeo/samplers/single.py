@@ -4,8 +4,7 @@
 """TorchGeo samplers."""
 
 import abc
-from collections.abc import Callable, Iterable, Iterator
-from functools import partial
+from collections.abc import Iterator
 
 import numpy as np
 import pandas as pd
@@ -363,11 +362,12 @@ class PreChippedGeoSampler(GeoSampler):
         Yields:
             [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
-        generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
-            generator = partial(torch.randperm, generator=self.generator)
+            indices = torch.randperm(len(self), generator=self.generator)
+        else:
+            indices = range(len(self))
 
-        for idx in generator(len(self)):
+        for idx in indices:
             i = int(idx)
             xmin, ymin, xmax, ymax = self.index.geometry.iloc[i].bounds
             tmin, tmax = self.index.index[i].left, self.index.index[i].right

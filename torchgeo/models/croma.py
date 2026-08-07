@@ -254,8 +254,8 @@ class Attention(nn.Module):
         """
         x = self.input_norm(x)
         q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -318,8 +318,8 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -545,7 +545,7 @@ def load_weights(model: CROMA, weights: WeightsEnum) -> None:
     Raises:
         AssertionError: If there are missing or unexpected keys.
     """
-    state_dict = weights.get_state_dict(progress=True)
+    state_dict = weights.get_state_dict(progress=True, weights_only=True)
     missing_keys, unexpected_keys = [], []
 
     if 'sar' in model.modalities:

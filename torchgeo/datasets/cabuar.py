@@ -168,7 +168,7 @@ class CaBuAr(NonGeoDataset):
         uuids = []
         with h5py.File(self.filepath, 'r') as f:
             for k, v in f.items():
-                if v.attrs['fold'] in self.folds[self.split] and 'pre_fire' in v.keys():
+                if v.attrs['fold'] in self.folds[self.split] and 'pre_fire' in v:
                     uuids.append(k)
         return sorted(uuids)
 

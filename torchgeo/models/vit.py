@@ -638,7 +638,7 @@ def vit_small_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         # used when features_only = True
@@ -678,7 +678,7 @@ def vit_base_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         assert set(unexpected_keys) <= KEYS
@@ -717,7 +717,7 @@ def vit_large_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         assert set(unexpected_keys) <= KEYS
@@ -756,7 +756,7 @@ def vit_huge_patch14_224(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         assert set(unexpected_keys) <= KEYS
@@ -796,7 +796,7 @@ def vit_small_patch14_dinov2(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         assert set(unexpected_keys) <= KEYS
@@ -836,7 +836,7 @@ def vit_base_patch14_dinov2(
 
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         assert set(missing_keys) <= KEYS
         assert set(unexpected_keys) <= KEYS

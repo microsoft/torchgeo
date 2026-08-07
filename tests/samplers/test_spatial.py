@@ -15,7 +15,8 @@ from torchgeo.samplers import GriddedPatchSampler, RandomPatchSampler, Units
 
 class TestRandomPatchSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> RandomPatchSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> RandomPatchSampler:
         return RandomPatchSampler(dataset, size=5)
 
     def test_iter(self, sampler: RandomPatchSampler) -> None:
@@ -60,7 +61,8 @@ class TestRandomPatchSampler:
 
 class TestGriddedPatchSampler:
     @pytest.fixture(scope='class')
-    def sampler(self, dataset: GeoDataset) -> GriddedPatchSampler:
+    @classmethod
+    def sampler(cls, dataset: GeoDataset) -> GriddedPatchSampler:
         return GriddedPatchSampler(dataset, size=5)
 
     def test_iter(self, sampler: GriddedPatchSampler) -> None:

@@ -8,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, MillionAID
 
@@ -18,7 +18,8 @@ class TestMillionAID:
     @pytest.fixture(
         scope='class', params=zip(['train', 'test'], ['multi-class', 'multi-label'])
     )
-    def dataset(self, request: SubRequest) -> MillionAID:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> MillionAID:
         root = os.path.join('tests', 'data', 'millionaid')
         split, task = request.param
         transforms = nn.Identity()

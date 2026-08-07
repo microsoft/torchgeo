@@ -6,7 +6,6 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -246,7 +245,6 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    @lru_cache(maxsize=128)
     def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine]:
         """Load all the imagery (across time) for the dataset.
 
@@ -269,7 +267,6 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return img, transform
 
-    @lru_cache(maxsize=128)
     def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine]:
         """Load the imagery for a single date.
 
@@ -298,7 +295,6 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return img, transform
 
-    @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson

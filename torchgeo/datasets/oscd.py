@@ -59,15 +59,15 @@ class OSCD(NonGeoDataset):
         'Onera Satellite Change Detection dataset - Train Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Train%20Labels.zip',
         'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd/resolve/4958d786c1389ede1511d91a6ecf1a75c4074933/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
-    md5s: ClassVar[dict[str, str]] = {
+    sha256s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
-            'c50d4a2941da64e03a47ac4dec63d915'
+            '940b87887511058a933e67cd6d0e43e2eb825a55d8e79a50983dee7f23003656'
         ),
         'Onera Satellite Change Detection dataset - Train Labels.zip': (
-            '4d2965af8170c705ebad3d6ee71b6990'
+            '89fb54cd12ad0dbea6c447528139dec305b865294215434bf6dd170fb8fd3ca5'
         ),
         'Onera Satellite Change Detection dataset - Test Labels.zip': (
-            '8177d437793c522653c442aa4e66c617'
+            '2e195eaa1b788b99fa93ea8073e3780bc0b763000b0c49dbf70548acf1e5d67d'
         ),
     }
 
@@ -111,7 +111,7 @@ class OSCD(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -184,7 +184,7 @@ class OSCD(NonGeoDataset):
             region = folder.split(os.sep)[-2]
             mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
-            def get_image_paths(ind: int) -> list[str]:
+            def get_image_paths(ind: int, region: str = region) -> list[str]:
                 return sorted(
                     glob.glob(
                         os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
@@ -202,13 +202,13 @@ class OSCD(NonGeoDataset):
                 )
 
             regions.append(
-                dict(
-                    region=region,
-                    images1=images1,
-                    images2=images2,
-                    mask=mask,
-                    dates=dates,
-                )
+                {
+                    'region': region,
+                    'images1': images1,
+                    'images2': images2,
+                    'mask': mask,
+                    'dates': dates,
+                }
             )
 
         return regions
@@ -277,7 +277,7 @@ class OSCD(NonGeoDataset):
                 self.urls[filename],
                 self.root,
                 filename=filename,
-                md5=self.md5s[filename] if self.checksum else None,
+                sha256=self.sha256s[filename] if self.checksum else None,
             )
 
     def _extract(self) -> None:
@@ -384,10 +384,10 @@ class OSCD100(OSCD):
         'Onera Satellite Change Detection dataset - Val Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Val%20Labels.zip',
         'Onera Satellite Change Detection dataset - Test Labels.zip': 'https://hf.co/datasets/hkristen/oscd100/resolve/81edcad799419465bf9ca137281bb72a6f4e4b34/Onera%20Satellite%20Change%20Detection%20dataset%20-%20Test%20Labels.zip',
     }
-    md5s: ClassVar[dict[str, str]] = {
-        'Onera Satellite Change Detection dataset - Images.zip': '1b4592e0195b675d3822d0fb675b3be2',
-        'Onera Satellite Change Detection dataset - Train Labels.zip': 'ef1d59b9f1a2b9c8b595c33b726c5d0a',
-        'Onera Satellite Change Detection dataset - Val Labels.zip': 'abcbb7e5b0e9f4fd0ff51f28d5c46ae0',
-        'Onera Satellite Change Detection dataset - Test Labels.zip': 'b615ba424a77fcc41bdab8c5a56c7b54',
+    sha256s: ClassVar[dict[str, str]] = {
+        'Onera Satellite Change Detection dataset - Images.zip': '6c88242b15f3295a1062bea90adffb76af87a4e8b386a0cbb82e5a01663f9480',
+        'Onera Satellite Change Detection dataset - Train Labels.zip': '84145c36f55753f182a782c00e62107495e0a44effce90086fad1c5efe5b3d98',
+        'Onera Satellite Change Detection dataset - Val Labels.zip': '3a7e8cecacc9be4a12a6d2fc7f7926871039d78c346969c709690869c322f596',
+        'Onera Satellite Change Detection dataset - Test Labels.zip': '425571643f1c456caf3cb250f13cbfbbeee247838dfc1e0c50cdb712d8bbf383',
     }
     splits: tuple[str, ...] = ('train', 'val', 'test')

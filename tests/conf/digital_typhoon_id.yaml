@@ -1,5 +1,5 @@
 model:
-  class_path: RegressionTask
+  class_path: Regression
   init_args:
     model: 'resnet18'
     num_outputs: 1

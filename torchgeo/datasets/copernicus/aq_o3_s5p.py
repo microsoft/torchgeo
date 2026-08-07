@@ -33,7 +33,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l3_airquality_s5p/airquality_s5p.zip'
-    md5 = '92081c7437c5c1daf783868ad7669877'
+    sha256 = '8d97ccd45ccb883ad2f8d94c6193be0dbf66fff2bf185a87f822d46aee454454'
     zipfile = 'airquality_s5p.zip'
     directory = os.path.join('airquality_s5p', 'o3')
     filename = '{}.csv'
@@ -64,7 +64,7 @@ class CopernicusBenchAQO3S5P(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.

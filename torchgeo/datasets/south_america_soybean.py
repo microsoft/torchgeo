@@ -75,7 +75,7 @@ class SouthAmericaSoybean(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2021],
+        years: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -106,6 +106,8 @@ class SouthAmericaSoybean(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
+        if years is None:
+            years = [2021]
         self.paths = paths
         self.download = download
         self.checksum = checksum

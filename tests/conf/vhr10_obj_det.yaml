@@ -1,5 +1,5 @@
 model:
-  class_path: ObjectDetectionTask
+  class_path: ObjectDetection
   init_args:
     model: 'faster-rcnn'
     backbone: 'resnet18'
