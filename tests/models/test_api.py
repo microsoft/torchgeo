@@ -51,6 +51,7 @@ from torchgeo.models import (
     get_weight,
     list_models,
     olmoearth_v1,
+    olmoearth_v1_unet_decoder,
     panopticon_vitb14,
     presto,
     resnet18,
@@ -84,6 +85,7 @@ builders = [
     dofa_small_patch16_224,
     earthloc,
     olmoearth_v1,
+    olmoearth_v1_unet_decoder,
     panopticon_vitb14,
     presto,
     resnet18,
@@ -141,7 +143,7 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
-    if builder == olmoearth_v1:
+    if builder in (olmoearth_v1, olmoearth_v1_unet_decoder):
         pytest.importorskip('olmoearth_pretrain_minimal')
 
     model = get_model(builder.__name__)
@@ -150,7 +152,11 @@ def test_get_model(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
-    models_without_weights = [dofa_huge_patch14_224, dofa_small_patch16_224]
+    models_without_weights = [
+        dofa_huge_patch14_224,
+        dofa_small_patch16_224,
+        olmoearth_v1_unet_decoder,
+    ]
     if builder in models_without_weights:
         return
 
