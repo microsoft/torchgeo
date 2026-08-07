@@ -5,7 +5,7 @@
 
 from typing import Any
 
-import torch.nn as nn
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..datasets.utils import lazy_import
@@ -90,9 +90,11 @@ def olmoearth_v1(
     model_size = kwargs.pop('model_size', 'nano')
     if weights is not None:
         model_size = weights.meta.get('model_size', model_size)
-    model: nn.Module = olmoearth.OlmoEarthPretrain_v1(model_size=model_size, **kwargs)
+    model: nn.Module = olmoearth.OlmoEarthPretrain_v1(
+        model_size=model_size, model_version='v1', **kwargs
+    )
     if weights is not None:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
         model.load_state_dict(state_dict, strict=False)
     return model
 

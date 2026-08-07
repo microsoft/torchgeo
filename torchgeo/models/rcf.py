@@ -160,16 +160,16 @@ class RCF(Module):
         patchesCovMat = 1.0 / n_patches * patches.T.dot(patches)
 
         (E, V) = np.linalg.eig(patchesCovMat)
+        E_real = np.real(E)
+        V_real = np.real(V)
 
-        E += zca_bias
-        sqrt_zca_eigs = np.sqrt(E)
+        E_real += zca_bias
+        sqrt_zca_eigs = np.sqrt(E_real)
         inv_sqrt_zca_eigs = np.diag(np.power(sqrt_zca_eigs, -1))
-        global_ZCA = V.dot(inv_sqrt_zca_eigs).dot(V.T)
-        patches_normalized: np.typing.NDArray[np.float32] = (
-            (patches).dot(global_ZCA).dot(global_ZCA.T)
-        )
+        global_ZCA = V_real.dot(inv_sqrt_zca_eigs).dot(V_real.T)
+        patches_normalized = (patches).dot(global_ZCA).dot(global_ZCA.T)
 
-        return patches_normalized.reshape(orig_shape).astype('float32')
+        return patches_normalized.reshape(orig_shape)
 
     @torch.inference_mode()
     def forward(self, x: Tensor) -> Tensor:

@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # uv-build 0.7+ required for bdist reorganization
-    "uv_build>=0.7,<0.12",
+    "uv_build>=0.7,<0.13",
 ]
 build-backend = "uv_build"
 
@@ -106,6 +106,9 @@ datasets = [
     "rioxarray>=0.14.1",
     # scipy 1.11.2+ required for Python 3.12 wheels
     "scipy>=1.11.2",
+    # tokenizers 0.14+ required for Python 3.12 wheels
+    # tokenizers does not yet provide wheels for Python 3.14t
+    "tokenizers>=0.14; python_version<'3.14'",
     # webdataset 0.2.4+ required for PyTorch tuple seed support
     "webdataset>=0.2.4",
     # xarray 0.17+ required by rioxarray
@@ -134,12 +137,14 @@ models = [
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
-    # ruff 0.9+ required for 2025 style guide
-    "ruff>=0.9",
-    # ty 0.0.40+ required for latest type checking changes
-    "ty>=0.0.40",
+    # ruff 0.16+ required for 2026 style guide
+    "ruff>=0.16",
+    # ty 0.0.46+ required for latest type checking changes
+    "ty>=0.0.62",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
+    # types-rasterio 1.5.0.20260728+ needed for https://github.com/python/typeshed/pull/16092
+    "types-rasterio>=1.5.0.20260728",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
@@ -202,10 +207,12 @@ filterwarnings = [
     'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
     # https://github.com/kornia/kornia/issues/3727
     'ignore:`torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.:DeprecationWarning',
+    # https://github.com/rasterio/rasterio/issues/3592
+    "ignore:Setting the shape on a NumPy array has been deprecated in NumPy 2.5:DeprecationWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning",
     # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
     # Lightning warns us if TensorBoard is not installed
@@ -235,7 +242,6 @@ tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/
 [tool.ruff]
-extend-include = ["*.ipynb"]
 fix = true
 
 [tool.ruff.format]
@@ -244,12 +250,16 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "D", "I", "RUF", "UP"]
+extend-select = ["ANN", "CPY"]
 ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
 "tests/**" = ["D"]
+
+[tool.ruff.lint.flake8-copyright]
+author = "TorchGeo Contributors"
+notice-rgx = 'Copyright \(c\)'
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false

@@ -7,13 +7,13 @@
 
 import segmentation_models_pytorch as smp
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from segmentation_models_pytorch.decoders.upernet.decoder import UPerNetDecoder
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 from torchvision.models.feature_extraction import create_feature_extractor
+from torchvision.models.swin_transformer import SwinTransformer
 
 from torchgeo.models.swin import (
     Swin_B_Weights,
@@ -131,7 +131,7 @@ class SwinBackbone(Module):
         self.feature_extractor = create_feature_extractor(
             model, return_nodes=return_layers
         )
-        self.channels = self._get_feature_channels()
+        self.channels = self._get_feature_channels(model, return_layers)
         self.image_normalization = weights.transforms
 
         norms = []
@@ -141,7 +141,9 @@ class SwinBackbone(Module):
 
         if backbone_pretrained:
             # load pretrained feature norm weights
-            state_dict = weights.get_state_dict(include_norms=True, progress=True)
+            state_dict = weights.get_state_dict(
+                include_norms=True, progress=True, weights_only=True
+            )
             self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
     def forward(self, x: Tensor) -> list[Tensor]:
@@ -163,21 +165,16 @@ class SwinBackbone(Module):
             output.append(x)
         return output
 
-    def _get_feature_channels(self) -> list[int]:
+    def _get_feature_channels(
+        self, model: SwinTransformer, return_layers: list[str]
+    ) -> list[int]:
         """Get the number of channels in features.
 
         Returns:
             list of channels for each feature map in hierarchy.
         """
-        is_training = self.feature_extractor.training
-        # dryrun
-        self.feature_extractor.eval()
-        with torch.no_grad():
-            features = self.feature_extractor(torch.rand(1, 3, 256, 256))
-        # revert feature extractor training state
-        self.feature_extractor.train(is_training)
-        # torchvision swin is channel last
-        return [feature.shape[-1] for feature in features.values()]
+        indices = [int(name.split('.')[-1]) for name in return_layers]
+        return [model.features[i][-1].mlp[-2].out_features for i in indices]  # ty: ignore[not-subscriptable]
 
 
 def subtraction_fusion(x: list[Tensor]) -> list[Tensor]:

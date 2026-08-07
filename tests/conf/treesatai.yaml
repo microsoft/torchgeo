@@ -1,5 +1,5 @@
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     model: 'resnet18'
     in_channels: 19

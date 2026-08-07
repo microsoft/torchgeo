@@ -49,7 +49,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l1_cloud_s2/cloud_s2.zip'
-    md5 = '39a1f966e76455549a3e6c209ba751c1'
+    sha256 = '38a371b10ad66a6eb702179b2023b1874caf81a1f8dc72ccbfdfd1701acabaef'
     zipfile = 'cloud_s2.zip'
     directory = 'cloud_s2'
     filename_regex = r'ROI_\d{5}__(?P<date>\d{8}T\d{6})'

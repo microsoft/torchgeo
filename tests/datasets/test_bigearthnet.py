@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import BigEarthNet, BigEarthNetV2, DatasetNotFoundError
 
@@ -215,12 +215,11 @@ class TestBigEarthNetV2:
         self, dataset: BigEarthNetV2, tmp_path: Path
     ) -> None:
         def rm_files(file_list: list[str]) -> None:
-            for key, val in dataset.metadata_locs.items():
-                if key in file_list:
-                    if key != 'metadata':
-                        shutil.rmtree(
-                            os.path.join(dataset.root, dataset.dir_file_names[key])
-                        )
+            for key in dataset.metadata_locs:
+                if key in file_list and key != 'metadata':
+                    shutil.rmtree(
+                        os.path.join(dataset.root, dataset.dir_file_names[key])
+                    )
 
         if dataset.bands == 'all':
             rm_files(['s1', 's2', 'maps', 'metadata'])

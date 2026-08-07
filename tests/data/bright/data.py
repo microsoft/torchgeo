@@ -54,8 +54,7 @@ def make_dirs() -> None:
 def write_list_file(filename: str, ids: list[str]) -> None:
     file_path = os.path.join(ROOT, DATA_DIR, filename)
     with open(file_path, 'w') as f:
-        for sid in ids:
-            f.write(f'{sid}\n')
+        f.writelines(f'{sid}\n' for sid in ids)
 
 
 def write_tif(filepath: str, channels: int, classes: int) -> None:

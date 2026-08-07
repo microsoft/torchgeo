@@ -87,7 +87,7 @@ profile = {
 
 # Images and masks
 directory = 'flood_s1'
-for key in metadata.keys():
+for key in metadata:
     subdir = os.path.join(directory, 'data', metadata[key]['path'])
     os.makedirs(subdir, exist_ok=True)
     for value in metadata[key]['info']['datasets'].values():

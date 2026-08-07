@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn
 
 from torchgeo.datasets import (
     Airphen,
