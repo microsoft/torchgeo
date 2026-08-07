@@ -4,8 +4,9 @@
 """BioMassters Dataset."""
 
 import os
+import shutil
 from collections.abc import Sequence
-from typing import Literal
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, quantile_normalization
+from .utils import Path, Sample, download_url, extract_archive, quantile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -60,12 +61,30 @@ class BioMassters(NonGeoDataset):
 
     metadata_filename = 'biomassters_features_metadata.csv'
 
+    url = 'https://huggingface.co/datasets/torchgeo/biomassters/resolve/main/{}'
+
+    # The train/test feature archives are split into multiple parts on the
+    # Hugging Face Hub and must be concatenated before extraction, see
+    # https://huggingface.co/datasets/torchgeo/biomassters
+    feature_archive_filenames: ClassVar[dict[str, list[str]]] = {
+        'train': [
+            'train_features.tar.gzaa',
+            'train_features.tar.gzab',
+            'train_features.tar.gzac',
+            'train_features.tar.gzad',
+        ],
+        'test': ['test_features.tar.gzaa', 'test_features.tar.gzab'],
+    }
+
+    target_archive_filenames: ClassVar[dict[str, str]] = {'train': 'train_agbm.tar.gz'}
+
     def __init__(
         self,
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
         as_time_series: bool = False,
+        download: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
 
@@ -79,10 +98,11 @@ class BioMassters(NonGeoDataset):
                 Sentinel 2 ('S1', 'S2')
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
+            download: if True, download dataset and store it in the root directory
 
         Raises:
             AssertionError: if ``split`` or ``sensors`` is invalid
-            DatasetNotFoundError: If dataset is not found.
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
 
@@ -96,6 +116,7 @@ class BioMassters(NonGeoDataset):
         )
         self.sensors = sensors
         self.as_time_series = as_time_series
+        self.download = download
 
         self._verify()
 
@@ -215,13 +236,64 @@ class BioMassters(NonGeoDataset):
         exists = []
 
         filenames = [f'{self.split}_features', self.metadata_filename]
+        if self.split == 'train':
+            filenames.append('train_agbm')
         for filename in filenames:
             pathname = os.path.join(self.root, filename)
             exists.append(os.path.exists(pathname))
         if all(exists):
             return
 
-        raise DatasetNotFoundError(self)
+        # Check if the archive files have already been downloaded
+        exists = []
+        archive_filenames = list(self.feature_archive_filenames[self.split])
+        if self.split == 'train':
+            archive_filenames.append(self.target_archive_filenames['train'])
+        archive_filenames.append(self.metadata_filename)
+        for filename in archive_filenames:
+            pathname = os.path.join(self.root, filename)
+            exists.append(os.path.exists(pathname))
+
+        if all(exists):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download and extract the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        archive_filenames = list(self.feature_archive_filenames[self.split])
+        if self.split == 'train':
+            archive_filenames.append(self.target_archive_filenames['train'])
+        archive_filenames.append(self.metadata_filename)
+
+        for filename in archive_filenames:
+            download_url(self.url.format(filename), self.root, filename=filename)
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        # The feature archive is split into multiple parts and must be
+        # concatenated before it forms a valid tar.gz archive
+        feature_filenames = self.feature_archive_filenames[self.split]
+        combined_path = os.path.join(self.root, f'{self.split}_features.tar.gz')
+        with open(combined_path, 'wb') as combined_f:
+            for filename in feature_filenames:
+                with open(os.path.join(self.root, filename), 'rb') as part_f:
+                    shutil.copyfileobj(part_f, combined_f)
+        extract_archive(combined_path, self.root)
+        os.remove(combined_path)
+
+        if self.split == 'train':
+            extract_archive(
+                os.path.join(self.root, self.target_archive_filenames['train']),
+                self.root,
+            )
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
