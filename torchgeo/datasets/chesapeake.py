@@ -13,7 +13,6 @@ from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -21,7 +20,7 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset, UnionDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
