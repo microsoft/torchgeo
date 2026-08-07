@@ -6,7 +6,6 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -121,7 +120,7 @@ class Esri2020(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
         pathname = os.path.join(paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()

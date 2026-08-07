@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Iterable
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -494,7 +494,7 @@ class NLCD(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
         for year in self.years:
             pathname = os.path.join(paths, self.zipfile_glob.replace('*', str(year)))
             if os.path.exists(pathname):

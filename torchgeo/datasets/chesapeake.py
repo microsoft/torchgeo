@@ -7,7 +7,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -275,8 +275,9 @@ class Chesapeake(RasterDataset, ABC):
             return
 
         # Check if the zip file has already been downloaded
-        paths = cast(Path, self.paths)
-        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
+        if glob.glob(
+            os.path.join(self._download_root_path, '**', '*.zip'), recursive=True
+        ):
             self._extract()
             return
 

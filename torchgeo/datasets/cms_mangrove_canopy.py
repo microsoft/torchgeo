@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -237,7 +236,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
         pathname = os.path.join(paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):

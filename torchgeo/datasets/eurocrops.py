@@ -6,7 +6,6 @@
 import csv
 import os
 from collections.abc import Callable, Iterable
-from typing import cast
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -154,7 +153,7 @@ class EuroCrops(VectorDataset):
         ):
             return True
 
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
 
         filepath = os.path.join(paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):

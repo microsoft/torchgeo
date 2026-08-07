@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -196,7 +196,7 @@ class L8Biome(IntersectionDataset):
         if not isinstance(self.paths, str | os.PathLike):
             return
 
-        paths = cast(Path, self.paths)
+        paths = self._download_root_path
 
         for classname in [L8BiomeImage, L8BiomeMask]:
             pathname = os.path.join(paths, '**', classname.filename_glob)
