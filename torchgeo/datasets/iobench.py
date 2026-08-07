@@ -129,7 +129,7 @@ class IOBench(IntersectionDataset):
         download_url(
             self.url.format(self.split),
             self.root,
-            sha256=self.sha256[self.split] if self.checksum else None,
+            sha256=self.sha256s[self.split] if self.checksum else None,
         )
 
     def _extract(self) -> None:

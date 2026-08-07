@@ -225,7 +225,7 @@ class L8Biome(IntersectionDataset):
         paths = cast(Path, self.paths)
         for biome, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(biome), paths, sha246=sha256 if self.checksum else None
+                self.url.format(biome), paths, sha256=sha256 if self.checksum else None
             )
 
     def _extract(self) -> None:
