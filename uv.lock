@@ -1795,7 +1795,7 @@ wheels = [
 
 [[package]]
 name = "microsoft-aurora"
-version = "2.0.0"
+version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "azure-storage-blob" },
@@ -1809,9 +1809,9 @@ dependencies = [
     { name = "torch" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/ff/912736f4b9aaa5de3f4be04686755ee5f2394c58f01905ad6dfc3e9d08dc/microsoft_aurora-2.0.0.tar.gz", hash = "sha256:982e7f506a878a2fc98352af6877264a335c822145ca46f67642a4d8663d4b2c", size = 215551, upload-time = "2026-07-09T16:30:08.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/b6/c474578e0f81db909311a446a1af2b831b91d42987b899130d082b12e6e0/microsoft_aurora-2.0.1.tar.gz", hash = "sha256:f0903508ad2122bc759106a99380b1eb1a2ca7195a0450eb5d8c059531886d09", size = 215537, upload-time = "2026-08-04T19:30:22.367Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/26/408852c11907d741179014be50b6bc63d768022d88af49182a71b5df0b60/microsoft_aurora-2.0.0-py3-none-any.whl", hash = "sha256:97941865b88b8a124d6683252168d57a620dc522d19cdc669b7771fe4ef88f38", size = 229711, upload-time = "2026-07-09T16:30:07.158Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/76/ba0a4fa958a662852c6b9103999ff519f2d599ed7652a9e5b80b70e722c4/microsoft_aurora-2.0.1-py3-none-any.whl", hash = "sha256:f9b72b268d579c0799e476afe121c62cd8dde6501f8505f3480c4cb89a5ce019", size = 229693, upload-time = "2026-08-04T19:30:20.655Z" },
 ]
 
 [[package]]
