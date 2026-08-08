@@ -8,21 +8,21 @@ We provide security updates for `main` and for the most recent minor (`X.Y`) rel
 
 ## Issues That Are Not Security Vulnerabilities
 
-The following examples *do not* constitute security vulnerabilities:
+The following examples _do not_ constitute security vulnerabilities:
 
-* **Vulnerabilities in our dependencies.** For example, vulnerabilities in low-level dependencies like Pillow are frequently discovered and could affect TorchGeo usage. These vulnerabilities should be reported to [Pillow](https://github.com/python-pillow/Pillow/security) instead.
-* **Vulnerabilities in undocumented APIs.** For example, we use `pickle.loads()` in our unit tests, but these are not user-facing and do not constitute a vulnerability.
-* **Intentionally disabling or bypassing security features.** For example, the use of `checksum=False` or manually tampering with the download URL or checksum is not considered secure and is a user-mistake instead of a security vulnerability.
+- **Vulnerabilities in our dependencies.** For example, vulnerabilities in low-level dependencies like Pillow are frequently discovered and could affect TorchGeo usage. These vulnerabilities should be reported to [Pillow](https://github.com/python-pillow/Pillow/security) instead.
+- **Vulnerabilities in undocumented APIs.** For example, we use `pickle.loads()` in our unit tests, but these are not user-facing and do not constitute a vulnerability.
+- **Intentionally disabling or bypassing security features.** For example, the use of `checksum=False` or manually tampering with the download URL or checksum is not considered secure and is a user-mistake instead of a security vulnerability.
 
 When in doubt, open a vulnerability report and check with us.
 
 ## Issues That Are Security Vulnerabilities
 
-The following examples *do* constitute security vulnerabilities:
+The following examples _do_ constitute security vulnerabilities:
 
-* **Insecure usage of our dependencies.** For example, the use of `eval`[^1], `exec`, `pickle.loads`, `subprocess.run(shell=True)`, or `torch.load(weights_only=False)`[^2] are standard features of Python and PyTorch. But without input validation, these can result in remote code execution.
-* **Vulnerabilities in CI.** For example, a vulnerability that allows exfiltration of private API keys would constitute a security vulnerability, not in TorchGeo, but in our release pipeline.
-* **Vulnerabilities in our downloads.** For example, zip bombs or viruses in our downloaded datasets or model weights would constitute a security vulnerability and should be reported.
+- **Insecure usage of our dependencies.** For example, the use of `eval`[^1], `exec`, `pickle.loads`, `subprocess.run(shell=True)`, or `torch.load(weights_only=False)`[^2] are standard features of Python and PyTorch. But without input validation, these can result in remote code execution.
+- **Vulnerabilities in CI.** For example, a vulnerability that allows exfiltration of private API keys would constitute a security vulnerability, not in TorchGeo, but in our release pipeline.
+- **Vulnerabilities in our downloads.** For example, zip bombs or viruses in our downloaded datasets or model weights would constitute a security vulnerability and should be reported.
 
 This list is not exhaustive, and we encourage you to report when in doubt.
 
