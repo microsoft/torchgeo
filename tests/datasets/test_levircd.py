@@ -35,7 +35,7 @@ class TestLEVIRCD:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return LEVIRCD(root, split, transforms, download=True)
+        return LEVIRCD(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: LEVIRCD) -> None:
         x = dataset[0]

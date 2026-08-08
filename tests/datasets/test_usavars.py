@@ -64,7 +64,7 @@ class TestUSAVars:
         split, labels = request.param
         transforms = nn.Identity()
 
-        return USAVars(root, split, labels, transforms=transforms, download=True)
+        return USAVars(root, split, labels, transforms=transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]

@@ -31,7 +31,7 @@ class TestCOWCCounting:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return COWCCounting(root, split, transforms, download=True)
+        return COWCCounting(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]
@@ -48,7 +48,7 @@ class TestCOWCCounting:
         assert len(ds) in [12, 24]
 
     def test_already_downloaded(self, dataset: COWC) -> None:
-        COWCCounting(root=dataset.root, download=True)
+        COWCCounting(root=dataset.root, download=True, checksum=False)
 
     def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
@@ -79,7 +79,7 @@ class TestCOWCDetection:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return COWCDetection(root, split, transforms, download=True)
+        return COWCDetection(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: COWC) -> None:
         x = dataset[0]
@@ -96,7 +96,7 @@ class TestCOWCDetection:
         assert len(ds) in [12, 24]
 
     def test_already_downloaded(self, dataset: COWC) -> None:
-        COWCDetection(root=dataset.root, download=True)
+        COWCDetection(root=dataset.root, download=True, checksum=False)
 
     def test_out_of_bounds(self, dataset: COWC) -> None:
         with pytest.raises(IndexError):
