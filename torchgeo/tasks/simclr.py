@@ -12,9 +12,6 @@ import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn.functional as F
-from lightly.loss import NTXentLoss
-from lightly.models.modules import SimCLRProjectionHead
-from lightly.utils.lars import LARS
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
@@ -25,6 +22,7 @@ from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
+from .ssl_utils import LARS, NTXentLoss, ProjectionHead
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -179,7 +177,7 @@ class SimCLR(BaseTask):
         if self.hparams['output_dim'] is None:
             self.hparams['output_dim'] = input_dim
 
-        self.projection_head = SimCLRProjectionHead(
+        self.projection_head = ProjectionHead(
             input_dim,
             self.hparams['hidden_dim'],
             self.hparams['output_dim'],

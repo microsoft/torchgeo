@@ -13,10 +13,6 @@ import lightning.pytorch.utilities.types
 import timm
 import torch
 import torch.nn.functional as F
-from lightly.loss import NTXentLoss
-from lightly.models.modules import MoCoProjectionHead
-from lightly.models.utils import deactivate_requires_grad, update_momentum
-from lightly.utils.scheduler import cosine_schedule
 from torch import Tensor, nn
 from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
@@ -34,6 +30,13 @@ from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
+from .ssl_utils import (
+    NTXentLoss,
+    ProjectionHead,
+    cosine_schedule,
+    deactivate_requires_grad,
+    update_momentum,
+)
 
 
 def moco_augmentations(
@@ -258,15 +261,15 @@ class MoCo(BaseTask):
         batch_norm = version == 3
         if version > 1:
             input_dim = cast(int, self.backbone.num_features)
-            self.projection_head = MoCoProjectionHead(
+            self.projection_head = ProjectionHead(
                 input_dim, hidden_dim, output_dim, layers, batch_norm=batch_norm
             )
-            self.projection_head_momentum = MoCoProjectionHead(
+            self.projection_head_momentum = ProjectionHead(
                 input_dim, hidden_dim, output_dim, layers, batch_norm=batch_norm
             )
             deactivate_requires_grad(self.projection_head_momentum)
         if version == 3:
-            self.prediction_head = MoCoProjectionHead(
+            self.prediction_head = ProjectionHead(
                 output_dim, hidden_dim, output_dim, num_layers=2, batch_norm=batch_norm
             )
 

@@ -47,8 +47,6 @@ dependencies = [
     # kornia 0.8.2+ required for fix to VideoSequential
     # https://github.com/kornia/kornia/pull/3330
     "kornia>=0.8.2",
-    # lightly 1.5.1+ required for lightly.models.modules.MAEDecoderTIMM
-    "lightly>=1.5.1",
     # lightning 2.4+ required for fastapi and pydantic v2 support in lightning
     # lightning 2.5.0 contains backwards-incompatible import changes
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
@@ -199,10 +197,6 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
-    # https://github.com/lightly-ai/lightly/issues/1791
-    # https://github.com/pydantic/pydantic/issues/12618
-    "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
-    "ignore:ForwardRef._evaluate is a private API and is retained for compatibility:DeprecationWarning",
     # https://github.com/pytorch/pytorch/pull/167669
     'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
     # https://github.com/kornia/kornia/issues/3727

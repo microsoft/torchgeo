@@ -6,8 +6,6 @@
 import timm
 import torch
 from kornia import augmentation as K
-from lightly.models import utils
-from lightly.models.modules import MAEDecoderTIMM, MaskedVisionTransformerTIMM
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from timm.models import VisionTransformer
 from torch import nn
@@ -17,6 +15,16 @@ from torchvision.models._api import WeightsEnum
 from ..datasets.utils import Sample
 from ..models import get_weight
 from .base import BaseTask
+from .ssl_utils import (
+    MAEDecoderTIMM,
+    MaskedVisionTransformerTIMM,
+    get_at_index,
+    normalize_mean_var,
+    patchify,
+    random_token_mask,
+    repeat_token,
+    set_at_index,
+)
 from .utils import load_state_dict
 
 
@@ -204,14 +212,14 @@ class MAE(BaseTask):
         x_encoded = self.backbone.encode(images=images, idx_keep=idx_keep)
         batch_size = x_encoded.shape[0]
         x_decode = self.decoder.embed(x_encoded)
-        x_masked = utils.repeat_token(
+        x_masked = repeat_token(
             self.decoder.mask_token, (batch_size, self.sequence_length)
         )
-        x_masked = utils.set_at_index(x_masked, idx_keep, x_decode.type_as(x_masked))
+        x_masked = set_at_index(x_masked, idx_keep, x_decode.type_as(x_masked))
         # decoder forward pass
         x_decoded = self.decoder.decode(x_masked)
         # predict pixel values for masked tokens
-        x_pred = utils.get_at_index(x_decoded, idx_mask)
+        x_pred = get_at_index(x_decoded, idx_mask)
         x_pred = self.decoder.predict(x_pred)
         return x_pred
 
@@ -231,19 +239,19 @@ class MAE(BaseTask):
         with torch.no_grad():
             images = self.transform(batch['image'].float())
         batch_size = images.shape[0]
-        idx_keep, idx_mask = utils.random_token_mask(
+        idx_keep, idx_mask = random_token_mask(
             size=(batch_size, self.sequence_length),
             mask_ratio=self.hparams['mask_ratio'],
             device=images.device,
         )
         x_pred = self.forward(images, idx_keep, idx_mask)
         # get image patches for masked tokens
-        patches = utils.patchify(images, self.patch_size)
+        patches = patchify(images, self.patch_size)
         # must adjust idx_mask for missing class token
-        target = utils.get_at_index(patches, idx_mask - self.num_prefix_tokens)
+        target = get_at_index(patches, idx_mask - self.num_prefix_tokens)
         # Apply normalization to target patches if norm_pix_loss is True.
         if self.hparams['norm_pix_loss']:
-            target = utils.normalize_mean_var(target, dim=-1)
+            target = normalize_mean_var(target, dim=-1)
         # per-sample loss for std logging
         loss_per_sample = self.criterion(x_pred, target)
         loss_per_sample = loss_per_sample.mean(dim=list(range(1, loss_per_sample.ndim)))
