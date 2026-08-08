@@ -21,7 +21,7 @@ class TestSo2Sat:
         root = os.path.join('tests', 'data', 'so2sat')
         split = request.param
         transforms = nn.Identity()
-        return So2Sat(root=root, split=split, transforms=transforms)
+        return So2Sat(root=root, split=split, transforms=transforms, checksum=False)
 
     def test_getitem(self, dataset: So2Sat) -> None:
         x = dataset[0]
