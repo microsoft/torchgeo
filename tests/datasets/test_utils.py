@@ -16,8 +16,7 @@ import rasterio
 import torch
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
-from rasterio import MemoryFile
-from rasterio.affine import Affine
+from rasterio import Affine, MemoryFile
 from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from shapely import MultiPolygon, Polygon, box
