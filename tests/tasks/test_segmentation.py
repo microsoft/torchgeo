@@ -217,7 +217,7 @@ class TestSemanticSegmentation:
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(
@@ -231,7 +231,7 @@ class TestSemanticSegmentation:
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(

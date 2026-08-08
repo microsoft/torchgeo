@@ -78,7 +78,7 @@ class TestInstanceSegmentation:
         monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -93,7 +93,7 @@ class TestInstanceSegmentation:
         monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot_missing_bands)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -106,7 +106,7 @@ class TestInstanceSegmentation:
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictInstanceSegmentationDataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(num_classes=11)
         trainer = Trainer(

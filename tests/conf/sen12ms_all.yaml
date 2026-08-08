@@ -14,3 +14,4 @@ data:
     band_set: 'all'
   dict_kwargs:
     root: 'tests/data/sen12ms'
+    checksum: false
