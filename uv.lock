@@ -1139,9 +1139,9 @@ name = "geoarrow-pandas"
 version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "geoarrow-pyarrow" },
-    { name = "pandas" },
-    { name = "pyarrow" },
+    { name = "geoarrow-pyarrow", marker = "python_full_version < '3.14'" },
+    { name = "pandas", marker = "python_full_version < '3.14'" },
+    { name = "pyarrow", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/89/f4/e20f1f96dc572b2dac17ff99395e95bebaae972f5e0cef9087be58e60789/geoarrow-pandas-0.1.1.tar.gz", hash = "sha256:feb909eb5f5b98addc9bbb7e34d73208a43ec74df68d02f94aa2b54bab52aa50", size = 9963, upload-time = "2023-10-05T15:12:08.48Z" }
 wheels = [
@@ -1153,9 +1153,9 @@ name = "geoarrow-pyarrow"
 version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "geoarrow-c" },
-    { name = "geoarrow-types" },
-    { name = "pyarrow" },
+    { name = "geoarrow-c", marker = "python_full_version < '3.14'" },
+    { name = "geoarrow-types", marker = "python_full_version < '3.14'" },
+    { name = "pyarrow", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d1/e0/ff8430e5e1049e310c35f335cf7e14682bfeafeb773f48c5a7425359a4ba/geoarrow_pyarrow-0.2.0.tar.gz", hash = "sha256:5c981f5cae26fa6cdfb6f9b83fb490d36bf0fe6f6fa360c4c8983e0a8a457926", size = 33488, upload-time = "2025-05-27T03:51:45.071Z" }
 wheels = [
@@ -1324,7 +1324,7 @@ name = "imagecodecs"
 version = "2026.3.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3b/8d/dc18623e5e926ad53c626e128c8baaf4ec42e41029cf0a07381cfef79289/imagecodecs-2026.3.6.tar.gz", hash = "sha256:471b8a4d1b3843cbf7179b45f7d7261f0c0b28809efc1ca6c47822477b143b85", size = 9565259, upload-time = "2026-03-07T01:26:41.183Z" }
 wheels = [
@@ -3156,7 +3156,7 @@ name = "pystac"
 version = "1.14.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "python-dateutil" },
+    { name = "python-dateutil", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/31/e6/efbc20dbc94ad7ed18fe11a4208103a509384ffcccd9bdc27953b725e686/pystac-1.14.3.tar.gz", hash = "sha256:24f92d6f301371859aa0abc1bbe7b1523a603e1184a6d139ecb323967c2c9bb3", size = 164205, upload-time = "2026-01-09T12:38:42.456Z" }
 wheels = [
@@ -3165,7 +3165,7 @@ wheels = [
 
 [package.optional-dependencies]
 validation = [
-    { name = "jsonschema" },
+    { name = "jsonschema", marker = "python_full_version < '3.14'" },
 ]
 
 [[package]]
@@ -3173,9 +3173,9 @@ name = "pystac-client"
 version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pystac", extra = ["validation"] },
-    { name = "python-dateutil" },
-    { name = "requests" },
+    { name = "pystac", extra = ["validation"], marker = "python_full_version < '3.14'" },
+    { name = "python-dateutil", marker = "python_full_version < '3.14'" },
+    { name = "requests", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c5/8d/b98aeffd325fc208e1624cf586d0c4dfb927bc7a2bce20d3b58ee80d2483/pystac_client-0.9.0.tar.gz", hash = "sha256:3908951583bcc6a3aaaf2828024a8e03764e6ca9d9f9f1d8149df587e14dd744", size = 52339, upload-time = "2025-07-18T15:44:41.1Z" }
 wheels = [
@@ -3349,25 +3349,25 @@ name = "rasteret"
 version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "affine" },
-    { name = "cachetools" },
-    { name = "duckdb" },
-    { name = "geoarrow-pandas" },
-    { name = "geoarrow-pyarrow" },
-    { name = "geopandas" },
-    { name = "huggingface-hub" },
-    { name = "imagecodecs" },
-    { name = "ipykernel" },
-    { name = "nbconvert" },
-    { name = "numpy" },
-    { name = "obstore" },
-    { name = "pyarrow" },
-    { name = "pyproj" },
-    { name = "pystac-client" },
-    { name = "rasterio" },
-    { name = "tqdm" },
-    { name = "xarray" },
-    { name = "zstandard" },
+    { name = "affine", marker = "python_full_version < '3.14'" },
+    { name = "cachetools", marker = "python_full_version < '3.14'" },
+    { name = "duckdb", marker = "python_full_version < '3.14'" },
+    { name = "geoarrow-pandas", marker = "python_full_version < '3.14'" },
+    { name = "geoarrow-pyarrow", marker = "python_full_version < '3.14'" },
+    { name = "geopandas", marker = "python_full_version < '3.14'" },
+    { name = "huggingface-hub", marker = "python_full_version < '3.14'" },
+    { name = "imagecodecs", marker = "python_full_version < '3.14'" },
+    { name = "ipykernel", marker = "python_full_version < '3.14'" },
+    { name = "nbconvert", marker = "python_full_version < '3.14'" },
+    { name = "numpy", marker = "python_full_version < '3.14'" },
+    { name = "obstore", marker = "python_full_version < '3.14'" },
+    { name = "pyarrow", marker = "python_full_version < '3.14'" },
+    { name = "pyproj", marker = "python_full_version < '3.14'" },
+    { name = "pystac-client", marker = "python_full_version < '3.14'" },
+    { name = "rasterio", marker = "python_full_version < '3.14'" },
+    { name = "tqdm", marker = "python_full_version < '3.14'" },
+    { name = "xarray", marker = "python_full_version < '3.14'" },
+    { name = "zstandard", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c8/95/e9b9a5fadb36640c2df9210afa8e1f196280e6a98c81047713923fd13119/rasteret-0.4.1.tar.gz", hash = "sha256:3f10261357221e3edd51d7d5232a5d2bf1d4327196c3998e866be5003926b733", size = 229979, upload-time = "2026-07-22T15:30:46.29Z" }
 wheels = [
@@ -4018,6 +4018,7 @@ all = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-socket" },
+    { name = "rasteret", marker = "python_full_version < '3.14'" },
     { name = "rioxarray" },
     { name = "ruff" },
     { name = "scipy" },
@@ -4035,6 +4036,7 @@ datasets = [
     { name = "laspy" },
     { name = "netcdf4" },
     { name = "pandas", extra = ["parquet"] },
+    { name = "rasteret", marker = "python_full_version < '3.14'" },
     { name = "rioxarray" },
     { name = "scipy" },
     { name = "webdataset" },
@@ -4051,9 +4053,6 @@ docs = [
 models = [
     { name = "microsoft-aurora" },
     { name = "olmoearth-pretrain-minimal" },
-]
-rasteret = [
-    { name = "rasteret" },
 ]
 style = [
     { name = "pandas-stubs" },
@@ -4101,7 +4100,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=7.3.2" },
     { name = "pytest-cov", marker = "extra == 'tests'", specifier = ">=4" },
     { name = "pytest-socket", marker = "extra == 'tests'", specifier = ">=0.3.4" },
-    { name = "rasteret", marker = "extra == 'rasteret'", specifier = ">=0.4.1" },
+    { name = "rasteret", marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=0.4.1" },
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "requests", specifier = ">=2.25" },
     { name = "rioxarray", marker = "extra == 'datasets'", specifier = ">=0.14.1" },
@@ -4124,7 +4123,7 @@ requires-dist = [
     { name = "webdataset", marker = "extra == 'datasets'", specifier = ">=0.2.4" },
     { name = "xarray", marker = "extra == 'datasets'", specifier = ">=0.17" },
 ]
-provides-extras = ["datasets", "docs", "models", "rasteret", "style", "tests", "all"]
+provides-extras = ["datasets", "docs", "models", "style", "tests", "all"]
 
 [[package]]
 name = "torchmetrics"

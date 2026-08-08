@@ -5,5 +5,4 @@ Dataset,Type,Source,Size (px),Resolution (m),License
 :ref:`NAIP`,Imagery,Aerial,"6,100x7,600",0.3--2,public domain
 :ref:`OpenAerialMap`,Imagery,Aerial,"256x256 OR 512x512",0.03--50,CC-BY-4.0
 :ref:`PRISMA`,Imagery,PRISMA,512x512,5--30,
-:ref:`Rasteret`,Imagery,Cloud-Optimized GeoTIFFs (COGs),variable,variable,depends on underlying data source
 :ref:`Sentinel`,Imagery,Sentinel,"10,000x10,000",10,CC-BY-SA-3.0-IGO
