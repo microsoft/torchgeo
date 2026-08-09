@@ -1,6 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
-# Licensed under the MIT License.
 
+# Licensed under the MIT License.
 
 import os
 from itertools import product
@@ -30,6 +30,52 @@ class TestBioMassters:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BioMassters(tmp_path)
+
+    def test_download_checksum(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls = []
+
+        def mock_download(
+            url: str, root: Path, filename: str | None = None, **kwargs: object
+        ) -> None:
+            calls.append((filename, kwargs))
+
+        monkeypatch.setattr('torchgeo.datasets.biomassters.download_url', mock_download)
+
+        dataset = BioMassters.__new__(BioMassters)
+        dataset.root = tmp_path
+        dataset.split = 'test'
+        dataset.checksum = True
+        dataset._download()
+
+        assert len(calls) == 3
+
+        for filename, kwargs in calls:
+            assert kwargs['sha256'] == dataset.checksums[filename]
+
+    def test_download_without_checksum(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls = []
+
+        def mock_download(
+            url: str, root: Path, filename: str | None = None, **kwargs: object
+        ) -> None:
+            calls.append((filename, kwargs))
+
+        monkeypatch.setattr('torchgeo.datasets.biomassters.download_url', mock_download)
+
+        dataset = BioMassters.__new__(BioMassters)
+        dataset.root = tmp_path
+        dataset.split = 'test'
+        dataset.checksum = False
+        dataset._download()
+
+        assert len(calls) == 3
+
+        for _, kwargs in calls:
+            assert kwargs['sha256'] is None
 
     def test_plot(self, dataset: BioMassters) -> None:
         dataset.plot(dataset[0], suptitle='Test')

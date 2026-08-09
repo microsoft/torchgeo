@@ -78,6 +78,17 @@ class BioMassters(NonGeoDataset):
 
     target_archive_filenames: ClassVar[dict[str, str]] = {'train': 'train_agbm.tar.gz'}
 
+    checksums: ClassVar[dict[str, str]] = {
+        'train_features.tar.gzaa': 'bf727a4ad437aa3b5f8e22364187794c1d046dba165479e4dcdb35760287e656',
+        'train_features.tar.gzab': '196d8a4c7e2fcd4f2f9f8ca6dd500532de470662a268fe4a6c3afd79a040359f',
+        'train_features.tar.gzac': '726dc04435fde063b5fb9ab177abd852938963a6f665185a6b459cd602fa33cf',
+        'train_features.tar.gzad': 'da2bcd5187e9ece658b65a26e8185a99648637e5cd059c16f4c5de40162eed4a',
+        'test_features.tar.gzaa': '1734253a7040b5adff7daa2daa1babcfb7e1f789d83774fc6d43bda5d7efacfc',
+        'test_features.tar.gzab': 'b185c38887575e67976ff6ca184340352d0dc09aae58d5a2cc74d60dc9d34826',
+        'train_agbm.tar.gz': '3909abc4569f36c9edf5c7358cd9ffef23c57f12e91fef9539cd7ac8a2e35e8d',
+        'biomassters_features_metadata.csv': '8e2cb4e6faa169ea3d5dada791f16cd44fe6149091a129c5ce28fb024f79ed93',
+    }
+
     def __init__(
         self,
         root: Path = 'data',
@@ -85,6 +96,7 @@ class BioMassters(NonGeoDataset):
         sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
         as_time_series: bool = False,
         download: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
 
@@ -99,6 +111,7 @@ class BioMassters(NonGeoDataset):
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
             download: if True, download dataset and store it in the root directory
+            checksum: if True, verify downloaded files using SHA-256 checksums
 
         Raises:
             AssertionError: if ``split`` or ``sensors`` is invalid
@@ -117,6 +130,7 @@ class BioMassters(NonGeoDataset):
         self.sensors = sensors
         self.as_time_series = as_time_series
         self.download = download
+        self.checksum = checksum
 
         self._verify()
 
@@ -274,7 +288,12 @@ class BioMassters(NonGeoDataset):
         archive_filenames.append(self.metadata_filename)
 
         for filename in archive_filenames:
-            download_url(self.url.format(filename), self.root, filename=filename)
+            download_url(
+                self.url.format(filename),
+                self.root,
+                filename=filename,
+                sha256=self.checksums[filename] if self.checksum else None,
+            )
 
     def _extract(self) -> None:
         """Extract the dataset."""
