@@ -20,7 +20,7 @@ When in doubt, open a vulnerability report and check with us.
 
 The following examples _do_ constitute security vulnerabilities:
 
-- **Insecure usage of our dependencies.** For example, the use of `eval`[^1], `exec`, `pickle.loads`, `subprocess.run(shell=True)`, or `torch.load(weights_only=False)`[^2] are standard features of Python and PyTorch. But without input validation, these can result in remote code execution.
+- **Insecure usage of our dependencies.** For example, the use of `eval`[^1], `exec`, `pickle.loads`, `subprocess.run(shell=True)`, `numpy.load(allow_pickle=True)`, or `torch.load(weights_only=False)`[^2] are standard features of Python, NumPy, and PyTorch. But without input validation, these can result in remote code execution.
 - **Vulnerabilities in CI.** For example, a vulnerability that allows exfiltration of private API keys would constitute a security vulnerability, not in TorchGeo, but in our release pipeline.
 - **Vulnerabilities in our downloads.** For example, zip bombs or viruses in our downloaded datasets or model weights would constitute a security vulnerability and should be reported.
 
