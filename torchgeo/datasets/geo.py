@@ -36,6 +36,7 @@ from rasterio.io import DatasetReader
 from rasterio.transform import Affine, array_bounds, from_gcps
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -482,7 +483,10 @@ class RasterDataset(GeoDataset):
                     if crs is None:
                         with rasterio.Env(OSR_WKT_FORMAT='WKT2_2018'):
                             crs = PROJ_CRS.from_user_input(vrt.crs)
-                    geometries.append(shapely.box(*vrt.bounds))
+                    footprint = self.footprint_from_datasource(vrt)
+                    if footprint is None:
+                        footprint = shapely.box(*vrt.bounds)
+                    geometries.append(footprint)
                     if res is None:
                         res = vrt.res
                 except rasterio.errors.RasterioIOError:
@@ -797,6 +801,26 @@ class RasterDataset(GeoDataset):
         )
 
         return dst_transform, dst_width, dst_height, needs_warp
+
+    def footprint_from_datasource(
+        self, datasource: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon | None:
+        """Compute the spatial footprint of the dataset from a file handle.
+
+        Called during indexing for each file in the dataset.
+        Override this in subclasses to compute a more precise footprint than
+        just the raster bounds (e.g., by reading a metadata file).
+
+        Args:
+            datasource: An open raster dataset.
+
+        Returns:
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
+
+        .. versionadded:: 0.10
+        """
+        return
 
 
 class XarrayDataset(GeoDataset):
