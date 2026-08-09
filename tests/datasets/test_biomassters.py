@@ -54,6 +54,29 @@ class TestBioMassters:
         for filename, kwargs in calls:
             assert kwargs['sha256'] == dataset.checksums[filename]
 
+    def test_download_checksum_train(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls = []
+
+        def mock_download(
+            url: str, root: Path, filename: str | None = None, **kwargs: object
+        ) -> None:
+            calls.append((filename, kwargs))
+
+        monkeypatch.setattr('torchgeo.datasets.biomassters.download_url', mock_download)
+
+        dataset = BioMassters.__new__(BioMassters)
+        dataset.root = tmp_path
+        dataset.split = 'train'
+        dataset.checksum = True
+        dataset._download()
+
+        assert len(calls) == 6
+
+        for filename, kwargs in calls:
+            assert kwargs['sha256'] == dataset.checksums[filename]
+
     def test_download_without_checksum(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
