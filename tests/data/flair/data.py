@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
@@ -173,8 +171,8 @@ def create_toy_dataset(base_dir: Path) -> Path:
     toy_dir = base_dir / 'FLAIR-HUB_TOY'
     toy_dir.mkdir(parents=True, exist_ok=True)
 
-    for domain_year, domain_info in DOMAIN_YEARS.items():
-        for modality in MODALITIES.keys():
+    for domain_year in DOMAIN_YEARS:
+        for modality in MODALITIES:
             dir_year = (
                 domain_year.replace(domain_year[-4:], '195X')
                 if modality == 'AERIAL-RLT_PAN'
@@ -210,8 +208,8 @@ def main() -> None:
     base_dir = Path(__file__).resolve().parent
 
     # Clean up
-    for domain_year in DOMAIN_YEARS.keys():
-        for modality in MODALITIES.keys():
+    for domain_year in DOMAIN_YEARS:
+        for modality in MODALITIES:
             dir_path = base_dir / f'{domain_year}_{modality}'
             if dir_path.exists():
                 shutil.rmtree(dir_path)
@@ -228,7 +226,7 @@ def main() -> None:
 
     # Create files: COSIA, LPIS, SENTINEL2_TS and AERIAL_RGBI for all domain-years; others for D006 only (plotting).
     for domain_year, domain_info in DOMAIN_YEARS.items():
-        for modality in MODALITIES.keys():
+        for modality in MODALITIES:
             if (
                 modality not in REQUIRED_MODALITIES_PER_DOMAIN
                 and domain_year != PLOTTING_ONLY_DOMAIN_YEAR

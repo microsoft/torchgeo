@@ -1325,8 +1325,8 @@ class FLAIRHUB(NonGeoDataset):
             'split_4',
             'split_5',
             'split_flairchallenge',
-        ]
-        | Literal['split_toy'] = 'split_1',
+            'split_toy',
+        ] = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
