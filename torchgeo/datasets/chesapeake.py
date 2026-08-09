@@ -593,11 +593,10 @@ class ChesapeakeCVPR(GeoDataset):
         self.download = download
         self.checksum = checksum
 
-        # The prior extension ships as a separate archive, so only require it
-        # when one of its layers is actually requested.
-        self.subdatasets: tuple[str, ...] = ('base',)
         if self.prior_layer in layers:
-            self.subdatasets += ('prior_extension',)
+            self.subdatasets = ('base', 'prior_extension')
+        else:
+            self.subdatasets = ('base',)
 
         self._verify()
 
