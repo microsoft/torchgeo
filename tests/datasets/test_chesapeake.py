@@ -184,8 +184,6 @@ class TestChesapeakeCVPR:
             ChesapeakeCVPR(tmp_path)
 
     def test_base_only_without_prior_extension(self, tmp_path: Path) -> None:
-        # Regression test: the prior extension is a separate archive, so a
-        # complete base install must work when no prior layer is requested.
         shutil.copy(
             os.path.join(
                 'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
@@ -195,8 +193,6 @@ class TestChesapeakeCVPR:
         ChesapeakeCVPR(tmp_path, splits=['de-test'], layers=['naip-new', 'lc'])
 
     def test_prior_extension_missing(self, tmp_path: Path) -> None:
-        # Requesting a prior layer without the prior extension archive should
-        # still raise, rather than silently failing later.
         shutil.copy(
             os.path.join(
                 'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
