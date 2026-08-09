@@ -20,7 +20,8 @@ from torchgeo.datasets import (
 
 class TestEDDMapS:
     @pytest.fixture(scope='class')
-    def dataset(self) -> EDDMapS:
+    @classmethod
+    def dataset(cls) -> EDDMapS:
         root = os.path.join('tests', 'data', 'eddmaps')
         return EDDMapS(root)
 

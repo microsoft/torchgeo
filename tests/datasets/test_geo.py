@@ -13,12 +13,11 @@ import pandas as pd
 import pytest
 import shapely
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
-from torch import Tensor
+from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -46,15 +45,18 @@ class CustomGeoDataset(GeoDataset):
         bounds: Sequence[
             tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]
         ] = [(0, 1, 2, 3, MINT, MAXT)],
-        crs: CRS = CRS.from_epsg(4087),
+        crs: CRS | None = None,
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
+        if crs is None:
+            crs = CRS.from_epsg(4087)
+        data = {'filepath': ['file.tif'] * len(bounds)}
         geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
             [(b[4], b[5]) for b in bounds], closed='both', name='datetime'
         )
-        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
+        self.index = GeoDataFrame(data, index=index, geometry=geometry, crs=crs)
         self.res = res
         self.paths = paths or []
 
@@ -149,7 +151,7 @@ class TestGeoDataset:
         ds2 = CustomGeoDataset()
         ds3 = CustomGeoDataset()
         ds4 = CustomGeoDataset()
-        dataset = (ds1 & ds2) & (ds3 & ds4)
+        dataset = ds1 & ds2 & ds3 & ds4
         assert isinstance(dataset, IntersectionDataset)
         assert len(dataset) == 1
 
@@ -173,7 +175,7 @@ class TestGeoDataset:
         ds2 = CustomGeoDataset()
         ds3 = CustomGeoDataset()
         ds4 = CustomGeoDataset()
-        dataset = (ds1 | ds2) | (ds3 | ds4)
+        dataset = ds1 | ds2 | ds3 | ds4
         assert isinstance(dataset, UnionDataset)
         assert len(dataset) == 4
 
@@ -198,7 +200,7 @@ class TestGeoDataset:
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # ty: ignore[unsupported-operator]
 
@@ -288,29 +290,28 @@ class TestGeoDataset:
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
-    def test_files_property_for_virtual_files(self) -> None:
-        # Tests only a subset of schemes and combinations.
-        paths = [
-            'file://directory/file.tif',
-            'zip://archive.zip!folder/file.tif',
-            'az://azure_bucket/prefix/file.tif',
-            '/vsiaz/azure_bucket/prefix/file.tif',
-            'zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif',
-            '/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif',
-        ]
-        assert len(CustomGeoDataset(paths=paths).files) == len(paths)
+    def test_files_property_empty_dir_no_warning(self, tmp_path: Path) -> None:
+        assert len(CustomGeoDataset(paths=[tmp_path]).files) == 0
 
-    def test_files_property_ordered(self) -> None:
+    def test_files_property_ordered(self, tmp_path: Path) -> None:
         """Ensure that the list of files is ordered."""
-        paths = ['file://file3.tif', 'file://file1.tif', 'file://file2.tif']
-        assert CustomGeoDataset(paths=paths).files == sorted(paths)
 
-    def test_files_property_deterministic(self) -> None:
+        files = ['file3.tif', 'file1.tif', 'file2.tif']
+        paths = [tmp_path / fake_file for fake_file in files]
+        for fake_file in paths:
+            fake_file.touch()
+        str_paths = [str(fake_file) for fake_file in paths]
+        assert CustomGeoDataset(paths=paths).files == sorted(str_paths)
+
+    def test_files_property_deterministic(self, tmp_path: Path) -> None:
         """Ensure that the list of files is consistent regardless of their original
         order.
         """
-        paths1 = ['file://file3.tif', 'file://file1.tif', 'file://file2.tif']
-        paths2 = ['file://file2.tif', 'file://file3.tif', 'file://file1.tif']
+        files = ['file3.tif', 'file1.tif', 'file2.tif']
+        paths1 = [tmp_path / fake_file for fake_file in files]
+        paths2 = paths1[::-1]  # reverse order
+        for fake_file in paths1:
+            fake_file.touch()
         assert (
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
@@ -322,6 +323,31 @@ class TestGeoDataset:
         bar.touch()
         ds = CustomGeoDataset(paths=[str(foo), bar])
         assert ds.files == [str(bar), str(foo)]
+
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
+    def test_files_from_archive(self, temp_archive: tuple[str, str]) -> None:
+        """A dataset finds the same files in a zipped archive as in a directory."""
+        directory, archive = temp_archive
+        bands = Sentinel2.rgb_bands
+        from_directory = Sentinel2(paths=directory, bands=bands, cache=False).files
+        from_archive = Sentinel2(
+            paths=f'/vsizip/{archive}', bands=bands, cache=False
+        ).files
+        assert from_archive  # the archive must actually yield files
+        assert [Path(p).stem for p in from_archive] == [
+            Path(p).stem for p in from_directory
+        ]
 
 
 class TestRasterDataset:
@@ -523,6 +549,11 @@ class TestRasterDataset:
         ):
             RasterDataset(root)
 
+    def test_cmap(self) -> None:
+        root = os.path.join('tests', 'data', 'cdl')
+        ds = RasterDataset(root)
+        assert ds.cmap is not None
+
 
 class TestXarrayDataset:
     pytest.importorskip('rioxarray', minversion='0.14.1')
@@ -532,7 +563,8 @@ class TestXarrayDataset:
         scope='class',
         params=itertools.product(['hdf5', 'netcdf'], [None, CRS.from_epsg(4979)]),
     )
-    def dataset(self, request: SubRequest) -> XarrayDataset:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> XarrayDataset:
         root = os.path.join('tests', 'data', request.param[0])
         transforms = nn.Identity()
         match request.param[0]:
@@ -565,6 +597,10 @@ class TestXarrayDataset:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
+    def test_getitem_returns_source_data(self, dataset: XarrayDataset) -> None:
+        image = dataset[dataset.bounds]['image']
+        assert (image > 0).any()
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             XarrayDataset(tmp_path)
@@ -572,19 +608,22 @@ class TestXarrayDataset:
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomVectorDataset:
+    @classmethod
+    def dataset(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def dataset_parquet(self) -> CustomVectorParquetDataset:
+    @classmethod
+    def dataset_parquet(cls) -> CustomVectorParquetDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorParquetDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def multilabel(self) -> CustomVectorDataset:
+    @classmethod
+    def multilabel(cls) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(
@@ -732,7 +771,8 @@ class TestVectorDataset:
 
 class TestNonGeoDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> NonGeoDataset:
+    @classmethod
+    def dataset(cls) -> NonGeoDataset:
         return CustomNonGeoDataset()
 
     def test_getitem(self, dataset: NonGeoDataset) -> None:
@@ -761,7 +801,7 @@ class TestNonGeoDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomNonGeoDataset()
         ds4 = CustomNonGeoDataset()
-        dataset = (ds1 + ds2) + (ds3 + ds4)
+        dataset = ds1 + ds2 + ds3 + ds4
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
@@ -776,12 +816,14 @@ class TestNonGeoDataset:
 
 class TestNonGeoClassificationDataset:
     @pytest.fixture(scope='class')
-    def dataset(self, root: str) -> NonGeoClassificationDataset:
+    @classmethod
+    def dataset(cls, root: str) -> NonGeoClassificationDataset:
         transforms = nn.Identity()
         return NonGeoClassificationDataset(root, transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def root(self) -> str:
+    @classmethod
+    def root(cls) -> str:
         root = os.path.join('tests', 'data', 'nongeoclassification')
         return root
 
@@ -815,7 +857,7 @@ class TestNonGeoClassificationDataset:
         ds2 = NonGeoClassificationDataset(root)
         ds3 = NonGeoClassificationDataset(root)
         ds4 = NonGeoClassificationDataset(root)
-        dataset = (ds1 + ds2) + (ds3 + ds4)
+        dataset = ds1 + ds2 + ds3 + ds4
         assert isinstance(dataset, ConcatDataset)
         assert len(dataset) == 8
 
@@ -826,7 +868,8 @@ class TestNonGeoClassificationDataset:
 
 class TestIntersectionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> IntersectionDataset:
+    @classmethod
+    def dataset(cls) -> IntersectionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
@@ -853,7 +896,7 @@ class TestIntersectionDataset:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             IntersectionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
 
@@ -1102,7 +1145,8 @@ class TestIntersectionDataset:
 
 class TestUnionDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> UnionDataset:
+    @classmethod
+    def dataset(cls) -> UnionDataset:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
@@ -1250,11 +1294,11 @@ class TestUnionDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomGeoDataset()
         msg = 'UnionDataset only supports GeoDatasets'
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds3)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds3, ds1)  # ty: ignore[invalid-argument-type]
 
     def test_invalid_index(self, dataset: UnionDataset) -> None:

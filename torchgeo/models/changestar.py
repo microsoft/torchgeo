@@ -6,9 +6,8 @@
 from typing import Literal
 
 import torch
-import torch.nn as nn
 from einops import rearrange
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 

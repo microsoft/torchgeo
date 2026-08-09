@@ -6,6 +6,7 @@
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .agrifieldnet import AgriFieldNet
+from .air_quality import AirQuality
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -123,6 +124,7 @@ from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
+from .mixins import PlottingMixin
 from .mmearth import MMEarth
 from .mmflood import MMFlood
 from .naip import NAIP
@@ -228,6 +230,7 @@ __all__ = (
     'VHR10',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
+    'AirQuality',
     'Airphen',
     'AsterGDEM',
     'BeninSmallHolderCashews',
@@ -339,6 +342,7 @@ __all__ = (
     'OpenBuildings',
     'OpenStreetMap',
     'PatternNet',
+    'PlottingMixin',
     'Potsdam2D',
     'PrestoEmbeddings',
     'QuakeSet',

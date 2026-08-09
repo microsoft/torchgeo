@@ -7,11 +7,11 @@ import glob
 import os
 from collections.abc import Callable
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -198,7 +198,7 @@ class ReforesTree(NonGeoDataset):
     def _verify(self) -> None:
         """Checks the integrity of the dataset structure."""
         filepaths = [os.path.join(self.root, dir) for dir in ['tiles', 'mapping']]
-        if all([os.path.exists(filepath) for filepath in filepaths]):
+        if all(os.path.exists(filepath) for filepath in filepaths):
             return
 
         filepath = os.path.join(self.root, self.zipfilename)

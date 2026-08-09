@@ -40,8 +40,10 @@ stop = {
 }
 
 meta_lines = [
-    'Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
-    'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n'
+    (
+        'Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
+        'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n'
+    )
 ]
 seasons = ['spring', 'summer', 'fall', 'winter', 'snow']
 grids = [1, 2]
@@ -119,7 +121,6 @@ for split in ['train', 'val', 'test']:
 
     # Create file list
     with open(os.path.join('splits', filename), 'w') as f:
-        for i in range(index):
-            f.write(str(i) + '\n')
+        f.writelines(str(i) + '\n' for i in range(index))
 
 shutil.make_archive('splits', 'zip', '.', 'splits')

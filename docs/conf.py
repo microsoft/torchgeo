@@ -37,6 +37,7 @@ release = torchgeo.__version__
 extensions = [
     'myst_parser',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
@@ -50,9 +51,8 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
-# https://github.com/sphinx-doc/sphinx/pull/10887
-needs_sphinx = '5.3'
+# Sphinx 8.0+ required by pydata-sphinx-theme 0.18.0+
+needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
@@ -63,6 +63,7 @@ nitpick_ignore = [
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
+    ('py:class', 'numpy._typing._array_like.NDArray'),
     ('py:class', 'numpy.uint8'),
     ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
     ('py:class', 'timm.models.resnet.ResNet'),
@@ -73,7 +74,6 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
-    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -128,6 +128,11 @@ html_theme_options = {
             'url': 'https://www.youtube.com/@TorchGeo',
             'icon': 'fa-brands fa-youtube',
         },
+        {
+            'name': 'Hugging Face',
+            'url': 'https://huggingface.co/torchgeo',
+            'icon': 'fa-brands fa-hugging-face',
+        },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
     'logo': {
@@ -173,6 +178,7 @@ intersphinx_mapping = {
     'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
+    'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
@@ -216,7 +222,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         if sourcefile is None:
             return None
         source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     # Make path relative to the repo root

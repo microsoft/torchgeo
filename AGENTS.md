@@ -24,7 +24,7 @@ cd docs && make clean && make html
 ## Project Structure
 
 ```
-torchgeo/{datamodules,datasets,losses,models,samplers,trainers,transforms}/
+torchgeo/{datamodules,datasets,losses,models,samplers,tasks,transforms}/
 tests/{data/<dataset>/,datasets/,...}
 ```
 

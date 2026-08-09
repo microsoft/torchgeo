@@ -4,6 +4,7 @@
 """TorchGeo datamodules."""
 
 from .agrifieldnet import AgriFieldNetDataModule
+from .air_quality import AirQualityDataModule
 from .bigearthnet import BigEarthNetDataModule
 from .bright import BRIGHTDFC2025DataModule
 from .cabuar import CaBuArDataModule
@@ -67,6 +68,7 @@ from .xbd import XView2DataModule, xBDDataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
+    'AirQualityDataModule',
     'BRIGHTDFC2025DataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
