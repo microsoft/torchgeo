@@ -120,7 +120,15 @@ class TestChesapeakeCVPR:
         monkeypatch.setattr(
             ChesapeakeCVPR,
             '_files',
-            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
+            {
+                'base': (
+                    'de_1m_2013_extended-debuffered-test_tiles',
+                    'spatial_index.geojson',
+                ),
+                'prior_extension': (
+                    'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                ),
+            },
         )
         root = tmp_path
         transforms = nn.Identity()
@@ -174,6 +182,33 @@ class TestChesapeakeCVPR:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ChesapeakeCVPR(tmp_path)
+
+    def test_base_only_without_prior_extension(self, tmp_path: Path) -> None:
+        # Regression test: the prior extension is a separate archive, so a
+        # complete base install must work when no prior layer is requested.
+        shutil.copy(
+            os.path.join(
+                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
+            ),
+            tmp_path,
+        )
+        ChesapeakeCVPR(tmp_path, splits=['de-test'], layers=['naip-new', 'lc'])
+
+    def test_prior_extension_missing(self, tmp_path: Path) -> None:
+        # Requesting a prior layer without the prior extension archive should
+        # still raise, rather than silently failing later.
+        shutil.copy(
+            os.path.join(
+                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
+            ),
+            tmp_path,
+        )
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            ChesapeakeCVPR(
+                tmp_path,
+                splits=['de-test'],
+                layers=['naip-new', ChesapeakeCVPR.prior_layer],
+            )
 
     def test_out_of_bounds_index(self, dataset: ChesapeakeCVPR) -> None:
         with pytest.raises(
