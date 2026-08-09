@@ -109,8 +109,6 @@ datasets = [
     # tokenizers 0.14+ required for Python 3.12 wheels
     # tokenizers does not yet provide wheels for Python 3.14t
     "tokenizers>=0.14; python_version<'3.14'",
-    # webdataset 0.2.4+ required for PyTorch tuple seed support
-    "webdataset>=0.2.4",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
 ]

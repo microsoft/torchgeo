@@ -3,18 +3,49 @@
 
 """Copernicus-Pretrain dataset."""
 
+import io
+import os
 import random
-from collections.abc import Iterator
-from typing import Any, ClassVar
+import re
+import tarfile
+from collections.abc import Iterator, Sequence
+from typing import ClassVar
 
+import requests
 import torch
+import torch.distributed as dist
+import torch.utils.data
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
-from torch import Tensor
 from torch.utils.data import IterableDataset
 
-from ..utils import Sample, lazy_import, quantile_normalization
+from ..utils import Sample, quantile_normalization
+
+
+def _expand_urls(urls: str | Sequence[str]) -> list[str]:
+    """Expand brace notation into a list of shard paths or URLs.
+
+    Args:
+        urls: One or more shard paths or URLs, optionally containing numeric
+            brace notation such as ``example-{000000..000009}.tar``.
+
+    Returns:
+        The expanded list of shard paths or URLs.
+    """
+    if not isinstance(urls, str):
+        return [expanded for url in urls for expanded in _expand_urls(url)]
+
+    match = re.search(r'\{(\d+)\.\.(\d+)\}', urls)
+    if match is None:
+        return [urls]
+
+    start, stop = match.group(1), match.group(2)
+    expanded = []
+    for i in range(int(start), int(stop) + 1):
+        shard = urls[: match.start()] + str(i).zfill(len(start)) + urls[match.end() :]
+        expanded.extend(_expand_urls(shard))
+    return expanded
 
 
 class CopernicusPretrain(IterableDataset[Sample]):
@@ -25,10 +56,10 @@ class CopernicusPretrain(IterableDataset[Sample]):
     consistent with ERA5), densely covering the whole land surface and near-land ocean
     with time series from eight distinct Sentinel modalities.
 
-    This dataset class uses WebDataset for efficient data loading in distributed
-    environments, which returns a PyTorch IterableDataset that is compatible with
-    Pytorch DataLoader. Note: it is recommended to further use webdataset.WebLoader
-    (a wrapper on DataLoader) for more features in data loading.
+    This dataset streams samples directly from its sharded tar archives, which can be
+    local files or remote http(s) URLs. It is a PyTorch IterableDataset that is
+    compatible with :class:`torch.utils.data.DataLoader`, and shards are automatically
+    split across distributed ranks and DataLoader workers.
 
     The full dataset has a varying number of modalities, S1/2 local patches, and
     timestamps for different grids. It also contains metadata including the filenames
@@ -61,26 +92,21 @@ class CopernicusPretrain(IterableDataset[Sample]):
        dem = sample['dem.pth']
 
        # Create a DataLoader for distributed training on 2 GPUs
-       dataset = dataset.dataset.batched(10)  # batch size
-       dataloader = webdataset.WebLoader(dataset, batch_size=None, num_workers=2)
-       # Unbatch, shuffle, and rebatch to mix samples from different workers
-       dataloader = dataloader.unbatched().shuffle(100).batched(10)
-       # A resampled dataset is infinite size, but we can recreate a fixed epoch length
+       dataloader = DataLoader(dataset, batch_size=10, num_workers=2)
+       # A resampled dataset is infinite size, so limit the epoch length
        # Total number of samples / (batch size * world size)
        number_of_batches = 1000 // (10 * 2)
-       dataloader = dataloader.with_epoch(number_of_batches)
 
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2503.11849
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `<https://pypi.org/project/webdataset/>`_ to load the dataset.
-
     .. versionadded:: 0.7
+
+    .. versionchanged:: 0.10
+       *webdataset* is no longer required to load this dataset. The constructor now
+       accepts explicit *urls*, *shardshuffle*, *resampled*, and *shuffle_buffer*
+       arguments instead of forwarding all arguments to ``webdataset.WebDataset``.
     """
 
     url_dict: ClassVar[dict[str, str]] = {
@@ -92,24 +118,27 @@ class CopernicusPretrain(IterableDataset[Sample]):
         '100_example': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/example_100_grids/example_100_webdataset/example-{000000..000009}.tar',
     }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        urls: str | Sequence[str],
+        shardshuffle: bool = False,
+        resampled: bool = False,
+        shuffle_buffer: int = 10,
+    ) -> None:
         """Initialize a new CopernicusPretrain instance.
 
         Args:
-            *args: Arguments passed to WebDataset base class.
-            **kwargs: Keyword arguments passed to WebDataset base class.
+            urls: One or more shard paths or http(s) URLs, optionally containing
+                numeric brace notation such as ``example-{000000..000009}.tar``.
+            shardshuffle: Shuffle the order of shards each epoch.
+            resampled: Yield an infinite stream of samples by sampling shards
+                with replacement instead of iterating over each shard once.
+            shuffle_buffer: Size of the buffer used to shuffle samples.
         """
-        wds = lazy_import('webdataset')
-
-        self.dataset = (
-            wds.WebDataset(*args, **kwargs)
-            .shuffle(10)  # shuffle individual samples before batching
-            .decode()  # decode binary data
-            .map(self._drop_metadata)  # remove non-Tensor metadata
-            .select(self._has_all_modalities)  # select samples with all modalities
-            .map(self._sample_one_local_patch)  # sample one local patch for S1 and S2
-            .map(self._sample_one_time_stamp)  # sample one timestamp for all modalities
-        )
+        self.urls = _expand_urls(urls)
+        self.shardshuffle = shardshuffle
+        self.resampled = resampled
+        self.shuffle_buffer = shuffle_buffer
 
     def __iter__(self) -> Iterator[Sample]:
         """Iterate over images in the dataset.
@@ -120,23 +149,104 @@ class CopernicusPretrain(IterableDataset[Sample]):
         .. versionchanged:: 0.10
            Removed *json* metadata.
         """
-        return iter(self.dataset)
+        samples = (
+            sample
+            for shard in self._iter_shards()
+            for sample in self._iter_samples(shard)
+        )
+        for sample in self._shuffle_samples(samples):
+            if self._has_all_modalities(sample):
+                sample = self._sample_one_local_patch(sample)
+                sample = self._sample_one_time_stamp(sample)
+                yield sample
 
-    def _drop_metadata(self, sample: dict[str, object]) -> Sample:
-        """Mapping function: remove all non-Tensor metadata.
+    def _iter_shards(self) -> Iterator[str]:
+        """Yield the shards that this rank and DataLoader worker should read.
+
+        If *resampled*, shards are sampled indefinitely with replacement.
+        Otherwise, shards are split across distributed ranks and DataLoader
+        workers, and each assigned shard is yielded once.
+
+        Yields:
+            Shard paths or URLs.
+        """
+        shards = self.urls
+        if self.resampled:
+            while True:
+                yield random.choice(shards)
+        else:
+            if dist.is_available() and dist.is_initialized():
+                shards = shards[dist.get_rank() :: dist.get_world_size()]
+            worker_info = torch.utils.data.get_worker_info()
+            if worker_info is not None:
+                shards = shards[worker_info.id :: worker_info.num_workers]
+            if self.shardshuffle:
+                shards = random.sample(shards, k=len(shards))
+            yield from shards
+
+    def _open_shard(self, shard: str) -> tarfile.TarFile:
+        """Open a local or remote tar shard for sequential streaming.
 
         Args:
-            sample: A single sample from the dataset.
+            shard: Local path or http(s) URL of a tar shard.
 
         Returns:
-            The same sample with only Tensor images.
+            The tar archive opened in streaming mode.
         """
-        new_sample = {}
-        for key, value in sample.items():
-            if isinstance(value, Tensor):
-                new_sample[key] = value
+        if shard.startswith(('http://', 'https://')):
+            response = requests.get(shard, stream=True, timeout=30)
+            response.raise_for_status()
+            return tarfile.open(fileobj=response.raw, mode='r|*')
+        return tarfile.open(shard, mode='r|*')
 
-        return new_sample
+    def _iter_samples(self, shard: str) -> Iterator[Sample]:
+        """Sequentially read samples from a single tar shard.
+
+        Files are grouped into samples by their prefix up to the first dot,
+        and ``.pth`` entries are decoded into tensors. All other entries,
+        including *json* metadata, are skipped.
+
+        Args:
+            shard: Local path or http(s) URL of a tar shard.
+
+        Yields:
+            sample of images
+        """
+        with self._open_shard(shard) as tar:
+            key = None
+            sample: Sample = {}
+            for member in (m for m in tar if m.isfile()):
+                prefix, _, field = os.path.basename(member.name).partition('.')
+                if prefix != key:
+                    if sample:
+                        yield sample
+                    key = prefix
+                    sample = {}
+                if field.endswith('.pth'):
+                    data = tar.extractfile(member)
+                    assert data is not None
+                    sample[field] = torch.load(
+                        io.BytesIO(data.read()), weights_only=True
+                    )
+            if sample:
+                yield sample
+
+    def _shuffle_samples(self, samples: Iterator[Sample]) -> Iterator[Sample]:
+        """Shuffle a stream of samples using a fixed-size buffer.
+
+        Args:
+            samples: Stream of samples to shuffle.
+
+        Yields:
+            sample of images
+        """
+        buffer: list[Sample] = []
+        for sample in samples:
+            buffer.append(sample)
+            if len(buffer) >= self.shuffle_buffer:
+                yield buffer.pop(random.randrange(len(buffer)))
+        while buffer:
+            yield buffer.pop(random.randrange(len(buffer)))
 
     def _has_all_modalities(self, sample: Sample) -> bool:
         """Selection function: filter samples with all required modalities.

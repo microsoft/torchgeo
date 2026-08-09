@@ -1,13 +1,18 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import io
 import os
 import shutil
+import tarfile
 from pathlib import Path
+from typing import NamedTuple
 
 import pandas as pd
 import pytest
+import requests
 import torch
+import torch.utils.data
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
@@ -127,17 +132,44 @@ class TestCopernicusBench:
             dataset.plot(dataset[0])
 
 
+def create_shard(path: Path, keys: list[str], fields: list[str] | None = None) -> None:
+    if fields is None:
+        fields = [
+            's1_grd',
+            's2_toa',
+            's3_olci',
+            's5p_co',
+            's5p_no2',
+            's5p_o3',
+            's5p_so2',
+            'dem',
+        ]
+    with tarfile.open(path, 'w') as tar:
+        for key in keys:
+            for field in fields:
+                buffer = io.BytesIO()
+                torch.save(torch.rand(2, 2, 2), buffer)
+                data = buffer.getvalue()
+                info = tarfile.TarInfo(f'{key}.{field}.pth')
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+
+
+class WorkerInfo(NamedTuple):
+    id: int
+    num_workers: int
+
+
 class TestCopernicusPretrain:
     @pytest.fixture
-    def dataset(self) -> CopernicusPretrain:
-        pytest.importorskip('webdataset')
-
+    def urls(self) -> str:
         root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
-        shards = 'example-000000.tar'
-        # WebDataset requires forward slash for paths, even on Windows
-        urls = os.path.join(root, shards).replace('\\', '/')
-        dataset = CopernicusPretrain(urls, shardshuffle=False)
-        return dataset
+        shards = 'example-{000000..000000}.tar'
+        return os.path.join(root, shards)
+
+    @pytest.fixture
+    def dataset(self, urls: str) -> CopernicusPretrain:
+        return CopernicusPretrain(urls, shardshuffle=False)
 
     def test_getitem(self, dataset: CopernicusPretrain) -> None:
         x = next(iter(dataset))
@@ -164,6 +196,61 @@ class TestCopernicusPretrain:
         x = next(iter(dataset))
         dataset.plot(x, suptitle='Test')
         plt.close()
+
+    def test_expand_urls(self, urls: str) -> None:
+        assert len(CopernicusPretrain('example-{000000..000009}.tar').urls) == 10
+        assert CopernicusPretrain('example-000000.tar').urls == ['example-000000.tar']
+        assert len(CopernicusPretrain([urls, urls]).urls) == 2
+
+    def test_shardshuffle(self, urls: str) -> None:
+        dataset = CopernicusPretrain(urls, shardshuffle=True)
+        assert len(list(dataset)) == 1
+
+    def test_resampled(self, urls: str) -> None:
+        dataset = CopernicusPretrain(urls, resampled=True)
+        it = iter(dataset)
+        for _ in range(2):
+            assert isinstance(next(it)['s1_grd.pth'], torch.Tensor)
+
+    def test_shuffle_buffer(self, urls: str) -> None:
+        dataset = CopernicusPretrain([urls, urls], shuffle_buffer=1)
+        assert len(list(dataset)) == 2
+
+    def test_remote_shards(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        path = tmp_path / 'example-000000.tar'
+        create_shard(path, keys=['a', 'b'])
+
+        class Response:
+            raw: io.BufferedReader
+
+            def raise_for_status(self) -> None:
+                pass
+
+        with open(path, 'rb') as f:
+            Response.raw = f
+            monkeypatch.setattr(requests, 'get', lambda url, **kwargs: Response())
+            dataset = CopernicusPretrain('https://example.com/example-000000.tar')
+            assert len(list(dataset)) == 2
+
+    def test_worker_split(self, monkeypatch: MonkeyPatch, urls: str) -> None:
+        monkeypatch.setattr(
+            torch.utils.data, 'get_worker_info', lambda: WorkerInfo(1, 2)
+        )
+        dataset = CopernicusPretrain([urls, urls])
+        assert len(list(dataset)) == 1
+
+    def test_distributed_split(self, monkeypatch: MonkeyPatch, urls: str) -> None:
+        monkeypatch.setattr(torch.distributed, 'is_initialized', lambda: True)
+        monkeypatch.setattr(torch.distributed, 'get_rank', lambda: 0)
+        monkeypatch.setattr(torch.distributed, 'get_world_size', lambda: 2)
+        dataset = CopernicusPretrain([urls, urls])
+        assert len(list(dataset)) == 1
+
+    def test_missing_modalities(self, tmp_path: Path) -> None:
+        path = tmp_path / 'example-000000.tar'
+        create_shard(path, keys=['a'], fields=['s1_grd'])
+        dataset = CopernicusPretrain(str(path))
+        assert list(dataset) == []
 
 
 class TestCopernicusEmbed:
