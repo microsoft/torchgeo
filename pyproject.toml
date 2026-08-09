@@ -86,6 +86,8 @@ dependencies = [
     "torchmetrics[detection]>=1.5",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
+    # tqdm 4.57+ required to match lightning's own tqdm dependency
+    "tqdm>=4.57",
     # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
