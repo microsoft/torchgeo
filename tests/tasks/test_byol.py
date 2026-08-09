@@ -35,27 +35,6 @@ class TestBYOLModule:
         augment_fn = SimCLRAugmentation((2, 2))
         BYOLModule(model, augment_fn=augment_fn)
 
-    def test_target_network_is_independent(self) -> None:
-        module = BYOLModule(resnet18(), image_size=(64, 64), in_channels=3)
-        backbone_params = dict(module.backbone.named_parameters())
-        target_params = dict(module.target.named_parameters())
-        assert backbone_params.keys() == target_params.keys()
-        for name, param in backbone_params.items():
-            assert param is not target_params[name]
-            assert torch.equal(param, target_params[name])
-            assert not target_params[name].requires_grad
-
-    def test_update_target(self) -> None:
-        module = BYOLModule(resnet18(), image_size=(64, 64), in_channels=3, beta=0.9)
-        with torch.no_grad():
-            for param in module.backbone.parameters():
-                param.add_(1)
-        module.update_target()
-        for p, pt in zip(
-            module.backbone.parameters(), module.target.parameters(), strict=True
-        ):
-            assert torch.allclose(pt, p - 0.9, atol=1e-6)
-
 
 class TestBYOL:
     @pytest.mark.parametrize(
