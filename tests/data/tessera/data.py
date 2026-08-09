@@ -20,12 +20,13 @@ def ensure_tessera_data(
     root: str | os.PathLike[str] | None = None,
     *,
     size: int = SIZE,
-    crs: CRS | str = CRS.from_epsg(32631),
+    crs: CRS | str | None = None,
     transform: Affine | None = None,
     year: str = '2024',
     subfolder: str = 'global_0.1_degree_representation',
 ) -> None:
     """Create fake Tessera embeddings data using the fixed fixture layout."""
+    crs = crs if crs is not None else CRS.from_epsg(32631)
     root_path = Path(root) if root is not None else Path.cwd()
     directory = root_path / subfolder / year / 'grid_0.05_51.35'
     filename = directory / f'grid_0.05_51.35_{year}.tiff'

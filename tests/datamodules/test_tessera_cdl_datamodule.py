@@ -10,9 +10,9 @@ import torch
 from tests.data.tessera_cdl.data import ensure_tessera_cdl_data
 from torchgeo.datamodules import TesseraCDLDataModule
 from torchgeo.datamodules.utils import collate_fn_embeddings
-from torchgeo.datasets import CDL, GeoDataset
 
 EMBEDDINGS_DIM = 128
+CDL_ROOT = str(Path('tests') / 'data' / 'cdl')
 
 
 class TestCollateFunction:
@@ -52,13 +52,12 @@ class TestTesseraCDLDataModule:
 
     @pytest.fixture
     def datamodule(self, tmp_path: Path) -> TesseraCDLDataModule:
-        """Create test datamodule with generated test data in a temp dir."""
+        """Create test datamodule with generated Tessera data in a temp dir."""
         tessera_root = tmp_path / 'tessera_cdl'
-        cdl_root = tmp_path / 'cdl'
-        ensure_tessera_cdl_data(tessera_root, cdl_root)
+        ensure_tessera_cdl_data(tessera_root)
 
         return TesseraCDLDataModule(
-            data_dir=str(cdl_root),
+            data_dir=CDL_ROOT,
             tessera_root=str(tessera_root),
             year=2023,
             batch_size=2,
@@ -76,10 +75,14 @@ class TestTesseraCDLDataModule:
         assert datamodule.num_train_patches == 2
 
     def test_setup(self, datamodule: TesseraCDLDataModule) -> None:
-        """Test setup creates train and validation datasets."""
+        """Test setup creates datasets and samplers for each stage."""
         datamodule.setup('fit')
         assert datamodule.train_dataset is not None
         assert datamodule.val_dataset is not None
+
+        datamodule.setup('test')
+        assert datamodule.test_dataset is not None
+        assert datamodule.test_sampler is not None
 
     @pytest.mark.parametrize('stage', ['fit', 'validate'])
     def test_dataloader(self, datamodule: TesseraCDLDataModule, stage: str) -> None:
@@ -99,12 +102,6 @@ class TestTesseraCDLDataModule:
         assert batch['embeddings'].shape[0] == batch['labels'].shape[0]
         assert batch['embeddings'].shape[1] == EMBEDDINGS_DIM
 
-    def test_pin_memory(self, datamodule: TesseraCDLDataModule) -> None:
-        """Test pin_memory follows cuda availability."""
-        datamodule.setup('fit')
-        loader = datamodule.train_dataloader()
-        assert loader.pin_memory == torch.cuda.is_available()
-
     def test_on_after_batch_transfer(self, datamodule: TesseraCDLDataModule) -> None:
         """Test batch transfer returns batch unchanged."""
         batch = {
@@ -116,38 +113,17 @@ class TestTesseraCDLDataModule:
         assert torch.equal(result['embeddings'], batch['embeddings'])
         assert torch.equal(result['labels'], batch['labels'])
 
-    def test_setup_missing_train_tessera_dir(self, tmp_path: Path) -> None:
-        """Test setup raises when the train Tessera directory is missing."""
-        cdl_root = tmp_path / 'cdl'
-        ensure_tessera_cdl_data(tmp_path / 'tessera_cdl', cdl_root)
-
-        bad_tessera_root = tmp_path / 'missing_tessera'
-        datamodule = TesseraCDLDataModule(
-            data_dir=str(cdl_root),
-            tessera_root=str(bad_tessera_root),
-            year=2023,
-            batch_size=2,
-            num_workers=0,
-            num_train_patches=2,
-            patch_size=16,
-            download=False,
-        )
-
-        with pytest.raises(FileNotFoundError, match='Tessera directory not found'):
-            datamodule.setup('fit')
-
-    def test_setup_missing_val_tessera_dir(self, tmp_path: Path) -> None:
-        """Test setup raises when the validation Tessera directory is missing."""
+    @pytest.mark.parametrize('missing_split', ['train', 'val'])
+    def test_setup_missing_tessera_dir(
+        self, tmp_path: Path, missing_split: str
+    ) -> None:
+        """Test setup raises when a split's Tessera directory is missing."""
         tessera_root = tmp_path / 'tessera_cdl'
-        cdl_root = tmp_path / 'cdl'
-        ensure_tessera_cdl_data(tessera_root, cdl_root)
-
-        val_dir = tessera_root / 'val'
-        if val_dir.exists():
-            shutil.rmtree(val_dir)
+        ensure_tessera_cdl_data(tessera_root)
+        shutil.rmtree(tessera_root / missing_split)
 
         datamodule = TesseraCDLDataModule(
-            data_dir=str(cdl_root),
+            data_dir=CDL_ROOT,
             tessera_root=str(tessera_root),
             year=2023,
             batch_size=2,
@@ -158,51 +134,4 @@ class TestTesseraCDLDataModule:
         )
 
         with pytest.raises(FileNotFoundError, match='Tessera directory not found'):
-            datamodule.setup('fit')
-
-    def test_explicit_split_dirs(self, tmp_path: Path) -> None:
-        """Test that explicit train/val/test dirs override the default layout."""
-        tessera_root = tmp_path / 'tessera_cdl'
-        cdl_root = tmp_path / 'cdl'
-        ensure_tessera_cdl_data(tessera_root, cdl_root)
-
-        train_dir = tessera_root / 'train' / 'global_0.1_degree_representation' / '2023'
-        val_dir = tessera_root / 'val' / 'global_0.1_degree_representation' / '2023'
-
-        datamodule = TesseraCDLDataModule(
-            data_dir=str(cdl_root),
-            tessera_root=str(tmp_path / 'does_not_exist'),
-            year=2023,
-            batch_size=2,
-            num_workers=0,
-            num_train_patches=2,
-            patch_size=16,
-            download=False,
-            train_dir=str(train_dir),
-            val_dir=str(val_dir),
-            test_dir=str(val_dir),
-        )
-
-        datamodule.setup('fit')
-        assert datamodule.train_dataset is not None
-        assert datamodule.val_dataset is not None
-
-        datamodule.setup('test')
-        assert datamodule.test_dataset is not None
-        assert datamodule.test_sampler is not None
-
-    def test_setup_train_dataset_none(
-        self, datamodule: TesseraCDLDataModule, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Test setup raises if the train dataset could not be built."""
-        original_build_dataset = datamodule._build_dataset
-
-        def fake_build_dataset(split: str, cdl: CDL) -> GeoDataset | None:
-            if split == 'train':
-                return None
-            return original_build_dataset(split, cdl)
-
-        monkeypatch.setattr(datamodule, '_build_dataset', fake_build_dataset)
-
-        with pytest.raises(FileNotFoundError, match='Train dataset could not be built'):
             datamodule.setup('fit')

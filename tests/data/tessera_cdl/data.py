@@ -6,20 +6,20 @@ from pathlib import Path
 from rasterio import Affine
 from rasterio.crs import CRS
 
-from tests.data.cdl.data import ensure_cdl_data
 from tests.data.tessera.data import ensure_tessera_data
 
-SIZE = 64  # patch size for Tessera embeddings and CDL labels
+SIZE = 64  # patch size for Tessera embeddings, sized to fit inside tests/data/cdl
 YEAR = '2023'
+# Matches the origin/resolution of the CDL fixture at tests/data/cdl so the two
+# datasets overlap.
 affine = Affine(30.0, 0.0, 399960.0, 0.0, -30.0, 4500000.0)
 
 
-def ensure_tessera_cdl_data(tessera_root: Path, cdl_root: Path | None = None) -> None:
-    """Ensure Tessera and CDL test data exists with overlapping footprints."""
+def ensure_tessera_cdl_data(tessera_root: Path) -> None:
+    """Ensure Tessera test data exists overlapping the tests/data/cdl fixture."""
     tessera_root = Path(tessera_root)
-    cdl_root = Path(cdl_root) if cdl_root is not None else tessera_root.parent / 'cdl'
 
-    for split in ['train', 'val']:
+    for split in ['train', 'val', 'test']:
         split_root = tessera_root / split
         ensure_tessera_data(
             split_root,
@@ -29,5 +29,3 @@ def ensure_tessera_cdl_data(tessera_root: Path, cdl_root: Path | None = None) ->
             year=YEAR,
             subfolder='global_0.1_degree_representation',
         )
-
-    ensure_cdl_data(cdl_root, size=SIZE, crs='epsg:32616', transform=affine)

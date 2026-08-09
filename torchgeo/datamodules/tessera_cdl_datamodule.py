@@ -35,14 +35,12 @@ class TesseraCDLDataModule(GeoDataModule):
         num_workers: int = 0,
         download: bool = True,
         subfolder: str = 'global_0.1_degree_representation',
-        train_dir: str | None = None,
-        val_dir: str | None = None,
-        test_dir: str | None = None,
     ) -> None:
         """Initialize a new TesseraCDLDataModule instance.
 
         Args:
-            tessera_root: Root directory containing Tessera embeddings.
+            tessera_root: Root directory containing Tessera embeddings, laid
+                out as ``<tessera_root>/<split>/<subfolder>/<year>``.
             data_dir: Root directory containing CDL data.
             year: Year of CDL data to use.
             classes: List of class indices to include. If None, all classes are included.
@@ -53,15 +51,6 @@ class TesseraCDLDataModule(GeoDataModule):
             download: Whether to download data if not found locally.
             subfolder: Subdirectory inside `tessera_root` containing Tessera
                 embeddings (default: 'global_0.1_degree_representation').
-            train_dir: Optional explicit directory containing the training
-                Tessera embeddings. If not provided, the default
-                ``<tessera_root>/train/<subfolder>/<year>`` layout is used.
-            val_dir: Optional explicit directory containing the validation
-                Tessera embeddings. If not provided, the default
-                ``<tessera_root>/val/<subfolder>/<year>`` layout is used.
-            test_dir: Optional explicit directory containing the test Tessera
-                embeddings. If not provided, the default
-                ``<tessera_root>/test/<subfolder>/<year>`` layout is used.
         """
         super().__init__(dataset_class=GeoDataset)
 
@@ -75,9 +64,6 @@ class TesseraCDLDataModule(GeoDataModule):
         self.num_workers = num_workers
         self.download = download
         self.subfolder = subfolder
-        self.train_dir = train_dir
-        self.val_dir = val_dir
-        self.test_dir = test_dir
         self.collate_fn = collate_fn_embeddings
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
@@ -96,19 +82,20 @@ class TesseraCDLDataModule(GeoDataModule):
         """
         return batch
 
-    def _build_dataset(self, split: str, cdl: CDL) -> GeoDataset | None:
-        """Build a dataset for the given split if the data directory exists."""
-        split_dir = None
+    def _build_dataset(self, split: str, cdl: CDL) -> GeoDataset:
+        """Build a dataset for the given split.
 
-        if split == 'train' and self.train_dir is not None:
-            split_dir = Path(self.train_dir)
-        elif split == 'val' and self.val_dir is not None:
-            split_dir = Path(self.val_dir)
-        elif split == 'test' and self.test_dir is not None:
-            split_dir = Path(self.test_dir)
-        else:
-            base_path = Path(self.tessera_root)
-            split_dir = base_path / split / self.subfolder / str(self.year)
+        Args:
+            split: One of 'train', 'val', or 'test'.
+            cdl: The shared CDL dataset to intersect with.
+
+        Returns:
+            The intersection of the Tessera embeddings and CDL datasets.
+
+        Raises:
+            FileNotFoundError: If the split's Tessera directory does not exist.
+        """
+        split_dir = Path(self.tessera_root) / split / self.subfolder / str(self.year)
 
         if not split_dir.exists():
             raise FileNotFoundError(f'Tessera directory not found: {split_dir}')
@@ -129,10 +116,7 @@ class TesseraCDLDataModule(GeoDataModule):
             download=self.download,
         )
 
-        train_dataset = self._build_dataset('train', cdl)
-        if train_dataset is None:
-            raise FileNotFoundError('Train dataset could not be built')
-        self.train_dataset = train_dataset
+        self.train_dataset = self._build_dataset('train', cdl)
 
         if stage in ['fit']:
             self.train_sampler = RandomPatchSampler(
@@ -140,17 +124,13 @@ class TesseraCDLDataModule(GeoDataModule):
             )
 
         if stage in ['fit', 'validate']:
-            val_dataset = self._build_dataset('val', cdl)
-            self.val_dataset = val_dataset
-            if self.val_dataset is not None:
-                self.val_sampler = GriddedPatchSampler(
-                    self.val_dataset, size=self.patch_size, stride=self.patch_size
-                )
+            self.val_dataset = self._build_dataset('val', cdl)
+            self.val_sampler = GriddedPatchSampler(
+                self.val_dataset, size=self.patch_size, stride=self.patch_size
+            )
 
         if stage in ['test']:
-            test_dataset = self._build_dataset('test', cdl)
-            self.test_dataset = test_dataset
-            if self.test_dataset is not None:
-                self.test_sampler = GriddedPatchSampler(
-                    self.test_dataset, size=self.patch_size, stride=self.patch_size
-                )
+            self.test_dataset = self._build_dataset('test', cdl)
+            self.test_sampler = GriddedPatchSampler(
+                self.test_dataset, size=self.patch_size, stride=self.patch_size
+            )
