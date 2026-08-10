@@ -5,18 +5,23 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+import contextlib
+import pathlib
+import types
+from typing import Any, Self
 
 import numpy as np
 import rasterio
 import rasterio.shutil
-from pyproj import CRS
+from rasterio.crs import CRS
+from rasterio.io import DatasetWriter
 from rasterio.transform import Affine
 from rasterio.windows import Window
 
+from torchgeo.datasets.utils import Path
 
-class GeoTIFFWriter:
+
+class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
     """GeoTIFF writer with chunked writing and COG support.
 
     Example::
@@ -37,7 +42,7 @@ class GeoTIFFWriter:
 
     def __init__(
         self,
-        output_path: str | Path,
+        output_path: Path,
         width: int,
         height: int,
         num_bands: int,
@@ -45,7 +50,7 @@ class GeoTIFFWriter:
         transform: Affine,
         dtype: str = 'uint8',
         nodata: float | None = None,
-        cog_config: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize writer.
 
@@ -58,9 +63,10 @@ class GeoTIFFWriter:
             transform: Affine transform.
             dtype: Output data type.
             nodata: Value to use for nodata pixels.
-            cog_config: Optional COG configuration.
+            **kwargs: Additional keyword arguments passed to the GDAL COG
+                driver (e.g. ``compress``, ``overview_resampling``).
         """
-        self.output_path = Path(output_path)
+        self.output_path = pathlib.Path(output_path)
         self.width = width
         self.height = height
         self.num_bands = num_bands
@@ -68,32 +74,32 @@ class GeoTIFFWriter:
         self.transform = transform
         self.dtype = dtype
         self.nodata = nodata
-        self.cog_config = cog_config or {}
+        self.kwargs = kwargs
 
         self.tmp_path = self.output_path.with_suffix('.tmp.tif')
-        self.dataset: Any = None
+        self.dataset: DatasetWriter | None = None
 
-    def __enter__(self) -> GeoTIFFWriter:
+    def __enter__(self) -> Self:
         """Open GeoTIFF for writing.
 
         Returns:
             GeoTIFFWriter instance.
         """
-        kwargs = {
-            'driver': 'GTiff',
-            'height': self.height,
-            'width': self.width,
-            'count': self.num_bands,
-            'dtype': self.dtype,
-            'crs': self.crs,
-            'transform': self.transform,
-            'nodata': self.nodata,
-            'tiled': True,
-            'compress': self.cog_config.get('compress', 'lzw'),
-            'BIGTIFF': 'IF_SAFER',
-        }
-
-        self.dataset = rasterio.open(self.tmp_path, 'w', **kwargs)
+        self.dataset = rasterio.open(
+            self.tmp_path,
+            'w',
+            driver='GTiff',
+            height=self.height,
+            width=self.width,
+            count=self.num_bands,
+            dtype=self.dtype,
+            crs=self.crs,
+            transform=self.transform,
+            nodata=self.nodata,
+            tiled=True,
+            compress=self.kwargs.get('compress', 'lzw'),
+            BIGTIFF='IF_SAFER',
+        )
         return self
 
     def write_chunk(
@@ -107,16 +113,18 @@ class GeoTIFFWriter:
             y_offset: Row offset in output.
             x_offset: Column offset in output.
         """
-        if self.dataset is None:
-            raise RuntimeError('Writer not opened. Use with statement.')
-
         if data.ndim == 2:
             data = data[np.newaxis]
         _, h, w = data.shape
-        window = Window(x_offset, y_offset, w, h)  # ty: ignore[too-many-positional-arguments]
+        window = Window(x_offset, y_offset, w, h)
         self.dataset.write(data, window=window)
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         """Finalize the COG on exit and clean up the temporary file.
 
         Args:
@@ -146,10 +154,8 @@ class GeoTIFFWriter:
                 self.tmp_path,
                 self.output_path,
                 driver='COG',
-                compress=self.cog_config.get('compress', 'lzw'),
-                overview_resampling=self.cog_config.get(
-                    'overview_resampling', 'nearest'
-                ),
+                compress=self.kwargs.get('compress', 'lzw'),
+                overview_resampling=self.kwargs.get('overview_resampling', 'nearest'),
                 BIGTIFF='IF_SAFER',
             )
         finally:

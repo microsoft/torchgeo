@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import rasterio
-from rasterio.transform import Affine
+from affine import Affine
 
 from torchgeo.callbacks.writer import GeoTIFFWriter
 
@@ -157,24 +157,6 @@ class TestGeoTIFFWriter:
         with rasterio.open(output) as src:
             assert src.nodata is None
 
-    def test_write_without_context_raises(self, tmp_path: Path) -> None:
-        """Test writing without context manager raises error."""
-        output = tmp_path / 'test.tif'
-        transform = Affine(1, 0, 0, 0, -1, 100)
-
-        writer = GeoTIFFWriter(
-            output_path=output,
-            width=64,
-            height=64,
-            num_bands=1,
-            crs='EPSG:32631',
-            transform=transform,
-        )
-
-        data = np.ones((64, 64), dtype=np.uint8)
-        with pytest.raises(RuntimeError, match='Writer not opened'):
-            writer.write_chunk(data, 0, 0)
-
     def test_finalize_creates_cog(self, tmp_path: Path) -> None:
         """Test finalize produces a valid Cloud-Optimized GeoTIFF."""
         output = tmp_path / 'test_cog.tif'
@@ -187,7 +169,7 @@ class TestGeoTIFFWriter:
             num_bands=1,
             crs='EPSG:32631',
             transform=transform,
-            cog_config={'overview_resampling': 'nearest'},
+            overview_resampling='nearest',
         )
 
         data = np.ones((1024, 1024), dtype=np.uint8)
@@ -213,10 +195,9 @@ class TestGeoTIFFWriter:
             transform=transform,
         )
 
-        with pytest.raises(ValueError, match='boom'):
-            with writer:
-                writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
-                raise ValueError('boom')
+        with pytest.raises(ValueError, match='boom'), writer:
+            writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
+            raise ValueError('boom')
 
         assert not writer.tmp_path.exists()
         assert not output.exists()
