@@ -101,7 +101,12 @@ class TesseraCDLDataModule(GeoDataModule):
             raise FileNotFoundError(f'Tessera directory not found: {split_dir}')
 
         tessera = TesseraEmbeddings(paths=str(split_dir))
-        return tessera & cdl
+        # IntersectionDataset reprojects its right-hand operand to the left-hand
+        # operand's CRS/resolution. CDL is coarser and in a different CRS, so
+        # putting it on the left keeps the per-read reprojection cost on the
+        # (smaller, higher-resolution) Tessera side instead of warping CDL up
+        # to Tessera's resolution on every sample.
+        return cdl & tessera
 
     def setup(self, stage: str | None = None) -> None:
         """Set up datasets and samplers."""
