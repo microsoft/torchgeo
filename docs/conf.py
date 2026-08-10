@@ -161,6 +161,11 @@ autodoc_default_options = {
 autodoc_member_order = 'bysource'
 autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'documented'
+autodoc_type_aliases = {
+    'GeoSlice': 'torchgeo.datasets.utils.GeoSlice',
+    'Path': 'torchgeo.datasets.utils.Path',
+    'Sample': 'torchgeo.datasets.utils.Sample',
+}
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {

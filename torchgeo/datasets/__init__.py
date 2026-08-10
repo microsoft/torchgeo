@@ -186,6 +186,9 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    GeoSlice,
+    Path,
+    Sample,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -302,6 +305,7 @@ __all__ = (
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',
+    'GeoSlice',
     'GlobBiomass',
     'GlobalBuildingMap',
     'GlobalMangroveWatch',
@@ -343,6 +347,7 @@ __all__ = (
     'OpenAerialMap',
     'OpenBuildings',
     'OpenStreetMap',
+    'Path',
     'PatternNet',
     'PlottingMixin',
     'Potsdam2D',
@@ -354,6 +359,7 @@ __all__ = (
     'RwandaFieldBoundary',
     'S2100k',
     'SSL4EOLBenchmark',
+    'Sample',
     'SatlasPretrain',
     'SeasoNet',
     'SeasonalContrastS2',
