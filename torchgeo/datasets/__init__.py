@@ -124,6 +124,7 @@ from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
+from .meta_chm import MetaCHM
 from .millionaid import MillionAID
 from .mixins import PlottingMixin
 from .mmearth import MMEarth
@@ -336,6 +337,7 @@ __all__ = (
     'MMFlood',
     'MajorTOMEmbeddings',
     'MapInWild',
+    'MetaCHM',
     'MillionAID',
     'NASAMarineDebris',
     'NonGeoClassificationDataset',
