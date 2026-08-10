@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Literal
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -57,6 +57,7 @@ class BioMassters(NonGeoDataset):
 
     valid_splits = ('train', 'test')
     valid_sensors = ('S1', 'S2')
+    channel_counts: ClassVar[dict[str, int]] = {'S1': 4, 'S2': 11}
 
     metadata_filename = 'biomassters_features_metadata.csv'
 
@@ -64,7 +65,7 @@ class BioMassters(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
-        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
+        sensors: Sequence[Literal['S1', 'S2']] = ('S1', 'S2'),
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
@@ -94,7 +95,7 @@ class BioMassters(NonGeoDataset):
         assert set(sensors).issubset(set(self.valid_sensors)), (
             f'Please choose a subset of valid sensors: {self.valid_sensors}.'
         )
-        self.sensors = sensors
+        self.sensors = tuple(sensors)
         self.as_time_series = as_time_series
 
         self._verify()
@@ -146,23 +147,69 @@ class BioMassters(NonGeoDataset):
         """
         sample_df = self.df[self.df['num_index'] == index].copy()
 
-        # sort by satellite and month to return correct order
-        sample_df.sort_values(
-            by=['satellite', 'num_month'], inplace=True, ascending=True
-        )
+        if self.as_time_series:
+            image = self._load_time_series(sample_df)
+        else:
+            images = []
+            for sensor in self.sensors:
+                filenames = sample_df[sample_df['satellite'] == sensor][
+                    'filename'
+                ].tolist()
+                images.append(self._load_input(filenames))
+            image = torch.cat(images, dim=0)
 
-        filepaths = sample_df['filename'].tolist()
-        sample: Sample = {}
-        for sens in self.sensors:
-            sens_filepaths = [fp for fp in filepaths if sens in fp]
-            sample[f'image_{sens}'] = self._load_input(sens_filepaths)
-
+        sample: Sample = {'image': image}
         if self.split == 'train':
-            sample['label'] = self._load_target(
+            sample['mask'] = self._load_target(
                 sample_df['corresponding_agbm'].unique()[0]
-            )
+            ).squeeze(dim=0)
 
         return sample
+
+    def _load_time_series(self, sample_df: pd.DataFrame) -> Tensor:
+        """Load and fuse sensor imagery into a time series.
+
+        Args:
+            sample_df: Metadata rows for a single chip.
+
+        Returns:
+            Image tensor with shape ``(T, C, H, W)``.
+
+        Raises:
+            ValueError: If a sensor has multiple acquisitions in the same month.
+        """
+        frames = []
+        for month in sorted(sample_df['num_month'].unique()):
+            month_df = sample_df[sample_df['num_month'] == month]
+            sensor_images: dict[str, Tensor] = {}
+            for sensor in self.sensors:
+                filenames = month_df[month_df['satellite'] == sensor][
+                    'filename'
+                ].tolist()
+                if filenames:
+                    if len(filenames) != 1:
+                        msg = f'Expected one {sensor} acquisition per month.'
+                        raise ValueError(msg)
+                    sensor_images[sensor] = self._load_input(filenames)[0]
+
+            reference = next(iter(sensor_images.values()))
+            _, height, width = reference.shape
+            channels = []
+            for sensor in self.sensors:
+                channels.append(
+                    sensor_images.get(
+                        sensor,
+                        torch.zeros(
+                            self.channel_counts[sensor],
+                            height,
+                            width,
+                            dtype=reference.dtype,
+                        ),
+                    )
+                )
+            frames.append(torch.cat(channels, dim=0))
+
+        return torch.stack(frames)
 
     def __len__(self) -> int:
         """Return the length of the dataset.
@@ -236,18 +283,30 @@ class BioMassters(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        ncols = len(self.sensors) + 1
-
+        ncols = len(self.sensors)
         showing_predictions = 'prediction' in sample
         if showing_predictions:
             ncols += 1
+        if 'mask' in sample:
+            ncols += 1
 
-        fig, axs = plt.subplots(1, ncols=ncols, figsize=(5 * ncols, 10))
+        fig, axs_array = plt.subplots(
+            1, ncols=ncols, figsize=(5 * ncols, 10), squeeze=False
+        )
+        axs = axs_array[0]
+        image = sample['image'].float()
+        expected_ndim = 4 if self.as_time_series else 3
+        if image.ndim != expected_ndim:
+            msg = f'Expected image tensor with {expected_ndim} dimensions.'
+            raise ValueError(msg)
+        if self.as_time_series:
+            image = image[-1]
+
+        channel_start = 0
         for idx, sens in enumerate(self.sensors):
-            img = sample[f'image_{sens}'].float()
-            if self.as_time_series:
-                # plot last time step
-                img = img[-1, ...]
+            channel_end = channel_start + self.channel_counts[sens]
+            img = image[channel_start:channel_end]
+            channel_start = channel_end
             if sens == 'S2':
                 img = img[[2, 1, 0], ...]
                 img = quantile_normalization(einops.rearrange(img, 'c h w -> h w c'))
@@ -269,17 +328,18 @@ class BioMassters(NonGeoDataset):
                 axs[idx].set_title(sens)
 
         if showing_predictions:
-            pred = axs[ncols - 2].imshow(
-                sample['prediction'].permute(1, 2, 0), cmap='YlGn'
-            )
-            plt.colorbar(pred, ax=axs[ncols - 2], fraction=0.046, pad=0.04)
-            axs[ncols - 2].axis('off')
+            prediction = sample['prediction']
+            if prediction.ndim == 3:
+                prediction = prediction.squeeze(dim=0)
+            prediction_idx = len(self.sensors)
+            pred = axs[prediction_idx].imshow(prediction, cmap='YlGn')
+            plt.colorbar(pred, ax=axs[prediction_idx], fraction=0.046, pad=0.04)
+            axs[prediction_idx].axis('off')
             if show_titles:
-                axs[ncols - 2].set_title('Prediction')
+                axs[prediction_idx].set_title('Prediction')
 
-        # plot target / only available in train set
-        if 'label' in sample:
-            target = axs[-1].imshow(sample['label'].permute(1, 2, 0), cmap='YlGn')
+        if 'mask' in sample:
+            target = axs[-1].imshow(sample['mask'], cmap='YlGn')
             plt.colorbar(target, ax=axs[-1], fraction=0.046, pad=0.04)
             axs[-1].axis('Off')
             if show_titles:

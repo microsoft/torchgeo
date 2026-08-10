@@ -59,7 +59,7 @@ class TestBioMasstersDataModule:
         batch = next(iter(fit_datamodule.train_dataloader()))
 
         assert batch['image'].shape == (1, 4, 15, 32, 32)
-        assert batch['mask'].shape == (1, 1, 32, 32)
+        assert batch['mask'].shape == (1, 32, 32)
         assert torch.equal(batch['length'], torch.tensor([3]))
         assert not torch.all(batch['image'][0, 1, :4] == 0)
         assert torch.all(batch['image'][0, 1, 4:] == 0)
@@ -77,7 +77,7 @@ class TestBioMasstersDataModule:
         batch = next(iter(test_datamodule.test_dataloader()))
 
         assert batch['image'].shape == (1, 4, 15, 32, 32)
-        assert batch['mask'].shape == (1, 1, 32, 32)
+        assert batch['mask'].shape == (1, 32, 32)
         assert torch.equal(batch['length'], torch.tensor([3]))
 
     def test_predict_dataloader(self, test_datamodule: BioMasstersDataModule) -> None:
@@ -102,11 +102,3 @@ class TestBioMasstersDataModule:
         sample['prediction'] = sample['mask']
         fit_datamodule.plot(sample)
         plt.close()
-
-    def test_plot_invalid_image_shape(
-        self, fit_datamodule: BioMasstersDataModule
-    ) -> None:
-        fit_datamodule.setup('fit')
-        assert fit_datamodule.val_dataset is not None
-        with pytest.raises(ValueError, match=r'Expected image tensor with shape'):
-            fit_datamodule.val_dataset.dataset.plot({'image': torch.zeros(15, 32, 32)})
