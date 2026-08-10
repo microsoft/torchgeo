@@ -78,7 +78,7 @@ class SeasonalContrastS2(NonGeoDataset):
         bands: Sequence[str] = rgb_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SeasonalContrastS2 instance.
 

@@ -35,7 +35,7 @@ class TestOpenBuildings:
         md5s = {'000_buildings.csv.gz': 'fake'}
         monkeypatch.setattr(OpenBuildings, 'md5s', md5s)
         transforms = nn.Identity()
-        return OpenBuildings(root, transforms=transforms)
+        return OpenBuildings(root, transforms=transforms, checksum=False)
 
     def test_no_shapes_to_rasterize(
         self, dataset: OpenBuildings, tmp_path: Path
@@ -69,7 +69,7 @@ class TestOpenBuildings:
             json.dump(content, f)
 
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            OpenBuildings(dataset.paths)
+            OpenBuildings(dataset.paths, checksum=False)
 
     def test_getitem(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
@@ -105,9 +105,12 @@ class TestOpenBuildings:
         plt.close()
 
     def test_float_res(self, dataset: OpenBuildings) -> None:
-        OpenBuildings(dataset.paths, res=0.0001)
+        OpenBuildings(dataset.paths, res=0.0001, checksum=False)
 
     def test_crs_not_none(self, dataset: OpenBuildings) -> None:
         OpenBuildings(
-            dataset.paths, transforms=dataset.transforms, crs=CRS.from_epsg(3857)
+            dataset.paths,
+            transforms=dataset.transforms,
+            crs=CRS.from_epsg(3857),
+            checksum=False,
         )

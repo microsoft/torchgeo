@@ -88,7 +88,7 @@ class TestPASTIS:
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
         root = tmp_path
         shutil.copy(url, root)
-        PASTIS(root)
+        PASTIS(root, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

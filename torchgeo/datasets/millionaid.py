@@ -201,7 +201,7 @@ class MillionAID(NonGeoDataset):
         task: Literal['multi-class', 'multi-label'] = 'multi-class',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
 

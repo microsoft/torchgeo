@@ -161,7 +161,7 @@ class PASTIS(NonGeoDataset):
         mode: str = 'semantic',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new PASTIS dataset instance.
 

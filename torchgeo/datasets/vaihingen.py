@@ -126,7 +126,7 @@ class Vaihingen2D(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
 

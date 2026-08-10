@@ -226,7 +226,7 @@ class Chesapeake(RasterDataset, ABC):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
@@ -549,7 +549,7 @@ class ChesapeakeCVPR(GeoDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 

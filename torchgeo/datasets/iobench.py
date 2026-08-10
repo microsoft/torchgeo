@@ -59,7 +59,7 @@ class IOBench(IntersectionDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new IOBench instance.
 
