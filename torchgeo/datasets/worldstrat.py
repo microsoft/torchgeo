@@ -6,7 +6,7 @@
 import os
 from collections.abc import Callable, Sequence
 from glob import glob
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +21,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     array_to_tensor,
     check_integrity,
     download_and_extract_archive,
@@ -159,21 +160,21 @@ class WorldStrat(NonGeoDataset):
             os.path.join(self.root, self.file_info_dict['metadata']['filename'])
         )
 
-    def __getitem__(self, idx: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Retrieve a sample from the dataset.
 
         Args:
-            idx: Index of the sample to retrieve.
+            index: Index of the sample to retrieve.
 
         Returns:
             Selected modalities of low and high resolution images and metadata.
         """
-        file_entry = self.file_path_df.iloc[idx]
+        file_entry = self.file_path_df.iloc[index]
         aoi = file_entry['tile']
         hr_tile_dir = os.path.join(self.root, self.hr_dir, aoi)
         lr_tile_dir = os.path.join(self.root, self.lr_dir, aoi)
 
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
 
         modality_loaders: dict[str, Callable[[], Tensor]] = {
             'l1c': lambda: self._load_sentinel_data(os.path.join(lr_tile_dir, 'L1C')),
@@ -336,10 +337,7 @@ class WorldStrat(NonGeoDataset):
                 )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

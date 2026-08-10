@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
+
 
 import hashlib
 import os
 import shutil
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 import numpy as np
 import pandas as pd
@@ -50,8 +51,6 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
     """Create dummy WorldStrat dataset."""
     os.makedirs(root, exist_ok=True)
 
-    # tile names mirror the real record: hyphens and spaces are part of the name,
-    # so the '-<n>-' index in low-res filenames is not the only hyphen present
     tiles = {
         'train': ['ASMSpotter-1-1-1', 'Landcover-773616'],
         'val': ['UNHCR-GHAs003590'],
@@ -62,11 +61,10 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
     split_info = []
 
     # Generate 4 timesteps for the time series
-    base_date = datetime(2021, 1, 1)
+    base_date = date(2021, 1, 1)
     dates = [base_date + timedelta(days=i * 30) for i in range(4)]
 
-    # 1-based as in the real record, deliberately written in non-ascending order
-    # so tests catch loaders that trust glob order
+    # 1-based as in the real record
     write_order = [3, 1, 4, 2]
 
     for wrapper in (HR_DIR, LR_DIR):
@@ -104,7 +102,7 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                 TRANSFORM,
             )
 
-            # Time series data, indexed by n rather than by date
+            # Time series data
             for n in write_order:
                 write_tiff(
                     os.path.join(l1c_dir, f'{tile}-{n}-L1C_data.tiff'),
@@ -119,7 +117,7 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                     LR_TRANSFORM,
                 )
 
-            # Metadata: one row per (tile, n), rows shuffled relative to n
+            # Metadata: one row per (tile, n)
             for n in write_order:
                 metadata.append(
                     {
@@ -142,7 +140,7 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
 
 def create_archives(root: str) -> None:
     """Create zip archives and compute checksums."""
-    # Each archive keeps its top-level wrapper directory, as in the real record
+    # Each archive with wrapper directory
     archives = {
         'hr_dataset.zip': (HR_DIR, None),
         'lr_dataset_l1c.zip': (LR_DIR, 'L1C'),
@@ -165,11 +163,9 @@ def create_archives(root: str) -> None:
 
         checksums[archive_name] = compute_md5(archive_path)
 
-    # Add CSV files
     for csv_file in ['metadata.csv', 'stratified_train_val_test_split.csv']:
         checksums[csv_file] = compute_md5(os.path.join(root, csv_file))
 
-    # Print checksums in format matching file_info_dict
     print('\nfile_info_dict entries:')
     for filename, checksum in checksums.items():
         name = filename.replace('.zip', '').replace('.csv', '')
