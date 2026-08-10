@@ -30,7 +30,11 @@ class TestGlobalMangroveWatch:
         monkeypatch.setattr(GlobalMangroveWatch, 'url', url)
         transforms = nn.Identity()
         return GlobalMangroveWatch(
-            tmp_path, transforms=transforms, download=True, years=[1996, 2020]
+            tmp_path,
+            transforms=transforms,
+            download=True,
+            checksum=False,
+            years=[1996, 2020],
         )
 
     def test_getitem(self, dataset: GlobalMangroveWatch) -> None:
@@ -64,13 +68,13 @@ class TestGlobalMangroveWatch:
         )
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, tmp_path)
-        GlobalMangroveWatch(tmp_path, years=[2020])
+        GlobalMangroveWatch(tmp_path, years=[2020], checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'gmw_v3_2020_gtiff.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            GlobalMangroveWatch(tmp_path, years=[2020], checksum=True)
+            GlobalMangroveWatch(tmp_path, years=[2020])
 
     def test_multiple_paths_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError, match='paths must be a single root'):
