@@ -67,6 +67,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
     cmap = 'YlGn'
+    image_size = (282, 282)
 
     def __init__(
         self,
@@ -99,10 +100,31 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         self.files = pd.read_csv(filepath, header=None)
 
     def _load_image(self, path: str) -> Sample:
-        """Load an image and replace its declared nodata value."""
+        """Load and resize an image, replacing its declared nodata value."""
         sample = super()._load_image(path)
         sample['image'] = sample['image'].masked_fill(
             torch.isneginf(sample['image']), 0
+        )
+        sample['image'] = F.interpolate(
+            sample['image'].unsqueeze(dim=0),
+            size=self.image_size,
+            mode='bilinear',
+            align_corners=False,
+        ).squeeze(dim=0)
+        return sample
+
+    def _load_mask(self, path: str) -> Sample:
+        """Load and resize a biomass mask."""
+        sample = super()._load_mask(path)
+        sample['mask'] = (
+            F.interpolate(
+                sample['mask'].unsqueeze(dim=0).unsqueeze(dim=0),
+                size=self.image_size,
+                mode='bilinear',
+                align_corners=False,
+            )
+            .squeeze(dim=0)
+            .squeeze(dim=0)
         )
         return sample
 
@@ -123,28 +145,6 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             case 'time-series':
                 paths = os.path.join(self.root, self.directory, 's3_olci', pid, '*.tif')
                 samples = [self._load_image(path) for path in sorted(glob.glob(paths))]
-
-                # stack_samples requires a consistent spatial shape across timestamps.
-                max_h = max(sample['image'].shape[-2] for sample in samples)
-                max_w = max(sample['image'].shape[-1] for sample in samples)
-                if any(
-                    sample['image'].shape[-2] != max_h
-                    or sample['image'].shape[-1] != max_w
-                    for sample in samples
-                ):
-                    padded_samples: list[Sample] = []
-                    for sample_dict in samples:
-                        image = sample_dict['image']
-                        h, w = image.shape[-2:]
-                        pad_h = max_h - h
-                        pad_w = max_w - w
-                        if pad_h or pad_w:
-                            # Pad only bottom/right so existing pixels keep their origin.
-                            padded_image = F.pad(image, (0, pad_w, 0, pad_h))
-                            sample_dict = sample_dict.copy()
-                            sample_dict['image'] = padded_image
-                        padded_samples.append(sample_dict)
-                    samples = padded_samples
                 sample = stack_samples(samples)
 
         path = os.path.join(self.root, self.directory, 'biomass', f'{pid}.tif')

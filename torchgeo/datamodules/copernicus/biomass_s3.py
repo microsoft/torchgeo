@@ -3,13 +3,11 @@
 
 """Copernicus-Bench Biomass-S3 datamodule."""
 
-from collections.abc import Callable
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 import kornia.augmentation as K
 import torch
-from kornia.constants import DataKey, Resample
 
 from ...datasets import CopernicusBenchBiomassS3
 from ...datasets.utils import pad_across_batches
@@ -41,8 +39,7 @@ SCALE = {
     'Oa21_radiance': 0.00324118,
 }
 
-TARGET_SIZE = (282, 282)
-# Dataset-wide biomass statistics after resizing masks to TARGET_SIZE.
+# Dataset-wide biomass statistics after resizing masks to the dataset image size.
 TARGET_MEAN = 93.197777079690
 TARGET_STD = 119.004185235754
 
@@ -74,30 +71,6 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
         self.std = torch.reciprocal(scale_factors)
         self.target_mean = TARGET_MEAN
         self.target_std = TARGET_STD
-
-        resize_transform = K.AugmentationSequential(
-            K.Resize(size=TARGET_SIZE, resample=Resample.BILINEAR, align_corners=False),
-            data_keys=None,
-            keepdim=True,
-            extra_args={
-                DataKey.MASK: {'resample': Resample.BILINEAR, 'align_corners': None}
-            },
-        )
-        existing_transform = cast(
-            Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None,
-            kwargs.get('transforms'),
-        )
-
-        if existing_transform is not None:
-            transform = existing_transform
-
-            def composed(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-                resized = resize_transform(sample)
-                return transform(resized)
-
-            kwargs['transforms'] = composed
-        else:
-            kwargs['transforms'] = resize_transform
 
         super().__init__(CopernicusBenchBiomassS3, batch_size, num_workers, **kwargs)
 

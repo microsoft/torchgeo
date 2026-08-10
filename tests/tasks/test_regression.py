@@ -16,15 +16,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataModule
-from torchgeo.datamodules.copernicus.biomass_s3 import (
-    TARGET_SIZE,
-    CopernicusBenchBiomassS3DataModule,
-)
-from torchgeo.datasets import (
-    CopernicusBenchBiomassS3,
-    RGBBandsMissingError,
-    TropicalCyclone,
-)
+from torchgeo.datasets import RGBBandsMissingError, TropicalCyclone
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import PixelwiseRegression, Regression
@@ -271,42 +263,6 @@ class TestPixelwiseRegression:
             main(['predict', *args])
         except MisconfigurationException:
             pass
-
-    def test_biomass_s3_existing_transform_is_composed(self) -> None:
-        root = 'tests/data/copernicus/l3_biomass_s3'
-        bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
-        count = 0
-        shape: tuple[int, int] | None = None
-
-        def existing_transform(
-            sample: dict[str, torch.Tensor],
-        ) -> dict[str, torch.Tensor]:
-            nonlocal count, shape
-            count += 1
-            shape = (int(sample['image'].shape[-2]), int(sample['image'].shape[-1]))
-            sample['transformed'] = torch.tensor(True)
-            return sample
-
-        datamodule = CopernicusBenchBiomassS3DataModule(
-            root=root,
-            batch_size=1,
-            num_workers=0,
-            bands=bands,
-            transforms=existing_transform,
-        )
-
-        composed = datamodule.kwargs['transforms']
-        assert composed is not existing_transform
-
-        dataset = CopernicusBenchBiomassS3(
-            root=root, split='train', bands=bands, transforms=composed
-        )
-        sample = dataset[0]
-
-        assert count == 1
-        assert shape == TARGET_SIZE
-        assert sample['transformed']
-        assert sample['image'].shape[-2:] == TARGET_SIZE
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
