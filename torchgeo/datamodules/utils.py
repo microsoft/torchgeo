@@ -5,7 +5,7 @@
 
 import math
 from collections.abc import Iterable
-from typing import Any, NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 import numpy as np
 import torch
@@ -125,19 +125,3 @@ def group_shuffle_split(
             test_idxs.append(i)
 
     return train_idxs, test_idxs
-
-
-def collate_fn_embeddings(batch: list[dict[str, Any]]) -> dict[str, torch.Tensor]:
-    """Collate function for flattening embeddings and masks into pixel samples."""
-    images: list[torch.Tensor] = []
-    masks: list[torch.Tensor] = []
-
-    for sample in batch:
-        nb_channels = sample['image'].shape[0]
-        images.append(sample['image'].permute(1, 2, 0).reshape(-1, nb_channels))
-        masks.append(sample['mask'].reshape(-1))
-
-    return {
-        'embeddings': torch.cat(images, dim=0),
-        'labels': torch.cat(masks, dim=0).long(),
-    }

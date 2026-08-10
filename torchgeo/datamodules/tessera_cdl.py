@@ -4,13 +4,30 @@
 """Tessera + CDL TorchGeo DataModule for pixel-wise classification."""
 
 from pathlib import Path
+from typing import Any
+
+import torch
 
 from torchgeo.datamodules import GeoDataModule
 from torchgeo.datasets import CDL, GeoDataset, TesseraEmbeddings
 from torchgeo.datasets.utils import Sample
 from torchgeo.samplers import GriddedPatchSampler, RandomPatchSampler
 
-from .utils import collate_fn_embeddings
+
+def collate_fn_embeddings(batch: list[dict[str, Any]]) -> dict[str, torch.Tensor]:
+    """Collate function for flattening embeddings and masks into pixel samples."""
+    images: list[torch.Tensor] = []
+    masks: list[torch.Tensor] = []
+
+    for sample in batch:
+        nb_channels = sample['image'].shape[0]
+        images.append(sample['image'].permute(1, 2, 0).reshape(-1, nb_channels))
+        masks.append(sample['mask'].reshape(-1))
+
+    return {
+        'embeddings': torch.cat(images, dim=0),
+        'labels': torch.cat(masks, dim=0).long(),
+    }
 
 
 class TesseraCDLDataModule(GeoDataModule):
