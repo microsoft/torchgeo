@@ -26,27 +26,27 @@ class TestWorldStrat:
             'hr_dataset': {
                 'url': os.path.join(url, 'hr_dataset.zip'),
                 'filename': 'hr_dataset.zip',
-                'md5': '531a2262b55985a9af1d99a7ee890cc2',
+                'sha256': 'b1692b15ae6633334ebe456cdf7fc419cf285207ef66ca0d6e05b107f254422b',
             },
             'lr_dataset_l1c': {
                 'url': os.path.join(url, 'lr_dataset_l1c.zip'),
                 'filename': 'lr_dataset_l1c.zip',
-                'md5': 'dbf5882a22c751c5fe0822c5a4db06d4',
+                'sha256': '4c96167b74dfd2b86e848d861912077d3b50c6d1d53d25e7fa50738ab198d368',
             },
             'lr_dataset_l2a': {
                 'url': os.path.join(url, 'lr_dataset_l2a.zip'),
                 'filename': 'lr_dataset_l2a.zip',
-                'md5': 'f48ad8b9dc79afa87f44d0d89d2c6544',
+                'sha256': 'cc991961f9c2f8293e0205685bd6751172bd3c19819b7ae2220b97bb21c4b694',
             },
             'metadata': {
                 'url': os.path.join(url, 'metadata.csv'),
                 'filename': 'metadata.csv',
-                'md5': '84492378455f689a49078e187dfdf0b6',
+                'sha256': '080b8e7ecbef10454047ca1e439eb45aefba2f41ba3bfd4dc238e3f9d7a08ea1',
             },
             'train_val_test_split': {
                 'url': os.path.join(url, 'stratified_train_val_test_split.csv'),
                 'filename': 'stratified_train_val_test_split.csv',
-                'md5': 'c9eb98a9a45a57ef6028a6ef8102485d',
+                'sha256': '776653b439385ea7061bfaf27d57eabebceb81c66479e76de67fa3f02ef82539',
             },
         }
         monkeypatch.setattr(WorldStrat, 'file_info_dict', file_info_dict)

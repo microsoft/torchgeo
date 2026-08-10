@@ -161,27 +161,27 @@ def create_archives(root: str) -> None:
                         continue
                     zf.write(src, arcname)
 
-        checksums[archive_name] = compute_md5(archive_path)
+        checksums[archive_name] = compute_sha256(archive_path)
 
     for csv_file in ['metadata.csv', 'stratified_train_val_test_split.csv']:
-        checksums[csv_file] = compute_md5(os.path.join(root, csv_file))
+        checksums[csv_file] = compute_sha256(os.path.join(root, csv_file))
 
     print('\nfile_info_dict entries:')
     for filename, checksum in checksums.items():
         name = filename.replace('.zip', '').replace('.csv', '')
         print(f"'{name}': {{")
         print(f"    'filename': '{filename}',")
-        print(f"    'md5': '{checksum}',")
+        print(f"    'sha256': '{checksum}',")
         print('},')
 
 
-def compute_md5(filepath: str) -> str:
-    """Compute MD5 checksum of a file."""
-    md5_hash = hashlib.md5()
+def compute_sha256(filepath: str) -> str:
+    """Compute SHA256 checksum of a file."""
+    sha256_hash = hashlib.sha256()
     with open(filepath, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
-            md5_hash.update(chunk)
-    return md5_hash.hexdigest()
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest()
 
 
 if __name__ == '__main__':

@@ -82,27 +82,27 @@ class WorldStrat(NonGeoDataset):
         'hr_dataset': {
             'url': 'https://zenodo.org/records/15382551/files/hr_dataset.zip?download=1',
             'filename': 'hr_dataset.zip',
-            'md5': '5ae09bb3557ce131242a133d9758d9e7',
+            'sha256': '7cf08ff4d9bd465f471da8d7f12a536eea78051d87d11fedc75079dc74326d54',
         },
         'lr_dataset_l1c': {
             'url': 'https://zenodo.org/records/15382551/files/lr_dataset_l1c.zip?download=1',
             'filename': 'lr_dataset_l1c.zip',
-            'md5': 'e90ecfa4bf838ace0b51dea1031b5ed1',
+            'sha256': 'a74ef88b04c0ce1b036510f3cd8a8533708d9c915fb5ecbab5869fded17625d3',
         },
         'lr_dataset_l2a': {
             'url': 'https://zenodo.org/records/15382551/files/lr_dataset_l2a.zip?download=1',
             'filename': 'lr_dataset_l2a.zip',
-            'md5': '7aa1878a37d22a6c7c4b84b022a14ad7',
+            'sha256': '0d35c199fd04618d94a5cc48dcb966d515566e0213fa57e07f8932aa1844f6e6',
         },
         'metadata': {
             'url': 'https://zenodo.org/records/15382551/files/metadata.csv?download=1',
             'filename': 'metadata.csv',
-            'md5': '1a66ac42b9a688be18debd0d95633fa1',
+            'sha256': '36f72dc43290ff79b6722e2654e605a41f32f1a7feb7807f0dbcbc7286214bdb',
         },
         'train_val_test_split': {
             'url': 'https://zenodo.org/records/15382551/files/stratified_train_val_test_split.csv?download=1',
             'filename': 'stratified_train_val_test_split.csv',
-            'md5': '874612b59bbf7987f7de7edd48a30c70',
+            'sha256': '67a38f84fb122627bf8c89de6ca92004af22f30f001aa46fbe1da432c78a9a0b',
         },
     }
 
@@ -125,7 +125,7 @@ class WorldStrat(NonGeoDataset):
             transforms: A function/transform that takes in a dictionary of tensors
                 and returns a transformed version.
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If *split* or *modalities* arguments are invalid.
@@ -294,8 +294,7 @@ class WorldStrat(NonGeoDataset):
             path = os.path.join(self.root, file['filename'])
             if os.path.exists(path):
                 if self.checksum:
-                    md5 = file['md5']
-                    if not check_integrity(path, md5):
+                    if not check_integrity(path, sha256=file['sha256']):
                         raise RuntimeError(f'Archive {file["filename"]} corrupted')
                 exists.append(True)
             else:
@@ -324,14 +323,14 @@ class WorldStrat(NonGeoDataset):
                     metadata['url'],
                     self.root,
                     filename=metadata['filename'],
-                    md5=metadata['md5'] if self.checksum else None,
+                    sha256=metadata['sha256'] if self.checksum else None,
                 )
             else:
                 download_url(
                     metadata['url'],
                     self.root,
                     filename=metadata['filename'],
-                    md5=metadata['md5'] if self.checksum else None,
+                    sha256=metadata['sha256'] if self.checksum else None,
                 )
 
     def plot(
