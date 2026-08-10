@@ -1383,6 +1383,10 @@ class FLAIRHUBBase(NonGeoDataset):
         if bands is None:
             bands = list(self.modality_key_map.keys())
 
+        for band in bands:
+            if band not in self.modality_key_map:
+                raise ValueError(f'Invalid band name: {band}')
+
         self.bands = bands
         self._verify()
         self.files = self._load_files()
