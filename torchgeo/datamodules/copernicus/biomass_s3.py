@@ -41,8 +41,8 @@ SCALE = {
 
 TARGET_SIZE = (282, 282)
 # Dataset-wide biomass statistics after resizing masks to TARGET_SIZE.
-TARGET_MEAN = torch.tensor(93.197777079690, dtype=torch.float32)
-TARGET_STD = torch.tensor(119.004185235754, dtype=torch.float32)
+TARGET_MEAN = 93.197777079690
+TARGET_STD = 119.004185235754
 
 
 def _collate_time_series_batch(
@@ -97,8 +97,8 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
 
         self.mean = torch.zeros(len(bands), dtype=torch.float32)
         self.std = torch.reciprocal(scale_factors)
-        self.target_mean = TARGET_MEAN.clone()
-        self.target_std = TARGET_STD.clone()
+        self.target_mean = TARGET_MEAN
+        self.target_std = TARGET_STD
 
         resize_transform = K.AugmentationSequential(
             K.Resize(size=TARGET_SIZE, resample=Resample.BILINEAR, align_corners=False),
@@ -139,23 +139,6 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             self.aug = K.AugmentationSequential(
                 normalizer, data_keys=None, keepdim=True
             )
-
-    def transfer_batch_to_device(
-        self, batch: dict[str, torch.Tensor], device: torch.device, dataloader_idx: int
-    ) -> dict[str, torch.Tensor]:
-        """Transfer batch and statistics to device.
-
-        Args:
-            batch: A batch of data that needs to be transferred to a new device.
-            device: The target device as defined in PyTorch.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A reference to the data on the new device.
-        """
-        self.target_mean = self.target_mean.to(device)
-        self.target_std = self.target_std.to(device)
-        return super().transfer_batch_to_device(batch, device, dataloader_idx)
 
     def on_after_batch_transfer(
         self, batch: dict[str, torch.Tensor], dataloader_idx: int
