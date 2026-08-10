@@ -6,6 +6,7 @@
 import io
 import urllib.request
 from collections.abc import Callable
+from typing import cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -71,7 +72,7 @@ class MetaCHM(RasterDataset):
         with urllib.request.urlopen(request) as response:
             buffer = io.BytesIO(response.read())
         columns = ['geometry', 'assets', 'datetime']
-        gdf = gpd.read_parquet(str(buffer), columns=columns)
+        gdf = gpd.read_parquet(cast(str, buffer), columns=columns)
         gdf.to_crs('EPSG:3857', inplace=True)
         filepaths = (
             gdf['assets']
