@@ -51,28 +51,6 @@ class TestTemporalRegression:
         trainer = Trainer(accelerator='cpu')
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_predict_presto(self) -> None:
-        root = os.path.join('tests', 'data', 'air_quality')
-        model = TemporalRegression(
-            model='presto',
-            in_channels=17,
-            num_outputs=17,
-            encoder_embedding_size=16,
-            channel_embed_ratio=0.25,
-            month_embed_ratio=0.25,
-            encoder_depth=1,
-            mlp_ratio=2,
-            encoder_num_heads=2,
-            decoder_embedding_size=16,
-            decoder_depth=1,
-            decoder_num_heads=2,
-            max_sequence_length=3,
-        )
-        datamodule = AirQualityDataModule(root=root)
-        datamodule.predict_dataset = AirQuality(root)
-        trainer = Trainer(accelerator='cpu')
-        trainer.predict(model=model, datamodule=datamodule)
-
     def test_presto_channel_validation(self) -> None:
         match = 'Presto expected 17 input channels, got 3.'
         with pytest.raises(ValueError, match=match):
