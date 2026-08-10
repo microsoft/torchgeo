@@ -181,6 +181,28 @@ class TestGeoTIFFWriter:
             assert src.tags(ns='IMAGE_STRUCTURE')['LAYOUT'] == 'COG'
             assert src.overviews(1)
 
+    def test_cog_kwargs_forwarded(self, tmp_path: Path) -> None:
+        """Test that extra kwargs are forwarded to the COG driver."""
+        output = tmp_path / 'test_deflate.tif'
+        transform = Affine(1, 0, 0, 0, -1, 1024)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=1024,
+            height=1024,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+            compress='deflate',
+        )
+
+        data = np.ones((1024, 1024), dtype=np.uint8)
+        with writer:
+            writer.write_chunk(data, 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.compression.name == 'deflate'
+
     def test_exception_cleans_up(self, tmp_path: Path) -> None:
         """Test an exception in the with block propagates and leaves no files."""
         output = tmp_path / 'test.tif'

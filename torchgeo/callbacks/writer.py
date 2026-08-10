@@ -164,5 +164,8 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
                 BIGTIFF='IF_SAFER',
                 **extra,
             )
+        except Exception:
+            self.output_path.unlink(missing_ok=True)
+            raise
         finally:
             self.tmp_path.unlink(missing_ok=True)
