@@ -8,8 +8,8 @@ from typing import BinaryIO
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import IntersectionDataset, MetaCHM, UnionDataset
 

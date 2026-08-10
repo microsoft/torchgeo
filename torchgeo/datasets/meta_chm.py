@@ -71,7 +71,7 @@ class MetaCHM(RasterDataset):
         with urllib.request.urlopen(request) as response:
             buffer = io.BytesIO(response.read())
         columns = ['geometry', 'assets', 'datetime']
-        gdf = gpd.read_parquet(buffer, columns=columns)  # ty: ignore[invalid-argument-type]
+        gdf = gpd.read_parquet(str(buffer), columns=columns)
         gdf.to_crs('EPSG:3857', inplace=True)
         filepaths = (
             gdf['assets']
