@@ -10,6 +10,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
     Aurora_Weights,
+    Climplicit_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
@@ -38,6 +39,7 @@ from torchgeo.models import (
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
     aurora_swin_unet,
+    climplicit,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -75,6 +77,7 @@ from torchgeo.models import (
 
 builders = [
     aurora_swin_unet,
+    climplicit,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -107,6 +110,7 @@ builders = [
 ]
 enums = [
     Aurora_Weights,
+    Climplicit_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,

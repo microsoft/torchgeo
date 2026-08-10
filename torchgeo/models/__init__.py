@@ -8,6 +8,7 @@ from .aurora import Aurora_Weights, aurora_swin_unet
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .changevit import ChangeViT
+from .climplicit import Climplicit, Climplicit_Weights, climplicit
 from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -84,6 +85,8 @@ __all__ = (
     'ChangeStar',
     'ChangeStarFarSeg',
     'ChangeViT',
+    'Climplicit',
+    'Climplicit_Weights',
     'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
@@ -122,6 +125,7 @@ __all__ = (
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
     'aurora_swin_unet',
+    'climplicit',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
