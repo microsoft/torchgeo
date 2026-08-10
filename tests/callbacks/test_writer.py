@@ -203,6 +203,34 @@ class TestGeoTIFFWriter:
         with rasterio.open(output) as src:
             assert src.compression.name == 'deflate'
 
+    def test_failed_cog_translation_cleans_up(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test a failed COG translation removes partial output."""
+        output = tmp_path / 'test.tif'
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+        )
+
+        def failing_copy(*args: object, **kwargs: object) -> None:
+            output.touch()
+            raise RuntimeError('COG translation failed')
+
+        monkeypatch.setattr('rasterio.shutil.copy', failing_copy)
+
+        with pytest.raises(RuntimeError, match='COG translation failed'), writer:
+            writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
+
+        assert not writer.tmp_path.exists()
+        assert not output.exists()
+
     def test_exception_cleans_up(self, tmp_path: Path) -> None:
         """Test an exception in the with block propagates and leaves no files."""
         output = tmp_path / 'test.tif'
