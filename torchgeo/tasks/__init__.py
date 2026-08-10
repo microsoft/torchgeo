@@ -16,7 +16,7 @@ from .moco import MoCo
 from .regression import PixelwiseRegression, Regression
 from .segmentation import SemanticSegmentation
 from .simclr import SimCLR
-from .spatiotemporal_regression import SpatioTemporalRegression
+from .spatiotemporal_pixelwise_regression import SpatioTemporalPixelwiseRegression
 from .spatiotemporal_segmentation import SpatioTemporalSegmentation
 from .temporal_regression import TemporalRegression
 
@@ -36,7 +36,7 @@ __all__ = (
     'RegressionMixin',
     'SemanticSegmentation',
     'SimCLR',
-    'SpatioTemporalRegression',
+    'SpatioTemporalPixelwiseRegression',
     'SpatioTemporalSegmentation',
     'TemporalRegression',
 )

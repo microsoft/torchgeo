@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Tasks for spatiotemporal regression."""
+"""Tasks for spatiotemporal pixelwise regression."""
 
 from typing import Any, Literal
 
@@ -14,7 +14,7 @@ from .base import BaseTask
 from .mixins import RegressionMixin
 
 
-class SpatioTemporalRegression(RegressionMixin, BaseTask):
+class SpatioTemporalPixelwiseRegression(RegressionMixin, BaseTask):
     """Pixelwise regression over spatiotemporal image sequences.
 
     Uses a :class:`~torchgeo.models.ConvLSTM` encoder to predict continuous
@@ -34,7 +34,7 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
         patience: int = 10,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new SpatioTemporalRegression instance.
+        """Initialize a new SpatioTemporalPixelwiseRegression instance.
 
         Args:
             model: Spatiotemporal model name. Supported value is ``'convlstm'``.

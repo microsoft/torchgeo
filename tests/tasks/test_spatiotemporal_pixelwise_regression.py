@@ -12,7 +12,7 @@ from torch import Tensor
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
-from torchgeo.tasks import SpatioTemporalRegression
+from torchgeo.tasks import SpatioTemporalPixelwiseRegression
 
 
 class ConstantRegressionModel(torch.nn.Module):
@@ -23,7 +23,7 @@ class ConstantRegressionModel(torch.nn.Module):
         return torch.zeros(x.shape[0], 1, x.shape[-2], x.shape[-1], device=x.device)
 
 
-class TestSpatioTemporalRegression:
+class TestSpatioTemporalPixelwiseRegression:
     @pytest.mark.parametrize('name', ['copernicus_biomass_s3_ts'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
@@ -53,7 +53,7 @@ class TestSpatioTemporalRegression:
 
     @pytest.mark.parametrize('loss', ['mse', 'mae'])
     def test_task(self, loss: Literal['mse', 'mae']) -> None:
-        model = SpatioTemporalRegression(
+        model = SpatioTemporalPixelwiseRegression(
             in_channels=3, loss=loss, hidden_dim=8, num_layers=1
         )
         batch = {
@@ -71,7 +71,9 @@ class TestSpatioTemporalRegression:
         assert y_hat.shape == (2, 1, 16, 16)
 
     def test_predict_step_denormalizes_targets(self) -> None:
-        model = SpatioTemporalRegression(in_channels=3, hidden_dim=8, num_layers=1)
+        model = SpatioTemporalPixelwiseRegression(
+            in_channels=3, hidden_dim=8, num_layers=1
+        )
         model.model = ConstantRegressionModel()
         datamodule = SimpleNamespace(
             target_mean=torch.tensor(2.0), target_std=torch.tensor(3.0)
@@ -84,7 +86,9 @@ class TestSpatioTemporalRegression:
         assert torch.all(y_hat == 2)
 
     def test_predict_step_without_target_stats(self) -> None:
-        model = SpatioTemporalRegression(in_channels=3, hidden_dim=8, num_layers=1)
+        model = SpatioTemporalPixelwiseRegression(
+            in_channels=3, hidden_dim=8, num_layers=1
+        )
         model.model = ConstantRegressionModel()
         # Attach a datamodule with no target stats to exercise _target_stats()
         # returning None after trainer lookup succeeds.

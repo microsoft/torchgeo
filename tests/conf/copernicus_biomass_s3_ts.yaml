@@ -1,5 +1,5 @@
 model:
-  class_path: SpatioTemporalRegression
+  class_path: SpatioTemporalPixelwiseRegression
   init_args:
     in_channels: 3
     loss: 'mse'
