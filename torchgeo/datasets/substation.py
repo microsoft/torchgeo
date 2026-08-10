@@ -50,15 +50,6 @@ class Substation(NonGeoDataset):
 
     * https://doi.org/10.48550/arXiv.2409.17363
 
-    Access:
-
-    * Dataset is hosted on Hugging Face: https://huggingface.co/datasets/neurograce/SubstationDataset
-
-    .. versionchanged:: 0.10
-       The dataset is now downloaded from Hugging Face instead of Google Cloud Storage.
-       The images are distributed as a multi-part zip archive, and the ``md5_images``,
-       ``md5_masks``, ``url_for_images``, and ``url_for_masks`` attributes have been
-       replaced by *url* and *checksums*.
     """
 
     # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue) = indices 3, 2, 1
