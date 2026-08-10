@@ -69,7 +69,7 @@ class COWC(NonGeoDataset, abc.ABC):
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new COWC dataset instance.
 

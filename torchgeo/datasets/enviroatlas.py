@@ -260,7 +260,7 @@ class EnviroAtlas(GeoDataset):
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 

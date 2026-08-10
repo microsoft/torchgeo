@@ -150,7 +150,7 @@ class DL4GAMAlps(NonGeoDataset):
         extra_features: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize the dataset.
 

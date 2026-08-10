@@ -52,7 +52,7 @@ class TestDLRSD:
         self, dataset: DLRSDBase, tmp_path: Path
     ) -> None:
         shutil.rmtree(os.path.join(tmp_path, dataset.directory))
-        type(dataset)(tmp_path)
+        type(dataset)(tmp_path, checksum=False)
 
     @pytest.mark.parametrize('base_class', [DLRSD, DLRSDMultilabel])
     def test_corrupted(self, tmp_path: Path, base_class: type[DLRSDBase]) -> None:

@@ -86,6 +86,8 @@ dependencies = [
     "torchmetrics[detection]>=1.5",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
+    # tqdm 4.57+ required to match lightning's own tqdm dependency
+    "tqdm>=4.57",
     # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
@@ -109,8 +111,8 @@ datasets = [
     # tokenizers 0.14+ required for Python 3.12 wheels
     # tokenizers does not yet provide wheels for Python 3.14t
     "tokenizers>=0.14; python_version<'3.14'",
-    # webdataset 0.2.4+ required for PyTorch tuple seed support
-    "webdataset>=0.2.4",
+    # webdataset 0.2.101+ required for security hardening
+    "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
 ]

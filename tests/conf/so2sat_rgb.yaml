@@ -14,3 +14,4 @@ data:
   dict_kwargs:
     root: 'tests/data/so2sat'
     version: '3_random'
+    checksum: false

@@ -108,7 +108,7 @@ class DigitalTyphoon(NonGeoDataset):
         max_feature_value: dict[str, float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Digital Typhoon dataset instance.
 

@@ -91,7 +91,7 @@ class ADVANCE(NonGeoDataset):
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ADVANCE dataset instance.
 

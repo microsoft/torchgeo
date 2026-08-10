@@ -130,7 +130,7 @@ class TreeSatAI(NonGeoDataset):
         sensors: Sequence[Literal['aerial', 's1', 's2']] = all_sensors,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new TreeSatAI instance.
 

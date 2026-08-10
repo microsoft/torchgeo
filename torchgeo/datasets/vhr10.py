@@ -100,7 +100,7 @@ class VHR10(NonGeoDataset):
         split: Literal['positive', 'negative'] = 'positive',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 

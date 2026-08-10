@@ -118,7 +118,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CopernicusBenchBase instance.
 
