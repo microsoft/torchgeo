@@ -149,6 +149,11 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
         overviews so it validates as a COG, without loading the full resolution
         image into memory.
         """
+        extra = {
+            k: v
+            for k, v in self.kwargs.items()
+            if k not in ('compress', 'overview_resampling')
+        }
         try:
             rasterio.shutil.copy(
                 self.tmp_path,
@@ -157,6 +162,7 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
                 compress=self.kwargs.get('compress', 'lzw'),
                 overview_resampling=self.kwargs.get('overview_resampling', 'nearest'),
                 BIGTIFF='IF_SAFER',
+                **extra,
             )
         finally:
             self.tmp_path.unlink(missing_ok=True)
