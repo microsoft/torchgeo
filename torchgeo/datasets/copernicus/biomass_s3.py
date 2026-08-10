@@ -98,6 +98,14 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)
 
+    def _load_image(self, path: str) -> Sample:
+        """Load an image and replace its declared nodata value."""
+        sample = super()._load_image(path)
+        sample['image'] = sample['image'].masked_fill(
+            torch.isneginf(sample['image']), 0
+        )
+        return sample
+
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 

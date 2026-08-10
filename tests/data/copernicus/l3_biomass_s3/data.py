@@ -57,6 +57,7 @@ image_profile = profile | {
     ),
     'count': 21,
     'dtype': 'float32',
+    'nodata': -np.inf,
 }
 
 mask_profile = profile | {
@@ -84,6 +85,8 @@ for location in LOCATIONS:
     for fname, (height, width) in location['files']:
         profile_args = image_profile | {'height': height, 'width': width}
         data = np.random.random(size=(height, width))
+        if fname == 'S3B_20200514T234457_20200514T234757.tif':
+            data[0, 0] = -np.inf
         path = os.path.join(directory, fname)
         with rio.open(path, 'w', **profile_args) as src:
             for band in range(1, profile_args['count'] + 1):
