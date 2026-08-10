@@ -229,8 +229,7 @@ class WorldStrat(NonGeoDataset):
         level = os.path.basename(data_dir)
         tiff_paths = glob(os.path.join(data_dir, f'*{level}_data.tiff'))
 
-        # filenames are '<AOI>-<n>-<level>_data.tiff', so sort numerically by n
-        # rather than relying on lexicographic glob order
+        # filenames are '<AOI>-<n>-<level>_data.tiff' and indexed by n
         pairs = [
             (int(os.path.basename(tiff_path).split('-')[-2]), tiff_path)
             for tiff_path in tiff_paths
@@ -261,7 +260,6 @@ class WorldStrat(NonGeoDataset):
         with rasterio.open(tiff_path) as src:
             data = src.read()
             tensor = array_to_tensor(data)
-        # high-res tiffs are uint16 on disk, low-res float32
         return tensor.float()
 
     def __len__(self) -> int:
