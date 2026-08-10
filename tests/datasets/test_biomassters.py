@@ -203,7 +203,7 @@ class TestBioMassters:
         checksums = _fixture_checksums()
         monkeypatch.setattr(BioMassters, 'checksums', checksums)
 
-        calls: list[tuple[str, str | None]] = []
+        calls: list[tuple[str | None, str | None]] = []
 
         def _spy_download_url(
             url: str, root: Path, filename: str | None = None, **kwargs: str | None
@@ -223,6 +223,7 @@ class TestBioMassters:
         }
         assert {filename for filename, _ in calls} == expected_filenames
         for filename, sha256 in calls:
+            assert filename is not None
             assert sha256 == checksums[filename]
 
     def test_download_checksum_false_forwards_none(
@@ -240,7 +241,7 @@ class TestBioMassters:
         )
         monkeypatch.setattr(BioMassters, 'checksums', bad_checksums)
 
-        calls: list[tuple[str, str | None]] = []
+        calls: list[tuple[str | None, str | None]] = []
 
         def _spy_download_url(
             url: str, root: Path, filename: str | None = None, **kwargs: str | None
