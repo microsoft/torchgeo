@@ -30,7 +30,7 @@ class TestGlobBiomass:
         )
         root = tmp_path
         transforms = nn.Identity()
-        return GlobBiomass(root, transforms=transforms)
+        return GlobBiomass(root, transforms=transforms, checksum=False)
 
     def test_getitem(self, dataset: GlobBiomass) -> None:
         x = dataset[dataset.bounds]

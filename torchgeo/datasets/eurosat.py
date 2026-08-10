@@ -112,7 +112,7 @@ class EuroSAT(NonGeoClassificationDataset):
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new EuroSAT dataset instance.
 

@@ -22,7 +22,7 @@ class TestInriaAerialImageLabeling:
         root = os.path.join('tests', 'data', 'inria')
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
-            root, split=request.param, transforms=transforms
+            root, split=request.param, transforms=transforms, checksum=False
         )
 
     def test_getitem(self, dataset: InriaAerialImageLabeling) -> None:

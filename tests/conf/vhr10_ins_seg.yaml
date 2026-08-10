@@ -12,3 +12,4 @@ data:
     patch_size: 256
   dict_kwargs:
     root: 'tests/data/vhr10'
+    checksum: false

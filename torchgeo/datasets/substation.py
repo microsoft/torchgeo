@@ -69,7 +69,7 @@ class Substation(NonGeoDataset):
         | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize the Substation.
 

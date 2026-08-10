@@ -102,7 +102,7 @@ class DLRSDBase(NonGeoDataset):
         root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DLRSD-style dataset instance.
 
@@ -223,7 +223,7 @@ class DLRSD(DLRSDBase):
         root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DLRSD dataset instance.
 
@@ -375,7 +375,7 @@ class DLRSDMultilabel(DLRSDBase):
         root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DLRSDMultilabel dataset instance.
 

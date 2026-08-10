@@ -39,6 +39,7 @@ from rasterio.vrt import WarpedVRT
 from shapely import Geometry, MultiPolygon, Polygon, box
 from torch import Tensor
 from torchvision.utils import draw_segmentation_masks
+from tqdm import tqdm
 from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
@@ -425,14 +426,23 @@ def download_url(
         # TODO: use fsspec if we want AWS/Azure/GCS support
         # TODO: use gdown if we want Google Drive support
         # TODO: use requests if we want redirect support
-        # TODO: use tqdm if we want a progress bar
         request = urllib.request.Request(url, headers={'User-Agent': 'torchgeo'})
         # Stream to a temporary file and atomically replace on success so an
         # interrupted download cannot leave a truncated file behind.
         tmp = f'{fpath}.tmp'
         try:
-            with urllib.request.urlopen(request) as response, open(tmp, 'wb') as f:
-                shutil.copyfileobj(response, f)
+            with urllib.request.urlopen(request) as response:
+                total = response.headers.get('Content-Length')
+                with (
+                    tqdm.wrapattr(
+                        response,
+                        'read',
+                        total=int(total) if total else None,
+                        desc=str(filename),
+                    ) as reader,
+                    open(tmp, 'wb') as f,
+                ):
+                    shutil.copyfileobj(reader, f)
             os.replace(tmp, fpath)
         finally:
             if os.path.exists(tmp):
