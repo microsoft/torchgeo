@@ -359,7 +359,7 @@ class WorldStrat(NonGeoDataset):
         for panel, modality in enumerate(self.modalities):
             key = f'image_{modality}'
             if key in sample:
-                img = sample[key].numpy()
+                img = sample[key]
 
                 if modality in ['hr_ps', 'hr_pan']:
                     img = img[0, ...]
@@ -368,7 +368,7 @@ class WorldStrat(NonGeoDataset):
                 elif modality in ['l1c', 'l2a']:
                     img = img[0, [3, 2, 1], ...]
 
-                img = quantile_normalization(img)
+                img = quantile_normalization(img).numpy()
 
                 if img.ndim == 3:
                     img = img.transpose(1, 2, 0)
@@ -379,10 +379,10 @@ class WorldStrat(NonGeoDataset):
                     axs[0, panel].set_title(self.modality_titles[modality])
 
         if 'prediction' in sample:
-            pred = sample['prediction'].numpy()
+            pred = sample['prediction']
             if pred.shape[0] == 4:
                 pred = pred[:3]
-            pred = quantile_normalization(pred).transpose(1, 2, 0)
+            pred = quantile_normalization(pred).numpy().transpose(1, 2, 0)
             axs[0, -1].imshow(pred)
             axs[0, -1].axis('off')
             if show_titles:
