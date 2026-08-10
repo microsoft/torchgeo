@@ -101,6 +101,5 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             A batch with normalized imagery and target masks.
         """
         batch = super().on_after_batch_transfer(batch, dataloader_idx)
-        if 'mask' in batch:
-            batch['mask'] = (batch['mask'] - self.target_mean) / self.target_std
+        batch['mask'] = (batch['mask'] - self.target_mean) / self.target_std
         return batch
