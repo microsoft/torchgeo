@@ -48,10 +48,14 @@ class WorldStrat(NonGeoDataset):
     Dataset format:
 
     * pixel dimensions vary across AOI tiles
-    * all modalities are 'tif' files except for 'hr_rgbn' which is 'png'
-    * 'hr_ps', 'hr_pan', 'hr_rgbn' are high resolution data
-    * 'lr_rgbn' is low resolution data and roughly 4x lower resolution than 'hr_rgbn'
-    * 'l1c' and 'l2a' are Sentinel-2 data with 13 and 12 bands respectively and roughly 8x lower resolution than 'hr_rgbn'
+    * all modalities are 'tif' files except for 'hr_rgbn' which is an 8-bit 'png'
+    * 'hr_ps' (pansharpened, 4 bands), 'hr_pan' (panchromatic, 1 band) and 'hr_rgbn' are
+      the 1.5m/pixel SPOT products and live in 'hr_dataset/<AOI>/'
+    * 'lr_rgbn' is SPOT's native 6m/pixel multispectral acquisition before pansharpening,
+      so roughly 4x lower resolution than 'hr_rgbn'. It is also
+      stored in 'hr_dataset/<AOI>/<AOI>_rgbn.tiff'
+    * 'l1c' and 'l2a' are Sentinel-2 time-series with 13 and 12 bands respectively and roughly
+      8x lower resolution than 'hr_rgbn', downloaded as separate archives
 
     If you use this dataset in your research, please cite the following entries:
 
@@ -67,7 +71,7 @@ class WorldStrat(NonGeoDataset):
         'lr_rgbn': 'Low-res RGBN',
         'hr_ps': 'High-res PS',
         'hr_pan': 'High-res PAN',
-        'hr_rgbn': 'High-res RGB',
+        'hr_rgbn': 'High-res RGBN',
     }
 
     all_modalities = ('hr_ps', 'hr_pan', 'hr_rgbn', 'lr_rgbn', 'l1c', 'l2a')
@@ -75,6 +79,8 @@ class WorldStrat(NonGeoDataset):
     valid_splits = ('train', 'val', 'test')
 
     # Top-level directories the archives extract into
+    # Note that 'lr_rgbn' is the native 6m/pixel SPOT multispectral acquisition and is
+    # part of the high-res archive, not the Sentinel-2 ones.
     hr_dir = 'hr_dataset'
     lr_dir = 'lr_dataset'
 
@@ -293,9 +299,8 @@ class WorldStrat(NonGeoDataset):
         for file in self.file_info_dict.values():
             path = os.path.join(self.root, file['filename'])
             if os.path.exists(path):
-                if self.checksum:
-                    if not check_integrity(path, sha256=file['sha256']):
-                        raise RuntimeError(f'Archive {file["filename"]} corrupted')
+                if self.checksum and not check_integrity(path, sha256=file['sha256']):
+                    raise RuntimeError(f'Archive {file["filename"]} corrupted')
                 exists.append(True)
             else:
                 exists.append(False)

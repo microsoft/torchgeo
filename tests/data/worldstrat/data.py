@@ -94,11 +94,12 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
             rgbn_img = Image.fromarray(hr_rgbn_png, mode='RGBA')
             rgbn_img.save(os.path.join(hr_tile_dir, f'{tile}_rgb.png'))
 
-            # Low-res RGBN
+            # Low-res RGBN, the native SPOT multispectral acquisition at 4x
+            # lower resolution than the pansharpened products
             write_tiff(
                 os.path.join(hr_tile_dir, f'{tile}_rgbn.tiff'),
                 4,
-                img_size // 8,
+                img_size // 4,
                 TRANSFORM,
             )
 

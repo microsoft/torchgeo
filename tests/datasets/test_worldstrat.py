@@ -26,22 +26,22 @@ class TestWorldStrat:
             'hr_dataset': {
                 'url': os.path.join(url, 'hr_dataset.zip'),
                 'filename': 'hr_dataset.zip',
-                'sha256': 'b1692b15ae6633334ebe456cdf7fc419cf285207ef66ca0d6e05b107f254422b',
+                'sha256': '44b60bc03ad45281886c65c85c6c09f3aa2931d1f154ac985470eb0329e4085b',
             },
             'lr_dataset_l1c': {
                 'url': os.path.join(url, 'lr_dataset_l1c.zip'),
                 'filename': 'lr_dataset_l1c.zip',
-                'sha256': '4c96167b74dfd2b86e848d861912077d3b50c6d1d53d25e7fa50738ab198d368',
+                'sha256': '6e29fe2d2ea65c3a1269f0344f61f2f1eb0e01a2eff64f6a9dd26745d10b6e90',
             },
             'lr_dataset_l2a': {
                 'url': os.path.join(url, 'lr_dataset_l2a.zip'),
                 'filename': 'lr_dataset_l2a.zip',
-                'sha256': 'cc991961f9c2f8293e0205685bd6751172bd3c19819b7ae2220b97bb21c4b694',
+                'sha256': '6f39eedc1c0aff78dd4bb8f69c26f87993c86e19411ebd24f486babfa875a545',
             },
             'metadata': {
                 'url': os.path.join(url, 'metadata.csv'),
                 'filename': 'metadata.csv',
-                'sha256': '080b8e7ecbef10454047ca1e439eb45aefba2f41ba3bfd4dc238e3f9d7a08ea1',
+                'sha256': 'bfc8f0ab3dc48617d83146eefd609d03ae41e533bc5009476289708d6892d692',
             },
             'train_val_test_split': {
                 'url': os.path.join(url, 'stratified_train_val_test_split.csv'),
