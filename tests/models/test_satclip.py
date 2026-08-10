@@ -71,9 +71,15 @@ class TestSatCLIP:
 
         assert torch.isfinite(embeddings).all()
 
-    def test_satclip_invalid_legendre_polys(self) -> None:
-        with pytest.raises(ValueError, match='legendre_polys must be positive'):
-            satclip(legendre_polys=0)
+    @pytest.mark.parametrize(
+        ('legendre_polys', 'capacity', 'embed_dim', 'num_hidden_layers'),
+        [(0, 512, 256, 2), (40, 0, 256, 2), (40, 512, 0, 2), (40, 512, 256, 0)],
+    )
+    def test_satclip_invalid_dimensions(
+        self, legendre_polys: int, capacity: int, embed_dim: int, num_hidden_layers: int
+    ) -> None:
+        with pytest.raises(AssertionError):
+            SatCLIP(legendre_polys, capacity, embed_dim, num_hidden_layers)
 
     def test_satclip_weights(self, mocked_weights: SatCLIP_Weights) -> None:
         model = satclip(weights=mocked_weights)
