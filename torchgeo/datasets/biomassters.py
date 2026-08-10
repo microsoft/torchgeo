@@ -53,7 +53,16 @@ class BioMassters(NonGeoDataset):
     .. note::
         This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://huggingface.co/datasets/torchgeo/biomassters>`_.
 
+    .. warning::
+        This dataset is large (~201 GB total across both splits). Setting
+        ``download=True`` will download and extract the full archive for the
+        requested ``split``, so make sure you have sufficient disk space and
+        bandwidth available before doing so.
+
     .. versionadded:: 0.5
+
+    .. versionadded:: 0.10
+       The *download* and *checksum* parameters.
     """
 
     valid_splits = ('train', 'test')
@@ -61,7 +70,11 @@ class BioMassters(NonGeoDataset):
 
     metadata_filename = 'biomassters_features_metadata.csv'
 
-    url = 'https://huggingface.co/datasets/torchgeo/biomassters/resolve/main/{}'
+    # Pinned to an immutable revision of the Hugging Face Hub repository so that
+    # the archives referenced below (and their checksums) cannot change out from
+    # under this dataset. See https://huggingface.co/datasets/torchgeo/biomassters
+    # /tree/249525e82c27a981b5355caea2730084ce5db7a8 for the pinned file listing.
+    url = 'https://huggingface.co/datasets/torchgeo/biomassters/resolve/249525e82c27a981b5355caea2730084ce5db7a8/{}'
 
     # The train/test feature archives are split into multiple parts on the
     # Hugging Face Hub and must be concatenated before extraction, see
@@ -79,14 +92,30 @@ class BioMassters(NonGeoDataset):
     target_archive_filenames: ClassVar[dict[str, str]] = {'train': 'train_agbm.tar.gz'}
 
     checksums: ClassVar[dict[str, str]] = {
-        'train_features.tar.gzaa': 'bf727a4ad437aa3b5f8e22364187794c1d046dba165479e4dcdb35760287e656',
-        'train_features.tar.gzab': '196d8a4c7e2fcd4f2f9f8ca6dd500532de470662a268fe4a6c3afd79a040359f',
-        'train_features.tar.gzac': '726dc04435fde063b5fb9ab177abd852938963a6f665185a6b459cd602fa33cf',
-        'train_features.tar.gzad': 'da2bcd5187e9ece658b65a26e8185a99648637e5cd059c16f4c5de40162eed4a',
-        'test_features.tar.gzaa': '1734253a7040b5adff7daa2daa1babcfb7e1f789d83774fc6d43bda5d7efacfc',
-        'test_features.tar.gzab': 'b185c38887575e67976ff6ca184340352d0dc09aae58d5a2cc74d60dc9d34826',
-        'train_agbm.tar.gz': '3909abc4569f36c9edf5c7358cd9ffef23c57f12e91fef9539cd7ac8a2e35e8d',
-        'biomassters_features_metadata.csv': '8e2cb4e6faa169ea3d5dada791f16cd44fe6149091a129c5ce28fb024f79ed93',
+        'train_features.tar.gzaa': (
+            'bf727a4ad437aa3b5f8e22364187794c1d046dba165479e4dcdb35760287e656'
+        ),
+        'train_features.tar.gzab': (
+            '196d8a4c7e2fcd4f2f9f8ca6dd500532de470662a268fe4a6c3afd79a040359f'
+        ),
+        'train_features.tar.gzac': (
+            '726dc04435fde063b5fb9ab177abd852938963a6f665185a6b459cd602fa33cf'
+        ),
+        'train_features.tar.gzad': (
+            'da2bcd5187e9ece658b65a26e8185a99648637e5cd059c16f4c5de40162eed4a'
+        ),
+        'test_features.tar.gzaa': (
+            '1734253a7040b5adff7daa2daa1babcfb7e1f789d83774fc6d43bda5d7efacfc'
+        ),
+        'test_features.tar.gzab': (
+            'b185c38887575e67976ff6ca184340352d0dc09aae58d5a2cc74d60dc9d34826'
+        ),
+        'train_agbm.tar.gz': (
+            '3909abc4569f36c9edf5c7358cd9ffef23c57f12e91fef9539cd7ac8a2e35e8d'
+        ),
+        'biomassters_features_metadata.csv': (
+            '8e2cb4e6faa169ea3d5dada791f16cd44fe6149091a129c5ce28fb024f79ed93'
+        ),
     }
 
     def __init__(
@@ -110,12 +139,17 @@ class BioMassters(NonGeoDataset):
                 Sentinel 2 ('S1', 'S2')
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
-            download: if True, download dataset and store it in the root directory
+            download: if True, download dataset and store it in the root directory.
+                The full dataset is ~201 GB, so make sure you have enough disk
+                space and a stable connection before enabling this.
             checksum: if True, verify downloaded files using SHA-256 checksums
 
         Raises:
             AssertionError: if ``split`` or ``sensors`` is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.10
+           The *download* and *checksum* parameters.
         """
         self.root = root
 
