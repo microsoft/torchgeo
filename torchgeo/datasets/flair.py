@@ -342,8 +342,8 @@ TASKS: dict[str, _Task] = {
 }
 
 
-class FLAIRHUB(NonGeoDataset):
-    """FLAIR-HUB Dataset.
+class FLAIRHUBBase(NonGeoDataset):
+    """Shared base for FLAIRHUB and FLAIRHUBToy.
 
     Large-scale Multimodal Dataset for Land Cover and Crop Mapping dataset.
 
@@ -1318,15 +1318,7 @@ class FLAIRHUB(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
-        split_column: Literal[
-            'split_1',
-            'split_2',
-            'split_3',
-            'split_4',
-            'split_5',
-            'split_flairchallenge',
-            'split_toy',
-        ] = 'split_1',
+        split_column: str = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -1878,7 +1870,43 @@ class FLAIRHUB(NonGeoDataset):
         return fig
 
 
-class FLAIRHUBToy(FLAIRHUB):
+class FLAIRHUB(FLAIRHUBBase):
+    """FLAIR-HUB Dataset."""
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        split: Literal['train', 'val', 'test'] = 'train',
+        split_column: Literal[
+            'split_1',
+            'split_2',
+            'split_3',
+            'split_4',
+            'split_5',
+            'split_flairchallenge',
+        ] = 'split_1',
+        transforms: Callable[[Sample], Sample] | None = None,
+        download: bool = False,
+        checksum: bool = False,
+        bands: list[AvailableBands] | None = None,
+        dataset_type: Literal[
+            'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
+        ] = 'land_cover',
+    ) -> None:
+        """Initialize a new FLAIRHUB dataset instance."""
+        super().__init__(
+            root=root,
+            split=split,
+            split_column=split_column,
+            transforms=transforms,
+            download=download,
+            checksum=checksum,
+            bands=bands,
+            dataset_type=dataset_type,
+        )
+
+
+class FLAIRHUBToy(FLAIRHUBBase):
     """Toy version of the FLAIRHUB dataset.
 
     For further information refer to :class:`~torchgeo.datasets.FLAIRHUB`.
