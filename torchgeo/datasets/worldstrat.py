@@ -6,7 +6,7 @@
 import os
 from collections.abc import Callable, Sequence
 from glob import glob
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +54,7 @@ class WorldStrat(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following entries:
 
-    * https://zenodo.org/records/6810792
+    * https://zenodo.org/records/15382551
     * https://arxiv.org/abs/2207.06418
 
     .. versionadded:: 0.7
@@ -73,31 +73,35 @@ class WorldStrat(NonGeoDataset):
 
     valid_splits = ('train', 'val', 'test')
 
+    # Top-level directories the archives extract into
+    hr_dir = 'hr_dataset'
+    lr_dir = 'lr_dataset'
+
     file_info_dict: ClassVar[dict[str, dict[str, str]]] = {
         'hr_dataset': {
-            'url': 'https://zenodo.org/records/6810792/files/hr_dataset.tar.gz?download=1',
-            'filename': 'hr_dataset.tar.gz',
-            'md5': 'ca7167334006f3c17f9071f14c435335',
+            'url': 'https://zenodo.org/records/15382551/files/hr_dataset.zip?download=1',
+            'filename': 'hr_dataset.zip',
+            'md5': '5ae09bb3557ce131242a133d9758d9e7',
         },
         'lr_dataset_l1c': {
-            'url': 'https://zenodo.org/records/6810792/files/lr_dataset_l1c.tar.gz?download=1',
-            'filename': 'lr_dataset_l1c.tar.gz',
-            'md5': 'd2dcafa207b1e1bc6c754607f15e9ed6',
+            'url': 'https://zenodo.org/records/15382551/files/lr_dataset_l1c.zip?download=1',
+            'filename': 'lr_dataset_l1c.zip',
+            'md5': 'e90ecfa4bf838ace0b51dea1031b5ed1',
         },
         'lr_dataset_l2a': {
-            'url': 'https://zenodo.org/records/6810792/files/lr_dataset_l2a.tar.gz?download=1',
-            'filename': 'lr_dataset_l2a.tar.gz',
-            'md5': '8cfc6a477cee9e9cd8b20ea27227de65',
+            'url': 'https://zenodo.org/records/15382551/files/lr_dataset_l2a.zip?download=1',
+            'filename': 'lr_dataset_l2a.zip',
+            'md5': '7aa1878a37d22a6c7c4b84b022a14ad7',
         },
         'metadata': {
-            'url': 'https://zenodo.org/records/6810792/files/metadata.csv?download=1',
+            'url': 'https://zenodo.org/records/15382551/files/metadata.csv?download=1',
             'filename': 'metadata.csv',
-            'md5': 'dfeb3348e79b719bf03c230d5d258839',
+            'md5': '1a66ac42b9a688be18debd0d95633fa1',
         },
         'train_val_test_split': {
-            'url': 'https://zenodo.org/records/6810792/files/stratified_train_val_test_split.csv?download=1',
+            'url': 'https://zenodo.org/records/15382551/files/stratified_train_val_test_split.csv?download=1',
             'filename': 'stratified_train_val_test_split.csv',
-            'md5': '745035835d835280aa0298a9dc1996d1',
+            'md5': '874612b59bbf7987f7de7edd48a30c70',
         },
     }
 
@@ -154,9 +158,8 @@ class WorldStrat(NonGeoDataset):
         self.metadata_df = pd.read_csv(
             os.path.join(self.root, self.file_info_dict['metadata']['filename'])
         )
-        self.metadata_df.rename(columns={'Unnamed: 0': 'tile_id'}, inplace=True)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         """Retrieve a sample from the dataset.
 
         Args:
@@ -167,45 +170,72 @@ class WorldStrat(NonGeoDataset):
         """
         file_entry = self.file_path_df.iloc[idx]
         aoi = file_entry['tile']
-        data_dir = os.path.join(self.root, aoi)
+        hr_tile_dir = os.path.join(self.root, self.hr_dir, aoi)
+        lr_tile_dir = os.path.join(self.root, self.lr_dir, aoi)
 
-        sample: dict[str, Tensor] = {}
+        sample: dict[str, Any] = {}
 
         modality_loaders: dict[str, Callable[[], Tensor]] = {
-            'l1c': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L1C')),
-            'l2a': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L2A')),
+            'l1c': lambda: self._load_sentinel_data(os.path.join(lr_tile_dir, 'L1C')),
+            'l2a': lambda: self._load_sentinel_data(os.path.join(lr_tile_dir, 'L2A')),
             'lr_rgbn': lambda: self._load_tiff(
-                os.path.join(data_dir, f'{aoi}_rgbn.tiff')
+                os.path.join(hr_tile_dir, f'{aoi}_rgbn.tiff')
             ),
-            'hr_ps': lambda: self._load_tiff(os.path.join(data_dir, f'{aoi}_ps.tiff')),
+            'hr_ps': lambda: self._load_tiff(
+                os.path.join(hr_tile_dir, f'{aoi}_ps.tiff')
+            ),
             'hr_pan': lambda: self._load_tiff(
-                os.path.join(data_dir, f'{aoi}_pan.tiff')
+                os.path.join(hr_tile_dir, f'{aoi}_pan.tiff')
             ),
             'hr_rgbn': lambda: torch.from_numpy(
                 np.array(
-                    Image.open(os.path.join(data_dir, f'{aoi}_rgb.png'))
+                    Image.open(os.path.join(hr_tile_dir, f'{aoi}_rgb.png'))
                 ).transpose(2, 0, 1)
             ).float(),
         }
 
-        # Load only selected modalities
         for modality in self.modalities:
             sample[f'image_{modality}'] = modality_loaders[modality]()
 
-        # Add metadata
-        metadata = self.metadata_df[self.metadata_df['tile_id'] == aoi].reset_index(
-            drop=True
+        # Add metadata, one row per low-res timestep n, ordered to match the
+        # stacked L1C/L2A time dimension
+        metadata = (
+            self.metadata_df[self.metadata_df['tile'] == aoi]
+            .sort_values('n')
+            .reset_index(drop=True)
         )
         sample.update(
             {
                 'lon': metadata['lon'][0],
                 'lat': metadata['lat'][0],
-                'low_res_date': metadata['lowres_date'][0],
+                'low_res_date': metadata['lowres_date'].tolist(),
                 'high_res_date': metadata['highres_date'][0],
             }
         )
 
         return sample
+
+    def _sentinel_paths(self, data_dir: str) -> list[tuple[int, str]]:
+        """Find Sentinel time-series files sorted by their timestep index.
+
+        Args:
+            data_dir: Directory containing the Sentinel data, in the dataset
+                this is either the L1C or L2A directory with time-series.
+
+        Returns:
+            List of (timestep index, file path) pairs sorted by timestep index.
+        """
+        level = os.path.basename(data_dir)
+        tiff_paths = glob(os.path.join(data_dir, f'*{level}_data.tiff'))
+
+        # filenames are '<AOI>-<n>-<level>_data.tiff', so sort numerically by n
+        # rather than relying on lexicographic glob order
+        pairs = [
+            (int(os.path.basename(tiff_path).split('-')[-2]), tiff_path)
+            for tiff_path in tiff_paths
+        ]
+
+        return sorted(pairs)
 
     def _load_sentinel_data(self, data_dir: str) -> Tensor:
         """Load Sentinel data for a given AOI in a data directory.
@@ -215,26 +245,23 @@ class WorldStrat(NonGeoDataset):
                 this is either the L1C or L2A directory with time-series.
 
         Returns:
-            Loaded Sentinel data stacked as tensor of shape [T, C, H, W].
+            Loaded Sentinel data stacked as tensor of shape [T, C, H, W],
+            ordered by ascending timestep index.
         """
-        tiff_paths = glob(
-            os.path.join(data_dir, f'*{os.path.basename(data_dir)}_data.tiff'),
-            recursive=True,
-        )
+        data = [
+            self._load_tiff(tiff_path)
+            for _, tiff_path in self._sentinel_paths(data_dir)
+        ]
 
-        # load and stack the data
-        data = []
-        for tiff_path in tiff_paths:
-            data.append(self._load_tiff(tiff_path))
-
-        return torch.stack(data).float()
+        return torch.stack(data)
 
     def _load_tiff(self, tiff_path: str) -> Tensor:
         """Load a tiff file as a tensor."""
         with rasterio.open(tiff_path) as src:
             data = src.read()
             tensor = array_to_tensor(data)
-        return tensor
+        # high-res tiffs are uint16 on disk, low-res float32
+        return tensor.float()
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
@@ -252,7 +279,10 @@ class WorldStrat(NonGeoDataset):
             df = df[df['split'] == self.split]
             # check that all tiles are present
             for tile in df['tile']:
-                exists.append(os.path.exists(os.path.join(self.root, tile)))
+                exists.append(
+                    os.path.exists(os.path.join(self.root, self.hr_dir, tile))
+                    and os.path.exists(os.path.join(self.root, self.lr_dir, tile))
+                )
         else:
             exists.append(False)
 
@@ -273,26 +303,24 @@ class WorldStrat(NonGeoDataset):
                 exists.append(False)
 
         if all(exists):
-            # extract files
             self._extract()
             return
 
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        # download
         self._download()
 
     def _extract(self) -> None:
-        """Extract tar balls to root directory."""
+        """Extract archives to root directory."""
         for file in self.file_info_dict.values():
-            if 'tar.gz' in file['filename']:
+            if file['filename'].endswith('.zip'):
                 extract_archive(os.path.join(self.root, file['filename']), self.root)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-        for _, metadata in self.file_info_dict.items():
-            if 'tar.gz' in metadata['filename']:
+        for metadata in self.file_info_dict.values():
+            if metadata['filename'].endswith('.zip'):
                 download_and_extract_archive(
                     metadata['url'],
                     self.root,
@@ -309,7 +337,7 @@ class WorldStrat(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
@@ -333,18 +361,15 @@ class WorldStrat(NonGeoDataset):
             if key in sample:
                 img = sample[key].numpy()
 
-                # Select and normalize image data
                 if modality in ['hr_ps', 'hr_pan']:
                     img = img[0, ...]
                 elif modality == 'hr_rgbn':
                     img = img[0:3, ...]
                 elif modality in ['l1c', 'l2a']:
-                    img = img[0, [4, 3, 2], ...]
+                    img = img[0, [3, 2, 1], ...]
 
-                # Apply percentile normalization
                 img = percentile_normalization(img)
 
-                # Handle channel ordering
                 if img.ndim == 3:
                     img = img.transpose(1, 2, 0)
 
@@ -354,9 +379,10 @@ class WorldStrat(NonGeoDataset):
                     axs[0, panel].set_title(self.modality_titles[modality])
 
         if 'prediction' in sample:
-            pred = sample['prediction'].numpy().transpose(1, 2, 0)
-            if pred.shape[-1] == 4:
-                pred = pred[..., :3]
+            pred = sample['prediction'].numpy()
+            if pred.shape[0] == 4:
+                pred = pred[:3]
+            pred = percentile_normalization(pred).transpose(1, 2, 0)
             axs[0, -1].imshow(pred)
             axs[0, -1].axis('off')
             if show_titles:

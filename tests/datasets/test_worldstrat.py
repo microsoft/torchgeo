@@ -24,29 +24,29 @@ class TestWorldStrat:
 
         file_info_dict = {
             'hr_dataset': {
-                'url': os.path.join(url, 'hr_dataset.tar.gz'),
-                'filename': 'hr_dataset.tar.gz',
-                'md5': 'e395f3357c6d97e5fee1baaffcaa31bd',
+                'url': os.path.join(url, 'hr_dataset.zip'),
+                'filename': 'hr_dataset.zip',
+                'md5': '531a2262b55985a9af1d99a7ee890cc2',
             },
             'lr_dataset_l1c': {
-                'url': os.path.join(url, 'lr_dataset_l1c.tar.gz'),
-                'filename': 'lr_dataset_l1c.tar.gz',
-                'md5': '24db4553ea14b8c8253c13c297d6c862',
+                'url': os.path.join(url, 'lr_dataset_l1c.zip'),
+                'filename': 'lr_dataset_l1c.zip',
+                'md5': 'dbf5882a22c751c5fe0822c5a4db06d4',
             },
             'lr_dataset_l2a': {
-                'url': os.path.join(url, 'lr_dataset_l2a.tar.gz'),
-                'filename': 'lr_dataset_l2a.tar.gz',
-                'md5': 'a4237eb6fb6a96ef3f52a4e9bf6ee754',
+                'url': os.path.join(url, 'lr_dataset_l2a.zip'),
+                'filename': 'lr_dataset_l2a.zip',
+                'md5': 'f48ad8b9dc79afa87f44d0d89d2c6544',
             },
             'metadata': {
                 'url': os.path.join(url, 'metadata.csv'),
                 'filename': 'metadata.csv',
-                'md5': '6d2ced33b6dc2c25a5c067d34d2c1738',
+                'md5': '84492378455f689a49078e187dfdf0b6',
             },
             'train_val_test_split': {
                 'url': os.path.join(url, 'stratified_train_val_test_split.csv'),
                 'filename': 'stratified_train_val_test_split.csv',
-                'md5': 'c6941d2c0f044d716ea5f0ab4277cba6',
+                'md5': 'c9eb98a9a45a57ef6028a6ef8102485d',
             },
         }
         monkeypatch.setattr(WorldStrat, 'file_info_dict', file_info_dict)
@@ -62,6 +62,25 @@ class TestWorldStrat:
         assert isinstance(x, dict)
         for modality in dataset.modalities:
             assert isinstance(x[f'image_{modality}'], torch.Tensor)
+            assert x[f'image_{modality}'].dtype == torch.float32
+
+        # one low-res date per timestep, aligned to the stacked time dimension
+        assert isinstance(x['low_res_date'], list)
+        assert len(x['low_res_date']) == x['image_l1c'].shape[0]
+        assert x['low_res_date'] == sorted(x['low_res_date'])
+
+        # remaining metadata is constant across a tile's rows
+        for key in ('lon', 'lat', 'high_res_date'):
+            assert not isinstance(x[key], list)
+
+    def test_sentinel_paths_sorted_by_index(self, dataset: WorldStrat) -> None:
+        aoi = dataset.file_path_df['tile'][0]
+        data_dir = os.path.join(dataset.root, dataset.lr_dir, aoi, 'L1C')
+        pairs = dataset._sentinel_paths(data_dir)
+
+        assert [n for n, _ in pairs] == [1, 2, 3, 4]
+        for n, path in pairs:
+            assert os.path.basename(path) == f'{aoi}-{n}-L1C_data.tiff'
 
     def test_len(self, dataset: WorldStrat) -> None:
         if dataset.split == 'train':
@@ -74,9 +93,9 @@ class TestWorldStrat:
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
         file_list = [
-            'hr_dataset.tar.gz',
-            'lr_dataset_l1c.tar.gz',
-            'lr_dataset_l2a.tar.gz',
+            'hr_dataset.zip',
+            'lr_dataset_l1c.zip',
+            'lr_dataset_l2a.zip',
             'metadata.csv',
             'stratified_train_val_test_split.csv',
         ]
@@ -96,7 +115,7 @@ class TestWorldStrat:
             WorldStrat(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, 'hr_dataset.tar.gz'), 'w') as f:
+        with open(os.path.join(tmp_path, 'hr_dataset.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Archive'):
             WorldStrat(root=tmp_path, checksum=True)
