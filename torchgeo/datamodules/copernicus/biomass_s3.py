@@ -170,9 +170,6 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             A batch with normalized imagery and target masks.
         """
         batch = super().on_after_batch_transfer(batch, dataloader_idx)
-        batch['image'] = torch.nan_to_num(
-            batch['image'], nan=0.0, posinf=0.0, neginf=0.0
-        )
         if 'mask' in batch:
             batch['mask'] = (batch['mask'] - self.target_mean) / self.target_std
         return batch

@@ -70,26 +70,6 @@ class SpatioTemporalPixelwiseRegression(RegressionMixin, BaseTask):
         """
         return self.model(x, **kwargs)
 
-    def _target_stats(self) -> tuple[Tensor, Tensor] | None:
-        """Return target normalization statistics from the datamodule if present."""
-        try:
-            datamodule = self.trainer.datamodule
-        except RuntimeError:
-            return None
-
-        mean = getattr(datamodule, 'target_mean', None)
-        std = getattr(datamodule, 'target_std', None)
-        if isinstance(mean, Tensor) and isinstance(std, Tensor):
-            return mean, std
-        return None
-
-    def _denormalize(self, x: Tensor) -> Tensor:
-        """Denormalize target values if datamodule statistics are available."""
-        if (stats := self._target_stats()) is not None:
-            mean, std = stats
-            x = x * std + mean
-        return x
-
     def _shared_step(self, batch: Sample, stage: str) -> Tensor:
         """Compute the loss and metrics for a given stage."""
         x = batch['image']
@@ -101,10 +81,14 @@ class SpatioTemporalPixelwiseRegression(RegressionMixin, BaseTask):
             kwargs['lengths'] = lengths
 
         y_hat = self(x, **kwargs).squeeze(dim=1)
-        metrics = getattr(self, f'{stage}_metrics')
-        metrics(self._denormalize(y_hat), self._denormalize(y))
-
         loss: Tensor = self.criterion(y_hat, y)
+
+        datamodule = self.trainer.datamodule
+        y = y * datamodule.target_std + datamodule.target_mean
+        y_hat = y_hat * datamodule.target_std + datamodule.target_mean
+        metrics = getattr(self, f'{stage}_metrics')
+        metrics(y_hat, y)
+
         self.log(f'{stage}_loss', loss, batch_size=batch_size)
         return loss
 
@@ -132,4 +116,5 @@ class SpatioTemporalPixelwiseRegression(RegressionMixin, BaseTask):
         if (lengths := batch.get('length')) is not None:
             kwargs['lengths'] = lengths
         y_hat: Tensor = self(batch['image'], **kwargs)
-        return self._denormalize(y_hat)
+        datamodule = self.trainer.datamodule
+        return y_hat * datamodule.target_std + datamodule.target_mean

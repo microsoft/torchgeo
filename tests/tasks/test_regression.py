@@ -308,20 +308,6 @@ class TestPixelwiseRegression:
         assert sample['transformed']
         assert sample['image'].shape[-2:] == TARGET_SIZE
 
-    def test_biomass_s3_nonfinite_imagery_is_sanitized(self) -> None:
-        datamodule = CopernicusBenchBiomassS3DataModule(
-            root='tests/data/copernicus/l3_biomass_s3', batch_size=1, num_workers=0
-        )
-        batch = {
-            'image': torch.tensor([[[[float('nan'), float('inf')]]]]),
-            'mask': torch.ones(1, 1, 2),
-        }
-
-        batch = datamodule.on_after_batch_transfer(batch, dataloader_idx=0)
-
-        assert torch.isfinite(batch['image']).all()
-        assert batch['image'].eq(0).all()
-
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO
