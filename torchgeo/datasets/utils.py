@@ -23,7 +23,7 @@ import zipfile
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, cast, overload
 
 import numpy as np
 import pandas as pd
@@ -54,15 +54,13 @@ from .errors import DependencyNotFoundError
 #:    ds[xmin:xmax, ymin:ymax, tmin:tmax]
 #:
 #: All values are optional and will default to the spatiotemporal extent of the dataset.
-GeoSlice: TypeAlias = (  # noqa: UP040
-    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
-)
+type GeoSlice = slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 
 #: Path-like object.
 #:
 #: Most datasets can handle any kind of path-like object,
 #: and some can support a list of paths.
-Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
+type Path = str | os.PathLike[str]
 
 #: Sample dictionary returned by a GeoDataset.
 #:
@@ -75,7 +73,7 @@ Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 #: * prediction: predicted output
 #:
 #: Values are usually of type torch.Tensor.
-Sample: TypeAlias = dict[str, Any]  # noqa: UP040
+type Sample = dict[str, Any]
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
