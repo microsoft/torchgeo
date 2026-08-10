@@ -26,7 +26,7 @@ class TestVHR10:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return VHR10(root, split, transforms, download=True)
+        return VHR10(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: VHR10) -> None:
         x = dataset[0]
@@ -44,7 +44,7 @@ class TestVHR10:
             assert len(dataset) == 150
 
     def test_already_downloaded(self, dataset: VHR10) -> None:
-        VHR10(root=dataset.root, download=True)
+        VHR10(root=dataset.root, download=True, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
