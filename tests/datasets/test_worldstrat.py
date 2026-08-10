@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from torch import nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, WorldStrat
 
