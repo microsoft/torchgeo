@@ -1,5 +1,5 @@
 DEO
-=====
+===
 
 .. currentmodule:: torchgeo.models
 .. autoclass:: DEO

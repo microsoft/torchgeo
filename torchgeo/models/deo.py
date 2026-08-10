@@ -7,7 +7,7 @@ from functools import partial
 from typing import Any, Literal
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torchvision import models as torchvision_models
 from torchvision import transforms
 from torchvision.models._api import Weights, WeightsEnum
@@ -40,30 +40,17 @@ class DEO(nn.Module):
         del self.feat_extr.features[0]
 
         # Conv layers for Swin
-        if in_channels == 10:
-            norm_layer_ms = partial(nn.LayerNorm, eps=1e-5)
-            self.feat_extr.patch_embed = nn.Sequential(
-                nn.Conv2d(
-                    10,
-                    self.feat_extr.features[0][0].norm1.normalized_shape[0],
-                    kernel_size=(4, 4),
-                    stride=(4, 4),
-                ),
-                Permute([0, 2, 3, 1]),
-                norm_layer_ms(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
-            )
-        elif in_channels == 3:
-            norm_layer_rgb = partial(nn.LayerNorm, eps=1e-5)
-            self.feat_extr.patch_embed = nn.Sequential(
-                nn.Conv2d(
-                    3,
-                    self.feat_extr.features[0][0].norm1.normalized_shape[0],
-                    kernel_size=(4, 4),
-                    stride=(4, 4),
-                ),
-                Permute([0, 2, 3, 1]),
-                norm_layer_rgb(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
-            )
+        norm_layer = partial(nn.LayerNorm, eps=1e-5)
+        self.feat_extr.patch_embed = nn.Sequential(
+            nn.Conv2d(
+                in_channels,
+                self.feat_extr.features[0][0].norm1.normalized_shape[0],
+                kernel_size=(4, 4),
+                stride=(4, 4),
+            ),
+            Permute([0, 2, 3, 1]),
+            norm_layer(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
+        )
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Get multi-stage swin features.
@@ -127,7 +114,7 @@ class DEO_Weights(WeightsEnum):
     """
 
     DEO_SWIN = Weights(
-        url='https://huggingface.co/SolaireTheSun/DEO/resolve/main/DEO_swin_b.pth',
+        url='https://huggingface.co/SolaireTheSun/DEO/resolve/43bcb822955b8ceb3ca44ee2c4c0e059002bc0f8/DEO_swin_b.pth',
         transforms=_deo_transforms,
         meta={
             'dataset': 'fMoW, fMoW-Sentinel',
@@ -136,7 +123,7 @@ class DEO_Weights(WeightsEnum):
             'repo': 'https://github.com/wolfilip/DEO-FM',
             'license': 'MIT',
             'ssl_method': 'DEO',
-            'bands': ['R', 'G', 'B', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'],
+            'bands': ['B4', 'B3', 'B2', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12'],
             'in_chans': 10,
             'img_size': 224,
         },
@@ -161,7 +148,7 @@ def deo_base(weights: DEO_Weights | None = None, *args: Any, **kwargs: Any) -> D
     model = DEO(*args, **kwargs)
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
         model.load_state_dict(state_dict, strict=False)
 
     return model

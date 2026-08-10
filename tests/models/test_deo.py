@@ -8,8 +8,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.models import deo_base
-from torchgeo.models.deo import DEO_Weights
+from torchgeo.models import DEO_Weights, deo_base
 
 
 class TestDEO:
