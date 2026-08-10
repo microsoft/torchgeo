@@ -20,7 +20,12 @@ from torchvision.models._api import WeightsEnum
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
+from torchvision.ops import (
+    MultiScaleRoIAlign,
+    box_convert,
+    feature_pyramid_network,
+    misc,
+)
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -100,7 +105,46 @@ class ObjectDetection(BaseTask):
         """
         self.weights = weights
         self.model_kwargs = kwargs
+        self.rf_detr_criterion: Any | None = None
+        self.rf_detr_postprocess: Any | None = None
         super().__init__()
+
+    def forward(
+        self, images: Tensor, targets: list[dict[str, Tensor]] | None = None
+    ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
+        """Run a forward pass."""
+        if not self.hparams['model'].startswith('rf-detr'):
+            return self.model(images, targets)
+
+        height, width = images.shape[-2:]
+        if targets is not None:
+            scale = images.new_tensor([width, height, width, height])
+            targets = [
+                {
+                    'boxes': box_convert(target['boxes'], 'xyxy', 'cxcywh') / scale,
+                    'labels': target['labels'] - 1,
+                }
+                for target in targets
+            ]
+
+        outputs = self.model(images, targets)
+        if targets is not None:
+            assert self.rf_detr_criterion is not None
+            losses = self.rf_detr_criterion(outputs, targets)
+            return {
+                key: losses[key] * self.rf_detr_criterion.weight_dict[key]
+                for key in losses
+                if key in self.rf_detr_criterion.weight_dict
+            }
+
+        assert self.rf_detr_postprocess is not None
+        sizes = torch.tensor(
+            [[height, width]] * len(images), device=images.device, dtype=torch.int64
+        )
+        predictions: list[dict[str, Tensor]] = self.rf_detr_postprocess(outputs, sizes)
+        for prediction in predictions:
+            prediction['labels'] += 1
+        return predictions
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -115,10 +159,39 @@ class ObjectDetection(BaseTask):
         freeze_backbone: bool = self.hparams['freeze_backbone']
 
         if model.startswith('rf-detr'):
-            from ..models.rfdetr import RFDETR
+            from rfdetr.config import (
+                RFDETRLargeConfig,
+                RFDETRMediumConfig,
+                RFDETRNanoConfig,
+                RFDETRSmallConfig,
+                TrainConfig,
+            )
+            from rfdetr.models import (
+                apply_lora,
+                build_criterion_from_config,
+                build_model_from_config,
+                load_pretrain_weights,
+            )
 
-            self.model = RFDETR(
-                model, num_classes, in_channels, freeze_backbone, **self.model_kwargs
+            variants = {
+                'rf-detr-nano': RFDETRNanoConfig,
+                'rf-detr-small': RFDETRSmallConfig,
+                'rf-detr-medium': RFDETRMediumConfig,
+                'rf-detr-large': RFDETRLargeConfig,
+            }
+            self.model_kwargs.setdefault('num_channels', in_channels)
+            self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
+            model_config = variants[model](
+                num_classes=num_classes - 1, **self.model_kwargs
+            )
+            train_config = TrainConfig(dataset_dir='.', output_dir='.')
+            self.model = build_model_from_config(model_config, train_config)
+            if model_config.pretrain_weights is not None:
+                load_pretrain_weights(self.model, model_config)
+            if model_config.backbone_lora:
+                apply_lora(self.model)
+            self.rf_detr_criterion, self.rf_detr_postprocess = (
+                build_criterion_from_config(model_config, train_config)
             )
             return
 
