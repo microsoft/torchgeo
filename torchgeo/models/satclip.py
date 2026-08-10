@@ -39,13 +39,13 @@ class SphericalHarmonics(nn.Module):
         self.embedding_dim = self.L * self.L
 
         # d_m = product_{k=1}^m sqrt(1 + 1/(2k)); s_m = sqrt(2m + 3).
-        orders = torch.arange(self.L, dtype=torch.int64)
+        orders = torch.arange(self.L, dtype=torch.float64)
         diag_coeffs = torch.ones(self.L, dtype=torch.float64)
         if self.L > 1:
-            diag_terms = torch.sqrt(1.0 + 1.0 / (2.0 * orders[1:].to(torch.float64)))
+            diag_terms = torch.sqrt(1 + 1 / (2 * orders[1:]))
             diag_coeffs[1:] = torch.cumprod(diag_terms, dim=0)
 
-        subdiag_coeffs = torch.sqrt(2.0 * orders[:-1].to(torch.float64) + 3.0)
+        subdiag_coeffs = torch.sqrt(2 * orders[:-1] + 3)
 
         alpha = torch.zeros((self.L, self.L), dtype=torch.float64)
         beta = torch.zeros((self.L, self.L), dtype=torch.float64)
@@ -53,21 +53,20 @@ class SphericalHarmonics(nn.Module):
         # c_l = (2l + 1)/(2l - 3)
         # alpha_lm = sqrt(c_l * (4(l - 1)^2 - 1)/(l^2 - m^2))
         # beta_lm = sqrt(c_l * ((l - 1)^2 - m^2)/(l^2 - m^2))
-        for degree in range(2, self.L):
-            m = torch.arange(degree - 1, dtype=torch.float64)
-            previous_degree = degree - 1
-            previous_degree_squared = previous_degree * previous_degree
-            order_squared = m * m
+        for deg in range(2, self.L):
+            m = torch.arange(deg - 1, dtype=torch.float64)
+            prev_deg_sq = (deg - 1) ** 2
+            order_sq = m**2
 
-            degree_scale = (2.0 * degree + 1.0) / (2.0 * degree - 3.0)
-            denominator = degree * degree - order_squared
-            alpha_numerator = 4.0 * previous_degree_squared - 1.0
-            beta_numerator = previous_degree_squared - order_squared
+            deg_scale = (2 * deg + 1) / (2 * deg - 3)
+            denom = deg**2 - order_sq
+            alpha_num = 4 * prev_deg_sq - 1
+            beta_num = prev_deg_sq - order_sq
 
-            alpha_squared = degree_scale * (alpha_numerator / denominator)
-            beta_squared = degree_scale * (beta_numerator / denominator)
-            alpha[degree, : degree - 1] = torch.sqrt(alpha_squared)
-            beta[degree, : degree - 1] = torch.sqrt(beta_squared)
+            alpha_sq = deg_scale * (alpha_num / denom)
+            beta_sq = deg_scale * (beta_num / denom)
+            alpha[deg, : deg - 1] = torch.sqrt(alpha_sq)
+            beta[deg, : deg - 1] = torch.sqrt(beta_sq)
 
         self.register_buffer('orders', orders, persistent=False)
         self.register_buffer('diag_coeffs', diag_coeffs, persistent=False)
@@ -76,105 +75,102 @@ class SphericalHarmonics(nn.Module):
         self.register_buffer('beta', beta, persistent=False)
 
     def _legendre_polynomials(
-        self, x: Tensor, cos_theta: Tensor, sin_theta: Tensor, order_values: Tensor
-    ) -> Tensor:
+        self, x: Tensor, cos_theta: Tensor, sin_theta: Tensor, orders: Tensor
+    ) -> list[Tensor]:
         """Compute the normalized associated Legendre polynomials.
 
         Args:
             x: Input coordinates used to create tensors with matching properties.
             cos_theta: Cosine of the colatitude for each coordinate.
             sin_theta: Sine of the colatitude for each coordinate.
-            order_values: Spherical harmonic orders in the input dtype.
+            orders: Spherical harmonic orders in the input dtype.
 
         Returns:
-            Associated Legendre polynomials of shape ``(B, L, L)``.
+            Associated Legendre polynomials for each degree. Row ``l`` has shape
+            ``(B, l + 1)``.
         """
         dtype = x.dtype
         device = x.device
         batch_size = x.shape[0]
 
-        p00 = x.new_full((batch_size,), math.sqrt(1.0 / (4.0 * math.pi)))
+        p00 = x.new_full((batch_size,), math.sqrt(1 / (4 * math.pi)))
         diag_terms: list[Tensor] = [p00]
         if self.L > 1:
             diag_coeffs = self.diag_coeffs.to(device=device, dtype=dtype)
-            diag_values = rearrange(p00, 'b -> b 1')
-            diag_values = diag_values * rearrange(diag_coeffs[1:], 'm -> 1 m')
+            diag_vals = rearrange(p00, 'b -> b 1')
+            diag_vals = diag_vals * rearrange(diag_coeffs[1:], 'm -> 1 m')
             sin_theta = rearrange(sin_theta, 'b -> b 1')
-            powers = rearrange(order_values[1:], 'm -> 1 m')
-            diag_values = diag_values * sin_theta.pow(powers)
-            diag_terms.extend(diag_values.unbind(dim=1))
+            powers = rearrange(orders[1:], 'm -> 1 m')
+            diag_vals = diag_vals * sin_theta.pow(powers)
+            diag_terms.extend(diag_vals.unbind(dim=1))
 
         subdiag_coeffs = self.subdiag_coeffs.to(device=device, dtype=dtype)
         alpha = self.alpha.to(device=device, dtype=dtype)
         beta = self.beta.to(device=device, dtype=dtype)
 
-        first_row = diag_terms[0].unsqueeze(1)
-        first_row_padding = x.new_zeros((batch_size, self.L - 1))
-        rows: list[Tensor] = [torch.cat([first_row, first_row_padding], dim=1)]
+        row = rearrange(diag_terms[0], 'b -> b 1')
+        rows = [row]
         if self.L > 1:
             subdiag = subdiag_coeffs[0] * cos_theta
             subdiag = subdiag * diag_terms[0]
-            subdiag = subdiag.unsqueeze(1)
-            diagonal = diag_terms[1].unsqueeze(1)
-            padding = x.new_zeros((batch_size, self.L - 2))
-            rows.append(torch.cat([subdiag, diagonal, padding], dim=1))
+            subdiag = rearrange(subdiag, 'b -> b 1')
+            diag = rearrange(diag_terms[1], 'b -> b 1')
+            rows.append(torch.cat([subdiag, diag], dim=1))
 
         # P_l^m = alpha_lm cos(theta) P_{l-1}^m - beta_lm P_{l-2}^m.
-        for degree in range(2, self.L):
-            alpha_values = rearrange(alpha[degree, : degree - 1], 'm -> 1 m')
-            recurrence = alpha_values * rearrange(cos_theta, 'b -> b 1')
-            recurrence = recurrence * rows[degree - 1][:, : degree - 1]
+        for deg in range(2, self.L):
+            alpha_vals = rearrange(alpha[deg, : deg - 1], 'm -> 1 m')
+            recurrence = alpha_vals * rearrange(cos_theta, 'b -> b 1')
+            recurrence = recurrence * rows[deg - 1][:, : deg - 1]
 
-            beta_values = rearrange(beta[degree, : degree - 1], 'm -> 1 m')
-            previous_degree = beta_values * rows[degree - 2][:, : degree - 1]
-            recurrence = recurrence - previous_degree
+            beta_vals = rearrange(beta[deg, : deg - 1], 'm -> 1 m')
+            beta_term = beta_vals * rows[deg - 2][:, : deg - 1]
+            recurrence = recurrence - beta_term
 
-            subdiag = subdiag_coeffs[degree - 1] * cos_theta
-            subdiag = subdiag * diag_terms[degree - 1]
+            subdiag = subdiag_coeffs[deg - 1] * cos_theta
+            subdiag = subdiag * diag_terms[deg - 1]
             subdiag = subdiag.unsqueeze(1)
-            diagonal = diag_terms[degree].unsqueeze(1)
-            row_terms = [recurrence, subdiag, diagonal]
-            if degree < self.L - 1:
-                width = self.L - degree - 1
-                row_terms.append(x.new_zeros((batch_size, width)))
-            rows.append(torch.cat(row_terms, dim=1))
+            diag = diag_terms[deg].unsqueeze(1)
+            terms = [recurrence, subdiag, diag]
+            rows.append(torch.cat(terms, dim=1))
 
-        return torch.stack(rows, dim=1)
+        return rows
 
     def _real_spherical_harmonics(
-        self, plm: Tensor, phi: Tensor, order_values: Tensor
+        self, plm: list[Tensor], phi: Tensor, orders: Tensor
     ) -> Tensor:
         """Combine Legendre polynomials and longitude phases.
 
         Args:
-            plm: Associated Legendre polynomials of shape ``(B, L, L)``.
+            plm: Associated Legendre polynomials for each degree.
             phi: Longitude angle for each coordinate.
-            order_values: Spherical harmonic orders in the input dtype.
+            orders: Spherical harmonic orders in the input dtype.
 
         Returns:
             Real spherical harmonic features of shape ``(B, L * L)``.
         """
         phases = rearrange(phi, 'b -> b 1')
-        phases = phases * rearrange(order_values, 'm -> 1 m')
+        phases = phases * rearrange(orders, 'm -> 1 m')
         sin_terms = torch.sin(phases)
         cos_terms = torch.cos(phases)
 
         # Y_l^0 = pi P_l^0; negative m use sin(m phi), positive m use cos(m phi).
-        degree_blocks: list[Tensor] = []
-        for degree in range(self.L):
-            center = math.pi * plm[:, degree, 0]
+        blocks: list[Tensor] = []
+        for deg in range(self.L):
+            row = plm[deg]
+            center = math.pi * row[:, 0]
             center = center.unsqueeze(1)
-            if degree == 0:
-                degree_blocks.append(center)
+            if deg == 0:
+                blocks.append(center)
                 continue
 
-            base = math.sqrt(2.0) * plm[:, degree, 1 : degree + 1]
-            negative = base * sin_terms[:, 1 : degree + 1]
+            base = math.sqrt(2) * row[:, 1:]
+            negative = base * sin_terms[:, 1 : deg + 1]
             negative = torch.flip(negative, dims=(1,))
-            positive = base * cos_terms[:, 1 : degree + 1]
-            degree_blocks.append(torch.cat([negative, center, positive], dim=1))
+            positive = base * cos_terms[:, 1 : deg + 1]
+            blocks.append(torch.cat([negative, center, positive], dim=1))
 
-        return torch.cat(degree_blocks, dim=1)
+        return torch.cat(blocks, dim=1)
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass.
@@ -189,7 +185,7 @@ class SphericalHarmonics(nn.Module):
         lon = x[:, 0]
         lat = x[:, 1]
 
-        # Clamp latitudes off the poles to keep the recurrence stable.
+        # Clamp latitudes off the poles to keep coordinate gradients finite.
         lat = lat.clamp(min=-89.95, max=89.95)
         phi = torch.deg2rad(lon + 180)
         theta = torch.deg2rad(lat + 90)
@@ -199,9 +195,9 @@ class SphericalHarmonics(nn.Module):
         sin_theta = torch.clamp(sin_theta, min=0)
         sin_theta = torch.sqrt(sin_theta)
 
-        order_values = self.orders.to(device=x.device, dtype=x.dtype)
-        plm = self._legendre_polynomials(x, cos_theta, sin_theta, order_values)
-        return self._real_spherical_harmonics(plm, phi, order_values)
+        orders = self.orders.to(device=x.device, dtype=x.dtype)
+        plm = self._legendre_polynomials(x, cos_theta, sin_theta, orders)
+        return self._real_spherical_harmonics(plm, phi, orders)
 
 
 class SineActivation(nn.Module):
@@ -338,19 +334,22 @@ class SirenNet(nn.Module):
             final_activation: Activation applied to the last layer.
         """
         super().__init__()
-        self.layers = nn.ModuleList(
-            [
+        layers = []
+        for index in range(num_layers):
+            is_first = index == 0
+            layer_dim = dim_in if is_first else dim_hidden
+            layer_w0 = w0_initial if is_first else w0
+            layers.append(
                 Siren(
-                    dim_in=dim_in if index == 0 else dim_hidden,
+                    dim_in=layer_dim,
                     dim_out=dim_hidden,
-                    w0=w0_initial if index == 0 else w0,
+                    w0=layer_w0,
                     use_bias=use_bias,
-                    is_first=index == 0,
+                    is_first=is_first,
                     dropout=True,
                 )
-                for index in range(num_layers)
-            ]
-        )
+            )
+        self.layers = nn.ModuleList(layers)
         self.last_layer = Siren(
             dim_in=dim_hidden,
             dim_out=dim_out,
@@ -411,7 +410,9 @@ class SatCLIP(nn.Module):
         assert embed_dim > 0
         assert num_hidden_layers > 0
 
-        self.posenc = SphericalHarmonics(legendre_polys)
+        self.posenc = SphericalHarmonics(legendre_polys).to(
+            dtype=torch.get_default_dtype()
+        )
         self.nnet = SirenNet(
             dim_in=self.posenc.embedding_dim,
             dim_hidden=capacity,
@@ -496,9 +497,7 @@ def satclip(
             for key, value in checkpoint['state_dict'].items()
             if key.startswith(prefix + 'nnet.')
         }
-        missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=True)
-        assert missing_keys == []
-        assert unexpected_keys == []
+        model.load_state_dict(state_dict, strict=True)
         model.eval()
 
     return model
