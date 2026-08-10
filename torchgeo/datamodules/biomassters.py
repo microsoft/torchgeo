@@ -170,7 +170,7 @@ class BioMasstersDataModule(NonGeoDataModule):
     This datamodule adapts BioMassters to a fused spatiotemporal regression format
     with samples shaped like ``{'image': (T, C, H, W), 'mask': (1, H, W)}``.
 
-    .. versionadded:: 0.9
+    .. versionadded:: 0.10
     """
 
     def __init__(
