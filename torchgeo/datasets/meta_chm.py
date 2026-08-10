@@ -75,7 +75,7 @@ class MetaCHM(RasterDataset):
         gdf.to_crs('EPSG:3857', inplace=True)
         filepaths = (
             gdf['assets']
-            .map(lambda asset: asset['chm']['href'])
+            .map(lambda asset: asset['chm']['href'])  # ty: ignore[not-subscriptable]
             .str.replace(
                 's3://dataforgood-fb-data/',
                 'https://dataforgood-fb-data.s3.amazonaws.com/',
