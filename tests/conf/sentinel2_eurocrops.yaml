@@ -28,3 +28,4 @@ data:
       - 'B09'
       - 'B11'
       - 'B12'
+    eurocrops_checksum: false

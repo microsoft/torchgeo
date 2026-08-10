@@ -68,7 +68,7 @@ class ZueriCrop(NonGeoDataset):
         bands: Sequence[str] = band_names,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ZueriCrop dataset instance.
 

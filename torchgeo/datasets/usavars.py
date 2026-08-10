@@ -96,7 +96,7 @@ class USAVars(NonGeoDataset):
         labels: Sequence[Literal['treecover', 'elevation', 'population']] = ALL_LABELS,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new USAVars dataset instance.
 
