@@ -1,10 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """DeepGlobe Land Cover Classification Challenge dataset."""
 
 import os
 from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +18,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -102,8 +104,8 @@ class DeepGlobeLandCover(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DeepGlobeLandCover dataset instance.
@@ -147,7 +149,7 @@ class DeepGlobeLandCover(NonGeoDataset):
                 self.image_fns.append(image_path)
                 self.mask_fns.append(mask_path)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -228,7 +230,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,

@@ -1,19 +1,20 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Northeastern China Crop Map Dataset."""
 
+import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
-import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, download_url
+from .utils import GeoSlice, Path, Sample, download_url
 
 
 class NCCM(RasterDataset):
@@ -73,24 +74,21 @@ class NCCM(RasterDataset):
         2017: 'CDL2017_clip.tif',
     }
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 255, 0, 255),
-        1: (255, 0, 0, 255),
-        2: (255, 255, 0, 255),
-        3: (128, 128, 128, 255),
-        15: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        [(0, 1, 0, 1), (1, 0, 0, 1), (1, 1, 0, 1), (0.5, 0.5, 0.5, 1), (1, 1, 1, 1)]
+    )
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        years: list[int] = [2019],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        years: list[int] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new dataset.
 
@@ -98,7 +96,8 @@ class NCCM(RasterDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             years: list of years for which to use nccm layers
             transforms: a function/transform that takes an input sample
@@ -106,10 +105,17 @@ class NCCM(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
+        if years is None:
+            years = [2019]
         assert set(years) <= self.md5s.keys(), (
             'NCCM data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'
@@ -118,30 +124,29 @@ class NCCM(RasterDataset):
         self.years = years
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.full((max(self.cmap.keys()) + 1,), 4, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((5, 4), dtype=torch.uint8)
 
         self._verify()
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
-        for i, (k, v) in enumerate(self.cmap.items()):
-            self.ordinal_map[k] = i
-            self.ordinal_cmap[i] = torch.tensor(v)
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve mask and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        sample = super().__getitem__(query)
-        sample['mask'] = self.ordinal_map[sample['mask']]
+        sample = super().__getitem__(index)
+
+        # Convert nodata class (15) to 4 so there are no gaps in our ordinal mapping
+        sample['mask'][sample['mask'] == 15] = 4
+
         return sample
 
     def _verify(self) -> None:
@@ -159,50 +164,48 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.urls[year],
-                self.paths,
+                paths,
                 filename=self.fnames[year],
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`NCCM.__getitem__`
+            sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample['mask'].squeeze()
+        mask = sample['mask']
         ncols = 1
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze()
+            pred = sample['prediction']
             ncols = 2
 
-        fig, axs = plt.subplots(
-            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
-        )
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 4, 4), squeeze=False)
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 4, 'interpolation': 'none'}
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis('off')
 
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')

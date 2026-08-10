@@ -1,12 +1,11 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SemanticSegmentation
   init_args:
-    loss: 'ce'
     model: 'deeplabv3+'
     backbone: 'resnet18'
-    in_channels: 13
-    num_classes: 2
-    num_filters: 1
+    in_channels: 12
+    task: 'binary'
+    loss: 'bce'
 data:
   class_path: Sentinel2SouthAmericaSoybeanDataModule
   init_args:
@@ -15,3 +14,16 @@ data:
   dict_kwargs:
     south_america_soybean_paths: 'tests/data/south_america_soybean'
     sentinel2_paths: 'tests/data/sentinel2'
+    sentinel2_bands:
+      - 'B01'
+      - 'B02'
+      - 'B03'
+      - 'B04'
+      - 'B05'
+      - 'B06'
+      - 'B07'
+      - 'B08'
+      - 'B8A'
+      - 'B09'
+      - 'B11'
+      - 'B12'

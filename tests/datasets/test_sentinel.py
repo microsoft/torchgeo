@@ -1,18 +1,17 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -43,13 +42,9 @@ class TestSentinel1:
         transforms = nn.Identity()
         return Sentinel1(root, bands=bands, transforms=transforms)
 
-    def test_separate_files(self, dataset: Sentinel1) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
-
     def test_getitem(self, dataset: Sentinel1) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Sentinel1) -> None:
@@ -93,30 +88,38 @@ class TestSentinel1:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
 
-    def test_invalid_query(self, dataset: Sentinel1) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+    def test_invalid_index(self, dataset: Sentinel1) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestSentinel2:
     @pytest.fixture
     def dataset(self) -> Sentinel2:
         root = os.path.join('tests', 'data', 'sentinel2')
-        res = 10
-        bands = ['B02', 'B03', 'B04', 'B08']
+        res = (10.0, 10.0)
         transforms = nn.Identity()
-        return Sentinel2(root, res=res, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 4
+        bands = [
+            'B01',
+            'B02',
+            'B03',
+            'B04',
+            'B05',
+            'B06',
+            'B07',
+            'B08',
+            'B8A',
+            'B09',
+            'B11',
+            'B12',
+        ]
+        return Sentinel2(root, res=res, transforms=transforms, bands=bands)
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Sentinel2) -> None:
@@ -148,9 +151,11 @@ class TestSentinel2:
         ):
             ds.plot(x)
 
-    def test_invalid_query(self, dataset: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_invalid_index(self, dataset: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_float_res(self, dataset: Sentinel2) -> None:
+        Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)

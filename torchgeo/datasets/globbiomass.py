@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """GlobBiomass dataset."""
@@ -6,18 +6,22 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from datetime import datetime
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import rasterio
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
 from .utils import (
-    BoundingBox,
+    GeoSlice,
     Path,
+    Sample,
     check_integrity,
     disambiguate_timestamp,
     extract_archive,
@@ -68,6 +72,8 @@ class GlobBiomass(RasterDataset):
         ^(?P<tile>[NS][\d]{2}[EW][\d]{3})
         _(?P<measurement>(agb|gsv))
     """
+    mint: datetime
+    maxt: datetime
     mint, maxt = disambiguate_timestamp('2010', '%Y')
     is_image = False
     dtype = torch.float32  # pixelwise regression
@@ -139,11 +145,12 @@ class GlobBiomass(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         measurement: str = 'agb',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new GlobBiomass instance.
 
@@ -151,17 +158,23 @@ class GlobBiomass(RasterDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             measurement: use data from 'agb' or 'gsv' measurement
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             AssertionError: If *measurement* is not valid.
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -176,37 +189,46 @@ class GlobBiomass(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample at index consisting of measurement mask with 2 channels,
-            where the first is the measurement and the second the error map
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not filepaths:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        mask = self._merge_files(filepaths, query)
+        mask = self._merge_or_stack(df.filepath, index)
 
-        std_error_paths = [str(f).replace('.tif', '_err.tif') for f in filepaths]
-        std_err_mask = self._merge_files(std_error_paths, query)
+        std_error_paths = df.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
+        std_err_mask = self._merge_or_stack(std_error_paths, index)
 
-        mask = torch.cat((mask, std_err_mask), dim=0)
+        mask = torch.cat((mask, std_err_mask), dim=-3)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'mask': mask,
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -221,7 +243,8 @@ class GlobBiomass(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
@@ -233,10 +256,7 @@ class GlobBiomass(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Implementation of a random convolutional feature projection model."""
@@ -160,17 +160,18 @@ class RCF(Module):
         patchesCovMat = 1.0 / n_patches * patches.T.dot(patches)
 
         (E, V) = np.linalg.eig(patchesCovMat)
+        E_real = np.real(E)
+        V_real = np.real(V)
 
-        E += zca_bias
-        sqrt_zca_eigs = np.sqrt(E)
+        E_real += zca_bias
+        sqrt_zca_eigs = np.sqrt(E_real)
         inv_sqrt_zca_eigs = np.diag(np.power(sqrt_zca_eigs, -1))
-        global_ZCA = V.dot(inv_sqrt_zca_eigs).dot(V.T)
-        patches_normalized: np.typing.NDArray[np.float32] = (
-            (patches).dot(global_ZCA).dot(global_ZCA.T)
-        )
+        global_ZCA = V_real.dot(inv_sqrt_zca_eigs).dot(V_real.T)
+        patches_normalized = (patches).dot(global_ZCA).dot(global_ZCA.T)
 
-        return patches_normalized.reshape(orig_shape).astype('float32')
+        return patches_normalized.reshape(orig_shape)
 
+    @torch.inference_mode()
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the RCF model.
 
@@ -180,22 +181,51 @@ class RCF(Module):
         Returns:
             a tensor of size (B, ``self.num_features``)
         """
-        x1a = F.relu(
-            F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
-            inplace=True,
-        )
-        x1b = F.relu(
-            -F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0),
-            inplace=False,
-        )
+        y = F.conv2d(x, self.weights, bias=self.biases, stride=1, padding=0)
+        x1a = y.clamp_min(0).mean(dim=(-2, -1))
+        x1b = y.clamp_max(0).neg_().mean(dim=(-2, -1))
+        return torch.cat((x1a, x1b), dim=1)
 
-        x1a = F.adaptive_avg_pool2d(x1a, (1, 1)).squeeze()
-        x1b = F.adaptive_avg_pool2d(x1b, (1, 1)).squeeze()
 
-        if len(x1a.shape) == 1:  # case where we passed a single input
-            output = torch.cat((x1a, x1b), dim=0)
-            return output
-        else:  # case where we passed a batch of > 1 inputs
-            assert len(x1a.shape) == 2
-            output = torch.cat((x1a, x1b), dim=1)
-            return output
+class MOSAIKS(RCF):
+    """MOSAIKS RCF model with the recommended parameters defined in the paper.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://www.nature.com/articles/s41467-021-24638-z
+
+    .. note::
+
+       This Module is *not* trainable. It is only used as a feature extractor.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(
+        self,
+        dataset: NonGeoDataset,
+        in_channels: int = 3,
+        features: int = 4096,
+        kernel_size: int = 4,
+        bias: float = -1.0,
+        seed: int | None = None,
+    ) -> None:
+        """Initializes the MOSAIKS model.
+
+        Args:
+            dataset: a NonGeoDataset to sample from
+            in_channels: number of input channels
+            features: number of features to compute, must be divisible by 2
+            kernel_size: size of the kernel used to compute the RCFs
+            bias: bias of the convolutional layer
+            seed: random seed used to initialize the convolutional layer
+        """
+        super().__init__(
+            mode='empirical',
+            dataset=dataset,
+            in_channels=in_channels,
+            features=features,
+            kernel_size=kernel_size,
+            bias=bias,
+            seed=seed,
+        )

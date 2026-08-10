@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -9,9 +9,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -38,23 +38,15 @@ class TestSeasonalContrastS2:
             os.path.join('tests', 'data', 'seco', 'seco_100k.zip'),
         )
         monkeypatch.setitem(
-            SeasonalContrastS2.metadata['100k'],
-            'md5',
-            '6f527567f066562af2c78093114599f9',
-        )
-        monkeypatch.setitem(
             SeasonalContrastS2.metadata['1m'],
             'url',
             os.path.join('tests', 'data', 'seco', 'seco_1m.zip'),
-        )
-        monkeypatch.setitem(
-            SeasonalContrastS2.metadata['1m'], 'md5', '3bb3fcf90f5de7d5781ce0cb85fd20af'
         )
         root = tmp_path
         version, seasons, bands = request.param
         transforms = nn.Identity()
         return SeasonalContrastS2(
-            root, version, seasons, bands, transforms, download=True, checksum=True
+            root, version, seasons, bands, transforms, download=True
         )
 
     def test_getitem(self, dataset: SeasonalContrastS2) -> None:

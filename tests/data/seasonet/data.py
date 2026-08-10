@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -41,8 +40,10 @@ stop = {
 }
 
 meta_lines = [
-    'Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
-    'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n'
+    (
+        'Index,Season,Grid,Latitude,Longitude,Satellite,Year,Month,Day,'
+        'Hour,Minute,Second,Clouds,Snow,Classes,SLRAUM,RTYP3,KTYP4,Path\n'
+    )
 ]
 seasons = ['spring', 'summer', 'fall', 'winter', 'snow']
 grids = [1, 2]
@@ -109,19 +110,9 @@ for season in seasons:
     # Create archives
     shutil.make_archive(season, 'zip', '.', season)
 
-    # Compute checksums
-    with open(archive, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{season}: {md5!r}')
-
 # Write meta.csv
 with open('meta.csv', 'w') as f:
     f.writelines(meta_lines)
-
-# Compute checksums
-with open('meta.csv', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'meta.csv: {md5!r}')
 
 os.makedirs('splits', exist_ok=True)
 
@@ -130,12 +121,6 @@ for split in ['train', 'val', 'test']:
 
     # Create file list
     with open(os.path.join('splits', filename), 'w') as f:
-        for i in range(index):
-            f.write(str(i) + '\n')
+        f.writelines(str(i) + '\n' for i in range(index))
 
 shutil.make_archive('splits', 'zip', '.', 'splits')
-
-# Compute checksums
-with open('splits.zip', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'splits: {md5!r}')

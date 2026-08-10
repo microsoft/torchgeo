@@ -1,20 +1,20 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """EnMAP dataset."""
 
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
-import numpy as np
+import torch
 from einops import rearrange
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path, percentile_normalization
+from .utils import Path, Sample, quantile_normalization
 
 ALL_BANDS = list(range(1, 225))
 # Remove bands strongly affected by water vapor absorption due to presence of nodata:
@@ -301,10 +301,11 @@ class EnMAP(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new EnMAP instance.
 
@@ -312,20 +313,26 @@ class EnMAP(RasterDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         bands = bands or self.default_bands
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
-    def plot(self, sample: dict[str, Any], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -345,10 +352,10 @@ class EnMAP(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample['image'][rgb_indices].cpu().numpy()
-        image = np.clip(image, 0, None)
+        image = sample['image'][rgb_indices]
+        image = torch.clamp(image, 0, None)
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots()
         ax.imshow(image)

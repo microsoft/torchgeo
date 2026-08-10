@@ -1,25 +1,24 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Aster Global Digital Elevation Model dataset."""
 
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class AsterGDEM(RasterDataset):
     """Aster Global Digital Elevation Model Dataset.
 
     The `Aster Global Digital Elevation Model
-    <https://lpdaac.usgs.gov/products/astgtmv003/>`_
+    <https://www.earthdata.nasa.gov/data/catalog/lpcloud-astgtm-003>`_
     dataset is a Digital Elevation Model (DEM) on a global scale.
     The dataset can be downloaded from the
     `Earth Data website <https://search.earthdata.nasa.gov/search/>`_
@@ -50,9 +49,10 @@ class AsterGDEM(RasterDataset):
         self,
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -61,14 +61,20 @@ class AsterGDEM(RasterDataset):
                 the collection of individual zip files for each tile should be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -77,7 +83,9 @@ class AsterGDEM(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -88,10 +96,7 @@ class AsterGDEM(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

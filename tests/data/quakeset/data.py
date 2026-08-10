@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 
 import h5py
@@ -42,8 +41,3 @@ with h5py.File(filename, 'w') as f:
                 patch.create_dataset('before', data=data)
                 patch.create_dataset('pre', data=data)
                 patch.create_dataset('post', data=data)
-
-# Compute checksums
-with open(filename, 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'md5: {md5}')

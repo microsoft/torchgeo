@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -6,21 +6,19 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EnviroAtlas,
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.samplers import RandomGeoSampler
 
 
 class TestEnviroAtlas:
@@ -34,7 +32,6 @@ class TestEnviroAtlas:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EnviroAtlas:
-        monkeypatch.setattr(EnviroAtlas, 'md5', '071ec65c611e1d4915a5247bffb5ad87')
         monkeypatch.setattr(
             EnviroAtlas,
             'url',
@@ -53,15 +50,11 @@ class TestEnviroAtlas:
             transforms=transforms,
             prior_as_input=request.param[1],
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=32)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: EnviroAtlas) -> None:
@@ -87,30 +80,27 @@ class TestEnviroAtlas:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EnviroAtlas(tmp_path, checksum=True)
+            EnviroAtlas(tmp_path)
 
-    def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_out_of_bounds_index(self, dataset: EnviroAtlas) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_multiple_hits_query(self, dataset: EnviroAtlas) -> None:
+    def test_multiple_hits_index(self, dataset: EnviroAtlas) -> None:
         ds = EnviroAtlas(
             root=dataset.root,
             splits=['pittsburgh_pa-2010_1m-train', 'austin_tx-2012_1m-test'],
             layers=dataset.layers,
         )
         with pytest.raises(
-            IndexError, match='query: .* spans multiple tiles which is not valid'
+            IndexError, match=r'index: .* spans multiple tiles which is not valid'
         ):
             ds[dataset.bounds]
 
     def test_plot(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=1)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         if 'naip' not in dataset.layers or 'lc' not in dataset.layers:
             with pytest.raises(ValueError, match="The 'naip' and"):
                 dataset.plot(x)

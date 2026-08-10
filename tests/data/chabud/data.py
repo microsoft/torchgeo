@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import random
 
@@ -58,12 +57,6 @@ with h5py.File(filename, 'w') as f:
     for uri, fold in zip(uris, folds):
         sample = f.create_group(uri)
         sample.attrs.create(name='fold', data=np.int64(fold))
-        sample.create_dataset
         sample.create_dataset('pre_fire', data=data)
         sample.create_dataset('post_fire', data=data)
         sample.create_dataset('mask', data=gt)
-
-# Compute checksums
-with open(filename, 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'md5: {md5}')

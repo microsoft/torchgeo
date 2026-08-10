@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Forest Damage dataset."""
@@ -9,17 +9,23 @@ from collections.abc import Callable
 from typing import Any
 from xml.etree import ElementTree
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 def parse_pascal_voc(path: Path) -> dict[str, Any]:
@@ -33,15 +39,15 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """
     et = ElementTree.parse(path)
     element = et.getroot()
-    filename = element.find('filename').text  # type: ignore[union-attr]
+    filename = element.find('filename').text
     labels, bboxes = [], []
     for obj in element.findall('object'):
         bndbox = obj.find('bndbox')
         bbox = [
-            int(bndbox.find('xmin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
+            int(bndbox.find('xmin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('xmax').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymax').text),  # ty: ignore[invalid-argument-type]
         ]
 
         label_var = obj.find('damage')
@@ -51,7 +57,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
             label = 'other'
         bboxes.append(bbox)
         labels.append(label)
-    return dict(filename=filename, bboxes=bboxes, labels=labels)
+    return {'filename': filename, 'bboxes': bboxes, 'labels': labels}
 
 
 class ForestDamage(NonGeoDataset):
@@ -104,7 +110,7 @@ class ForestDamage(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -131,7 +137,7 @@ class ForestDamage(NonGeoDataset):
 
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -178,7 +184,7 @@ class ForestDamage(NonGeoDataset):
         )
 
         files = [
-            dict(image=image, annotation=annotation)
+            {'image': image, 'annotation': annotation}
             for image, annotation in zip(images, annotations)
         ]
 
@@ -246,10 +252,7 @@ class ForestDamage(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

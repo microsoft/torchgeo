@@ -1,38 +1,47 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 from typing import Any
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
+import shapely
 import torch
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
-from torch import Tensor
+from pyproj import CRS
 
 from torchgeo.datamodules import (
     GeoDataModule,
     MisconfigurationException,
     NonGeoDataModule,
 )
-from torchgeo.datasets import BoundingBox, GeoDataset, NonGeoDataset
-from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
+from torchgeo.datasets import GeoDataset, NonGeoDataset
+from torchgeo.datasets.utils import GeoSlice, Sample
+from torchgeo.samplers import RandomBatchGeoSampler, RandomPatchSampler
+
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
+
+pytestmark = pytest.mark.filterwarnings('ignore:Use .* instead:DeprecationWarning')
 
 
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self, split: str = 'train', length: int = 1, download: bool = False
     ) -> None:
-        super().__init__()
-        for i in range(length):
-            self.index.insert(i, (0, 1, 2, 3, 4, 5))
-        self.res = 1
+        geometry = [shapely.box(0, 0, 2, 2)] * length
+        index = pd.IntervalIndex([pd.Interval(MINT, MAXT)] * length, name='datetime')
+        crs = CRS.from_epsg(4326)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
+        self.res = (1, 1)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, index: GeoSlice) -> Sample:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
-        return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
+        return {'image': image, 'bounds': self._slice_to_tensor(index)}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
@@ -46,10 +55,10 @@ class CustomGeoDataModule(GeoDataModule):
 class SamplerGeoDataModule(CustomGeoDataModule):
     def setup(self, stage: str) -> None:
         self.dataset = CustomGeoDataset()
-        self.train_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.val_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.test_sampler = RandomGeoSampler(self.dataset, 1, 1)
-        self.predict_sampler = RandomGeoSampler(self.dataset, 1, 1)
+        self.train_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.val_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.test_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
+        self.predict_sampler = RandomPatchSampler(self.dataset, size=1, length=1)
 
 
 class BatchSamplerGeoDataModule(CustomGeoDataModule):
@@ -67,7 +76,7 @@ class CustomNonGeoDataset(NonGeoDataset):
     ) -> None:
         self.length = length
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
 
     def __len__(self) -> int:
@@ -181,8 +190,8 @@ class TestGeoDataModule:
     def test_zero_length_sampler(self) -> None:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
-        dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
-        dm.sampler.length = 0
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
+        dm.sampler._length = 0
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
             dm.train_dataloader()
@@ -192,6 +201,16 @@ class TestGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last(self) -> None:
+        dm = CustomGeoDataModule()
+        dm.dataset = CustomGeoDataset(length=2)
+        dm.sampler = RandomPatchSampler(dm.dataset, size=1, length=1)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
 
 
 class TestNonGeoDataModule:
@@ -265,3 +284,12 @@ class TestNonGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last(self) -> None:
+        dm = CustomNonGeoDataModule()
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -63,20 +62,9 @@ for season in seasons:
         # Create tarballs
         shutil.make_archive(f'{season}_{source}', 'gztar', '.', directory)
 
-        # Compute checksums
-        with open(tarball, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(repr(md5) + ',')
-
 for split in ['train', 'test']:
     filename = f'{split}_list.txt'
 
     # Create file list
     with open(filename, 'w') as f:
-        for fname in file_list:
-            f.write(f'{fname}\n')
-
-    # Compute checksums
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(repr(md5) + ',')
+        f.writelines(f'{fname}\n' for fname in file_list)

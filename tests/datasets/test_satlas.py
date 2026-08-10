@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,9 +7,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
-import torch.nn as nn
 from pytest import MonkeyPatch
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, SatlasPretrain
 from torchgeo.datasets.utils import Executable

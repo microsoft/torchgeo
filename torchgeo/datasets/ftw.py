@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Fields Of The World dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -18,13 +18,19 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, array_to_tensor, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    array_to_tensor,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
 class FieldsOfTheWorld(NonGeoDataset):
     """Fields Of The World dataset.
 
-    The `Fields Of The World <https://beta.source.coop/repositories/kerner-lab/fields-of-the-world/>`__
+    The `Fields Of The World <https://source.coop/kerner-lab/fields-of-the-world>`__
     datataset is a semantic and instance segmentation dataset for delineating field
     boundaries.
 
@@ -43,9 +49,10 @@ class FieldsOfTheWorld(NonGeoDataset):
 
     Dataset classes:
 
-    1. background
-    2. field
-    3. field-boundary (three-class only)
+    0. background
+    1. field
+    2. field-boundary (three-class only)
+    3. unlabeled (kenya, rwanda, brazil and india have presence only labels)
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -118,10 +125,10 @@ class FieldsOfTheWorld(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        target: str = '2-class',
+        split: Literal['train', 'val', 'test'] = 'train',
+        target: Literal['2-class', '3-class', 'instance'] = '2-class',
         countries: str | Sequence[str] = ['austria'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -160,7 +167,7 @@ class FieldsOfTheWorld(NonGeoDataset):
 
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -178,7 +185,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         win_b = self._load_image(win_b_fn)
         mask = self._load_target(mask_fn)
 
-        image = torch.cat((win_a, win_b), dim=0)
+        image = torch.cat((win_b, win_a), dim=0)
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
@@ -306,10 +313,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         return True
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -321,14 +325,19 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
-
         win_a = einops.rearrange(sample['image'][0:3], 'c h w -> h w c')
         win_b = einops.rearrange(sample['image'][4:7], 'c h w -> h w c')
         mask = sample['mask']
 
         win_a = torch.clip(win_a / 3000, 0, 1)
         win_b = torch.clip(win_b / 3000, 0, 1)
+
+        ncols = 3
+        showing_predictions = 'prediction' in sample
+        if showing_predictions:
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
         axs[0].imshow(win_a)
         axs[0].set_title('Window A')
@@ -349,6 +358,11 @@ class FieldsOfTheWorld(NonGeoDataset):
         elif self.target == '3-class':
             axs[2].imshow(mask, vmin=0, vmax=2, cmap='gray', interpolation='none')
             axs[2].set_title('3-class mask')
+
+        if showing_predictions:
+            axs[3].imshow(sample['prediction'])
+            axs[3].set_title('Predictions')
+
         for ax in axs:
             ax.axis('off')
 

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Code based on https://github.com/antofuller/CROMA under MIT License
@@ -74,8 +74,9 @@ class CROMA(nn.Module):
         self.s1_channels = 2  # fixed at 2 SAR backscatter channels
         self.s2_channels = 12  # fixed at 12 multispectral optical channels
 
-        self.attn_bias = get_2dalibi(
-            num_heads=self.num_heads, num_patches=self.num_patches
+        self.register_buffer(
+            'attn_bias',
+            get_2dalibi(num_heads=self.num_heads, num_patches=self.num_patches),
         )
 
         def initialize_encoder(
@@ -173,7 +174,7 @@ def get_2dalibi(num_heads: int, num_patches: int) -> Tensor:
         ratio = start
         return [start * ratio**i for i in range(n)]
 
-    slopes = torch.Tensor(get_slopes(num_heads)).unsqueeze(1)
+    slopes = torch.tensor(get_slopes(num_heads), dtype=torch.float32).unsqueeze(1)
     idxs = []
     for p1 in points:
         for p2 in points:
@@ -253,8 +254,8 @@ class Attention(nn.Module):
         """
         x = self.input_norm(x)
         q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -263,10 +264,10 @@ class Attention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class CrossAttention(nn.Module):
@@ -317,8 +318,8 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -327,10 +328,10 @@ class CrossAttention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class BaseTransformer(nn.Module):
@@ -380,7 +381,7 @@ class BaseTransformer(nn.Module):
             x: Input tensor.
             relative_position_bias: whether to use relative position bias.
         """
-        for self_attn, ffn in self.layers:
+        for self_attn, ffn in self.layers:  # ty: ignore[not-iterable]
             x = self_attn(x, relative_position_bias) + x
             x = ffn(x) + x
 
@@ -440,7 +441,7 @@ class BaseTransformerCrossAttn(nn.Module):
         Returns:
             Output tensor.
         """
-        for self_attn, cross_attn, ffn in self.layers:
+        for self_attn, cross_attn, ffn in self.layers:  # ty: ignore[not-iterable]
             x = self_attn(x, relative_position_bias) + x
             x = cross_attn(x, context, relative_position_bias) + x
             x = ffn(x) + x
@@ -483,20 +484,20 @@ class ViT(nn.Module):
         Returns:
             Output tensor.
         """
-        x = rearrange(
+        imgs = rearrange(
             imgs,
             'b c (h i) (w j) -> b (h w) (c i j)',
             i=self.patch_size,
             j=self.patch_size,
         )
-        # x is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
+        # imgs is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
 
-        x = self.linear_input(x)
-        x = self.transformer(x, relative_position_bias=attn_bias)
-        return x
+        imgs = self.linear_input(imgs)
+        imgs = self.transformer(imgs, relative_position_bias=attn_bias)
+        return imgs
 
 
-class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
+class CROMABase_Weights(WeightsEnum):
     """CROMA base model weights.
 
     .. versionadded:: 0.7
@@ -504,7 +505,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
 
     CROMA_VIT = Weights(
         url='https://hf.co/torchgeo/croma/resolve/387883f08af79d777167519c57cd826eda89a16f/CROMA_base-0238d814.pt',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'SSL4EO',
             'model': 'vit',
@@ -515,7 +516,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class CROMALarge_Weights(WeightsEnum):  # type: ignore[misc]
+class CROMALarge_Weights(WeightsEnum):
     """CROMA large model weights.
 
     .. versionadded:: 0.7
@@ -523,7 +524,7 @@ class CROMALarge_Weights(WeightsEnum):  # type: ignore[misc]
 
     CROMA_VIT = Weights(
         url='https://huggingface.co/torchgeo/croma/resolve/92cb1a0f4e34c6c01558baf070197c01255382f6/CROMA_large-921e69ad.pt',
-        transforms=None,
+        transforms=nn.Identity(),
         meta={
             'dataset': 'SSL4EO',
             'model': 'vit',
@@ -544,7 +545,7 @@ def load_weights(model: CROMA, weights: WeightsEnum) -> None:
     Raises:
         AssertionError: If there are missing or unexpected keys.
     """
-    state_dict = weights.get_state_dict(progress=True)
+    state_dict = weights.get_state_dict(progress=True, weights_only=True)
     missing_keys, unexpected_keys = [], []
 
     if 'sar' in model.modalities:

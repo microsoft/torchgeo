@@ -1,39 +1,25 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.1
+    rev: v0.16.1
     hooks:
       - id: ruff
         types_or:
           - python
           - jupyter
-        args:
-          - --fix
+        args: ['--fix', '--show-fixes']
       - id: ruff-format
         types_or:
           - python
           - jupyter
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
+
+  - repo: local
     hooks:
-      - id: mypy
-        args:
-          - --strict
-          - --ignore-missing-imports
-          - --show-error-codes
-        additional_dependencies:
-          - einops>=0.6.0
-          - kornia>=0.6.9
-          - lightning>=2.0.9
-          - matplotlib>=3.9.2
-          - numpy>=1.22
-          - pillow>=10.4.0
-          - pytest>=6.1.2
-          - scikit-image>=0.22.0
-          - timm>=1.0.14
-          - torch>=2.6
-          - torchmetrics>=0.10
-          - torchvision>=0.18
-        exclude: (build|data|dist|logo|logs|output)/
+      - id: ty
+        name: ty check
+        entry: uv run --locked --extra datasets --extra models --extra style --extra tests ty check
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
     hooks:

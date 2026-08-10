@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -14,13 +13,13 @@ np.random.seed(0)
 
 
 def create_image(path: str) -> None:
-    Z = np.random.randint(255, size=(1, 1, 3), dtype=np.uint8)
+    Z = np.random.randint(255, size=(32, 32, 3), dtype=np.uint8)
     img = Image.fromarray(Z).convert('RGB')
     img.save(path)
 
 
 def create_mask(path: str) -> None:
-    Z = np.random.randint(2, size=(1, 1, 3), dtype=np.uint8) * 255
+    Z = np.random.randint(2, size=(32, 32, 3), dtype=np.uint8) * 255
     img = Image.fromarray(Z).convert('L')
     img.save(path)
 
@@ -52,8 +51,3 @@ if __name__ == '__main__':
 
     # Compress data
     shutil.make_archive(root, 'zip', '.', root)
-
-    # compute checksum
-    with open(f'{root}.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{root}.zip: {md5}')

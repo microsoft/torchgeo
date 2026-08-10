@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data.
@@ -11,4 +11,4 @@ common image transformations for geospatial data.
 """
 
 __author__ = 'Adam J. Stewart'
-__version__ = '0.7.0.dev0'
+__version__ = '0.10.0.dev0'

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -49,8 +48,3 @@ for band in bands:
 
 # Compress data
 shutil.make_archive('preprocessed', 'gztar', '.', 'preprocessed')
-
-# Compute checksums
-with open('preprocessed.tar.gz', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(md5)

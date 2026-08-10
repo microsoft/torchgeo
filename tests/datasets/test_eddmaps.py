@@ -1,13 +1,16 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
+from matplotlib.figure import Figure
+from torch import Tensor
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EDDMapS,
     IntersectionDataset,
@@ -17,13 +20,16 @@ from torchgeo.datasets import (
 
 class TestEDDMapS:
     @pytest.fixture(scope='class')
-    def dataset(self) -> EDDMapS:
+    @classmethod
+    def dataset(cls) -> EDDMapS:
         root = os.path.join('tests', 'data', 'eddmaps')
         return EDDMapS(root)
 
     def test_getitem(self, dataset: EDDMapS) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
+        assert isinstance(x['keypoints'], Tensor)
+        assert x['keypoints'].shape == (1, 2)
 
     def test_len(self, dataset: EDDMapS) -> None:
         assert len(dataset) == 2
@@ -40,9 +46,14 @@ class TestEDDMapS:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EDDMapS(tmp_path)
 
-    def test_invalid_query(self, dataset: EDDMapS) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_invalid_index(self, dataset: EDDMapS) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_plot(self, dataset: EDDMapS) -> None:
+        sample = dataset[dataset.bounds]
+        fig = dataset.plot(sample, suptitle='test')
+        assert isinstance(fig, Figure)
+        plt.close()

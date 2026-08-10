@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """BRIGHT dataset."""
@@ -6,7 +6,7 @@
 import os
 import textwrap
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .utils import Path, Sample, check_integrity, download_url, extract_archive
 
 
 class BRIGHTDFC2025(NonGeoDataset):
@@ -63,9 +63,9 @@ class BRIGHTDFC2025(NonGeoDataset):
         'red',  # destroyed
     )
 
-    md5 = '2c435bb50345d425390eff59a92134ac'
+    sha256 = 'aed4aca4d582bc829ba0921b55d488eec6a792c2d1092aac54eb746ef8e6f1cc'
 
-    url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
+    url = 'https://hf.co/datasets/isaaccorley/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
     data_dir = 'dfc25_track2_trainval'
 
@@ -90,8 +90,8 @@ class BRIGHTDFC2025(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -103,7 +103,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -120,8 +120,11 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         self.sample_paths = self._get_paths()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -138,7 +141,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         # post image is stacked to also have 3 channels
         image_post = repeat(image_post, 'c h w -> (repeat c) h w', repeat=3)
 
-        sample = {'image_pre': image_pre, 'image_post': image_post}
+        sample = {'image': torch.stack([image_pre, image_post])}
 
         if 'target' in idx_paths and self.split != 'test':
             target = self._load_image(idx_paths['target']).long()
@@ -218,7 +221,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         exists = []
         zip_file_path = os.path.join(self.root, self.data_dir + '.zip')
         if os.path.exists(zip_file_path):
-            if self.checksum and not check_integrity(zip_file_path, self.md5):
+            if self.checksum and not check_integrity(zip_file_path, self.sha256):
                 raise RuntimeError('Dataset found, but corrupted.')
             exists.append(True)
             extract_archive(zip_file_path, self.root)
@@ -241,7 +244,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             self.url,
             self.root,
             self.data_dir + '.zip',
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def __len__(self) -> int:
@@ -267,10 +270,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         return tensor
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -292,16 +292,17 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
-        axs[0].imshow(sample['image_pre'].permute(1, 2, 0) / 255.0)
+        axs[0].imshow(sample['image'][0].permute(1, 2, 0) / 255.0)
         axs[0].axis('off')
 
-        axs[1].imshow(sample['image_post'].permute(1, 2, 0) / 255.0)
+        axs[1].imshow(sample['image'][1].permute(1, 2, 0) / 255.0)
         axs[1].axis('off')
 
         cmap = colors.ListedColormap(self.colormap)
 
+        kwargs = {'cmap': cmap, 'vmin': 0, 'vmax': 3, 'interpolation': 'none'}
         if showing_mask:
-            axs[2].imshow(sample['mask'].squeeze(0), cmap=cmap, interpolation='none')
+            axs[2].imshow(sample['mask'][0], **kwargs)
             axs[2].axis('off')
             unique_classes = np.unique(sample['mask'].numpy())
             handles = [
@@ -316,14 +317,10 @@ class BRIGHTDFC2025(NonGeoDataset):
             ]
             axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
             if showing_prediction:
-                axs[3].imshow(
-                    sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-                )
+                axs[3].imshow(sample['prediction'][0], **kwargs)
                 axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(
-                sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-            )
+            axs[2].imshow(sample['prediction'][0], **kwargs)
             axs[2].axis('off')
 
         if show_titles:

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """South Africa Crop Type Competition Dataset."""
@@ -6,24 +6,28 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import cast
 
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import rasterio
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, which
+from .utils import GeoSlice, Path, Sample, quantile_normalization, which
 
 
 class SouthAfricaCropType(RasterDataset):
     """South Africa Crop Type Challenge dataset.
 
     The `South Africa Crop Type Challenge
-    <https://beta.source.coop/repositories/radiantearth/south-africa-crops-competition/description/>`__
+    <https://source.coop/radiantearth/south-africa-crops-competition>`__
     dataset includes satellite imagery from Sentinel-1 and Sentinel-2 and labels for
     crop type that were collected by aerial and vehicle survey from May 2017 to March
     2018. Data was provided by the Western Cape Department of Agriculture and is
@@ -95,27 +99,33 @@ class SouthAfricaCropType(RasterDataset):
         'B12',
     )
     all_bands = s1_bands + s2_bands
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (255, 211, 0, 255),
-        2: (255, 37, 37, 255),
-        3: (0, 168, 226, 255),
-        4: (255, 158, 9, 255),
-        5: (37, 111, 0, 255),
-        6: (255, 255, 0, 255),
-        7: (222, 166, 9, 255),
-        8: (111, 166, 0, 255),
-        9: (0, 175, 73, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (255, 211, 0, 255),
+                (255, 37, 37, 255),
+                (0, 168, 226, 255),
+                (255, 158, 9, 255),
+                (37, 111, 0, 255),
+                (255, 255, 0, 255),
+                (222, 166, 9, 255),
+                (111, 166, 0, 255),
+                (0, 175, 73, 255),
+            ]
+        )
+        / 255
+    )
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        classes: Sequence[int] = list(cmap.keys()),
+        classes: Sequence[int] = list(range(10)),
         bands: Sequence[str] = s2_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
 
@@ -127,12 +137,17 @@ class SouthAfricaCropType(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= set(range(10)), (
+            'Only the following classes are valid: [0-9].'
         )
         assert 0 in classes, 'Classes must include the background class: 0'
 
@@ -142,33 +157,42 @@ class SouthAfricaCropType(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
+        super().__init__(
+            paths=paths,
+            crs=crs,
+            bands=bands,
+            transforms=transforms,
+            time_series=time_series,
+        )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(10, dtype=self.dtype)
+        self.inverse_map = torch.zeros(len(classes), dtype=self.dtype)
         for v, k in enumerate(classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Return an index within the dataset.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            data and labels at that index
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *index* is not found in the dataset.
         """
-        assert isinstance(self.paths, str | os.PathLike)
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        # Get all files matching the given query
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
-
-        if not filepaths:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -179,7 +203,7 @@ class SouthAfricaCropType(RasterDataset):
         # Store date in July for s1 and s2 we want to use for each sample
         imagery_dates: dict[str, dict[str, str]] = {}
 
-        for filepath in filepaths:
+        for filepath in df.filepath:
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
@@ -197,13 +221,15 @@ class SouthAfricaCropType(RasterDataset):
                     imagery_dates[field_id][band_type] = date
 
         # Create Tensors for each band using stored dates
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
                 filepath = os.path.join(
-                    self.paths,
+                    paths,
                     'train',
                     'imagery',
                     band_type,
@@ -212,24 +238,25 @@ class SouthAfricaCropType(RasterDataset):
                     f'{field_id}_{date}_{band}_10m.tif',
                 )
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, query))
-        image = torch.cat(data_list)
+            data_list.append(self._merge_or_stack(band_filepaths, index))
+        image = torch.cat(data_list, dim=-3)
 
         # Add labels for each field
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
-                self.paths, 'train', 'labels', f'{field_id}.tif'
+                paths, 'train', 'labels', f'{field_id}.tif'
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query).squeeze(0)
+        mask = self._merge_or_stack(mask_filepaths, index).squeeze(-3)
 
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample = {
-            'crs': self.crs,
-            'bounds': query,
+            'bounds': self._slice_to_tensor(index),
             'image': image.float(),
             'mask': mask.long(),
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:
@@ -253,15 +280,13 @@ class SouthAfricaCropType(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        os.makedirs(self.paths, exist_ok=True)
+        paths = cast(Path, self.paths)
+        os.makedirs(paths, exist_ok=True)
         azcopy = which('azcopy')
-        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
+        azcopy('sync', f'{self.url}', paths, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -284,27 +309,28 @@ class SouthAfricaCropType(RasterDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
-        mask = sample['mask'].squeeze()
+        mask = self.inverse_map[sample['mask']]
         ncols = 2
 
         showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample['prediction'].squeeze()
+            pred = self.inverse_map[sample['prediction']]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 9, 'interpolation': 'none'}
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].imshow(mask, **kwargs)
         axs[1].axis('off')
         if show_titles:
             axs[0].set_title('Image')
             axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(pred)
+            axs[2].imshow(pred, **kwargs)
             axs[2].axis('off')
             if show_titles:
                 axs[2].set_title('Prediction')

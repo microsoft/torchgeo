@@ -1,19 +1,18 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
     AgriFieldNet,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -35,7 +34,6 @@ class TestAgriFieldNet:
     def test_getitem(self, dataset: AgriFieldNet) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
@@ -68,12 +66,11 @@ class TestAgriFieldNet:
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: AgriFieldNet) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_invalid_index(self, dataset: AgriFieldNet) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_rgb_bands_absent_plot(self, dataset: AgriFieldNet) -> None:
         with pytest.raises(

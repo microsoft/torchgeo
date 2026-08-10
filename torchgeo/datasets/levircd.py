@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """LEVIR-CD and LEVIR-CD+ datasets."""
@@ -7,8 +7,9 @@ import abc
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -18,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, percentile_normalization
+from .utils import Path, Sample, download_and_extract_archive, quantile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -33,8 +34,8 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -67,8 +68,11 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -80,7 +84,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         image1 = self._load_image(files['image1'])
         image2 = self._load_image(files['image2'])
         mask = self._load_target(files['mask'])
-        sample = {'image1': image1, 'image2': image2, 'mask': mask}
+        sample = {'image': torch.stack([image1, image2]), 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -108,9 +112,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         with Image.open(filename) as img:
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
-            # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
-            return tensor
+            return einops.rearrange(tensor, 'h w c -> c h w')
 
     def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
@@ -127,13 +129,11 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -149,26 +149,26 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         ncols = 3
 
-        image1 = sample['image1'].permute(1, 2, 0).numpy()
-        image1 = percentile_normalization(image1, axis=(0, 1))
+        image1 = sample['image'][0].permute(1, 2, 0)
+        image1 = quantile_normalization(image1)
 
-        image2 = sample['image2'].permute(1, 2, 0).numpy()
-        image2 = percentile_normalization(image2, axis=(0, 1))
+        image2 = sample['image'][1].permute(1, 2, 0)
+        image2 = quantile_normalization(image2)
 
         if 'prediction' in sample:
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image1)
         axs[0].axis('off')
         axs[1].imshow(image2)
         axs[1].axis('off')
-        axs[2].imshow(sample['mask'], cmap='gray', interpolation='none')
+        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
         axs[2].axis('off')
 
         if 'prediction' in sample:
-            axs[3].imshow(sample['prediction'], cmap='gray', interpolation='none')
+            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
             axs[3].axis('off')
             if show_titles:
                 axs[3].set_title('Prediction')
@@ -184,7 +184,9 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         return fig
 
     @abc.abstractmethod
-    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
+    def _load_files(
+        self, root: Path, split: Literal['train', 'test']
+    ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -240,23 +242,25 @@ class LEVIRCD(LEVIRCDBase):
 
     splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/train.zip',
             'filename': 'train.zip',
             'md5': 'a638e71f480628652dea78d8544307e4',
         },
         'val': {
-            'url': 'https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/val.zip',
             'filename': 'val.zip',
             'md5': 'f7b857978524f9aa8c3bf7f94e3047a4',
         },
         'test': {
-            'url': 'https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0',
+            'url': 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/6a6bb0a5b389403d81c05e33bf08bc0b9e5f13a6/test.zip',
             'filename': 'test.zip',
             'md5': '07d5dd89e46f5c1359e2eca746989ed9',
         },
     }
 
-    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
+    def _load_files(
+        self, root: Path, split: Literal['train', 'test']
+    ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -272,7 +276,7 @@ class LEVIRCD(LEVIRCDBase):
 
         files = []
         for image1, image2, mask in zip(images1, images2, masks):
-            files.append(dict(image1=image1, image2=image2, mask=mask))
+            files.append({'image1': image1, 'image2': image2, 'mask': mask})
         return files
 
     def _check_integrity(self) -> bool:
@@ -282,10 +286,8 @@ class LEVIRCD(LEVIRCDBase):
             True if the dataset directories and split files are found, else False
         """
         return all(
-            [
-                os.path.exists(os.path.join(self.root, directory))
-                for directory in self.directories
-            ]
+            os.path.exists(os.path.join(self.root, directory))
+            for directory in self.directories
         )
 
     def _download(self) -> None:
@@ -307,7 +309,8 @@ class LEVIRCDPlus(LEVIRCDBase):
     """LEVIR-CD+ dataset.
 
     The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset is a dataset for building change detection.
+    dataset extends LEVIR-CD to 985 image pairs and is designed
+    to be easier due to its urban locations and near-nadir angles.
 
     Dataset features:
 
@@ -331,13 +334,15 @@ class LEVIRCDPlus(LEVIRCDBase):
     * https://arxiv.org/abs/2107.09244
     """
 
-    url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
+    url = 'https://huggingface.co/datasets/satellite-image-deep-learning/LEVIR-CD/resolve/d4f83dcbb571ee7573079129a5c327d18592a849/LEVIR-CD+.zip'
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'
     splits = ('train', 'test')
 
-    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
+    def _load_files(
+        self, root: Path, split: Literal['train', 'test']
+    ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -354,7 +359,7 @@ class LEVIRCDPlus(LEVIRCDBase):
             image1 = os.path.join(root, self.directory, split, 'A', image)
             image2 = os.path.join(root, self.directory, split, 'B', image)
             mask = os.path.join(root, self.directory, split, 'label', image)
-            files.append(dict(image1=image1, image2=image2, mask=mask))
+            files.append({'image1': image1, 'image2': image2, 'mask': mask})
         return files
 
     def _check_integrity(self) -> bool:

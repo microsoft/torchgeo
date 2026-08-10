@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -6,15 +6,14 @@ from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     MMFlood,
@@ -43,13 +42,11 @@ class TestMMFlood:
             include_hydro=include_hydro,
             transforms=nn.Identity(),
             download=True,
-            checksum=True,
         )
 
     def test_getitem(self, dataset: MMFlood) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
         nchannels = 2
@@ -103,9 +100,8 @@ class TestMMFlood:
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_invalid_query(self, dataset: MMFlood) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_invalid_index(self, dataset: MMFlood) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

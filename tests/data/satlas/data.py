@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import json
@@ -45,7 +45,7 @@ times = {
 
 FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 filenames: FILENAME_HIERARCHY = {
-    'landsat': {'2022-03': list(f'b{i}' for i in range(1, 12))},
+    'landsat': {'2022-03': [f'b{i}' for i in range(1, 12)]},
     'naip': {'m_3808245_se_17_1_20110801': ['tci', 'ir']},
     'sentinel1': {'2022-01': ['vh', 'vv']},
     'sentinel2': {

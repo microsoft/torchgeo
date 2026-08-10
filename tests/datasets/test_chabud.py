@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,13 +7,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestChaBuD:
@@ -23,19 +23,12 @@ class TestChaBuD:
     ) -> ChaBuD:
         data_dir = os.path.join('tests', 'data', 'chabud')
         url = os.path.join(data_dir, 'train_eval.hdf5')
-        md5 = '1bec048beeb87a865c53f40ab418aa75'
         monkeypatch.setattr(ChaBuD, 'url', url)
-        monkeypatch.setattr(ChaBuD, 'md5', md5)
         bands, split = request.param
         root = tmp_path
         transforms = nn.Identity()
         return ChaBuD(
-            root=root,
-            split=split,
-            bands=bands,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, split=split, bands=bands, transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: ChaBuD) -> None:
@@ -45,15 +38,15 @@ class TestChaBuD:
         assert isinstance(x['mask'], torch.Tensor)
 
         # Image tests
-        assert x['image'].ndim == 3
+        assert x['image'].ndim == 4
 
         if dataset.bands == ChaBuD.rgb_bands:
-            assert x['image'].shape[0] == 2 * 3
+            assert x['image'].shape[:2] == (2, 3)
         elif dataset.bands == ChaBuD.all_bands:
-            assert x['image'].shape[0] == 2 * 12
+            assert x['image'].shape[:2] == (2, 12)
 
         # Mask tests:
-        assert x['mask'].ndim == 2
+        assert x['mask'].ndim == 3
 
     def test_len(self, dataset: ChaBuD) -> None:
         assert len(dataset) == 4

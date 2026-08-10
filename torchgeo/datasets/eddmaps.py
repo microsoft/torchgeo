@@ -1,19 +1,22 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dataset for EDDMapS."""
 
+import functools
 import os
-import sys
-from typing import Any
 
-import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import pandas as pd
-from rasterio.crs import CRS
+import rasterio
+import torch
+from geopandas import GeoDataFrame
+from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -39,9 +42,6 @@ class EDDMapS(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    res = 0
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
-
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
@@ -60,46 +60,86 @@ class EDDMapS(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
-        data = pd.read_csv(
-            filepath, engine='c', usecols=['ObsDate', 'Latitude', 'Longitude']
-        )
+        df = pd.read_csv(filepath, usecols=['ObsDate', 'Latitude', 'Longitude'])
+        df = df[df.Latitude.notna()]
+        df = df[df.Longitude.notna()]
 
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for date, y, x in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if np.isnan(y) or np.isnan(x):
-                continue
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%m-%d-%y')
+        data = df['ObsDate'].apply(func).to_list()
+        index = pd.IntervalIndex.from_tuples(data, closed='both', name='datetime')
+        geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-            if not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, '%m-%d-%y')
-            else:
-                mint, maxt = 0, sys.maxsize
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not bboxes:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        keypoints = torch.tensor(df.get_coordinates().values, dtype=torch.float32)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'bounds': self._slice_to_tensor(index),
+            'keypoints': keypoints,
+            'transform': torch.tensor(transform),
+        }
 
         return sample
+
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for Figure
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.8
+        """
+        # Create figure and axis - using regular matplotlib axes
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.grid(ls='--')
+
+        # Extract coordinates
+        keypoints = sample['keypoints']
+        x = keypoints[:, 0]
+        y = keypoints[:, 1]
+
+        # Plot the points
+        ax.scatter(x, y)
+
+        # Set labels
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+
+        # Add titles if requested
+        if show_titles:
+            ax.set_title('EDDMapS Observation Locations by Date')
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+        return fig

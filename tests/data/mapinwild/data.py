@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -89,7 +88,6 @@ dict_all = {
     's2_temp': ['s2_temporal_subset_part1', 's2_temporal_subset_part2'],
 }
 
-md5s = {}
 keys = count.keys()
 modality_download_list = list(count.keys())
 
@@ -120,8 +118,7 @@ for source in modality_download_list:
                 f.write(data, j)
 
 # Mimic the two-part structure of the dataset
-for key in dict_all.keys():
-    path_list = dict_all[key]
+for path_list in dict_all.values():
     path_list_dir_p1 = os.path.join(folder_path, path_list[0])
     path_list_dir_p2 = os.path.join(folder_path, path_list[1])
     n_ims = len(os.listdir(path_list_dir_p1))
@@ -147,13 +144,6 @@ for i, source in zip(keys, modality_download_list):
     # Compress data
     shutil.make_archive(directory, 'zip', root_dir=root, base_dir=source)
 
-    # Compute checksums
-    with open(directory + '.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{directory}: {md5}')
-        name = i + '.zip'
-        md5s[name] = md5
-
 tvt_split = pd.DataFrame(
     [['1', '2', '3'], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
     index=['0', '1', '2'],
@@ -161,6 +151,3 @@ tvt_split = pd.DataFrame(
 )
 tvt_split.dropna()
 tvt_split.to_csv(os.path.join(folder_path, 'split_IDs.csv'))
-
-with open(os.path.join(folder_path, 'split_IDs.csv'), 'rb') as f:
-    csv_md5 = hashlib.md5(f.read()).hexdigest()

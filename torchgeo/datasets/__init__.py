@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo datasets."""
@@ -6,10 +6,11 @@
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .agrifieldnet import AgriFieldNet
+from .air_quality import AirQuality
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
-from .bigearthnet import BigEarthNet
+from .bigearthnet import BigEarthNet, BigEarthNetV2
 from .biomassters import BioMassters
 from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
@@ -28,8 +29,30 @@ from .chesapeake import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
+from .clay import ClayEmbeddings
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
+from .copernicus import (
+    CopernicusBench,
+    CopernicusBenchAQNO2S5P,
+    CopernicusBenchAQO3S5P,
+    CopernicusBenchBase,
+    CopernicusBenchBigEarthNetS1,
+    CopernicusBenchBigEarthNetS2,
+    CopernicusBenchBiomassS3,
+    CopernicusBenchCloudS2,
+    CopernicusBenchCloudS3,
+    CopernicusBenchDFC2020S1,
+    CopernicusBenchDFC2020S2,
+    CopernicusBenchEuroSATS1,
+    CopernicusBenchEuroSATS2,
+    CopernicusBenchFloodS1,
+    CopernicusBenchLC100ClsS3,
+    CopernicusBenchLC100SegS3,
+    CopernicusBenchLCZS2,
+    CopernicusEmbed,
+    CopernicusPretrain,
+)
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
@@ -37,20 +60,29 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dior import DIOR
+from .dl4gam import DL4GAMAlps
+from .dlrsd import DLRSD, DLRSDBase, DLRSDMultilabel
+from .dota import DOTA
+from .earth_embeddings import EarthEmbeddings
+from .earth_index import EarthIndexEmbeddings
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
+from .esd import EmbeddedSeamlessData
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
+from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
+from .gbm import GlobalBuildingMap
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -59,10 +91,12 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
+from .gse import GoogleSatelliteEmbedding
 from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
@@ -86,25 +120,31 @@ from .landsat import (
 )
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
+from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
+from .mixins import PlottingMixin
 from .mmearth import MMEarth
 from .mmflood import MMFlood
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
+from .openaerialmap import OpenAerialMap
 from .openbuildings import OpenBuildings
-from .oscd import OSCD
-from .pastis import PASTIS
+from .openstreetmap import OpenStreetMap
+from .oscd import OSCD, OSCD100
+from .pastis import PASTIS, PASTIS100
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .presto import PrestoEmbeddings
 from .prisma import PRISMA
 from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .s2_100k import S2100k
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
@@ -113,6 +153,8 @@ from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
+from .soda import SODAA
+from .solar_plants_brazil import SolarPlantsBrazil
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
@@ -135,7 +177,9 @@ from .splits import (
 )
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
+from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .tessera import TesseraEmbeddings
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
@@ -150,7 +194,7 @@ from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .worldstrat import WorldStrat
-from .xview import XView2
+from .xbd import xBD
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -159,6 +203,9 @@ __all__ = (
     'CDL',
     'COWC',
     'DFC2022',
+    'DIOR',
+    'DLRSD',
+    'DOTA',
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
@@ -170,21 +217,26 @@ __all__ = (
     'NCCM',
     'NLCD',
     'OSCD',
+    'OSCD100',
     'PASTIS',
+    'PASTIS100',
     'PRISMA',
     'RESISC45',
     'SEN12MS',
     'SKIPPD',
+    'SODAA',
     'SSL4EO',
     'SSL4EOL',
     'SSL4EOS12',
     'VHR10',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
+    'AirQuality',
     'Airphen',
     'AsterGDEM',
     'BeninSmallHolderCashews',
     'BigEarthNet',
+    'BigEarthNetV2',
     'BioMassters',
     'BoundingBox',
     'CMSGlobalMangroveCanopy',
@@ -204,13 +256,39 @@ __all__ = (
     'ChesapeakePA',
     'ChesapeakeVA',
     'ChesapeakeWV',
+    'ClayEmbeddings',
     'CloudCoverDetection',
+    'CopernicusBench',
+    'CopernicusBenchAQNO2S5P',
+    'CopernicusBenchAQO3S5P',
+    'CopernicusBenchBase',
+    'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
+    'CopernicusBenchBiomassS3',
+    'CopernicusBenchCloudS2',
+    'CopernicusBenchCloudS3',
+    'CopernicusBenchDFC2020S1',
+    'CopernicusBenchDFC2020S2',
+    'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
+    'CopernicusBenchFloodS1',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
+    'CopernicusBenchLCZS2',
+    'CopernicusEmbed',
+    'CopernicusPretrain',
     'CropHarvest',
+    'DL4GAMAlps',
+    'DLRSDBase',
+    'DLRSDMultilabel',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EarthEmbeddings',
+    'EarthIndexEmbeddings',
+    'EmbeddedSeamlessData',
     'EnMAP',
     'EnviroAtlas',
     'Esri2020',
@@ -218,12 +296,15 @@ __all__ = (
     'EuroSAT',
     'EuroSAT100',
     'EuroSATSpatial',
+    'EverWatch',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'GlobalBuildingMap',
+    'GoogleSatelliteEmbedding',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',
@@ -252,19 +333,25 @@ __all__ = (
     'LoveDA',
     'MMEarth',
     'MMFlood',
+    'MajorTOMEmbeddings',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',
     'NonGeoClassificationDataset',
     'NonGeoDataset',
+    'OpenAerialMap',
     'OpenBuildings',
+    'OpenStreetMap',
     'PatternNet',
+    'PlottingMixin',
     'Potsdam2D',
+    'PrestoEmbeddings',
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'S2100k',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
     'SeasoNet',
@@ -274,6 +361,7 @@ __all__ = (
     'Sentinel2',
     'SkyScript',
     'So2Sat',
+    'SolarPlantsBrazil',
     'SouthAfricaCropType',
     'SouthAmericaSoybean',
     'SpaceNet',
@@ -285,7 +373,9 @@ __all__ = (
     'SpaceNet6',
     'SpaceNet7',
     'SpaceNet8',
+    'Substation',
     'SustainBenchCropYield',
+    'TesseraEmbeddings',
     'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
@@ -296,6 +386,7 @@ __all__ = (
     'WesternUSALiveFuelMoisture',
     'WorldStrat',
     'XView2',
+    'XarrayDataset',
     'ZueriCrop',
     'concat_samples',
     'merge_samples',
@@ -306,4 +397,5 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
+    'xBD',
 )

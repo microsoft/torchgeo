@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Smallholder Cashew Plantations in Benin dataset."""
@@ -6,7 +6,6 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,12 +13,11 @@ import rasterio
 import rasterio.features
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class BeninSmallHolderCashews(NonGeoDataset):
@@ -30,7 +28,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
     Poorly-managed plantation, No plantation and other classes. The labels are
     generated using a combination of ground data collection with a handheld GPS device,
     and final corrections based on Airbus Pléiades imagery. See `this website
-    <https://beta.source.coop/technoserve/cashews-benin/>`__ for dataset details.
+    <https://source.coop/technoserve/cashews-benin>`__ for dataset details.
 
     Specifically, the data consists of Sentinel 2 imagery from a 120 km\ :sup:`2`\  area
     in the center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
@@ -46,7 +44,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following:
 
-    * https://beta.source.coop/technoserve/cashews-benin/
+    * https://source.coop/technoserve/cashews-benin/
 
     .. note::
 
@@ -167,7 +165,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
@@ -209,18 +207,18 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            a dict containing image, mask, transform, crs, and metadata at index.
+            a dict containing image, mask, transform, and metadata at index.
         """
         y, x = self.chips_metadata[index]
 
-        img, transform, crs = self._load_all_imagery()
+        img, transform = self._load_all_imagery()
         labels = self._load_mask(transform)
 
         img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
@@ -231,8 +229,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             'mask': labels,
             'x': torch.tensor(x),
             'y': torch.tensor(y),
-            'transform': transform,
-            'crs': crs,
+            'transform': torch.tensor(transform),
         }
 
         if self.transforms is not None:
@@ -248,15 +245,13 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    @lru_cache(maxsize=128)
-    def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine]:
         """Load all the imagery (across time) for the dataset.
 
         Returns:
             imagery of shape (70, number of bands, 1186, 1122) where 70 is the number
             of points in time, 1186 is the tile height, and 1122 is the tile width
-            rasterio affine transform, mapping pixel coordinates to geo coordinates
-            coordinate reference system of transform
+            rasterio affine transform, mapping pixel coordinates to geo coordinates.
         """
         img = torch.zeros(
             len(self.dates),
@@ -267,13 +262,12 @@ class BeninSmallHolderCashews(NonGeoDataset):
         )
 
         for date_index, date in enumerate(self.dates):
-            single_scene, transform, crs = self._load_single_scene(date)
+            single_scene, transform = self._load_single_scene(date)
             img[date_index] = single_scene
 
-        return img, transform, crs
+        return img, transform
 
-    @lru_cache(maxsize=128)
-    def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine]:
         """Load the imagery for a single date.
 
         Args:
@@ -281,8 +275,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         Returns:
             Tensor containing a single image tile, rasterio affine transform,
-            mapping pixel coordinates to geo coordinates, and coordinate
-            reference system of transform.
+            and mapping pixel coordinates to geo coordinates.
         """
         img = torch.zeros(
             len(self.bands), self.tile_height, self.tile_width, dtype=torch.float32
@@ -297,13 +290,11 @@ class BeninSmallHolderCashews(NonGeoDataset):
             )
             with rasterio.open(filepath) as src:
                 transform = src.transform  # same transform for every band
-                crs = src.crs
                 array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)
 
-        return img, transform, crs
+        return img, transform
 
-    @lru_cache
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
@@ -348,7 +339,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: str | None = None,

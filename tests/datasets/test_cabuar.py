@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -8,13 +8,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import CaBuAr, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestCaBuAr:
@@ -34,12 +34,7 @@ class TestCaBuAr:
         root = tmp_path
         transforms = nn.Identity()
         return CaBuAr(
-            root=root,
-            split=split,
-            bands=bands,
-            transforms=transforms,
-            download=True,
-            checksum=True,
+            root=root, split=split, bands=bands, transforms=transforms, download=True
         )
 
     def test_getitem(self, dataset: CaBuAr) -> None:
@@ -49,15 +44,15 @@ class TestCaBuAr:
         assert isinstance(x['mask'], torch.Tensor)
 
         # Image tests
-        assert x['image'].ndim == 3
+        assert x['image'].ndim == 4
 
         if dataset.bands == CaBuAr.rgb_bands:
-            assert x['image'].shape[0] == 2 * 3
+            assert x['image'].shape[:2] == (2, 3)
         elif dataset.bands == CaBuAr.all_bands:
-            assert x['image'].shape[0] == 2 * 12
+            assert x['image'].shape[:2] == (2, 12)
 
         # Mask tests:
-        assert x['mask'].ndim == 2
+        assert x['mask'].ndim == 3
 
     def test_len(self, dataset: CaBuAr) -> None:
         assert len(dataset) == 4
@@ -68,10 +63,6 @@ class TestCaBuAr:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CaBuAr(tmp_path)
-
-    def test_invalid_bands(self) -> None:
-        with pytest.raises(AssertionError):
-            CaBuAr(bands=('OK', 'BK'))
 
     def test_plot(self, dataset: CaBuAr) -> None:
         dataset.plot(dataset[0], suptitle='Test')
@@ -86,7 +77,3 @@ class TestCaBuAr:
         dataset = CaBuAr(root=dataset.root, bands=('B02',))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle='Single Band')
-
-    def test_invalid_split(self, dataset: CaBuAr) -> None:
-        with pytest.raises(AssertionError):
-            CaBuAr(dataset.root, split='foo')

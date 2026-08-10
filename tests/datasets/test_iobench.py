@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import glob
@@ -7,14 +7,13 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     IOBench,
@@ -26,18 +25,15 @@ from torchgeo.datasets import (
 class TestIOBench:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> IOBench:
-        md5 = 'e82398add7c35896a31c4398c608ef83'
         url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
         monkeypatch.setattr(IOBench, 'url', url)
-        monkeypatch.setitem(IOBench.md5s, 'preprocessed', md5)
         root = tmp_path
         transforms = nn.Identity()
-        return IOBench(root, transforms=transforms, download=True, checksum=True)
+        return IOBench(root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: IOBench) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
@@ -71,12 +67,11 @@ class TestIOBench:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             IOBench(tmp_path)
 
-    def test_invalid_query(self, dataset: IOBench) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+    def test_invalid_index(self, dataset: IOBench) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_rgb_bands_absent_plot(self, dataset: IOBench) -> None:
         with pytest.raises(

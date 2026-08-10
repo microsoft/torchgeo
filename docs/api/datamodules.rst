@@ -62,6 +62,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025DataModule
+
 CaBuAr
 ^^^^^^
 
@@ -76,6 +81,11 @@ ChaBuD
 ^^^^^^
 
 .. autoclass:: ChaBuDDataModule
+
+Cloud Cover Detection
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CloudCoverDetectionDataModule
 
 COWC
 ^^^^
@@ -169,6 +179,18 @@ OSCD
 ^^^^
 
 .. autoclass:: OSCDDataModule
+.. autoclass:: OSCD100DataModule
+
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTISDataModule
+.. autoclass:: PASTIS100DataModule
+
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNetDataModule
 
 Potsdam
 ^^^^^^^
@@ -179,6 +201,11 @@ QuakeSet
 ^^^^^^^^
 
 .. autoclass:: QuakeSetDataModule
+
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTreeDataModule
 
 RESISC45
 ^^^^^^^^
@@ -195,10 +222,20 @@ SEN12MS
 
 .. autoclass:: SEN12MSDataModule
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPDDataModule
+
 So2Sat
 ^^^^^^
 
 .. autoclass:: So2SatDataModule
+
+Solar Plants Brazil
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SolarPlantsBrazilDataModule
 
 SpaceNet
 ^^^^^^^^
@@ -217,6 +254,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmarkDataModule
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: SubstationDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -248,10 +290,15 @@ Vaihingen
 
 .. autoclass:: Vaihingen2DDataModule
 
-xView2
+VHR-10
 ^^^^^^
 
-.. autoclass:: XView2DataModule
+.. autoclass:: VHR10DataModule
+
+xBD
+^^^
+
+.. autoclass:: xBDDataModule
 
 Base Classes
 ------------

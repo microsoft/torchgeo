@@ -1,11 +1,10 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CV4A Kenya Crop Type dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from functools import lru_cache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,14 +15,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class CV4AKenyaCropType(NonGeoDataset):
     """CV4A Kenya Crop Type Competition dataset.
 
     The `CV4A Kenya Crop Type Competition
-    <https://beta.source.coop/repositories/radiantearth/african-crops-kenya-02/>`__
+    <https://source.coop/radiantearth/african-crops-kenya-02>`__
     dataset was produced as part of the Crop Type Detection competition at the
     Computer Vision for Agriculture (CV4A) Workshop at the ICLR 2020 conference.
     The objective of the competition was to create a machine learning model to
@@ -108,7 +107,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new CV4A Kenya Crop Type Dataset instance.
@@ -151,7 +150,7 @@ class CV4AKenyaCropType(NonGeoDataset):
                 ]:
                     self.chips_metadata.append((tile_index, y, x))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -192,7 +191,6 @@ class CV4AKenyaCropType(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    @lru_cache(maxsize=128)
     def _load_label_tile(self, tile: str) -> tuple[Tensor, Tensor]:
         """Load a single _tile_ of labels and field_ids.
 
@@ -214,7 +212,6 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return labels, field_ids
 
-    @lru_cache(maxsize=128)
     def _load_all_image_tiles(self, tile: str) -> Tensor:
         """Load all the imagery (across time) for a single _tile_.
 
@@ -240,7 +237,6 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return img
 
-    @lru_cache(maxsize=128)
     def _load_single_image_tile(self, tile: str, date: str) -> Tensor:
         """Load the imagery for a single tile for a single date.
 
@@ -284,7 +280,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: str | None = None,
@@ -314,15 +310,15 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         if 'prediction' in sample:
             prediction = sample['prediction']
-            n_cols = 3
+            ncols = 3
         else:
-            n_cols = 2
+            ncols = 2
 
         image, mask = sample['image'], sample['mask']
 
         image = image[time_step, rgb_indices]
 
-        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis('off')

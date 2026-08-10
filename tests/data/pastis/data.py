@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -33,9 +32,7 @@ def create_file(path: str) -> None:
         t = np.random.randint(1, MAX_NUM_TIME_STEPS)
         if fn.startswith('S2'):
             data = np.random.randint(0, 256, size=(t, 10, SIZE, SIZE)).astype(np.int16)
-        elif fn.startswith('S1A'):
-            data = np.random.randint(0, 256, size=(t, 3, SIZE, SIZE)).astype(np.float16)
-        elif fn.startswith('S1D'):
+        elif fn.startswith(('S1A', 'S1D')):
             data = np.random.randint(0, 256, size=(t, 3, SIZE, SIZE)).astype(np.float16)
         elif fn.startswith('TARGET'):
             data = np.random.randint(0, 20, size=(3, SIZE, SIZE)).astype(np.uint8)
@@ -83,8 +80,3 @@ if __name__ == '__main__':
 
     filename = 'PASTIS-R.zip'
     shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', 'PASTIS-R')
-
-    # Compute checksums
-    with open(filename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{filename}: {md5}')

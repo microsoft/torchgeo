@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
@@ -6,11 +6,11 @@
 from typing import Any
 
 import kornia.augmentation as K
+import shapely
 from matplotlib.figure import Figure
 
 from ..datasets import (
     NAIP,
-    BoundingBox,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -19,7 +19,7 @@ from ..datasets import (
     ChesapeakeVA,
     ChesapeakeWV,
 )
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from .geo import GeoDataModule
 
 
@@ -82,28 +82,24 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         self.chesapeake = dc | de | md | ny | pa | va | wv
         self.dataset = self.naip & self.chesapeake
 
-        roi = self.dataset.bounds
-        midx = roi.minx + (roi.maxx - roi.minx) / 2
-        midy = roi.miny + (roi.maxy - roi.miny) / 2
+        x, y, _ = self.dataset.bounds
+        midx = x.start + (x.stop - x.start) / 2
+        midy = y.start + (y.stop - y.start) / 2
 
         if stage in ['fit']:
-            train_roi = BoundingBox(
-                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
-            )
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length, train_roi
+            train_roi = shapely.box(x.start, y.start, midx, y.stop)
+            self.train_sampler = RandomPatchSampler(
+                self.dataset, size=self.patch_size, length=self.length, roi=train_roi
             )
         if stage in ['fit', 'validate']:
-            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
-            self.val_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, val_roi
+            val_roi = shapely.box(midx, y.start, x.stop, midy)
+            self.val_sampler = GriddedPatchSampler(
+                self.dataset, size=self.patch_size, stride=self.patch_size, roi=val_roi
             )
         if stage in ['test']:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
-            self.test_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, test_roi
+            test_roi = shapely.box(midx, midy, x.stop, y.stop)
+            self.test_sampler = GriddedPatchSampler(
+                self.dataset, size=self.patch_size, stride=self.patch_size, roi=test_roi
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:

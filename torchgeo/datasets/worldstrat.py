@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """WorldStrat Dataset."""
@@ -26,7 +26,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -57,7 +57,7 @@ class WorldStrat(NonGeoDataset):
     * https://zenodo.org/records/15382551
     * https://arxiv.org/abs/2207.06418
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.10
     """
 
     modality_titles: ClassVar[dict[str, str]] = {
@@ -351,7 +351,7 @@ class WorldStrat(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        n_panels = len([k for k in sample.keys() if k.startswith('image_')])
+        n_panels = len([k for k in sample if k.startswith('image_')])
         n_panels += 'prediction' in sample
 
         fig, axs = plt.subplots(1, n_panels, figsize=(5 * n_panels, 5), squeeze=False)
@@ -368,7 +368,7 @@ class WorldStrat(NonGeoDataset):
                 elif modality in ['l1c', 'l2a']:
                     img = img[0, [3, 2, 1], ...]
 
-                img = percentile_normalization(img)
+                img = quantile_normalization(img)
 
                 if img.ndim == 3:
                     img = img.transpose(1, 2, 0)
@@ -382,7 +382,7 @@ class WorldStrat(NonGeoDataset):
             pred = sample['prediction'].numpy()
             if pred.shape[0] == 4:
                 pred = pred[:3]
-            pred = percentile_normalization(pred).transpose(1, 2, 0)
+            pred = quantile_normalization(pred).transpose(1, 2, 0)
             axs[0, -1].imshow(pred)
             axs[0, -1].axis('off')
             if show_titles:

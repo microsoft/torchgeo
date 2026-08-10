@@ -1,19 +1,19 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Canadian Building Footprints dataset."""
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import Path, check_integrity, download_and_extract_archive
+from .utils import Path, Sample, check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -44,6 +44,8 @@ class CanadianBuildingFootprints(VectorDataset):
         'Saskatchewan',
         'YukonTerritory',
     )
+    filename_glob = '*.geojson'
+
     md5s = (
         '8b4190424e57bb0902bd8ecb95a9235b',
         'fea05d6eb0006710729c675de63db839',
@@ -64,8 +66,8 @@ class CanadianBuildingFootprints(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.00001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] = (0.00001, 0.00001),
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -75,7 +77,8 @@ class CanadianBuildingFootprints(VectorDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -105,8 +108,9 @@ class CanadianBuildingFootprints(VectorDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
-            filepath = os.path.join(self.paths, prov_terr + '.zip')
+            filepath = os.path.join(paths, prov_terr + '.zip')
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -117,18 +121,14 @@ class CanadianBuildingFootprints(VectorDataset):
             print('Files already downloaded and verified')
             return
         assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             download_and_extract_archive(
-                self.url + prov_terr + '.zip',
-                self.paths,
-                md5=md5 if self.checksum else None,
+                self.url + prov_terr + '.zip', paths, md5=md5 if self.checksum else None
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import DatasetNotFoundError, USAVars
@@ -30,10 +30,7 @@ class TestUSAVars:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
-        md5 = 'b504580a00bdc27097d5421dec50481b'
-        monkeypatch.setattr(USAVars, 'md5', md5)
-
-        data_url = os.path.join('tests', 'data', 'usavars', 'uar.zip')
+        data_url = os.path.join('tests', 'data', 'usavars', '{}')
         monkeypatch.setattr(USAVars, 'data_url', data_url)
 
         label_urls = {
@@ -51,17 +48,14 @@ class TestUSAVars:
             'train': {
                 'url': os.path.join('tests', 'data', 'usavars', 'train_split.txt'),
                 'filename': 'train_split.txt',
-                'md5': 'b94f3f6f63110b253779b65bc31d91b5',
             },
             'val': {
                 'url': os.path.join('tests', 'data', 'usavars', 'val_split.txt'),
                 'filename': 'val_split.txt',
-                'md5': 'e39aa54b646c4c45921fcc9765d5a708',
             },
             'test': {
                 'url': os.path.join('tests', 'data', 'usavars', 'test_split.txt'),
                 'filename': 'test_split.txt',
-                'md5': '4ab0f5549fee944a5690de1bc95ed245',
             },
         }
         monkeypatch.setattr(USAVars, 'split_metadata', split_metadata)
@@ -70,9 +64,7 @@ class TestUSAVars:
         split, labels = request.param
         transforms = nn.Identity()
 
-        return USAVars(
-            root, split, labels, transforms=transforms, download=True, checksum=True
-        )
+        return USAVars(root, split, labels, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: USAVars) -> None:
         x = dataset[0]

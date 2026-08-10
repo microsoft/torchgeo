@@ -1,12 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CaBuAr dataset."""
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -15,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class CaBuAr(NonGeoDataset):
@@ -84,9 +85,9 @@ class CaBuAr(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         bands: tuple[str, ...] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -127,8 +128,11 @@ class CaBuAr(NonGeoDataset):
 
         self.uuids = self._load_uuids()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -164,7 +168,7 @@ class CaBuAr(NonGeoDataset):
         uuids = []
         with h5py.File(self.filepath, 'r') as f:
             for k, v in f.items():
-                if v.attrs['fold'] in self.folds[self.split] and 'pre_fire' in v.keys():
+                if v.attrs['fold'] in self.folds[self.split] and 'pre_fire' in v:
                     uuids.append(k)
         return sorted(uuids)
 
@@ -186,11 +190,9 @@ class CaBuAr(NonGeoDataset):
         # index specified bands and concatenate
         pre_array = pre_array[..., self.band_indices]
         post_array = post_array[..., self.band_indices]
-        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
-
+        array = np.stack([pre_array, post_array]).astype(np.float32)
         tensor = torch.from_numpy(array)
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
+        tensor = einops.rearrange(tensor, 't h w c -> t c h w')
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -209,7 +211,8 @@ class CaBuAr(NonGeoDataset):
 
         tensor = torch.from_numpy(array)
         tensor = tensor.to(torch.long)
-        return tensor
+        # VideoSequential requires time dimension
+        return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -242,10 +245,7 @@ class CaBuAr(NonGeoDataset):
                 )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -264,24 +264,24 @@ class CaBuAr(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample['mask'].numpy()
-        image_pre = sample['image'][: len(self.bands)][rgb_indices].numpy()
-        image_post = sample['image'][len(self.bands) :][rgb_indices].numpy()
-        image_pre = percentile_normalization(image_pre)
-        image_post = percentile_normalization(image_post)
+        mask = sample['mask'][0]
+        image_pre = sample['image'][0][rgb_indices]
+        image_post = sample['image'][1][rgb_indices]
+        image_pre = quantile_normalization(image_pre)
+        image_post = quantile_normalization(image_post)
 
         ncols = 3
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample['prediction']
+            prediction = sample['prediction'][0]
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
-        axs[0].imshow(np.transpose(image_pre, (1, 2, 0)))
+        axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')
-        axs[1].imshow(np.transpose(image_post, (1, 2, 0)))
+        axs[1].imshow(einops.rearrange(image_post, 'c h w -> h w c'))
         axs[1].axis('off')
         axs[2].imshow(mask)
         axs[2].axis('off')

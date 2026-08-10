@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import json
@@ -10,12 +10,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
+from torch import nn
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     OpenBuildings,
@@ -33,9 +32,7 @@ class TestOpenBuildings:
         shutil.copy(
             os.path.join('tests', 'data', 'openbuildings', '000_buildings.csv.gz'), root
         )
-
-        md5s = {'000_buildings.csv.gz': '20aeeec9d45a0ce4d772a26e0bcbc25f'}
-
+        md5s = {'000_buildings.csv.gz': 'fake'}
         monkeypatch.setattr(OpenBuildings, 'md5s', md5s)
         transforms = nn.Identity()
         return OpenBuildings(root, transforms=transforms)
@@ -50,7 +47,6 @@ class TestOpenBuildings:
         df.to_csv(path, compression='gzip')
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_not_download(self, tmp_path: Path) -> None:
@@ -60,7 +56,7 @@ class TestOpenBuildings:
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, '000_buildings.csv.gz'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             OpenBuildings(dataset.paths, checksum=True)
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
@@ -78,7 +74,6 @@ class TestOpenBuildings:
     def test_getitem(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: OpenBuildings) -> None:
@@ -92,12 +87,11 @@ class TestOpenBuildings:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
 
-    def test_invalid_query(self, dataset: OpenBuildings) -> None:
-        query = BoundingBox(100, 100, 100, 100, 0, 0)
+    def test_invalid_index(self, dataset: OpenBuildings) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
@@ -109,3 +103,11 @@ class TestOpenBuildings:
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
+
+    def test_float_res(self, dataset: OpenBuildings) -> None:
+        OpenBuildings(dataset.paths, res=0.0001)
+
+    def test_crs_not_none(self, dataset: OpenBuildings) -> None:
+        OpenBuildings(
+            dataset.paths, transforms=dataset.transforms, crs=CRS.from_epsg(3857)
+        )

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,9 +7,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import DatasetNotFoundError, TropicalCyclone
@@ -53,10 +53,6 @@ class TestTropicalCyclone:
 
     def test_already_downloaded(self, dataset: TropicalCyclone) -> None:
         TropicalCyclone(root=dataset.root, download=True)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            TropicalCyclone(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

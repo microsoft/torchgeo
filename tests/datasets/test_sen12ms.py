@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,9 +7,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import SEN12MS, DatasetNotFoundError, RGBBandsMissingError
@@ -59,10 +59,6 @@ class TestSEN12MS:
     def test_out_of_bounds(self, dataset: SEN12MS) -> None:
         with pytest.raises(IndexError):
             dataset[8]
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SEN12MS(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

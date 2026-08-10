@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Common dataset utilities."""
@@ -6,44 +6,78 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
-import collections
+import bz2
 import contextlib
+import fnmatch
+import glob
+import hashlib
 import importlib
 import os
+import pathlib
 import shutil
 import subprocess
-import sys
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+import tarfile
+import urllib.request
+import warnings
+import zipfile
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
+import pandas as pd
+import pyogrio
 import rasterio
+import shapely.affinity
 import torch
+from numpy.typing import NDArray
+from pandas import Timedelta, Timestamp
+from rasterio import Affine, DatasetReader
+from rasterio.features import shapes, sieve
+from rasterio.vrt import WarpedVRT
+from shapely import Geometry, MultiPolygon, Polygon, box
 from torch import Tensor
-from torchvision.datasets.utils import (
-    check_integrity,
-    download_and_extract_archive,
-    download_url,
-    extract_archive,
-)
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
 
-# Only include import redirects
-__all__ = (
-    'check_integrity',
-    'download_and_extract_archive',
-    'download_url',
-    'extract_archive',
+#: Slice to index a GeoDataset.
+#:
+#: Can handle several different forms, such as:
+#:
+#: .. code-block:: python
+#:    ds[xmin:xmax:xres, ymin:ymax:yres]
+#:    ds[:, :, tmin:tmax:tres]
+#:    ds[xmin:xmax, ymin:ymax, tmin:tmax]
+#:
+#: All values are optional and will default to the spatiotemporal extent of the dataset.
+GeoSlice: TypeAlias = (  # noqa: UP040
+    slice | tuple[slice] | tuple[slice, slice] | tuple[slice, slice, slice]
 )
 
+#: Path-like object.
+#:
+#: Most datasets can handle any kind of path-like object,
+#: and some can support a list of paths.
+Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 
-Path: TypeAlias = str | os.PathLike[str]
+#: Sample dictionary returned by a GeoDataset.
+#:
+#: Keys typically follow Kornia constants and include common keys like:
+#:
+#: * image: input image
+#: * mask: expected output semantic segmentation mask
+#: * label: expected output classification or regression label
+#: * bbox_xyxy: expected output bounding box in (x1, y1, x2, y2) format
+#: * prediction: predicted output
+#:
+#: Values are usually of type torch.Tensor.
+Sample: TypeAlias = dict[str, Any]  # noqa: UP040
 
 
+@deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
 @dataclass(frozen=True)
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
@@ -57,9 +91,9 @@ class BoundingBox:
     #: northern boundary
     maxy: float
     #: earliest boundary
-    mint: float
+    mint: datetime
     #: latest boundary
-    maxt: float
+    maxt: datetime
 
     def __post_init__(self) -> None:
         """Validate the arguments passed to :meth:`__init__`.
@@ -84,14 +118,14 @@ class BoundingBox:
             )
 
     @overload
-    def __getitem__(self, key: int) -> float:
+    def __getitem__(self, key: int) -> Any:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:
+    def __getitem__(self, key: slice) -> list[Any]:
         pass
 
-    def __getitem__(self, key: int | slice) -> float | list[float]:
+    def __getitem__(self, key: int | slice) -> Any | list[Any]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -105,7 +139,7 @@ class BoundingBox:
         """
         return [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt][key]
 
-    def __iter__(self) -> Iterator[float]:
+    def __iter__(self) -> Iterator[Any]:
         """Container iterator.
 
         Returns:
@@ -193,7 +227,7 @@ class BoundingBox:
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
     @property
-    def volume(self) -> float:
+    def volume(self) -> timedelta:
         """Volume of bounding box.
 
         Volume is defined as spatial area times temporal range.
@@ -286,14 +320,165 @@ class Executable:
         Returns:
             The completed process.
         """
-        kwargs['check'] = True
-        return subprocess.run((self.name, *args), **kwargs)
+        return subprocess.run((self.name, *args), check=True, **kwargs)
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
+def check_integrity(fpath: Path, md5: str | None = None, **kwargs: str | None) -> bool:
+    """Check the integrity of a file.
+
+    Examples:
+        check_integrity(fpath)
+        check_integrity(fpath, md5='...')
+        check_integrity(fpath, sha256='...')
+
+    Args:
+        fpath: File path to check.
+        md5: Expected MD5 checksum.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
+
+    Returns:
+        True if file exists and checksum is None or matches, else False.
+    """
+    if not os.path.isfile(fpath):
+        return False
+
+    kwargs['md5'] = md5
+
+    for algorithm, checksum in kwargs.items():
+        if checksum:
+            with open(fpath, 'rb') as f:
+                return hashlib.file_digest(f, algorithm).hexdigest() == checksum
+
+    return True
+
+
+def extract_archive(
+    from_path: Path, to_path: Path | None = None, remove_finished: bool = False
+) -> Path:
+    """Extract an archive.
+
+    Args:
+        from_path: Path to the file to be extracted.
+        to_path: Path to the directory the file will be extracted to.
+            Defaults to the directory of *from_path*.
+        remove_finished: If True, remove *from_path* after extraction.
+
+    Returns:
+        Path to the directory the file was extracted to.
+    """
+    to_path = to_path or os.path.dirname(from_path)
+    suffixes = pathlib.Path(from_path).suffixes
+
+    if suffixes[-1] == '.zip':
+        with zipfile.ZipFile(from_path, 'r') as z:
+            z.extractall(to_path)
+    elif suffixes[-1] == '.bz2' and '.tar' not in suffixes:
+        stem = pathlib.Path(from_path).stem
+        to_path = os.path.join(to_path, stem)
+        with bz2.open(from_path, 'rb') as src, open(to_path, 'wb') as dst:
+            dst.write(src.read())
+    else:
+        with tarfile.open(from_path, 'r') as t:
+            t.extractall(to_path, filter='data')
+
+    if remove_finished:
+        os.remove(from_path)
+
+    return to_path
+
+
+def download_url(
+    url: str,
+    root: Path,
+    filename: Path | None = None,
+    md5: str | None = None,
+    max_redirect_hops: int = 3,
+    **kwargs: str | None,
+) -> None:
+    """Download a file from a url and place it in root.
+
+    Examples:
+        download_url(url, root)
+        download_url(url, root, md5='...')
+        download_url(url, root, sha256='...')
+
+    Args:
+        url: URL to download.
+        root: Root directory to save downloaded file to.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        max_redirect_hops: Maximum number of allowed redirection attempts.
+        **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
+
+    Raises:
+        RuntimeError: If checksum of downloaded file does not match.
+        urllib.error.URLError: If download fails.
+    """
+    if not filename:
+        filename = os.path.basename(url)
+
+    root = os.path.expanduser(root)
+    os.makedirs(root, exist_ok=True)
+
+    fpath = os.path.join(root, filename)
+    if not check_integrity(fpath, md5, **kwargs):
+        # TODO: use fsspec if we want AWS/Azure/GCS support
+        # TODO: use gdown if we want Google Drive support
+        # TODO: use requests if we want redirect support
+        # TODO: use tqdm if we want a progress bar
+        request = urllib.request.Request(url, headers={'User-Agent': 'torchgeo'})
+        # Stream to a temporary file and atomically replace on success so an
+        # interrupted download cannot leave a truncated file behind.
+        tmp = f'{fpath}.tmp'
+        try:
+            with urllib.request.urlopen(request) as response, open(tmp, 'wb') as f:
+                shutil.copyfileobj(response, f)
+            os.replace(tmp, fpath)
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        if not check_integrity(fpath, md5, **kwargs):
+            raise RuntimeError(f"Downloaded file '{fpath}' is corrupted.")
+
+
+def download_and_extract_archive(
+    url: str,
+    download_root: Path,
+    extract_root: Path | None = None,
+    filename: Path | None = None,
+    md5: str | None = None,
+    remove_finished: bool = False,
+    **kwargs: str | None,
+) -> None:
+    """Download and extract a remote archive.
+
+    Examples:
+        download_and_extract_archive(url, root)
+        download_and_extract_archive(url, root, md5=md5)
+        download_and_extract_archive(url, root, sha256=sha256)
+
+    Args:
+        url: URL to download.
+        download_root: Root directory to save downloaded file to.
+        extract_root: Root directory to extract archive to. Defaults to *download_root*.
+        filename: File path to save to. Defaults to the basename of the URL.
+        md5: Expected MD5 checksum.
+        remove_finished: If True, remove *filename* after extraction.
+        **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
+    """
+    download_root = os.path.expanduser(download_root)
+    extract_root = extract_root or download_root
+    filename = filename or os.path.basename(url)
+    from_path = os.path.join(download_root, filename)
+
+    download_url(url, download_root, filename, md5, 3, **kwargs)
+    extract_archive(from_path, extract_root, remove_finished)
+
+
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[Timestamp, Timestamp]:
     """Disambiguate partial timestamps.
 
-    TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
+    TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full
     timestamp isn't known, a file could represent a range of time. For example, in the
     CDL dataset, each mask spans an entire year. This method returns the maximum
     possible range of timestamps that ``date_str`` could belong to. It does this by
@@ -306,43 +491,43 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     Returns:
         (mint, maxt) tuple for indexing
     """
-    mint = datetime.strptime(date_str, format)
+    mint = pd.to_datetime(date_str, format=format)
     format = format.replace('%%', '')
 
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
-    if not any([f'%{c}' in format for c in 'yYcxG']):
+    if not any(f'%{c}' in format for c in 'yYcxG'):
         # No temporal info
-        return 0, sys.maxsize
-    elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
+        return Timestamp.min, Timestamp.max
+    elif not any(f'%{c}' in format for c in 'bBmjUWcxV'):
         # Year resolution
-        maxt = datetime(mint.year + 1, 1, 1)
-    elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
+        maxt = Timestamp(year=mint.year + 1, month=1, day=1)
+    elif not any(f'%{c}' in format for c in 'aAwdjcxV'):
         # Month resolution
         if mint.month == 12:
-            maxt = datetime(mint.year + 1, 1, 1)
+            maxt = Timestamp(year=mint.year + 1, month=1, day=1)
         else:
-            maxt = datetime(mint.year, mint.month + 1, 1)
-    elif not any([f'%{c}' in format for c in 'HIcX']):
+            maxt = Timestamp(year=mint.year, month=mint.month + 1, day=1)
+    elif not any(f'%{c}' in format for c in 'HIcX'):
         # Day resolution
-        maxt = mint + timedelta(days=1)
-    elif not any([f'%{c}' in format for c in 'McX']):
+        maxt = mint + Timedelta(days=1)
+    elif not any(f'%{c}' in format for c in 'McX'):
         # Hour resolution
-        maxt = mint + timedelta(hours=1)
-    elif not any([f'%{c}' in format for c in 'ScX']):
+        maxt = mint + Timedelta(hours=1)
+    elif not any(f'%{c}' in format for c in 'ScX'):
         # Minute resolution
-        maxt = mint + timedelta(minutes=1)
-    elif not any([f'%{c}' in format for c in 'f']):
+        maxt = mint + Timedelta(minutes=1)
+    elif not any(f'%{c}' in format for c in 'f'):
         # Second resolution
-        maxt = mint + timedelta(seconds=1)
+        maxt = mint + Timedelta(seconds=1)
     else:
         # Microsecond resolution
-        maxt = mint + timedelta(microseconds=1)
+        maxt = mint + Timedelta(microseconds=1)
 
-    maxt -= timedelta(microseconds=1)
+    maxt -= Timedelta(microseconds=1)
 
-    return mint.timestamp(), maxt.timestamp()
+    return mint, maxt
 
 
 @contextlib.contextmanager
@@ -365,9 +550,7 @@ def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(
-    samples: Iterable[Mapping[Any, Any]],
-) -> dict[Any, list[Any]]:
+def _list_dict_to_dict_list(samples: Iterable[Sample]) -> dict[str, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -378,7 +561,7 @@ def _list_dict_to_dict_list(
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, list[Any]] = dict()
+    collated: dict[str, list[Any]] = {}
     for sample in samples:
         for key, value in sample.items():
             if key not in collated:
@@ -387,9 +570,7 @@ def _list_dict_to_dict_list(
     return collated
 
 
-def _dict_list_to_list_dict(
-    sample: Mapping[Any, Sequence[Any]],
-) -> list[dict[Any, Any]]:
+def _dict_list_to_list_dict(sample: Mapping[str, Sequence[Any]]) -> list[Sample]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -400,16 +581,69 @@ def _dict_list_to_list_dict(
 
     .. versionadded:: 0.2
     """
-    uncollated: list[dict[Any, Any]] = [
-        {} for _ in range(max(map(len, sample.values())))
-    ]
+    uncollated = [{} for _ in range(max(map(len, sample.values())))]
     for key, values in sample.items():
         for i, value in enumerate(values):
             uncollated[i][key] = value
     return uncollated
 
 
-def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def pad_across_batches(
+    batch: Sequence[Sample], padding_length: int, padding_value: float = 0.0
+) -> Sample:
+    """Custom time-series collate fn to handle variable length sequences.
+
+    Args:
+        batch: list of sample dicts returned by dataset
+        padding_length: the length to pad the sequences to
+        padding_value: value for padded elements
+
+    Returns:
+        collated batch dict
+
+    .. versionadded:: 0.8
+    """
+    collated = {}
+    images = [sample['image'] for sample in batch]
+    feature_shape = images[0].shape[1:]
+
+    padded_images = torch.full(
+        (len(batch), padding_length, *feature_shape),
+        padding_value,
+        dtype=images[0].dtype,
+        device=images[0].device,
+    )
+
+    truncated = 0
+    lengths: list[int] = []
+    for i, img in enumerate(images):
+        seq_len = img.size(0)
+        if seq_len > padding_length:
+            padded_images[i, :padding_length] = img[:padding_length]
+            truncated += 1
+            lengths.append(padding_length)
+        else:
+            padded_images[i, :seq_len] = img
+            lengths.append(seq_len)
+
+    if truncated > 0:
+        warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
+
+    collated['image'] = padded_images
+    collated['length'] = torch.tensor(
+        lengths, device=padded_images.device, dtype=torch.long
+    )
+    if 'mask' in batch[0]:
+        collated['mask'] = torch.stack([sample['mask'] for sample in batch])
+    if 'bbox_xyxy' in batch[0]:
+        collated['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
+    if 'label' in batch[0]:
+        collated['label'] = torch.stack([sample['label'] for sample in batch])
+
+    return collated
+
+
+def stack_samples(samples: Iterable[Sample]) -> Sample:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -423,14 +657,17 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated: Sample = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
+        else:
+            collated[key] = value
     return collated
 
 
-def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def concat_samples(samples: Iterable[Sample]) -> Sample:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -443,8 +680,9 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
-    for key, value in collated.items():
+    uncollated = _list_dict_to_dict_list(samples)
+    collated = {}
+    for key, value in uncollated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
         else:
@@ -452,7 +690,7 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def merge_samples(samples: Iterable[Sample]) -> Sample:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -465,7 +703,7 @@ def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = {}
+    collated = {}
     for sample in samples:
         for key, value in sample.items():
             if key in collated and isinstance(value, Tensor):
@@ -477,7 +715,7 @@ def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
+def unbind_samples(sample: Sample) -> list[Sample]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
@@ -491,13 +729,16 @@ def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
 
     .. versionadded:: 0.2
     """
+    uncollated = {}
     for key, values in sample.items():
         if isinstance(values, Tensor):
-            sample[key] = torch.unbind(values)
-    return _dict_list_to_list_dict(sample)
+            uncollated[key] = torch.unbind(values)
+        else:
+            uncollated[key] = values
+    return _dict_list_to_list_dict(uncollated)
 
 
-def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
+def rasterio_loader(path: Path) -> np.typing.NDArray[np.int32]:
     """Load an image file using rasterio.
 
     Args:
@@ -507,7 +748,7 @@ def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
         the image
     """
     with rasterio.open(path) as f:
-        array: np.typing.NDArray[np.int_] = f.read().astype(np.int32)
+        array: np.typing.NDArray[np.int32] = f.read().astype(np.int32)
         # NonGeoClassificationDataset expects images returned with channels last (HWC)
         array = array.transpose(1, 2, 0)
     return array
@@ -526,7 +767,7 @@ def draw_semantic_segmentation_masks(
     image: Tensor,
     mask: Tensor,
     alpha: float = 0.5,
-    colors: Sequence[str | tuple[int, int, int]] | None = None,
+    colors: list[str | tuple[int, int, int]] | str | tuple[int, int, int] | None = None,
 ) -> np.typing.NDArray[np.uint8]:
     """Overlay a semantic segmentation mask onto an image.
 
@@ -575,12 +816,14 @@ def rgb_to_mask(
     return mask
 
 
+@deprecated('Use torchgeo.datasets.utils.quantile_normalization instead')
 def percentile_normalization(
-    img: np.typing.NDArray[np.int_],
+    img: NDArray,
     lower: float = 2,
     upper: float = 98,
     axis: int | Sequence[int] | None = None,
-) -> np.typing.NDArray[np.int_]:
+    nodata: int = 0,
+) -> NDArray:
     """Applies percentile normalization to an input image.
 
     Specifically, this will rescale the values in the input such that values <= the
@@ -593,43 +836,57 @@ def percentile_normalization(
         upper: upper percentile in range [0,100]
         axis: Axis or axes along which the percentiles are computed. The default
             is to compute the percentile(s) along a flattened version of the array.
+        nodata: Nodata value to ignore during quantile calculation.
 
     Returns:
         normalized version of ``img``
 
+    Raises:
+        AssertionError: If *lower* is higher than *upper*.
+
     .. versionadded:: 0.2
+    .. versiondeprecated:: 0.10
     """
+    if (img == nodata).all():
+        return img
+
     assert lower < upper
-    lower_percentile = np.percentile(img, lower, axis=axis)
-    upper_percentile = np.percentile(img, upper, axis=axis)
-    img_normalized: np.typing.NDArray[np.int_] = np.clip(
+    lower_percentile = np.percentile(img[img != nodata], lower, axis=axis)
+    upper_percentile = np.percentile(img[img != nodata], upper, axis=axis)
+    img_normalized = np.clip(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
 
 
-def path_is_vsi(path: Path) -> bool:
-    """Checks if the given path is pointing to a Virtual File System.
-
-    .. note::
-       Does not check if the path exists, or if it is a dir or file.
-
-    VSI can for instance be Cloud Storage Blobs or zip-archives.
-    They will start with a prefix indicating this.
-    For examples of these, see references for the two accepted syntaxes.
-
-    * https://gdal.org/user/virtual_file_systems.html
-    * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+def quantile_normalization(
+    img: Tensor,
+    lower: float | Tensor = 0.02,
+    upper: float | Tensor = 0.98,
+    nodata: float = 0,
+    dim: int | None = None,
+) -> Tensor:
+    """Normalize and clip an input image to a specific quantile range.
 
     Args:
-        path: a directory or file
+        img: Image to normalize.
+        lower: Lower quantile in range [0, 1].
+        upper: Upper quantile in range [0, 1].
+        nodata: Nodata value to ignore during quantile calculation.
+        dim: Dimension to reduce.
 
     Returns:
-        True if path is on a virtual file system, else False
+        A normalized image.
 
-    .. versionadded:: 0.6
+    .. versionadded:: 0.10
     """
-    return '://' in str(path) or str(path).startswith('/vsi')
+    if (img == nodata).all():
+        return img
+
+    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
+    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
+    img = (img - lower) / (upper - lower + 1e-5)
+    return torch.clamp(img, 0, 1)
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
@@ -679,19 +936,16 @@ def lazy_import(name: str) -> Any:
     except ModuleNotFoundError:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
-        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
-        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
-        name = module_to_pypi[name]
         msg = f"""\
-{name} is not installed and is required to use this dataset. Either run:
+{name} is not installed and is required to use this feature. Either run:
 
 $ pip install {name}
 
 to install just this dependency, or:
 
-$ pip install torchgeo[datasets]
+$ pip install torchgeo[datasets,models]
 
-to install all optional dataset dependencies."""
+to install all optional dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
@@ -714,3 +968,191 @@ def which(name: Path) -> Executable:
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
+
+
+def convert_poly_coords(
+    geom: Geometry, affine_obj: Affine, inverse: bool = False
+) -> Geometry:
+    """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
+
+    Args:
+        geom: shape to convert
+        affine_obj: rasterio.Affine object to use for geoconversion
+        inverse: If true, convert geocoordinates to pixel coordinates
+
+    Returns:
+        input shape converted to pixel coordinates
+
+    .. versionadded:: 0.8
+    """
+    if inverse:
+        affine_obj = ~affine_obj
+
+    xformed_shape = shapely.affinity.affine_transform(
+        geom,
+        [
+            affine_obj.a,
+            affine_obj.b,
+            affine_obj.d,
+            affine_obj.e,
+            affine_obj.xoff,
+            affine_obj.yoff,
+        ],
+    )
+    return xformed_shape
+
+
+def _list_vsi_files(root: Path) -> list[str]:
+    """List all files under a VSI path recursively.
+
+    Args:
+        root: VSI path to list (e.g., ``/vsiaz/container/`` for Azure Blob
+            Storage, ``/vsizip/archive.zip`` for zip archives).
+
+    Returns:
+        A list of all file paths under *root*, or an empty list if *root*
+        does not exist.
+    """
+    try:
+        entries = pyogrio.vsi_listtree(str(root))
+    except NotADirectoryError:
+        return [str(root)]
+    except FileNotFoundError:
+        return []
+    return [e for e in entries if not e.endswith('/')]
+
+
+def find_files(path: Path, filename_glob: str = '*') -> list[str]:
+    """Return all files under *path* that match *filename_glob*.
+
+    Supports local directories, individual files, and VSI paths such as
+    cloud storage buckets and local archives (zip, tar, etc.).
+
+    Args:
+        path: Local directory, local file, or VSI path.
+        filename_glob: Glob pattern to match filenames against.
+
+    Returns:
+        Sorted list of matching file paths.
+
+    .. versionadded:: 0.10
+    """
+    files: set[str] = set()
+    if os.path.isdir(path):
+        pathname = os.path.join(path, '**', filename_glob)
+        files = set(glob.iglob(pathname, recursive=True))
+    elif os.path.isfile(path) and fnmatch.fnmatch(str(path), f'*{filename_glob}'):
+        files = {str(path)}
+    elif str(path).startswith('/vsi'):
+        all_files = _list_vsi_files(path)
+        files = {
+            f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
+        }
+    return sorted(files)
+
+
+def _clean_binary_mask(
+    mask: np.typing.NDArray[np.number], threshold: int = 1
+) -> np.typing.NDArray[np.uint8]:
+    """Convert any rasterio mask to a clean binary mask (uint8 0 or 255).
+
+    Args:
+        mask: input mask array from `DatasetReader.dataset_mask()`
+              or `DatasetReader.read_masks()`.
+              Can be 2D or 3D with values between 0 and 255.
+        threshold: pixel values >= threshold are considered valid.
+            This is needed when/if the mask is based on alpha channel.
+            Defaults to 1 as we assume pixels outside the valid footprint will
+            also have 0 alpha.
+
+    Returns:
+        Binary mask of dtype uint8 with 255 = valid pixels, 0 = invalid.
+        If input is 3D, masks are combined (OR) before thresholding.
+    """
+    if mask.ndim == 3:
+        combined = np.any(mask >= threshold, axis=0)
+    else:
+        combined = mask >= threshold
+
+    binary_mask: np.typing.NDArray[np.uint8] = (combined.astype(np.uint8)) * 255
+    return binary_mask
+
+
+def _binary_mask_to_polygon(
+    mask: np.typing.NDArray[np.uint8], transform: Affine, raster_resolution_x: float
+) -> Polygon | MultiPolygon:
+    """Vectorize a binary raster mask into a polygon.
+
+    Args:
+        mask: binary mask where 255 representing valid pixels
+            and 0 representing nodata pixels
+        transform: affine transform for the raster
+        raster_resolution_x: pixel size in the x direction in CRS units
+
+    Returns:
+        A `Polygon` or `MultiPolygon` representing the valid data mask
+    """
+    # Fill small nodata holes (< 0.2% of pixels, capped at 800) so minor
+    # sensor artifacts don't fragment the footprint. Cap prevents the threshold
+    # from exceeding the raster size on large images; `or 1` guards against
+    # mask.size being zero.
+    # See https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
+    max_hole_size = min(int(mask.size * 0.002), 800) or 1
+    sieved_mask = sieve(mask, max_hole_size)
+
+    # Extract one polygon per contiguous valid-data region (value > 0).
+    # Multiple disjoint regions are collected here and merged into a MultiPolygon below.
+    geoms = [g for g, v in shapes(sieved_mask, transform=transform) if v > 0]
+
+    # coordinates[0] = exterior ring, coordinates[1:] = interior holes (if any).
+    vector_mask = MultiPolygon(
+        [
+            Polygon(feature['coordinates'][0], feature['coordinates'][1:])
+            for feature in geoms
+        ]
+    )
+    # Collapse pixel-staircase edges into straight lines. A staircase step deviates
+    # at most ~1 pixel from the true boundary, so 2 pixels of tolerance cleanly
+    # removes jaggedness without distorting the actual shape. Works for any CRS
+    # since the tolerance is expressed directly in CRS units.
+    simplification_tolerance = 2 * raster_resolution_x
+    return cast(Polygon | MultiPolygon, vector_mask.simplify(simplification_tolerance))
+
+
+def get_valid_footprint_from_datasource(
+    src: DatasetReader | WarpedVRT,
+) -> MultiPolygon | Polygon:
+    """Compute the valid (non-NoData) data footprint of a raster in its CRS.
+
+    .. note::
+       Deriving masks from a nodata value adds overhead. For large datasets,
+       pre-compute footprints once and look them up in
+       :meth:`~torchgeo.datasets.RasterDataset._footprint_from_datasource`
+       instead of recomputing on every initialisation.
+
+    Args:
+        src: An open raster dataset (`DatasetReader` or `WarpedVRT`).
+
+    Returns:
+        A `Polygon` or `MultiPolygon` of the valid data footprint.
+
+    .. versionadded:: 0.10
+    """
+    valid_data_mask = src.dataset_mask()
+    binary_mask = _clean_binary_mask(valid_data_mask)
+
+    if (binary_mask == 255).all():
+        return box(*src.bounds)
+
+    if (binary_mask == 0).all():
+        warnings.warn(
+            'All pixels are nodata; returning an empty geometry.',
+            UserWarning,
+            stacklevel=2,
+        )
+        return Polygon()
+
+    res_x = src.res[0] if isinstance(src.res, tuple) else src.res
+    return _binary_mask_to_polygon(
+        mask=binary_mask, transform=src.transform, raster_resolution_x=res_x
+    )

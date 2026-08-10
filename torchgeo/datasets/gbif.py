@@ -1,60 +1,23 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dataset for the Global Biodiversity Information Facility."""
 
+import functools
 import glob
 import os
-import sys
-from datetime import datetime, timedelta
-from typing import Any
 
-import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import pandas as pd
-from rasterio.crs import CRS
+import rasterio
+import torch
+from geopandas import GeoDataFrame
+from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
-
-
-def _disambiguate_timestamps(
-    year: float, month: float, day: float
-) -> tuple[float, float]:
-    """Disambiguate partial timestamps.
-
-    Based on :func:`torchgeo.datasets.utils.disambiguate_timestamps`.
-
-    Args:
-        year: year, possibly nan
-        month: month, possibly nan
-        day: day, possibly nan
-
-    Returns:
-        minimum and maximum possible time range
-    """
-    if np.isnan(year):
-        # No temporal info
-        return 0, sys.maxsize
-    elif np.isnan(month):
-        # Year resolution
-        mint = datetime(int(year), 1, 1)
-        maxt = datetime(int(year) + 1, 1, 1)
-    elif np.isnan(day):
-        # Month resolution
-        mint = datetime(int(year), int(month), 1)
-        if month == 12:
-            maxt = datetime(int(year) + 1, 1, 1)
-        else:
-            maxt = datetime(int(year), int(month) + 1, 1)
-    else:
-        # Day resolution
-        mint = datetime(int(year), int(month), int(day))
-        maxt = mint + timedelta(days=1)
-
-    maxt -= timedelta(microseconds=1)
-
-    return mint.timestamp(), maxt.timestamp()
+from .utils import GeoSlice, Path, Sample, disambiguate_timestamp
 
 
 class GBIF(GeoDataset):
@@ -77,9 +40,6 @@ class GBIF(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    res = 0
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
-
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
@@ -98,45 +58,94 @@ class GBIF(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read tab-delimited CSV file
-        data = pd.read_table(
-            files[0],
-            engine='c',
-            usecols=['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year'],
+        usecols = ['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year']
+        dtype = {'day': str, 'month': str, 'year': str}
+        # https://github.com/pandas-dev/pandas-stubs/pull/1696
+        df = pd.read_table(files[0], usecols=usecols, dtype=dtype)  # ty: ignore[invalid-argument-type]
+        df = df[df['decimalLatitude'].notna()]
+        df = df[df['decimalLongitude'].notna()]
+        df['day'] = df['day'].str.zfill(2)
+        df['month'] = df['month'].str.zfill(2)
+        date = df['day'] + ' ' + df['month'] + ' ' + df['year']
+
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%d %m %Y')
+        index = pd.IntervalIndex.from_tuples(
+            date.apply(func).to_list(), closed='both', name='datetime'
         )
+        geometry = gpd.points_from_xy(df['decimalLongitude'], df['decimalLatitude'])
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for y, x, day, month, year in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if np.isnan(y) or np.isnan(x):
-                continue
-
-            mint, maxt = _disambiguate_timestamps(year, month, day)
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not bboxes:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        keypoints = torch.tensor(df.get_coordinates().values, dtype=torch.float32)
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'bounds': self._slice_to_tensor(index),
+            'keypoints': keypoints,
+            'transform': torch.tensor(transform),
+        }
 
         return sample
+
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for Figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.8
+        """
+        # Create figure and axis - using regular matplotlib axes
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.grid(ls='--')
+
+        # Extract coordinates
+        keypoints = sample['keypoints']
+        x = keypoints[:, 0]
+        y = keypoints[:, 1]
+
+        # Plot the points
+        ax.scatter(x, y)
+
+        # Set labels
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+
+        # Add titles if requested
+        if show_titles:
+            ax.set_title('GBIF Occurrence Locations by Date')
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+        return fig

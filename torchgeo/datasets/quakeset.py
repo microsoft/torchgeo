@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """QuakeSet dataset."""
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, Literal, TypedDict, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,17 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
+
+
+class Metadata(TypedDict):
+    """Sample metadata."""
+
+    key: str
+    patch: str
+    images: tuple[str, str]
+    label: int
+    magnitude: float
 
 
 class QuakeSet(NonGeoDataset):
@@ -60,7 +70,7 @@ class QuakeSet(NonGeoDataset):
 
     filename = 'earthquakes.h5'
     url = 'https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5'
-    md5 = '76fc7c76b7ca56f4844d852e175e1560'
+    sha256 = '11527e6a21c425b787d0952443e434f53d90a22ee16b75d20e17d54c2b091a78'
     splits: ClassVar[dict[str, str]] = {
         'train': 'train',
         'val': 'validation',
@@ -71,8 +81,8 @@ class QuakeSet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -84,7 +94,7 @@ class QuakeSet(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If ``split`` argument is invalid.
@@ -104,7 +114,7 @@ class QuakeSet(NonGeoDataset):
         self._verify()
         self.data = self._load_data()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -132,14 +142,14 @@ class QuakeSet(NonGeoDataset):
         """
         return len(self.data)
 
-    def _load_data(self) -> list[dict[str, Any]]:
+    def _load_data(self) -> list[Metadata]:
         """Return the metadata for a given split.
 
         Returns:
             the sample keys, patches, images, labels, and magnitudes
         """
         h5py = lazy_import('h5py')
-        data = []
+        data: list[Metadata] = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
                 if f[k].attrs['split'] != self.splits[self.split]:
@@ -150,25 +160,25 @@ class QuakeSet(NonGeoDataset):
                         # positive sample
                         magnitude = float(f[k].attrs['magnitude'])
                         data.append(
-                            dict(
-                                key=k,
-                                patch=patch,
-                                images=('pre', 'post'),
-                                label=1,
-                                magnitude=magnitude,
-                            )
+                            {
+                                'key': k,
+                                'patch': patch,
+                                'images': ('pre', 'post'),
+                                'label': 1,
+                                'magnitude': magnitude,
+                            }
                         )
 
                         # hard negative sample
-                        if 'before' in f[k][patch].keys():
+                        if 'before' in f[k][patch]:
                             data.append(
-                                dict(
-                                    key=k,
-                                    patch=patch,
-                                    images=('before', 'pre'),
-                                    label=0,
-                                    magnitude=0.0,
-                                )
+                                {
+                                    'key': k,
+                                    'patch': patch,
+                                    'images': ('before', 'pre'),
+                                    'label': 0,
+                                    'magnitude': 0.0,
+                                }
                             )
         return data
 
@@ -220,14 +230,11 @@ class QuakeSet(NonGeoDataset):
                 self.url,
                 self.root,
                 filename=self.filename,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -239,19 +246,19 @@ class QuakeSet(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample['image'].permute((1, 2, 0)).numpy()
+        image = sample['image'].permute((1, 2, 0))
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
         # Create false color image for image1
-        vv = percentile_normalization(image[..., 0]) + 1e-16
-        vh = percentile_normalization(image[..., 1]) + 1e-16
-        fci1 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        vv = quantile_normalization(image[..., 0]) + 1e-16
+        vh = quantile_normalization(image[..., 1]) + 1e-16
+        fci1 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         # Create false color image for image2
-        vv = percentile_normalization(image[..., 2]) + 1e-16
-        vh = percentile_normalization(image[..., 3]) + 1e-16
-        fci2 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        vv = quantile_normalization(image[..., 2]) + 1e-16
+        vh = quantile_normalization(image[..., 3]) + 1e-16
+        fci2 = torch.stack([vv, vh, vv / vh], dim=-1).clamp(0, 1)
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
@@ -273,7 +280,7 @@ class QuakeSet(NonGeoDataset):
         if show_titles:
             title = f'Label: {label_class}'
             if 'magnitude' in sample:
-                magnitude = cast(float, sample['magnitude'].item())
+                magnitude = sample['magnitude'].item()
                 title += f' | Magnitude: {magnitude:.2f}'
             if showing_predictions:
                 title += f'\nPrediction: {prediction_class}'

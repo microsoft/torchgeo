@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import random
 import shutil
@@ -67,14 +66,9 @@ if __name__ == '__main__':
         for e in raster_extensions:
             create_file(
                 os.path.join(dir, filename.replace('.zip', e)),
-                dtype='int8',
+                dtype='uint8',
                 num_channels=1,
             )
 
         # Compress data
         shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', dir)
-
-        # Compute checksums
-        with open(filename, 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{filename}: {md5}')

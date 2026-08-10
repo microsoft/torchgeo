@@ -1,18 +1,17 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dynamic One-For-All (DOFA) models."""
 
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
-import kornia.augmentation as K
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.init as init
+import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
-from torch import Tensor
+from torch import Tensor, nn
+from torch.nn import init
 from torchvision.models._api import Weights, WeightsEnum
 
 
@@ -255,7 +254,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # type: ignore[assignment]
+        norm_layer: type[nn.Module] | None = None,
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -274,6 +273,9 @@ class DOFA(nn.Module):
         """
         super().__init__()
 
+        if norm_layer is None:
+            norm_layer = cast(type[nn.Module], partial(nn.LayerNorm, eps=1e-6))
+
         self.img_size = img_size
         self.patch_size = patch_size
         self.drop_rate = drop_rate
@@ -286,8 +288,6 @@ class DOFA(nn.Module):
         self.mlp_ratio = mlp_ratio
 
         if self.global_pool:
-            norm_layer = norm_layer
-            embed_dim = embed_dim
             self.fc_norm = norm_layer(embed_dim)
         else:
             self.norm = norm_layer(embed_dim)
@@ -295,7 +295,7 @@ class DOFA(nn.Module):
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = DOFAEmbedding(
-            dynamic_embed_dim=128, kernel_size=16, embed_dim=embed_dim
+            dynamic_embed_dim=128, kernel_size=patch_size, embed_dim=embed_dim
         )
         self.num_patches = (img_size // patch_size) ** 2
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -327,7 +327,9 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wavelengths: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1 VV/VH,
+                the DOFA v1 weights use ``[3.75, 3.75]`` as modality placeholders
+                rather than physical wavelengths.
 
         Returns:
             Output mini-batch.
@@ -375,7 +377,9 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wavelengths: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1 VV/VH,
+                the DOFA v1 weights use ``[3.75, 3.75]`` as modality placeholders
+                rather than physical wavelengths.
 
         Returns:
             Output mini-batch.
@@ -387,15 +391,10 @@ class DOFA(nn.Module):
 
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
-_dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+_dofa_transforms = nn.Sequential(T.CenterCrop((224, 224)))
 
 
-class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFABase16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) base patch size 16 weights.
 
     .. versionadded:: 0.6
@@ -414,7 +413,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
+class DOFALarge16_Weights(WeightsEnum):
     """Dynamic One-For-All (DOFA) large patch size 16 weights.
 
     .. versionadded:: 0.6
@@ -478,7 +477,7 @@ def dofa_base_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
@@ -516,7 +515,7 @@ def dofa_large_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+            weights.get_state_dict(progress=True, weights_only=True), strict=False
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
@@ -530,8 +529,8 @@ def dofa_large_patch16_224(
     return model
 
 
-def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
-    """Dynamic One-For-All (DOFA) huge patch size 16 model.
+def dofa_huge_patch14_224(*args: Any, **kwargs: Any) -> DOFA:
+    """Dynamic One-For-All (DOFA) huge patch size 14 model.
 
     If you use this model in your research, please cite the following paper:
 
@@ -544,7 +543,7 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
         **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
-        A DOFA huge 16 model.
+        A DOFA huge 14 model.
     """
     kwargs |= {'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16}
     model = DOFA(*args, **kwargs)

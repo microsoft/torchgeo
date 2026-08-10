@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Self-Supervised Learning for Earth Observation Benchmark Datasets."""
@@ -6,12 +6,13 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -19,7 +20,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -56,12 +57,12 @@ class SSL4EOLBenchmark(NonGeoDataset):
     valid_splits = ('train', 'val', 'test')
 
     image_root = 'ssl4eo_l_{}_benchmark'
-    img_md5s: ClassVar[dict[str, str]] = {
-        'tm_toa': '8e3c5bcd56d3780a442f1332013b8d15',
-        'etm_toa': '1b051c7fe4d61c581b341370c9e76f1f',
-        'etm_sr': '34a24fa89a801654f8d01e054662c8cd',
-        'oli_tirs_toa': '6e9d7cf0392e1de2cbdb39962ba591aa',
-        'oli_sr': '0700cd15cc2366fe68c2f8c02fa09a15',
+    img_sha256s: ClassVar[dict[str, str]] = {
+        'tm_toa': 'b279c12c1360beb4faf605e3c0c83d08e9a0b98bef82c8adc85532e3359ab585',
+        'etm_toa': 'e6ba623a348309efecbd8161365fd34ca6877c7003bc4f7127dfc3472eef9613',
+        'etm_sr': '050613d7ec7ae651f708656684003129b5cc8a9cb78b996b46cc7107b28c4be6',
+        'oli_tirs_toa': '7cea175c09534e9178bd0e9ee017058055a5b8f301d76c0b19c7d726e07c3bdf',
+        'oli_sr': 'fb5074a719c5bbc8cf546aaddc58ed2dc8b5a902202bd28d5eb3f35d4085df2a',
     }
 
     mask_dir_dict: ClassVar[dict[str, str]] = {
@@ -71,18 +72,18 @@ class SSL4EOLBenchmark(NonGeoDataset):
         'oli_tirs_toa': 'ssl4eo_l_oli_{}',
         'oli_sr': 'ssl4eo_l_oli_{}',
     }
-    mask_md5s: ClassVar[dict[str, dict[str, str]]] = {
+    mask_sha256s: ClassVar[dict[str, dict[str, str]]] = {
         'tm': {
-            'cdl': '3d676770ffb56c7e222a7192a652a846',
-            'nlcd': '261149d7614fcfdcb3be368eefa825c7',
+            'cdl': '0aabd12537cae8ef33b38cdc0a6fb24405ce259b813df92313b7f481cb2bd34b',
+            'nlcd': '2371109835f8f2667409109d872ca3bea58840d3fc6d232757bc0692b1d982dd',
         },
         'etm': {
-            'cdl': '008098c968544049eaf7b307e14241de',
-            'nlcd': '9c031049d665202ba42ac1d89b687999',
+            'cdl': '952f39691fec80d06c72a3e20659e126df717328888d643312a93c4854d83e82',
+            'nlcd': '2c0f31fb855b44c071fe43af45c59ee713c66430825954d0f24da9e32da7a7d3',
         },
         'oli': {
-            'cdl': '1cb057de6eafeca975deb35cb9fb036f',
-            'nlcd': '9de0d6d4d0b94313b80450f650813922',
+            'cdl': '60463aecd7e96e7528cd3d888767e619b02e33760d9c340b4f2d1a0b021b24bb',
+            'nlcd': '42e13f84eb22f1776f544b92e5e78942357fe80beb38d1550847759fd4cb1e18',
         },
     }
 
@@ -104,19 +105,20 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     split_percentages = (0.7, 0.15, 0.15)
 
-    cmaps: ClassVar[dict[str, dict[int, tuple[int, int, int, int]]]] = {
-        'nlcd': NLCD.cmap,
-        'cdl': CDL.cmap,
+    cmaps: ClassVar[dict[str, Colormap]] = {'nlcd': NLCD.cmap, 'cdl': CDL.cmap}
+    valid_classes: ClassVar[dict[str, tuple[int, ...]]] = {
+        'nlcd': NLCD.valid_classes,
+        'cdl': CDL.valid_classes,
     }
 
     def __init__(
         self,
         root: Path = 'data',
-        sensor: str = 'oli_sr',
-        product: str = 'cdl',
-        split: str = 'train',
+        sensor: Literal['etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'] = 'oli_sr',
+        product: Literal['cdl', 'nlcd'] = 'cdl',
+        split: Literal['train', 'val', 'test'] = 'train',
         classes: list[int] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -132,7 +134,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, verify the checksum after downloading files (may be slow)
 
         Raises:
             AssertionError: if any arguments are invalid
@@ -153,20 +155,22 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         self.cmap = self.cmaps[product]
         if classes is None:
-            classes = list(self.cmap.keys())
+            self.classes = self.valid_classes[product]
+        else:
+            self.classes = classes
 
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(self.classes) <= set(self.valid_classes[product]), (
+            f'Only the following classes are valid: {self.valid_classes[product]}.'
         )
-        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.root = root
-        self.classes = classes
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=torch.long)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(
+            self.valid_classes[product][-1] + 1, dtype=torch.long
+        )
+        self.inverse_map = torch.zeros(len(self.classes), dtype=torch.long)
         self.img_dir_name = self.image_root.format(self.sensor)
         self.mask_dir_name = self.mask_dir_dict[self.sensor].format(self.product)
 
@@ -192,7 +196,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -236,14 +240,14 @@ class SSL4EOLBenchmark(NonGeoDataset):
         download_url(
             self.url.format(self.img_dir_name),
             self.root,
-            md5=self.img_md5s[self.sensor] if self.checksum else None,
+            sha256=self.img_sha256s[self.sensor] if self.checksum else None,
         )
         # download mask
         download_url(
             self.url.format(self.mask_dir_name),
             self.root,
-            md5=(
-                self.mask_md5s[self.sensor.split('_')[0]][self.product]
+            sha256=(
+                self.mask_sha256s[self.sensor.split('_')[0]][self.product]
                 if self.checksum
                 else None
             ),
@@ -257,7 +261,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         extract_archive(mask_pathname)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -329,10 +333,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         return mask
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -348,24 +349,26 @@ class SSL4EOLBenchmark(NonGeoDataset):
         image = sample['image'][self.rgb_indices[self.sensor]].permute(1, 2, 0)
         image = image / 255
 
-        mask = sample['mask'].squeeze(0)
+        mask = self.inverse_map[sample['mask']]
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze(0)
+            pred = self.inverse_map[sample['prediction']]
             ncols = 3
 
         fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 255, 'interpolation': 'none'}
+
         ax[0].imshow(image)
         ax[0].axis('off')
-        ax[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        ax[1].imshow(mask, **kwargs)
         ax[1].axis('off')
         if show_titles:
             ax[0].set_title('Image')
             ax[1].set_title('Mask')
 
         if showing_predictions:
-            ax[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            ax[2].imshow(pred, **kwargs)
             if show_titles:
                 ax[2].set_title('Prediction')
 

@@ -1,0 +1,5 @@
+entry_id,split_1,split_2,split_3,split_4,split_5
+g_0008,fold_train,fold_train,fold_train,fold_test,fold_test
+g_0009,fold_train,fold_valid,fold_valid,fold_valid,fold_train
+g_0030,fold_valid,fold_train,fold_test,fold_train,fold_train
+g_0035,fold_test,fold_test,fold_train,fold_train,fold_valid

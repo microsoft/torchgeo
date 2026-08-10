@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from torchgeo.datasets import EuroSAT
-from torchgeo.models import RCF
+from torchgeo.models import MOSAIKS, RCF
 
 
 class TestRCF:
@@ -25,11 +25,11 @@ class TestRCF:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')
         x = torch.randn(2, 5, 64, 64)
         y = model(x)
-        assert y.shape[1] == 4
+        assert y.shape == (2, 4)
 
         x = torch.randn(1, 5, 64, 64)
         y = model(x)
-        assert y.shape[0] == 4
+        assert y.shape == (1, 4)
 
     def test_untrainable(self) -> None:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')
@@ -56,3 +56,12 @@ class TestRCF:
         match = "dataset must be provided when mode is 'empirical'"
         with pytest.raises(ValueError, match=match):
             RCF(mode='empirical', dataset=None)
+
+
+class TestMOSAIKS:
+    def test_model(self) -> None:
+        root = os.path.join('tests', 'data', 'eurosat')
+        ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split='train')
+        model = MOSAIKS(in_channels=3, features=8, dataset=ds)
+        output = model(torch.randn(2, 3, 8, 8))
+        assert output.shape == (2, 8)

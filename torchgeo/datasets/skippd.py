@@ -1,14 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """SKy Images and Photovoltaic Power Dataset (SKIPP'D)."""
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from einops import rearrange
 from matplotlib.figure import Figure
@@ -16,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import Path, Sample, download_url, extract_archive, lazy_import
 
 
 class SKIPPD(NonGeoDataset):
@@ -63,9 +62,9 @@ class SKIPPD(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'
-    md5: ClassVar[dict[str, str]] = {
-        'forecast': 'f4f3509ddcc83a55c433be9db2e51077',
-        'nowcast': '0000761d403e45bb5f86c21d3c69aa80',
+    sha256: ClassVar[dict[str, str]] = {
+        'forecast': 'c9d9695291838ac73e3ee4177dc9cb3fa2178cf132814767436e4df9db11ee8d',
+        'nowcast': '5c2e8d0dbece6f50ac299e76c69b6fced437d75cd121a9948ddc12611a6fd603',
     }
 
     data_file_name = '2017_2019_images_pv_processed_{}.hdf5'
@@ -75,14 +74,12 @@ class SKIPPD(NonGeoDataset):
 
     valid_tasks = ('nowcast', 'forecast')
 
-    dateformat = '%m/%d/%Y, %H:%M:%S'
-
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'trainval',
-        task: str = 'nowcast',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        split: Literal['trainval', 'test'] = 'trainval',
+        task: Literal['nowcast', 'forecast'] = 'nowcast',
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -95,7 +92,7 @@ class SKIPPD(NonGeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, verify the checksum after downloading files (may be slow)
 
         Raises:
             AssertionError: if ``task`` or ``split`` is invalid
@@ -134,7 +131,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -143,7 +140,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, str | Tensor] = {'image': self._load_image(index)}
+        sample: Sample = {'image': self._load_image(index)}
         sample.update(self._load_features(index))
 
         if self.transforms is not None:
@@ -176,7 +173,7 @@ class SKIPPD(NonGeoDataset):
         tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
-    def _load_features(self, index: int) -> dict[str, str | Tensor]:
+    def _load_features(self, index: int) -> Sample:
         """Load label.
 
         Args:
@@ -191,13 +188,7 @@ class SKIPPD(NonGeoDataset):
         ) as f:
             label = f[self.split]['pv_log'][index]
 
-        path = os.path.join(self.root, f'times_{self.split}_{self.task}.npy')
-        datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
-
-        features: dict[str, str | Tensor] = {
-            'label': torch.tensor(label, dtype=torch.float32),
-            'date': datestring,
-        }
+        features: Sample = {'label': torch.tensor(label, dtype=torch.float32)}
         return features
 
     def _verify(self) -> None:
@@ -227,7 +218,7 @@ class SKIPPD(NonGeoDataset):
             self.url.format(self.zipfile_name.format(self.task)),
             self.root,
             filename=self.zipfile_name.format(self.task),
-            md5=self.md5[self.task] if self.checksum else None,
+            sha256=self.sha256[self.task] if self.checksum else None,
         )
         self._extract()
 
@@ -237,10 +228,7 @@ class SKIPPD(NonGeoDataset):
         extract_archive(zipfile_path, self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

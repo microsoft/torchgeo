@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -13,6 +12,7 @@ from rasterio import Affine
 from rasterio.crs import CRS
 
 SIZE = 36
+CHUNK_SIZE = 2**14
 
 np.random.seed(0)
 
@@ -100,10 +100,10 @@ def create_file(path: str) -> None:
         ),
     }
 
-    if path.endswith('VH.tif') or path.endswith('VV.tif'):
+    if path.endswith(('VH.tif', 'VV.tif')):
         profile['dtype'] = 'float32'
 
-    if path.endswith('B1.tif') or path.endswith('B9.tif') or path.endswith('B10.tif'):
+    if path.endswith(('B1.tif', 'B9.tif', 'B10.tif')):
         profile['width'] = profile['height'] = SIZE // 6
         profile['transform'] = Affine(
             0.0005532946262789551,
@@ -113,14 +113,7 @@ def create_file(path: str) -> None:
             -0.0005278320358784425,
             18.588322889892943,
         )
-    elif (
-        path.endswith('B5.tif')
-        or path.endswith('B6.tif')
-        or path.endswith('B7.tif')
-        or path.endswith('B8A.tif')
-        or path.endswith('B11.tif')
-        or path.endswith('B12.tif')
-    ):
+    elif path.endswith(('B5.tif', 'B6.tif', 'B7.tif', 'B8A.tif', 'B11.tif', 'B12.tif')):
         profile['width'] = profile['height'] = SIZE // 2
         profile['transform'] = Affine(
             0.00018443154209298504,
@@ -154,13 +147,20 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
 if __name__ == '__main__':
     create_directory('.', filenames)
 
-    files = ['s1', 's2_l1c', 's2_l2a']
+    files = ['s1_grd', 's2_l1c', 's2_l2a']
     directories = ['s1', 's2c', 's2a']
     for file, directory in zip(files, directories):
         # Create tarballs
         shutil.make_archive(file, 'gztar', '.', directory)
 
-        # Compute checksums
-        with open(f'{file}.tar.gz', 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(file, md5)
+        # Split tarball
+        path = f'{file}.tar.gz'
+        paths = []
+        with open(path, 'rb') as f:
+            suffix = 'a'
+            while chunk := f.read(CHUNK_SIZE):
+                split = f'{path}.parta{suffix}'
+                with open(split, 'wb') as g:
+                    g.write(chunk)
+                suffix = chr(ord(suffix) + 1)
+                paths.append(split)

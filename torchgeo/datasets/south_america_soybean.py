@@ -1,19 +1,19 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """South America Soybean Dataset."""
 
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, download_url
+from .utils import Path, Sample, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -75,12 +75,13 @@ class SouthAmericaSoybean(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        years: list[int] = [2021],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        years: list[int] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -88,7 +89,8 @@ class SouthAmericaSoybean(RasterDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             years: list of years for which to use the South America Soybean layer
             transforms: a function/transform that takes an input sample
@@ -96,17 +98,26 @@ class SouthAmericaSoybean(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
+        if years is None:
+            years = [2021]
         self.paths = paths
         self.download = download
         self.checksum = checksum
         self.years = years
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -124,18 +135,17 @@ class SouthAmericaSoybean(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.paths,
+                paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

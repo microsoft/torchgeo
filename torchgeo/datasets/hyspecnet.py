@@ -1,49 +1,30 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """HySpecNet dataset."""
 
 import os
+import re
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import rasterio as rio
 import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
-from torch import Tensor
 
+from .enmap import EnMAP
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
-
-# https://git.tu-berlin.de/rsim/hyspecnet-tools/-/blob/main/tif_to_npy.ipynb
-invalid_channels = [
-    126,
-    127,
-    128,
-    129,
-    130,
-    131,
-    132,
-    133,
-    134,
-    135,
-    136,
-    137,
-    138,
-    139,
-    140,
-    160,
-    161,
-    162,
-    163,
-    164,
-    165,
-    166,
-]
-valid_channels_ids = [c + 1 for c in range(224) if c not in invalid_channels]
+from .utils import (
+    Path,
+    Sample,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class HySpecNet11k(NonGeoDataset):
@@ -85,30 +66,31 @@ class HySpecNet11k(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/hyspecnet/resolve/13e110422a6925cbac0f11edff610219b9399227/'
-    md5s: ClassVar[dict[str, str]] = {
-        'hyspecnet-11k-01.tar.gz': '974aae9197006727b42ec81796049efe',
-        'hyspecnet-11k-02.tar.gz': 'f80574485f835b8a263b6c64076c0c62',
-        'hyspecnet-11k-03.tar.gz': '6bc1de573f97fa4a75b79719b9270cb3',
-        'hyspecnet-11k-04.tar.gz': '2463dc10653cb8be10d44951307c5e7d',
-        'hyspecnet-11k-05.tar.gz': '16c1bd9e684673e741c0849bd015c988',
-        'hyspecnet-11k-06.tar.gz': '8eef16b67d71af6eb4bc836d294fe3c4',
-        'hyspecnet-11k-07.tar.gz': 'f61f0e7d6b05c861e69026b09130a5d6',
-        'hyspecnet-11k-08.tar.gz': '19d390bc9e61b85e7d765f3077984976',
-        'hyspecnet-11k-09.tar.gz': '197ff47befe5b9de88be5e1321c5ce5d',
-        'hyspecnet-11k-10.tar.gz': '9e674cca126a9d139d6584be148d4bac',
-        'hyspecnet-11k-splits.tar.gz': '94fad9e3c979c612c29a045406247d6c',
+    sha256s: ClassVar[dict[str, str]] = {
+        'hyspecnet-11k-01.tar.gz': 'bd551f2b16d02ec6154b83dd75bc8640fdc4ef75b03680610d5cfec07d2e4d1d',
+        'hyspecnet-11k-02.tar.gz': '245afe0be3b6bd5ac8783c6351390ffb16c1c2320db48f09adbcb4bedbf79844',
+        'hyspecnet-11k-03.tar.gz': '31223d9b7ce1ebeb51138ab885658c0aeefa908df9fee4c2ca35605fc8a8c4ac',
+        'hyspecnet-11k-04.tar.gz': '9283deea3188705d6b3d4a5239e792c43d30498cc8c7615eb859b55b72e1084e',
+        'hyspecnet-11k-05.tar.gz': 'c5eb190d0336fe459273cff5e87c597430771f273f0a5226388e7efe6fd0c263',
+        'hyspecnet-11k-06.tar.gz': '8f9af9fcb4c22cc86066a6c60f876a65f4dc114d4c4be8e1d997e6a701c1ae6e',
+        'hyspecnet-11k-07.tar.gz': '39a8b75e56451a5590a3ae378d14f15edfb3326bbad5dd664cc2ca07cf4edeb1',
+        'hyspecnet-11k-08.tar.gz': 'c45d379b047d0e685e465a534550e1f144e83303a98d980493858d5513add656',
+        'hyspecnet-11k-09.tar.gz': '01d70d41f37f70e52ad562c5d7b3232784c8f3ec0ac8fdac9f7f4e44a7e8a7f8',
+        'hyspecnet-11k-10.tar.gz': '643248dd6d0e9c5bd297c040e16aaa67aacc6e7c2162824009aea74b4e440bcf',
+        'hyspecnet-11k-splits.tar.gz': '12d809d1e13ae4b2cf76b9eca2855e0bbab143372ebe728440eab383364cfb8b',
     }
 
-    all_bands = valid_channels_ids
-    rgb_bands = (43, 28, 10)
+    all_bands = EnMAP.all_bands
+    default_bands = EnMAP.default_bands
+    rgb_bands = EnMAP.rgb_bands
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        strategy: str = 'easy',
-        bands: Sequence[int] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
+        strategy: Literal['easy', 'hard'] = 'easy',
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -123,7 +105,7 @@ class HySpecNet11k(NonGeoDataset):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -131,10 +113,13 @@ class HySpecNet11k(NonGeoDataset):
         self.root = root
         self.split = split
         self.strategy = strategy
-        self.bands = bands
+        self.bands = bands or self.default_bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
+
+        self.wavelengths = torch.tensor([EnMAP.wavelengths[b] for b in self.bands])
+        self.band_indices = [self.all_bands.index(b) + 1 for b in self.bands]
 
         self._verify()
 
@@ -150,7 +135,7 @@ class HySpecNet11k(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -159,9 +144,23 @@ class HySpecNet11k(NonGeoDataset):
         Returns:
             Data and label at that index.
         """
-        file = self.files[index].replace('DATA.npy', 'SPECTRAL_IMAGE.TIF')
-        with rio.open(os.path.join(self.root, 'hyspecnet-11k', 'patches', file)) as src:
-            sample = {'image': torch.tensor(src.read(self.bands).astype('float32'))}
+        path = self.files[index].replace('DATA.npy', 'SPECTRAL_IMAGE.TIF')
+        file = os.path.basename(path)
+        match = re.match(EnMAP.filename_regex, file, re.VERBOSE)
+        assert match
+        mint, maxt = disambiguate_timestamp(match.group('date'), EnMAP.date_format)
+
+        with rio.open(os.path.join(self.root, 'hyspecnet-11k', 'patches', path)) as src:
+            minx, maxx = src.bounds.left, src.bounds.right
+            miny, maxy = src.bounds.bottom, src.bounds.top
+            sample = {
+                'image': torch.tensor(src.read(self.band_indices).astype('float32')),
+                'x': torch.tensor((minx + maxx) / 2),
+                'y': torch.tensor((miny + maxy) / 2),
+                't': torch.tensor((mint.timestamp() + maxt.timestamp()) / 2),
+                'wavelength': self.wavelengths,
+                'res': torch.tensor(30),
+            }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -179,7 +178,7 @@ class HySpecNet11k(NonGeoDataset):
         if all(exists):
             return
 
-        for file, md5 in self.md5s.items():
+        for file, sha256 in self.sha256s.items():
             # Check if the file has already been downloaded
             path = os.path.join(self.root, file)
             if os.path.isfile(path):
@@ -189,13 +188,13 @@ class HySpecNet11k(NonGeoDataset):
             # Check if the user requested to download the dataset
             if self.download:
                 url = self.url + file
-                download_url(url, self.root, md5=md5 if self.checksum else None)
+                download_url(url, self.root, sha256=sha256 if self.checksum else None)
                 extract_archive(path)
                 continue
 
             raise DatasetNotFoundError(self)
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -215,9 +214,9 @@ class HySpecNet11k(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample['image'][rgb_indices].cpu().numpy()
+        image = sample['image'][rgb_indices]
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots()
         ax.imshow(image)

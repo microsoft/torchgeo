@@ -1,11 +1,11 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MDAS dataset."""
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class MDAS(NonGeoDataset):
@@ -139,9 +139,9 @@ class MDAS(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        subareas: list[str] = ['sub_area_1'],
-        modalities: list[str] = ['3K_RGB', 'HySpex', 'Sentinel_2'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        subareas: list[str] | None = None,
+        modalities: list[str] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -159,6 +159,10 @@ class MDAS(NonGeoDataset):
             AssertionError: If the subareas or modalities are not valid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if modalities is None:
+            modalities = ['3K_RGB', 'HySpex', 'Sentinel_2']
+        if subareas is None:
+            subareas = ['sub_area_1']
         self.root = root
         self.download = download
         assert all(sub in self.valid_subareas for sub in subareas), (
@@ -232,17 +236,17 @@ class MDAS(NonGeoDataset):
 
             return torch.from_numpy(img)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return the dataset sample at the given index.
 
         Args:
-            idx: The index of the sample to return
+            index: The index of the sample to return
 
         Returns:
             a dictionary containing the data of chosen modalities
         """
-        sample_files = self.files[idx]
-        sample: dict[str, Any] = {}
+        sample_files = self.files[index]
+        sample: Sample = {}
         for modality, path in sample_files.items():
             if 'osm' in modality:
                 sample[f'{modality}_mask'] = self._load_image(path).long()
@@ -297,10 +301,7 @@ class MDAS(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

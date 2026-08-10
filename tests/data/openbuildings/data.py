@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import csv
 import gzip
-import hashlib
 import json
 import os
 import shutil
 
-from shapely.geometry import Polygon
+from shapely import Polygon
 
 SIZE = 0.05
 
@@ -87,14 +86,8 @@ if __name__ == '__main__':
         w.writerows(buildings_data)
 
     # archive the csv to gzip
-    with open(csvname, 'rb') as f_in:
-        with gzip.open(zipfilename, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-
-    # Compute checksums
-    with open(zipfilename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{zipfilename}: {md5}')
+    with open(csvname, 'rb') as f_in, gzip.open(zipfilename, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
 
     # remove csv file
     os.remove(csvname)

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CaFFe datamodule."""
@@ -20,8 +20,8 @@ class CaFFeDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     """
 
-    mean = torch.Tensor([0.5517])
-    std = torch.Tensor([11.8478])
+    mean = torch.tensor([0.5517])
+    std = torch.tensor([11.8478])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
@@ -41,7 +41,7 @@ class CaFFeDataModule(NonGeoDataModule):
 
         self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.Resize(size),
+            K.Resize((size, size)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=None,
@@ -50,7 +50,7 @@ class CaFFeDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.Resize(size),
+            K.Resize((size, size)),
             data_keys=None,
             keepdim=True,
         )

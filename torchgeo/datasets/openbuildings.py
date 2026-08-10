@@ -1,37 +1,36 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Open Buildings datasets."""
 
 import glob
-import json
 import os
-import sys
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
-import fiona
-import fiona.transform
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import pyproj
 import rasterio
+import rasterio.features
 import shapely
-import shapely.wkt as wkt
 import torch
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
-from rtree.index import Index, Property
+from pyproj import CRS
+from shapely.geometry.base import BaseGeometry
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, Path, check_integrity
+from .utils import GeoSlice, Path, Sample, check_integrity
 
 
 class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/>`__ dataset
+    <https://sites.research.google/gr/open-buildings/>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -47,7 +46,7 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#open-buildings-download>`__.
+    <https://sites.research.google/gr/open-buildings/#open-buildings-download>`__.
     Additionally, the `meta data geometry file
     <https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson>`_
     also needs to be placed in `root` as `tiles.geojson`.
@@ -204,13 +203,14 @@ class OpenBuildings(VectorDataset):
 
     meta_data_url = 'https://sites.research.google/open-buildings/tiles.geojson'
     meta_data_filename = 'tiles.geojson'
+    _source_crs = CRS.from_epsg(4326)
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] = 0.0001,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -219,7 +219,8 @@ class OpenBuildings(VectorDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -230,94 +231,77 @@ class OpenBuildings(VectorDataset):
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
+        assert isinstance(paths, str | os.PathLike)
+        paths = cast(Path, paths)
         self.paths = paths
+        if isinstance(res, int | float):
+            res = (res, res)
         self.res = res
         self.checksum = checksum
-        self.res = res
         self.transforms = transforms
 
         self._verify()
 
-        # Create an R-tree to index the dataset using the polygon centroid as bounds
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-
-        assert isinstance(self.paths, str | os.PathLike)
-        with open(os.path.join(self.paths, 'tiles.geojson')) as f:
-            data = json.load(f)
-
-        features = data['features']
-        features_filenames = [
-            feature['properties']['tile_url'].split('/')[-1] for feature in features
-        ]  # get csv filename
-
-        polygon_files = glob.glob(os.path.join(self.paths, self.zipfile_glob))
+        polygon_files = glob.glob(os.path.join(paths, self.zipfile_glob))
         polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
-        matched_features = [
-            feature
-            for filename, feature in zip(features_filenames, features)
-            if filename in polygon_filenames
-        ]
+        filename = os.path.join(paths, 'tiles.geojson')
+        gdf = gpd.read_file(filename)
+        gdf.set_crs(self._source_crs, inplace=True)
 
-        i = 0
-        source_crs = CRS.from_dict({'init': 'epsg:4326'})
-        for feature in matched_features:
-            if crs is None:
-                crs = CRS.from_dict(source_crs)
+        # Filter to only include desired polygon files
+        gdf['filepath'] = gdf['tile_url'].str.split('/').str[-1]
+        gdf = gdf[gdf['filepath'].isin(polygon_filenames)]
 
-            c = feature['geometry']['coordinates'][0]
-            xs = [x[0] for x in c]
-            ys = [x[1] for x in c]
+        # Convert geometries to bounding boxes
+        geometries = gdf.bounds.apply(
+            lambda row: shapely.box(row['minx'], row['miny'], row['maxx'], row['maxy']),
+            axis=1,
+        )
+        filepaths = [os.path.join(paths, filepath) for filepath in gdf['filepath']]
+        datetimes = [(pd.Timestamp.min, pd.Timestamp.max)] * len(filepaths)
 
-            minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
-
-            (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                source_crs.to_dict(), crs.to_dict(), [minx, maxx], [miny, maxy]
-            )
-            mint = 0
-            maxt = sys.maxsize
-            coords = (minx, maxx, miny, maxy, mint, maxt)
-
-            filepath = os.path.join(
-                self.paths, feature['properties']['tile_url'].split('/')[-1]
-            )
-            self.index.insert(i, coords, filepath)
-            i += 1
-
-        if i == 0:
+        if not len(filepaths):
             raise DatasetNotFoundError(self)
 
-        self._crs = crs
-        self._source_crs = source_crs
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(
+            data, index=index, geometry=list(geometries), crs=self._source_crs
+        )
+        if crs is not None and crs != self._source_crs:
+            self.index.to_crs(crs, inplace=True)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata for the given query. If there are
-            not matching shapes found within the query, an empty raster is returned
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        if not filepaths:
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        shapes = self._filter_geometries(query, filepaths)
+        shapes = self._filter_geometries(index, df.filepath)
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
+        width = (x.stop - x.start) / x.step
+        height = (y.stop - y.start) / y.step
         transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
+            x.start, y.start, x.stop, y.stop, width, height
         )
         if shapes:
             masks = rasterio.features.rasterize(
@@ -327,7 +311,12 @@ class OpenBuildings(VectorDataset):
         else:
             masks = torch.zeros(size=(1, round(height), round(width)))
 
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample = {
+            'mask': masks,
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -335,70 +324,45 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: BoundingBox, filepaths: list[str]
-    ) -> list[dict[str, Any]]:
-        """Filters a df read from the polygon csv file based on query and conf thresh.
+        self, index: GeoSlice, filepaths: list[str]
+    ) -> list[BaseGeometry]:
+        """Filters a df read from the polygon csv file based on index and conf thresh.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             filepaths: filepaths to files that were hits from rmtree index
 
         Returns:
             List with all polygons from all hit filepaths
 
         """
-        # We need to know the bounding box of the query in the source CRS
-        (minx, maxx), (miny, maxy) = fiona.transform.transform(
-            self._crs.to_dict(),
-            self._source_crs.to_dict(),
-            [query.minx, query.maxx],
-            [query.miny, query.maxy],
+        x, y, _ = self._disambiguate_slice(index)
+
+        # We need to know the bounding box of the index in the source CRS
+        transformer = pyproj.Transformer.from_crs(
+            self.crs, self._source_crs, always_xy=True
         )
-        df_query = (
-            f'longitude >= {minx} & longitude <= {maxx} & '
-            f'latitude >= {miny} & latitude <= {maxy}'
-        )
+        (minx, miny) = transformer.transform(x.start, y.start)
+        (maxx, maxy) = transformer.transform(x.stop, y.stop)
+
         shapes = []
         for f in filepaths:
             csv_chunks = pd.read_csv(f, chunksize=200000, compression='gzip')
             for chunk in csv_chunks:
-                df = chunk.query(df_query)
-                # Warp geometries to requested CRS
-                polygon_series = df['geometry'].map(self._wkt_fiona_geom_transform)
-                shapes.extend(polygon_series.values.tolist())
+                chunk['geometry'] = gpd.GeoSeries.from_wkt(chunk['geometry'])
+                gdf = gpd.GeoDataFrame(chunk, geometry='geometry', crs=self._source_crs)
+                gdf = gdf.cx[minx:maxx, miny:maxy]
+                gdf.to_crs(self.crs, inplace=True)
+                shapes.extend(gdf.geometry.tolist())
 
         return shapes
-
-    def _wkt_fiona_geom_transform(self, x: str) -> dict[str, Any]:
-        """Function to transform a geometry string into new crs.
-
-        Args:
-            x: Polygon string
-
-        Returns:
-            transformed geometry in geojson format
-
-        """
-        x = json.dumps(shapely.geometry.mapping(wkt.loads(x)))
-        x = json.loads(x.replace("'", '"'))
-        import fiona
-
-        if hasattr(fiona, 'model'):
-            import fiona.model
-
-            geom = fiona.model.Geometry(**x)
-        else:
-            geom = x
-        transformed: dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self._crs.to_dict(), geom
-        )
-        return transformed
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)
@@ -412,10 +376,7 @@ class OpenBuildings(VectorDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

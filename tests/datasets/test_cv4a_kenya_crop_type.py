@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -7,8 +7,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -70,7 +70,7 @@ class TestCV4AKenyaCropType:
         plt.close()
 
     def test_plot_rgb(self, dataset: CV4AKenyaCropType) -> None:
-        dataset = CV4AKenyaCropType(root=dataset.root, bands=tuple(['B01']))
+        dataset = CV4AKenyaCropType(root=dataset.root, bands=('B01',))
         match = 'Dataset does not contain some of the RGB bands'
         with pytest.raises(RGBBandsMissingError, match=match):
             dataset.plot(dataset[0])

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Fully convolutional change detection (FCCD) implementations."""
@@ -10,10 +10,11 @@ import segmentation_models_pytorch as smp
 import torch
 from segmentation_models_pytorch import Unet
 from segmentation_models_pytorch.base.model import SegmentationModel
+from segmentation_models_pytorch.decoders.unet.decoder import UnetDecoder
 from torch import Tensor
 
 
-class FCSiamConc(SegmentationModel):  # type: ignore[misc]
+class FCSiamConc(SegmentationModel):
     """Fully-convolutional Siamese Concatenation (FC-Siam-conc).
 
     If you use this model in your research, please cite the following paper:
@@ -26,7 +27,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         encoder_name: str = 'resnet34',
         encoder_depth: int = 5,
         encoder_weights: str | None = 'imagenet',
-        decoder_use_batchnorm: bool = True,
+        decoder_use_batchnorm: bool | str | dict[str, Any] = 'batchnorm',
         decoder_channels: Sequence[int] = (256, 128, 64, 32, 16),
         decoder_attention_type: str | None = None,
         in_channels: int = 3,
@@ -50,10 +51,26 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             decoder_channels: List of integers which specify **in_channels**
                 parameter for convolutions used in decoder. Length of the list
                 should be the same as **encoder_depth**
-            decoder_use_batchnorm: If **True**, BatchNorm2d layer between
-                Conv2D and Activation layers is used. If **"inplace"** InplaceABN
-                will be used, allows to decrease memory consumption. Available
-                options are **True, False, "inplace"**
+            decoder_use_batchnorm: Specifies normalization between Conv2D and
+                activation. Accepts the following types:
+
+                - **True**: Defaults to `"batchnorm"`.
+                - **False**: No normalization (`nn.Identity`).
+                - **str**: Specifies normalization type using default parameters.
+                  Available values: `"batchnorm"`, `"identity"`, `"layernorm"`,
+                  `"instancenorm"`, `"inplace"`.
+                - **dict**: Fully customizable normalization settings. Structure:
+                  ```python
+                  {"type": <norm_type>, **kwargs}
+                  ```
+                  where `norm_name` corresponds to normalization type (see above), and
+                  `kwargs` are passed directly to the normalization layer as defined in
+                  PyTorch documentation.
+
+                  **Example**:
+                  ```python
+                  decoder_use_norm = {'type': 'layernorm', 'eps': 1e-2}
+                  ```
             decoder_attention_type: Attention module used in decoder of the model.
                 Available options are **None** and **scse**. SCSE paper
                 https://arxiv.org/abs/1808.08127
@@ -75,19 +92,13 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         )
         encoder_out_channels = [c * 2 for c in self.encoder.out_channels[1:]]
         encoder_out_channels.insert(0, self.encoder.out_channels[0])
-        try:
-            # smp 0.3+
-            UnetDecoder = smp.decoders.unet.decoder.UnetDecoder
-        except AttributeError:
-            # smp 0.2
-            UnetDecoder = smp.unet.decoder.UnetDecoder
         self.decoder = UnetDecoder(
             encoder_channels=encoder_out_channels,
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,
-            use_batchnorm=decoder_use_batchnorm,
-            center=True if encoder_name.startswith('vgg') else False,
+            use_norm=decoder_use_batchnorm,
             attention_type=decoder_attention_type,
+            add_center_block=bool(encoder_name.startswith('vgg')),
         )
 
         self.segmentation_head = smp.base.SegmentationHead(
@@ -117,12 +128,12 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             for i in range(1, len(features1))
         ]
         features.insert(0, features2[0])
-        decoder_output = self.decoder(*features)
+        decoder_output = self.decoder(features)
         masks: Tensor = self.segmentation_head(decoder_output)
         return masks
 
 
-class FCSiamDiff(Unet):  # type: ignore[misc]
+class FCSiamDiff(Unet):
     """Fully-convolutional Siamese Difference (FC-Siam-diff).
 
     If you use this model in your research, please cite the following paper:
@@ -156,6 +167,6 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         features1, features2 = self.encoder(x1), self.encoder(x2)
         features = [features2[i] - features1[i] for i in range(1, len(features1))]
         features.insert(0, features2[0])
-        decoder_output = self.decoder(*features)
+        decoder_output = self.decoder(features)
         masks: Tensor = self.segmentation_head(decoder_output)
         return masks

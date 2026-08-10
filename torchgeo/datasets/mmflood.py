@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """MMFlood dataset."""
@@ -14,12 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
-from torch import Tensor
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class MMFloodComponent(RasterDataset):
@@ -31,9 +30,10 @@ class MMFloodComponent(RasterDataset):
         content: Literal['s1_raw', 'DEM', 'hydro', 'mask'],
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize MMFloodComponent dataset instance.
 
@@ -43,11 +43,17 @@ class MMFloodComponent(RasterDataset):
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         self.content = content
         self.is_image = content != 'mask'
@@ -55,32 +61,9 @@ class MMFloodComponent(RasterDataset):
         for s in subfolders:
             paths += glob(os.path.join(root, '**', f'{s}*-*', self.content, '*.tif'))
         paths = sorted(paths)
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
-
-
-class MMFloodIntersection(IntersectionDataset):
-    """Intersection dataset used to merge two or more MMFloodComponents."""
-
-    def __init__(
-        self,
-        dataset1: MMFloodComponent | MMFloodIntersection,
-        dataset2: MMFloodComponent | MMFloodIntersection,
-    ) -> None:
-        """Initialize a new MMFloodIntersection instance.
-
-        Args:
-            dataset1: the first dataset to merge
-            dataset2: the second dataset to merge
-        """
-        # if hydro component is passed, it should always be passed as dataset2
-        super().__init__(dataset1, dataset2)
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        _, ds2 = self.datasets
-        # Always use index of ds2, since it either coincides with ds1 index
-        # or refers to hydro, which represents only a subset of the dataset
-        self.index = ds2.index
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
 
 class MMFlood(IntersectionDataset):
@@ -145,14 +128,15 @@ class MMFlood(IntersectionDataset):
         self,
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        split: str = 'train',
+        res: float | tuple[float, float] | None = None,
+        split: Literal['train', 'val', 'test'] = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
         cache: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new MMFlood dataset instance.
 
@@ -160,7 +144,8 @@ class MMFlood(IntersectionDataset):
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             split: train/val/test split to load
             include_dem: If True, DEM data is concatenated after Sentinel-1 bands.
@@ -171,11 +156,15 @@ class MMFlood(IntersectionDataset):
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split* is invalid.
 
+        .. versionadded:: 0.9
+           The *time_series* parameter.
         """
         assert split in self._splits
 
@@ -195,22 +184,51 @@ class MMFlood(IntersectionDataset):
         split_subfolders = self.metadata_df[
             self.metadata_df['subset'] == self.split
         ].index.tolist()
-        self.image: MMFloodComponent | MMFloodIntersection = MMFloodComponent(
-            split_subfolders, 's1_raw', root, crs, res, cache=cache
+        self.image: MMFloodComponent | IntersectionDataset = MMFloodComponent(
+            split_subfolders,
+            's1_raw',
+            root,
+            crs,
+            res,
+            cache=cache,
+            time_series=time_series,
         )
         if include_dem:
-            dem = MMFloodComponent(split_subfolders, 'DEM', root, crs, res, cache=cache)
-            self.image = MMFloodIntersection(self.image, dem)
+            dem = MMFloodComponent(
+                split_subfolders,
+                'DEM',
+                root,
+                crs,
+                res,
+                cache=cache,
+                time_series=time_series,
+            )
+            self.image = self.image & dem
+            self.image.index = dem.index
         if include_hydro:
             hydro = MMFloodComponent(
-                split_subfolders, 'hydro', root, crs, res, cache=cache
+                split_subfolders,
+                'hydro',
+                root,
+                crs,
+                res,
+                cache=cache,
+                time_series=time_series,
             )
-            self.image = MMFloodIntersection(self.image, hydro)
+            self.image = self.image & hydro
+            self.image.index = hydro.index
         self.mask = MMFloodComponent(
-            split_subfolders, 'mask', root, crs, res, cache=cache
+            split_subfolders,
+            'mask',
+            root,
+            crs,
+            res,
+            cache=cache,
+            time_series=time_series,
         )
 
         super().__init__(self.image, self.mask, transforms=transforms)
+        self.index = self.image.index
 
     def _merge_tar_files(self) -> None:
         """Merge part tar gz files."""
@@ -227,30 +245,24 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        data = super().__getitem__(query)
+        data = super().__getitem__(index)
         missing_data = data['image'].isnan().any(dim=0)
         # Set all pixel values of invalid areas to 0, all mask values to 255
         data['image'][:, missing_data] = 0
         data['mask'][missing_data] = self._ignore_index
         return data
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        ds1, _ = self.datasets
-        # Use ds1 index
-        self.index = ds1.index
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -260,7 +272,6 @@ class MMFlood(IntersectionDataset):
             if not os.path.exists(path):
                 md5 = self._md5[filename] if self.checksum else None
                 download_url(url, self.root, filename, md5)
-            return
 
         filename = self.metadata['filename']
         filepath = os.path.join(self.root, filename)
@@ -295,10 +306,7 @@ class MMFlood(IntersectionDataset):
         self._extract()
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

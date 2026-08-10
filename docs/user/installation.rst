@@ -16,25 +16,58 @@ If you want to install a development version, you can use a VCS project URL:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/microsoft/torchgeo.git
+   $ pip install git+https://github.com/torchgeo/torchgeo.git
 
 or a local git checkout:
 
 .. code-block:: console
 
-   $ git clone https://github.com/microsoft/torchgeo.git
+   $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
    $ pip install .
 
-By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets or development. These can be installed with a comma-separated list:
+By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets, models, or development. These can be installed with a comma-separated list:
 
 .. code-block:: console
 
-   $ pip install torchgeo[datasets]
+   $ pip install torchgeo[datasets,models]
    $ pip install torchgeo[style,tests]
    $ pip install torchgeo[all]
 
 See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
+
+uv
+--
+
+`uv <https://docs.astral.sh/uv/>`_ is an extremely fast Python package manager written in Rust.
+
+To add TorchGeo as a dependency to your project:
+
+.. code-block:: console
+
+   $ uv add torchgeo
+
+For a development version from GitHub:
+
+.. code-block:: console
+
+   $ uv add git+https://github.com/torchgeo/torchgeo.git
+
+Optional dependencies can be added using extras:
+
+.. code-block:: console
+
+   $ uv add torchgeo --extra datasets --extra models
+
+To develop TorchGeo itself, clone the repository and sync the dependencies:
+
+.. code-block:: console
+
+   $ git clone https://github.com/torchgeo/torchgeo.git
+   $ cd torchgeo
+   $ uv sync --extra all
+
+See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
 
 conda
 -----
@@ -51,8 +84,6 @@ Now, you can install the latest stable release using:
 .. code-block:: console
 
    $ conda install torchgeo
-
-.. note:: The installation of TorchGeo in this manner is not supported on Windows since PyTorch from the conda-forge channel currently does not support Windows. Users are recommended to use pip instead.
 
 Conda does not support development versions or optional dependencies. If you install from conda-forge, only stable releases and required dependencies will be installed. Development versions or optional dependencies can be installed afterwards using pip.
 
@@ -79,7 +110,7 @@ Optional dependencies can be installed by enabling build variants:
 
 .. code-block:: console
 
-   $ spack install py-torchgeo+datasets
+   $ spack install py-torchgeo+datasets+models
    $ spack install py-torchgeo+style+tests
 
 Run ``spack info py-torchgeo`` for a complete list of variants. See the `spack documentation <https://spack.readthedocs.io/en/latest/>`_ for more details.

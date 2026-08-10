@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """PASTIS dataset."""
@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -17,7 +17,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class PASTIS(NonGeoDataset):
@@ -93,28 +100,33 @@ class PASTIS(NonGeoDataset):
         'sorghum',
         'void_label',  # for parcels mostly outside their patch
     )
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (174, 199, 232, 255),
-        2: (255, 127, 14, 255),
-        3: (255, 187, 120, 255),
-        4: (44, 160, 44, 255),
-        5: (152, 223, 138, 255),
-        6: (214, 39, 40, 255),
-        7: (255, 152, 150, 255),
-        8: (148, 103, 189, 255),
-        9: (197, 176, 213, 255),
-        10: (140, 86, 75, 255),
-        11: (196, 156, 148, 255),
-        12: (227, 119, 194, 255),
-        13: (247, 182, 210, 255),
-        14: (127, 127, 127, 255),
-        15: (199, 199, 199, 255),
-        16: (188, 189, 34, 255),
-        17: (219, 219, 141, 255),
-        18: (23, 190, 207, 255),
-        19: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (174, 199, 232, 255),
+                (255, 127, 14, 255),
+                (255, 187, 120, 255),
+                (44, 160, 44, 255),
+                (152, 223, 138, 255),
+                (214, 39, 40, 255),
+                (255, 152, 150, 255),
+                (148, 103, 189, 255),
+                (197, 176, 213, 255),
+                (140, 86, 75, 255),
+                (196, 156, 148, 255),
+                (227, 119, 194, 255),
+                (247, 182, 210, 255),
+                (127, 127, 127, 255),
+                (199, 199, 199, 255),
+                (188, 189, 34, 255),
+                (219, 219, 141, 255),
+                (23, 190, 207, 255),
+                (255, 255, 255, 255),
+            ]
+        )
+        / 255
+    )
     directory = 'PASTIS-R'
     filename = 'PASTIS-R.zip'
     url = 'https://zenodo.org/records/5735646/files/PASTIS-R.zip?download=1'
@@ -126,14 +138,28 @@ class PASTIS(NonGeoDataset):
         'semantic': os.path.join('ANNOTATIONS', 'TARGET_'),
         'instance': os.path.join('INSTANCE_ANNOTATIONS', 'INSTANCES_'),
     }
+    s2_bands: ClassVar[tuple[str, ...]] = (
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B11',
+        'B12',
+    )
+    s1a_bands: ClassVar[tuple[str, ...]] = ('S1A_VV', 'S1A_VH', 'S1A_VV_VH')
+    s1d_bands: ClassVar[tuple[str, ...]] = ('S1D_VV', 'S1D_VH', 'S1D_VV_VH')
 
     def __init__(
         self,
         root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
-        bands: str = 's2',
+        bands: Sequence[str] = s2_bands,
         mode: str = 'semantic',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -143,8 +169,9 @@ class PASTIS(NonGeoDataset):
             root: root directory where dataset can be found
             folds: a sequence of integers from 0 to 4 specifying which of the five
                 dataset folds to include
-            bands: load Sentinel-1 ascending path data (s1a), Sentinel-1 descending path
-                data (s1d), or Sentinel-2 data (s2)
+            bands: sequence of band names to load. Must be a non-empty subset of
+                ``s2_bands``, ``s1a_bands``, or ``s1d_bands``. All bands must
+                come from the same sensor. Defaults to all S2 bands.
             mode: load semantic (semantic) or instance (instance) annotations
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -156,11 +183,29 @@ class PASTIS(NonGeoDataset):
         """
         for fold in folds:
             assert 1 <= fold <= 5
-        assert bands in ['s1a', 's1d', 's2']
         assert mode in ['semantic', 'instance']
+
+        bands_set = set(bands)
+        if not bands_set:
+            raise ValueError('bands must not be empty')
+        if bands_set <= set(self.s2_bands):
+            self.image_key = 's2'
+            all_bands: tuple[str, ...] = self.s2_bands
+        elif bands_set <= set(self.s1a_bands):
+            self.image_key = 's1a'
+            all_bands = self.s1a_bands
+        elif bands_set <= set(self.s1d_bands):
+            self.image_key = 's1d'
+            all_bands = self.s1d_bands
+        else:
+            raise ValueError(
+                f'bands must be a subset of s2_bands, s1a_bands, or s1d_bands; got {bands}'
+            )
+        self.bands = tuple(bands)
+        self.band_indices = [all_bands.index(b) for b in self.bands]
+
         self.root = root
         self.folds = folds
-        self.bands = bands
         self.mode = mode
         self.transforms = transforms
         self.download = download
@@ -168,18 +213,7 @@ class PASTIS(NonGeoDataset):
         self._verify()
         self.files = self._load_files()
 
-        colors = []
-        for i in range(len(self.cmap)):
-            colors.append(
-                (
-                    self.cmap[i][0] / 255.0,
-                    self.cmap[i][1] / 255.0,
-                    self.cmap[i][2] / 255.0,
-                )
-            )
-        self._cmap = ListedColormap(colors)
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -218,10 +252,9 @@ class PASTIS(NonGeoDataset):
         Returns:
             the time-series
         """
-        path = self.files[index][self.bands]
-        array = np.load(path)
-
-        tensor = torch.from_numpy(array)
+        path = self.files[index][self.image_key]
+        array = np.load(path)[:, self.band_indices, :, :]
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_semantic_targets(self, index: int) -> Tensor:
@@ -290,13 +323,11 @@ class PASTIS(NonGeoDataset):
         Returns:
             list of dicts containing image and semantic/instance target file paths
         """
-        self.idxs = []
         metadata_fn = os.path.join(self.root, self.directory, 'metadata.geojson')
-        with fiona.open(metadata_fn) as f:
-            for row in f:
-                fold = int(row['properties']['Fold'])
-                if fold in self.folds:
-                    self.idxs.append(row['properties']['ID_PATCH'])
+        gdf = gpd.read_file(metadata_fn)
+        gdf['Fold'] = gdf['Fold'].astype(int)
+        gdf = gdf[gdf['Fold'].isin(self.folds)]
+        self.idxs = gdf['ID_PATCH'].tolist()
 
         files = []
         for i in self.idxs:
@@ -345,10 +376,7 @@ class PASTIS(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.filename), self.root)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -360,8 +388,12 @@ class PASTIS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        # Keep the RGB bands and convert to T x H x W x C format
-        images = sample['image'][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
+        # Keep the RGB bands and quantile-normalize each frame independently.
+        rgb_frames = sample['image'][:, [2, 1, 0], :, :]
+        rgb_frames = torch.stack(
+            [quantile_normalization(frame) for frame in rgb_frames]
+        )
+        images = rgb_frames.numpy().transpose(0, 2, 3, 1)
         mask = sample['mask'].numpy()
 
         if self.mode == 'instance':
@@ -379,15 +411,15 @@ class PASTIS(NonGeoDataset):
                 predictions = label[predictions].numpy()
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
-        axs[0].imshow(images[0] / 5000)
-        axs[1].imshow(images[1] / 5000)
-        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self._cmap, interpolation='none')
+        axs[0].imshow(images[0])
+        axs[1].imshow(images[1])
+        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
         axs[0].axis('off')
         axs[1].axis('off')
         axs[2].axis('off')
         if showing_predictions:
             axs[3].imshow(
-                predictions, vmin=0, vmax=19, cmap=self._cmap, interpolation='none'
+                predictions, vmin=0, vmax=19, cmap=self.cmap, interpolation='none'
             )
             axs[3].axis('off')
 
@@ -401,3 +433,17 @@ class PASTIS(NonGeoDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class PASTIS100(PASTIS):
+    """Subset of PASTIS-R containing only 100 time-series.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    .. versionadded:: 0.9
+    """
+
+    directory = 'PASTIS-R'
+    filename = 'PASTIS-R.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/PASTIS-R-100/resolve/acd0180e834e40934b79c0121f606d4f8ca3299d/PASTIS-R.zip'
+    md5 = '6b4a428bd27cdbc2abda44973ba42892'

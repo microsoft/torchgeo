@@ -1,10 +1,10 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SemanticSegmentation
   init_args:
     loss: 'ce'
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 13
+    in_channels: 12
     num_classes: 3
     num_filters: 1
 data:
@@ -15,3 +15,16 @@ data:
   dict_kwargs:
     sentinel2_paths: 'tests/data/sentinel2'
     eurocrops_paths: 'tests/data/eurocrops'
+    sentinel2_bands:
+      - 'B01'
+      - 'B02'
+      - 'B03'
+      - 'B04'
+      - 'B05'
+      - 'B06'
+      - 'B07'
+      - 'B08'
+      - 'B8A'
+      - 'B09'
+      - 'B11'
+      - 'B12'

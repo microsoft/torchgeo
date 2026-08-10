@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -8,13 +8,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, DigitalTyphoon
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.10')
 
 
 class TestDigitalTyphoon:
@@ -32,11 +32,6 @@ class TestDigitalTyphoon:
         url = os.path.join('tests', 'data', 'digital_typhoon', 'WP.tar.gz{0}')
         monkeypatch.setattr(DigitalTyphoon, 'url', url)
 
-        md5sums = {
-            'aa': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
-            'ab': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
-        }
-        monkeypatch.setattr(DigitalTyphoon, 'md5sums', md5sums)
         root = tmp_path
 
         transforms = nn.Identity()
@@ -47,7 +42,6 @@ class TestDigitalTyphoon:
             max_feature_value=max_features,
             transforms=transforms,
             download=True,
-            checksum=True,
         )
 
     def test_len(self, dataset: DigitalTyphoon) -> None:

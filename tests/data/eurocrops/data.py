@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import csv
-import hashlib
 import os
 import zipfile
 
 import fiona
 from rasterio.crs import CRS
-from shapely.geometry import Polygon, mapping
+from shapely import Polygon
+from shapely.geometry import mapping
 
 # Size of example crop field polygon in projection units.
 # This is set to align with Sentinel-2 test data, which is a 128x128 image at 10
@@ -66,11 +66,3 @@ if __name__ == '__main__':
 
     # create csv metadata file
     create_csv(csvname)
-
-    # Compute checksums
-    with open(zipfilename, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{zipfilename}: {md5}')
-    with open(csvname, 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{csvname}: {md5}')

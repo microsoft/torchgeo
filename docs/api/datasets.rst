@@ -3,544 +3,95 @@ torchgeo.datasets
 
 .. module:: torchgeo.datasets
 
-In :mod:`torchgeo`, we define two types of datasets: :ref:`Geospatial Datasets` and :ref:`Non-geospatial Datasets`. These abstract base classes are documented in more detail in :ref:`Base Classes`.
+.. toctree::
+   :maxdepth: 0
+   :hidden:
+   :glob:
 
-.. _Geospatial Datasets:
+   datasets/*
 
-Geospatial Datasets
--------------------
+TorchGeo defines several kinds of datasets for geospatial data.
 
-:class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
+Benchmark Datasets
+------------------
 
-.. csv-table::
-   :widths: 30 15 20 36 20 15
+Curated benchmark datasets allow for model training and evaluation. They typically provide both input images and output labels, and target a variety of downstream applications.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
    :header-rows: 1
    :align: center
-   :file: datasets/geo_datasets.csv
+   :file: datasets/benchmark.csv
 
-Aboveground Woody Biomass
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: AbovegroundLiveWoodyBiomassDensity
-
-AgriFieldNet
-^^^^^^^^^^^^
-
-.. autoclass:: AgriFieldNet
-
-Airphen
-^^^^^^^
-
-.. autoclass:: Airphen
-
-Aster Global DEM
+Copernicus-Bench
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: AsterGDEM
-
-Canadian Building Footprints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CanadianBuildingFootprints
-
-Chesapeake Land Cover
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: Chesapeake
-.. autoclass:: ChesapeakeDC
-.. autoclass:: ChesapeakeDE
-.. autoclass:: ChesapeakeMD
-.. autoclass:: ChesapeakeNY
-.. autoclass:: ChesapeakePA
-.. autoclass:: ChesapeakeVA
-.. autoclass:: ChesapeakeWV
-.. autoclass:: ChesapeakeCVPR
-
-Global Mangrove Distribution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CMSGlobalMangroveCanopy
-
-Cropland Data Layer
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CDL
-
-EDDMapS
-^^^^^^^
-
-.. autoclass:: EDDMapS
-
-EnMAP
-^^^^^
-
-.. autoclass:: EnMAP
-
-EnviroAtlas
-^^^^^^^^^^^
-
-.. autoclass:: EnviroAtlas
-
-Esri2020
-^^^^^^^^
-
-.. autoclass:: Esri2020
-
-EU-DEM
-^^^^^^
-
-.. autoclass:: EUDEM
-
-EuroCrops
-^^^^^^^^^
-
-.. autoclass:: EuroCrops
-
-GBIF
-^^^^
-
-.. autoclass:: GBIF
-
-GlobBiomass
-^^^^^^^^^^^
-
-.. autoclass:: GlobBiomass
-
-iNaturalist
-^^^^^^^^^^^
-
-.. autoclass:: INaturalist
-
-I/O Bench
-^^^^^^^^^
-
-.. autoclass:: IOBench
-
-L7 Irish
-^^^^^^^^
-
-.. autoclass:: L7Irish
-
-L8 Biome
-^^^^^^^^
-
-.. autoclass:: L8Biome
-
-LandCover.ai Geo
-^^^^^^^^^^^^^^^^
-
-.. autoclass:: LandCoverAIBase
-.. autoclass:: LandCoverAIGeo
-
-Landsat
-^^^^^^^
-
-.. autoclass:: Landsat
-.. autoclass:: Landsat9
-.. autoclass:: Landsat8
-.. autoclass:: Landsat7
-.. autoclass:: Landsat5TM
-.. autoclass:: Landsat5MSS
-.. autoclass:: Landsat4TM
-.. autoclass:: Landsat4MSS
-.. autoclass:: Landsat3
-.. autoclass:: Landsat2
-.. autoclass:: Landsat1
-
-MMFlood
-^^^^^^^
-.. autoclass:: MMFlood
-
-NAIP
-^^^^
-
-.. autoclass:: NAIP
-
-NCCM
-^^^^
-
-.. autoclass:: NCCM
-
-NLCD
-^^^^
-
-.. autoclass:: NLCD
-
-Open Buildings
-^^^^^^^^^^^^^^
-
-.. autoclass:: OpenBuildings
-
-PRISMA
-^^^^^^
-
-.. autoclass:: PRISMA
-
-Sentinel
-^^^^^^^^
-
-.. autoclass:: Sentinel
-.. autoclass:: Sentinel1
-.. autoclass:: Sentinel2
-
-South Africa Crop Type
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SouthAfricaCropType
-
-South America Soybean
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SouthAmericaSoybean
-
-.. _Non-geospatial Datasets:
-
-Non-geospatial Datasets
------------------------
-
-:class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
+Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream tasks hierarchically organized across preprocessing (e.g., cloud removal), base applications (e.g., land cover classification), and specialized applications (e.g., air quality estimation). This benchmark enables systematic assessment of foundation model performances across various Sentinel missions on different levels of practical applications.
 
 .. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, SR = super resolution
    :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: datasets/non_geo_datasets.csv
-
-ADVANCE
-^^^^^^^
-
-.. autoclass:: ADVANCE
-
-Benin Cashew Plantations
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: BeninSmallHolderCashews
-
-BigEarthNet
-^^^^^^^^^^^
-
-.. autoclass:: BigEarthNet
-
-BioMassters
-^^^^^^^^^^^
-
-.. autoclass:: BioMassters
-
-BRIGHT
-^^^^^^
-
-.. autoclass:: BRIGHTDFC2025
-
-CaBuAr
-^^^^^^
-
-.. autoclass:: CaBuAr
-
-CaFFe
-^^^^^
-
-.. autoclass:: CaFFe
-
-ChaBuD
-^^^^^^
-
-.. autoclass:: ChaBuD
-
-Cloud Cover Detection
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: CloudCoverDetection
-
-COWC
-^^^^
-
-.. autoclass:: COWC
-.. autoclass:: COWCCounting
-.. autoclass:: COWCDetection
-
-CropHarvest
-^^^^^^^^^^^
-
-.. autoclass:: CropHarvest
-
-Kenya Crop Type
-^^^^^^^^^^^^^^^
-
-.. autoclass:: CV4AKenyaCropType
-
-DeepGlobe Land Cover
-^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: DeepGlobeLandCover
-
-DFC2022
-^^^^^^^
-
-.. autoclass:: DFC2022
-
-
-Digital Typhoon
-^^^^^^^^^^^^^^^
-
-.. autoclass:: DigitalTyphoon
-
-ETCI2021 Flood Detection
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: ETCI2021
-
-EuroSAT
-^^^^^^^
-
-.. autoclass:: EuroSAT
-.. autoclass:: EuroSATSpatial
-.. autoclass:: EuroSAT100
-
-FAIR1M
-^^^^^^
-
-.. autoclass:: FAIR1M
-
-Fields Of The World
-^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: FieldsOfTheWorld
-
-FireRisk
-^^^^^^^^
-
-.. autoclass:: FireRisk
-
-Forest Damage
-^^^^^^^^^^^^^
-
-.. autoclass:: ForestDamage
-
-GeoNRW
-^^^^^^^
-
-.. autoclass:: GeoNRW
-
-GID-15
-^^^^^^
-
-.. autoclass:: GID15
-
-HySpecNet-11k
-^^^^^^^^^^^^^
-
-.. autoclass:: HySpecNet11k
-
-IDTReeS
-^^^^^^^
-
-.. autoclass:: IDTReeS
-
-Inria Aerial Image Labeling
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: InriaAerialImageLabeling
-
-LandCover.ai
-^^^^^^^^^^^^
-
-.. autoclass:: LandCoverAI
-.. autoclass:: LandCoverAI100
-
-LEVIR-CD
-^^^^^^^^
-
-.. autoclass:: LEVIRCDBase
-.. autoclass:: LEVIRCD
-
-LEVIR-CD+
-^^^^^^^^^
-
-.. autoclass:: LEVIRCDPlus
-
-LoveDA
-^^^^^^
-
-.. autoclass:: LoveDA
-
-MapInWild
-^^^^^^^^^
-
-.. autoclass:: MapInWild
-
-MDAS
-^^^^
-
-.. autoclass:: MDAS
-
-Million-AID
-^^^^^^^^^^^
-
-.. autoclass:: MillionAID
-
-MMEarth
-^^^^^^^^
-
-.. autoclass:: MMEarth
-
-NASA Marine Debris
-^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: NASAMarineDebris
-
-OSCD
-^^^^
-
-.. autoclass:: OSCD
-
-PASTIS
-^^^^^^
-
-.. autoclass:: PASTIS
-
-PatternNet
-^^^^^^^^^^
-
-.. autoclass:: PatternNet
-
-Potsdam
-^^^^^^^
-
-.. autoclass:: Potsdam2D
-
-QuakeSet
-^^^^^^^^
-
-.. autoclass:: QuakeSet
-
-ReforesTree
-^^^^^^^^^^^
-
-.. autoclass:: ReforesTree
-
-RESISC45
-^^^^^^^^
-
-.. autoclass:: RESISC45
-
-Rwanda Field Boundary
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: RwandaFieldBoundary
-
-SatlasPretrain
-^^^^^^^^^^^^^^
-
-.. autoclass:: SatlasPretrain
-
-Seasonal Contrast
-^^^^^^^^^^^^^^^^^
-
-.. autoclass:: SeasonalContrastS2
-
-SeasoNet
-^^^^^^^^
-
-.. autoclass:: SeasoNet
-
-SEN12MS
-^^^^^^^
-
-.. autoclass:: SEN12MS
-
-SKIPP'D
-^^^^^^^
-
-.. autoclass:: SKIPPD
-
-SkyScript
-^^^^^^^^^
-
-.. autoclass:: SkyScript
-
-So2Sat
-^^^^^^
-
-.. autoclass:: So2Sat
+   :file: datasets/copernicus_bench.csv
 
 SpaceNet
 ^^^^^^^^
 
-.. autoclass:: SpaceNet
-.. autoclass:: SpaceNet1
-.. autoclass:: SpaceNet2
-.. autoclass:: SpaceNet3
-.. autoclass:: SpaceNet4
-.. autoclass:: SpaceNet5
-.. autoclass:: SpaceNet6
-.. autoclass:: SpaceNet7
-.. autoclass:: SpaceNet8
+The `SpaceNet Dataset <https://spacenet.ai/datasets/>`_ is hosted as an Amazon Web Services (AWS) `Public Dataset <https://registry.opendata.aws/spacenet/>`_. It contains ~67,000 square km of very high-resolution imagery, >11M building footprints, and ~20,000 km of road labels to ensure that there is adequate open source data available for geospatial machine learning research. SpaceNet Challenge Dataset's have a combination of very high resolution satellite imagery and high quality corresponding labels for foundational mapping features such as building footprints or road networks.
 
-SSL4EO
-^^^^^^
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :header-rows: 1
+   :align: center
+   :file: datasets/spacenet.csv
 
-.. autoclass:: SSL4EO
-.. autoclass:: SSL4EOL
-.. autoclass:: SSL4EOS12
+Pre-Training Datasets
+---------------------
 
-SSL4EO-L Benchmark
-^^^^^^^^^^^^^^^^^^
+Pre-training datasets are designed for foundation model development, providing millions of input images with global distributions. These datasets may come with output labels for supervised pre-training, or come without output labels for self-supervised pre-training.
 
-.. autoclass:: SSL4EOLBenchmark
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, LE = location encoding
+   :header-rows: 1
+   :align: center
+   :file: datasets/pretraining.csv
 
-SustainBench Crop Yield
-^^^^^^^^^^^^^^^^^^^^^^^
+Embeddings Datasets
+-------------------
 
-.. autoclass:: SustainBenchCropYield
+Embeddings are low-dimensional representations generated by foundation models. There are both patch-based embeddings designed for similarity search and pixel-based embeddings designed for applications like land cover mapping.
 
-TreeSatAI
-^^^^^^^^^
+.. csv-table:: Global coverage only implies land surfaces. Temporal resolution is divided into "snapshot" for embeddings generated from a single mosaic and "annual" for embeddings generated from annual time series data. \*Product has sparse spatial or temporal coverage.
+   :header-rows: 1
+   :align: center
+   :file: datasets/embeddings.csv
 
-.. autoclass:: TreeSatAI
+Image Sources
+-------------
 
-Tropical Cyclone
-^^^^^^^^^^^^^^^^
+Uncurated raster imagery can be used within TorchGeo, either for inference using a pre-trained model, or for training by combination with mask labels.
 
-.. autoclass:: TropicalCyclone
+.. csv-table::
+   :header-rows: 1
+   :align: center
+   :file: datasets/images.csv
 
-UC Merced
-^^^^^^^^^
+Mask Labels
+-----------
 
-.. autoclass:: UCMerced
+Uncurated raster and vector masks can be used within TorchGeo, typically in combination with an image source for model training.
 
-USAVars
-^^^^^^^
+.. csv-table::
+   :header-rows: 1
+   :align: center
+   :file: datasets/masks.csv
 
-.. autoclass:: USAVars
+Toy Datasets
+------------
 
-Vaihingen
-^^^^^^^^^
+Toy datasets are tiny, ~100 image datasets designed for tutorials, demos, or few-shot learning.
 
-.. autoclass:: Vaihingen2D
-
-VHR-10
-^^^^^^
-
-.. autoclass:: VHR10
-
-Western USA Live Fuel Moisture
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: WesternUSALiveFuelMoisture
-
-WorldStrat
-^^^^^^^^^^^
-.. autoclass:: WorldStrat
-
-xView2
-^^^^^^
-
-.. autoclass:: XView2
-
-ZueriCrop
-^^^^^^^^^
-
-.. autoclass:: ZueriCrop
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :header-rows: 1
+   :align: center
+   :file: datasets/toys.csv
 
 .. _Base Classes:
 
@@ -584,10 +135,13 @@ UnionDataset
 
 .. autoclass:: UnionDataset
 
+Mixins
+------
+
+.. autoclass:: PlottingMixin
+
 Utilities
 ---------
-
-.. autoclass:: BoundingBox
 
 Collation Functions
 ^^^^^^^^^^^^^^^^^^^

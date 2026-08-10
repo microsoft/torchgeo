@@ -1,12 +1,13 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """ChaBuD dataset."""
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -15,13 +16,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class ChaBuD(NonGeoDataset):
     """ChaBuD dataset.
 
-    `ChaBuD <https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023>`__
+    `ChaBuD <https://github.com/lccol/chabud-challenge-description>`__
     is a dataset for Change detection for Burned area Delineation and is used
     for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
 
@@ -43,7 +44,7 @@ class ChaBuD(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.1016/j.rse.2021.112603
+    * https://doi.org/10.1109/MGRS.2023.3292467
 
     .. note::
 
@@ -72,14 +73,14 @@ class ChaBuD(NonGeoDataset):
     folds: ClassVar[dict[str, list[int]]] = {'train': [1, 2, 3, 4], 'val': [0]}
     url = 'https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5'
     filename = 'train_eval.hdf5'
-    md5 = '15d78fb825f9a81dad600db828d22c08'
+    sha256 = '7aaf771259e81131e08671c9ecaeb2902378530957771a35fd142b157cb09931'
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val'] = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -92,7 +93,7 @@ class ChaBuD(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If ``split`` or ``bands`` arguments are invalid.
@@ -117,8 +118,11 @@ class ChaBuD(NonGeoDataset):
 
         self.uuids = self._load_uuids()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
+
+        .. versionchanged:: 0.8
+           Now returns a single T x C x H x W image.
 
         Args:
             index: index to return
@@ -178,11 +182,9 @@ class ChaBuD(NonGeoDataset):
         # index specified bands and concatenate
         pre_array = pre_array[..., self.band_indices]
         post_array = post_array[..., self.band_indices]
-        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
-
+        array = np.stack([pre_array, post_array]).astype(np.float32)
         tensor = torch.from_numpy(array)
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
+        tensor = einops.rearrange(tensor, 't h w c -> t c h w')
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -201,7 +203,8 @@ class ChaBuD(NonGeoDataset):
 
         tensor = torch.from_numpy(array)
         tensor = tensor.to(torch.long)
-        return tensor
+        # VideoSequential requires time dimension
+        return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -223,14 +226,11 @@ class ChaBuD(NonGeoDataset):
                 self.url,
                 self.root,
                 filename=self.filename,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -249,24 +249,24 @@ class ChaBuD(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample['mask'].numpy()
-        image_pre = sample['image'][: len(self.bands)][rgb_indices].numpy()
-        image_post = sample['image'][len(self.bands) :][rgb_indices].numpy()
-        image_pre = percentile_normalization(image_pre)
-        image_post = percentile_normalization(image_post)
+        mask = sample['mask'][0]
+        image_pre = sample['image'][0][rgb_indices]
+        image_post = sample['image'][1][rgb_indices]
+        image_pre = quantile_normalization(image_pre)
+        image_post = quantile_normalization(image_post)
 
         ncols = 3
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample['prediction']
+            prediction = sample['prediction'][0]
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
-        axs[0].imshow(np.transpose(image_pre, (1, 2, 0)))
+        axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')
-        axs[1].imshow(np.transpose(image_post, (1, 2, 0)))
+        axs[1].imshow(einops.rearrange(image_post, 'c h w -> h w c'))
         axs[1].axis('off')
         axs[2].imshow(mask)
         axs[2].axis('off')

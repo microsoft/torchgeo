@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """European Digital Elevation Model (EU-DEM) dataset."""
@@ -6,15 +6,15 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, check_integrity, extract_archive
+from .utils import Path, Sample, check_integrity, extract_archive
 
 
 class EUDEM(RasterDataset):
@@ -28,7 +28,7 @@ class EUDEM(RasterDataset):
     * DEMs at 25 m per pixel spatial resolution (~40,000x40,0000 px)
     * vertical accuracy of +/- 7 m RMSE
     * data fused from `ASTER GDEM
-      <https://lpdaac.usgs.gov/news/nasa-and-meti-release-aster-global-dem-version-3/>`_,
+      <https://www.earthdata.nasa.gov/news/nasa-meti-release-aster-global-dem-version-3>`_,
       `SRTM <https://science.jpl.nasa.gov/projects/srtm/>`_ and Russian topomaps
 
     Dataset format:
@@ -77,10 +77,11 @@ class EUDEM(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -89,15 +90,21 @@ class EUDEM(RasterDataset):
                 the collection of individual zip files for each tile should be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -107,7 +114,9 @@ class EUDEM(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -117,7 +126,8 @@ class EUDEM(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        paths = cast(Path, self.paths)
+        pathname = os.path.join(paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
@@ -129,10 +139,7 @@ class EUDEM(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

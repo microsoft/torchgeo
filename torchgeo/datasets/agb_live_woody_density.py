@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Aboveground Live Woody Biomass Density dataset."""
@@ -6,15 +6,15 @@
 import json
 import os
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path, download_url
+from .utils import Path, Sample, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -59,10 +59,11 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -70,15 +71,21 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -88,7 +95,9 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -106,23 +115,21 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        download_url(self.url, self.paths, self.base_filename)
+        paths = cast(Path, self.paths)
+        download_url(self.url, paths, self.base_filename)
 
-        with open(os.path.join(self.paths, self.base_filename)) as f:
+        with open(os.path.join(paths, self.base_filename)) as f:
             content = json.load(f)
 
         for item in content['features']:
             download_url(
                 item['properties']['Mg_px_1_download'],
-                self.paths,
+                paths,
                 item['properties']['tile_id'] + '.tif',
             )
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

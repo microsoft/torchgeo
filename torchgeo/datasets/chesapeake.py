@@ -1,40 +1,39 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Cheasapeake Bay Program Land Use/Land Cover Data Project datasets."""
 
 import glob
 import os
-import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
-import fiona
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyproj
 import rasterio
-import rasterio.mask
+import rasterio.windows
 import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
-from torch import Tensor
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, Sample, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, ABC):
     """Abstract base class for all Chesapeake datasets.
 
     `Chesapeake Bay Land Use and Land Cover (LULC) Database 2022 Edition
-    <https://www.chesapeakeconservancy.org/conservation-innovation-center/high-resolution-data/lulc-data-project-2022/>`_
+    <https://www.chesapeakeconservancy.org/projects/cbp-land-use-land-cover-data-project>`_
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time
@@ -74,65 +73,161 @@ class Chesapeake(RasterDataset, ABC):
 
     @property
     @abstractmethod
-    def md5s(self) -> dict[int, str]:
-        """Mapping between data year and zip file MD5."""
+    def sha256s(self) -> dict[int, str]:
+        """Mapping between data year and zip file sha256."""
 
     @property
     def state(self) -> str:
         """State abbreviation."""
         return self.__class__.__name__[-2:].lower()
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        11: (0, 92, 230, 255),
-        12: (0, 92, 230, 255),
-        13: (0, 92, 230, 255),
-        14: (0, 92, 230, 255),
-        15: (0, 92, 230, 255),
-        21: (0, 0, 0, 255),
-        22: (235, 6, 2, 255),
-        23: (89, 89, 89, 255),
-        24: (138, 138, 136, 255),
-        25: (138, 138, 136, 255),
-        26: (138, 138, 136, 255),
-        27: (115, 115, 0, 255),
-        28: (233, 255, 190, 255),
-        29: (255, 255, 115, 255),
-        41: (38, 115, 0, 255),
-        42: (56, 168, 0, 255),
-        51: (255, 255, 115, 255),
-        52: (255, 255, 115, 255),
-        53: (255, 255, 115, 255),
-        54: (170, 255, 0, 255),
-        55: (170, 255, 0, 255),
-        56: (170, 255, 0, 255),
-        62: (77, 209, 148, 255),
-        63: (77, 209, 148, 255),
-        64: (56, 168, 0, 255),
-        65: (38, 115, 0, 255),
-        72: (186, 245, 217, 255),
-        73: (186, 245, 217, 255),
-        74: (56, 168, 0, 255),
-        75: (38, 115, 0, 255),
-        83: (255, 211, 127, 255),
-        84: (255, 211, 127, 255),
-        85: (255, 211, 127, 255),
-        91: (0, 168, 132, 255),
-        92: (0, 168, 132, 255),
-        93: (0, 168, 132, 255),
-        94: (56, 168, 0, 255),
-        95: (38, 115, 0, 255),
-        127: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (0, 92, 230, 255),
+                (0, 92, 230, 255),
+                (0, 92, 230, 255),
+                (0, 92, 230, 255),
+                (0, 92, 230, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (0, 0, 0, 255),
+                (235, 6, 2, 255),
+                (89, 89, 89, 255),
+                (138, 138, 136, 255),
+                (138, 138, 136, 255),
+                (138, 138, 136, 255),
+                (115, 115, 0, 255),
+                (233, 255, 190, 255),
+                (255, 255, 115, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (38, 115, 0, 255),
+                (56, 168, 0, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 115, 255),
+                (255, 255, 115, 255),
+                (255, 255, 115, 255),
+                (170, 255, 0, 255),
+                (170, 255, 0, 255),
+                (170, 255, 0, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (77, 209, 148, 255),
+                (77, 209, 148, 255),
+                (56, 168, 0, 255),
+                (38, 115, 0, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (186, 245, 217, 255),
+                (186, 245, 217, 255),
+                (56, 168, 0, 255),
+                (38, 115, 0, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 211, 127, 255),
+                (255, 211, 127, 255),
+                (255, 211, 127, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (0, 168, 132, 255),
+                (0, 168, 132, 255),
+                (0, 168, 132, 255),
+                (56, 168, 0, 255),
+                (38, 115, 0, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+                (255, 255, 255, 255),
+            ]
+        )
+        / 255
+    )
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
 
@@ -140,16 +235,22 @@ class Chesapeake(RasterDataset, ABC):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
+            time_series: if True, stack data along the time series dimension
+                [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.9
+           The *time_series* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -163,7 +264,9 @@ class Chesapeake(RasterDataset, ABC):
 
         self._verify()
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -173,7 +276,8 @@ class Chesapeake(RasterDataset, ABC):
 
         # Check if the zip file has already been downloaded
         assert isinstance(self.paths, str | os.PathLike)
-        if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        if glob.glob(os.path.join(paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
 
@@ -187,22 +291,21 @@ class Chesapeake(RasterDataset, ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for year, md5 in self.md5s.items():
+        assert isinstance(self.paths, str | os.PathLike)
+        paths = cast(Path, self.paths)
+        for year, sha256 in self.sha256s.items():
             url = self.url.format(state=self.state, year=year)
-            print(url)
-            download_url(url, self.paths, md5=md5 if self.checksum else None)
+            download_url(url, paths, sha256=sha256 if self.checksum else None)
 
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
-        for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
+        paths = cast(Path, self.paths)
+        for file in glob.iglob(os.path.join(paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -218,29 +321,24 @@ class Chesapeake(RasterDataset, ABC):
            Method now takes a sample dict, not a Tensor. Additionally, possible to
            show subplot titles and/or use a custom suptitle.
         """
-        cmap = torch.zeros(max(self.cmap) + 1, 4, dtype=torch.uint8)
-        for key, value in self.cmap.items():
-            cmap[key] = torch.tensor(value)
-
-        mask = sample['mask'].squeeze(0)
-        mask = cmap[mask]
+        mask = sample['mask']
         ncols = 1
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze(0)
-            pred = cmap[pred]
+            pred = sample['prediction']
             ncols = 2
 
         fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(4 * ncols, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 128, 'interpolation': 'none'}
 
-        axs[0, 0].imshow(mask)
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis('off')
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(pred)
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')
@@ -254,63 +352,63 @@ class Chesapeake(RasterDataset, ABC):
 class ChesapeakeDC(Chesapeake):
     """This subset of the dataset contains data only for Washington, D.C."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2013: '9f1df21afbb9d5c0fcf33af7f6750a7f',
-        2017: 'c45e4af2950e1c93ecd47b61af296d9b',
+    sha256s: ClassVar[dict[int, str]] = {
+        2013: '13c776f8690a19c4088df6f4c143bca9650ce6cfe5c4091f3b774441eab8805a',
+        2017: 'f71ae8836bbbf7e4b60e4edf99e3a6eee16f62473dcb2c7f20ba5836c7a108c8',
     }
 
 
 class ChesapeakeDE(Chesapeake):
     """This subset of the dataset contains data only for Delaware."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2013: '5850d96d897babba85610658aeb5951a',
-        2018: 'ee94c8efeae423d898677104117bdebc',
+    sha256s: ClassVar[dict[int, str]] = {
+        2013: 'ced3e274bfd8531915cb21d1a3faad31c9de859648feb8b8daec245f343c0b5c',
+        2018: '4b996051cbd532dc4e43642d4ecbdf2dd55456a927edc35983b427f137145273',
     }
 
 
 class ChesapeakeMD(Chesapeake):
     """This subset of the dataset contains data only for Maryland."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2013: '9c3ca5040668d15284c1bd64b7d6c7a0',
-        2018: '0647530edf8bec6e60f82760dcc7db9c',
+    sha256s: ClassVar[dict[int, str]] = {
+        2013: 'e5a6a2c02f50295f6f13539092ce801c94263bd7ac304203cc2da2d4d774dd18',
+        2018: 'd3b70ae09737e119f5292b071f752add4c44c1f0a0b959a26305f2ceb0c583ec',
     }
 
 
 class ChesapeakeNY(Chesapeake):
     """This subset of the dataset contains data only for New York."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2013: '38a29b721610ba661a7f8b6ec71a48b7',
-        2017: '4c1b1a50fd9368cd7b8b12c4d80c63f3',
+    sha256s: ClassVar[dict[int, str]] = {
+        2013: '2b861e5893f9340fc792c3df2dedfd0230ee35b1cd22fb53cc258fa7a97f4d33',
+        2017: 'eceaae776c49636730a51b5abe93ec123000535e92aee37cf9594c8ba52cd41e',
     }
 
 
 class ChesapeakePA(Chesapeake):
     """This subset of the dataset contains data only for Pennsylvania."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2013: '86febd603a120a49ef7d23ef486152a3',
-        2017: 'b11d92e4471e8cb887c790d488a338c1',
+    sha256s: ClassVar[dict[int, str]] = {
+        2013: '5f197d18765ff8e0c837433c2eba285f97a1c5ac68c12d8c06fc4854c5df3d8c',
+        2017: 'f699ea705ae5bcda04e0eaa5c14369bccc1cec7ad65b1c4946134e8c55b84737',
     }
 
 
 class ChesapeakeVA(Chesapeake):
     """This subset of the dataset contains data only for Virginia."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2014: '49c9700c71854eebd00de24d8488eb7c',
-        2018: '51731c8b5632978bfd1df869ea10db5b',
+    sha256s: ClassVar[dict[int, str]] = {
+        2014: '9e71799f70c4c994eadeb126e4923e7b843dff335b46cb27a4785f1551660226',
+        2018: 'c7dd3514268f83fe8a3d650b3e686f4a7bce091b04f6e16a84e4f3d475bf19e9',
     }
 
 
 class ChesapeakeWV(Chesapeake):
     """This subset of the dataset contains data only for West Virginia."""
 
-    md5s: ClassVar[dict[int, str]] = {
-        2014: '32fea42fae147bd58a83e3ea6cccfb94',
-        2018: '80f25dcba72e39685ab33215c5d97292',
+    sha256s: ClassVar[dict[int, str]] = {
+        2014: 'a882edc5e71acae0da953e44266562a0a957c8b139a885a20bbd33b22fe43d42',
+        2018: '84c3577680bba0c2da179b0def119f014581cdf08d16039188d6e482a997cb8d',
     }
 
 
@@ -350,19 +448,31 @@ class ChesapeakeCVPR(GeoDataset):
         'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
 
-    crs = CRS.from_epsg(3857)
-    res = 1
+    _res = (1, 1)
 
-    lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 0),
-        1: (0, 197, 255, 255),
-        2: (38, 115, 0, 255),
-        3: (163, 255, 115, 255),
-        4: (255, 170, 0, 255),
-        5: (156, 156, 156, 255),
-        6: (0, 0, 0, 255),
-        15: (0, 0, 0, 0),
-    }
+    lc_cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 0),
+                (0, 197, 255, 255),
+                (38, 115, 0, 255),
+                (163, 255, 115, 255),
+                (255, 170, 0, 255),
+                (156, 156, 156, 255),
+                (0, 0, 0, 255),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+                (0, 0, 0, 0),
+            ]
+        )
+        / 255
+    )
 
     prior_color_matrix = np.array(
         [
@@ -422,13 +532,13 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, CRS]] = {
+    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ).transform,
+        ),
         'epsg:26918': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ).transform,
+        ),
     }
 
     def __init__(
@@ -436,7 +546,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['de-train'],
         layers: Sequence[str] = ['naip-new', 'lc'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -463,82 +573,67 @@ class ChesapeakeCVPR(GeoDataset):
         """
         for split in splits:
             assert split in self.splits
-        assert all([layer in self.valid_layers for layer in layers])
+        assert all(layer in self.valid_layers for layer in layers)
         self.root = root
         self.layers = layers
+        self.transforms = transforms
         self.cache = cache
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
-        super().__init__(transforms)
-
-        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
-        lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
-        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
-
-        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
-        nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
-        self._nlcd_cmap = ListedColormap(nlcd_colors[:, :3] / 255)
-
         # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint: float = 0
-        maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
-            for i, row in enumerate(f):
-                if row['properties']['split'] in splits:
-                    box = shapely.geometry.shape(row['geometry'])
-                    minx, miny, maxx, maxy = box.bounds
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
+        mint = pd.Timestamp.min
+        maxt = pd.Timestamp.max
+        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
+        gdf = gdf[gdf['split'].isin(splits)]
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
+            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
+        )
+        datetimes = [(mint, maxt)] * len(gdf)
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        gdf.set_crs('EPSG:3857', inplace=True)
+        gdf.set_index(index, inplace=True)
+        self.index = gdf
 
-                    prior_fn = row['properties']['lc'].replace(
-                        'lc.tif',
-                        'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-                    )
-
-                    self.index.insert(
-                        i,
-                        coords,
-                        {
-                            'naip-new': row['properties']['naip-new'],
-                            'naip-old': row['properties']['naip-old'],
-                            'landsat-leaf-on': row['properties']['landsat-leaf-on'],
-                            'landsat-leaf-off': row['properties']['landsat-leaf-off'],
-                            'lc': row['properties']['lc'],
-                            'nlcd': row['properties']['nlcd'],
-                            'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
-                        },
-                    )
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *index* is not found in the dataset.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
+        x, y, t = self._disambiguate_slice(index)
+        interval = pd.Interval(t.start, t.stop)
+        df = self.index.iloc[self.index.index.overlaps(interval)]
+        df = df.iloc[:: t.step]
+        df = df.cx[x.start : x.stop, y.start : y.stop]
 
-        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
+        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
+        sample: Sample = {
+            'bounds': self._slice_to_tensor(index),
+            'transform': torch.tensor(transform),
+        }
 
-        if len(filepaths) == 0:
+        images = []
+        masks = []
+        if df.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
-        elif len(filepaths) == 1:
-            filenames = filepaths[0]
-            query_geom_transformed = None  # is set by the first layer
+        elif len(df) == 1:
+            filenames = df.iloc[0]
+            query_box_transformed = None  # is set by the first layer
 
-            minx, maxx, miny, maxy, mint, maxt = query
-            query_box = shapely.geometry.box(minx, miny, maxx, maxy)
+            query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
             for layer in self.layers:
                 fn = filenames[layer]
@@ -546,16 +641,27 @@ class ChesapeakeCVPR(GeoDataset):
                 with rasterio.open(os.path.join(self.root, fn)) as f:
                     dst_crs = f.crs.to_string().lower()
 
-                    if query_geom_transformed is None:
+                    if query_box_transformed is None:
                         query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs], query_box
+                            self.p_transformers[dst_crs].transform, query_box
                         ).envelope
-                        query_geom_transformed = shapely.geometry.mapping(
-                            query_box_transformed
-                        )
 
-                    data, _ = rasterio.mask.mask(
-                        f, [query_geom_transformed], crop=True, all_touched=True
+                    # Use a boundless windowed read so the returned array
+                    # always matches the requested patch shape, even when
+                    # the query extends beyond the raster footprint. The
+                    # out-of-raster region is filled with nodata (or 0 if
+                    # the raster has no nodata defined).
+                    window = rasterio.windows.from_bounds(
+                        *query_box_transformed.bounds, transform=f.transform
+                    )
+                    out_height = round(window.height)
+                    out_width = round(window.width)
+                    fill_value = f.nodata if f.nodata is not None else 0
+                    data = f.read(
+                        window=window,
+                        boundless=True,
+                        fill_value=fill_value,
+                        out_shape=(f.count, out_height, out_width),
                     )
 
                 if layer in [
@@ -564,22 +670,19 @@ class ChesapeakeCVPR(GeoDataset):
                     'landsat-leaf-on',
                     'landsat-leaf-off',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in [
                     'lc',
                     'nlcd',
                     'buildings',
                     'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
-            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
+            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
-
-        sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
+        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
+        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -598,10 +701,8 @@ class ChesapeakeCVPR(GeoDataset):
 
         # Check if the zip files have already been downloaded
         if all(
-            [
-                os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
-                for subdataset in self.subdatasets
-            ]
+            os.path.exists(os.path.join(self.root, self.filenames[subdataset]))
+            for subdataset in self.subdatasets
         ):
             self._extract()
             return
@@ -630,10 +731,7 @@ class ChesapeakeCVPR(GeoDataset):
             extract_archive(os.path.join(self.root, self.filenames[subdataset]))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -678,14 +776,14 @@ class ChesapeakeCVPR(GeoDataset):
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation='none'
+                    img, vmin=0, vmax=255, cmap=NLCD.cmap, interpolation='none'
                 )
                 axs[i].axis('off')
             elif layer == 'lc':
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation='none'
+                    img, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
                 )
                 axs[i].axis('off')
             elif layer == 'buildings':
@@ -708,7 +806,7 @@ class ChesapeakeCVPR(GeoDataset):
 
         if showing_predictions:
             axs[i].imshow(
-                predictions, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation='none'
+                predictions, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
             )
             axs[i].axis('off')
             if show_titles:

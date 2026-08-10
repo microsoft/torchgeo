@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import csv
-import hashlib
 import os
 import shutil
 
 import numpy as np
 import rasterio
 
-metadata_train = 'The_BioMassters_-_features_metadata.csv.csv'
+metadata_train = 'biomassters_features_metadata.csv'
 
 csv_columns = [
     'filename',
@@ -131,7 +130,3 @@ if __name__ == '__main__':
     zip_dirs = ['train_features', 'test_features', 'train_agbm']
     for dir in zip_dirs:
         shutil.make_archive(dir, 'zip', dir)
-        # Compute checksums
-        with open(dir + '.zip', 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{dir}: {md5}')
