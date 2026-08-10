@@ -70,5 +70,6 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`VHR-10`,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB,CC-BY-NC-4.0
 :ref:`Vaihingen`,S,Aerial,33,6,"1,281--3,816",0.09,RGB,
 :ref:`Western USA Live Fuel Moisture`,R,"Landsat8, Sentinel-1",2615,-,-,-,-,CC-BY-NC-ND-4.0
+:ref:`WorldStrat`,SR,"Sentinel-2, SPOT 6/7","3,928",-,"263--1,054",1.5--10,"RGB, NIR, MSI","CC-BY-NC-4.0, CC-BY-4.0"
 :ref:`ZueriCrop`,"I, T",Sentinel-2,116K,48,24x24,10,MSI,CC-BY-NC-4.0
 :ref:`xBD`,CD,Maxar,"3,732",4,"1,024x1,024",0.8,RGB,CC-BY-NC-SA-4.0

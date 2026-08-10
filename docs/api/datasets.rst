@@ -17,7 +17,7 @@ Benchmark Datasets
 
 Curated benchmark datasets allow for model training and evaluation. They typically provide both input images and output labels, and target a variety of downstream applications.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, SR = super resolution
    :header-rows: 1
    :align: center
    :file: datasets/benchmark.csv
@@ -27,8 +27,7 @@ Copernicus-Bench
 
 Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream tasks hierarchically organized across preprocessing (e.g., cloud removal), base applications (e.g., land cover classification), and specialized applications (e.g., air quality estimation). This benchmark enables systematic assessment of foundation model performances across various Sentinel missions on different levels of practical applications.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, SR = super resolution
-   :widths: 15 7 15 20 12 11 12 15 13
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
    :header-rows: 1
    :align: center
    :file: datasets/copernicus_bench.csv

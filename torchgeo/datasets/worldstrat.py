@@ -128,7 +128,7 @@ class WorldStrat(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` or ``modalities``arguments are invalid
+            AssertionError: If *split* or *modalities* arguments are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert all(modality in self.all_modalities for modality in modalities), (
