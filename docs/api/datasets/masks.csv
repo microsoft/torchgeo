@@ -10,6 +10,7 @@ Dataset,Type,Source,Size (px),Resolution (m),License
 :ref:`GBIF`,Points,Citizen Scientists,-,-,CC0-1.0 OR CC-BY-4.0 OR CC-BY-NC-4.0
 :ref:`GlobBiomass`,Masks,Landsat,"45,000x45,000",100,CC-BY-4.0
 :ref:`Global Mangrove Distribution`,Masks,"Remote Sensing, In Situ Measurements",-,3,public domain
+:ref:`Global Mangrove Watch`,Masks,"Landsat, ALOS PALSAR","4,500x4,500",25,CC-BY-4.0
 :ref:`GlobalBuildingMap`,Masks,PlanetScope,180K,3,CC-BY-4.0
 :ref:`NCCM`,Masks,Sentinel-2,-,10,CC-BY-4.0
 :ref:`NLCD`,Masks,Landsat,-,30,public domain
