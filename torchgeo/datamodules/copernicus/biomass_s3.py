@@ -4,6 +4,7 @@
 """Copernicus-Bench Biomass-S3 datamodule."""
 
 from collections.abc import Callable
+from functools import partial
 from typing import Any, cast
 
 import kornia.augmentation as K
@@ -11,6 +12,7 @@ import torch
 from kornia.constants import DataKey, Resample
 
 from ...datasets import CopernicusBenchBiomassS3
+from ...datasets.utils import pad_across_batches
 from ..geo import NonGeoDataModule
 
 # Multiplicative scale factors from
@@ -43,33 +45,6 @@ TARGET_SIZE = (282, 282)
 # Dataset-wide biomass statistics after resizing masks to TARGET_SIZE.
 TARGET_MEAN = 93.197777079690
 TARGET_STD = 119.004185235754
-
-
-def _collate_time_series_batch(
-    batch: list[dict[str, torch.Tensor]],
-) -> dict[str, torch.Tensor]:
-    """Collate a time-series batch by padding temporal dimensions to a common length."""
-    lengths = [sample['image'].shape[0] for sample in batch]
-    max_length = max(lengths)
-    batch_size = len(batch)
-
-    collated: dict[str, torch.Tensor] = {}
-    for key in batch[0]:
-        values = [sample[key] for sample in batch]
-        value = values[0]
-
-        is_time_series_tensor = value.ndim > 0 and all(
-            item.shape[0] == length for item, length in zip(values, lengths)
-        )
-        if is_time_series_tensor:
-            padded = value.new_zeros((batch_size, max_length, *value.shape[1:]))
-            for i, item in enumerate(values):
-                padded[i, : item.shape[0]] = item
-            collated[key] = padded
-        else:
-            collated[key] = torch.stack(values)
-
-    return collated
 
 
 class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
@@ -128,7 +103,7 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
 
         normalizer = K.Normalize(mean=self.mean, std=self.std)
         if mode == 'time-series':
-            self.collate_fn = _collate_time_series_batch
+            self.collate_fn = partial(pad_across_batches, padding_length=4)
             self.aug = K.AugmentationSequential(
                 K.VideoSequential(normalizer),
                 data_keys=None,
