@@ -8,7 +8,7 @@ from .aurora import Aurora_Weights, aurora_swin_unet
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .changevit import ChangeViT
-from .convlstm import ConvLSTM
+from .convlstm import Conv3dLSTM, ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -84,6 +84,7 @@ __all__ = (
     'ChangeStar',
     'ChangeStarFarSeg',
     'ChangeViT',
+    'Conv3dLSTM',
     'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
