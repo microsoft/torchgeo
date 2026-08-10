@@ -52,7 +52,9 @@ class TesseraCDLDataModule(GeoDataModule):
             subfolder: Subdirectory inside `tessera_root` containing Tessera
                 embeddings (default: 'global_0.1_degree_representation').
         """
-        super().__init__(dataset_class=GeoDataset)
+        super().__init__(
+            dataset_class=GeoDataset, batch_size=batch_size, num_workers=num_workers
+        )
 
         self.tessera_root = tessera_root
         self.data_dir = data_dir
@@ -60,8 +62,6 @@ class TesseraCDLDataModule(GeoDataModule):
         self.classes = classes
         self.patch_size = patch_size
         self.num_train_patches = num_train_patches
-        self.batch_size = batch_size
-        self.num_workers = num_workers
         self.download = download
         self.subfolder = subfolder
         self.collate_fn = collate_fn_embeddings
@@ -93,13 +93,9 @@ class TesseraCDLDataModule(GeoDataModule):
             The intersection of the Tessera embeddings and CDL datasets.
 
         Raises:
-            FileNotFoundError: If the split's Tessera directory does not exist.
+            DatasetNotFoundError: If the split's Tessera directory has no data.
         """
         split_dir = Path(self.tessera_root) / split / self.subfolder / str(self.year)
-
-        if not split_dir.exists():
-            raise FileNotFoundError(f'Tessera directory not found: {split_dir}')
-
         tessera = TesseraEmbeddings(paths=str(split_dir))
         return tessera & cdl
 

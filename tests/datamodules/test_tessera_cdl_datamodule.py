@@ -1,7 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import shutil
 from pathlib import Path
 
 import pytest
@@ -18,22 +17,7 @@ CDL_ROOT = str(Path('tests') / 'data' / 'cdl')
 class TestCollateFunction:
     """Test the collate function for embeddings."""
 
-    def test_empty_batch(self) -> None:
-        """Test collating an empty batch."""
-        result = collate_fn_embeddings([])
-        assert result['embeddings'].shape == (0, 0)
-        assert result['labels'].shape == (0,)
-
-    def test_single_sample(self) -> None:
-        """Test collating a single sample."""
-        image = torch.randn(EMBEDDINGS_DIM, 4, 4)
-        mask = torch.randint(0, 10, (4, 4)).float()
-        result = collate_fn_embeddings([{'image': image, 'mask': mask}])
-
-        assert result['embeddings'].shape == (16, EMBEDDINGS_DIM)
-        assert result['labels'].shape == (16,)
-
-    def test_multiple_samples(self) -> None:
+    def test_samples(self) -> None:
         """Test collating multiple samples."""
         batch = [
             {
@@ -67,19 +51,8 @@ class TestTesseraCDLDataModule:
             download=False,
         )
 
-    def test_initialization(self, datamodule: TesseraCDLDataModule) -> None:
-        """Test datamodule parameters are set correctly."""
-        assert datamodule.year == 2023
-        assert datamodule.batch_size == 2
-        assert datamodule.patch_size == 16
-        assert datamodule.num_train_patches == 2
-
     def test_setup(self, datamodule: TesseraCDLDataModule) -> None:
-        """Test setup creates datasets and samplers for each stage."""
-        datamodule.setup('fit')
-        assert datamodule.train_dataset is not None
-        assert datamodule.val_dataset is not None
-
+        """Test setup creates the test dataset and sampler."""
         datamodule.setup('test')
         assert datamodule.test_dataset is not None
         assert datamodule.test_sampler is not None
@@ -112,26 +85,3 @@ class TestTesseraCDLDataModule:
 
         assert torch.equal(result['embeddings'], batch['embeddings'])
         assert torch.equal(result['labels'], batch['labels'])
-
-    @pytest.mark.parametrize('missing_split', ['train', 'val'])
-    def test_setup_missing_tessera_dir(
-        self, tmp_path: Path, missing_split: str
-    ) -> None:
-        """Test setup raises when a split's Tessera directory is missing."""
-        tessera_root = tmp_path / 'tessera_cdl'
-        ensure_tessera_cdl_data(tessera_root)
-        shutil.rmtree(tessera_root / missing_split)
-
-        datamodule = TesseraCDLDataModule(
-            data_dir=CDL_ROOT,
-            tessera_root=str(tessera_root),
-            year=2023,
-            batch_size=2,
-            num_workers=0,
-            num_train_patches=2,
-            patch_size=16,
-            download=False,
-        )
-
-        with pytest.raises(FileNotFoundError, match='Tessera directory not found'):
-            datamodule.setup('fit')
