@@ -79,7 +79,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
-from .flair import FLAIRHUB, FLAIRHUBToy
+from .flair import FLAIRHUB, FLAIRHUBBase, FLAIRHUBToy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -300,6 +300,7 @@ __all__ = (
     'EuroSAT100',
     'EuroSATSpatial',
     'EverWatch',
+    'FLAIRHUBBase',
     'FLAIRHUBToy',
     'FieldsOfTheWorld',
     'FireRisk',
