@@ -81,8 +81,7 @@ with rasterio.open(
 files = ['M-33-20-D-c-4-2_0', 'M-33-20-D-c-4-2_1']
 for split in ['train', 'val', 'test']:
     with open(f'{split}.txt', 'w') as f:
-        for file in files:
-            f.write(f'{file}\n')
+        f.writelines(f'{file}\n' for file in files)
 
 # Create output directory with pre-chipped images using PIL instead of cv2
 os.makedirs('output', exist_ok=True)

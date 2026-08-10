@@ -8,10 +8,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     CopernicusBench,
@@ -110,8 +110,8 @@ class TestCopernicusBench:
         plt.close()
 
     def test_not_rgb(self, dataset: CopernicusBench) -> None:
-        all_bands = list(dataset.all_bands)
-        rgb_bands = list(dataset.rgb_bands)
+        all_bands = list(dataset.dataset.all_bands)
+        rgb_bands = list(dataset.dataset.rgb_bands)
         for band in rgb_bands:
             all_bands.remove(band)
 

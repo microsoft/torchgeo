@@ -1,5 +1,5 @@
 model:
-  class_path: SpatioTemporalSegmentationTask
+  class_path: SpatioTemporalSegmentation
   init_args:
     model: 'convlstm'
     in_channels: 10

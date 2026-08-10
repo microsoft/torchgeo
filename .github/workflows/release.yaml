@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           enable-cache: true
@@ -35,7 +35,7 @@ jobs:
       - name: Run integration checks
         run: |
           pytest -m slow --force-enable-socket --durations=10 tests/samplers
-          pytest -m slow --force-enable-socket --durations=10 tests/trainers
+          pytest -m slow --force-enable-socket --durations=10 tests/tasks
           python -m torchgeo --help
           torchgeo --help
   notebooks:
@@ -43,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           enable-cache: true

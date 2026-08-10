@@ -48,7 +48,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     valid_countries = ('usa', 'brazil', 'argentina')
 
-    md5 = '362bad07b51a1264172b8376b39d1fc9'
+    sha256 = 'ff66f83a91a16b302c731c7efa4020ecf323d96beca2f1f9196a643efdb8ea4a'
 
     url = 'https://hf.co/datasets/torchgeo/sustainbench_crop_yield/resolve/eceefda0b866c321c18baa256205d21fa6f5eb8c/soybeans_updated.zip'
 
@@ -60,7 +60,7 @@ class SustainBenchCropYield(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'dev', 'test'] = 'train',
-        countries: list[Literal['usa', 'brazil', 'argentina']] = ['usa'],
+        countries: list[Literal['usa', 'brazil', 'argentina']] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -74,13 +74,15 @@ class SustainBenchCropYield(NonGeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, verify the checksum after downloading files (may be slow)
 
         Raises:
             AssertionError: if ``countries`` contains invalid countries or if ``split``
                 is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if countries is None:
+            countries = ['usa']
         assert set(countries).issubset(self.valid_countries), (
             f'Please choose a subset of these valid countried: {self.valid_countries}.'
         )
@@ -182,7 +184,7 @@ class SustainBenchCropYield(NonGeoDataset):
             self.url,
             self.root,
             filename=self.dir + '.zip',
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
         self._extract()
 

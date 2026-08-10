@@ -23,6 +23,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
    coordinate reference system (CRS)
        Synonym for :term:`spatial reference system (SRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
 
+   index
+       The lookup table of a geospatial dataset (``GeoDataset.index``): a mapping from each file's spatiotemporal footprint to its path, used to find which files a :term:`query` overlaps. It is metadata, not pixel data. Unrelated to a :term:`spectral index`; and note that the ``index`` argument of ``__getitem__`` is, despite its name, a :term:`query`.
+
    instance segmentation
        A computer vision task that involves predicting labels for each pixel in an image such that each object has a unique label.
 
@@ -35,6 +38,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
    projection
        A geometric transformation for portraying the surface of a 3D Earth onto a 2D planar image.
 
+   query
+       The spatiotemporal bounding box passed to a geospatial dataset's ``__getitem__`` (a ``GeoSlice``), describing *where and when to sample*. Distinct from the dataset's :term:`index`, which is *how* files are found. When a query is read in a file's native :term:`coordinate reference system (CRS)`, its box may align to a different grid than the index.
+
    region of interest (ROI)
        Synonym for :term:`area of interest (AOI)`. A particular spatial region to focus on.
 
@@ -46,6 +52,9 @@ A collection of common terms used in :mod:`torchgeo` that may be unfamiliar to e
 
    spatial reference system (SRS)
        Synonym for :term:`coordinate reference system (CRS)`. A system that defines how to locate geographic entities on a :term:`projected <projection>` surface.
+
+   spectral index
+       A per-pixel combination of spectral bands that highlights a phenomenon, such as NDVI (vegetation) or NDBI (built-up area). Unrelated to a dataset's :term:`index`.
 
    stitching
        Combining a collection of :term:`patches <patch>` into a single image. This is the reverse operation of :term:`tiling`.

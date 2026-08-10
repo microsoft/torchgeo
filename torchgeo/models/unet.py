@@ -6,8 +6,8 @@
 from typing import Any
 
 import segmentation_models_pytorch as smp
-import torch.nn as nn
 import torchvision.transforms.v2 as T
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
@@ -275,7 +275,7 @@ def unet(
     model: nn.Module = smp.create_model(*args, **kwargs)
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
 
         # Load full pretrained model
         if kwargs['classes'] == weights.meta['num_classes']:

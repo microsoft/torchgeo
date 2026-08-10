@@ -20,7 +20,8 @@ from torchgeo.datasets import (
 
 class TestINaturalist:
     @pytest.fixture(scope='class')
-    def dataset(self) -> INaturalist:
+    @classmethod
+    def dataset(cls) -> INaturalist:
         root = os.path.join('tests', 'data', 'inaturalist')
         return INaturalist(root)
 

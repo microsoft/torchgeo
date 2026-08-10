@@ -6,12 +6,14 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import cast
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import rasterio
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 from torch import Tensor
@@ -97,24 +99,29 @@ class SouthAfricaCropType(RasterDataset):
         'B12',
     )
     all_bands = s1_bands + s2_bands
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 0, 0, 255),
-        1: (255, 211, 0, 255),
-        2: (255, 37, 37, 255),
-        3: (0, 168, 226, 255),
-        4: (255, 158, 9, 255),
-        5: (37, 111, 0, 255),
-        6: (255, 255, 0, 255),
-        7: (222, 166, 9, 255),
-        8: (111, 166, 0, 255),
-        9: (0, 175, 73, 255),
-    }
+    cmap = ListedColormap(
+        np.array(
+            [
+                (0, 0, 0, 255),
+                (255, 211, 0, 255),
+                (255, 37, 37, 255),
+                (0, 168, 226, 255),
+                (255, 158, 9, 255),
+                (37, 111, 0, 255),
+                (255, 255, 0, 255),
+                (222, 166, 9, 255),
+                (111, 166, 0, 255),
+                (0, 175, 73, 255),
+            ]
+        )
+        / 255
+    )
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        classes: Sequence[int] = list(cmap.keys()),
+        classes: Sequence[int] = list(range(10)),
         bands: Sequence[str] = s2_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
@@ -139,8 +146,8 @@ class SouthAfricaCropType(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
-        assert set(classes) <= self.cmap.keys(), (
-            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= set(range(10)), (
+            'Only the following classes are valid: [0-9].'
         )
         assert 0 in classes, 'Classes must include the background class: 0'
 
@@ -159,11 +166,11 @@ class SouthAfricaCropType(RasterDataset):
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        self.ordinal_map = torch.zeros(10, dtype=self.dtype)
+        self.inverse_map = torch.zeros(len(classes), dtype=self.dtype)
         for v, k in enumerate(classes):
             self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+            self.inverse_map[v] = k
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -304,25 +311,26 @@ class SouthAfricaCropType(RasterDataset):
         image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = quantile_normalization(image)
 
-        mask = sample['mask'].squeeze()
+        mask = self.inverse_map[sample['mask']]
         ncols = 2
 
         showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample['prediction'].squeeze()
+            pred = self.inverse_map[sample['prediction']]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 9, 'interpolation': 'none'}
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].imshow(mask, **kwargs)
         axs[1].axis('off')
         if show_titles:
             axs[0].set_title('Image')
             axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(pred)
+            axs[2].imshow(pred, **kwargs)
             axs[2].axis('off')
             if show_titles:
                 axs[2].set_title('Prediction')

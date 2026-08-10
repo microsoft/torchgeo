@@ -72,7 +72,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l1_cloud_s3/cloud_s3.zip'
-    md5 = '1f82a8ccf16a0c44f0b1729e523e343a'
+    sha256 = '02765fc0d80056eadb94ff60d665b36b17f64426c174b3a490c071a7005fe566'
     zipfile = 'cloud_s3.zip'
     directory = 'cloud_s3'
     filename_regex = r'S3[AB]_OL_1_EFR____(?P<date>\d{8}T\d{6})'
@@ -130,7 +130,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.

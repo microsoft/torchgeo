@@ -63,7 +63,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/1ce6f1bfb56db63fd91b6ecc466ea67f2509774c/'
     filename = 'EuroSATallBands.zip'
-    md5 = '5ac12b3b2557aa56e1826e981e8e200e'
+    sha256 = '751f070f9bffa2eed48b24ca2dd0b02959280c08837e8c9a5532a67ba611df59'
 
     # For some reason the class directories are actually nested in this directory
     base_dir = os.path.join(
@@ -76,10 +76,10 @@ class EuroSAT(NonGeoClassificationDataset):
         'val': 'eurosat-val.txt',
         'test': 'eurosat-test.txt',
     }
-    split_md5s: ClassVar[dict[str, str]] = {
-        'train': '908f142e73d6acdf3f482c5e80d851b1',
-        'val': '95de90f2aa998f70a3b2416bfe0687b4',
-        'test': '7ae5ab94471417b6e315763121e67c5f',
+    split_sha256s: ClassVar[dict[str, str]] = {
+        'train': '1c1d2e855f95deee605a3d992f914d113fddbecf422ec61648057d029a37d695',
+        'val': 'b385741f31daa9f1250cf1e1fe03adfab394e1172e0693df40141af004f60330',
+        'test': 'cf37948894c12bd953930ff54ee9b7abf0b31478abb8d25fd2c6c721db74c592',
     }
 
     all_band_names = (
@@ -123,7 +123,7 @@ class EuroSAT(NonGeoClassificationDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -191,7 +191,7 @@ class EuroSAT(NonGeoClassificationDataset):
                 download_url(
                     self.url + self.split_filenames[self.split],
                     self.root,
-                    md5=self.split_md5s[self.split] if self.checksum else None,
+                    sha256=self.split_sha256s[self.split] if self.checksum else None,
                 )
             else:
                 raise DatasetNotFoundError(self)
@@ -207,7 +207,7 @@ class EuroSAT(NonGeoClassificationDataset):
             download_and_extract_archive(
                 self.url + self.filename,
                 self.root,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
         else:
             raise DatasetNotFoundError(self)
@@ -294,10 +294,10 @@ class EuroSATSpatial(EuroSAT):
         'val': 'eurosat-spatial-val.txt',
         'test': 'eurosat-spatial-test.txt',
     }
-    split_md5s: ClassVar[dict[str, str]] = {
-        'train': '7be3254be39f23ce4d4d144290c93292',
-        'val': 'acf392290050bb3df790dc8fc0ebf193',
-        'test': '5ec1733f9c16116bf0aa2d921fc613ef',
+    split_sha256s: ClassVar[dict[str, str]] = {
+        'train': '2db7d455afb8dcbca898ea19a00f1f90c091734efdbba89e22aaf24056da243f',
+        'val': '6c758477604b7057a0fd990d7f6327b63b99a6725aac11a6a9d0174a7fdd8f0b',
+        'test': 'de22dec83d350cac3b3e4ca8e285cb6733c81ab94bf5bcf9213a567993402452',
     }
 
 
@@ -313,15 +313,15 @@ class EuroSAT100(EuroSAT):
     """
 
     filename = 'EuroSAT100.zip'
-    md5 = 'c21c649ba747e86eda813407ef17d596'
+    sha256 = '2ed4bb4a6808004c98691f64b366827f7783c76a49151e7c2b70423eb77a5b76'
 
     split_filenames: ClassVar[dict[str, str]] = {
         'train': 'eurosat-100-train.txt',
         'val': 'eurosat-100-val.txt',
         'test': 'eurosat-100-test.txt',
     }
-    split_md5s: ClassVar[dict[str, str]] = {
-        'train': '033d0c23e3a75e3fa79618b0e35fe1c7',
-        'val': '3e3f8b3c344182b8d126c4cc88f3f215',
-        'test': 'f908f151b950f270ad18e61153579794',
+    split_sha256s: ClassVar[dict[str, str]] = {
+        'train': '7f2416377fc379d43197512ef2f7582e87f62c7b2b63ac576bd5c18f110e0a20',
+        'val': '09e4744d15299c0e5b39a5bb211ce245b8dbaeafc5353ce3372f5db69f6e59d8',
+        'test': '576738254dffa4fd3cdefed1763ecbd9f6e2b4de0f5ec8a9aa4ff301a6d8e00e',
     }
