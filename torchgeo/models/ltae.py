@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from typing import cast
 
 import torch
+from einops import rearrange
 from torch import Tensor, nn
 
 
@@ -199,7 +200,8 @@ class DatePositionalEncoding(nn.Module):
             Positional encoding of shape ``(B, T, d)`` or ``(B, T, d * repeat)``.
         """
         denom = cast(Tensor, self.denom)
-        pe = batch_positions.unsqueeze(-1).float() * denom.unsqueeze(0).unsqueeze(0)
+        positions = rearrange(batch_positions, 'b t -> b t 1').float()
+        pe = positions * rearrange(denom, 'd -> 1 1 d')
         pe[..., 0::2].sin_()
         pe[..., 1::2].cos_()
         if self.repeat is not None:
