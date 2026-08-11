@@ -133,7 +133,7 @@ class TestCopernicusFMBase:
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
-    def test_copernicusfm_spectral(self, use_bfloat16: None) -> None:
+    def test_copernicusfm_spectral(self, use_float16: None) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 4, 28, 28)
         metadata = torch.rand(1, 4) + 1
