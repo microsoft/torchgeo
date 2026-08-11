@@ -15,10 +15,10 @@ class TestFarSeg:
     )
     def test_valid_backbone(self, backbone: str) -> None:
         model = FarSeg(classes=4, backbone=backbone)
-        x = torch.randn(2, 3, 128, 128)
+        x = torch.randn(2, 3, 32, 32)
         y = model(x)
 
-        assert y.shape == (2, 4, 128, 128)
+        assert y.shape == (2, 4, 32, 32)
 
     def test_invalid_backbone(self) -> None:
         match = 'unknown backbone: anynet.'
