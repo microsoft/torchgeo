@@ -802,7 +802,7 @@ class Presto_Weights(WeightsEnum):
     """
 
     PRESTO = Weights(
-        url='https://hf.co/torchgeo/presto/resolve/40de9c69b1611bb11de7b572cf3d24bb60cb8c82/model-bfa691d3.pth',
+        url='https://hf.co/torchgeo/presto/resolve/43f8d500a930772d226b309a06ec32be6dc077dd/model-e5e57c68.pth',
         transforms=nn.Identity(),
         meta={
             'dataset': 'LEM (Presto pretraining dataset)',

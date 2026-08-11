@@ -33,7 +33,7 @@ class Unet_Weights(WeightsEnum):
     """
 
     SENTINEL2_2CLASS_FTW = Weights(
-        url='https://huggingface.co/torchgeo/ftw/resolve/d2fdab6ea9d9cd38b491292cc9a5c8642533cef5/commercial/2-class/sentinel2_unet_effb3-9c04b7c6.pth',
+        url='https://hf.co/torchgeo/ftw/resolve/2ff807f35ec4e04ab329cd66de6117d8b4c26578/commercial/2-class/sentinel2_unet_effb3-3ce575ed.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -48,7 +48,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_3CLASS_FTW = Weights(
-        url='https://huggingface.co/torchgeo/ftw/resolve/d2fdab6ea9d9cd38b491292cc9a5c8642533cef5/commercial/3-class/sentinel2_unet_effb3-5d591cbb.pth',
+        url='https://hf.co/torchgeo/ftw/resolve/d85ee8487a1b513bceaa747d11ad48aa63519f61/commercial/3-class/sentinel2_unet_effb3-74f7eb81.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -63,7 +63,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_2CLASS_NC_FTW = Weights(
-        url='https://huggingface.co/torchgeo/ftw/resolve/d2fdab6ea9d9cd38b491292cc9a5c8642533cef5/noncommercial/2-class/sentinel2_unet_effb3-bf010a31.pth',
+        url='https://hf.co/torchgeo/ftw/resolve/3224ec89837c6b051b796f329a59dbd44efbf81f/noncommercial/2-class/sentinel2_unet_effb3-2bbd554b.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -78,7 +78,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_3CLASS_NC_FTW = Weights(
-        url='https://huggingface.co/torchgeo/ftw/resolve/d2fdab6ea9d9cd38b491292cc9a5c8642533cef5/noncommercial/3-class/sentinel2_unet_effb3-ed36f465.pth',
+        url='https://hf.co/torchgeo/ftw/resolve/71f0b677a3ac8fd00bc08f61106fe8d8f70ce158/noncommercial/3-class/sentinel2_unet_effb3-364c657c.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -138,7 +138,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_FTW_PRUE_CCBY_EFNETB3 = Weights(
-        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb3_ccby-aa82bfe9.pth',
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ebd2a7948ac1aad45eadd1d47abc6f63260843bc/prue_efnetb3_ccby-b35d59a6.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -153,7 +153,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_FTW_PRUE_CCBY_EFNETB5 = Weights(
-        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb5_ccby-a3aaa8b6.pth',
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/9d54aff1c6b903fb9f308dbcb5cba6b98c87a336/prue_efnetb5_ccby-4fd92b24.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -168,7 +168,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     SENTINEL2_FTW_PRUE_CCBY_EFNETB7 = Weights(
-        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/ce7ffffbceb1b55b3b6db77ecbc82313b7afa163/prue_efnetb7_ccby-da5ad55e.pth',
+        url='https://hf.co/isaaccorley/ftw-prue-ccby/resolve/59f3136ceb4904dba8eda40e0168b206071cbe6b/prue_efnetb7_ccby-4bfbbbde.pth',
         transforms=_ftw_transforms,
         meta={
             'dataset': 'FTW',
@@ -183,7 +183,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     OAM_RGB_RESNET50_TCD = Weights(
-        url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/74a8e34652e9bcd08af24d98195c6610edeb80da/unet_resnet50_oam_rgb_tcd-c648cc7d.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
@@ -201,7 +201,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     OAM_RGB_RESNET34_TCD = Weights(
-        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/40c914bbcbe43a6a87c81adb0a22ff2d4a53204d/unet_resnet34_oam_rgb_tcd-9472042e.pth',
+        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/064afa3dae671d62200cd34566617a02a107d4c3/unet_resnet34_oam_rgb_tcd-3e2a4603.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
@@ -219,7 +219,7 @@ class Unet_Weights(WeightsEnum):
         },
     )
     NAIP_RGBN_RESNET18_CHESAPEAKERSC = Weights(
-        url='https://hf.co/isaaccorley/chesapeakersc/resolve/fe3dc77a9edfe95fde49b0318fb047c1fc6dd195/unet-resnet18-6c2e3984.pth',
+        url='https://hf.co/isaaccorley/chesapeakersc/resolve/f237c88706903ae522410ecd0688ef307e3d95a7/unet-resnet18-829a85c5.pth',
         transforms=T.Normalize(mean=[0.0], std=[255.0], inplace=True),
         meta={
             'dataset': 'ChesapeakeRSC',
