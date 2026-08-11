@@ -67,7 +67,7 @@ class TestDOFA:
 
 
 class TestDOFASmall16:
-    def test_dofa(self, use_bfloat16: None) -> None:
+    def test_dofa(self, use_float16: None) -> None:
         model = dofa_small_patch16_224()
         x = torch.rand(1, 4, 224, 224)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
