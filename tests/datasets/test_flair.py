@@ -156,6 +156,30 @@ class TestFLAIRHUB:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             FLAIRHUB(root=root, checksum=True, bands=['AERIAL_RGBI'])
 
+    def test_toy_checksum(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            FLAIRHUBToy, 'download_link', str(_TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip')
+        )
+        monkeypatch.setattr(
+            FLAIRHUBToy,
+            'sha256',
+            'f7c19caa216fe37afac70ada47207d7cf1cbd2ce2da24654606bb68c261f3473',
+        )
+        dataset = FLAIRHUBToy(
+            root=tmp_path,
+            split='train',
+            download=True,
+            checksum=True,
+            bands=['AERIAL_RGBI'],
+        )
+        assert len(dataset) == 1
+
+        toy_dir = tmp_path / 'FLAIR-HUB_TOY'
+        shutil.rmtree(toy_dir)
+        (tmp_path / 'FLAIR-HUB_TOY_DATASET.zip').write_text('breaking_SHA256')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            FLAIRHUBToy(root=tmp_path, checksum=True, bands=['AERIAL_RGBI'])
+
     def test_toy_reextract_and_missing_splits(self, tmp_path: Path) -> None:
         shutil.copy(
             _TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip',
