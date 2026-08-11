@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from typing import cast
 
 import torch
-from einops import rearrange
+from einops import rearrange, repeat
 from torch import Tensor, nn
 
 
@@ -205,7 +205,7 @@ class DatePositionalEncoding(nn.Module):
         pe[..., 0::2].sin_()
         pe[..., 1::2].cos_()
         if self.repeat is not None:
-            pe = pe.repeat(1, 1, self.repeat)
+            pe = repeat(pe, 'b t d -> b t (repeat d)', repeat=self.repeat)
         return pe
 
 
