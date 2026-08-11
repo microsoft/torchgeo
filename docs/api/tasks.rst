@@ -50,6 +50,9 @@ Supervised learning tasks have both inputs and labeled outputs.
    * - :math:`\mathbb{R}^{T \times C \times H \times W}`
      - :math:`\mathbb{N}^{H \times W}`
      - :ref:`SpatioTemporalSegmentation`
+   * - :math:`\mathbb{R}^{T \times C \times H \times W}`
+     - :math:`\mathbb{R}^{H \times W}`
+     - :ref:`SpatioTemporalPixelwiseRegression`
 
 
 Self-Supervised Learning
