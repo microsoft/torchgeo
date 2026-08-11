@@ -8,7 +8,7 @@ from typing import Any, Literal, cast
 
 from torch import Tensor
 
-from ..models import UTAE, ConvLSTM
+from ..models import UTAE, Conv3dLSTM, ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
 
@@ -21,7 +21,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
 
     def __init__(
         self,
-        model: Literal['convlstm', 'utae'] = 'convlstm',
+        model: Literal['convlstm', 'conv3dlstm', 'utae'] = 'convlstm',
         in_channels: int = 3,
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
@@ -38,8 +38,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         """Initialize a new SpatioTemporalSegmentation instance.
 
         Args:
-            model: Spatiotemporal model name. One of ``'convlstm'`` or
-                ``'utae'``.
+            model: Spatiotemporal model name. One of ``'convlstm'``,
+                ``'conv3dlstm'``, or ``'utae'``.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
             task: One of 'binary', 'multiclass', or 'multilabel'.
@@ -57,8 +57,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
 
-        The input batch may include model-specific metadata. ConvLSTM uses
-        ``length`` with shape ``(B,)`` for sequence lengths. UTAE uses
+        The input batch may include model-specific metadata. ConvLSTM and Conv3dLSTM
+        use ``length`` with shape ``(B,)`` for sequence lengths. UTAE uses
         ``batch_positions`` with shape ``(B, T)`` for temporal positions such as
         acquisition day indices.
         """
@@ -83,8 +83,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
-        # jsonargparse injects defaults for both ConvLSTM and UTAE into self.kwargs
-        # regardless of which model is selected, so we strip the other model's keys.
+        # jsonargparse injects defaults for all models into self.kwargs regardless of
+        # which model is selected, so we strip the other models' keys.
         _convlstm_keys = {
             'hidden_dim',
             'kernel_size',
@@ -92,6 +92,13 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             'bias',
             'return_all_layers',
             'head_kernel_size',
+        }
+        _conv3dlstm_keys = _convlstm_keys | {
+            'conv3d_dim',
+            'conv3d_kernel_size',
+            'output_mode',
+            'return_sequence',
+            'pooling',
         }
         _utae_keys = {
             'encoder_widths',
@@ -111,13 +118,19 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         }
         match self.hparams['model']:
             case 'convlstm':
-                kwargs = {k: v for k, v in self.kwargs.items() if k not in _utae_keys}
+                excluded = _utae_keys | (_conv3dlstm_keys - _convlstm_keys)
+                kwargs = {k: v for k, v in self.kwargs.items() if k not in excluded}
                 self.model = ConvLSTM(
                     input_dim=in_channels, num_classes=num_classes, **kwargs
                 )
+            case 'conv3dlstm':
+                kwargs = {k: v for k, v in self.kwargs.items() if k not in _utae_keys}
+                self.model = Conv3dLSTM(
+                    input_dim=in_channels, num_outputs=num_classes, **kwargs
+                )
             case 'utae':
                 kwargs = {
-                    k: v for k, v in self.kwargs.items() if k not in _convlstm_keys
+                    k: v for k, v in self.kwargs.items() if k not in _conv3dlstm_keys
                 }
                 out_conv = cast(
                     Sequence[int], kwargs.pop('out_conv', (32, num_classes))
@@ -132,7 +145,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         """
         kwargs: dict[str, Tensor] = {}
         match self.hparams['model']:
-            case 'convlstm':
+            case 'convlstm' | 'conv3dlstm':
                 if (lengths := batch.get('length')) is not None:
                     kwargs['lengths'] = lengths
             case 'utae':

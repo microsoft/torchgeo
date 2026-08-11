@@ -12,6 +12,7 @@ from .caffe import CaFFeDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cloud_cover import CloudCoverDetectionDataModule
+from .copernicus import CopernicusBenchBiomassS3DataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
@@ -78,6 +79,7 @@ __all__ = (
     'ChaBuDDataModule',
     'ChesapeakeCVPRDataModule',
     'CloudCoverDetectionDataModule',
+    'CopernicusBenchBiomassS3DataModule',
     'DLRSDDataModule',
     'DLRSDMultilabelDataModule',
     'DeepGlobeLandCoverDataModule',
