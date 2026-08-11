@@ -64,7 +64,7 @@ class TestLTAE2d:
             positional_encoding=False,
         )
         x = torch.randn(2, 5, 32, 8, 8)
-        out = model(x)
+        out, _ = model(x)
         assert out.shape == (2, 16, 8, 8)
 
     def test_forward_with_positions(self) -> None:
@@ -72,18 +72,17 @@ class TestLTAE2d:
         model = LTAE2d(in_channels=32, n_head=4, d_model=32, mlp=(32, 16), d_k=4)
         x = torch.randn(2, 5, 32, 8, 8)
         positions = torch.randint(1, 365, (2, 5))
-        out = model(x, batch_positions=positions)
+        out, _ = model(x, batch_positions=positions)
         assert out.shape == (2, 16, 8, 8)
 
-    def test_return_att(self) -> None:
-        """Return attention masks when return_att=True."""
+    def test_attention(self) -> None:
+        """Return attention masks."""
         model = LTAE2d(
             in_channels=32,
             n_head=4,
             d_model=32,
             mlp=(32, 16),
             d_k=4,
-            return_att=True,
             positional_encoding=False,
         )
         x = torch.randn(2, 5, 32, 8, 8)
@@ -99,7 +98,6 @@ class TestLTAE2d:
             d_model=32,
             mlp=(32, 16),
             d_k=4,
-            return_att=True,
             positional_encoding=False,
         )
         x = torch.randn(2, 5, 32, 8, 8)
@@ -120,7 +118,7 @@ class TestLTAE2d:
             positional_encoding=False,
         )
         x = torch.randn(2, 5, 32, 8, 8)
-        out = model(x)
+        out, _ = model(x)
         assert out.shape == (2, 16, 8, 8)
 
     def test_invalid_n_head(self) -> None:

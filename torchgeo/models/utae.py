@@ -133,7 +133,6 @@ class UTAE(nn.Module):
             d_model=d_model,
             n_head=n_head,
             mlp=(d_model, self.encoder_widths[-1]),
-            return_att=True,
             d_k=d_k,
         )
         self.temporal_aggregator = TemporalAggregator()

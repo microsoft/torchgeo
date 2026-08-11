@@ -12,6 +12,7 @@ from typing import cast
 import torch
 from einops import rearrange, repeat
 from torch import Tensor, nn
+from torch.nn import functional as F
 
 
 class LTAE(nn.Module):
@@ -209,43 +210,6 @@ class DatePositionalEncoding(nn.Module):
         return pe
 
 
-class _ScaledDotProductAttention(nn.Module):
-    """Scaled dot-product attention with optional padding mask."""
-
-    def __init__(self, temperature: float, attn_dropout: float = 0.1) -> None:
-        """Initialize scaled dot-product attention.
-
-        Args:
-            temperature: Scaling factor (typically ``sqrt(d_k)``).
-            attn_dropout: Dropout rate applied to attention weights.
-        """
-        super().__init__()
-        self.temperature = temperature
-        self.dropout = nn.Dropout(attn_dropout)
-        self.softmax = nn.Softmax(dim=2)
-
-    def forward(
-        self, q: Tensor, k: Tensor, v: Tensor, pad_mask: Tensor | None = None
-    ) -> tuple[Tensor, Tensor]:
-        """Forward pass.
-
-        Args:
-            q: Query tensor of shape ``(n_head * B, d_k)``.
-            k: Key tensor of shape ``(n_head * B, T, d_k)``.
-            v: Value tensor of shape ``(n_head * B, T, d_in // n_head)``.
-            pad_mask: Boolean mask of shape ``(n_head * B, T)``.
-
-        Returns:
-            Tuple of (output, attention weights).
-        """
-        attn = torch.matmul(q.unsqueeze(1), k.transpose(1, 2)) / self.temperature
-        if pad_mask is not None:
-            attn = attn.masked_fill(pad_mask.unsqueeze(1), -1e3)
-        attn = self.dropout(self.softmax(attn))
-        output = torch.matmul(attn, v)
-        return output, attn
-
-
 class _MultiHeadAttention(nn.Module):
     """Multi-head attention with a shared learned master query for L-TAE.
 
@@ -272,7 +236,7 @@ class _MultiHeadAttention(nn.Module):
         self.fc1_k = nn.Linear(d_in, n_head * d_k)
         nn.init.normal_(self.fc1_k.weight, mean=0, std=math.sqrt(2.0 / d_k))
 
-        self.attention = _ScaledDotProductAttention(temperature=math.sqrt(d_k))
+        self.attn_dropout = 0.1
 
     def forward(
         self, v: Tensor, pad_mask: Tensor | None = None
@@ -302,8 +266,15 @@ class _MultiHeadAttention(nn.Module):
             n_head * sz_b, seq_len, -1
         )
 
-        output, attn = self.attention(q, k, v_split, pad_mask=pad_mask)
-        attn = attn.view(n_head, sz_b, 1, seq_len).squeeze(2)
+        q = rearrange(q, 'b d -> b 1 d')
+        attn = torch.matmul(q, k.transpose(1, 2)) / math.sqrt(d_k)
+        if pad_mask is not None:
+            attn = attn.masked_fill(rearrange(pad_mask, 'b t -> b 1 t'), -1e3)
+        attn = F.dropout(
+            F.softmax(attn, dim=-1), p=self.attn_dropout, training=self.training
+        )
+        output = torch.matmul(attn, v_split)
+        attn = rearrange(attn, '(h b) 1 t -> h b t', h=n_head)
         output = output.view(n_head, sz_b, 1, d_in // n_head).squeeze(2)
         return output, attn
 
@@ -332,7 +303,6 @@ class LTAE2d(nn.Module):
         dropout: float = 0.2,
         d_model: int | None = 256,
         T: int = 1000,
-        return_att: bool = False,
         positional_encoding: bool = True,
     ) -> None:
         """Initialize L-TAE 2D.
@@ -346,12 +316,10 @@ class LTAE2d(nn.Module):
             dropout: Dropout rate.
             d_model: If given, projects input to this dimension first.
             T: Period for sinusoidal positional encoding.
-            return_att: If True, return attention masks alongside output.
             positional_encoding: If False, no positional encoding is applied.
         """
         super().__init__()
         self.in_channels = in_channels
-        self.return_att = return_att
         self.n_head = n_head
         self.d_model = d_model if d_model is not None else in_channels
 
@@ -400,7 +368,7 @@ class LTAE2d(nn.Module):
         x: Tensor,
         batch_positions: Tensor | None = None,
         pad_mask: Tensor | None = None,
-    ) -> Tensor | tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Forward pass.
 
         Args:
@@ -412,9 +380,8 @@ class LTAE2d(nn.Module):
                 marks padded (invalid) timesteps.
 
         Returns:
-            Output feature map of shape ``(B, mlp[-1], H, W)``, and
-            optionally attention weights of shape
-            ``(n_head, B, T, H, W)`` when ``return_att=True``.
+            Output feature map of shape ``(B, mlp[-1], H, W)`` and attention
+            weights of shape ``(n_head, B, T, H, W)``.
         """
         sz_b, seq_len, d, h, w = x.shape
 
@@ -454,7 +421,4 @@ class LTAE2d(nn.Module):
         attn = attn.view(self.n_head, sz_b, h, w, seq_len).permute(
             0, 1, 4, 2, 3
         )  # n_head x B x T x H x W
-
-        if self.return_att:
-            return out, attn
-        return out
+        return out, attn
