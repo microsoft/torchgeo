@@ -39,7 +39,7 @@ class DigitalTyphoon(NonGeoDataset):
     covers over four decades.
 
     See `the Digital Typhoon website
-    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    <https://agora.ex.nii.ac.jp/digital-typhoon/dataset/index.html.en>`_
     for more information about the dataset.
 
     Dataset features:
@@ -55,9 +55,9 @@ class DigitalTyphoon(NonGeoDataset):
     * hdf5 files containing the infrared channel images
     * .csv files containing the metadata for each image
 
-    If you use this dataset in your research, please cite the following papers:
+    If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.20783/DIAS.664
+    * https://arxiv.org/abs/2311.02665
 
     .. versionadded:: 0.6
     """
