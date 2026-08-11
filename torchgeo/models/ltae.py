@@ -314,10 +314,8 @@ class LTAE2d(nn.Module):
 
         if n_head <= 0:
             raise ValueError('n_head must be positive')
-        if in_channels % n_head != 0:
-            raise ValueError('in_channels must be divisible by n_head')
-        if self.d_model % n_head != 0:
-            raise ValueError('d_model must be divisible by n_head')
+        assert in_channels % n_head == 0, 'in_channels must be divisible by n_head'
+        assert self.d_model % n_head == 0, 'd_model must be divisible by n_head'
 
         self.inconv: nn.Conv1d | None = None
         if d_model is not None:
