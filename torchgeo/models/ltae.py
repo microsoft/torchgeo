@@ -200,8 +200,8 @@ class DatePositionalEncoding(nn.Module):
         """
         denom = cast(Tensor, self.denom)
         pe = batch_positions.unsqueeze(-1).float() * denom.unsqueeze(0).unsqueeze(0)
-        pe[..., 0::2] = torch.sin(pe[..., 0::2])
-        pe[..., 1::2] = torch.cos(pe[..., 1::2])
+        pe[..., 0::2].sin_()
+        pe[..., 1::2].cos_()
         if self.repeat is not None:
             pe = pe.repeat(1, 1, self.repeat)
         return pe
