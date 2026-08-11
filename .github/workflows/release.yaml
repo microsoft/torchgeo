@@ -21,11 +21,8 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
-          enable-cache: true
+          enable-cache: false
           activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
       - name: Install dependencies
         run: |
           uv lock --upgrade
@@ -49,11 +46,8 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
-          enable-cache: true
+          enable-cache: false
           activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
       - name: Install dependencies
         run: |
           uv lock --upgrade
