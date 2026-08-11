@@ -105,8 +105,6 @@ class ObjectDetection(BaseTask):
         """
         self.weights = weights
         self.model_kwargs = kwargs
-        self.rf_detr_criterion: Any | None = None
-        self.rf_detr_postprocess: Any | None = None
         super().__init__()
 
     def forward(
@@ -129,7 +127,6 @@ class ObjectDetection(BaseTask):
 
         outputs = self.model(images, targets)
         if targets is not None:
-            assert self.rf_detr_criterion is not None
             losses = self.rf_detr_criterion(outputs, targets)
             return {
                 key: losses[key] * self.rf_detr_criterion.weight_dict[key]
@@ -137,7 +134,6 @@ class ObjectDetection(BaseTask):
                 if key in self.rf_detr_criterion.weight_dict
             }
 
-        assert self.rf_detr_postprocess is not None
         sizes = torch.tensor(
             [[height, width]] * len(images), device=images.device, dtype=torch.int64
         )
