@@ -99,11 +99,7 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
-            case 'flairhub_multimodal_landcover':
-                monkeypatch.setattr(
-                    FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
-                )
-            case 'flairhub_toy_croptype':
+            case 'flairhub_multimodal_landcover' | 'flairhub_toy_croptype':
                 monkeypatch.setattr(
                     FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
                 )
