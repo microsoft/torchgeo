@@ -185,7 +185,7 @@ intersphinx_mapping = {
 }
 
 # myst-parser
-suppress_warnings = ['myst.header']
+suppress_warnings = ['myst.header', 'ref.ref']
 
 # nbsphinx
 nbsphinx_execute = 'never'

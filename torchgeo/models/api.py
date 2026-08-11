@@ -39,6 +39,7 @@ from .resnet import (
     resnet50,
     resnet152,
 )
+from .satclip import SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
     Swin_B_Weights,
@@ -86,6 +87,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
+    'satclip': satclip,
     'scalemae_large_patch16': scalemae_large_patch16,
     'swin_t': swin_t,
     'swin_s': swin_s,
@@ -117,6 +119,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
+    satclip: SatCLIP_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
     swin_t: Swin_T_Weights,
     swin_s: Swin_S_Weights,
@@ -145,6 +148,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
+    'satclip': SatCLIP_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
     'swin_t': Swin_T_Weights,
     'swin_s': Swin_S_Weights,

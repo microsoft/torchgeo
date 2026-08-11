@@ -16,7 +16,7 @@ from torchvision.models._api import WeightsEnum
 from torchvision.models.detection import maskrcnn_resnet50_fpn
 
 from ..datamodules import BaseDataModule
-from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import RGBBandsMissingError
 from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
@@ -137,12 +137,15 @@ class InstanceSegmentation(BaseTask):
             The loss tensor.
         """
         x = batch['image']
-        y = {
-            'boxes': batch['bbox_xyxy'],
-            'labels': batch['label'],
-            'masks': batch['mask'],
-        }
-        loss_dict = self(x.unbind(), unbind_samples(y))
+        y = [
+            {
+                'boxes': batch['bbox_xyxy'][i],
+                'labels': batch['label'][i],
+                'masks': batch['mask'][i],
+            }
+            for i in range(len(x))
+        ]
+        loss_dict = self(x.unbind(), y)
         self.log_dict(loss_dict, batch_size=len(x))
         loss: Tensor = sum(loss_dict.values())
         return loss
@@ -158,16 +161,19 @@ class InstanceSegmentation(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
-        y = {
-            'boxes': batch['bbox_xyxy'],
-            'labels': batch['label'],
-            'masks': batch['mask'],
-        }
+        y = [
+            {
+                'boxes': batch['bbox_xyxy'][i],
+                'labels': batch['label'][i],
+                'masks': batch['mask'][i],
+            }
+            for i in range(len(x))
+        ]
         y_hat = self(x.unbind())
         for pred in y_hat:
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        metrics = self.val_metrics(y_hat, unbind_samples(y))
+        metrics = self.val_metrics(y_hat, y)
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop('val_classes', None)
@@ -196,7 +202,7 @@ class InstanceSegmentation(BaseTask):
             batch['prediction_score'] = [pred['scores'].cpu() for pred in y_hat]
             batch['image'] = batch['image'].cpu()
 
-            sample = unbind_samples(batch)[0]
+            sample = {key: value[0] for key, value in batch.items()}
 
             fig: Figure | None = None
             try:
@@ -220,16 +226,19 @@ class InstanceSegmentation(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
-        y = {
-            'boxes': batch['bbox_xyxy'],
-            'labels': batch['label'],
-            'masks': batch['mask'],
-        }
+        y = [
+            {
+                'boxes': batch['bbox_xyxy'][i],
+                'labels': batch['label'][i],
+                'masks': batch['mask'][i],
+            }
+            for i in range(len(x))
+        ]
         y_hat = self(x.unbind())
         for pred in y_hat:
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        metrics = self.test_metrics(y_hat, unbind_samples(y))
+        metrics = self.test_metrics(y_hat, y)
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop('test_classes', None)

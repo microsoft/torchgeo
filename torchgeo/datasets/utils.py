@@ -74,8 +74,8 @@ Path: TypeAlias = str | os.PathLike[str]  # noqa: UP040
 #: * bbox_xyxy: expected output bounding box in (x1, y1, x2, y2) format
 #: * prediction: predicted output
 #:
-#: Values are usually of type torch.Tensor.
-Sample: TypeAlias = dict[str, Any]  # noqa: UP040
+#: Values are of type torch.Tensor.
+Sample: TypeAlias = dict[str, Tensor]  # noqa: UP040
 
 
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
@@ -670,10 +670,7 @@ def stack_samples(samples: Iterable[Sample]) -> Sample:
     uncollated = _list_dict_to_dict_list(samples)
     collated: Sample = {}
     for key, value in uncollated.items():
-        if isinstance(value[0], Tensor):
-            collated[key] = torch.stack(value)
-        else:
-            collated[key] = value
+        collated[key] = torch.stack(value)
     return collated
 
 
@@ -693,10 +690,7 @@ def concat_samples(samples: Iterable[Sample]) -> Sample:
     uncollated = _list_dict_to_dict_list(samples)
     collated = {}
     for key, value in uncollated.items():
-        if isinstance(value[0], Tensor):
-            collated[key] = torch.cat(value)
-        else:
-            collated[key] = value[0]
+        collated[key] = torch.cat(value)
     return collated
 
 
@@ -716,7 +710,7 @@ def merge_samples(samples: Iterable[Sample]) -> Sample:
     collated = {}
     for sample in samples:
         for key, value in sample.items():
-            if key in collated and isinstance(value, Tensor):
+            if key in collated:
                 # Take the maximum so that nodata values (zeros) get replaced
                 # by data values whenever possible
                 collated[key] = torch.maximum(collated[key], value)
@@ -741,10 +735,7 @@ def unbind_samples(sample: Sample) -> list[Sample]:
     """
     uncollated = {}
     for key, values in sample.items():
-        if isinstance(values, Tensor):
-            uncollated[key] = torch.unbind(values)
-        else:
-            uncollated[key] = values
+        uncollated[key] = torch.unbind(values)
     return _dict_list_to_list_dict(uncollated)
 
 

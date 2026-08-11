@@ -95,6 +95,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .globalmangrovewatch import GlobalMangroveWatch
 from .globbiomass import GlobBiomass
 from .gse import GoogleSatelliteEmbedding
 from .hyspecnet import HySpecNet11k
@@ -123,6 +124,7 @@ from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
+from .meta_chm import MetaCHM
 from .millionaid import MillionAID
 from .mixins import PlottingMixin
 from .mmearth import MMEarth
@@ -303,6 +305,7 @@ __all__ = (
     'GeoNRW',
     'GlobBiomass',
     'GlobalBuildingMap',
+    'GlobalMangroveWatch',
     'GoogleSatelliteEmbedding',
     'HySpecNet11k',
     'IDTReeS',
@@ -334,6 +337,7 @@ __all__ = (
     'MMFlood',
     'MajorTOMEmbeddings',
     'MapInWild',
+    'MetaCHM',
     'MillionAID',
     'NASAMarineDebris',
     'NonGeoClassificationDataset',

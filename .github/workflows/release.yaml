@@ -22,6 +22,7 @@ jobs:
         with:
           python-version: '3.14'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -50,6 +51,7 @@ jobs:
         with:
           python-version: '3.14'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
