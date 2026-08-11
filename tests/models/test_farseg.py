@@ -9,7 +9,7 @@ from torchgeo.models import FarSeg
 
 
 class TestFarSeg:
-    @torch.no_grad()
+    @torch.inference_mode()
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'resnet34', 'resnet50', 'resnet101']
     )
