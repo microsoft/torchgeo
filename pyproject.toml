@@ -119,16 +119,16 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
-    # myst-parser 4+ required for sphinx 8+ compatibility
-    "myst-parser>=4",
+    # myst-parser 5.1+ required by sphinx-github-changelog 2+
+    "myst-parser>=5.1",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
     # pydata-sphinx-theme 0.18+ required for font awesome 7
     "pydata-sphinx-theme>=0.18",
     # sphinx 8+ required by pydata-sphinx-theme 0.18+
     "sphinx>=8",
-    # sphinx-github-changelog 1.7.2+ required for image URL fix
-    "sphinx-github-changelog>=1.7.2",
+    # sphinx-github-changelog 2+ converts GitHub markdown alerts to Sphinx admonitions
+    "sphinx-github-changelog>=2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support

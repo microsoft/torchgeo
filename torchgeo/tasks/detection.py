@@ -363,7 +363,7 @@ class ObjectDetection(BaseTask):
             batch['prediction_label'] = [b['labels'].cpu() for b in y_hat]
             batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
-            sample = unbind_samples(batch)[0]
+            sample = {key: value[0] for key, value in batch.items()}
 
             fig: Figure | None = None
             try:
