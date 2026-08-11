@@ -30,7 +30,7 @@ from .utils import (
 class HySpecNet11k(NonGeoDataset):
     """HySpecNet-11k dataset.
 
-    `HySpecNet-11k <https://doi.org/10.5061/dryad.fttdz08zh>`__ is a large-scale
+    `HySpecNet-11k <https://hyspecnet.rsim.berlin/>`__ is a large-scale
     benchmark dataset for hyperspectral image compression and self-supervised learning.
     It is made up of 11,483 nonoverlapping image patches acquired by the
     `EnMAP satellite <https://www.enmap.org/>`_. Each patch is a portion of 128 x 128
