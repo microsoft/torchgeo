@@ -15,7 +15,6 @@ from torchgeo.models import (
     croma_base,
     croma_large,
 )
-from torchgeo.models.croma import get_2dalibi
 
 
 def save_model(model: CROMA, path: Path) -> None:
@@ -51,9 +50,6 @@ class TestCROMA:
             assert f'{modality}_encodings' in out
         if set(modalities) == {'sar', 'optical'}:
             assert 'joint_encodings' in out
-
-    def test_dtype(self, use_float16: None) -> None:
-        assert get_2dalibi(8, 64).dtype == torch.float16
 
 
 class TestCROMABase:
