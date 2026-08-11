@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, check_integrity, percentile_normalization
+from .utils import Path, Sample, check_integrity, quantile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -170,7 +170,7 @@ class SEN12MS(NonGeoDataset):
         split: Literal['train', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
 
@@ -211,7 +211,7 @@ class SEN12MS(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         with open(os.path.join(self.root, split + '_list.txt')) as f:
-            self.ids = [line.rstrip() for line in f.readlines()]
+            self.ids = [line.rstrip() for line in f]
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -335,8 +335,8 @@ class SEN12MS(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image, mask = sample['image'][rgb_indices].numpy(), sample['mask']
-        image = percentile_normalization(image)
+        image, mask = sample['image'][rgb_indices], sample['mask']
+        image = quantile_normalization(image)
         ncols = 2
 
         showing_predictions = 'prediction' in sample

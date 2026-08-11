@@ -1,5 +1,5 @@
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     loss: 'ce'
     model: 'resnet18'
@@ -14,3 +14,4 @@ data:
   dict_kwargs:
     root: 'tests/data/so2sat'
     version: '3_random'
+    checksum: false

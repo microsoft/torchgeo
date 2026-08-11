@@ -15,7 +15,14 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import (
+    GeoSlice,
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class L7IrishImage(RasterDataset):
@@ -115,16 +122,16 @@ class L7Irish(IntersectionDataset):
 
     url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'
 
-    md5s: ClassVar[dict[str, str]] = {
-        'austral': '0a34770b992a62abeb88819feb192436',
-        'boreal': 'b7cfdd689a3c2fd2a8d572e1c10ed082',
-        'mid_latitude_north': 'c40abe5ad2487f8ab021cfb954982faa',
-        'mid_latitude_south': '37abab7f6ebe3d6cf6a3332144145427',
-        'polar_north': '49d9e616bd715057db9acb1c4d234d45',
-        'polar_south': 'c1503db1cf46d5c37b579190f989e7ec',
-        'subtropical_north': 'a6010de4c50167260de35beead9d6a65',
-        'subtropical_south': 'c37d439df2f05bd7cfe87cf6ff61a690',
-        'tropical': 'd7931419c70f3520a17361d96f1a4810',
+    sha256s: ClassVar[dict[str, str]] = {
+        'austral': '9b025debb20791cd3279cbc56f39dcd42fa7f20f172608a750e06b31c153457e',
+        'boreal': '7d5bf24420e7606b71669c39e7ffc7fbef0605224845e6c6995572d3fadffff2',
+        'mid_latitude_north': '7ab40faee550f941da41365093cf604c304641343c9777bbe9dba46d050e4a4f',
+        'mid_latitude_south': '8b74d7debd5229d03fe210c6ce813a7e4a8b2ece7acc3a8f8d2af8100e6e034d',
+        'polar_north': '0eb82d2c5a46600b7d4ffe1e67e4f0858947707e183dc29c00027b3f7caae3d1',
+        'polar_south': '1d1b89e232af2d2685355713c1a11eb8de351ca7dc8e34d82b87a6a4237d47f4',
+        'subtropical_north': '48f5cbd08b6095ae853f632e5660ade0d99be5c713d5a05b49302fbe5070860d',
+        'subtropical_south': 'ad88b32b992fcf88aab9c7e83c678c8e71f75547bdf7d66baec00aafdb0fdcad',
+        'tropical': '659c5f528b81f9e8626a3b88ce47b844484522a3316cbc62be7a0cdfd994a7b4',
     }
 
     def __init__(
@@ -136,7 +143,7 @@ class L7Irish(IntersectionDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new L7Irish instance.
@@ -153,7 +160,7 @@ class L7Irish(IntersectionDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
             time_series: if True, stack data along the time series dimension
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
@@ -218,9 +225,9 @@ class L7Irish(IntersectionDataset):
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
         paths = cast(Path, self.paths)
-        for biome, md5 in self.md5s.items():
+        for biome, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(biome), paths, md5=md5 if self.checksum else None
+                self.url.format(biome), paths, sha256=sha256 if self.checksum else None
             )
 
     def _extract(self) -> None:
@@ -255,9 +262,7 @@ class L7Irish(IntersectionDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].numpy().astype('uint8').squeeze()
 

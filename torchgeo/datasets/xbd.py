@@ -60,12 +60,12 @@ class xBD(NonGeoDataset):
     metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train_images_labels_targets.tar.gz',
-            'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
+            'sha256': 'a5941b7a3e523eafc4aeaa740a1c83f1af6a18c894e7e8c62dd830a76921ecd4',
             'directory': 'train',
         },
         'test': {
             'filename': 'test_images_labels_targets.tar.gz',
-            'md5': '1b39c47e05d1319c17cc8763cee6fe0c',
+            'sha256': '0fcdbfe3ee7d0842729dd2230217e74b2f12be35546ff666df4dae5388e2541c',
             'directory': 'test',
         },
     }
@@ -77,7 +77,7 @@ class xBD(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new xBD dataset instance.
 
@@ -86,7 +86,7 @@ class xBD(NonGeoDataset):
             split: one of "train" or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If *split* is invalid.
@@ -167,7 +167,9 @@ class xBD(NonGeoDataset):
             image2 = os.path.join(image_root, f'{name}_post_disaster.png')
             mask1 = os.path.join(mask_root, f'{name}_pre_disaster_target.png')
             mask2 = os.path.join(mask_root, f'{name}_post_disaster_target.png')
-            files.append(dict(image1=image1, image2=image2, mask1=mask1, mask2=mask2))
+            files.append(
+                {'image1': image1, 'image2': image2, 'mask1': mask1, 'mask2': mask2}
+            )
         return files
 
     def _load_image(self, path: Path) -> Tensor:
@@ -224,7 +226,9 @@ class xBD(NonGeoDataset):
         for split_info in self.metadata.values():
             filepath = os.path.join(self.root, split_info['filename'])
             if os.path.isfile(filepath):
-                if self.checksum and not check_integrity(filepath, split_info['md5']):
+                if self.checksum and not check_integrity(
+                    filepath, sha256=split_info['sha256']
+                ):
                     raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)

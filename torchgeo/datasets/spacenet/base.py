@@ -12,6 +12,7 @@ from collections.abc import Callable
 from json.decoder import JSONDecodeError
 from typing import ClassVar, Literal
 
+import einops
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,7 +32,7 @@ from ..utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
     which,
 )
 
@@ -106,12 +107,12 @@ class SpaceNet(NonGeoDataset, ABC):
         self,
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
-        aois: list[int] = [],
+        aois: list[int] | None = None,
         image: str | None = None,
         mask: str | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SpaceNet Dataset instance.
 
@@ -130,6 +131,8 @@ class SpaceNet(NonGeoDataset, ABC):
             AssertionError: If any invalid arguments are passed.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if aois is None:
+            aois = []
         self.root = root
         self.split = split
         self.aois = aois or self.valid_aois[split]
@@ -172,7 +175,10 @@ class SpaceNet(NonGeoDataset, ABC):
                 out_shape = (img.count, *self.chip_size[self.image])
             array = img.read(out_shape=out_shape, resampling=Resampling.bilinear)
             tensor = torch.from_numpy(array.astype(np.float32))
-            return tensor, img.transform, img.crs
+            # https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#rasterio
+            with rio.Env(OSR_WKT_FORMAT='WKT2_2018'):
+                crs = CRS.from_user_input(img.crs)
+            return tensor, img.transform, crs
 
     def _load_mask(
         self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
@@ -359,19 +365,19 @@ class SpaceNet(NonGeoDataset, ABC):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 8, 8))

@@ -24,7 +24,7 @@ from .utils import (
     check_integrity,
     download_url,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -85,29 +85,29 @@ class DOTA(NonGeoDataset):
             'images': {
                 '1.0': {
                     'filename': 'dotav1.0_images_train.tar.gz',
-                    'md5': '363b472dc3c71e7fa2f4a60223b437ea',
+                    'sha256': '2fd69eeb9ba0c775db007c7fe11d7708fb905a67ca3a663874147434db68e7ac',
                 },
                 '1.5': {
                     'filename': 'dotav1.0_images_train.tar.gz',
-                    'md5': '363b472dc3c71e7fa2f4a60223b437ea',
+                    'sha256': '2fd69eeb9ba0c775db007c7fe11d7708fb905a67ca3a663874147434db68e7ac',
                 },
                 '2.0': {
                     'filename': 'dotav2.0_images_train.tar.gz',
-                    'md5': '91ae5212d170330ab9f65ccb6c675763',
+                    'sha256': 'ceccafe50e4e49c5f1ad6b0bce917e356c4df29321fd79037c77912bad594989',
                 },
             },
             'annotations': {
                 '1.0': {
                     'filename': 'dotav1.0_annotations_train.tar.gz',
-                    'md5': 'f6788257bcc4d29018344a4128e3734a',
+                    'sha256': '79096d14f5065e1582af47817b5d7c2d1c1611cadc7f1ccc3f868ded1c41a9f6',
                 },
                 '1.5': {
                     'filename': 'dotav1.5_annotations_train.tar.gz',
-                    'md5': '0da97e5623a87d7bec22e75f6978dbce',
+                    'sha256': '0c8fe411f50331dcb0d1aeef90606045e24d6f34b225630f8b98af3044c469fc',
                 },
                 '2.0': {
                     'filename': 'dotav2.0_annotations_train.tar.gz',
-                    'md5': '04d3d626df2203053b7f06581b3b0667',
+                    'sha256': 'f142824f6eafef3b1922f7ff1583375e4d59d2a841d4670c312be854652631a6',
                 },
             },
         },
@@ -115,29 +115,29 @@ class DOTA(NonGeoDataset):
             'images': {
                 '1.0': {
                     'filename': 'dotav1.0_images_val.tar.gz',
-                    'md5': '42293219ba61d61c417ae558bbe1f2ba',
+                    'sha256': 'f7ab9c570b3aba66d07d6ec91801f76c840fde2ffc12b4f8efa02c90aeb32c83',
                 },
                 '1.5': {
                     'filename': 'dotav1.0_images_val.tar.gz',
-                    'md5': '42293219ba61d61c417ae558bbe1f2ba',
+                    'sha256': 'f7ab9c570b3aba66d07d6ec91801f76c840fde2ffc12b4f8efa02c90aeb32c83',
                 },
                 '2.0': {
                     'filename': 'dotav2.0_images_val.tar.gz',
-                    'md5': '737f65edf54b5aa627b3d48b0e253095',
+                    'sha256': '76005d65bc1d0e8ee2dd4b4c2922b47fddc73d07dd93a87eb5f022d22727a0fd',
                 },
             },
             'annotations': {
                 '1.0': {
                     'filename': 'dotav1.0_annotations_val.tar.gz',
-                    'md5': '28155c05b1dc3a0f5cb6b9bdfef85a13',
+                    'sha256': '879e8f013a5231cb52c3dc95b5ade7d4aeb3a0d3e600cb658a5a4d13ea7116c2',
                 },
                 '1.5': {
                     'filename': 'dotav1.5_annotations_val.tar.gz',
-                    'md5': '85bf945788784cf9b4f1c714453178fc',
+                    'sha256': 'd9a5c8412f0094fcba088c8b41e1f214e5dbc22da415beba32289d6b9f32e2a5',
                 },
                 '2.0': {
                     'filename': 'dotav2.0_annotations_val.tar.gz',
-                    'md5': 'ec53c1dbcfc125d7532bd6a065c647ac',
+                    'sha256': '66cde2e76f131a55243904884b68ef450a73b1404668001df92bc94dde4a2e25',
                 },
             },
         },
@@ -179,7 +179,7 @@ class DOTA(NonGeoDataset):
         bbox_orientation: Literal['horizontal', 'oriented'] = 'oriented',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DOTA dataset instance.
 
@@ -192,7 +192,7 @@ class DOTA(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if *split*, *version*, or *bbox_orientation* argument are not valid
@@ -345,11 +345,11 @@ class DOTA(NonGeoDataset):
         files_needed = [
             (
                 self.file_info[self.split]['images'][self.version]['filename'],
-                self.file_info[self.split]['images'][self.version]['md5'],
+                self.file_info[self.split]['images'][self.version]['sha256'],
             ),
             (
                 self.file_info[self.split]['annotations'][self.version]['filename'],
-                self.file_info[self.split]['annotations'][self.version]['md5'],
+                self.file_info[self.split]['annotations'][self.version]['sha256'],
             ),
         ]
         # For v2.0, also need v1.0 image files, but only v2 annotations
@@ -357,20 +357,19 @@ class DOTA(NonGeoDataset):
             files_needed.append(
                 (
                     self.file_info[self.split]['images']['1.0']['filename'],
-                    self.file_info[self.split]['images']['1.0']['md5'],
+                    self.file_info[self.split]['images']['1.0']['sha256'],
                 )
             )
 
         # Check if archives exist and verify checksums if requested
         exists = []
-        for filename, md5 in files_needed:
+        for filename, sha256 in files_needed:
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
-                if self.checksum:
-                    if not check_integrity(filepath, md5):
-                        raise RuntimeError(f'Archive {filename} corrupted')
+                if self.checksum and not check_integrity(filepath, sha256=sha256):
+                    raise RuntimeError(f'Archive {filename} corrupted')
                 exists.append(True)
-                self._extract([(filename, md5)])
+                self._extract([(filename, sha256)])
             else:
                 exists.append(False)
 
@@ -390,13 +389,13 @@ class DOTA(NonGeoDataset):
         Args:
             files_needed: list of files to download for the particular version
         """
-        for filename, md5 in files_needed:
+        for filename, sha256 in files_needed:
             if not os.path.exists(os.path.join(self.root, filename)):
                 download_url(
                     url=self.url.format(filename),
                     root=self.root,
                     filename=filename,
-                    md5=None if not self.checksum else md5,
+                    sha256=None if not self.checksum else sha256,
                 )
 
         if not os.path.exists(os.path.join(self.root, self.sample_df_path)):
@@ -434,12 +433,12 @@ class DOTA(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
+        image = quantile_normalization(sample['image'].permute(1, 2, 0))
         if self.bbox_orientation == 'horizontal':
-            boxes = sample['bbox_xyxy'].cpu().numpy()
+            boxes = sample['bbox_xyxy']
         else:
-            boxes = sample['bbox'].cpu().numpy()
-        labels = sample['labels'].cpu().numpy()
+            boxes = sample['bbox']
+        labels = sample['labels']
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.imshow(image)
@@ -473,7 +472,7 @@ class DOTA(NonGeoDataset):
                     label,
                     color='white',
                     fontsize=8,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
+                    bbox={'facecolor': color, 'alpha': box_alpha},
                 )
             else:
                 # Oriented box: [x1,y1,x2,y2,x3,y3,x4,y4]
@@ -496,7 +495,7 @@ class DOTA(NonGeoDataset):
                     label,
                     color='white',
                     fontsize=8,
-                    bbox=dict(facecolor=color, alpha=box_alpha),
+                    bbox={'facecolor': color, 'alpha': box_alpha},
                     ha='center',
                     va='center',
                 )

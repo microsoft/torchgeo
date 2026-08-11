@@ -8,11 +8,11 @@ import os
 from collections.abc import Callable
 from typing import ClassVar, Literal
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from shapely import MultiPoint, Polygon
@@ -71,11 +71,11 @@ class SODAA(NonGeoDataset):
     files: ClassVar[dict[str, dict[str, str]]] = {
         'images': {
             'filename': 'Images.zip',
-            'md5sum': '8ee4ad7a306b0a0a900fa78a4f6aae68',
+            'sha256': '90889eae9e6b168ee598576d43f2155cffbe3016209b5f1ce0f5053c2a6eab48',
         },
         'labels': {
             'filename': 'Annotations.zip',
-            'md5sum': '45b0d21209fc332d89b0144b308e57fa',
+            'sha256': 'c088d7cc4afafc72509756163efc885e2cad5153161bf4c02b6be37eb4f7d0ff',
         },
     }
 
@@ -103,7 +103,7 @@ class SODAA(NonGeoDataset):
         bbox_orientation: Literal['oriented', 'horizontal'] = 'horizontal',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new instance of SODA-A dataset.
 
@@ -114,7 +114,7 @@ class SODAA(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if *split* or *bbox_orientation* argument is invalid
@@ -256,7 +256,9 @@ class SODAA(NonGeoDataset):
         for file in self.files.values():
             archive_path = os.path.join(self.root, file['filename'])
             if os.path.exists(archive_path):
-                if self.checksum and not check_integrity(archive_path, file['md5sum']):
+                if self.checksum and not check_integrity(
+                    archive_path, sha256=file['sha256']
+                ):
                     raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
             else:
@@ -277,7 +279,7 @@ class SODAA(NonGeoDataset):
                 self.url.format(file['filename']),
                 self.root,
                 filename=file['filename'],
-                md5=file['md5sum'] if self.checksum else None,
+                sha256=file['sha256'] if self.checksum else None,
             )
 
         # also download the sample_df

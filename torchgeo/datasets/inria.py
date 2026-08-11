@@ -9,6 +9,7 @@ import re
 from collections.abc import Callable
 from typing import Literal
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -23,7 +24,7 @@ from .utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -68,7 +69,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new InriaAerialImageLabeling Dataset instance.
 
@@ -114,12 +115,13 @@ class InriaAerialImageLabeling(NonGeoDataset):
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                if match := pattern.search(img):
+                fname = os.path.basename(img)
+                if match := pattern.search(fname):
                     idx = int(match.group(2))
                     # For validation, use the first 5 images of every location
-                    if self.split == 'train' and idx > 5:
-                        files.append({'image': img, 'label': lbl})
-                    elif self.split == 'val' and idx < 6:
+                    if (self.split == 'train' and idx > 5) or (
+                        self.split == 'val' and idx < 6
+                    ):
                         files.append({'image': img, 'label': lbl})
         else:
             for img in images:
@@ -212,19 +214,19 @@ class InriaAerialImageLabeling(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
+        image = einops.rearrange(sample['image'][:3], 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         ncols = 1
         show_mask = 'mask' in sample
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
 
         if show_predictions:
-            prediction = sample['prediction'].numpy()
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))

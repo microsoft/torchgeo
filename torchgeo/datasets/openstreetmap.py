@@ -11,7 +11,7 @@ import re
 import time
 import warnings
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypedDict
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
@@ -28,6 +28,13 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
 from .utils import Path, Sample
+
+
+class OSMClassConfig(TypedDict):
+    """Type definition for OpenStreetMap class configuration."""
+
+    name: str
+    selector: list[dict[str, str | list[str]]]
 
 
 class OpenStreetMap(VectorDataset):
@@ -85,7 +92,7 @@ class OpenStreetMap(VectorDataset):
     def __init__(
         self,
         bbox: tuple[float, float, float, float],
-        classes: list[dict[str, Any]],
+        classes: list[OSMClassConfig],
         paths: Path = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
@@ -97,7 +104,7 @@ class OpenStreetMap(VectorDataset):
             bbox: bounding box for initial data fetch as (xmin, ymin, xmax, ymax) in EPSG:4326
             classes: list of dicts defining feature classes. Each dict must have:
                 - 'name' (str): class name
-                - 'selector' (list[dict[str, Any]]): list of OSM tag filters
+                - 'selector' (list[dict[str, str | list[str]]]): list of OSM tag filters
                 Features get labels 1-N based on class order, with first match taking priority.
             paths: paths directory where dataset will be stored
             res: resolution of the dataset in units of EPSG:4326 (degrees). Default is 0.0001°.
@@ -109,6 +116,7 @@ class OpenStreetMap(VectorDataset):
 
         Raises:
             DatasetNotFoundError: if dataset is not found and download is False
+            TypeError: if invalid class configuration
             ValueError: if invalid class configuration
         """
         self._validate_classes(classes)
@@ -137,29 +145,30 @@ class OpenStreetMap(VectorDataset):
         # Check for empty classes after initialization
         self._check_empty_classes()
 
-    def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
+    def _validate_classes(self, classes: list[OSMClassConfig]) -> None:
         """Validate classes configuration.
 
         Args:
             classes: list of class definitions to validate. Each class should be a dict
-                with 'name' (str) and 'selector' (list[dict[str, Any]]) keys.
+                with 'name' (str) and 'selector' (list[dict[str, str | list[str]]]) keys.
 
         Raises:
+            TypeError: if classes configuration is invalid
             ValueError: if classes configuration is invalid
         """
         if not isinstance(classes, list) or not classes:
-            raise ValueError('classes must be a non-empty list')
+            raise TypeError('classes must be a non-empty list')
 
         for i, class_def in enumerate(classes):
             if not isinstance(class_def, dict):
-                raise ValueError(f'Class {i} must be a dictionary')
+                raise TypeError(f'Class {i} must be a dictionary')
             if 'name' not in class_def or 'selector' not in class_def:
                 raise ValueError(f'Class {i} must have "name" and "selector" keys')
             if not isinstance(class_def['selector'], list):
-                raise ValueError(f'Class {i} selector must be a list')
+                raise TypeError(f'Class {i} selector must be a list')
             for j, selector in enumerate(class_def['selector']):
                 if not isinstance(selector, dict):
-                    raise ValueError(f'Class {i} selector {j} must be a dictionary')
+                    raise TypeError(f'Class {i} selector {j} must be a dictionary')
 
     def _get_data_filename(self) -> pathlib.Path:
         """Get the filename for the cached data file.
@@ -262,7 +271,7 @@ class OpenStreetMap(VectorDataset):
 
             except ValueError:
                 raise
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 last_exception = e
                 continue
 
@@ -364,7 +373,7 @@ class OpenStreetMap(VectorDataset):
         return 0
 
     def _feature_matches_selector(
-        self, props: dict[str, Any], selector: dict[str, Any]
+        self, props: dict[str, Any], selector: dict[str, str | list[str]]
     ) -> bool:
         """Check if feature properties match a selector.
 

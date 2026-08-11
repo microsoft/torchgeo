@@ -63,7 +63,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         'red',  # destroyed
     )
 
-    md5 = '45fd96716e7f5673869b166859a6cb3c'
+    sha256 = 'aed4aca4d582bc829ba0921b55d488eec6a792c2d1092aac54eb746ef8e6f1cc'
 
     url = 'https://hf.co/datasets/isaaccorley/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
@@ -93,7 +93,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new BRIGHT DFC2025 dataset instance.
 
@@ -103,7 +103,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -221,7 +221,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         exists = []
         zip_file_path = os.path.join(self.root, self.data_dir + '.zip')
         if os.path.exists(zip_file_path):
-            if self.checksum and not check_integrity(zip_file_path, self.md5):
+            if self.checksum and not check_integrity(zip_file_path, self.sha256):
                 raise RuntimeError('Dataset found, but corrupted.')
             exists.append(True)
             extract_archive(zip_file_path, self.root)
@@ -244,7 +244,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             self.url,
             self.root,
             self.data_dir + '.zip',
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def __len__(self) -> int:

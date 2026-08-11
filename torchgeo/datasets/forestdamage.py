@@ -9,10 +9,10 @@ from collections.abc import Callable
 from typing import Any
 from xml.etree import ElementTree
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -44,10 +44,10 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
     for obj in element.findall('object'):
         bndbox = obj.find('bndbox')
         bbox = [
-            int(bndbox.find('xmin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymin').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
-            int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
+            int(bndbox.find('xmin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymin').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('xmax').text),  # ty: ignore[invalid-argument-type]
+            int(bndbox.find('ymax').text),  # ty: ignore[invalid-argument-type]
         ]
 
         label_var = obj.find('damage')
@@ -57,7 +57,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
             label = 'other'
         bboxes.append(bbox)
         labels.append(label)
-    return dict(filename=filename, bboxes=bboxes, labels=labels)
+    return {'filename': filename, 'bboxes': bboxes, 'labels': labels}
 
 
 class ForestDamage(NonGeoDataset):
@@ -112,7 +112,7 @@ class ForestDamage(NonGeoDataset):
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ForestDamage dataset instance.
 
@@ -184,7 +184,7 @@ class ForestDamage(NonGeoDataset):
         )
 
         files = [
-            dict(image=image, annotation=annotation)
+            {'image': image, 'annotation': annotation}
             for image, annotation in zip(images, annotations)
         ]
 

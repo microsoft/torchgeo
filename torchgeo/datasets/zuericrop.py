@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -53,7 +53,10 @@ class ZueriCrop(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/isaaccorley/zuericrop/resolve/8ac0f416fbaab032d8670cc55f984b9f079e86b2/'
-    md5s = ('1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b')
+    sha256s = (
+        '738536d3a28154e9a47ab8431b325a0213e80e7b75e8df9f7f42cc815b322fde',
+        '9bd634d09075e5a196a6b32ed81cb75dba50aa926644f1deb2a0a27f27af82ad',
+    )
     filenames = ('ZueriCrop.hdf5', 'labels.csv')
 
     band_names = ('NIR', 'B03', 'B02', 'B04', 'B05', 'B06', 'B07', 'B11', 'B12')
@@ -65,7 +68,7 @@ class ZueriCrop(NonGeoDataset):
         bands: Sequence[str] = band_names,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ZueriCrop dataset instance.
 
@@ -75,7 +78,7 @@ class ZueriCrop(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -218,14 +221,14 @@ class ZueriCrop(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for filename, md5 in zip(self.filenames, self.md5s):
+        for filename, sha256 in zip(self.filenames, self.sha256s):
             filepath = os.path.join(self.root, filename)
             if not os.path.exists(filepath):
                 download_url(
                     self.url + filename,
                     self.root,
                     filename=filename,
-                    md5=md5 if self.checksum else None,
+                    sha256=sha256 if self.checksum else None,
                 )
 
     def _validate_bands(self, bands: Sequence[str]) -> None:
@@ -278,9 +281,7 @@ class ZueriCrop(NonGeoDataset):
         ncols = 2
         image, mask = sample['image'][time_step, rgb_indices], sample['mask']
 
-        image = torch.tensor(
-            percentile_normalization(image.numpy()) * 255, dtype=torch.uint8
-        )
+        image = (quantile_normalization(image) * 255).byte()
 
         mask = torch.argmax(mask, dim=0)
 

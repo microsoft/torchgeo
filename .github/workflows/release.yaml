@@ -15,13 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -31,11 +32,11 @@ jobs:
           uv lock --upgrade
           uv sync --locked --extra datasets --extra tests
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run integration checks
         run: |
           pytest -m slow --force-enable-socket --durations=10 tests/samplers
-          pytest -m slow --force-enable-socket --durations=10 tests/trainers
+          pytest -m slow --force-enable-socket --durations=10 tests/tasks
           python -m torchgeo --help
           torchgeo --help
   notebooks:
@@ -43,13 +44,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -60,7 +62,7 @@ jobs:
           uv sync --locked --extra docs --extra tests
           uv pip install planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run notebook checks
         run: pytest --force-enable-socket --nbmake --durations=10 docs/tutorials
 concurrency:

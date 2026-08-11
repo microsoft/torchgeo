@@ -21,12 +21,13 @@ jobs:
         python-version: ['3.12', '3.13', '3.14', '3.14t']
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -34,13 +35,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -48,25 +49,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.12'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   optional:
@@ -74,12 +76,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           enable-cache: true
+          prune-cache: true
           activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
@@ -87,13 +90,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra tests
       - name: List installed dependencies
-        run: uv pip list
+        run: uv tree
       - name: Run checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

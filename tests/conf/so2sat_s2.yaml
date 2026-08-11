@@ -1,5 +1,5 @@
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     loss: 'jaccard'
     model: 'resnet18'
@@ -12,3 +12,4 @@ data:
     band_set: 's2'
   dict_kwargs:
     root: 'tests/data/so2sat'
+    checksum: false

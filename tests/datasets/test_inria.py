@@ -7,9 +7,9 @@ import shutil
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, InriaAerialImageLabeling
 
@@ -22,7 +22,7 @@ class TestInriaAerialImageLabeling:
         root = os.path.join('tests', 'data', 'inria')
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
-            root, split=request.param, transforms=transforms
+            root, split=request.param, transforms=transforms, checksum=False
         )
 
     def test_getitem(self, dataset: InriaAerialImageLabeling) -> None:

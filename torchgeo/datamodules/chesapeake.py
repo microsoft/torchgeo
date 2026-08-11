@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from ..datasets import ChesapeakeCVPR
 from ..datasets.utils import Sample
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from .geo import GeoDataModule
 
 
@@ -54,7 +54,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.ChesapeakeCVPR`.
 
         Raises:
-            ValueError: If ``use_prior_labels=True`` is used with ``class_set=7``.
+            AssertionError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
@@ -68,11 +68,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         )
 
         assert class_set in [5, 7]
-        if use_prior_labels and class_set == 7:
-            raise ValueError(
-                'The pre-generated prior labels are only valid for the 5'
-                + ' class set of labels'
-            )
+        msg = 'The pre-generated prior labels are only valid for the 5 class set of labels'
+        assert not (use_prior_labels and class_set == 7), msg
 
         self.train_splits = train_splits
         self.val_splits = val_splits
@@ -103,25 +100,26 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.train_dataset = ChesapeakeCVPR(
                 splits=self.train_splits, layers=self.layers, **self.kwargs
             )
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset,
-                self.original_patch_size,
-                self.batch_size,
-                self.length,
+            self.train_sampler = RandomPatchSampler(
+                self.train_dataset, size=self.original_patch_size, length=self.length
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = ChesapeakeCVPR(
                 splits=self.val_splits, layers=self.layers, **self.kwargs
             )
-            self.val_sampler = GridGeoSampler(
-                self.val_dataset, self.original_patch_size, self.original_patch_size
+            self.val_sampler = GriddedPatchSampler(
+                self.val_dataset,
+                size=self.original_patch_size,
+                stride=self.original_patch_size,
             )
         if stage in ['test']:
             self.test_dataset = ChesapeakeCVPR(
                 splits=self.test_splits, layers=self.layers, **self.kwargs
             )
-            self.test_sampler = GridGeoSampler(
-                self.test_dataset, self.original_patch_size, self.original_patch_size
+            self.test_sampler = GriddedPatchSampler(
+                self.test_dataset,
+                size=self.original_patch_size,
+                stride=self.original_patch_size,
             )
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:

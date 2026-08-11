@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -19,6 +19,7 @@ import torch
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from pyproj import CRS
+from shapely.geometry.base import BaseGeometry
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
@@ -210,7 +211,7 @@ class OpenBuildings(VectorDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] = 0.0001,
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -324,7 +325,7 @@ class OpenBuildings(VectorDataset):
 
     def _filter_geometries(
         self, index: GeoSlice, filepaths: list[str]
-    ) -> list[dict[str, Any]]:
+    ) -> list[BaseGeometry]:
         """Filters a df read from the polygon csv file based on index and conf thresh.
 
         Args:

@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, xBD
 
@@ -55,7 +55,7 @@ class TestxBD:
             os.path.join('tests', 'data', 'xbd', 'test_images_labels_targets.tar.gz'),
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'),
         )
-        xBD(root=tmp_path)
+        xBD(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(

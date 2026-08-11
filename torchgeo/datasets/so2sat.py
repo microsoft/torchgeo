@@ -7,6 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal, cast
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -14,7 +15,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, check_integrity, lazy_import, percentile_normalization
+from .utils import Path, Sample, check_integrity, lazy_import, quantile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -198,7 +199,7 @@ class So2Sat(NonGeoDataset):
         split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
 
@@ -312,9 +313,7 @@ class So2Sat(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         md5 = self.md5s_by_version[self.version][self.split]
-        if not check_integrity(self.fn, md5 if self.checksum else None):
-            return False
-        return True
+        return check_integrity(self.fn, md5 if self.checksum else None)
 
     def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.
@@ -359,9 +358,9 @@ class So2Sat(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
-        image = np.rollaxis(image, 0, 3)
-        image = percentile_normalization(image, 0, 100)
+        image = sample['image'][rgb_indices]
+        image = einops.rearrange(image, 'c h w -> h w c')
+        image = quantile_normalization(image)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]

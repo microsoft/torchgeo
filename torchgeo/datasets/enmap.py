@@ -7,14 +7,14 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
-import numpy as np
+import torch
 from einops import rearrange
 from matplotlib.figure import Figure
 from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path, Sample, percentile_normalization
+from .utils import Path, Sample, quantile_normalization
 
 ALL_BANDS = list(range(1, 225))
 # Remove bands strongly affected by water vapor absorption due to presence of nodata:
@@ -352,10 +352,10 @@ class EnMAP(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample['image'][rgb_indices].cpu().numpy()
-        image = np.clip(image, 0, None)
+        image = sample['image'][rgb_indices]
+        image = torch.clamp(image, 0, None)
         image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots()
         ax.imshow(image)

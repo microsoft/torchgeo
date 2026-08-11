@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -87,9 +87,9 @@ class DigitalTyphoon(NonGeoDataset):
 
     url = 'https://hf.co/datasets/torchgeo/digital_typhoon/resolve/cf2f9ef89168d31cb09e42993d35b068688fe0df/WP.tar.gz{0}'
 
-    md5sums: ClassVar[dict[str, str]] = {
-        'aa': '9e77a5f74783f7909dee0fb936053b17',
-        'ab': '46aebdcba6e4e2df1619e4a3d7e556bb',
+    sha256s: ClassVar[dict[str, str]] = {
+        'aa': '186d3b28f120c82ec606c3a8119ced86e8a6833fee8ba9c851b2154d83f39846',
+        'ab': '943cb9d01e35321611d55e47e3a8d8ba49e51c3d64ef353f5015c112e370990a',
     }
 
     min_input_clamp = 170.0
@@ -108,7 +108,7 @@ class DigitalTyphoon(NonGeoDataset):
         max_feature_value: dict[str, float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Digital Typhoon dataset instance.
 
@@ -123,7 +123,7 @@ class DigitalTyphoon(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If any arguments are invalid.
@@ -239,7 +239,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         self.sample_sequences: list[_SampleSequenceDict] = [
             item
-            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]  # type: ignore[no-matching-overload]
+            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]
             .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
@@ -349,15 +349,15 @@ class DigitalTyphoon(NonGeoDataset):
         """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
-        feature_dict = {
-            name: torch.tensor(feature_df[name].item()).float()
-            for name in self.features
-        }
+        feature_dict = {}
+        for name in self.features:
+            feature_dict[name] = torch.tensor(feature_df[name].item()).float()
+
         # normalize the targets for regression
         if self.task == 'regression':
             for feature, mean in self.target_mean.items():
-                feature_dict[feature] = (
-                    feature_dict[feature] - mean
+                feature_dict[str(feature)] = (
+                    feature_dict[str(feature)] - mean
                 ) / self.target_std[feature]
         return feature_dict
 
@@ -380,7 +380,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Check if the tar.gz files have already been downloaded
         exists = []
-        for suffix in self.md5sums.keys():
+        for suffix in self.sha256s:
             path = os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             exists.append(os.path.exists(path))
 
@@ -398,15 +398,17 @@ class DigitalTyphoon(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for suffix, md5 in self.md5sums.items():
+        for suffix, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(suffix), self.root, md5=md5 if self.checksum else None
+                self.url.format(suffix),
+                self.root,
+                sha256=sha256 if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         # Extract tarball
-        for suffix in self.md5sums.keys():
+        for suffix in self.sha256s:
             with tarfile.open(
                 os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
             ) as tar:
@@ -425,9 +427,9 @@ class DigitalTyphoon(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample['image'].numpy(), sample['label'].numpy()
+        image, label = sample['image'], sample['label']
 
-        image = percentile_normalization(image)
+        image = quantile_normalization(image)
         image = einops.rearrange(image, 'c h w -> h w c')
 
         showing_predictions = 'prediction' in sample

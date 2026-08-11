@@ -134,7 +134,7 @@ class MMFlood(IntersectionDataset):
         include_hydro: bool = False,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         cache: bool = False,
         time_series: bool = False,
     ) -> None:
@@ -272,7 +272,6 @@ class MMFlood(IntersectionDataset):
             if not os.path.exists(path):
                 md5 = self._md5[filename] if self.checksum else None
                 download_url(url, self.root, filename, md5)
-            return
 
         filename = self.metadata['filename']
         filepath = os.path.join(self.root, filename)

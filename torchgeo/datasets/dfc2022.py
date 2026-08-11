@@ -24,7 +24,7 @@ from .utils import (
     Sample,
     check_integrity,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -147,7 +147,7 @@ class DFC2022(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DFC2022 dataset instance.
 
@@ -225,9 +225,9 @@ class DFC2022(NonGeoDataset):
             if self.split == 'train':
                 target = image.replace(self.image_root, self.target_root)
                 target = f'{os.path.splitext(target)[0]}_UA2012.tif'
-                files.append(dict(image=image, dem=dem, target=target))
+                files.append({'image': image, 'dem': dem, 'target': target})
             else:
-                files.append(dict(image=image, dem=dem))
+                files.append({'image': image, 'dem': dem})
 
         return files
 
@@ -310,10 +310,10 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image_arr = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0)
 
-        dem = sample['image'][-1].numpy()
-        dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
+        dem = sample['image'][-1]
+        dem = quantile_normalization(dem)
 
         showing_mask = 'mask' in sample
         showing_prediction = 'prediction' in sample
@@ -321,10 +321,10 @@ class DFC2022(NonGeoDataset):
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
             ncols += 1
         if showing_prediction:
-            pred = sample['prediction'].numpy()
+            pred = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))

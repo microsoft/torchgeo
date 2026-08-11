@@ -4,9 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
-import fnmatch
 import functools
-import glob
 import os
 import pathlib
 import re
@@ -14,29 +12,38 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import ExitStack
 from datetime import datetime
-from typing import Any, ClassVar, Literal, cast
+from typing import Any, Literal, cast
 
 import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pyproj
 import rasterio
 import rasterio.features
 import rasterio.merge
-import rasterio.warp
 import shapely
 import torch
 from geopandas import GeoDataFrame
-from pyproj import CRS
+from matplotlib.colors import ListedColormap
+from PIL.Image import Image
+
+# https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#rasterio
+from pyproj import CRS as PROJ_CRS
+from rasterio.crs import CRS as RIO_CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
+from rasterio.transform import Affine, array_bounds, from_gcps
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import calculate_default_transform
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
 from .errors import DatasetNotFoundError
+from .mixins import PlottingMixin
 from .utils import (
     GeoSlice,
     Path,
@@ -45,13 +52,13 @@ from .utils import (
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
+    find_files,
     lazy_import,
     merge_samples,
-    path_is_vsi,
 )
 
 
-class GeoDataset(Dataset[Sample], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -143,7 +150,6 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         geoslice = tuple(out)
         assert len(geoslice) == 3
-        geoslice = cast(tuple[slice, slice, slice], geoslice)
         return geoslice
 
     def _slice_to_tensor(self, index: GeoSlice) -> Tensor:
@@ -193,7 +199,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -209,7 +215,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
             a single dataset
 
         Raises:
-            ValueError: if other is not a :class:`GeoDataset`
+            TypeError: if other is not a :class:`GeoDataset`
 
         .. versionadded:: 0.2
         """
@@ -250,17 +256,17 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         return slice(xmin, xmax, xres), slice(ymin, ymax, yres), slice(tmin, tmax, tres)
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of the dataset.
 
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        _crs = cast(CRS, self.index.crs)
+        _crs = cast(PROJ_CRS, self.index.crs)
         return _crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
         If ``new_crs == self.crs``, does nothing, otherwise updates the index.
@@ -309,7 +315,6 @@ class GeoDataset(Dataset[Sample], abc.ABC):
 
         .. versionadded:: 0.5
         """
-        # Make iterable
         if isinstance(self.paths, str | os.PathLike):
             paths: Iterable[Path] = [cast(Path, self.paths)]
         else:
@@ -318,20 +323,15 @@ class GeoDataset(Dataset[Sample], abc.ABC):
         # Using set to remove any duplicates if directories are overlapping
         files: set[str] = set()
         for path in paths:
-            if os.path.isdir(path):
-                pathname = os.path.join(path, '**', self.filename_glob)
-                files |= set(glob.iglob(pathname, recursive=True))
-            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
-                str(path), f'*{self.filename_glob}'
-            ):
-                files.add(str(path))
-            elif not hasattr(self, 'download'):
+            found = set(find_files(path, self.filename_glob))
+            if found:
+                files.update(found)
+            elif not os.path.isdir(path) and not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
                     f'Path was ignored.',
                     UserWarning,
                 )
-
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
 
@@ -379,15 +379,6 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
-    #: Names of all available bands in the dataset
-    all_bands: tuple[str, ...] = ()
-
-    #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: tuple[str, ...] = ()
-
-    #: Color map for the dataset, used for plotting
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
-
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -426,7 +417,7 @@ class RasterDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -483,14 +474,19 @@ class RasterDataset(GeoDataset):
                 try:
                     vrt = self._load_warp_file(filepath=filepath, crs=crs)
                     # See if file has a color map
-                    if len(self.cmap) == 0:
+                    if self.cmap is None:
                         try:
-                            self.cmap = vrt.colormap(1)  # type: ignore[misc]
+                            colors = np.array(list(vrt.colormap(1).values())) / 255
+                            self.cmap = ListedColormap(colors)
                         except ValueError:
                             pass
                     if crs is None:
-                        crs = vrt.crs
-                    geometries.append(shapely.box(*vrt.bounds))
+                        with rasterio.Env(OSR_WKT_FORMAT='WKT2_2018'):
+                            crs = PROJ_CRS.from_user_input(vrt.crs)
+                    footprint = self.footprint_from_datasource(vrt)
+                    if footprint is None:
+                        footprint = shapely.box(*vrt.bounds)
+                    geometries.append(footprint)
                     if res is None:
                         res = vrt.res
                 except rasterio.errors.RasterioIOError:
@@ -623,11 +619,10 @@ class RasterDataset(GeoDataset):
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         match = re.match(self.filename_regex, filename, re.VERBOSE)
-        if match:
-            if 'band' in match.groupdict():
-                start = match.start('band')
-                end = match.end('band')
-                filename = filename[:start] + band + filename[end:]
+        if match and 'band' in match.groupdict():
+            start = match.start('band')
+            end = match.end('band')
+            filename = filename[:start] + band + filename[end:]
         filepath = os.path.join(directory, filename)
         return filepath
 
@@ -656,7 +651,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
-        kwargs = {
+        kwargs: dict[str, Any] = {
             'bounds': (x.start, y.start, x.stop, y.stop),
             'res': (x.step, y.step),
             'indexes': band_indexes,
@@ -672,8 +667,8 @@ class RasterDataset(GeoDataset):
         tensor = array_to_tensor(dest)
         return tensor
 
-    @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
+    @functools.lru_cache(maxsize=128)  # noqa: B019
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader | WarpedVRT:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -684,8 +679,13 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: Path, crs: CRS | None = None) -> DatasetReader:
+    def _load_warp_file(
+        self, filepath: Path, crs: PROJ_CRS | None = None
+    ) -> DatasetReader | WarpedVRT:
         """Load and warp a file to the correct CRS and resolution.
+
+        If the dataset has no CRS/transform but has 4 corner GCPs, we derive an affine
+        transform from the GCPs and override src_crs/src_transform in WarpedVRT.
 
         Args:
             filepath: file to load and warp
@@ -694,32 +694,133 @@ class RasterDataset(GeoDataset):
 
         Returns:
             file handle of warped VRT
+
+        Raises:
+            ValueError: If dataset has no usable affine CRS/transform and no GCP CRS.
         """
         src = rasterio.open(filepath)
 
-        if crs is None:
+        has_meaningful_affine = (
+            src.transform is not None and not src.transform.is_identity
+        )
+        if has_meaningful_affine:
+            src_crs, src_transform = src.crs, src.transform
+        else:
             try:
-                crs = self.crs
-            except AttributeError:
-                crs = src.crs
+                src_crs, src_transform = self._compute_affine_georeferencing(src)
+            except ValueError:
+                src.close()
+                raise
 
-        left = min(src.bounds.left, src.bounds.right)
-        bottom = min(src.bounds.bottom, src.bounds.top)
-        right = max(src.bounds.left, src.bounds.right)
-        top = max(src.bounds.bottom, src.bounds.top)
-        transform, width, height = rasterio.warp.calculate_default_transform(
-            src.crs, crs, src.width, src.height, left, bottom, right, top
+        try:  # Use externally chosen crs
+            dst_crs = RIO_CRS.from_user_input(crs or self.crs)
+        except AttributeError:
+            dst_crs = src_crs
+
+        dst_transform, dst_width, dst_height, needs_warp = (
+            self._compute_affine_warp_grid(
+                src_crs, src_transform, src.width, src.height, dst_crs
+            )
         )
 
-        # Only warp if necessary
-        if src.crs != crs or src.transform != transform:
+        if needs_warp:
             vrt = WarpedVRT(
-                src, crs=crs, transform=transform, height=height, width=width
+                src,
+                crs=dst_crs,
+                transform=dst_transform,
+                height=dst_height,
+                width=dst_width,
+                src_crs=src_crs,
+                src_transform=src_transform,
             )
             src.close()
             return vrt
-        else:
-            return src
+        return src
+
+    def _compute_affine_georeferencing(
+        self, src: DatasetReader | WarpedVRT
+    ) -> tuple[RIO_CRS, Affine]:
+        """Computes transform from Ground Control Points.
+
+        Args:
+            src: file handle of source dataset
+
+        Returns:
+            crs: :term:`coordinate reference system (CRS)` from GCPs
+            transform: affine transform from GCPs
+
+        Raises:
+            ValueError: If dataset has no usable affine CRS/transform and no GCP CRS.
+        """
+        gcps, gcp_crs = src.gcps
+        if not gcps or gcp_crs is None:
+            raise ValueError(
+                f'{src.name}: dataset has no usable affine CRS/transform and no GCP CRS.'
+            )
+
+        # affine best-fit to e.g. 4 corner GCPs
+        return gcp_crs, from_gcps(gcps)
+
+    def _compute_affine_warp_grid(
+        self, crs: RIO_CRS, transform: Affine, width: int, height: int, dst_crs: RIO_CRS
+    ) -> tuple[Affine, int, int, bool]:
+        """Compute the output grid (affine, width, height) for warping a raster.
+
+        Args:
+            crs: :term:`coordinate reference system (CRS)` of the datasource.
+            transform: Source affine transform or spatial model.
+            width: Source width in pixels.
+            height: Source height in pixels.
+            dst_crs: :term:`coordinate reference system (CRS)` to warp to.
+
+        Returns:
+            dst_transform: Affine of output grid.
+            dst_width: Output width in pixels.
+            dst_height: Output height in pixels.
+            needs_warp: True if the source needs to be warped.
+        """
+        # Compute bounds from the effective transform (do NOT use src.bounds here)
+        west, south, east, north = array_bounds(height, width, transform)
+
+        # Ensure that rasters with unusual orientations are correctly warped
+        left = min(west, east)
+        bottom = min(south, north)
+        right = max(west, east)
+        top = max(south, north)
+
+        # Compute destination grid suggestion
+        dst_transform, dst_width, dst_height = calculate_default_transform(
+            crs, dst_crs, width, height, left, bottom, right, top
+        )
+
+        needs_warp = (
+            (crs != dst_crs)
+            or (not transform.almost_equals(dst_transform))
+            or (width != dst_width)
+            or (height != dst_height)
+        )
+
+        return dst_transform, dst_width, dst_height, needs_warp
+
+    def footprint_from_datasource(
+        self, datasource: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon | None:
+        """Compute the spatial footprint of the dataset from a file handle.
+
+        Called during indexing for each file in the dataset.
+        Override this in subclasses to compute a more precise footprint than
+        just the raster bounds (e.g., by reading a metadata file).
+
+        Args:
+            datasource: An open raster dataset.
+
+        Returns:
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
+
+        .. versionadded:: 0.10
+        """
+        return
 
 
 class XarrayDataset(GeoDataset):
@@ -737,7 +838,7 @@ class XarrayDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] | None = None,
         data_vars: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
@@ -771,7 +872,7 @@ class XarrayDataset(GeoDataset):
         for filepath in self.files:
             try:
                 with xr.open_dataset(filepath, decode_coords='all') as src:
-                    crs = crs or src.rio.crs or CRS.from_epsg(4326)
+                    crs = crs or src.rio.crs or PROJ_CRS.from_epsg(4326)
                     res = res or src.rio.resolution()
                     data_vars = data_vars or list(src.data_vars.keys())
                     tmin = pd.Timestamp(src.time.values.min())
@@ -864,7 +965,8 @@ class XarrayDataset(GeoDataset):
 
         x, y, t = self._disambiguate_slice(index)
         bounds = (x.start, y.start, x.stop, y.stop)
-        res = (x.step, y.step)
+        # merge_datasets requires a positive resolution
+        res = (abs(x.step), abs(y.step))
 
         with ExitStack() as stack:
             datasets = []
@@ -876,8 +978,14 @@ class XarrayDataset(GeoDataset):
                 if src.rio.crs is None:
                     src = src.rio.write_crs(self.crs)
 
-                if src.rio.crs != self.crs or res != src.rio.resolution():
-                    src = src.rio.reproject(self.crs, resolution=res)
+                # Flip to north-up if the y-axis is ascending or merge_datasets
+                # will silently return an all-nodata array.
+                y_dim = src.rio.y_dim
+                if src[y_dim][0] < src[y_dim][-1]:
+                    src = src.isel({y_dim: slice(None, None, -1)})
+
+                if src.rio.crs != self.crs:
+                    src = src.rio.reproject(self.crs)
 
                 datasets.append(src)
 
@@ -926,7 +1034,7 @@ class VectorDataset(GeoDataset):
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
-        crs: CRS | None = None,
+        crs: PROJ_CRS | None = None,
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[Sample], Sample] | None = None,
         label_name: str | None = None,
@@ -991,7 +1099,7 @@ class VectorDataset(GeoDataset):
                         src = gpd.read_parquet(filepath)
                     else:
                         src = gpd.read_file(filepath, layer=layer)
-                    crs = crs or src.crs or CRS.from_epsg(4326)
+                    crs = crs or src.crs or PROJ_CRS.from_epsg(4326)
                     if src.crs is None:
                         src.set_crs(crs, inplace=True)
                     elif src.crs != crs:
@@ -1189,7 +1297,7 @@ class VectorDataset(GeoDataset):
         return 1
 
 
-class NonGeoDataset(Dataset[Sample], abc.ABC):
+class NonGeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
@@ -1240,7 +1348,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
         self,
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
-        loader: Callable[[str], Any] = pil_loader,
+        loader: Callable[[str], Image | npt.NDArray[np.generic]] = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
@@ -1302,7 +1410,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
             the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: np.typing.NDArray[np.int_] = np.array(img)
+        array: npt.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))
@@ -1337,9 +1445,7 @@ class IntersectionDataset(GeoDataset):
         dataset1: GeoDataset,
         dataset2: GeoDataset,
         spatial_only: bool = False,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = concat_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
@@ -1359,7 +1465,7 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             RuntimeError: if datasets have no spatiotemporal intersection
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.8
            The *spatial_only* parameter.
@@ -1373,7 +1479,7 @@ class IntersectionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('IntersectionDataset only supports GeoDatasets')
+                raise TypeError('IntersectionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
@@ -1388,10 +1494,18 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatial intersection')
 
+        # Remove duplicate columns with a suffix
+        # Pandas does not allow suffixes of suffixes
+        columns = ['filepath_1', 'filepath_2']
+        self.index.drop(columns=columns, inplace=True, errors='ignore')
+
+        name = 'datetime'
+        datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
+        datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')), name=name)
+        self.index.index = datetime_1
+
         # Temporal intersection
         if not spatial_only:
-            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')))
-            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')))
             mint = np.maximum(datetime_1.left, datetime_2.left)
             maxt = np.minimum(datetime_1.right, datetime_2.right)
             valid = maxt >= mint
@@ -1442,7 +1556,7 @@ class IntersectionDataset(GeoDataset):
     size: {len(self)}"""
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of both datasets.
 
         Returns:
@@ -1451,7 +1565,7 @@ class IntersectionDataset(GeoDataset):
         return self.datasets[0].crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of both datasets.
 
         Args:
@@ -1505,9 +1619,7 @@ class UnionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = merge_samples,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
@@ -1525,7 +1637,7 @@ class UnionDataset(GeoDataset):
                 entry and returns a transformed version
 
         Raises:
-            ValueError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if either dataset is not a :class:`GeoDataset`
 
         .. versionadded:: 0.4
             The *transforms* parameter.
@@ -1536,12 +1648,12 @@ class UnionDataset(GeoDataset):
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
-                raise ValueError('UnionDataset only supports GeoDatasets')
+                raise TypeError('UnionDataset only supports GeoDatasets')
 
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])  # type: ignore[invalid-assignment]
+        self.index = pd.concat([dataset1.index, dataset2.index])
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -1588,7 +1700,7 @@ class UnionDataset(GeoDataset):
     size: {len(self)}"""
 
     @property
-    def crs(self) -> CRS:
+    def crs(self) -> PROJ_CRS:
         """:term:`coordinate reference system (CRS)` of both datasets.
 
         Returns:
@@ -1597,7 +1709,7 @@ class UnionDataset(GeoDataset):
         return self.datasets[0].crs
 
     @crs.setter
-    def crs(self, new_crs: CRS) -> None:
+    def crs(self, new_crs: PROJ_CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of both datasets.
 
         Args:

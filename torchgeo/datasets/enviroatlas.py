@@ -260,7 +260,7 @@ class EnviroAtlas(GeoDataset):
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -284,7 +284,7 @@ class EnviroAtlas(GeoDataset):
         """
         for split in splits:
             assert split in self.splits
-        assert all([layer in self.valid_layers for layer in layers])
+        assert all(layer in self.valid_layers for layer in layers)
         self.root = root
         self.layers = layers
         self.transforms = transforms

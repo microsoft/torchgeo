@@ -7,9 +7,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import ETCI2021, DatasetNotFoundError
 
@@ -41,7 +41,7 @@ class TestETCI2021:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return ETCI2021(root, split, transforms, download=True)
+        return ETCI2021(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: ETCI2021) -> None:
         x = dataset[0]
@@ -60,7 +60,7 @@ class TestETCI2021:
         assert len(dataset) == 3
 
     def test_already_downloaded(self, dataset: ETCI2021) -> None:
-        ETCI2021(root=dataset.root, download=True)
+        ETCI2021(root=dataset.root, download=True, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

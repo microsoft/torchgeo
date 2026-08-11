@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, quantile_normalization
 
 
 class ChaBuD(NonGeoDataset):
@@ -73,7 +73,7 @@ class ChaBuD(NonGeoDataset):
     folds: ClassVar[dict[str, list[int]]] = {'train': [1, 2, 3, 4], 'val': [0]}
     url = 'https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5'
     filename = 'train_eval.hdf5'
-    md5 = '15d78fb825f9a81dad600db828d22c08'
+    sha256 = '7aaf771259e81131e08671c9ecaeb2902378530957771a35fd142b157cb09931'
 
     def __init__(
         self,
@@ -82,7 +82,7 @@ class ChaBuD(NonGeoDataset):
         bands: Sequence[str] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ChaBuD dataset instance.
 
@@ -93,7 +93,7 @@ class ChaBuD(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: If ``split`` or ``bands`` arguments are invalid.
@@ -226,7 +226,7 @@ class ChaBuD(NonGeoDataset):
                 self.url,
                 self.root,
                 filename=self.filename,
-                md5=self.md5 if self.checksum else None,
+                sha256=self.sha256 if self.checksum else None,
             )
 
     def plot(
@@ -249,11 +249,11 @@ class ChaBuD(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample['mask'].numpy()[0]
-        image_pre = sample['image'][0][rgb_indices].numpy()
-        image_post = sample['image'][1][rgb_indices].numpy()
-        image_pre = percentile_normalization(image_pre)
-        image_post = percentile_normalization(image_post)
+        mask = sample['mask'][0]
+        image_pre = sample['image'][0][rgb_indices]
+        image_post = sample['image'][1][rgb_indices]
+        image_pre = quantile_normalization(image_pre)
+        image_post = quantile_normalization(image_post)
 
         ncols = 3
 

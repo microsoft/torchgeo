@@ -29,6 +29,12 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git commit -m "descriptive commit message"
    $ git push
 
+For developers using `uv <https://docs.astral.sh/uv/>`_, you can sync the project dependencies with:
+
+.. code-block:: console
+
+   $ uv sync
+
 
 For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/torchgeo/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
@@ -42,6 +48,16 @@ TorchGeo is licensed under the MIT License. If your pull request adds any new fi
    # Copyright (c) TorchGeo Contributors. All rights reserved.
    # Licensed under the MIT License.
 
+AI Policy
+---------
+
+The TorchGeo project follows the TorchGeo organization's `AI policy <https://github.com/torchgeo/governance/blob/main/AI-POLICY.md>`__. In particular, this means:
+
+* **Responsibility**: human-in-the-loop, must understand every line of code you contribute
+* **Copyright**: no agentic AI, must own copyright of your contributions
+* **Communication**: all issue/PR descriptions/comments must be written in your own words
+* **Conciseness**: PRs should be simple and concise, no defensive coding or unnecessary tests
+* **Disclosure**: disclose any usage of AI via our disclosure templates
 
 .. _tests:
 
@@ -172,6 +188,37 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
 
+Models
+------
+
+Pull requests may involve adding new model architectures, new pre-trained model weights, or both.
+
+Model Architectures
+^^^^^^^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add a new model *architecture*:
+
+* ``torchgeo/models/foo.py``: the actual model code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``torchgeo/models/api.py``: the model loading code
+* ``tests/models/test_foo.py``: the model tests
+* ``tests/models/test_api.py``: the model loading tests
+* ``hubconf.py``: for ``torch.hub`` support
+* ``docs/api/models/foo.rst``: the model documentation
+* ``docs/api/models.rst``: the model table of contents
+
+Model Weights
+^^^^^^^^^^^^^
+
+The following checklist lists all files that need to be modified to add new model *weights*:
+
+* ``torchgeo/models/foo.py``: the actual weight code
+* ``torchgeo/models/__init__.py``: the import alias
+* ``tests/models/test_foo.py``: the weight tests
+* ``docs/api/weights/bar.csv``: the weight documentation
+* ``docs/api/models.rst``: if bar.csv is a new sensor
+
+
 I/O Benchmarking
 ----------------
 
@@ -182,16 +229,15 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
    $ python -m torchgeo fit --config tests/conf/io_raw.yaml
    $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
 
-This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the total time taken by ``train_dataloader_next`` (RandomGeoSampler) and ``val_next`` (GridGeoSampler). With this, you can create a table on your PR like:
+This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). Each run will output a table like below. You can add these two tables to your PR to describe I/O performance before and after your change.
 
-======  ============  ==========  =====================  ===================
- state  raw (random)  raw (grid)  preprocessed (random)  preprocessed (grid)
-======  ============  ==========  =====================  ===================
-before        17.223      10.974                 15.685               4.6075
- after        17.360      11.032                  9.613               4.6673
-======  ============  ==========  =====================  ===================
+=========== ========== =========  =========  ==================
+ Split       Strategy   Samples    Time (s)   Rate (samples/s)
+=========== ========== =========  =========  ==================
+Train        Random         928    8.35074           111.12790
+Validation   Grid           992    4.97084           199.56398
+=========== ========== =========  =========  ==================
 
-In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
 
 Related Libraries
 -----------------

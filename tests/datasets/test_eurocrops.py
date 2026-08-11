@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -60,12 +60,14 @@ class TestEuroCrops:
         index = dataset.bounds
         x = dataset[index]
         dataset.plot(x, suptitle='Test')
+        plt.close()
 
     def test_plot_prediction(self, dataset: EuroCrops) -> None:
         index = dataset.bounds
         x = dataset[index]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
+        plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

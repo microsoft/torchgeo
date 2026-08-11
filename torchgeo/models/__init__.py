@@ -8,7 +8,7 @@ from .aurora import Aurora_Weights, aurora_swin_unet
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .changevit import ChangeViT
-from .convlstm import ConvLSTM
+from .convlstm import Conv3dLSTM, ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -25,6 +25,7 @@ from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
 from .rcf import MOSAIKS, RCF
@@ -83,6 +84,7 @@ __all__ = (
     'ChangeStar',
     'ChangeStarFarSeg',
     'ChangeViT',
+    'Conv3dLSTM',
     'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
@@ -93,6 +95,7 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'OlmoEarthV1_Weights',
     'Panopticon',
     'Panopticon_Weights',
     'Presto',
@@ -132,6 +135,7 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'olmoearth_v1',
     'panopticon_vitb14',
     'presto',
     'resnet18',

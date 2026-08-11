@@ -51,7 +51,7 @@ class FireRisk(NonGeoClassificationDataset):
     """
 
     url = 'https://hf.co/datasets/isaaccorley/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
-    md5 = 'a77b9a100d51167992ae8c51d26198a6'
+    sha256 = '80d51d5bf5004e4cfffac5a64a23b46c4fb3427ebd1a4f0ac848ca2dbbbf46ac'
     filename = 'FireRisk.zip'
     directory = 'FireRisk'
     splits = ('train', 'val')
@@ -71,7 +71,7 @@ class FireRisk(NonGeoClassificationDataset):
         split: Literal['train', 'val'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new FireRisk dataset instance.
 
@@ -81,7 +81,7 @@ class FireRisk(NonGeoClassificationDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -125,7 +125,7 @@ class FireRisk(NonGeoClassificationDataset):
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def _extract(self) -> None:

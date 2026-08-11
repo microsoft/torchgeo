@@ -9,9 +9,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -31,7 +31,7 @@ class TestEuroSAT:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
         base_class: type[EuroSAT] = request.param[0]
-        split: str = request.param[1]
+        split = request.param[1]
         url = os.path.join('tests', 'data', 'eurosat') + os.sep
         monkeypatch.setattr(base_class, 'url', url)
         transforms = nn.Identity()

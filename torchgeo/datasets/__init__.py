@@ -6,6 +6,7 @@
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .agrifieldnet import AgriFieldNet
+from .air_quality import AirQuality
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -61,6 +62,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
+from .dlrsd import DLRSD, DLRSDBase, DLRSDMultilabel
 from .dota import DOTA
 from .earth_embeddings import EarthEmbeddings
 from .earth_index import EarthIndexEmbeddings
@@ -93,6 +95,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .globalmangrovewatch import GlobalMangroveWatch
 from .globbiomass import GlobBiomass
 from .gse import GoogleSatelliteEmbedding
 from .habitalp2 import HabitAlp2, HabitAlp2CD
@@ -122,13 +125,16 @@ from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
+from .meta_chm import MetaCHM
 from .millionaid import MillionAID
+from .mixins import PlottingMixin
 from .mmearth import MMEarth
 from .mmflood import MMFlood
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
+from .openaerialmap import OpenAerialMap
 from .openbuildings import OpenBuildings
 from .openstreetmap import OpenStreetMap
 from .oscd import OSCD, OSCD100
@@ -141,6 +147,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .s2_100k import S2100k
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
@@ -199,6 +206,7 @@ __all__ = (
     'COWC',
     'DFC2022',
     'DIOR',
+    'DLRSD',
     'DOTA',
     'ETCI2021',
     'EUDEM',
@@ -225,6 +233,7 @@ __all__ = (
     'VHR10',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
+    'AirQuality',
     'Airphen',
     'AsterGDEM',
     'BeninSmallHolderCashews',
@@ -272,6 +281,8 @@ __all__ = (
     'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
+    'DLRSDBase',
+    'DLRSDMultilabel',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
@@ -295,6 +306,7 @@ __all__ = (
     'GeoNRW',
     'GlobBiomass',
     'GlobalBuildingMap',
+    'GlobalMangroveWatch',
     'GoogleSatelliteEmbedding',
     'HabitAlp2',
     'HabitAlp2CD',
@@ -328,13 +340,16 @@ __all__ = (
     'MMFlood',
     'MajorTOMEmbeddings',
     'MapInWild',
+    'MetaCHM',
     'MillionAID',
     'NASAMarineDebris',
     'NonGeoClassificationDataset',
     'NonGeoDataset',
+    'OpenAerialMap',
     'OpenBuildings',
     'OpenStreetMap',
     'PatternNet',
+    'PlottingMixin',
     'Potsdam2D',
     'PrestoEmbeddings',
     'QuakeSet',
@@ -342,6 +357,7 @@ __all__ = (
     'RasterDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'S2100k',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
     'SeasoNet',

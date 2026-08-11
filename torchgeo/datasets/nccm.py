@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable
 from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
-import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -59,9 +59,9 @@ class NCCM(RasterDataset):
     date_format = '%Y'
     is_image = False
     urls: ClassVar[dict[int, str]] = {
-        2019: 'https://figshare.com/ndownloader/files/25070540',
-        2018: 'https://figshare.com/ndownloader/files/25070624',
-        2017: 'https://figshare.com/ndownloader/files/25070582',
+        2019: 'https://api.figshare.com/v2/file/download/25070540',
+        2018: 'https://api.figshare.com/v2/file/download/25070624',
+        2017: 'https://api.figshare.com/v2/file/download/25070582',
     }
     md5s: ClassVar[dict[int, str]] = {
         2019: '0d062bbd42e483fdc8239d22dba7020f',
@@ -74,24 +74,20 @@ class NCCM(RasterDataset):
         2017: 'CDL2017_clip.tif',
     }
 
-    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
-        0: (0, 255, 0, 255),
-        1: (255, 0, 0, 255),
-        2: (255, 255, 0, 255),
-        3: (128, 128, 128, 255),
-        15: (255, 255, 255, 255),
-    }
+    cmap = ListedColormap(
+        [(0, 1, 0, 1), (1, 0, 0, 1), (1, 1, 0, 1), (0.5, 0.5, 0.5, 1), (1, 1, 1, 1)]
+    )
 
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2019],
+        years: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new dataset.
@@ -118,6 +114,8 @@ class NCCM(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
+        if years is None:
+            years = [2019]
         assert set(years) <= self.md5s.keys(), (
             'NCCM data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'
@@ -126,17 +124,11 @@ class NCCM(RasterDataset):
         self.years = years
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.full((max(self.cmap.keys()) + 1,), 4, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((5, 4), dtype=torch.uint8)
 
         self._verify()
         super().__init__(
             paths, crs, res, transforms=transforms, cache=cache, time_series=time_series
         )
-
-        for i, (k, v) in enumerate(self.cmap.items()):
-            self.ordinal_map[k] = i
-            self.ordinal_cmap[i] = torch.tensor(v)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -151,7 +143,10 @@ class NCCM(RasterDataset):
             IndexError: If *index* is not found in the dataset.
         """
         sample = super().__getitem__(index)
-        sample['mask'] = self.ordinal_map[sample['mask']]
+
+        # Convert nodata class (15) to 4 so there are no gaps in our ordinal mapping
+        sample['mask'][sample['mask'] == 15] = 4
+
         return sample
 
     def _verify(self) -> None:
@@ -192,26 +187,25 @@ class NCCM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample['mask'].squeeze()
+        mask = sample['mask']
         ncols = 1
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample['prediction'].squeeze()
+            pred = sample['prediction']
             ncols = 2
 
-        fig, axs = plt.subplots(
-            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
-        )
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 4, 4), squeeze=False)
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 4, 'interpolation': 'none'}
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].imshow(mask, **kwargs)
         axs[0, 0].axis('off')
 
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].imshow(pred, **kwargs)
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')

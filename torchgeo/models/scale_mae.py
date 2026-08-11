@@ -7,10 +7,9 @@ from functools import partial
 from typing import Any
 
 import torch
-import torch.nn as nn
 import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import VisionTransformer
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 _mean = [0.485, 0.456, 0.406]
@@ -225,6 +224,7 @@ def scalemae_large_patch16(
         A Scale-MAE Large patch16 model.
     """
     model = ScaleMAE(
+        *args,
         patch_size=16,
         embed_dim=1024,
         depth=24,
@@ -232,15 +232,14 @@ def scalemae_large_patch16(
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(progress=True, weights_only=True)
 
         if 'img_size' in kwargs and weights.meta['img_size'] != kwargs['img_size']:
-            state_dict = interpolate_pos_embed(model, state_dict)  # type: ignore[invalid-argument-type]
+            state_dict = interpolate_pos_embed(model, state_dict)
 
         model.load_state_dict(state_dict, strict=False)
 

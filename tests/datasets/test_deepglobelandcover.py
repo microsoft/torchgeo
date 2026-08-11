@@ -8,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, DeepGlobeLandCover
 
@@ -35,7 +35,7 @@ class TestDeepGlobeLandCover:
         root = os.path.join('tests', 'data', 'deepglobelandcover')
         filename = 'data.zip'
         shutil.copyfile(os.path.join(root, filename), os.path.join(tmp_path, filename))
-        DeepGlobeLandCover(root=tmp_path)
+        DeepGlobeLandCover(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'data.zip'), 'w') as f:

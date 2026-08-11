@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DIOR, DatasetNotFoundError
 
@@ -25,10 +25,10 @@ class TestDIOR:
 
         files = {
             'trainval': {
-                'images': {'filename': 'Images_trainval.zip', 'md5': ''},
-                'labels': {'filename': 'Annotations_trainval.zip', 'md5': ''},
+                'images': {'filename': 'Images_trainval.zip', 'sha256': ''},
+                'labels': {'filename': 'Annotations_trainval.zip', 'sha256': ''},
             },
-            'test': {'images': {'filename': 'Images_test.zip', 'md5': ''}},
+            'test': {'images': {'filename': 'Images_test.zip', 'sha256': ''}},
         }
         monkeypatch.setattr(DIOR, 'files', files)
         root = tmp_path
@@ -52,7 +52,7 @@ class TestDIOR:
                 os.path.join(str(tmp_path), path),
             )
 
-        DIOR(root=tmp_path)
+        DIOR(root=tmp_path, checksum=False)
 
     def test_getitem(self, dataset: DIOR) -> None:
         x = dataset[0]

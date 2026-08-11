@@ -8,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, EverWatch
 
@@ -45,7 +45,7 @@ class TestEverWatch:
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'everwatch', 'everwatch-benchmark.zip')
         shutil.copy(url, tmp_path)
-        EverWatch(root=tmp_path)
+        EverWatch(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'everwatch-benchmark.zip'), 'w') as f:

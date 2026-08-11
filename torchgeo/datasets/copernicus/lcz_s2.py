@@ -36,10 +36,10 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l3_lcz_s2/lcz_{}.h5'
-    md5s: ClassVar[dict[str, str]] = {
-        'train': 'e0b10cdb7f12e053cda8dd3ff12dbd9e',
-        'val': 'be3b503dba5a1405ec6d5a770c2bee33',
-        'test': '4e95788c72a421d636f6f8dc7623d116',
+    sha256s: ClassVar[dict[str, str]] = {
+        'train': 'b3e7297df254a959a00be63a312b81d6938bd201b4e8dbf77b5f9d0c9a48c54d',
+        'val': '3d1a0d8aa4bd80a791b0ad8cfeeec2bbe21278218d294487f3d7eca8d63f4b4b',
+        'test': 'd2c923ed694ea4c531a9996ae924f8360c439cd7f9b5797fcc244f719e8a058f',
     }
     filename = 'lcz_{}.h5'
     all_bands = ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B11', 'B12')
@@ -71,7 +71,7 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CopernicusBenchBase instance.
 
@@ -82,7 +82,7 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -149,5 +149,5 @@ class CopernicusBenchLCZS2(CopernicusBenchBase):
 
     def _download(self) -> None:
         """Download the dataset."""
-        md5 = self.md5s[self.split] if self.checksum else None
-        download_url(self.url.format(self.split), self.root, md5=md5)
+        sha256 = self.sha256s[self.split] if self.checksum else None
+        download_url(self.url.format(self.split), self.root, sha256=sha256)

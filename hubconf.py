@@ -17,6 +17,7 @@ from torchgeo.models import (
     dofa_large_patch16_224,
     earthloc,
     ltae,
+    olmoearth_v1,
     panopticon_vitb14,
     presto,
     resnet18,
@@ -49,6 +50,7 @@ __all__ = (
     'dofa_large_patch16_224',
     'earthloc',
     'ltae',
+    'olmoearth_v1',
     'panopticon_vitb14',
     'presto',
     'resnet18',
@@ -73,7 +75,8 @@ __all__ = (
 
 dependencies = [
     'kornia',
-    'microsoft-aurora',
+    'aurora',
+    'olmoearth_pretrain_minimal',
     'segmentation_models_pytorch',
     'timm',
     'torchvision',

@@ -17,8 +17,8 @@ from ..datasets.utils import Sample
 from ..samplers import (
     BatchGeoSampler,
     GeoSampler,
-    GridGeoSampler,
-    RandomBatchGeoSampler,
+    GriddedPatchSampler,
+    RandomPatchSampler,
 )
 from .utils import MisconfigurationException
 
@@ -157,9 +157,8 @@ class BaseDataModule(LightningDataModule):
         dataset = self.dataset or self.val_dataset
         if isinstance(dataset, Subset):
             dataset = dataset.dataset
-        if dataset is not None:
-            if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)  # type: ignore[call-non-callable]
+        if dataset is not None and hasattr(dataset, 'plot'):
+            fig = dataset.plot(*args, **kwargs)  # ty: ignore[call-non-callable]
         return fig
 
 
@@ -224,34 +223,34 @@ class GeoDataModule(BaseDataModule):
             self.train_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='train',  # type: ignore[unknown-argument]
+                    split='train',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset, self.patch_size, self.batch_size, self.length
+            self.train_sampler = RandomPatchSampler(
+                self.train_dataset, size=self.patch_size, length=self.length
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='val',  # type: ignore[unknown-argument]
+                    split='val',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
-            self.val_sampler = GridGeoSampler(
-                self.val_dataset, self.patch_size, self.patch_size
+            self.val_sampler = GriddedPatchSampler(
+                self.val_dataset, size=self.patch_size, stride=self.patch_size
             )
         if stage in ['test']:
             self.test_dataset = cast(
                 GeoDataset,
                 self.dataset_class(
-                    split='test',  # type: ignore[unknown-argument]
+                    split='test',  # ty: ignore[unknown-argument]
                     **self.kwargs,
                 ),
             )
-            self.test_sampler = GridGeoSampler(
-                self.test_dataset, self.patch_size, self.patch_size
+            self.test_sampler = GriddedPatchSampler(
+                self.test_dataset, size=self.patch_size, stride=self.patch_size
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
@@ -379,17 +378,17 @@ class NonGeoDataModule(BaseDataModule):
         """
         if stage in ['fit']:
             self.train_dataset = self.dataset_class(
-                split='train',  # type: ignore[unknown-argument]
+                split='train',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = self.dataset_class(
-                split='val',  # type: ignore[unknown-argument]
+                split='val',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
         if stage in ['test']:
             self.test_dataset = self.dataset_class(
-                split='test',  # type: ignore[unknown-argument]
+                split='test',  # ty: ignore[unknown-argument]
                 **self.kwargs,
             )
 

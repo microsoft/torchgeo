@@ -30,7 +30,7 @@ from ..utils import (
     disambiguate_timestamp,
     download_and_extract_archive,
     extract_archive,
-    percentile_normalization,
+    quantile_normalization,
 )
 
 
@@ -49,8 +49,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def url(self) -> str:
         """Download URL."""
 
-    #: MD5 checksum.
-    md5: str
+    #: SHA256 checksum.
+    sha256: str
 
     #: Zip file name.
     zipfile: str
@@ -71,16 +71,6 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     #: Date format string used to parse date from filename.
     date_format = '%Y%m%dT%H%M%S'
 
-    @property
-    @abstractmethod
-    def all_bands(self) -> tuple[str, ...]:
-        """All spectral channels."""
-
-    @property
-    @abstractmethod
-    def rgb_bands(self) -> tuple[str, ...]:
-        """Spectral channels used to make RGB plots."""
-
     #: Matplotlib color map for semantic segmentation and change detection plots.
     cmap: str | matplotlib.colors.Colormap
 
@@ -94,7 +84,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CopernicusBenchBase instance.
 
@@ -105,7 +95,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -212,8 +202,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        md5 = self.md5 if self.checksum else None
-        download_and_extract_archive(self.url, self.root, md5=md5)
+        sha256 = self.sha256 if self.checksum else None
+        download_and_extract_archive(self.url, self.root, sha256=sha256)
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -239,9 +229,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 raise RGBBandsMissingError()
 
         # Static -> time series
-        images = sample['image'].numpy()
+        images = sample['image']
         if sample['image'].dim() == 3:
-            images = np.expand_dims(images, axis=0)
+            images = torch.unsqueeze(images, dim=0)
 
         ncols = len(images)
         if 'mask' in sample:
@@ -275,10 +265,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             # SAR
             vv = images[:, 0]
             vh = images[:, 1]
-            images = np.stack([vv, vh, (vv + vh) / 2], axis=1)
-            images = percentile_normalization(images)
+            images = torch.stack([vv, vh, (vv + vh) / 2], dim=1)
+            images = quantile_normalization(images)
 
-        images = percentile_normalization(images)
+        images = quantile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
             ax[0, i].imshow(images[i])

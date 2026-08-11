@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import DatasetNotFoundError, UCMerced
@@ -49,7 +49,7 @@ class TestUCMerced:
     ) -> None:
         shutil.rmtree(dataset.root)
         shutil.copy(dataset.url + dataset.filename, tmp_path)
-        UCMerced(tmp_path)
+        UCMerced(tmp_path, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

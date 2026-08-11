@@ -130,7 +130,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         countries: str | Sequence[str] = ['austria'],
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Fields Of The World dataset instance.
 
