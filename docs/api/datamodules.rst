@@ -87,6 +87,11 @@ Cloud Cover Detection
 
 .. autoclass:: CloudCoverDetectionDataModule
 
+Copernicus-Bench Biomass-S3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CopernicusBenchBiomassS3DataModule
+
 COWC
 ^^^^
 
