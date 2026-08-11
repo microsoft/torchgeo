@@ -195,7 +195,7 @@ class FourierExpansion(nn.Module):
         if not (d % 2 == 0):
             raise ValueError('The dimensionality must be a multiple of two.')
 
-        dtype = torch.get_default_dtype()
+        dtype = x.dtype if x.is_floating_point() else torch.get_default_dtype()
 
         # Always perform the expansion with `float64`s to avoid numerical accuracy shenanigans.
         x = x.double()

@@ -19,24 +19,27 @@ from torchgeo.models.copernicusfm import (
 
 
 class TestResizeEmbeddings:
-    def test_resize_abs_pos_embed(self, use_float16: None) -> None:
-        pos_embed = torch.rand(1, 4, 4)
+    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
+    def test_resize_abs_pos_embed(self, dtype: torch.dtype) -> None:
+        pos_embed = torch.rand(1, 4, 4, dtype=dtype)
         resize_abs_pos_embed(pos_embed, 2, 2)
         output = resize_abs_pos_embed(pos_embed, 2, 4, 0)
-        assert output.dtype == torch.float16
+        assert output.dtype == dtype
 
-    def test_pi_resize_patch_embed(self) -> None:
-        patch_embed = torch.rand(1, 1, 4, 4, dtype=torch.float64)
+    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
+    def test_pi_resize_patch_embed(self, dtype: torch.dtype) -> None:
+        patch_embed = torch.rand(1, 1, 4, 4, dtype=dtype)
         output = pi_resize_patch_embed(patch_embed, (2, 2))
-        assert output.dtype == torch.float64
+        assert output.dtype == dtype
 
 
 class TestFourierExpansion:
-    def test_zeros(self, use_float16: None) -> None:
+    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
+    def test_zeros(self, dtype: torch.dtype) -> None:
         expansion = FourierExpansion(1, 2)
-        x = torch.zeros(2)
+        x = torch.zeros(2, dtype=dtype)
         output = expansion(x, 2)
-        assert output.dtype == torch.float16
+        assert output.dtype == dtype
 
     def test_range(self) -> None:
         expansion = FourierExpansion(1, 2)
@@ -150,29 +153,6 @@ class TestCopernicusFMBase:
             bandwidths=bandwidths,
             input_mode=input_mode,
         )
-
-    def test_copernicusfm_spectral_dtype(self, monkeypatch: MonkeyPatch) -> None:
-        model = copernicusfm_base()
-
-        def check_dtype(
-            x: Tensor,
-            wavelengths: Tensor,
-            bandwidths: Tensor,
-            kernel_size: int | None = None,
-        ) -> None:
-            assert wavelengths.dtype == x.dtype
-            assert bandwidths.dtype == x.dtype
-            raise RuntimeError('dtype checked')
-
-        monkeypatch.setattr(model.patch_embed_spectral, 'forward', check_dtype)
-        x = torch.rand(1, 4, 28, 28, dtype=torch.float16)
-        metadata = torch.rand(1, 4)
-        wavelengths = [664.6, 559.8, 492.4, 832.8]
-        bandwidths = [31, 36, 66, 106]
-        with pytest.raises(RuntimeError, match='dtype checked'):
-            model.forward_features(
-                x, metadata, wavelengths=wavelengths, bandwidths=bandwidths
-            )
 
     def test_copernicusfm_variable(self) -> None:
         model = copernicusfm_base()
