@@ -285,28 +285,22 @@ class TemporallySharedBlock(nn.Module):
             ValueError: If every frame is padding.
         """
         if x.ndim != 5:
-            raise ValueError('x must have shape (B, T, C, H, W)')
+            raise ValueError('expected (B, T, C, H, W)')
 
-        b, t, c, h, w = x.shape
-        out = x.view(b * t, c, h, w)
+        b, t = x.shape[:2]
+        x = rearrange(x, 'b t c h w -> (b t) c h w')
         if self.pad_value is None:
-            out = self.forward(out)
+            out = self(x)
         else:
-            pad_mask = (out == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)
-            if pad_mask.any():
-                valid_mask = ~pad_mask
-                if not valid_mask.any():
-                    raise ValueError('batch must contain at least one non-padded frame')
-                valid_out = self.forward(out[valid_mask])
-                out_shape = torch.Size([b * t, *valid_out.shape[1:]])
-                temp = valid_out.new_full(out_shape, self.pad_value)
-                temp[valid_mask] = valid_out
-                out = temp
-            else:
-                out = self.forward(out)
+            valid = ~(x == self.pad_value).flatten(1).all(1)
+            if not valid.any():
+                raise ValueError('batch contains no valid frames')
 
-        _, c_out, h_out, w_out = out.shape
-        return out.view(b, t, c_out, h_out, w_out)
+            valid_out = self(x[valid])
+            out = valid_out.new_full((b * t, *valid_out.shape[1:]), self.pad_value)
+            out[valid] = valid_out
+
+        return rearrange(out, '(b t) c h w -> b t c h w', b=b, t=t)
 
 
 class ConvLayer(nn.Module):

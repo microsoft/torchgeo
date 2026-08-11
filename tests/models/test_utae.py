@@ -218,7 +218,7 @@ class TestUTAE:
         block = ConvBlock(nkernels=(1, 2), pad_value=None, norm='none')
         x = torch.randn(3, 1, 8, 8)
 
-        with pytest.raises(ValueError, match='x must have shape'):
+        with pytest.raises(ValueError, match=r'expected \(B, T, C, H, W\)'):
             block.smart_forward(x)
 
     def test_smart_forward_skips_padded_batch_norm_stats(self) -> None:
@@ -243,5 +243,5 @@ class TestUTAE:
         block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
         x = torch.zeros(1, 2, 1, 8, 8)
 
-        with pytest.raises(ValueError, match='at least one non-padded frame'):
+        with pytest.raises(ValueError, match='batch contains no valid frames'):
             block.smart_forward(x)
