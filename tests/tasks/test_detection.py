@@ -3,6 +3,7 @@
 
 import os
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -40,6 +41,14 @@ class TestObjectDetection:
     ) -> None:
         if name == 'vhr10_rf_detr':
             pytest.importorskip('rfdetr')
+            import rfdetr.models
+
+            load_pretrain_weights = Mock()
+            apply_lora = Mock()
+            monkeypatch.setattr(
+                rfdetr.models, 'load_pretrain_weights', load_pretrain_weights
+            )
+            monkeypatch.setattr(rfdetr.models, 'apply_lora', apply_lora)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -68,6 +77,10 @@ class TestObjectDetection:
             main(['predict', *args])
         except MisconfigurationException:
             pass
+
+        if name == 'vhr10_rf_detr':
+            load_pretrain_weights.assert_called()
+            apply_lora.assert_called()
 
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
