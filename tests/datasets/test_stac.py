@@ -219,6 +219,31 @@ class TestSTACDataset:
             ]
         ]
 
+    def test_time_range_pushdown_normalizes_naive_to_utc(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A tz-naive time_range is coerced to UTC so the Arrow pushdown stays
+        comparable to STAC's UTC datetime column."""
+        table = _editable_table()
+        calls: list[object] = []
+
+        def read_parquet(*args: object, **kwargs: object) -> GeoDataFrame:
+            calls.append(kwargs.get('filters'))
+            return table.copy()
+
+        monkeypatch.setattr(gpd, 'read_parquet', read_parquet)
+        STACDataset(
+            ITEMS,
+            ('B04',),
+            time_range=('2020-01-01', '2020-01-02'),
+            crs=CRS.from_epsg(32632),
+            res=10,
+        )
+        assert calls[0] == [
+            ('datetime', '>=', pd.Timestamp('2020-01-01', tz='UTC')),
+            ('datetime', '<=', pd.Timestamp('2020-01-02', tz='UTC')),
+        ]
+
     @pytest.mark.parametrize(
         ('filters', 'expected'),
         [

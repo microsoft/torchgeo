@@ -27,6 +27,17 @@ from .utils import GeoSlice, Path, Sample
 DEFAULT_MAX_INDEX_ITEMS = 10_000
 
 
+def _to_utc(value: str | pd.Timestamp) -> pd.Timestamp:
+    """Normalize a datetime input to a timezone-aware UTC timestamp.
+
+    STAC GeoParquet stores ``datetime`` in UTC, so user-supplied bounds are
+    coerced to UTC -- whether or not they carry a timezone -- to stay comparable
+    to that column in both the Arrow pushdown filter and the in-memory time mask.
+    """
+    ts = pd.Timestamp(value)
+    return ts.tz_localize('UTC') if ts.tz is None else ts.tz_convert('UTC')
+
+
 class STACDataset(RasterDataset):
     """STAC GeoParquet-backed raster dataset."""
 
@@ -91,9 +102,15 @@ class STACDataset(RasterDataset):
         parquet_bbox = intersects_bbox
         parquet_filesystem: Any | None = None
 
+        t_start: pd.Timestamp | None = None
+        t_end: pd.Timestamp | None = None
         time_filters = None
         if time_range:
-            t_start, t_end = pd.Timestamp(time_range[0]), pd.Timestamp(time_range[1])
+            t_start, t_end = _to_utc(time_range[0]), _to_utc(time_range[1])
+            if t_end < t_start:
+                raise ValueError(
+                    'time_range stop must be greater than or equal to start.'
+                )
             time_filters = [('datetime', '>=', t_start), ('datetime', '<=', t_end)]
             if parquet_filters is None:
                 parquet_filters = time_filters
@@ -206,22 +223,7 @@ class STACDataset(RasterDataset):
             else:
                 raise ValueError('invalid values in start_datetime/end_datetime column')
 
-        if time_range:
-            t_start = (
-                pd.Timestamp(time_range[0]).tz_localize('UTC')
-                if pd.Timestamp(time_range[0]).tz is None
-                else pd.Timestamp(time_range[0]).tz_convert('UTC')
-            )
-            t_end = (
-                pd.Timestamp(time_range[1]).tz_localize('UTC')
-                if pd.Timestamp(time_range[1]).tz is None
-                else pd.Timestamp(time_range[1]).tz_convert('UTC')
-            )
-            if t_end < t_start:
-                raise ValueError(
-                    'time_range stop must be greater than or equal to start.'
-                )
-
+        if t_start is not None and t_end is not None:
             time_mask = (start <= t_end) & (end >= t_start)
             df, start, end = df[time_mask], start[time_mask], end[time_mask]
 
