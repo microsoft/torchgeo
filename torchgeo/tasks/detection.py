@@ -29,7 +29,7 @@ from torchvision.ops import (
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..datasets.utils import Sample
+from ..datasets.utils import Sample, lazy_import
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -155,39 +155,30 @@ class ObjectDetection(BaseTask):
         freeze_backbone: bool = self.hparams['freeze_backbone']
 
         if model.startswith('rf-detr'):
-            from rfdetr.config import (
-                RFDETRLargeConfig,
-                RFDETRMediumConfig,
-                RFDETRNanoConfig,
-                RFDETRSmallConfig,
-                TrainConfig,
-            )
-            from rfdetr.models import (
-                apply_lora,
-                build_criterion_from_config,
-                build_model_from_config,
-                load_pretrain_weights,
-            )
+            rfdetr_config = lazy_import('rfdetr.config')
+            rfdetr_models = lazy_import('rfdetr.models')
 
             variants = {
-                'rf-detr-nano': RFDETRNanoConfig,
-                'rf-detr-small': RFDETRSmallConfig,
-                'rf-detr-medium': RFDETRMediumConfig,
-                'rf-detr-large': RFDETRLargeConfig,
+                'rf-detr-nano': rfdetr_config.RFDETRNanoConfig,
+                'rf-detr-small': rfdetr_config.RFDETRSmallConfig,
+                'rf-detr-medium': rfdetr_config.RFDETRMediumConfig,
+                'rf-detr-large': rfdetr_config.RFDETRLargeConfig,
             }
             self.model_kwargs.setdefault('num_channels', in_channels)
             self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
             model_config = variants[model](
                 num_classes=num_classes - 1, **self.model_kwargs
             )
-            train_config = TrainConfig(dataset_dir='.', output_dir='.')
-            self.model = build_model_from_config(model_config, train_config)
+            train_config = rfdetr_config.TrainConfig(dataset_dir='.', output_dir='.')
+            self.model = rfdetr_models.build_model_from_config(
+                model_config, train_config
+            )
             if model_config.pretrain_weights is not None:
-                load_pretrain_weights(self.model, model_config)
+                rfdetr_models.load_pretrain_weights(self.model, model_config)
             if model_config.backbone_lora:
-                apply_lora(self.model)
+                rfdetr_models.apply_lora(self.model)
             self.rf_detr_criterion, self.rf_detr_postprocess = (
-                build_criterion_from_config(model_config, train_config)
+                rfdetr_models.build_criterion_from_config(model_config, train_config)
             )
             return
 
