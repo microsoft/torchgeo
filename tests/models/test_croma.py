@@ -30,7 +30,7 @@ def save_model(model: CROMA, path: Path) -> None:
 
 class TestCROMA:
     @pytest.mark.parametrize('modalities', [['sar'], ['optical'], ['sar', 'optical']])
-    def test_croma(self, modalities: list[str], use_bfloat16: None) -> None:
+    def test_croma(self, modalities: list[str], use_float16: None) -> None:
         batch_size = 2
         model = CROMA(modalities=modalities)
         if 'sar' in modalities:
