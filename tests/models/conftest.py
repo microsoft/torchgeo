@@ -14,9 +14,9 @@ def features_only(request: SubRequest) -> bool:
 
 
 @pytest.fixture
-def use_bfloat16() -> Iterator[None]:
+def use_float16() -> Iterator[None]:
     dtype = torch.get_default_dtype()
-    torch.set_default_dtype(torch.bfloat16)
+    torch.set_default_dtype(torch.float16)
     try:
         yield
     finally:
