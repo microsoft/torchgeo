@@ -44,7 +44,7 @@ class TestRCF:
         weights2 = RCF(seed=1, mode='gaussian').weights
         assert torch.allclose(weights1, weights2)
 
-    def test_empirical(self) -> None:
+    def test_empirical(self, use_bfloat16: None) -> None:
         root = os.path.join('tests', 'data', 'eurosat')
         ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split='train')
         model = RCF(
