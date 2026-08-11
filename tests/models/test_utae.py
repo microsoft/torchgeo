@@ -238,26 +238,10 @@ class TestUTAE:
         expected_batch_norm = _first_batch_norm(expected_block)
         _assert_batch_norm_state_equal(batch_norm, expected_batch_norm)
 
-    def test_smart_forward_all_padded_preserves_batch_norm_stats(self) -> None:
-        """All-padded fallback infers shape without mutating BatchNorm state."""
+    def test_smart_forward_rejects_all_padded(self) -> None:
+        """A batch must contain at least one non-padded frame."""
         block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
-        batch_norm = _first_batch_norm(block)
-        assert batch_norm.running_mean is not None
-        assert batch_norm.running_var is not None
-        assert batch_norm.num_batches_tracked is not None
-        running_mean = batch_norm.running_mean.clone()
-        running_var = batch_norm.running_var.clone()
-        num_batches_tracked = batch_norm.num_batches_tracked.clone()
         x = torch.zeros(1, 2, 1, 8, 8)
 
-        block.train()
-        out = block.smart_forward(x)
-
-        assert out.shape == (1, 2, 1, 8, 8)
-        assert torch.all(out == 0)
-        assert batch_norm.running_mean is not None
-        assert batch_norm.running_var is not None
-        assert batch_norm.num_batches_tracked is not None
-        assert torch.equal(batch_norm.running_mean, running_mean)
-        assert torch.equal(batch_norm.running_var, running_var)
-        assert torch.equal(batch_norm.num_batches_tracked, num_batches_tracked)
+        with pytest.raises(ValueError, match='at least one non-padded frame'):
+            block.smart_forward(x)

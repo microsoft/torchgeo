@@ -282,6 +282,7 @@ class TemporallySharedBlock(nn.Module):
 
         Raises:
             ValueError: If *x* does not have shape ``(B, T, C, H, W)``.
+            ValueError: If every frame is padding.
         """
         if x.ndim != 5:
             raise ValueError('x must have shape (B, T, C, H, W)')
@@ -294,41 +295,18 @@ class TemporallySharedBlock(nn.Module):
             pad_mask = (out == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)
             if pad_mask.any():
                 valid_mask = ~pad_mask
-                if valid_mask.any():
-                    valid_out = self.forward(out[valid_mask])
-                    out_shape = torch.Size([b * t, *valid_out.shape[1:]])
-                    temp = valid_out.new_full(out_shape, self.pad_value)
-                    temp[valid_mask] = valid_out
-                    out = temp
-                else:
-                    out_shape = self._infer_output_shape(out)
-                    out = out.new_full(out_shape, self.pad_value)
+                if not valid_mask.any():
+                    raise ValueError('batch must contain at least one non-padded frame')
+                valid_out = self.forward(out[valid_mask])
+                out_shape = torch.Size([b * t, *valid_out.shape[1:]])
+                temp = valid_out.new_full(out_shape, self.pad_value)
+                temp[valid_mask] = valid_out
+                out = temp
             else:
                 out = self.forward(out)
 
         _, c_out, h_out, w_out = out.shape
         return out.view(b, t, c_out, h_out, w_out)
-
-    def _infer_output_shape(self, x: Tensor) -> torch.Size:
-        """Infer output shape via a dummy forward pass.
-
-        Called only when every frame in a batch is padding, so there are no
-        valid frames to process but we still need the output shape to allocate
-        the output tensor.  BatchNorm2d updates its running statistics even
-        under ``torch.no_grad()``, so we snapshot and restore them to avoid
-        corrupting the model with padding data.
-        """
-        batch_norms = [m for m in self.modules() if isinstance(m, nn.BatchNorm2d)]
-        saved = [
-            {name: tensor.clone() for name, tensor in m.state_dict().items()}
-            for m in batch_norms
-        ]
-        try:
-            with torch.no_grad():
-                return self.forward(x).shape
-        finally:
-            for m, state in zip(batch_norms, saved):
-                m.load_state_dict(state)
 
 
 class ConvLayer(nn.Module):
