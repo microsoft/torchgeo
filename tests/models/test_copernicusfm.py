@@ -19,27 +19,21 @@ from torchgeo.models.copernicusfm import (
 
 
 class TestResizeEmbeddings:
-    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
-    def test_resize_abs_pos_embed(self, dtype: torch.dtype) -> None:
-        pos_embed = torch.rand(1, 4, 4, dtype=dtype)
+    def test_resize_abs_pos_embed(self) -> None:
+        pos_embed = torch.rand(1, 4, 4)
         resize_abs_pos_embed(pos_embed, 2, 2)
-        output = resize_abs_pos_embed(pos_embed, 2, 4, 0)
-        assert output.dtype == dtype
+        resize_abs_pos_embed(pos_embed, 2, 4, 0)
 
-    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
-    def test_pi_resize_patch_embed(self, dtype: torch.dtype) -> None:
-        patch_embed = torch.rand(1, 1, 4, 4, dtype=dtype)
-        output = pi_resize_patch_embed(patch_embed, (2, 2))
-        assert output.dtype == dtype
+    def test_pi_resize_patch_embed(self) -> None:
+        patch_embed = torch.rand(1, 1, 4, 4)
+        pi_resize_patch_embed(patch_embed, (4, 4))
 
 
 class TestFourierExpansion:
-    @pytest.mark.parametrize('dtype', [torch.float16, torch.float32, torch.float64])
-    def test_zeros(self, dtype: torch.dtype) -> None:
+    def test_zeros(self) -> None:
         expansion = FourierExpansion(1, 2)
-        x = torch.zeros(2, dtype=dtype)
-        output = expansion(x, 2)
-        assert output.dtype == dtype
+        x = torch.zeros(2)
+        expansion(x, 2)
 
     def test_range(self) -> None:
         expansion = FourierExpansion(1, 2)

@@ -195,8 +195,6 @@ class FourierExpansion(nn.Module):
         if not (d % 2 == 0):
             raise ValueError('The dimensionality must be a multiple of two.')
 
-        dtype = x.dtype if x.is_floating_point() else torch.get_default_dtype()
-
         # Always perform the expansion with `float64`s to avoid numerical accuracy shenanigans.
         x = x.double()
 
@@ -211,7 +209,7 @@ class FourierExpansion(nn.Module):
         prod = torch.einsum('...i,j->...ij', x, 2 * np.pi / wavelengths)
         encoding = torch.cat((torch.sin(prod), torch.cos(prod)), dim=-1)
 
-        return encoding.to(dtype)
+        return encoding.to(torch.get_default_dtype())
 
 
 class DynamicPatchEmbed(nn.Module):
