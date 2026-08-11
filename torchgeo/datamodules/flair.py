@@ -15,20 +15,20 @@ from .geo import NonGeoDataModule
 
 # From the research paper : https://arxiv.org/abs/2506.07080 p16
 # AERIAL_RGBI: R, G, B, NIR bands
-AERIAL_RGBI_MEAN = torch.tensor([105.35, 111.31, 102.09, 106.12])
-AERIAL_RGBI_STD = torch.tensor([52.36, 45.63, 44.39, 40.01])
+AERIAL_RGBI_MEAN = torch.tensor([105.66, 111.35, 102.18, 106.59])
+AERIAL_RGBI_STD = torch.tensor([52.23, 45.62, 44.30, 39.78])
 
 # SPOT_RGBI: R, G, B, NIR bands
-SPOT_RGBI_MEAN = torch.tensor([432.03, 507.34, 466.75, 1126.26])
-SPOT_RGBI_STD = torch.tensor([324.70, 300.28, 239.36, 535.28])
+SPOT_RGBI_MEAN = torch.tensor([433.26, 508.75, 467.77, 1137.03])
+SPOT_RGBI_STD = torch.tensor([312.76, 284.61, 226.02, 543.11])
 
 # DEM_ELEV: DSM, DTM bands
-DEM_ELEV_MEAN = torch.tensor([326.43, 322.42])
-DEM_ELEV_STD = torch.tensor([535.41, 535.75])
+DEM_ELEV_MEAN = torch.tensor([311.06, 307.06])
+DEM_ELEV_STD = torch.tensor([537.55, 537.82])
 
 # AERIAL_RLT_PAN: Panchromatic band
 AERIAL_RLT_PAN_MEAN = torch.tensor([125.92])
-AERIAL_RLT_PAN_STD = torch.tensor([38.69])
+AERIAL_RLT_PAN_STD = torch.tensor([38.45])
 
 
 class FLAIRHUBDataModule(NonGeoDataModule):
