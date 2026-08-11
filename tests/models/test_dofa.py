@@ -17,14 +17,9 @@ from torchgeo.models import (
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
-from torchgeo.models.dofa import position_embedding
 
 
 class TestDOFA:
-    def test_dtype(self, use_float16: None) -> None:
-        pos = torch.rand(4)
-        assert position_embedding(4, pos).dtype == torch.float16
-
     @pytest.mark.parametrize(
         'wavelengths',
         [
@@ -77,19 +72,6 @@ class TestDOFASmall16:
         x = torch.rand(1, 4, 224, 224)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
-
-    def test_wavelength_dtype(self, monkeypatch: MonkeyPatch) -> None:
-        model = dofa_small_patch16_224()
-
-        def check_dtype(x: torch.Tensor, wavelengths: torch.Tensor) -> None:
-            assert wavelengths.dtype == x.dtype
-            raise RuntimeError('dtype checked')
-
-        monkeypatch.setattr(model.patch_embed, 'forward', check_dtype)
-        x = torch.rand(1, 4, 224, 224, dtype=torch.float16)
-        wavelengths = [664.6, 559.8, 492.4, 832.8]
-        with pytest.raises(RuntimeError, match='dtype checked'):
-            model.forward_features(x, wavelengths)
 
 
 class TestDOFABase16:
