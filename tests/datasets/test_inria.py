@@ -2,13 +2,12 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, InriaAerialImageLabeling
@@ -16,9 +15,7 @@ from torchgeo.datasets import DatasetNotFoundError, InriaAerialImageLabeling
 
 class TestInriaAerialImageLabeling:
     @pytest.fixture(params=['train', 'val', 'test'])
-    def dataset(
-        self, request: SubRequest, monkeypatch: MonkeyPatch
-    ) -> InriaAerialImageLabeling:
+    def dataset(self, request: SubRequest) -> InriaAerialImageLabeling:
         root = os.path.join('tests', 'data', 'inria')
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
@@ -50,10 +47,10 @@ class TestInriaAerialImageLabeling:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             InriaAerialImageLabeling(tmp_path)
 
-    def test_dataset_checksum(self, dataset: InriaAerialImageLabeling) -> None:
-        shutil.rmtree(os.path.join(dataset.root, dataset.directory))
+    def test_dataset_checksum(self, tmp_path: Path) -> None:
+        (tmp_path / InriaAerialImageLabeling.filename).touch()
         with pytest.raises(RuntimeError, match='Dataset corrupted'):
-            InriaAerialImageLabeling(root=dataset.root, checksum=True)
+            InriaAerialImageLabeling(root=tmp_path, checksum=True)
 
     def test_plot(self, dataset: InriaAerialImageLabeling) -> None:
         x = dataset[0].copy()
