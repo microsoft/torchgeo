@@ -109,6 +109,11 @@ RasterDataset
 
 .. autoclass:: RasterDataset
 
+RasteretDataset
+^^^^^^^^^^^^^^^
+
+.. autoclass:: RasteretDataset
+
 VectorDataset
 ^^^^^^^^^^^^^
 

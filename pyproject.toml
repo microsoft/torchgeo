@@ -104,6 +104,9 @@ datasets = [
     "netcdf4>=1.6.5",
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas[parquet]>=2.1.1",
+    # rasteret 0.4.1+ required for the RasteretDataset integration boundary
+    # (footprints/native_res/read_window); rasteret requires Python <3.14
+    "rasteret>=0.4.1; python_version<'3.14'",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
     # scipy 1.11.2+ required for Python 3.12 wheels

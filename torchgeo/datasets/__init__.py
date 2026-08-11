@@ -144,6 +144,7 @@ from .potsdam import Potsdam2D
 from .presto import PrestoEmbeddings
 from .prisma import PRISMA
 from .quakeset import QuakeSet
+from .rasteret import RasteretDataset
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -356,6 +357,7 @@ __all__ = (
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
+    'RasteretDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
     'S2100k',
