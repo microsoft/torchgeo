@@ -366,9 +366,8 @@ class STACDataset(RasterDataset):
     def _resolve_href(href: str, index_path: object) -> str:
         """Resolve a relative asset href against the GeoParquet file location."""
         if (
-            href.startswith('/')
+            href.startswith(('/', '\\\\'))
             or (len(href) >= 3 and href[1] == ':' and href[0].isalpha())
-            or href.startswith('\\\\')
             or urlparse(href).scheme
         ):
             return href
