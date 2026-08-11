@@ -42,18 +42,19 @@ class TestObjectDetection:
             pytest.importorskip('rfdetr')
             import rfdetr.models
 
-            called = set()
+            # Avoid checkpoint downloads and the optional PEFT dependency.
+            called: set[str] = set()
 
-            def load_pretrain_weights(*args: Any, **kwargs: Any) -> None:
+            def record_load_pretrain_weights(*args: Any, **kwargs: Any) -> None:
                 called.add('load_pretrain_weights')
 
-            def apply_lora(*args: Any, **kwargs: Any) -> None:
+            def record_apply_lora(*args: Any, **kwargs: Any) -> None:
                 called.add('apply_lora')
 
             monkeypatch.setattr(
-                rfdetr.models, 'load_pretrain_weights', load_pretrain_weights
+                rfdetr.models, 'load_pretrain_weights', record_load_pretrain_weights
             )
-            monkeypatch.setattr(rfdetr.models, 'apply_lora', apply_lora)
+            monkeypatch.setattr(rfdetr.models, 'apply_lora', record_apply_lora)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
