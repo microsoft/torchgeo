@@ -6,3 +6,4 @@ L-TAE
 .. autoclass:: LTAE2d
 .. autoclass:: IndexPositionalEncoding
 .. autoclass:: DatePositionalEncoding
+.. autoclass:: LearnedQueryAttention

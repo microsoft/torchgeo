@@ -10,6 +10,7 @@ from typing import Literal, cast
 
 import torch
 import torch.nn.functional as F
+from einops import rearrange
 from torch import Tensor, nn
 
 from .ltae import LTAE2d
@@ -223,7 +224,7 @@ class TemporalAggregator(nn.Module):
             raise ValueError('attn_mask is required for temporal aggregation')
 
         n_heads, b, t, h, w = attn_mask.shape
-        attn = attn_mask.view(n_heads * b, t, h, w)
+        attn = rearrange(attn_mask, 'n b t h w -> (n b) t h w')
         if x.shape[-2:] != (h, w):
             attn = F.interpolate(
                 attn, size=x.shape[-2:], mode='bilinear', align_corners=False

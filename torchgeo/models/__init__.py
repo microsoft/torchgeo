@@ -24,7 +24,13 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .ltae import LTAE, DatePositionalEncoding, IndexPositionalEncoding, LTAE2d
+from .ltae import (
+    LTAE,
+    DatePositionalEncoding,
+    IndexPositionalEncoding,
+    LearnedQueryAttention,
+    LTAE2d,
+)
 from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
@@ -99,6 +105,7 @@ __all__ = (
     'FarSeg',
     'IndexPositionalEncoding',
     'LTAE2d',
+    'LearnedQueryAttention',
     'OlmoEarthV1_Weights',
     'Panopticon',
     'Panopticon_Weights',

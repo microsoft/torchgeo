@@ -12,7 +12,6 @@ from typing import cast
 import torch
 from einops import rearrange, repeat
 from torch import Tensor, nn
-from torch.nn import functional as F
 
 
 class LTAE(nn.Module):
@@ -210,7 +209,7 @@ class DatePositionalEncoding(nn.Module):
         return pe
 
 
-class _MultiHeadAttention(nn.Module):
+class LearnedQueryAttention(nn.Module):
     """Multi-head attention with a shared learned master query for L-TAE.
 
     The query is a learned parameter (not derived from the input), shared
@@ -227,16 +226,19 @@ class _MultiHeadAttention(nn.Module):
         """
         super().__init__()
         self.n_head = n_head
-        self.d_k = d_k
         self.d_in = d_in
-
-        self.Q = nn.Parameter(torch.zeros(n_head, d_k))
-        nn.init.normal_(self.Q, mean=0, std=math.sqrt(2.0 / d_k))
-
-        self.fc1_k = nn.Linear(d_in, n_head * d_k)
-        nn.init.normal_(self.fc1_k.weight, mean=0, std=math.sqrt(2.0 / d_k))
-
-        self.attn_dropout = 0.1
+        embed_dim = n_head * d_k
+        self.learned_query = nn.Parameter(torch.empty(1, embed_dim))
+        nn.init.normal_(self.learned_query, std=math.sqrt(2.0 / d_k))
+        self.mha = nn.MultiheadAttention(
+            embed_dim=embed_dim,
+            num_heads=n_head,
+            dropout=0.1,
+            kdim=d_in,
+            vdim=d_in,
+            batch_first=True,
+        )
+        self.out_proj = nn.Linear(embed_dim, d_in)
 
     def forward(
         self, v: Tensor, pad_mask: Tensor | None = None
@@ -251,31 +253,18 @@ class _MultiHeadAttention(nn.Module):
             Tuple of (output ``(n_head, B, d_in // n_head)``,
             attention ``(n_head, B, T)``).
         """
-        n_head, d_k, d_in = self.n_head, self.d_k, self.d_in
-        sz_b, seq_len, _ = v.size()
-
-        q = torch.stack([self.Q] * sz_b, dim=1).view(n_head * sz_b, d_k)
-
-        k = self.fc1_k(v).view(sz_b, seq_len, n_head, d_k)
-        k = k.permute(2, 0, 1, 3).contiguous().view(n_head * sz_b, seq_len, d_k)
-
-        if pad_mask is not None:
-            pad_mask = pad_mask.repeat(n_head, 1)
-
-        v_split = torch.stack(v.split(d_in // n_head, dim=-1)).view(
-            n_head * sz_b, seq_len, -1
+        query = repeat(self.learned_query, 'q d -> b q d', b=len(v))
+        output, attn = self.mha(
+            query,
+            v,
+            v,
+            key_padding_mask=pad_mask,
+            need_weights=True,
+            average_attn_weights=False,
         )
-
-        q = rearrange(q, 'b d -> b 1 d')
-        attn = torch.matmul(q, k.transpose(1, 2)) / math.sqrt(d_k)
-        if pad_mask is not None:
-            attn = attn.masked_fill(rearrange(pad_mask, 'b t -> b 1 t'), -1e3)
-        attn = F.dropout(
-            F.softmax(attn, dim=-1), p=self.attn_dropout, training=self.training
-        )
-        output = torch.matmul(attn, v_split)
-        attn = rearrange(attn, '(h b) 1 t -> h b t', h=n_head)
-        output = output.view(n_head, sz_b, 1, d_in // n_head).squeeze(2)
+        output = self.out_proj(output)
+        output = rearrange(output, 'b 1 (h d) -> h b d', h=self.n_head)
+        attn = rearrange(attn, 'b h 1 t -> h b t')
         return output, attn
 
 
@@ -345,7 +334,7 @@ class LTAE2d(nn.Module):
                 self.d_model // n_head, T=T, repeat=n_head
             )
 
-        self.attention_heads = _MultiHeadAttention(
+        self.attention_heads = LearnedQueryAttention(
             n_head=n_head, d_k=d_k, d_in=self.d_model
         )
         self.in_norm = nn.GroupNorm(num_groups=n_head, num_channels=self.in_channels)
