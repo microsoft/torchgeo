@@ -19,6 +19,8 @@ import rasterio
 import torch
 from geopandas import GeoDataFrame
 from pyproj import CRS
+from rasterio.io import DatasetReader
+from rasterio.vrt import WarpedVRT
 
 from .errors import DependencyNotFoundError
 from .geo import RasterDataset
@@ -356,7 +358,7 @@ class STACDataset(RasterDataset):
 
     def _load_warp_file(
         self, filepath: Path, crs: CRS | None = None
-    ) -> rasterio.io.DatasetReader:
+    ) -> DatasetReader | WarpedVRT:
         """Sign href just before opening so the cache key stays canonical."""
         if self._sign_href is not None:
             filepath = self._sign_href(str(filepath))
