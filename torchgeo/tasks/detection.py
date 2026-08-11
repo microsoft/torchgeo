@@ -28,7 +28,7 @@ from torchvision.ops import (
 )
 
 from ..datamodules import BaseDataModule
-from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import RGBBandsMissingError
 from ..datasets.utils import Sample, lazy_import
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
