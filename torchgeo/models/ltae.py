@@ -70,7 +70,7 @@ class LTAE(nn.Module):
             )
 
         # Use PyTorch's built-in positional encoding
-        self.pos_encoder = _IndexPositionalEncoding(self.d_model, dropout, T)
+        self.pos_encoder = IndexPositionalEncoding(self.d_model, dropout, T)
 
         # Use PyTorch's built-in MultiheadAttention
         self.attention = nn.MultiheadAttention(
@@ -126,7 +126,7 @@ class LTAE(nn.Module):
         return output
 
 
-class _IndexPositionalEncoding(nn.Module):
+class IndexPositionalEncoding(nn.Module):
     """Positional encoding module using sinusoidal functions."""
 
     def __init__(self, d_model: int, dropout: float = 0.1, T: int = 1000) -> None:
@@ -162,10 +162,10 @@ class _IndexPositionalEncoding(nn.Module):
         return output
 
 
-class _DatePositionalEncoding(nn.Module):
+class DatePositionalEncoding(nn.Module):
     """Date-based sinusoidal positional encoder for L-TAE 2D.
 
-    Unlike :class:`_IndexPositionalEncoding`, this encoder maps actual acquisition
+    Unlike :class:`IndexPositionalEncoding`, this encoder maps actual acquisition
     dates (integer day values) rather than sequence indices, and supports
     repeating the encoding across attention heads.
     """
@@ -369,9 +369,9 @@ class LTAE2d(nn.Module):
         if n_neurons[-1] % n_head != 0:
             raise ValueError('mlp[-1] must be divisible by n_head')
 
-        self.positional_encoder: _DatePositionalEncoding | None = None
+        self.positional_encoder: DatePositionalEncoding | None = None
         if positional_encoding:
-            self.positional_encoder = _DatePositionalEncoding(
+            self.positional_encoder = DatePositionalEncoding(
                 self.d_model // n_head, T=T, repeat=n_head
             )
 
