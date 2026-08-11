@@ -26,11 +26,7 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
           activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
@@ -53,10 +49,7 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.12'
-          enable-cache: true
           activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: List installed dependencies
@@ -79,11 +72,7 @@ jobs:
         uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
-          enable-cache: true
           activate-environment: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
       - name: Install dependencies
         run: uv sync --locked --extra tests
       - name: List installed dependencies
