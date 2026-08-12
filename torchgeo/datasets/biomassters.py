@@ -4,7 +4,6 @@
 """BioMassters Dataset."""
 
 import os
-import shutil
 from collections.abc import Sequence
 from typing import ClassVar, Literal
 
@@ -70,15 +69,8 @@ class BioMassters(NonGeoDataset):
 
     metadata_filename = 'biomassters_features_metadata.csv'
 
-    # Pinned to an immutable revision of the Hugging Face Hub repository so that
-    # the archives referenced below (and their checksums) cannot change out from
-    # under this dataset. See https://huggingface.co/datasets/torchgeo/biomassters
-    # /tree/249525e82c27a981b5355caea2730084ce5db7a8 for the pinned file listing.
     url = 'https://huggingface.co/datasets/torchgeo/biomassters/resolve/249525e82c27a981b5355caea2730084ce5db7a8/{}'
 
-    # The train/test feature archives are split into multiple parts on the
-    # Hugging Face Hub and must be concatenated before extraction, see
-    # https://huggingface.co/datasets/torchgeo/biomassters
     feature_archive_filenames: ClassVar[dict[str, list[str]]] = {
         'train': [
             'train_features.tar.gzaa',
@@ -331,14 +323,14 @@ class BioMassters(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        # The feature archive is split into multiple parts and must be
-        # concatenated before it forms a valid tar.gz archive
         feature_filenames = self.feature_archive_filenames[self.split]
         combined_path = os.path.join(self.root, f'{self.split}_features.tar.gz')
-        with open(combined_path, 'wb') as combined_f:
+        chunk_size = 2**15
+        with open(combined_path, 'wb') as outfile:
             for filename in feature_filenames:
-                with open(os.path.join(self.root, filename), 'rb') as part_f:
-                    shutil.copyfileobj(part_f, combined_f)
+                with open(os.path.join(self.root, filename), 'rb') as g:
+                    while chunk := g.read(chunk_size):
+                        outfile.write(chunk)
         extract_archive(combined_path, self.root)
         os.remove(combined_path)
 
