@@ -5,8 +5,11 @@
 
 import glob
 import os
+import struct
+import zlib
 from collections.abc import Callable, Sequence
-from typing import Literal
+from contextlib import ExitStack
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,18 +49,22 @@ class Substation(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.48550/arXiv.2409.17363
+
     """
 
     # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue) = indices 3, 2, 1
     rgb_bands = (3, 2, 1)
 
     directory = 'Substation'
-    filename_images = 'image_stack.tar.gz'
+    filenames_images = ('images.z01', 'images.z02', 'images.zip')
     filename_masks = 'mask.tar.gz'
-    url_for_images = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
-    url_for_masks = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
-    md5_images = '948706609864d0283f74ee7015f9d032'
-    md5_masks = 'baa369ececdc2ff80e6ba2b4c7fe147c'
+    url = 'https://hf.co/datasets/neurograce/SubstationDataset/resolve/465090a85529932dfdc9b20b85fc287313ac02fb/{}'
+    checksums: ClassVar[dict[str, str]] = {
+        'images.z01': '25566e86a11483c144566d0999c915909c15133bdedbdf5c9699e51595f3b54f',
+        'images.z02': 'c8b387fdc9e09c9384f156639b13a5ec4c3c5984ff4bb7233461d18d3b85043d',
+        'images.zip': 'b4e0f644b0e1aedb1fc01756efc98c23d9593f06ecccd04a4791e13fa28fc5d6',
+        'mask.tar.gz': 'e6d0c5b613373826f22b9c83af2c511a83d7a4a8adb90685c00ffeb78a79c66e',
+    }
 
     def __init__(
         self,
@@ -255,13 +262,51 @@ class Substation(NonGeoDataset):
 
         return fig
 
+    def _extract_images(self) -> None:
+        """Extract the images.
+
+        The images are distributed as a multi-part (split) zip archive. Such archives
+        record local file header offsets relative to the part they live in, so they can
+        neither be opened by :class:`zipfile.ZipFile` nor repaired by concatenating the
+        parts. The parts are instead read as a single stream and each entry is inflated
+        directly into :attr:`image_dir`.
+        """
+        os.makedirs(self.image_dir, exist_ok=True)
+        with ExitStack() as stack:
+            files = [
+                stack.enter_context(open(os.path.join(self.root, file), 'rb'))
+                for file in self.filenames_images
+            ]
+
+            def read(size: int) -> bytes:
+                # Exhausted parts return b'', so the next part is picked up transparently
+                chunks = []
+                for file in files:
+                    while size > 0 and (chunk := file.read(size)):
+                        chunks.append(chunk)
+                        size -= len(chunk)
+                return b''.join(chunks)
+
+            read(4)  # multi-part archive spanning signature
+            # Stop at the central directory, which has a different signature
+            while (header := read(30))[:4] == b'PK\x03\x04':
+                size, name_len, extra_len = struct.unpack('<18xL4x2H', header)
+                name = read(name_len).decode()
+                read(extra_len)
+                if name.endswith('/'):
+                    continue
+
+                # Replace the directory stored in the archive with image_dir
+                path = os.path.join(self.image_dir, os.path.basename(name))
+                decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+                with open(path, 'wb') as f:
+                    f.write(decompressor.decompress(read(size)))
+                    f.write(decompressor.flush())
+
     def _extract(self) -> None:
         """Extract the dataset."""
-        img_pathname = os.path.join(self.root, self.filename_images)
-        extract_archive(img_pathname)
-
-        mask_pathname = os.path.join(self.root, self.filename_masks)
-        extract_archive(mask_pathname)
+        self._extract_images()
+        extract_archive(os.path.join(self.root, self.filename_masks), self.root)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -271,10 +316,9 @@ class Substation(NonGeoDataset):
         if glob.glob(image_path) and glob.glob(mask_path):
             return
 
-        # Check if the tar.gz files for images and masks have already been downloaded
-        image_exists = os.path.exists(os.path.join(self.root, self.filename_images))
-        mask_exists = os.path.exists(os.path.join(self.root, self.filename_masks))
-        if image_exists and mask_exists:
+        # Check if the archives have already been downloaded
+        files = (*self.filenames_images, self.filename_masks)
+        if all(os.path.exists(os.path.join(self.root, file)) for file in files):
             self._extract()
             return
 
@@ -287,21 +331,10 @@ class Substation(NonGeoDataset):
         self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
-        # Download and verify images
-        download_url(
-            self.url_for_images,
-            self.root,
-            filename=self.filename_images,
-            md5=self.md5_images if self.checksum else None,
-        )
-        extract_archive(os.path.join(self.root, self.filename_images), self.root)
-
-        # Download and verify masks
-        download_url(
-            self.url_for_masks,
-            self.root,
-            filename=self.filename_masks,
-            md5=self.md5_masks if self.checksum else None,
-        )
-        extract_archive(os.path.join(self.root, self.filename_masks), self.root)
+        """Download the dataset."""
+        for file, sha256 in self.checksums.items():
+            download_url(
+                self.url.format(file),
+                self.root,
+                sha256=sha256 if self.checksum else None,
+            )

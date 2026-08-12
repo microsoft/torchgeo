@@ -100,19 +100,14 @@ class TestSubstation:
             assert x['mask'].shape == torch.Size([32, 32])
 
     def test_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-        url = os.path.join('tests', 'data', 'substation')
-        filename = Substation.filename_images
-        maskname = Substation.filename_masks
-        monkeypatch.setattr(Substation, 'url_for_images', os.path.join(url, filename))
-        monkeypatch.setattr(Substation, 'url_for_masks', os.path.join(url, maskname))
-        Substation(tmp_path, download=True)
+        url = os.path.join('tests', 'data', 'substation', '{}')
+        monkeypatch.setattr(Substation, 'url', url)
+        Substation(tmp_path, download=True, checksum=True)
 
     def test_extract(self, tmp_path: Path) -> None:
         root = os.path.join('tests', 'data', 'substation')
-        filename = Substation.filename_images
-        maskname = Substation.filename_masks
-        shutil.copyfile(os.path.join(root, filename), tmp_path / filename)
-        shutil.copyfile(os.path.join(root, maskname), tmp_path / maskname)
+        for file in (*Substation.filenames_images, Substation.filename_masks):
+            shutil.copyfile(os.path.join(root, file), tmp_path / file)
         Substation(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
