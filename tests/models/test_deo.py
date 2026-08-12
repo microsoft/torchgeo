@@ -31,27 +31,27 @@ class TestDEO:
         weights = DEO_Weights.DEO_SWIN
         path = tmp_path / f'{weights}.pth'
 
-        model = deo_base(model=model_swin, in_channels=10)
+        model = deo_base(model=model_swin)
         torch.save(model.state_dict(), path)
 
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_backbone_swin(self, model_swin: str) -> None:
-        deo_base(None, model_swin, in_channels=10)
+        deo_base(None, model_swin)
 
     def test_deo_weights(self, mocked_weights: DEO_Weights, model_swin: str) -> None:
-        deo_base(weights=mocked_weights, model=model_swin, in_channels=10)
+        deo_base(weights=mocked_weights, model=model_swin)
 
     def test_forward_rgb(self, model_swin: str) -> None:
-        model = deo_base(None, model_swin, in_channels=3)
+        model = deo_base(None, model_swin)
         model.eval()
         with torch.no_grad():
             x = torch.randn(2, 3, 256, 256)
             model(x)
 
     def test_forward_ms(self, model_swin: str) -> None:
-        model = deo_base(None, model_swin, in_channels=10)
+        model = deo_base(None, model_swin)
         model.eval()
         with torch.no_grad():
             x = torch.randn(2, 10, 256, 256)
@@ -59,4 +59,4 @@ class TestDEO:
 
     @pytest.mark.slow
     def test_deo_download(self, weights: DEO_Weights, model_swin: str) -> None:
-        deo_base(weights=weights, model=model_swin, in_channels=10)
+        deo_base(weights=weights, model=model_swin)

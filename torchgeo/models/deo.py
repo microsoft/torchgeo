@@ -24,14 +24,11 @@ class DEO(nn.Module):
     .. versionadded:: 0.10
     """
 
-    def __init__(
-        self, model: Literal['swin_b'] = 'swin_b', in_channels: Literal[3, 10] = 10
-    ) -> None:
+    def __init__(self, model: Literal['swin_b'] = 'swin_b') -> None:
         """Initialise DEO model.
 
         Args:
             model: backbone type (for now swin_b).
-            in_channels: Number of input channels.
         """
         super().__init__()
 
@@ -96,17 +93,7 @@ class DEO(nn.Module):
         Returns:
             swin feature tensor (b, c, h', w').
         """
-        # apply the appropriate conv layer based on the number of input channels
-        if x.shape[1] == 10:
-            x = self.feat_extr.conv_ms(x)
-        else:
-            x = self.feat_extr.conv_rgb(x)
-
-        # extract intermediate swin layers
-        for i, layer in enumerate(self.feat_extr.features):
-            x = layer(x)
-
-        return x
+        return self.forward_features(x)[-1]
 
 
 # Transforms used during pretraining
