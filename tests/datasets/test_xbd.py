@@ -39,13 +39,13 @@ class TestxBD:
         transforms = nn.Identity()
         if base_class is xBDDistShift:
             return base_class(
-                root,
-                split,
-                transforms,
+                root=root,
+                split=split,
                 id_disaster='hurricane-harvey',
                 ood_disaster='hurricane-michael',
+                transforms=transforms,
             )
-        return base_class(root, split, transforms)
+        return base_class(root=root, split=split, transforms=transforms)
 
     def test_getitem(self, dataset: xBD) -> None:
         x = dataset[0]
@@ -112,11 +112,10 @@ class TestxBD:
         )
         assert len(dataset) == 4
 
-    def test_default_configuration(self, monkeypatch: MonkeyPatch) -> None:
-        monkeypatch.setattr(xBDDistShift, 'default_id_disaster', 'hurricane-harvey')
-        monkeypatch.setattr(xBDDistShift, 'default_ood_disaster', 'hurricane-michael')
+    def test_default_configuration(self) -> None:
         dataset = xBDDistShift(root=os.path.join('tests', 'data', 'xbd'))
-        assert len(dataset) == 2
+        assert dataset.id_disaster == 'hurricane-matthew'
+        assert dataset.ood_disaster == 'mexico-earthquake'
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -135,16 +134,9 @@ class TestxBD:
                 ood_disaster='hurricane-michael',
             )
 
-    def test_missing_disaster(self) -> None:
-        with pytest.raises(ValueError, match='must either both be set'):
-            xBD(
-                root=os.path.join('tests', 'data', 'xbd'),
-                id_disaster='hurricane-harvey',
-            )
-
     def test_same_disaster(self) -> None:
         with pytest.raises(ValueError, match='must be different'):
-            xBD(
+            xBDDistShift(
                 root=os.path.join('tests', 'data', 'xbd'),
                 id_disaster='hurricane-harvey',
                 ood_disaster='hurricane-harvey',
@@ -152,7 +144,7 @@ class TestxBD:
 
     def test_invalid_pre_post(self) -> None:
         with pytest.raises(ValueError, match='Invalid pre/post selection'):
-            xBD(
+            xBDDistShift(
                 root=os.path.join('tests', 'data', 'xbd'),
                 id_disaster='hurricane-harvey',
                 id_pre_post='during',  # ty: ignore[invalid-argument-type]
