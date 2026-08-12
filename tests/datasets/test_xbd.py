@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,10 +17,12 @@ from torchgeo.datasets import DatasetNotFoundError, xBD, xBDDistShift
 
 
 class TestxBD:
-    @pytest.fixture(params=['train', 'test'])
+    @pytest.fixture(params=product([xBD, xBDDistShift], ['train', 'test']))
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> xBD:
+        base_class: type[xBD] = request.param[0]
+        split = request.param[1]
         monkeypatch.setattr(
-            xBD,
+            base_class,
             'metadata',
             {
                 'train': {
@@ -33,15 +36,31 @@ class TestxBD:
             },
         )
         root = os.path.join('tests', 'data', 'xbd')
-        split = request.param
         transforms = nn.Identity()
-        return xBD(root, split, transforms)
+        if base_class is xBDDistShift:
+            return base_class(
+                root,
+                split,
+                transforms,
+                id_disaster='hurricane-harvey',
+                ood_disaster='hurricane-michael',
+            )
+        return base_class(root, split, transforms)
 
     def test_getitem(self, dataset: xBD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
+        if isinstance(dataset, xBDDistShift):
+            assert x['image'].ndim == 3
+            assert set(torch.unique(x['mask']).tolist()) <= {0, 1}
+            disaster = (
+                'hurricane-harvey' if dataset.split == 'train' else 'hurricane-michael'
+            )
+            assert disaster in dataset.files[0]['image']
+        else:
+            assert x['image'].ndim == 4
 
     def test_len(self, dataset: xBD) -> None:
         assert len(dataset) == 2
@@ -83,32 +102,6 @@ class TestxBD:
         dataset.plot(x)
         plt.close()
 
-
-class TestxBDDistShift:
-    @pytest.fixture(params=['train', 'test'])
-    def dataset(self, request: SubRequest) -> xBDDistShift:
-        root = os.path.join('tests', 'data', 'xbd')
-        split = request.param
-        transforms = nn.Identity()
-        return xBDDistShift(
-            root=root,
-            split=split,
-            id_disaster='hurricane-harvey',
-            ood_disaster='hurricane-michael',
-            transforms=transforms,
-        )
-
-    def test_getitem(self, dataset: xBDDistShift) -> None:
-        x = dataset[0]
-        assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
-        assert isinstance(x['mask'], torch.Tensor)
-        # Damage classes are reformulated as a binary building mask
-        assert set(torch.unique(x['mask']).tolist()) <= {0, 1}
-
-    def test_len(self, dataset: xBDDistShift) -> None:
-        assert len(dataset) == 2
-
     def test_pre_post_both(self) -> None:
         dataset = xBDDistShift(
             root=os.path.join('tests', 'data', 'xbd'),
@@ -118,6 +111,12 @@ class TestxBDDistShift:
             ood_disaster='hurricane-michael',
         )
         assert len(dataset) == 4
+
+    def test_default_configuration(self, monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setattr(xBDDistShift, 'default_id_disaster', 'hurricane-harvey')
+        monkeypatch.setattr(xBDDistShift, 'default_ood_disaster', 'hurricane-michael')
+        dataset = xBDDistShift(root=os.path.join('tests', 'data', 'xbd'))
+        assert len(dataset) == 2
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -136,6 +135,26 @@ class TestxBDDistShift:
                 ood_disaster='hurricane-michael',
             )
 
-    def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            xBDDistShift(tmp_path)
+    def test_missing_disaster(self) -> None:
+        with pytest.raises(ValueError, match='must either both be set'):
+            xBD(
+                root=os.path.join('tests', 'data', 'xbd'),
+                id_disaster='hurricane-harvey',
+            )
+
+    def test_same_disaster(self) -> None:
+        with pytest.raises(ValueError, match='must be different'):
+            xBD(
+                root=os.path.join('tests', 'data', 'xbd'),
+                id_disaster='hurricane-harvey',
+                ood_disaster='hurricane-harvey',
+            )
+
+    def test_invalid_pre_post(self) -> None:
+        with pytest.raises(ValueError, match='Invalid pre/post selection'):
+            xBD(
+                root=os.path.join('tests', 'data', 'xbd'),
+                id_disaster='hurricane-harvey',
+                id_pre_post='during',  # ty: ignore[invalid-argument-type]
+                ood_disaster='hurricane-michael',
+            )

@@ -69,8 +69,32 @@ class xBD(NonGeoDataset):
             'directory': 'test',
         },
     }
-    classes = ('background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed')
-    colormap = ('green', 'blue', 'orange', 'red')
+    classes: tuple[str, ...] = (
+        'background',
+        'no-damage',
+        'minor-damage',
+        'major-damage',
+        'destroyed',
+    )
+    colormap: tuple[str, ...] = ('green', 'blue', 'orange', 'red')
+    binary_classes: tuple[str, ...] = ('background', 'building')
+    binary_colormap: tuple[str, ...] = ('blue',)
+    valid_disasters = (
+        'hurricane-harvey',
+        'socal-fire',
+        'hurricane-matthew',
+        'mexico-earthquake',
+        'guatemala-volcano',
+        'santa-rosa-wildfire',
+        'palu-tsunami',
+        'hurricane-florence',
+        'hurricane-michael',
+        'midwest-flooding',
+    )
+    default_id_disaster: str | None = None
+    default_id_pre_post: Literal['pre', 'post', 'both'] = 'post'
+    default_ood_disaster: str | None = None
+    default_ood_pre_post: Literal['pre', 'post', 'both'] = 'post'
 
     def __init__(
         self,
@@ -78,6 +102,10 @@ class xBD(NonGeoDataset):
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = True,
+        id_disaster: str | None = None,
+        id_pre_post: Literal['pre', 'post', 'both'] | None = None,
+        ood_disaster: str | None = None,
+        ood_pre_post: Literal['pre', 'post', 'both'] | None = None,
     ) -> None:
         """Initialize a new xBD dataset instance.
 
@@ -87,10 +115,19 @@ class xBD(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, verify the checksum of the downloaded files (may be slow)
+            id_disaster: disaster used as the in-distribution training set
+            id_pre_post: imagery to use for the in-distribution disaster
+            ood_disaster: disaster used as the out-of-distribution test set
+            ood_pre_post: imagery to use for the out-of-distribution disaster
 
         Raises:
             AssertionError: If *split* is invalid.
+            ValueError: If the disaster shift configuration is invalid.
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.10
+           The *id_disaster*, *id_pre_post*, *ood_disaster*, and *ood_pre_post*
+           parameters.
         """
         assert split in self.metadata
         self.root = root
@@ -98,10 +135,33 @@ class xBD(NonGeoDataset):
         self.transforms = transforms
         self.checksum = checksum
 
+        if id_disaster is None:
+            id_disaster = self.default_id_disaster
+        if id_pre_post is None:
+            id_pre_post = self.default_id_pre_post
+        if ood_disaster is None:
+            ood_disaster = self.default_ood_disaster
+        if ood_pre_post is None:
+            ood_pre_post = self.default_ood_pre_post
+
+        self._disaster_shift = id_disaster is not None or ood_disaster is not None
+        if self._disaster_shift:
+            self._validate_disaster_shift(
+                id_disaster, id_pre_post, ood_disaster, ood_pre_post
+            )
+            self.classes = self.binary_classes
+            self.colormap = self.binary_colormap
+
         self._verify()
 
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
-        self.files = self._load_files(root, split)
+        if self._disaster_shift:
+            disaster = id_disaster if split == 'train' else ood_disaster
+            pre_post = id_pre_post if split == 'train' else ood_pre_post
+            assert disaster is not None
+            self.files = self._load_disaster_files(root, disaster, pre_post)
+        else:
+            self.files = self._load_files(root, split)
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -116,17 +176,20 @@ class xBD(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files['image1'])
-        image2 = self._load_image(files['image2'])
-        mask1 = self._load_target(files['mask1'])
-        mask2 = self._load_target(files['mask2'])
+        if self._disaster_shift:
+            image = self._load_image(files['image'])
+            mask = self._load_target(files['mask'])
+            mask = ((mask == 1) | (mask == 2)).long()
+        else:
+            image1 = self._load_image(files['image1'])
+            image2 = self._load_image(files['image2'])
+            mask1 = self._load_target(files['mask1'])
+            mask2 = self._load_target(files['mask2'])
 
-        image = torch.stack(tensors=[image1, image2], dim=0)
+            image = torch.stack(tensors=[image1, image2], dim=0)
 
-        # Dataset consists of semantic segmentation masks before and after event
-        # Convert to change detection by subtracting damage before from damage after
-        # Clamp to avoid potential negative numbers
-        mask = torch.clamp(mask2 - mask1, 0, 4)
+            # Convert semantic masks to change detection labels.
+            mask = torch.clamp(mask2 - mask1, 0, 4)
 
         sample = {'image': image, 'mask': mask}
 
@@ -171,6 +234,80 @@ class xBD(NonGeoDataset):
                 {'image1': image1, 'image2': image2, 'mask1': mask1, 'mask2': mask2}
             )
         return files
+
+    def _load_disaster_files(
+        self, root: Path, disaster: str, pre_post: Literal['pre', 'post', 'both']
+    ) -> list[dict[str, str]]:
+        """Return files matching a disaster and pre/post selection.
+
+        Args:
+            root: root directory of the dataset
+            disaster: disaster name to select
+            pre_post: imagery to select
+
+        Returns:
+            list of dicts containing image and mask paths
+        """
+        files = []
+        for split_info in self.metadata.values():
+            directory = split_info['directory']
+            image_root = os.path.join(root, directory, 'images')
+            mask_root = os.path.join(root, directory, 'targets')
+            for image in sorted(glob.glob(os.path.join(image_root, '*.png'))):
+                basename = os.path.basename(image)
+                image_disaster = basename.split('_')[0]
+                image_pre_post = 'pre' if 'pre_disaster' in basename else 'post'
+                if image_disaster != disaster or pre_post not in (
+                    'both',
+                    image_pre_post,
+                ):
+                    continue
+
+                mask = os.path.join(mask_root, basename.replace('.png', '_target.png'))
+                files.append({'image': image, 'mask': mask})
+
+        return files
+
+    def _validate_disaster_shift(
+        self,
+        id_disaster: str | None,
+        id_pre_post: str,
+        ood_disaster: str | None,
+        ood_pre_post: str,
+    ) -> None:
+        """Validate disaster shift arguments.
+
+        Args:
+            id_disaster: in-distribution disaster
+            id_pre_post: in-distribution imagery selection
+            ood_disaster: out-of-distribution disaster
+            ood_pre_post: out-of-distribution imagery selection
+
+        Raises:
+            ValueError: If the disaster shift configuration is invalid.
+        """
+        if id_disaster is None or ood_disaster is None:
+            raise ValueError(
+                'id_disaster and ood_disaster must either both be set or both be None.'
+            )
+
+        for disaster in (id_disaster, ood_disaster):
+            if disaster not in self.valid_disasters:
+                raise ValueError(
+                    f'Invalid disaster name: {disaster}. '
+                    f'Valid options are: {", ".join(self.valid_disasters)}.'
+                )
+
+        if id_disaster == ood_disaster:
+            raise ValueError('ID and OOD disasters must be different.')
+
+        valid_pre_post = ('pre', 'post', 'both')
+        for pre_post in (id_pre_post, ood_pre_post):
+            if pre_post not in valid_pre_post:
+                raise ValueError(
+                    f'Invalid pre/post selection: {pre_post}. '
+                    f'Valid options are: {", ".join(valid_pre_post)}.'
+                )
 
     def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
@@ -258,6 +395,39 @@ class xBD(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
+        if self._disaster_shift:
+            ncols = 1
+            image = draw_semantic_segmentation_masks(
+                sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
+            )
+            if 'prediction' in sample:
+                ncols += 1
+                prediction = draw_semantic_segmentation_masks(
+                    sample['image'],
+                    sample['prediction'],
+                    alpha=alpha,
+                    colors=list(self.colormap),
+                )
+
+            fig, axs = plt.subplots(
+                ncols=ncols, figsize=(ncols * 10, 10), squeeze=False
+            )
+            axs[0, 0].imshow(image)
+            axs[0, 0].axis('off')
+            if ncols > 1:
+                axs[0, 1].imshow(prediction)
+                axs[0, 1].axis('off')
+
+            if show_titles:
+                axs[0, 0].set_title('Image')
+                if ncols > 1:
+                    axs[0, 1].set_title('Prediction')
+
+            if suptitle is not None:
+                plt.suptitle(suptitle)
+
+            return fig
+
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
             sample['image'][0], sample['mask'], alpha=alpha, colors=list(self.colormap)
@@ -314,159 +484,16 @@ class xBDDistShift(xBD):
     where minor-damage and no-damage buildings are mapped to the *building* class and
     major-damage and destroyed buildings are mapped to the *background* class.
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/1911.09296
+
     .. versionadded:: 0.10
     """
 
-    binary_classes = ('background', 'building')
-
-    valid_disasters = (
-        'hurricane-harvey',
-        'socal-fire',
-        'hurricane-matthew',
-        'mexico-earthquake',
-        'guatemala-volcano',
-        'santa-rosa-wildfire',
-        'palu-tsunami',
-        'hurricane-florence',
-        'hurricane-michael',
-        'midwest-flooding',
-    )
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        split: Literal['train', 'test'] = 'train',
-        id_disaster: str = 'hurricane-matthew',
-        id_pre_post: Literal['pre', 'post', 'both'] = 'post',
-        ood_disaster: str = 'mexico-earthquake',
-        ood_pre_post: Literal['pre', 'post', 'both'] = 'post',
-        transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new xBDDistShift dataset instance.
-
-        Args:
-            root: Root directory where the dataset can be found.
-            split: One of "train" (in-distribution) or "test" (out-of-distribution).
-            id_disaster: Name of the disaster used as the in-distribution (training)
-                set. Must be one of *valid_disasters*.
-            id_pre_post: Which imagery of the in-distribution disaster to use: "pre"
-                (before the event), "post" (after the event), or "both".
-            ood_disaster: Name of the disaster used as the out-of-distribution (test)
-                set. Must be one of *valid_disasters*.
-            ood_pre_post: Which imagery of the out-of-distribution disaster to use:
-                "pre" (before the event), "post" (after the event), or "both".
-            transforms: A function/transform that takes an input sample and returns a
-                transformed version.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
-
-        Raises:
-            AssertionError: If *split* is invalid.
-            ValueError: If *id_disaster* or *ood_disaster* is not one of
-                *valid_disasters*.
-            DatasetNotFoundError: If dataset is not found.
-        """
-        assert split in ('train', 'test')
-        for disaster in (id_disaster, ood_disaster):
-            if disaster not in self.valid_disasters:
-                raise ValueError(
-                    f'Invalid disaster name: {disaster}. '
-                    f'Valid options are: {", ".join(self.valid_disasters)}.'
-                )
-
-        self.root = root
-        self.split = split
-        self.transforms = transforms
-        self.checksum = checksum
-
-        self._verify()
-
-        files = self._gather_files(root)
-        self.split_files = {
-            'train': self._filter_files(files, id_disaster, id_pre_post),
-            'test': self._filter_files(files, ood_disaster, ood_pre_post),
-        }
-
-    def __getitem__(self, index: int) -> Sample:
-        """Return an index within the dataset.
-
-        Args:
-            index: Index to return.
-
-        Returns:
-            Data and label at that index, with the mask reformulated as a binary
-            building segmentation target.
-        """
-        files = self.split_files[self.split][index]
-        image = self._load_image(files['image'])
-        mask = self._load_target(files['mask'])
-
-        # Reformulate the multiclass damage mask as a binary building mask
-        mask[mask == 2] = 1  # minor-damage -> building
-        mask[(mask == 3) | (mask == 4)] = 0  # major-damage, destroyed -> background
-
-        sample = {'image': image, 'mask': mask}
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the current split.
-
-        Returns:
-            Length of the current split.
-        """
-        return len(self.split_files[self.split])
-
-    def _gather_files(self, root: Path) -> list[dict[str, str]]:
-        """Return the image and mask paths for every disaster across both splits.
-
-        Args:
-            root: Root directory of the dataset.
-
-        Returns:
-            List of dicts, each with the image path, mask path, disaster name, and
-            pre/post type of a single sample.
-        """
-        files = []
-        for split_info in self.metadata.values():
-            directory = split_info['directory']
-            image_root = os.path.join(root, directory, 'images')
-            mask_root = os.path.join(root, directory, 'targets')
-            for image in sorted(glob.glob(os.path.join(image_root, '*.png'))):
-                basename = os.path.basename(image)
-                disaster = basename.split('_')[0]
-                pre_post = 'pre' if 'pre_disaster' in basename else 'post'
-                mask = os.path.join(mask_root, basename.replace('.png', '_target.png'))
-                files.append(
-                    {
-                        'image': image,
-                        'mask': mask,
-                        'disaster': disaster,
-                        'pre_post': pre_post,
-                    }
-                )
-        return files
-
-    def _filter_files(
-        self,
-        files: list[dict[str, str]],
-        disaster: str,
-        pre_post: Literal['pre', 'post', 'both'],
-    ) -> list[dict[str, str]]:
-        """Select the files matching a disaster and pre/post type.
-
-        Args:
-            files: List of all files as returned by :meth:`_gather_files`.
-            disaster: Disaster name to select.
-            pre_post: Which imagery to select: "pre", "post", or "both".
-
-        Returns:
-            List of dicts with the image and mask paths of the matching samples.
-        """
-        return [
-            {'image': file['image'], 'mask': file['mask']}
-            for file in files
-            if file['disaster'] == disaster and pre_post in ('both', file['pre_post'])
-        ]
+    classes = xBD.binary_classes
+    colormap = xBD.binary_colormap
+    default_id_disaster = 'hurricane-matthew'
+    default_id_pre_post: Literal['pre', 'post', 'both'] = 'post'
+    default_ood_disaster = 'mexico-earthquake'
+    default_ood_pre_post: Literal['pre', 'post', 'both'] = 'post'
