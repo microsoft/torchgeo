@@ -52,7 +52,6 @@ class DEO(nn.Module):
             Permute([0, 2, 3, 1]),
             norm_layer_ms(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
         )
-        # self.feat_extr.proj_ms = nn.Linear(768, 96)
         self.feat_extr.conv_rgb = nn.Sequential(
             nn.Conv2d(
                 3,
