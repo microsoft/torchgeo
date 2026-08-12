@@ -39,8 +39,7 @@ class TestObjectDetection:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name == 'vhr10_rf_detr':
-            pytest.importorskip('rfdetr')
-            import rfdetr.models
+            rfdetr = pytest.importorskip('rfdetr')
 
             # Avoid checkpoint downloads and the optional PEFT dependency.
             called: set[str] = set()
