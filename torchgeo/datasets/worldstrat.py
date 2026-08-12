@@ -116,7 +116,7 @@ class WorldStrat(NonGeoDataset):
         self,
         root: Path = 'data',
         modalities: Sequence[str] = all_modalities,
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = True,
