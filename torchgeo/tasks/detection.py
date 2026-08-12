@@ -83,7 +83,9 @@ class ObjectDetection(BaseTask):
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.
-            weights: Initial model weights.
+            weights: Initial model weights. For RF-DETR, pass a model-specific
+                ``pretrain_weights`` keyword argument, such as
+                ``pretrain_weights='rf-detr-nano.pth'``.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
@@ -166,6 +168,8 @@ class ObjectDetection(BaseTask):
             }
             self.model_kwargs.setdefault('num_channels', in_channels)
             self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
+            if self.weights is None:
+                self.model_kwargs.setdefault('pretrain_weights', None)
             model_config = variants[model](
                 num_classes=num_classes - 1, **self.model_kwargs
             )
