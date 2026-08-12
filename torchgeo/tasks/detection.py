@@ -22,7 +22,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datamodules import BaseDataModule
-from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import RGBBandsMissingError
 from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
@@ -290,7 +290,7 @@ class ObjectDetection(BaseTask):
             batch['prediction_label'] = [b['labels'].cpu() for b in y_hat]
             batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
-            sample = unbind_samples(batch)[0]
+            sample = {key: value[0] for key, value in batch.items()}
 
             fig: Figure | None = None
             try:
