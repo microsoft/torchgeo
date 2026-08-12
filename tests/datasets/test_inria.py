@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -53,7 +54,7 @@ class TestInriaAerialImageLabeling:
 
     def test_extract(self, tmp_path: Path) -> None:
         src = Path('tests/data/inria/NEW2-AerialImageDataset.zip')
-        src.copy(tmp_path / 'NEW2-AerialImageDataset.zip')
+        shutil.copy(src, tmp_path)
         InriaAerialImageLabeling(tmp_path, checksum=False)
 
     def test_plot(self, dataset: InriaAerialImageLabeling) -> None:
