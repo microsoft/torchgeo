@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from typing import cast
 
 import torch
-from einops import rearrange, repeat
+from einops import rearrange, reduce, repeat
 from torch import Tensor, nn
 
 
@@ -110,7 +110,9 @@ class LTAE(nn.Module):
         x = self.inlayernorm(x)
 
         if self.inconv is not None:
-            x = self.inconv(x.permute(0, 2, 1)).permute(0, 2, 1)
+            x = rearrange(x, 'b t c -> b c t')
+            x = self.inconv(x)
+            x = rearrange(x, 'b c t -> b t c')
 
         # Apply positional encoding
         x = self.pos_encoder(x)
@@ -121,7 +123,7 @@ class LTAE(nn.Module):
 
         # Process through MLP
         # Take the mean over the sequence dimension to get a fixed-size representation
-        mlp_input = attention_output.mean(dim=1)  # (batch_size, d_model)
+        mlp_input = reduce(attention_output, 'b t c -> b c', 'mean')
         output: Tensor = self.outlayernorm(self.dropout(self.mlp(mlp_input)))
 
         return output

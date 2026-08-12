@@ -10,7 +10,7 @@ from typing import Literal, cast
 
 import torch
 import torch.nn.functional as F
-from einops import rearrange
+from einops import rearrange, reduce
 from torch import Tensor, nn
 
 from .ltae import LTAE2d
@@ -154,7 +154,7 @@ class UTAE(nn.Module):
         Returns:
             Output tensor, and optionally attention masks or feature maps.
         """
-        pad_mask = (x == self.pad_value).all(dim=-1).all(dim=-1).all(dim=-1)  # B x T
+        pad_mask = reduce(x == self.pad_value, 'b t c h w -> b t', 'all')
 
         out = self.in_conv.smart_forward(x)
         feature_maps = [out]
@@ -223,24 +223,30 @@ class TemporalAggregator(nn.Module):
         if attn_mask is None:
             raise ValueError('attn_mask is required for temporal aggregation')
 
-        n_heads, b, t, h, w = attn_mask.shape
-        attn = rearrange(attn_mask, 'n b t h w -> (n b) t h w')
-        if x.shape[-2:] != (h, w):
+        n_heads, batch_size, _, height, width = attn_mask.shape
+        attn = rearrange(attn_mask, 'heads b t h w -> (heads b) t h w')
+        if x.shape[-2:] != (height, width):
             attn = F.interpolate(
                 attn, size=x.shape[-2:], mode='bilinear', align_corners=False
             )
-        attn = attn.view(n_heads, b, t, *x.shape[-2:])
+        attn = rearrange(
+            attn, '(heads b) t h w -> heads b t h w', heads=n_heads, b=batch_size
+        )
 
         if pad_mask is not None and pad_mask.any():
             # Ignore temporally padded frames so fixed-length batches do not
             # leak padding images into U-Net skip connections.
-            attn = attn * (~pad_mask).float()[None, :, :, None, None]
+            valid = rearrange((~pad_mask).float(), 'b t -> 1 b t 1 1')
+            attn = attn * valid
 
         self._check_att_group_channels(x, n_heads)
-        out = torch.stack(x.chunk(n_heads, dim=2))
-        out = attn[:, :, :, None, :, :] * out
-        out = out.sum(dim=2)
-        return torch.cat(list(out), dim=1)
+        out = rearrange(
+            x, 'b t (heads channels) h w -> heads b t channels h w', heads=n_heads
+        )
+        attn = rearrange(attn, 'heads b t h w -> heads b t 1 h w')
+        return reduce(
+            attn * out, 'heads b t channels h w -> b (heads channels) h w', 'sum'
+        )
 
     def _check_att_group_channels(self, x: Tensor, n_heads: int) -> None:
         """Validate channel grouping for ``att_group`` aggregation.
@@ -292,7 +298,7 @@ class TemporallySharedBlock(nn.Module):
         if self.pad_value is None:
             out = self(x)
         else:
-            valid = ~(x == self.pad_value).flatten(1).all(1)
+            valid = ~reduce(x == self.pad_value, 'frames c h w -> frames', 'all')
             if not valid.any():
                 raise ValueError('batch contains no valid frames')
 
