@@ -29,7 +29,7 @@ def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
         AssertionError: If *embed_dim* is not even.
     """
     assert embed_dim % 2 == 0
-    omega = torch.arange(embed_dim // 2, dtype=torch.float32, device=pos.device)
+    omega = torch.arange(embed_dim // 2, dtype=pos.dtype, device=pos.device)
     omega /= embed_dim / 2.0
     omega = 1.0 / 10000**omega  # (D/2,)
 
@@ -335,7 +335,7 @@ class DOFA(nn.Module):
             Output mini-batch.
         """
         # embed patches
-        wavelist = torch.tensor(wavelengths, device=x.device).float()
+        wavelist = torch.tensor(wavelengths, device=x.device, dtype=x.dtype)
         self.waves = wavelist
 
         x, _ = self.patch_embed(x, self.waves)
