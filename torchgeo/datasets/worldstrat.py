@@ -119,7 +119,7 @@ class WorldStrat(NonGeoDataset):
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize the WorldStrat dataset.
 
