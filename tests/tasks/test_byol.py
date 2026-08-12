@@ -104,18 +104,22 @@ class TestBYOL:
             BYOL(model='resnet18', in_channels=13, weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
-        BYOL(
-            model=mocked_weights.meta['model'],
-            weights=mocked_weights,
-            in_channels=mocked_weights.meta['in_chans'],
-        )
+        match = 'num classes .* != num classes in pretrained model'
+        with pytest.warns(UserWarning, match=match):
+            BYOL(
+                model=mocked_weights.meta['model'],
+                weights=mocked_weights,
+                in_channels=mocked_weights.meta['in_chans'],
+            )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
-        BYOL(
-            model=mocked_weights.meta['model'],
-            weights=str(mocked_weights),
-            in_channels=mocked_weights.meta['in_chans'],
-        )
+        match = 'num classes .* != num classes in pretrained model'
+        with pytest.warns(UserWarning, match=match):
+            BYOL(
+                model=mocked_weights.meta['model'],
+                weights=str(mocked_weights),
+                in_channels=mocked_weights.meta['in_chans'],
+            )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
