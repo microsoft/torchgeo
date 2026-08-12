@@ -41,19 +41,15 @@ class TestObjectDetection:
         if name == 'vhr10_rf_detr':
             rfdetr = pytest.importorskip('rfdetr')
 
-            # Avoid checkpoint downloads and the optional PEFT dependency.
+            # Avoid checkpoint downloads.
             called: set[str] = set()
 
             def record_load_pretrain_weights(*args: Any, **kwargs: Any) -> None:
                 called.add('load_pretrain_weights')
 
-            def record_apply_lora(*args: Any, **kwargs: Any) -> None:
-                called.add('apply_lora')
-
             monkeypatch.setattr(
                 rfdetr.models, 'load_pretrain_weights', record_load_pretrain_weights
             )
-            monkeypatch.setattr(rfdetr.models, 'apply_lora', record_apply_lora)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -84,7 +80,7 @@ class TestObjectDetection:
             pass
 
         if name == 'vhr10_rf_detr':
-            assert called == {'apply_lora', 'load_pretrain_weights'}
+            assert called == {'load_pretrain_weights'}
 
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."

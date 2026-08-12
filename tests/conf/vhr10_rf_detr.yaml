@@ -5,7 +5,6 @@ model:
     num_classes: 11
   dict_kwargs:
     pretrain_weights: 'rf-detr-nano.pth'
-    backbone_lora: true
 data:
   class_path: VHR10DataModule
   init_args:
