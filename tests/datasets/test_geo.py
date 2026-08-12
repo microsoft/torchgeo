@@ -17,6 +17,7 @@ from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
+from rasterio.vrt import WarpedVRT
 from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
@@ -467,6 +468,20 @@ class TestRasterDataset:
         assert naip1.crs != naip2.crs
         assert not math.isclose(naip1.res[0], naip2.res[0])
         assert not math.isclose(naip1.res[1], naip2.res[1])
+
+    def test_cached_load_warp_file_keyed_on_crs(self) -> None:
+        ds = NAIP(self.naip_dir)
+        filepath = ds.files[0]
+
+        # Native CRS is read without warping
+        native = ds._cached_load_warp_file(filepath, ds.crs)
+        assert not isinstance(native, WarpedVRT)
+        assert native.crs == ds.crs
+
+        # Foreign CRS is warped, verifying CRS is part of cache-key.
+        warped = ds._cached_load_warp_file(filepath, CRS.from_epsg(4326))
+        assert isinstance(warped, WarpedVRT)
+        assert warped.crs != native.crs
 
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:

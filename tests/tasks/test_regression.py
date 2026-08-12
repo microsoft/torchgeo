@@ -227,6 +227,7 @@ class TestPixelwiseRegression:
             'inria_segformer',
             'inria_upernet',
             'inria_dpt',
+            'copernicus_biomass_s3',
         ],
     )
     def test_trainer(

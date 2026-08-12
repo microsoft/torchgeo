@@ -8,7 +8,7 @@ from .aurora import Aurora_Weights, aurora_swin_unet
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .changevit import ChangeViT
-from .convlstm import ConvLSTM
+from .convlstm import Conv3dLSTM, ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -37,6 +37,7 @@ from .resnet import (
     resnet50,
     resnet152,
 )
+from .satclip import SatCLIP, SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
     Swin_B_Weights,
@@ -84,6 +85,7 @@ __all__ = (
     'ChangeStar',
     'ChangeStarFarSeg',
     'ChangeViT',
+    'Conv3dLSTM',
     'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
@@ -102,6 +104,8 @@ __all__ = (
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
+    'SatCLIP',
+    'SatCLIP_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
     'SwinBackbone_Weights',
@@ -140,6 +144,7 @@ __all__ = (
     'resnet18',
     'resnet50',
     'resnet152',
+    'satclip',
     'scalemae_large_patch16',
     'swin_b',
     'swin_s',

@@ -11,7 +11,7 @@ TorchGeo is an open-source project built by contributors like you from around th
 - building the documentation, and
 - adding new datasets,
 
-please see our [Contributing Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html).
+please see our [Contributing Guide](https://docs.torchgeo.org/en/stable/user/contributing.html).
 
 You can find a curated list of issues that we believe are easy for new contributors to tackle at https://github.com/torchgeo/torchgeo/contribute.
 

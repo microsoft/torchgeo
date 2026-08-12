@@ -79,6 +79,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
+from .flair import FLAIRHUB, FLAIRHUBBase, FLAIRHUBToy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -95,6 +96,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .globalmangrovewatch import GlobalMangroveWatch
 from .globbiomass import GlobBiomass
 from .gse import GoogleSatelliteEmbedding
 from .hyspecnet import HySpecNet11k
@@ -123,6 +125,7 @@ from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
 from .mdas import MDAS
+from .meta_chm import MetaCHM
 from .millionaid import MillionAID
 from .mixins import PlottingMixin
 from .mmearth import MMEarth
@@ -209,6 +212,7 @@ __all__ = (
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
+    'FLAIRHUB',
     'GBIF',
     'GID15',
     'LEVIRCD',
@@ -297,6 +301,8 @@ __all__ = (
     'EuroSAT100',
     'EuroSATSpatial',
     'EverWatch',
+    'FLAIRHUBBase',
+    'FLAIRHUBToy',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
@@ -304,6 +310,7 @@ __all__ = (
     'GeoNRW',
     'GlobBiomass',
     'GlobalBuildingMap',
+    'GlobalMangroveWatch',
     'GoogleSatelliteEmbedding',
     'HySpecNet11k',
     'IDTReeS',
@@ -335,6 +342,7 @@ __all__ = (
     'MMFlood',
     'MajorTOMEmbeddings',
     'MapInWild',
+    'MetaCHM',
     'MillionAID',
     'NASAMarineDebris',
     'NonGeoClassificationDataset',

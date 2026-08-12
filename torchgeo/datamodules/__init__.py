@@ -12,6 +12,7 @@ from .caffe import CaFFeDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cloud_cover import CloudCoverDetectionDataModule
+from .copernicus import CopernicusBenchBiomassS3DataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
@@ -21,6 +22,7 @@ from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
+from .flair import FLAIRHUBDataModule, FLAIRHUBToyDataModule
 from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
@@ -78,6 +80,7 @@ __all__ = (
     'ChaBuDDataModule',
     'ChesapeakeCVPRDataModule',
     'CloudCoverDetectionDataModule',
+    'CopernicusBenchBiomassS3DataModule',
     'DLRSDDataModule',
     'DLRSDMultilabelDataModule',
     'DeepGlobeLandCoverDataModule',
@@ -87,6 +90,8 @@ __all__ = (
     'EuroSATDataModule',
     'EuroSATSpatialDataModule',
     'FAIR1MDataModule',
+    'FLAIRHUBDataModule',
+    'FLAIRHUBToyDataModule',
     'FieldsOfTheWorldDataModule',
     'FireRiskDataModule',
     'GID15DataModule',

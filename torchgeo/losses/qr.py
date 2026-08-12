@@ -11,8 +11,8 @@ from torch.nn.modules import Module
 class QRLoss(Module):
     """The QR (forward) loss between class probabilities and predictions.
 
-    This loss is defined in `'Resolving label uncertainty with implicit generative
-    models' <https://openreview.net/forum?id=AEa_UepnMDX>`_.
+    This loss is defined in `'Resolving label uncertainty with implicit posterior
+    models' <https://arxiv.org/abs/2202.14000>`_.
 
     .. versionadded:: 0.2
     """
@@ -62,8 +62,8 @@ class QRLoss(Module):
 class RQLoss(Module):
     """The RQ (backwards) loss between class probabilities and predictions.
 
-    This loss is defined in `'Resolving label uncertainty with implicit generative
-    models' <https://openreview.net/forum?id=AEa_UepnMDX>`_.
+    This loss is defined in `'Resolving label uncertainty with implicit posterior
+    models' <https://arxiv.org/abs/2202.14000>`_.
 
     .. versionadded:: 0.2
     """
