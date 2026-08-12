@@ -52,7 +52,8 @@ class TestInriaAerialImageLabeling:
             InriaAerialImageLabeling(root=tmp_path, checksum=True)
 
     def test_extract(self, tmp_path: Path) -> None:
-        Path('tests/data/inria/NEW2-AerialImageDataset.zip').copy_into(tmp_path)
+        src = Path('tests/data/inria/NEW2-AerialImageDataset.zip')
+        src.copy(tmp_path / 'NEW2-AerialImageDataset.zip')
         InriaAerialImageLabeling(tmp_path, checksum=False)
 
     def test_plot(self, dataset: InriaAerialImageLabeling) -> None:
