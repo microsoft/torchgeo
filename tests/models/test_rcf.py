@@ -13,7 +13,7 @@ from torchgeo.models import MOSAIKS, RCF
 class TestRCF:
     def test_in_channels(self) -> None:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')
-        x = torch.randn(2, 5, 64, 64)
+        x = torch.randn(2, 5, 32, 32)
         model(x)
 
         model = RCF(in_channels=3, features=4, kernel_size=3, mode='gaussian')
@@ -23,11 +23,11 @@ class TestRCF:
 
     def test_num_features(self) -> None:
         model = RCF(in_channels=5, features=4, kernel_size=3, mode='gaussian')
-        x = torch.randn(2, 5, 64, 64)
+        x = torch.randn(2, 5, 32, 32)
         y = model(x)
         assert y.shape == (2, 4)
 
-        x = torch.randn(1, 5, 64, 64)
+        x = torch.randn(1, 5, 32, 32)
         y = model(x)
         assert y.shape == (1, 4)
 
