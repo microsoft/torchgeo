@@ -40,16 +40,28 @@ class DEO(nn.Module):
         del self.feat_extr.features[0]
 
         # Conv layers for Swin
-        norm_layer = partial(nn.LayerNorm, eps=1e-5)
-        self.feat_extr.patch_embed = nn.Sequential(
+        norm_layer_ms = partial(nn.LayerNorm, eps=1e-5)
+        norm_layer_rgb = partial(nn.LayerNorm, eps=1e-5)
+        self.feat_extr.conv_ms = nn.Sequential(
             nn.Conv2d(
-                in_channels,
+                10,
                 self.feat_extr.features[0][0].norm1.normalized_shape[0],
                 kernel_size=(4, 4),
                 stride=(4, 4),
             ),
             Permute([0, 2, 3, 1]),
-            norm_layer(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
+            norm_layer_ms(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
+        )
+        # self.feat_extr.proj_ms = nn.Linear(768, 96)
+        self.feat_extr.conv_rgb = nn.Sequential(
+            nn.Conv2d(
+                3,
+                self.feat_extr.features[0][0].norm1.normalized_shape[0],
+                kernel_size=(4, 4),
+                stride=(4, 4),
+            ),
+            Permute([0, 2, 3, 1]),
+            norm_layer_rgb(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
         )
 
     def forward_features(self, x: torch.Tensor) -> list[torch.Tensor]:
@@ -63,7 +75,10 @@ class DEO(nn.Module):
         """
         features = []
         # apply the appropriate conv layer based on the number of input channels
-        x = self.feat_extr.patch_embed(x)
+        if x.shape[1] == 10:
+            x = self.feat_extr.conv_ms(x)
+        else:
+            x = self.feat_extr.conv_rgb(x)
 
         # extract intermediate swin layers
         for i, layer in enumerate(self.feat_extr.features):
@@ -83,7 +98,10 @@ class DEO(nn.Module):
             swin feature tensor (b, c, h', w').
         """
         # apply the appropriate conv layer based on the number of input channels
-        x = self.feat_extr.patch_embed(x)
+        if x.shape[1] == 10:
+            x = self.feat_extr.conv_ms(x)
+        else:
+            x = self.feat_extr.conv_rgb(x)
 
         # extract intermediate swin layers
         for i, layer in enumerate(self.feat_extr.features):
