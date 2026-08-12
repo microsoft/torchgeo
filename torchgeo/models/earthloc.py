@@ -212,7 +212,7 @@ class EarthLoc_Weights(WeightsEnum):
     """EarthLoc weights."""
 
     SENTINEL2_RESNET50 = Weights(
-        url='https://huggingface.co/torchgeo/earthloc/resolve/53a4bb90a7754b12f44986521ac7a711b4795959/earthloc-8b632e30.pth',
+        url='https://hf.co/torchgeo/earthloc/resolve/5a47f9ba5f0ef5ce23dae5b48a6177cd9b400a21/earthloc-287af725.pth',
         transforms=_earthloc_transforms,
         meta={
             'dataset': 'EarthLoc',
@@ -256,7 +256,8 @@ def earthloc(
         }
         model = EarthLoc(*args, **kwargs)
         model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
     else:
         model = EarthLoc(*args, **kwargs)
