@@ -52,7 +52,7 @@ class DEO(nn.Module):
             norm_layer(self.feat_extr.features[0][0].norm1.normalized_shape[0]),
         )
 
-    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+    def forward_features(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Get multi-stage swin features.
 
         Args:
@@ -72,6 +72,24 @@ class DEO(nn.Module):
                 features.append(x)
 
         return features
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Get last layer swin features.
+
+        Args:
+            x: input image tensor (b, c, h, w).
+
+        Returns:
+            swin feature tensor (b, c, h', w').
+        """
+        # apply the appropriate conv layer based on the number of input channels
+        x = self.feat_extr.patch_embed(x)
+
+        # extract intermediate swin layers
+        for i, layer in enumerate(self.feat_extr.features):
+            x = layer(x)
+
+        return x
 
 
 # Transforms used during pretraining
