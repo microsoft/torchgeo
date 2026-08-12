@@ -174,6 +174,9 @@ class xBD(NonGeoDataset):
         mask2 = self._load_target(files['mask2'])
 
         image = torch.stack(tensors=[image1, image2], dim=0)
+        # Dataset consists of semantic segmentation masks before and after event
+        # Convert to change detection by subtracting damage before from damage after
+        # Clamp to avoid potential negative numbers
         mask = torch.clamp(mask2 - mask1, 0, 4)
         return {'image': image, 'mask': mask}
 
