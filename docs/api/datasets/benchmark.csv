@@ -25,6 +25,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`EuroSAT`,C,Sentinel-2,"27,000",10,64x64,10,MSI,MIT
 :ref:`EverWatch`,OD,Aerial,"5,325",8,"1,500x1500p",0.01,RGB,CC0-1.0
 :ref:`FAIR1M`,OD,Gaofen/Google Earth,"15,000",37,"1,024x1,024",0.3--0.8,RGB,CC-BY-NC-SA-3.0
+:ref:`FLAIR-HUB`,S,"Aerial, SPOT, Sentinel-1/2","241,100","19,23","512x512 and 256x256 and 64x64 and 10x10 and 10x10xT","0.2--10","RGB, NIR, MSI, SAR, DEM",etalab-2.0
 :ref:`Fields Of The World`,"S,I",Sentinel-2,"70795","2,3",256x256,10,MSI,Various
 :ref:`FireRisk`,C,NAIP Aerial,"91,872",7,"320x320",1,RGB,CC-BY-NC-4.0
 :ref:`Forest Damage`,OD,Drone imagery,"1,543",4,"1,500x1,500",,RGB,CDLA-Permissive-1.0

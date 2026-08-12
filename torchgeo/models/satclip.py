@@ -490,7 +490,9 @@ def satclip(
     if weights:
         # SatCLIP releases ship as Lightning checkpoints with the location encoder
         # weights under the 'model.location.nnet.*' namespace.
-        checkpoint = weights.get_state_dict(progress=True, map_location='cpu')
+        checkpoint = weights.get_state_dict(
+            progress=True, map_location='cpu', check_hash=True, weights_only=True
+        )
         prefix = 'model.location.'
         state_dict = {
             key[len(prefix) :]: value

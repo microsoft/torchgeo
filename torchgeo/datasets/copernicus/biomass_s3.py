@@ -10,6 +10,7 @@ from typing import Literal
 
 import pandas as pd
 import torch
+import torch.nn.functional as F
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -66,6 +67,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
     cmap = 'YlGn'
+    image_size = (282, 282)
 
     def __init__(
         self,
@@ -96,6 +98,35 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         super().__init__(root, split, bands, transforms, download, checksum)
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)
+
+    def _load_image(self, path: str) -> Sample:
+        """Load and resize an image, replacing its declared nodata value."""
+        sample = super()._load_image(path)
+        sample['image'] = sample['image'].masked_fill(
+            torch.isneginf(sample['image']), 0
+        )
+        sample['image'] = F.interpolate(
+            sample['image'].unsqueeze(dim=0),
+            size=self.image_size,
+            mode='bilinear',
+            align_corners=False,
+        ).squeeze(dim=0)
+        return sample
+
+    def _load_mask(self, path: str) -> Sample:
+        """Load and resize a biomass mask."""
+        sample = super()._load_mask(path)
+        sample['mask'] = (
+            F.interpolate(
+                sample['mask'].unsqueeze(dim=0).unsqueeze(dim=0),
+                size=self.image_size,
+                mode='bilinear',
+                align_corners=False,
+            )
+            .squeeze(dim=0)
+            .squeeze(dim=0)
+        )
+        return sample
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.

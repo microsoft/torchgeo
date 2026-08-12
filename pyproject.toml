@@ -176,7 +176,7 @@ torchgeo = "torchgeo.main:main"
 
 [project.urls]
 Codecov = "https://app.codecov.io/gh/torchgeo/torchgeo"
-Documentation = "https://torchgeo.readthedocs.io"
+Documentation = "https://docs.torchgeo.org"
 Homepage = "https://github.com/torchgeo/torchgeo"
 Slack = "https://torchgeo.slack.com"
 

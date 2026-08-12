@@ -174,7 +174,9 @@ def get_2dalibi(num_heads: int, num_patches: int) -> Tensor:
         ratio = start
         return [start * ratio**i for i in range(n)]
 
-    slopes = torch.tensor(get_slopes(num_heads), dtype=torch.float32).unsqueeze(1)
+    slopes = torch.tensor(
+        get_slopes(num_heads), dtype=torch.get_default_dtype()
+    ).unsqueeze(1)
     idxs = []
     for p1 in points:
         for p2 in points:
@@ -545,7 +547,9 @@ def load_weights(model: CROMA, weights: WeightsEnum) -> None:
     Raises:
         AssertionError: If there are missing or unexpected keys.
     """
-    state_dict = weights.get_state_dict(progress=True, weights_only=True)
+    state_dict = weights.get_state_dict(
+        progress=True, check_hash=True, weights_only=True
+    )
     missing_keys, unexpected_keys = [], []
 
     if 'sar' in model.modalities:
