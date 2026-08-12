@@ -360,13 +360,12 @@ class xBDDistShift(xBD):
             checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: If *split* is invalid.
-            ValueError: If the disaster shift configuration is invalid.
+            AssertionError: If *split* or the disaster shift configuration is invalid.
             DatasetNotFoundError: If dataset is not found.
         """
-        self._validate_disaster_shift(
-            id_disaster, id_pre_post, ood_disaster, ood_pre_post
-        )
+        assert {id_disaster, ood_disaster} <= set(self.valid_disasters)
+        assert id_disaster != ood_disaster
+        assert {id_pre_post, ood_pre_post} <= {'pre', 'post', 'both'}
         self.id_disaster = id_disaster
         self.id_pre_post = id_pre_post
         self.ood_disaster = ood_disaster
@@ -420,38 +419,6 @@ class xBDDistShift(xBD):
         mask = self._load_target(files['mask'])
         mask = ((mask == 1) | (mask == 2)).long()
         return {'image': image, 'mask': mask}
-
-    def _validate_disaster_shift(
-        self, id_disaster: str, id_pre_post: str, ood_disaster: str, ood_pre_post: str
-    ) -> None:
-        """Validate disaster shift arguments.
-
-        Args:
-            id_disaster: in-distribution disaster
-            id_pre_post: in-distribution imagery selection
-            ood_disaster: out-of-distribution disaster
-            ood_pre_post: out-of-distribution imagery selection
-
-        Raises:
-            ValueError: If the disaster shift configuration is invalid.
-        """
-        for disaster in (id_disaster, ood_disaster):
-            if disaster not in self.valid_disasters:
-                raise ValueError(
-                    f'Invalid disaster name: {disaster}. '
-                    f'Valid options are: {", ".join(self.valid_disasters)}.'
-                )
-
-        if id_disaster == ood_disaster:
-            raise ValueError('ID and OOD disasters must be different.')
-
-        valid_pre_post = ('pre', 'post', 'both')
-        for pre_post in (id_pre_post, ood_pre_post):
-            if pre_post not in valid_pre_post:
-                raise ValueError(
-                    f'Invalid pre/post selection: {pre_post}. '
-                    f'Valid options are: {", ".join(valid_pre_post)}.'
-                )
 
     def plot(
         self,

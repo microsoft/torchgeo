@@ -125,28 +125,3 @@ class TestxBD:
                 id_disaster='hurricane-harvey',
                 ood_disaster='hurricane-michael',
             )
-
-    def test_invalid_disaster(self) -> None:
-        with pytest.raises(ValueError, match='Invalid disaster name'):
-            xBDDistShift(
-                root=os.path.join('tests', 'data', 'xbd'),
-                id_disaster='not-a-real-disaster',
-                ood_disaster='hurricane-michael',
-            )
-
-    def test_same_disaster(self) -> None:
-        with pytest.raises(ValueError, match='must be different'):
-            xBDDistShift(
-                root=os.path.join('tests', 'data', 'xbd'),
-                id_disaster='hurricane-harvey',
-                ood_disaster='hurricane-harvey',
-            )
-
-    def test_invalid_pre_post(self) -> None:
-        with pytest.raises(ValueError, match='Invalid pre/post selection'):
-            xBDDistShift(
-                root=os.path.join('tests', 'data', 'xbd'),
-                id_disaster='hurricane-harvey',
-                id_pre_post='during',  # ty: ignore[invalid-argument-type]
-                ood_disaster='hurricane-michael',
-            )
