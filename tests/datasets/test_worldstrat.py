@@ -16,10 +16,8 @@ from torchgeo.datasets import DatasetNotFoundError, WorldStrat
 
 
 class TestWorldStrat:
-    @pytest.fixture(params=['train', 'val', 'test'])
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> WorldStrat:
+    @pytest.fixture(autouse=True)
+    def fake_file_info(self, monkeypatch: MonkeyPatch) -> None:
         url = os.path.join('tests', 'data', 'worldstrat')
 
         file_info_dict = {
@@ -50,6 +48,9 @@ class TestWorldStrat:
             },
         }
         monkeypatch.setattr(WorldStrat, 'file_info_dict', file_info_dict)
+
+    @pytest.fixture(params=['train', 'val', 'test'])
+    def dataset(self, tmp_path: Path, request: SubRequest) -> WorldStrat:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
@@ -60,18 +61,22 @@ class TestWorldStrat:
     def test_getitem(self, dataset: WorldStrat) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
+        assert all(isinstance(value, torch.Tensor) for value in x.values())
+
         for modality in dataset.modalities:
-            assert isinstance(x[f'image_{modality}'], torch.Tensor)
             assert x[f'image_{modality}'].dtype == torch.float32
 
         # one low-res date per timestep, aligned to the stacked time dimension
-        assert isinstance(x['low_res_date'], list)
-        assert len(x['low_res_date']) == x['image_l1c'].shape[0]
-        assert x['low_res_date'] == sorted(x['low_res_date'])
+        low_res_date = x['low_res_date']
+        assert low_res_date.dtype == torch.float64
+        assert low_res_date.ndim == 1
+        assert len(low_res_date) == x['image_l1c'].shape[0]
+        assert torch.equal(low_res_date, low_res_date.sort().values)
 
         # remaining metadata is constant across a tile's rows
         for key in ('lon', 'lat', 'high_res_date'):
-            assert not isinstance(x[key], list)
+            assert x[key].dtype == torch.float64
+            assert x[key].ndim == 0
 
     def test_sentinel_paths_sorted_by_index(self, dataset: WorldStrat) -> None:
         aoi = dataset.file_path_df['tile'][0]

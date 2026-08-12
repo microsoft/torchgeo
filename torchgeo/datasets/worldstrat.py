@@ -211,12 +211,21 @@ class WorldStrat(NonGeoDataset):
             .sort_values('n')
             .reset_index(drop=True)
         )
+
+        # Store dates as Unix timestamps so all sample values are tensors
+        low_res_date = torch.tensor(
+            [pd.Timestamp(date).timestamp() for date in metadata['lowres_date']],
+            dtype=torch.float64,
+        )
         sample.update(
             {
-                'lon': metadata['lon'][0],
-                'lat': metadata['lat'][0],
-                'low_res_date': metadata['lowres_date'].tolist(),
-                'high_res_date': metadata['highres_date'][0],
+                'lon': torch.tensor(metadata['lon'].iloc[0], dtype=torch.float64),
+                'lat': torch.tensor(metadata['lat'].iloc[0], dtype=torch.float64),
+                'low_res_date': low_res_date,
+                'high_res_date': torch.tensor(
+                    pd.Timestamp(metadata['highres_date'].iloc[0]).timestamp(),
+                    dtype=torch.float64,
+                ),
             }
         )
 
