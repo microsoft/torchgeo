@@ -370,42 +370,45 @@ class LTAE2d(nn.Module):
             Output feature map of shape ``(B, mlp[-1], H, W)`` and attention
             weights of shape ``(n_head, B, T, H, W)``.
         """
-        sz_b, seq_len, d, h, w = x.shape
+        batch_size, _, _, height, width = x.shape
 
         if pad_mask is not None:
-            pad_mask = (
-                pad_mask.unsqueeze(-1).repeat(1, 1, h).unsqueeze(-1).repeat(1, 1, 1, w)
-            )  # B x T x H x W
-            pad_mask = (
-                pad_mask.permute(0, 2, 3, 1).contiguous().view(sz_b * h * w, seq_len)
+            pad_mask = repeat(
+                pad_mask, 'b t -> (b height width) t', height=height, width=width
             )
 
-        out = x.permute(0, 3, 4, 1, 2).contiguous().view(sz_b * h * w, seq_len, d)
-        out = self.in_norm(out.permute(0, 2, 1)).permute(0, 2, 1)
+        out = rearrange(x, 'b t c height width -> (b height width) c t')
+        out = self.in_norm(out)
 
         if self.inconv is not None:
-            out = self.inconv(out.permute(0, 2, 1)).permute(0, 2, 1)
+            out = self.inconv(out)
+
+        out = rearrange(out, 'spatial c t -> spatial t c')
 
         if self.positional_encoder is not None and batch_positions is not None:
-            bp = (
-                batch_positions.unsqueeze(-1)
-                .repeat(1, 1, h)
-                .unsqueeze(-1)
-                .repeat(1, 1, 1, w)
-            )  # B x T x H x W
-            bp = bp.permute(0, 2, 3, 1).contiguous().view(sz_b * h * w, seq_len)
-            out = out + self.positional_encoder(bp)
+            positions = repeat(
+                batch_positions, 'b t -> (b height width) t', height=height, width=width
+            )
+            out = out + self.positional_encoder(positions)
 
         out, attn = self.attention_heads(out, pad_mask=pad_mask)
 
-        out = (
-            out.permute(1, 0, 2).contiguous().view(sz_b * h * w, -1)
-        )  # concatenate heads
+        out = rearrange(out, 'heads spatial channels -> spatial (heads channels)')
         out = self.dropout(self.mlp(out))
         out = self.out_norm(out)
-        out = out.view(sz_b, h, w, -1).permute(0, 3, 1, 2)
+        out = rearrange(
+            out,
+            '(b height width) c -> b c height width',
+            b=batch_size,
+            height=height,
+            width=width,
+        )
 
-        attn = attn.view(self.n_head, sz_b, h, w, seq_len).permute(
-            0, 1, 4, 2, 3
-        )  # n_head x B x T x H x W
+        attn = rearrange(
+            attn,
+            'heads (b height width) t -> heads b t height width',
+            b=batch_size,
+            height=height,
+            width=width,
+        )
         return out, attn
