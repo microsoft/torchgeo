@@ -64,28 +64,55 @@ class EarlyRewardLoss(Module):
         """Compute the ELECTS early classification loss.
 
         Args:
-            log_probs: Log class probabilities with shape B x T x C.
-            probability_stopping: Probability of stopping with shape B x T. The
-                final value is ignored because a decision is always made at the final
-                time step.
-            target: Class indices with shape B x T.
+            log_probs: Log class probabilities with shape B x T x C x ... .
+            probability_stopping: Probability of stopping with shape B x T x ... .
+                The final value is ignored because a decision is always made at the
+                final time step.
+            target: Class indices with shape B x ... . Targets already repeated over
+                time with shape B x T x ... are also supported.
             return_stats: Return the loss components and decision probabilities.
 
         Returns:
             The scalar loss, or the loss and detached statistics when
             ``return_stats`` is true.
+
+        Raises:
+            ValueError: If any input has an incompatible shape.
         """
-        batch_size, sequence_length, num_classes = log_probs.shape
+        if log_probs.ndim < 3:
+            raise ValueError(
+                'log_probs must have shape B x T x C x ..., '
+                f'but found {tuple(log_probs.shape)}'
+            )
+
+        batch_size, sequence_length, num_classes, *spatial_shape = log_probs.shape
+        expected_stopping_shape = (batch_size, sequence_length, *spatial_shape)
+        if probability_stopping.shape != expected_stopping_shape:
+            raise ValueError(
+                'probability_stopping must have shape '
+                f'{expected_stopping_shape}, but found '
+                f'{tuple(probability_stopping.shape)}'
+            )
+
+        expected_target_shape = (batch_size, *spatial_shape)
+        temporal_target_shape = (batch_size, sequence_length, *spatial_shape)
+        if target.shape == expected_target_shape:
+            target = target.unsqueeze(dim=1).expand(temporal_target_shape)
+        elif target.shape != temporal_target_shape:
+            raise ValueError(
+                f'target must have shape {expected_target_shape} or '
+                f'{temporal_target_shape}, but found {tuple(target.shape)}'
+            )
+
         decision_probability = _decision_probability(probability_stopping)
         decision_probability = decision_probability + self.epsilon / sequence_length
 
         time = torch.arange(
             sequence_length, device=log_probs.device, dtype=log_probs.dtype
         )
+        time = time.reshape(1, sequence_length, *([1] * len(spatial_shape)))
         correct_probability = (
-            log_probs.gather(dim=-1, index=target.unsqueeze(dim=-1))
-            .squeeze(dim=-1)
-            .exp()
+            log_probs.gather(dim=2, index=target.unsqueeze(dim=2)).squeeze(dim=2).exp()
         )
         earliness_reward = (
             (decision_probability * correct_probability * (1 - time / sequence_length))
@@ -94,9 +121,11 @@ class EarlyRewardLoss(Module):
         )
 
         classification_loss = self.nll_loss(
-            log_probs.reshape(batch_size * sequence_length, num_classes),
-            target.reshape(batch_size * sequence_length),
-        ).reshape(batch_size, sequence_length)
+            log_probs.reshape(
+                batch_size * sequence_length, num_classes, *spatial_shape
+            ),
+            target.reshape(batch_size * sequence_length, *spatial_shape),
+        ).reshape(batch_size, sequence_length, *spatial_shape)
         classification_loss = (
             (classification_loss * decision_probability).sum(dim=1).mean()
         )
