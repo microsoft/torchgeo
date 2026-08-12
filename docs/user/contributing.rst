@@ -245,8 +245,8 @@ Related Libraries
 TorchGeo maintains a list of :ref:`related-libraries`. New GeoML libraries can be added to this list using the following scripts in ``docs/user/metrics``:
 
 1. Add the library, GitHub repository, Codecov, PyPI/CRAN, and Conda information to ``common.py``.
-2. (Optional) Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
-3. (Optional) Sort all dictionaries in ``common.py`` in order of first commit.
+2. Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
+3. Sort all dictionaries in ``common.py`` in order of first commit and remove inactive projects from ``index``.
 4. Run ``python3 update_github.py --api-key GITHUB_TOKEN`` to update ``github.csv``.
 5. Sort ``index`` in ``common.py`` and ``features.csv`` in the same order as ``github.csv``.
 6. Run ``python3 update_downloads.py --api-key PEPY_TOKEN`` to update ``downloads.csv``.
