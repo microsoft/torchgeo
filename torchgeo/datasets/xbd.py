@@ -315,7 +315,7 @@ class xBDDistShift(xBD):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/1911.09296
+    * https://arxiv.org/abs/2412.13394
 
     .. versionadded:: 0.10
     """
