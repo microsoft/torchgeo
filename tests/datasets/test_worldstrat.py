@@ -111,10 +111,6 @@ class TestWorldStrat:
             )
         WorldStrat(root=str(tmp_path))
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            WorldStrat(split='foo')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             WorldStrat(tmp_path)

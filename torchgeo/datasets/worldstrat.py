@@ -6,7 +6,7 @@
 import os
 from collections.abc import Callable, Sequence
 from glob import glob
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -377,10 +377,10 @@ class WorldStrat(NonGeoDataset):
                 elif modality in ['l1c', 'l2a']:
                     img = img[0, [3, 2, 1], ...]
 
-                img = quantile_normalization(img).numpy()
+                img = quantile_normalization(img)
 
                 if img.ndim == 3:
-                    img = img.transpose(1, 2, 0)
+                    img = img.permute(1, 2, 0)
 
                 axs[0, panel].imshow(img)
                 axs[0, panel].axis('off')
@@ -391,7 +391,9 @@ class WorldStrat(NonGeoDataset):
             pred = sample['prediction']
             if pred.shape[0] == 4:
                 pred = pred[:3]
-            pred = quantile_normalization(pred).numpy().transpose(1, 2, 0)
+            pred = quantile_normalization(pred)
+            if pred.ndim == 3:
+                pred = pred.permute(1, 2, 0)
             axs[0, -1].imshow(pred)
             axs[0, -1].axis('off')
             if show_titles:
