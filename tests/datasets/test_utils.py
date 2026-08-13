@@ -718,6 +718,42 @@ class TestFindFiles:
         # Only the unpacked loose file is returned, not the archived copy.
         assert found == [str(tmp_path / 'vector_2024.geojson')]
 
+    def test_directory_excludes_directories(self, tmp_path: Path) -> None:
+        """Directories matching the glob are not returned; only files."""
+        (tmp_path / 'subdir').mkdir()  # a directory matching '*'...
+        (tmp_path / 'file.tif').touch()  # ...next to a file
+        assert find_files(tmp_path) == [str(tmp_path / 'file.tif')]
+
+    def test_descend_skips_unpacked_stem_subdir(
+        self, archive: str, tmp_path: Path
+    ) -> None:
+        """Members extracted into a folder named after the archive are not listed twice."""
+        shutil.copy(archive, tmp_path)  # e.g. vector.zip in a directory...
+        stem = tmp_path / Path(archive).stem  # ...extracted into vector/
+        shutil.unpack_archive(archive, stem, 'zip')
+        found = find_files(tmp_path, '*.geojson')
+        # Only the unpacked loose file is returned, not the archived copy.
+        assert found == [str(stem / 'vector_2024.geojson')]
+
+    def test_descend_skips_unpacked_vsi(self, monkeypatch: MonkeyPatch) -> None:
+        """On a VSI path, an archive whose contents are also present unzipped is not
+        descended into, even though os.path.exists cannot see remote files."""
+        prefix = '/vsigs/bucket/product'
+        archive = f'{prefix}/scene.SAFE.zip'
+        unzipped = [f'{prefix}/scene.SAFE/a.tif', f'{prefix}/scene.SAFE/b.tif']
+        members = [
+            f'/vsizip/{archive}/scene.SAFE/{name}' for name in ('a.tif', 'b.tif')
+        ]
+
+        def fake_list(root: Path) -> list[str]:
+            return {prefix: [*unzipped, archive], f'/vsizip/{archive}': members}.get(
+                str(root), []
+            )
+
+        monkeypatch.setattr('torchgeo.datasets.utils._list_vsi_files', fake_list)
+        # Only the unzipped copies are returned, not the archived duplicates.
+        assert find_files(prefix, '*.tif') == sorted(unzipped)
+
 
 @pytest.mark.parametrize(
     'res',
