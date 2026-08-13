@@ -18,11 +18,6 @@ from torchgeo.tasks import InstanceSegmentation
 pytest.importorskip('pycocotools')
 
 
-@pytest.fixture(autouse=True)
-def vhr10_length(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
-
-
 class PredictInstanceSegmentationDataModule(VHR10DataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = VHR10(**self.kwargs)
