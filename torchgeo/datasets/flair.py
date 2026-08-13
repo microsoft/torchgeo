@@ -1321,7 +1321,7 @@ class FLAIRHUBBase(NonGeoDataset):
         split_column: str = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
@@ -1891,7 +1891,7 @@ class FLAIRHUB(FLAIRHUBBase):
         ] = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
@@ -1917,6 +1917,7 @@ class FLAIRHUBToy(FLAIRHUBBase):
     """
 
     download_link = 'https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_hub/FLAIR-HUB_TOY_DATASET.zip'
+    sha256 = 'f0af97c8bb26c76d07351299017f11cbe0e015a621b6b5fdde0b451dbac254a1'
 
     def __init__(
         self,
@@ -1925,6 +1926,7 @@ class FLAIRHUBToy(FLAIRHUBBase):
         split_column: Literal['split_toy'] = 'split_toy',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
@@ -1941,7 +1943,8 @@ class FLAIRHUBToy(FLAIRHUBBase):
             split: One of ``train``, ``val``, or ``test``.
             split_column: Column name in the official splits GeoPackage.
             transforms: Optional transforms to apply to samples.
-            download: If True, download the toy dataset if not found (~10 MB).
+            download: If True, download the toy dataset if not found.
+            checksum: If True, check the SHA-256 of the downloaded file (may be slow).
             bands: List of bands/modalities to load. See
                 :class:`~torchgeo.datasets.FLAIRHUB` for available options.
                 Defaults to None, which enables all bands.
@@ -1974,6 +1977,7 @@ class FLAIRHUBToy(FLAIRHUBBase):
             split_column=split_column,
             transforms=transforms,
             download=download,
+            checksum=checksum,
             bands=bands,
             dataset_type=dataset_type,
         )
@@ -1986,10 +1990,14 @@ class FLAIRHUBToy(FLAIRHUBBase):
         if toy_dir.is_dir():
             return
 
-        if not toy_zip.is_file():
-            if not self.download:
-                raise DatasetNotFoundError(self)
-            download_url(self.download_link, self.root_folder)
+        if toy_zip.is_file():
+            if self.checksum and not check_integrity(toy_zip, sha256=self.sha256):
+                raise RuntimeError('Dataset found, but corrupted.')
+        elif self.download:
+            sha256 = self.sha256 if self.checksum else None
+            download_url(self.download_link, self.root_folder, sha256=sha256)
+        else:
+            raise DatasetNotFoundError(self)
 
         extract_archive(str(toy_zip), str(self.root_folder))
         self.files = self._load_files()

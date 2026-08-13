@@ -36,6 +36,7 @@ Geographic Coordinates (:math:`\scriptstyle B \times 2`)
 
    models/copernicus-fm
    models/croma
+   models/deo
    models/dofa
    models/earthloc
    models/farseg

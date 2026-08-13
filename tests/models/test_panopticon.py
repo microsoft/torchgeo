@@ -224,6 +224,11 @@ class TestChnEmb:
         output = model(chn_ids)
         assert output.shape == (1, 3, 32)  # (B, C, embed_dim)
 
+    def test_invalid_input_shape(self) -> None:
+        model = ChnEmb(embed_dim=32)
+        with pytest.raises(ValueError, match='2D or 3D'):
+            model(torch.ones(3))
+
 
 class TestCrossAttnNoQueryProj:
     def test_forward_shape(self) -> None:

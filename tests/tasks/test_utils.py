@@ -40,6 +40,11 @@ def test_get_input_layer_name_and_module() -> None:
     assert module.in_channels == 3
 
 
+def test_get_input_layer_name_and_module_empty() -> None:
+    with pytest.raises(ValueError, match='at least one child module'):
+        _get_input_layer_name_and_module(nn.Identity())
+
+
 def test_load_state_dict(checkpoint: str, model: Module) -> None:
     _, state_dict = extract_backbone(checkpoint)
     load_state_dict(model, state_dict)

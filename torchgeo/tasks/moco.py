@@ -218,10 +218,11 @@ class MoCo(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
-        self.augmentation1 = augmentation1 or aug1
-        self.augmentation2 = augmentation2 or aug2
+        self.augmentation1 = aug1 if augmentation1 is None else augmentation1
+        self.augmentation2 = aug2 if augmentation2 is None else augmentation2
 
     def configure_models(self) -> None:
         """Initialize the model."""
