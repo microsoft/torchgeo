@@ -1026,14 +1026,11 @@ class XarrayDataset(GeoDataset):
 
                 datasets.append(src)
 
-            nodata = self.nodata
-            if nodata is None:
-                nodata = datasets[0][self.data_vars[0]].rio.nodata
-            if nodata is None:
-                nodata = 0
-
+            # Pass the override explicitly; merge_datasets does not reliably pick
+            # it up from write_nodata when the source already encodes a nodata.
+            # When None, it reads the source's own value and falls back to 0.
             dataset = rioxr.merge.merge_datasets(
-                datasets, bounds=bounds, res=res, nodata=nodata, crs=out_crs
+                datasets, bounds=bounds, res=res, nodata=self.nodata, crs=out_crs
             )
             dataset = dataset.sel(time=t)
 

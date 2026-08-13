@@ -657,26 +657,23 @@ class TestXarrayDataset:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             XarrayDataset(tmp_path)
 
-    def test_nodata_fill_is_nan(self, dataset: XarrayDataset) -> None:
-        # Extend the query east of the data so part of the window has nodata pixels.
-        x, y, t = dataset.bounds
-        query = (slice(x.start, x.stop + 30, x.step), y, t)
-        image = dataset[query]['image']
-        assert torch.isnan(image).any()
-
-    def test_nodata_override(self) -> None:
+    def test_nodata(self) -> None:
         pytest.importorskip('h5py', minversion='3.10')
         root = os.path.join('tests', 'data', 'hdf5')
 
-        class NodataDataset(XarrayDataset):
-            nodata = -9999.0
-
-        ds = NodataDataset(root)
-        # Extend the query east of the data so part of the window is nodata fill.
+        # Extend the query east of the data so part of the window is nodata.
+        ds = XarrayDataset(root)
         x, y, t = ds.bounds
         query = (slice(x.start, x.stop + 30, x.step), y, t)
-        image = ds[query]['image']
-        # Nodata regions use the override value instead of the source's NaN.
+
+        # By default, nodata regions fall back to the source's fill (NaN here).
+        assert torch.isnan(ds[query]['image']).any()
+
+        # Setting `nodata` fills those regions with the override value instead.
+        class Override(XarrayDataset):
+            nodata = -9999.0
+
+        image = Override(root)[query]['image']
         assert (image == -9999).any()
         assert not torch.isnan(image).any()
 
