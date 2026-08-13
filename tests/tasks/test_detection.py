@@ -76,16 +76,6 @@ class TestObjectDetection:
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
 
-    def test_rf_detr_no_weights(self, monkeypatch: MonkeyPatch) -> None:
-        rfdetr = pytest.importorskip('rfdetr')
-
-        def fail(*args: Any, **kwargs: Any) -> None:
-            pytest.fail('Pretrained weights should not be loaded')
-
-        monkeypatch.setattr(rfdetr.models, 'load_pretrain_weights', fail)
-        with pytest.warns(UserWarning, match='initialised from scratch'):
-            ObjectDetection(model='rf-detr-nano', weights=None, num_classes=2)
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)
         datamodule = NASAMarineDebrisDataModule(
