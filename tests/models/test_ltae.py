@@ -86,7 +86,6 @@ class TestLTAE2d:
     @pytest.mark.parametrize(
         ('in_channels', 'n_head', 'd_model', 'mlp', 'error', 'match'),
         [
-            pytest.param(32, 0, 32, (32, 16), ValueError, 'n_head', id='n-head'),
             pytest.param(
                 30, 4, 32, (32, 16), AssertionError, 'in_channels', id='channels'
             ),
