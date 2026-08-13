@@ -17,52 +17,52 @@ from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, Substa
 class TestSubstation:
     @pytest.fixture(
         params=[
-            {'bands': [1, 2, 3], 'mask_2d': True},
+            {'bands': ['B2', 'B3', 'B4'], 'mask_2d': True},
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'concat',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'median',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': None,
                 'num_of_timepoints': 3,
                 'mask_2d': False,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': None,
                 'num_of_timepoints': 5,
                 'mask_2d': False,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
-            {'bands': [1, 2, 3], 'mask_2d': False},
+            {'bands': ['B2', 'B3', 'B4'], 'mask_2d': False},
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1, 2, 3],
+                'bands': ['B2', 'B3', 'B4'],
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
@@ -131,7 +131,7 @@ class TestSubstation:
 
     def test_plot_rgb_missing(self) -> None:
         root = os.path.join('tests', 'data', 'substation')
-        dataset = Substation(root, bands=[0, 4, 5])
+        dataset = Substation(root, bands=['B1', 'B5', 'B6'])
         sample = dataset[0]
         with pytest.raises(RGBBandsMissingError):
             dataset.plot(sample)

@@ -143,9 +143,12 @@ class SimCLR(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
-        self.augmentations = augmentations or simclr_augmentations(
-            size, grayscale_weights
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
+        self.augmentations = (
+            simclr_augmentations(size, grayscale_weights)
+            if augmentations is None
+            else augmentations
         )
 
     def configure_models(self) -> None:
