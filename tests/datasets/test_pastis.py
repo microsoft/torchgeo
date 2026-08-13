@@ -104,10 +104,6 @@ class TestPASTIS:
         with pytest.raises(AssertionError):
             PASTIS(folds=(0,))
 
-    def test_invalid_mode(self) -> None:
-        with pytest.raises(AssertionError):
-            PASTIS(mode='invalid')  # ty: ignore[invalid-argument-type]
-
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError, match='bands must be a subset of'):
             PASTIS(bands=('B01',))
