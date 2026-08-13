@@ -133,7 +133,6 @@ class VHR10(NonGeoDataset):
             path = os.path.join(self.root, 'NWPU VHR-10 dataset', 'annotations.json')
             with open(path) as f:
                 annotations = json.load(f)
-                self._length = len(annotations['images'])
 
                 # Gather image shapes
                 out_shapes = []
@@ -198,7 +197,7 @@ class VHR10(NonGeoDataset):
             length of the dataset
         """
         if self.split == 'positive':
-            return self._length
+            return 650
         else:
             return 150
 
