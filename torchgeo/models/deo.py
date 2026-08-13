@@ -170,7 +170,9 @@ def deo_base(weights: DEO_Weights | None = None, *args: Any, **kwargs: Any) -> D
     model = DEO(*args, **kwargs)
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True, weights_only=True)
+        state_dict = weights.get_state_dict(
+            progress=True, check_hash=True, weights_only=True
+        )
         model.load_state_dict(state_dict, strict=False)
 
     return model
