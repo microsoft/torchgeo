@@ -857,6 +857,9 @@ class XarrayDataset(GeoDataset):
     .. versionadded:: 0.8
     """
 
+    #: Nodata value for the dataset. If None, the source files' nodata value is used.
+    nodata: float | None = None
+
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
@@ -1016,9 +1019,16 @@ class XarrayDataset(GeoDataset):
                 if src.rio.crs != out_crs or res != src.rio.resolution():
                     src = src.rio.reproject(out_crs, resolution=res)
 
+                # Only override the source nodata when explicitly set
+                if self.nodata is not None:
+                    for var in self.data_vars:
+                        src[var] = src[var].rio.write_nodata(self.nodata)
+
                 datasets.append(src)
 
-            nodata = datasets[0][self.data_vars[0]].rio.nodata
+            nodata = self.nodata
+            if nodata is None:
+                nodata = datasets[0][self.data_vars[0]].rio.nodata
             if nodata is None:
                 nodata = 0
 

@@ -664,6 +664,22 @@ class TestXarrayDataset:
         image = dataset[query]['image']
         assert torch.isnan(image).any()
 
+    def test_nodata_override(self) -> None:
+        pytest.importorskip('h5py', minversion='3.10')
+        root = os.path.join('tests', 'data', 'hdf5')
+
+        class NodataDataset(XarrayDataset):
+            nodata = -9999.0
+
+        ds = NodataDataset(root)
+        # Extend the query east of the data so part of the window is nodata fill.
+        x, y, t = ds.bounds
+        query = (slice(x.start, x.stop + 30, x.step), y, t)
+        image = ds[query]['image']
+        # Nodata regions use the override value instead of the source's NaN.
+        assert (image == -9999).any()
+        assert not torch.isnan(image).any()
+
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
