@@ -3,6 +3,8 @@
 
 """Tests for U-TAE models."""
 
+from typing import Any
+
 import pytest
 import torch
 
@@ -10,155 +12,76 @@ from torchgeo.models import UTAE
 from torchgeo.models.utae import ConvBlock, ConvLayer, TemporalAggregator
 
 
-def _first_batch_norm(module: torch.nn.Module) -> torch.nn.BatchNorm2d:
-    """Return the first BatchNorm2d module."""
-    for child in module.modules():
-        if isinstance(child, torch.nn.BatchNorm2d):
-            return child
-
-    msg = 'Expected module to contain BatchNorm2d'
-    raise AssertionError(msg)
-
-
-def _assert_batch_norm_state_equal(
-    actual: torch.nn.BatchNorm2d, expected: torch.nn.BatchNorm2d
-) -> None:
-    """Assert that two BatchNorm2d running states are equal."""
-    assert actual.running_mean is not None
-    assert expected.running_mean is not None
-    assert actual.running_var is not None
-    assert expected.running_var is not None
-    assert actual.num_batches_tracked is not None
-    assert expected.num_batches_tracked is not None
-    assert torch.allclose(actual.running_mean, expected.running_mean)
-    assert torch.allclose(actual.running_var, expected.running_var)
-    assert torch.equal(actual.num_batches_tracked, expected.num_batches_tracked)
+def create_model(**kwargs: Any) -> UTAE:
+    """Create a small UTAE model for fast testing."""
+    config: dict[str, Any] = {
+        'input_dim': 4,
+        'encoder_widths': (32, 64),
+        'decoder_widths': (16, 64),
+        'out_conv': (8, 3),
+        'n_head': 16,
+        'd_model': 64,
+        'd_k': 4,
+    }
+    config.update(kwargs)
+    return UTAE(**config)
 
 
 class TestUTAE:
     """Tests for the UTAE model."""
 
     @pytest.fixture
-    def small_model(self) -> UTAE:
-        """Small UTAE for fast testing."""
-        return UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-        )
-
-    @pytest.fixture
     def x(self) -> torch.Tensor:
         """Batch of image time series (B=2, T=4, C=4, H=16, W=16)."""
         return torch.randn(2, 4, 4, 16, 16)
 
-    def test_forward(self, small_model: UTAE, x: torch.Tensor) -> None:
-        """Basic forward pass."""
-        out = small_model(x)
+    @pytest.mark.parametrize(
+        ('kwargs', 'padded'),
+        [
+            pytest.param({}, False, id='basic'),
+            pytest.param(
+                {'encoder_widths': (32, 32), 'decoder_widths': None, 'd_model': 32},
+                False,
+                id='mirrored-decoder',
+            ),
+            pytest.param({'encoder_norm': 'instance'}, False, id='instance-norm'),
+            pytest.param({'encoder_norm': 'none'}, False, id='no-norm'),
+            pytest.param({}, True, id='padding'),
+        ],
+    )
+    def test_forward(
+        self, x: torch.Tensor, kwargs: dict[str, Any], padded: bool
+    ) -> None:
+        """Test forward-pass configurations."""
+        if padded:
+            x[:, 2:] = 0
+        out = create_model(**kwargs)(x)
         assert out.shape == (2, 3, 16, 16)
 
-    def test_return_att(self, small_model: UTAE, x: torch.Tensor) -> None:
+    def test_return_att(self, x: torch.Tensor) -> None:
         """return_att=True yields output and attention masks."""
-        out, att = small_model(x, return_att=True)
+        out, att = create_model()(x, return_att=True)
         assert out.shape == (2, 3, 16, 16)
         assert att.shape[0] == 16  # n_head
 
-    def test_return_maps(self, x: torch.Tensor) -> None:
-        """return_maps=True yields output and feature map list."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-            return_maps=True,
-        )
-        out, maps = model(x)
-        assert out.shape == (2, 3, 16, 16)
+    @pytest.mark.parametrize('encoder', [False, True])
+    def test_return_maps(self, x: torch.Tensor, encoder: bool) -> None:
+        """Return decoder feature maps in output and encoder modes."""
+        _, maps = create_model(return_maps=True, encoder=encoder)(x)
         assert isinstance(maps, list)
         assert len(maps) > 0
 
-    def test_encoder_mode(self, x: torch.Tensor) -> None:
-        """encoder=True returns feature maps instead of class scores."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-            encoder=True,
-        )
-        _, maps = model(x)
-        assert isinstance(maps, list)
-        assert len(maps) > 0
-
-    def test_decoder_widths_none(self, x: torch.Tensor) -> None:
-        """decoder_widths=None mirrors encoder widths."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 32),
-            decoder_widths=None,
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=32,
-            d_k=4,
-        )
-        out = model(x)
-        assert out.shape == (2, 3, 16, 16)
-
-    def test_width_lengths_must_match(self) -> None:
-        """Encoder and decoder widths must have the same number of stages."""
-        match = 'encoder_widths and decoder_widths must have the same length'
-
+    @pytest.mark.parametrize(
+        ('decoder_widths', 'match'),
+        [
+            pytest.param((16, 32, 64), 'same length', id='length'),
+            pytest.param((16, 32), 'same final width', id='final-width'),
+        ],
+    )
+    def test_invalid_widths(self, decoder_widths: tuple[int, ...], match: str) -> None:
+        """Test incompatible encoder and decoder widths."""
         with pytest.raises(ValueError, match=match):
-            UTAE(input_dim=4, encoder_widths=(32, 64), decoder_widths=(16, 32, 64))
-
-    def test_final_widths_must_match(self) -> None:
-        """Encoder and decoder bottleneck widths must match."""
-        match = 'encoder_widths and decoder_widths must have the same final width'
-
-        with pytest.raises(ValueError, match=match):
-            UTAE(input_dim=4, encoder_widths=(32, 64), decoder_widths=(16, 32))
-
-    def test_forward_with_padding(self) -> None:
-        """All-zero frames (matching pad_value=0) exercise the padding mask paths."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-        )
-        x = torch.randn(2, 4, 4, 16, 16)
-        x[:, 2:] = 0.0  # last two timesteps are padding
-        out = model(x)
-        assert out.shape == (2, 3, 16, 16)
-
-    @pytest.mark.parametrize('encoder_norm', ['instance', 'none'])
-    def test_encoder_norm(self, x: torch.Tensor, encoder_norm: str) -> None:
-        """Instance norm and no-norm branches in ConvLayer."""
-        model = UTAE(
-            input_dim=4,
-            encoder_widths=(32, 64),
-            decoder_widths=(16, 64),
-            out_conv=(8, 3),
-            n_head=16,
-            d_model=64,
-            d_k=4,
-            encoder_norm=encoder_norm,
-        )
-        out = model(x)
-        assert out.shape == (2, 3, 16, 16)
+            create_model(decoder_widths=decoder_widths)
 
     def test_conv_layer_last_relu_false_keeps_intermediate_relu(self) -> None:
         """last_relu=False omits only the final ReLU."""
@@ -185,23 +108,16 @@ class TestUTAE:
         assert torch.all(out[0] == 0)
         assert torch.allclose(out[1], x[1, 0])
 
-    def test_temporal_aggregator_att_group_requires_divisible_channels(self) -> None:
-        """att_group raises a clear error when heads do not divide channels."""
+    @pytest.mark.parametrize('mode', ['channels', 'attention'])
+    def test_temporal_aggregator_invalid(self, mode: str) -> None:
+        """Test invalid temporal aggregation inputs."""
         aggregator = TemporalAggregator()
-        x = torch.randn(2, 3, 5, 4, 4)
-        attn_mask = torch.rand(2, 2, 3, 4, 4)
-        match = 'x.shape\\[2\\] must be divisible by n_heads'
-
+        channels = 5 if mode == 'channels' else 4
+        x = torch.randn(2, 3, channels, 4, 4)
+        attn_mask = torch.rand(2, 2, 3, 4, 4) if mode == 'channels' else None
+        match = 'divisible by n_heads' if mode == 'channels' else 'attn_mask'
         with pytest.raises(ValueError, match=match):
             aggregator(x, attn_mask=attn_mask)
-
-    def test_temporal_aggregator_requires_attention_mask(self) -> None:
-        """Temporal aggregation requires L-TAE attention masks."""
-        aggregator = TemporalAggregator()
-        x = torch.randn(2, 3, 4, 5, 5)
-
-        with pytest.raises(ValueError, match='attn_mask is required'):
-            aggregator(x)
 
     def test_smart_forward_without_pad_value(self) -> None:
         """smart_forward applies the block when pad_value is None."""
@@ -213,12 +129,19 @@ class TestUTAE:
 
         assert torch.allclose(actual, expected)
 
-    def test_smart_forward_rejects_four_dimensional_input(self) -> None:
-        """smart_forward only supports temporal 5-D inputs."""
-        block = ConvBlock(nkernels=(1, 2), pad_value=None, norm='none')
-        x = torch.randn(3, 1, 8, 8)
-
-        with pytest.raises(ValueError, match=r'expected \(B, T, C, H, W\)'):
+    @pytest.mark.parametrize('mode', ['dimensions', 'padding'])
+    def test_smart_forward_invalid(self, mode: str) -> None:
+        """Test invalid temporal block inputs."""
+        block = ConvBlock(nkernels=(1, 2), pad_value=0, norm='none')
+        x = (
+            torch.randn(3, 1, 8, 8)
+            if mode == 'dimensions'
+            else torch.zeros(1, 2, 1, 8, 8)
+        )
+        match = (
+            r'expected \(B, T, C, H, W\)' if mode == 'dimensions' else 'no valid frames'
+        )
+        with pytest.raises(ValueError, match=match):
             block.smart_forward(x)
 
     def test_smart_forward_skips_padded_batch_norm_stats(self) -> None:
@@ -234,14 +157,17 @@ class TestUTAE:
         block.smart_forward(x)
         expected_block.forward(x[:, 0])
 
-        batch_norm = _first_batch_norm(block)
-        expected_batch_norm = _first_batch_norm(expected_block)
-        _assert_batch_norm_state_equal(batch_norm, expected_batch_norm)
-
-    def test_smart_forward_rejects_all_padded(self) -> None:
-        """A batch must contain at least one non-padded frame."""
-        block = ConvBlock(nkernels=(1, 1), pad_value=0, norm='batch')
-        x = torch.zeros(1, 2, 1, 8, 8)
-
-        with pytest.raises(ValueError, match='batch contains no valid frames'):
-            block.smart_forward(x)
+        batch_norm = next(
+            module
+            for module in block.modules()
+            if isinstance(module, torch.nn.BatchNorm2d)
+        )
+        expected_batch_norm = next(
+            module
+            for module in expected_block.modules()
+            if isinstance(module, torch.nn.BatchNorm2d)
+        )
+        for actual, expected in zip(
+            batch_norm.buffers(), expected_batch_norm.buffers()
+        ):
+            assert torch.equal(actual, expected)
