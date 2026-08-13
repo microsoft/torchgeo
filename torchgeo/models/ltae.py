@@ -372,14 +372,12 @@ class LTAE2d(nn.Module):
             Output feature map of shape ``(B, mlp[-1], H, W)`` and attention
             weights of shape ``(n_head, B, T, H, W)``.
         """
-        batch_size, _, _, height, width = x.shape
+        b, _, _, h, w = x.shape
 
         if pad_mask is not None:
-            pad_mask = repeat(
-                pad_mask, 'b t -> (b height width) t', height=height, width=width
-            )
+            pad_mask = repeat(pad_mask, 'b t -> (b h w) t', h=h, w=w)
 
-        out = rearrange(x, 'b t c height width -> (b height width) c t')
+        out = rearrange(x, 'b t c h w -> (b h w) c t')
         out = self.in_norm(out)
 
         if self.inconv is not None:
@@ -388,9 +386,7 @@ class LTAE2d(nn.Module):
         out = rearrange(out, 'spatial c t -> spatial t c')
 
         if self.positional_encoder is not None and batch_positions is not None:
-            positions = repeat(
-                batch_positions, 'b t -> (b height width) t', height=height, width=width
-            )
+            positions = repeat(batch_positions, 'b t -> (b h w) t', h=h, w=w)
             out = out + self.positional_encoder(positions)
 
         out, attn = self.attention_heads(out, pad_mask=pad_mask)
@@ -398,19 +394,7 @@ class LTAE2d(nn.Module):
         out = rearrange(out, 'heads spatial channels -> spatial (heads channels)')
         out = self.dropout(self.mlp(out))
         out = self.out_norm(out)
-        out = rearrange(
-            out,
-            '(b height width) c -> b c height width',
-            b=batch_size,
-            height=height,
-            width=width,
-        )
+        out = rearrange(out, '(b h w) c -> b c h w', b=b, h=h, w=w)
 
-        attn = rearrange(
-            attn,
-            'heads (b height width) t -> heads b t height width',
-            b=batch_size,
-            height=height,
-            width=width,
-        )
+        attn = rearrange(attn, 'heads (b h w) t -> heads b t h w', b=b, h=h, w=w)
         return out, attn
