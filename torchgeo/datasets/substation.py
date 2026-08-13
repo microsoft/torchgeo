@@ -46,12 +46,26 @@ class Substation(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.48550/arXiv.2409.17363
+
+    .. versionadded:: 0.7
     """
 
-    # Sentinel-2 true color: B04 (Red), B03 (Green), B02 (Blue).
-    # Unlike most datasets, *bands* are channel indices rather than names, so this
-    # cannot use PlottingMixin.rgb_bands, which holds band names.
-    _rgb_indices: tuple[int, int, int] = (3, 2, 1)
+    all_bands = (
+        'B1',
+        'B2',
+        'B3',
+        'B4',
+        'B5',
+        'B6',
+        'B7',
+        'B8',
+        'B8A',
+        'B9',
+        'B10',
+        'B11',
+        'B12',
+    )
+    rgb_bands = ('B4', 'B3', 'B2')
 
     directory = 'Substation'
     filename_images = 'image_stack.tar.gz'
@@ -64,7 +78,7 @@ class Substation(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        bands: Sequence[int] = tuple(range(13)),
+        bands: Sequence[str] = all_bands,
         mask_2d: bool = True,
         num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
@@ -115,7 +129,8 @@ class Substation(NonGeoDataset):
         image = np.load(image_path)['arr_0']
 
         # selecting channels
-        image = image[:, self.bands, :, :]
+        indices = [self.all_bands.index(band) for band in self.bands]
+        image = image[:, indices, :, :]
 
         # handling multiple images across timepoints
         if image.shape[0] < self.num_of_timepoints:
@@ -184,9 +199,9 @@ class Substation(NonGeoDataset):
         is_time_series = sample['image'].ndim == 4
 
         rgb_indices = []
-        for band in self._rgb_indices:
+        for band in self.rgb_bands:
             if band in self.bands:
-                rgb_indices.append(list(self.bands).index(band))
+                rgb_indices.append(self.bands.index(band))
             else:
                 raise RGBBandsMissingError()
 
