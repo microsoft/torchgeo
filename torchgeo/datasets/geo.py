@@ -376,7 +376,7 @@ class RasterDataset(GeoDataset):
     separate_files = False
 
     #: Nodata value for the dataset. If None, the source files' nodata value is used.
-    nodata_value: float | None = None
+    nodata: float | None = None
 
     @property
     def dtype(self) -> torch.dtype:
@@ -652,7 +652,7 @@ class RasterDataset(GeoDataset):
         # runs np.min_scalar_type() on a float64 Python float internally.
         # We cast it to np.dtype as a workaround.
         fh = vrt_fhs[0]
-        nodata = self.nodata_value if self.nodata_value is not None else fh.nodata
+        nodata = self.nodata if self.nodata is not None else fh.nodata
         if nodata is not None:
             nodata = np.dtype(fh.dtypes[0]).type(nodata)
 
@@ -727,11 +727,11 @@ class RasterDataset(GeoDataset):
             )
         )
 
-        if needs_warp or self.nodata_value is not None:
+        if needs_warp or self.nodata is not None:
             # Only override the source nodata when explicitly set, else uses src.nodata.
             override: dict[str, float] = {}
-            if self.nodata_value is not None:
-                override['src_nodata'] = self.nodata_value
+            if self.nodata is not None:
+                override['src_nodata'] = self.nodata
             vrt = WarpedVRT(
                 src,
                 crs=dst_crs,

@@ -529,7 +529,7 @@ class TestRasterDataset:
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
 
-    def test_nodata_value(self, tmp_path: Path) -> None:
+    def test_nodata(self, tmp_path: Path) -> None:
         """Nodata handling across the read path."""
         nodata = np.finfo(np.float32).min
         profile = {
@@ -558,9 +558,9 @@ class TestRasterDataset:
         with ds._load_warp_file(ds.files[0], crs=CRS.from_epsg(4326)) as vrt:
             assert vrt.nodata == nodata
 
-        # nodata_value override remaps which value is treated as nodata.
+        # nodata override remaps which value is treated as nodata.
         class Override(RasterDataset):
-            nodata_value = 5.0
+            nodata = 5.0
 
         ds_override = Override(tmp_path)
         with ds_override._load_warp_file(ds_override.files[0]) as vrt:
