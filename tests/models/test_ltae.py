@@ -53,93 +53,56 @@ class TestLTAE:
 class TestLTAE2d:
     """Tests for the LTAE2d model."""
 
-    def test_forward(self) -> None:
-        """Basic forward pass without positional encoding."""
+    @pytest.mark.parametrize(
+        ('d_model', 'positional_encoding', 'mode'),
+        [
+            pytest.param(32, False, 'basic', id='basic'),
+            pytest.param(32, True, 'positions', id='positions'),
+            pytest.param(None, False, 'basic', id='no-projection'),
+            pytest.param(32, False, 'padding', id='padding'),
+        ],
+    )
+    def test_forward(
+        self, d_model: int | None, positional_encoding: bool, mode: str
+    ) -> None:
+        """Test forward-pass variants and attention masks."""
         model = LTAE2d(
             in_channels=32,
             n_head=4,
-            d_model=32,
+            d_model=d_model,
             mlp=(32, 16),
             d_k=4,
-            positional_encoding=False,
+            positional_encoding=positional_encoding,
         )
         x = torch.randn(2, 5, 32, 8, 8)
-        out, _ = model(x)
-        assert out.shape == (2, 16, 8, 8)
-
-    def test_forward_with_positions(self) -> None:
-        """Forward pass with acquisition-date positional encoding."""
-        model = LTAE2d(in_channels=32, n_head=4, d_model=32, mlp=(32, 16), d_k=4)
-        x = torch.randn(2, 5, 32, 8, 8)
-        positions = torch.randint(1, 365, (2, 5))
-        out, _ = model(x, batch_positions=positions)
-        assert out.shape == (2, 16, 8, 8)
-
-    def test_attention(self) -> None:
-        """Return attention masks."""
-        model = LTAE2d(
-            in_channels=32,
-            n_head=4,
-            d_model=32,
-            mlp=(32, 16),
-            d_k=4,
-            positional_encoding=False,
-        )
-        x = torch.randn(2, 5, 32, 8, 8)
-        out, att = model(x)
-        assert out.shape == (2, 16, 8, 8)
-        assert att.shape == (4, 2, 5, 8, 8)  # (n_head, B, T, H, W)
-
-    def test_pad_mask(self) -> None:
-        """Forward pass with a padding mask."""
-        model = LTAE2d(
-            in_channels=32,
-            n_head=4,
-            d_model=32,
-            mlp=(32, 16),
-            d_k=4,
-            positional_encoding=False,
-        )
-        x = torch.randn(2, 5, 32, 8, 8)
-        pad_mask = torch.zeros(2, 5, dtype=torch.bool)
-        pad_mask[0, -1] = True  # last timestep of first item is padded
-        out, att = model(x, pad_mask=pad_mask)
+        positions = torch.randint(1, 365, (2, 5)) if mode == 'positions' else None
+        pad_mask = torch.zeros(2, 5, dtype=torch.bool) if mode == 'padding' else None
+        if pad_mask is not None:
+            pad_mask[0, -1] = True
+        out, att = model(x, batch_positions=positions, pad_mask=pad_mask)
         assert out.shape == (2, 16, 8, 8)
         assert att.shape == (4, 2, 5, 8, 8)
 
-    def test_no_d_model(self) -> None:
-        """Forward pass without an input projection (d_model=None)."""
-        model = LTAE2d(
-            in_channels=32,
-            n_head=4,
-            d_model=None,
-            mlp=(32, 16),
-            d_k=4,
-            positional_encoding=False,
-        )
-        x = torch.randn(2, 5, 32, 8, 8)
-        out, _ = model(x)
-        assert out.shape == (2, 16, 8, 8)
-
-    def test_invalid_n_head(self) -> None:
-        """Invalid number of attention heads raises a clear error."""
-        with pytest.raises(ValueError, match='n_head must be positive'):
-            LTAE2d(in_channels=32, n_head=0, d_model=32, mlp=(32, 16))
-
-    def test_in_channels_must_be_divisible_by_n_head(self) -> None:
-        """Input channels must be divisible by the number of attention heads."""
-        match = 'in_channels must be divisible by n_head'
-        with pytest.raises(AssertionError, match=match):
-            LTAE2d(in_channels=30, n_head=4, d_model=32, mlp=(32, 16))
-
-    def test_d_model_must_be_divisible_by_n_head(self) -> None:
-        """Attention projection width must be divisible by attention heads."""
-        match = 'd_model must be divisible by n_head'
-        with pytest.raises(AssertionError, match=match):
-            LTAE2d(in_channels=32, n_head=4, d_model=30, mlp=(30, 16))
-
-    def test_mlp_output_must_be_divisible_by_n_head(self) -> None:
-        """Output channels must be divisible by attention heads."""
-        match = 'mlp\\[-1\\] must be divisible by n_head'
-        with pytest.raises(ValueError, match=match):
-            LTAE2d(in_channels=32, n_head=4, d_model=32, mlp=(32, 14))
+    @pytest.mark.parametrize(
+        ('in_channels', 'n_head', 'd_model', 'mlp', 'error', 'match'),
+        [
+            pytest.param(32, 0, 32, (32, 16), ValueError, 'n_head', id='n-head'),
+            pytest.param(
+                30, 4, 32, (32, 16), AssertionError, 'in_channels', id='channels'
+            ),
+            pytest.param(32, 4, 30, (30, 16), AssertionError, 'd_model', id='d-model'),
+            pytest.param(32, 4, 32, (32, 14), ValueError, 'mlp', id='mlp'),
+        ],
+    )
+    def test_invalid_config(
+        self,
+        in_channels: int,
+        n_head: int,
+        d_model: int,
+        mlp: tuple[int, int],
+        error: type[Exception],
+        match: str,
+    ) -> None:
+        """Test invalid model configurations."""
+        with pytest.raises(error, match=match):
+            LTAE2d(in_channels=in_channels, n_head=n_head, d_model=d_model, mlp=mlp)
