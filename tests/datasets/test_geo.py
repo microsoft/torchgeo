@@ -546,8 +546,8 @@ class TestRasterDataset:
         ds.res = 20.0
 
     def test_nodata(self, tmp_path: Path) -> None:
-        """Nodata handling across the read path."""
-        nodata = np.finfo(np.float32).min
+        """Source nodata is preserved, and ``nodata`` overrides it."""
+        nodata = -9999.0
         profile: dict[str, Any] = {
             'driver': 'GTiff',
             'height': 8,
@@ -563,18 +563,16 @@ class TestRasterDataset:
         with rasterio.open(tmp_path / 'image.tif', 'w', **profile) as src:
             src.write(data)
 
-        # real pixels read correctly (not all zeros) with no intervention.
+        # The file's own nodata is preserved: on read, for masking, and warping.
         ds = RasterDataset(tmp_path)
         image = ds[ds.bounds]['image']
         assert (image[image != nodata] == 5).all()
         with ds._load_warp_file(ds.files[0]) as src:
             assert (src.dataset_mask() == 0).sum() == 1
-
-        # Warping must not erase the file's own nodata.
         with ds._load_warp_file(ds.files[0], crs=CRS.from_epsg(4326)) as vrt:
             assert vrt.nodata == nodata
 
-        # nodata override remaps which value is treated as nodata.
+        # Setting `nodata` overrides which value is treated as nodata.
         class Override(RasterDataset):
             nodata = 5.0
 
