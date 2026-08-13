@@ -5,6 +5,7 @@
 
 import os
 import re
+import warnings
 from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar
 
@@ -494,8 +495,11 @@ class Sentinel2(Sentinel):
         metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
         if not os.path.exists(metadata_path):
             return None
-        with rasterio.open(metadata_path) as metadata_src:
-            tags = metadata_src.tags()
+        with warnings.catch_warnings():
+            # XML file does not have a CRS
+            warnings.simplefilter('ignore')
+            with rasterio.open(metadata_path) as metadata_src:
+                tags = metadata_src.tags()
         # The FOOTPRINT tag in MTD_MSIL1C.xml is always stored in EPSG:4326.
         footprint = gpd.GeoSeries.from_wkt([tags['FOOTPRINT']], crs='EPSG:4326')
         return footprint.to_crs(datasource.crs).iloc[0]

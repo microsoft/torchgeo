@@ -757,7 +757,8 @@ def copernicusfm_base(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
 
         # Both fc_norm and head are generated dynamically
