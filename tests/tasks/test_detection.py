@@ -38,19 +38,6 @@ class TestObjectDetection:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == 'vhr10_rf_detr':
-            rfdetr = pytest.importorskip('rfdetr')
-
-            # Avoid checkpoint downloads.
-            called: set[str] = set()
-
-            def record_load_pretrain_weights(*args: Any, **kwargs: Any) -> None:
-                called.add('load_pretrain_weights')
-
-            monkeypatch.setattr(
-                rfdetr.models, 'load_pretrain_weights', record_load_pretrain_weights
-            )
-
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         if name.startswith('vhr10'):
@@ -78,9 +65,6 @@ class TestObjectDetection:
             main(['predict', *args])
         except MisconfigurationException:
             pass
-
-        if name == 'vhr10_rf_detr':
-            assert called == {'load_pretrain_weights'}
 
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."

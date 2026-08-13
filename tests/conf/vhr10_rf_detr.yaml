@@ -3,8 +3,6 @@ model:
   init_args:
     model: 'rf-detr-nano'
     num_classes: 11
-  dict_kwargs:
-    pretrain_weights: 'rf-detr-nano.pth'
 data:
   class_path: VHR10DataModule
   init_args:
