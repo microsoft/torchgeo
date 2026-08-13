@@ -379,6 +379,9 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
+    #: Nodata value for the dataset. If None, the source files' nodata value is used.
+    nodata: float | None = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -737,7 +740,11 @@ class RasterDataset(GeoDataset):
             )
         )
 
-        if needs_warp:
+        if needs_warp or self.nodata is not None:
+            # Only override the source nodata when explicitly set, else uses src.nodata.
+            override: dict[str, Any] = {}
+            if self.nodata is not None:
+                override['src_nodata'] = self.nodata
             vrt = WarpedVRT(
                 src,
                 crs=dst_crs,
@@ -746,6 +753,7 @@ class RasterDataset(GeoDataset):
                 width=dst_width,
                 src_crs=src_crs,
                 src_transform=src_transform,
+                **override,
             )
             src.close()
             return vrt
@@ -848,6 +856,9 @@ class XarrayDataset(GeoDataset):
 
     .. versionadded:: 0.8
     """
+
+    #: Nodata value for the dataset. If None, the source files' nodata value is used.
+    nodata: float | None = None
 
     def __init__(
         self,
@@ -1008,10 +1019,18 @@ class XarrayDataset(GeoDataset):
                 if src.rio.crs != out_crs or res != src.rio.resolution():
                     src = src.rio.reproject(out_crs, resolution=res)
 
+                # Only override the source nodata when explicitly set
+                if self.nodata is not None:
+                    for var in self.data_vars:
+                        src[var] = src[var].rio.write_nodata(self.nodata)
+
                 datasets.append(src)
 
+            # Pass the override explicitly; merge_datasets does not reliably pick
+            # it up from write_nodata when the source already encodes a nodata.
+            # When None, it reads the source's own value and falls back to 0.
             dataset = rioxr.merge.merge_datasets(
-                datasets, bounds=bounds, res=res, nodata=0, crs=out_crs
+                datasets, bounds=bounds, res=res, nodata=self.nodata, crs=out_crs
             )
             dataset = dataset.sel(time=t)
 
