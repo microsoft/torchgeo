@@ -2,6 +2,10 @@
 # Licensed under the MIT License.
 
 # Copyright (c) 2021 VSainteuf (Vivien Sainte Fare Garnot)
+# Adapted from https://github.com/VSainteuf/utae-paps
+# This implementation differs significantly from the original: it uses einops
+# for tensor operations, TorchGeo's LTAE2d, typed configuration validation, and
+# explicit temporal-padding handling.
 
 """U-Net with Lightweight Temporal Attention Encoder (U-TAE)."""
 
