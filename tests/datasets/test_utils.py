@@ -692,28 +692,31 @@ class TestFindFiles:
         assert find_files(f'/vsizip/{archive}/non_existing.tif') == []
 
     def test_descend_into_archive_in_a_directory(
-            self, archive: str, tmp_path: Path
+        self, archive: str, tmp_path: Path
     ) -> None:
-        """Allow listing files inside of archives found in a directory without the
-        need of pointing directly to the archive with prefix /vsizip/."""
+        """Files inside archives found in a directory are matched automatically,
+        without pointing directly to the archive with prefix /vsizip/."""
         shutil.copy(archive, tmp_path)  # an archive in a directory...
         (tmp_path / 'loose.geojson').touch()  # ...next to a loose file
-        # Without descending, only the loose file matches; the archive is opaque.
-        assert find_files(tmp_path, '*.geojson') == [str(tmp_path / 'loose.geojson')]
-        # When descending, the files inside the archive are matched too.
-        found = find_files(tmp_path, '*.geojson', descend_into_archives=True)
+        found = find_files(tmp_path, '*.geojson')
         assert sorted(Path(p).name for p in found) == [
             'loose.geojson',
             'vector_2024.geojson',
         ]
 
     def test_descend_into_file_archive(self, archive: str) -> None:
-        """Allow listing when path points directly to an archive without prefix /vsizip/."""
-        # Without descending, the archive itself doesn't match the glob.
-        assert find_files(archive, '*.geojson') == []
-        # When descending, the files inside it are matched.
-        found = find_files(archive, '*.geojson', descend_into_archives=True)
+        """A path pointing directly to an archive lists the files inside it."""
+        found = find_files(archive, '*.geojson')
         assert [Path(p).name for p in found] == ['vector_2024.geojson']
+
+    def test_descend_skips_already_unpacked(self, archive: str, tmp_path: Path) -> None:
+        """Members already extracted next to the archive are not listed twice."""
+        shutil.copy(archive, tmp_path)  # an archive in a directory...
+        # ...whose contents have been extracted alongside it.
+        shutil.unpack_archive(archive, tmp_path, 'zip')
+        found = find_files(tmp_path, '*.geojson')
+        # Only the unpacked loose file is returned, not the archived copy.
+        assert found == [str(tmp_path / 'vector_2024.geojson')]
 
 
 @pytest.mark.parametrize(

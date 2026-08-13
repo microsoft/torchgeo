@@ -111,11 +111,6 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
     #: a different file format than what it was originally downloaded as.
     filename_glob = '*'
 
-    #: Whether to search inside archives (zip, tar, etc.) for matching files.
-    #:
-    #: .. versionadded:: 0.10
-    descend_into_archives = False
-
     # NOTE: according to the Python docs:
     #
     # * https://docs.python.org/3/library/exceptions.html#NotImplementedError
@@ -328,13 +323,7 @@ class GeoDataset(Dataset[Sample], abc.ABC, PlottingMixin):
         # Using set to remove any duplicates if directories are overlapping
         files: set[str] = set()
         for path in paths:
-            found = set(
-                find_files(
-                    path,
-                    self.filename_glob,
-                    descend_into_archives=self.descend_into_archives,
-                )
-            )
+            found = set(find_files(path, self.filename_glob))
             if found:
                 files.update(found)
             elif not os.path.isdir(path) and not hasattr(self, 'download'):
