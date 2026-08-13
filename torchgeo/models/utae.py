@@ -78,7 +78,7 @@ class UTAE(nn.Module):
             padding_mode: Spatial padding strategy for convolutions.
 
         Raises:
-            ValueError: If *encoder_widths* and *decoder_widths* have different
+            AssertionError: If *encoder_widths* and *decoder_widths* have different
                 lengths or different final widths.
         """
         super().__init__()
@@ -93,14 +93,12 @@ class UTAE(nn.Module):
         if encoder:
             self.return_maps = True
 
-        if len(self.encoder_widths) != len(self.decoder_widths):
-            raise ValueError(
-                'encoder_widths and decoder_widths must have the same length'
-            )
-        if self.encoder_widths[-1] != self.decoder_widths[-1]:
-            raise ValueError(
-                'encoder_widths and decoder_widths must have the same final width'
-            )
+        assert len(self.encoder_widths) == len(self.decoder_widths), (
+            'encoder_widths and decoder_widths must have the same length'
+        )
+        assert self.encoder_widths[-1] == self.decoder_widths[-1], (
+            'encoder_widths and decoder_widths must have the same final width'
+        )
 
         self.in_conv = ConvBlock(
             nkernels=[input_dim, self.encoder_widths[0], self.encoder_widths[0]],

@@ -80,7 +80,7 @@ class TestUTAE:
     )
     def test_invalid_widths(self, decoder_widths: tuple[int, ...], match: str) -> None:
         """Test incompatible encoder and decoder widths."""
-        with pytest.raises(ValueError, match=match):
+        with pytest.raises(AssertionError, match=match):
             create_model(decoder_widths=decoder_widths)
 
     def test_conv_layer_last_relu_false_keeps_intermediate_relu(self) -> None:
