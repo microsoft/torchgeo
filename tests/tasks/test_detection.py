@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -75,6 +76,20 @@ class TestObjectDetection:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
+
+    def test_rf_detr_weights(self, tmp_path: Path) -> None:
+        model = ObjectDetection(model='rf-detr-nano', weights=None, num_classes=2)
+        state_dict = model.model.state_dict()
+        key = next(
+            key for key, value in state_dict.items() if value.is_floating_point()
+        )
+        state_dict[key].fill_(0.5)
+        path = tmp_path / 'weights.pth'
+        torch.save({'model': state_dict}, path)
+
+        loaded = ObjectDetection(model='rf-detr-nano', weights=str(path), num_classes=2)
+
+        assert torch.equal(loaded.model.state_dict()[key], state_dict[key])
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)

@@ -59,7 +59,7 @@ class ObjectDetection(BaseTask):
         self,
         model: str = 'faster-rcnn',
         backbone: str = 'resnet50',
-        weights: WeightsEnum | None = None,
+        weights: WeightsEnum | str | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
@@ -83,9 +83,7 @@ class ObjectDetection(BaseTask):
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.
-            weights: Initial model weights. For RF-DETR, pass a model-specific
-                ``pretrain_weights`` keyword argument, such as
-                ``pretrain_weights='rf-detr-nano.pth'``.
+            weights: Initial model weights. RF-DETR models accept a checkpoint path.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
@@ -168,8 +166,7 @@ class ObjectDetection(BaseTask):
             }
             self.model_kwargs.setdefault('num_channels', in_channels)
             self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
-            if self.weights is None:
-                self.model_kwargs.setdefault('pretrain_weights', None)
+            self.model_kwargs['pretrain_weights'] = self.weights
             model_config = variants[model](
                 num_classes=num_classes - 1, **self.model_kwargs
             )
@@ -177,7 +174,7 @@ class ObjectDetection(BaseTask):
             self.model = rfdetr_models.build_model_from_config(
                 model_config, train_config
             )
-            if model_config.pretrain_weights is not None:
+            if self.weights is not None:
                 rfdetr_models.load_pretrain_weights(self.model, model_config)
             if model_config.backbone_lora:
                 rfdetr_models.apply_lora(self.model)
