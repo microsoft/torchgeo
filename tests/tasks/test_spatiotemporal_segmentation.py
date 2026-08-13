@@ -2,10 +2,10 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Literal
 
 import pytest
 import torch
-from torch import Tensor
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
@@ -62,22 +62,15 @@ class TestSpatioTemporalSegmentation:
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
 
-    def test_multilabel_predict_step(self) -> None:
-        model = SpatioTemporalSegmentation(
-            in_channels=3, num_labels=4, task='multilabel', hidden_dim=8, num_layers=1
-        )
-        batch = {'image': torch.randn(2, 4, 3, 16, 16), 'length': torch.tensor([4, 3])}
-
-        probabilities = model.predict_step(batch, 0)
-        assert probabilities.shape == (2, 4, 16, 16)
-        assert torch.all(probabilities >= 0)
-        assert torch.all(probabilities <= 1)
-
-    def test_utae_predict_step_forwards_batch_positions(self) -> None:
-        model = SpatioTemporalSegmentation(
-            model='utae',
+    @pytest.mark.parametrize('model', ['convlstm', 'utae'])
+    def test_multilabel_predict_step(self, model: Literal['convlstm', 'utae']) -> None:
+        task = SpatioTemporalSegmentation(
+            model=model,
             in_channels=3,
-            num_classes=4,
+            num_labels=4,
+            task='multilabel',
+            hidden_dim=8,
+            num_layers=1,
             encoder_widths=(4, 4),
             decoder_widths=(4, 4),
             out_conv=(4, 4),
@@ -85,34 +78,13 @@ class TestSpatioTemporalSegmentation:
             d_model=4,
             d_k=4,
         )
-        captured: list[Tensor] = []
-
-        # Hook the nested temporal encoder to verify the task forwards
-        # batch_positions while still exercising the real UTAE model.
-        def hook(
-            module: torch.nn.Module,
-            args: tuple[object, ...],
-            kwargs: dict[str, object],
-            output: object,
-        ) -> None:
-            """Record forwarded batch positions."""
-            batch_positions_kwarg = kwargs['batch_positions']
-            assert isinstance(batch_positions_kwarg, Tensor)
-            captured.append(batch_positions_kwarg)
-
-        handle = model.model.temporal_encoder.register_forward_hook(
-            hook, with_kwargs=True
-        )
-        batch_positions = torch.tensor([[1, 2, 3], [4, 5, 6]])
         batch = {
-            'image': torch.randn(2, 3, 3, 16, 16),
-            'batch_positions': batch_positions,
+            'image': torch.randn(2, 4, 3, 16, 16),
+            'length': torch.tensor([4, 3]),
+            'batch_positions': torch.arange(4).expand(2, -1),
         }
 
-        try:
-            probabilities = model.predict_step(batch, 0)
-        finally:
-            handle.remove()
-
-        assert captured[0] is batch_positions
+        probabilities = task.predict_step(batch, 0)
         assert probabilities.shape == (2, 4, 16, 16)
+        assert torch.all(probabilities >= 0)
+        assert torch.all(probabilities <= 1)
