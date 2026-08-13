@@ -131,7 +131,7 @@ class TestFLAIRHUB:
         directory = root / 'D006-2020_AERIAL_RGBI'
         shutil.rmtree(directory)
 
-        FLAIRHUB(root=root, bands=['AERIAL_RGBI'])
+        FLAIRHUB(root=root, bands=['AERIAL_RGBI'], checksum=False)
         assert directory.is_dir()
         assert not (root / 'D006-2020_AERIAL_RGBI.zip').exists()
 
@@ -190,6 +190,7 @@ class TestFLAIRHUB:
             split='train',
             bands=['AERIAL_RGBI'],
             dataset_type='land_cover',
+            checksum=False,
         )
         toy_dir = tmp_path / 'FLAIR-HUB_TOY'
         shutil.rmtree(toy_dir)
@@ -199,6 +200,7 @@ class TestFLAIRHUB:
             split='train',
             bands=['AERIAL_RGBI'],
             dataset_type='land_cover',
+            checksum=False,
         )
         assert len(dataset) == 1
 

@@ -1321,7 +1321,7 @@ class FLAIRHUBBase(NonGeoDataset):
         split_column: str = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
@@ -1891,7 +1891,7 @@ class FLAIRHUB(FLAIRHUBBase):
         ] = 'split_1',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
@@ -1917,9 +1917,7 @@ class FLAIRHUBToy(FLAIRHUBBase):
     """
 
     download_link = 'https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_hub/FLAIR-HUB_TOY_DATASET.zip'
-    sha256: ClassVar[str] = (
-        'f0af97c8bb26c76d07351299017f11cbe0e015a621b6b5fdde0b451dbac254a1'
-    )
+    sha256 = 'f0af97c8bb26c76d07351299017f11cbe0e015a621b6b5fdde0b451dbac254a1'
 
     def __init__(
         self,
@@ -1928,7 +1926,7 @@ class FLAIRHUBToy(FLAIRHUBBase):
         split_column: Literal['split_toy'] = 'split_toy',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         bands: list[AvailableBands] | None = None,
         dataset_type: Literal[
             'land_cover', 'crop_type', 'crop_type_2', 'crop_type_3'
