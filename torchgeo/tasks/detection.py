@@ -175,9 +175,15 @@ class ObjectDetection(BaseTask):
                 model_config, train_config
             )
             if self.weights is not None:
-                rfdetr_models.load_pretrain_weights(self.model, model_config)
-            if model_config.backbone_lora:
-                rfdetr_models.apply_lora(self.model)
+                if isinstance(self.weights, WeightsEnum):
+                    state_dict = self.weights.get_state_dict(
+                        progress=True, check_hash=True, weights_only=True
+                    )
+                else:
+                    state_dict = torch.load(
+                        self.weights, map_location='cpu', weights_only=True
+                    )
+                self.model.load_state_dict(state_dict)
             self.rf_detr_criterion, self.rf_detr_postprocess = (
                 rfdetr_models.build_criterion_from_config(model_config, train_config)
             )
