@@ -96,6 +96,21 @@ class TestObjectDetection:
 
         assert torch.equal(loaded.model.state_dict()[key], state_dict[key])
 
+    def test_rf_detr_lora(self, monkeypatch: MonkeyPatch) -> None:
+        rfdetr = pytest.importorskip('rfdetr')
+        called: list[torch.nn.Module] = []
+
+        def apply_lora(model: torch.nn.Module) -> None:
+            called.append(model)
+
+        monkeypatch.setattr(rfdetr.models, 'apply_lora', apply_lora)
+
+        model = ObjectDetection(
+            model='rf-detr-nano', weights=None, num_classes=2, backbone_lora=True
+        )
+
+        assert called == [model.model]
+
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)
         datamodule = NASAMarineDebrisDataModule(
