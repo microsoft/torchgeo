@@ -104,7 +104,8 @@ class TestInstanceSegmentation:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
+    def test_predict(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         datamodule = PredictInstanceSegmentationDataModule(
             root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
