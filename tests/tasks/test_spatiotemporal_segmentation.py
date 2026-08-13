@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 import torch
@@ -65,19 +65,20 @@ class TestSpatioTemporalSegmentation:
 
     @pytest.mark.parametrize('model', ['convlstm', 'utae'])
     def test_multilabel_predict_step(self, model: Literal['convlstm', 'utae']) -> None:
+        kwargs: dict[str, Any]
+        if model == 'convlstm':
+            kwargs = {'hidden_dim': 8, 'num_layers': 1}
+        else:
+            kwargs = {
+                'encoder_widths': (4, 4),
+                'decoder_widths': (4, 4),
+                'out_conv': (4, 4),
+                'n_head': 1,
+                'd_model': 4,
+                'd_k': 4,
+            }
         task = SpatioTemporalSegmentation(
-            model=model,
-            in_channels=3,
-            num_labels=4,
-            task='multilabel',
-            hidden_dim=8,
-            num_layers=1,
-            encoder_widths=(4, 4),
-            decoder_widths=(4, 4),
-            out_conv=(4, 4),
-            n_head=1,
-            d_model=4,
-            d_k=4,
+            model=model, in_channels=3, num_labels=4, task='multilabel', **kwargs
         )
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),

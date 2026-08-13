@@ -83,55 +83,19 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         num_classes: int = (
             self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
-        # jsonargparse injects defaults for all models into self.kwargs regardless of
-        # which model is selected, so we strip the other models' keys.
-        _convlstm_keys = {
-            'hidden_dim',
-            'kernel_size',
-            'num_layers',
-            'bias',
-            'return_all_layers',
-            'head_kernel_size',
-        }
-        _conv3dlstm_keys = _convlstm_keys | {
-            'conv3d_dim',
-            'conv3d_kernel_size',
-            'output_mode',
-            'return_sequence',
-            'pooling',
-        }
-        _utae_keys = {
-            'encoder_widths',
-            'decoder_widths',
-            'out_conv',
-            'str_conv_k',
-            'str_conv_s',
-            'str_conv_p',
-            'encoder_norm',
-            'n_head',
-            'd_model',
-            'd_k',
-            'encoder',
-            'return_maps',
-            'pad_value',
-            'padding_mode',
-        }
         match self.hparams['model']:
             case 'convlstm':
-                excluded = _utae_keys | (_conv3dlstm_keys - _convlstm_keys)
-                kwargs = {k: v for k, v in self.kwargs.items() if k not in excluded}
+                kwargs = self.kwargs.copy()
                 self.model = ConvLSTM(
                     input_dim=in_channels, num_classes=num_classes, **kwargs
                 )
             case 'conv3dlstm':
-                kwargs = {k: v for k, v in self.kwargs.items() if k not in _utae_keys}
+                kwargs = self.kwargs.copy()
                 self.model = Conv3dLSTM(
                     input_dim=in_channels, num_outputs=num_classes, **kwargs
                 )
             case 'utae':
-                kwargs = {
-                    k: v for k, v in self.kwargs.items() if k not in _conv3dlstm_keys
-                }
+                kwargs = self.kwargs.copy()
                 out_conv = cast(
                     Sequence[int], kwargs.pop('out_conv', (32, num_classes))
                 )
