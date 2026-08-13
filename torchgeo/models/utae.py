@@ -155,7 +155,10 @@ class UTAE(nn.Module):
             return_att: If ``True``, return attention masks alongside output.
 
         Returns:
-            Output tensor, and optionally attention masks or feature maps.
+            Output tensor of shape ``(B, out_conv[-1], H, W)``. If *return_att*
+            is ``True``, also returns attention masks of shape
+            ``(n_head, B, T, H_att, W_att)``. If *return_maps* or *encoder* is
+            enabled, instead also returns the decoder feature maps.
         """
         pad_mask = reduce(x == self.pad_value, 'b t c h w -> b t', 'all')
 
@@ -253,6 +256,10 @@ class TemporalAggregator(nn.Module):
 
     def _check_att_group_channels(self, x: Tensor, n_heads: int) -> None:
         """Validate channel grouping for ``att_group`` aggregation.
+
+        Args:
+            x: Feature maps of shape ``(B, T, C, H, W)``.
+            n_heads: Number of temporal attention heads.
 
         Raises:
             ValueError: If the channel dimension of *x* is not divisible by *n_heads*.
@@ -369,7 +376,14 @@ class ConvLayer(nn.Module):
         self.conv = nn.Sequential(*layers)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass."""
+        """Apply the convolutional stack.
+
+        Args:
+            x: Input tensor of shape ``(B, nkernels[0], H, W)``.
+
+        Returns:
+            Output tensor of shape ``(B, nkernels[-1], H_out, W_out)``.
+        """
         return self.conv(x)
 
 
@@ -399,7 +413,14 @@ class ConvBlock(TemporallySharedBlock):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass."""
+        """Apply the temporally shared convolutional block.
+
+        Args:
+            x: Input tensor of shape ``(B, nkernels[0], H, W)``.
+
+        Returns:
+            Output tensor of shape ``(B, nkernels[-1], H, W)``.
+        """
         return self.conv(x)
 
 
@@ -441,7 +462,14 @@ class DownConvBlock(TemporallySharedBlock):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass."""
+        """Downsample and transform a feature map.
+
+        Args:
+            x: Input tensor of shape ``(B, d_in, H, W)``.
+
+        Returns:
+            Downsampled tensor of shape ``(B, d_out, H_out, W_out)``.
+        """
         out = self.down(x)
         out = self.conv1(out)
         return out + self.conv2(out)
