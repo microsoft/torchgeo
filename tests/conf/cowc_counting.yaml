@@ -1,5 +1,5 @@
 model:
-  class_path: RegressionTask
+  class_path: Regression
   init_args:
     model: resnet18
     num_outputs: 1
@@ -11,3 +11,4 @@ data:
     batch_size: 1
   dict_kwargs:
     root: 'tests/data/cowc_counting'
+    checksum: false

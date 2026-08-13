@@ -7,8 +7,7 @@ from typing import Any
 
 import timm
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
@@ -23,7 +22,7 @@ class PanopticonPE(nn.Module):
         attn_dim: int,
         embed_dim: int,
         patch_size: int,
-        chnfus_cfg: dict[str, Any] = {},
+        chnfus_cfg: dict[str, Any] | None = None,
         img_size: int = 224,
     ) -> None:
         """Initialize a new Panopticon instance.
@@ -35,6 +34,8 @@ class PanopticonPE(nn.Module):
             chnfus_cfg: Keyword arguments defining the channel attention.
             img_size: Image size.
         """
+        if chnfus_cfg is None:
+            chnfus_cfg = {}
         super().__init__()
 
         self.conv3d = Conv3dWrapper(patch_size=patch_size, embed_dim=attn_dim)
@@ -126,8 +127,8 @@ class ChnAttn(nn.Module):
     def __init__(
         self,
         dim: int,
-        chnemb_cfg: dict[str, Any] = {},
-        attn_cfg: dict[str, Any] = {},
+        chnemb_cfg: dict[str, Any] | None = None,
+        attn_cfg: dict[str, Any] | None = None,
         layer_norm: bool = False,
     ) -> None:
         """Initialize a channel attention module.
@@ -138,6 +139,10 @@ class ChnAttn(nn.Module):
             attn_cfg: Key-value pairs for the channel attention.
             layer_norm: Whether to apply layer norm after channel attention.
         """
+        if attn_cfg is None:
+            attn_cfg = {}
+        if chnemb_cfg is None:
+            chnemb_cfg = {}
         super().__init__()
 
         self.chnemb = ChnEmb(**chnemb_cfg, embed_dim=dim)
@@ -224,11 +229,16 @@ class ChnEmb(torch.nn.Module):
 
         Returns:
             Embeddings of shape (B,C,embed_dim).
+
+        Raises:
+            ValueError: If the input is not 2D or 3D.
         """
         if input.ndim == 2:  # B,C (mus)
             mus = input
         elif input.ndim == 3:  # B,C,2 (mus, sigmas)
             mus = input[:, :, 0]
+        else:
+            raise ValueError('input must be a 2D or 3D tensor')
         sar_indices = mus < 0
         opt_indices = torch.logical_not(sar_indices)
         device = mus.device
@@ -509,7 +519,9 @@ def panopticon_vitb14(
     patch_size = 14  # fixed
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(
+            progress=True, check_hash=True, weights_only=True
+        )
         state_dict.pop('mask_token')
 
         # interpolate positional embeddings (timm==0.9.2) does not support this yet

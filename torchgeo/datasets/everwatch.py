@@ -7,11 +7,11 @@ import os
 from collections.abc import Callable
 from typing import Literal, cast
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -90,7 +90,7 @@ class EverWatch(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new EverWatch dataset instance.
 
@@ -130,7 +130,7 @@ class EverWatch(NonGeoDataset):
 
         # group per image path to get all annotations for one sample
         self.annot_df['sample_index'] = pd.factorize(self.annot_df['image_path'])[0]
-        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])
+        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])  # ty: ignore[invalid-argument-type]
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
@@ -290,7 +290,7 @@ class EverWatch(NonGeoDataset):
                 label,
                 color='white',
                 fontsize=8,
-                bbox=dict(facecolor=color, alpha=box_alpha),
+                bbox={'facecolor': color, 'alpha': box_alpha},
             )
 
         if suptitle is not None:

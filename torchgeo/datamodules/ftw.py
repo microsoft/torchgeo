@@ -23,9 +23,9 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
 
     def __init__(
         self,
-        train_countries: list[str] = ['austria'],
-        val_countries: list[str] = ['austria'],
-        test_countries: list[str] = ['austria'],
+        train_countries: list[str] | None = None,
+        val_countries: list[str] | None = None,
+        test_countries: list[str] | None = None,
         batch_size: int = 64,
         num_workers: int = 0,
         **kwargs: Any,
@@ -44,6 +44,12 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
         Raises:
             AssertionError: If 'countries' are specified in kwargs
         """
+        if test_countries is None:
+            test_countries = ['austria']
+        if val_countries is None:
+            val_countries = ['austria']
+        if train_countries is None:
+            train_countries = ['austria']
         assert 'countries' not in kwargs, (
             "Please specify 'train_countries', 'val_countries', and 'test_countries' instead of 'countries' inside kwargs"
         )

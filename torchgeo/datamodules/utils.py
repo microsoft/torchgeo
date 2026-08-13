@@ -56,7 +56,7 @@ def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
 
 
 def group_shuffle_split(
-    groups: Iterable[object],
+    groups: Iterable[float | str],
     train_size: float | None = None,
     test_size: float | None = None,
     random_state: int | None = None,

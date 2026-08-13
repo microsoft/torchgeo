@@ -5,13 +5,19 @@
 
 import os
 import re
+import warnings
 from collections.abc import Callable, Iterable, Sequence
 from typing import ClassVar
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
+import rasterio
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
+from rasterio import DatasetReader
+from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
@@ -462,3 +468,38 @@ class Sentinel2(Sentinel):
             plt.suptitle(suptitle)
 
         return fig
+
+    def footprint_from_datasource(
+        self, datasource: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon | None:
+        """Extract the true geometric footprint from a Sentinel-2 datasource.
+
+        This method reads the original footprint geometry from the associated
+        Sentinel-2 metadata XML file (`MTD_MSIL1C.xml`) and transforms it from
+        geographic coordinates (EPSG:4326) into the CRS of the given dataset.
+
+        Args:
+            datasource: An open raster dataset.
+
+        Returns:
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
+
+        .. versionadded:: 0.10
+        """
+        if hasattr(datasource, 'src_dataset'):
+            # When dataset is a WarpedVRT
+            filepath = datasource.src_dataset.name
+        else:
+            filepath = datasource.name
+        metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
+        if not os.path.exists(metadata_path):
+            return None
+        with warnings.catch_warnings():
+            # XML file does not have a CRS
+            warnings.simplefilter('ignore')
+            with rasterio.open(metadata_path) as metadata_src:
+                tags = metadata_src.tags()
+        # The FOOTPRINT tag in MTD_MSIL1C.xml is always stored in EPSG:4326.
+        footprint = gpd.GeoSeries.from_wkt([tags['FOOTPRINT']], crs='EPSG:4326')
+        return footprint.to_crs(datasource.crs).iloc[0]

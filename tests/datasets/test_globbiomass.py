@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -30,7 +30,7 @@ class TestGlobBiomass:
         )
         root = tmp_path
         transforms = nn.Identity()
-        return GlobBiomass(root, transforms=transforms)
+        return GlobBiomass(root, transforms=transforms, checksum=False)
 
     def test_getitem(self, dataset: GlobBiomass) -> None:
         x = dataset[dataset.bounds]

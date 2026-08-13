@@ -6,9 +6,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from torch import Tensor
+from torch import Tensor, nn
 
 from torchgeo.datasets import ClayEmbeddings, DatasetNotFoundError
 

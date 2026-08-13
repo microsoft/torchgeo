@@ -304,7 +304,7 @@ class Tessera_Weights(WeightsEnum):
     """
 
     TESSERA = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/model-b00edea0.pth',
+        url='https://hf.co/isaaccorley/tessera/resolve/a8afffd0f48ccce1dab060a7c532d3fde05ae580/model-44f8d7fe.pth',
         transforms=_tessera_transforms,
         meta={
             'dataset': 'TESSERA',
@@ -336,7 +336,7 @@ class Tessera_Weights(WeightsEnum):
     )
 
     TESSERA_SENTINEL2_ENCODER = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/s2_encoder-38fd63b9.pth',
+        url='https://hf.co/isaaccorley/tessera/resolve/1c723278ef8211d4917f8edf4a9cd5dcddc85e44/s2_encoder-28537a8e.pth',
         transforms=_tessera_s2_transforms,
         meta={
             'dataset': 'TESSERA',
@@ -365,7 +365,7 @@ class Tessera_Weights(WeightsEnum):
     )
 
     TESSERA_SENTINEL1_ENCODER = Weights(
-        url='https://hf.co/isaaccorley/tessera/resolve/acec3c1eb62d97a78b2cf65eb8cbf42587c57e93/s1_encoder-7797f44d.pth',
+        url='https://hf.co/isaaccorley/tessera/resolve/2b2a1059878f5d371ea595620f47b6ded73e6ea9/s1_encoder-6cb3ba6a.pth',
         transforms=_tessera_s1_transforms,
         meta={
             'dataset': 'TESSERA',
@@ -405,16 +405,21 @@ def tessera(
         return model
 
     if weights == Tessera_Weights.TESSERA:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=True)
+        model.load_state_dict(
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
+        )
         return model
     elif weights == Tessera_Weights.TESSERA_SENTINEL2_ENCODER:
         model.s2_backbone.load_state_dict(
-            weights.get_state_dict(progress=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         return model.s2_backbone
     elif weights == Tessera_Weights.TESSERA_SENTINEL1_ENCODER:
         model.s1_backbone.load_state_dict(
-            weights.get_state_dict(progress=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         return model.s1_backbone
     else:

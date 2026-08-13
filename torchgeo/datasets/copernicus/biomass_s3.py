@@ -10,6 +10,7 @@ from typing import Literal
 
 import pandas as pd
 import torch
+import torch.nn.functional as F
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -35,7 +36,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l3_biomass_s3/biomass_s3.zip'
-    md5 = '4769ab8c2c23cd8957b99e15e071931c'
+    sha256 = '1d005b200d50f2e8b5f4482959bdfa6e2d7d05a8cd828d7f438c99a4e1cfbaef'
     zipfile = 'biomass_s3.zip'
     directory = 'biomass_s3'
     filename = 'static_fnames-{}.csv'
@@ -66,6 +67,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
     cmap = 'YlGn'
+    image_size = (282, 282)
 
     def __init__(
         self,
@@ -75,7 +77,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CopernicusBenchBiomassS3 instance.
 
@@ -87,7 +89,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -96,6 +98,35 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         super().__init__(root, split, bands, transforms, download, checksum)
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)
+
+    def _load_image(self, path: str) -> Sample:
+        """Load and resize an image, replacing its declared nodata value."""
+        sample = super()._load_image(path)
+        sample['image'] = sample['image'].masked_fill(
+            torch.isneginf(sample['image']), 0
+        )
+        sample['image'] = F.interpolate(
+            sample['image'].unsqueeze(dim=0),
+            size=self.image_size,
+            mode='bilinear',
+            align_corners=False,
+        ).squeeze(dim=0)
+        return sample
+
+    def _load_mask(self, path: str) -> Sample:
+        """Load and resize a biomass mask."""
+        sample = super()._load_mask(path)
+        sample['mask'] = (
+            F.interpolate(
+                sample['mask'].unsqueeze(dim=0).unsqueeze(dim=0),
+                size=self.image_size,
+                mode='bilinear',
+                align_corners=False,
+            )
+            .squeeze(dim=0)
+            .squeeze(dim=0)
+        )
+        return sample
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.

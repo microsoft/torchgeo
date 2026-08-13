@@ -59,9 +59,9 @@ class NCCM(RasterDataset):
     date_format = '%Y'
     is_image = False
     urls: ClassVar[dict[int, str]] = {
-        2019: 'https://figshare.com/ndownloader/files/25070540',
-        2018: 'https://figshare.com/ndownloader/files/25070624',
-        2017: 'https://figshare.com/ndownloader/files/25070582',
+        2019: 'https://api.figshare.com/v2/file/download/25070540',
+        2018: 'https://api.figshare.com/v2/file/download/25070624',
+        2017: 'https://api.figshare.com/v2/file/download/25070582',
     }
     md5s: ClassVar[dict[int, str]] = {
         2019: '0d062bbd42e483fdc8239d22dba7020f',
@@ -83,11 +83,11 @@ class NCCM(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2019],
+        years: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new dataset.
@@ -114,6 +114,8 @@ class NCCM(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
+        if years is None:
+            years = [2019]
         assert set(years) <= self.md5s.keys(), (
             'NCCM data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'

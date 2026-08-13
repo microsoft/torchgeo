@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import BRIGHTDFC2025, DatasetNotFoundError
 
@@ -53,7 +53,7 @@ class TestBRIGHTDFC2025:
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )
-        BRIGHTDFC2025(root=str(tmp_path))
+        BRIGHTDFC2025(root=str(tmp_path), checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

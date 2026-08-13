@@ -294,6 +294,28 @@ class SpatioTemporalSampler(GeoSampler):
                 msg += 'a different number of timestamps'
                 warnings.warn(msg, UserWarning)
 
+    def __len__(self) -> int:
+        """Length of each epoch.
+
+        Computed analytically when the yield count is fixed by the inner
+        samplers' lengths, otherwise by brute-force iteration. The result is
+        cached on first call.
+
+        Returns:
+            The total number of samples produced by one iteration.
+        """
+        if not hasattr(self, '_length'):
+            match self.spatial_sampler.strategy, self.temporal_sampler.strategy:
+                case 'random', 'random':
+                    self._length = len(self.spatial_sampler)
+                case 'sequential', 'random':
+                    self._length = len(self.spatial_sampler) * len(
+                        self.temporal_sampler
+                    )
+                case _:
+                    self._length = super().__len__()
+        return self._length
+
     def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Iterate over generated sample locations for each epoch.
 
@@ -351,7 +373,8 @@ class SpatioTemporalSampler(GeoSampler):
                 t = np.array([tmin, tmax])
                 verts.extend(prism(x, y, t))
             poly = Poly3DCollection(verts, color='tab:blue', alpha=0.3)
-            return ax.add_collection3d(poly)
+            ax.add_collection3d(poly)
+            return (poly,)
 
         def func(index: tuple[slice, slice, slice]) -> Iterable[Artist]:
             """Plot the dynamic samples."""
@@ -376,6 +399,7 @@ class SpatioTemporalSampler(GeoSampler):
             t = np.array([index[2].start.timestamp(), index[2].stop.timestamp()])
             verts = prism(x, y, t)
             poly = Poly3DCollection(verts, color='tab:orange', alpha=0.3)
-            return ax.add_collection3d(poly)
+            ax.add_collection3d(poly)
+            return (poly,)
 
         return FuncAnimation(fig, func=func, frames=self, init_func=init_func)

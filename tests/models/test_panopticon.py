@@ -83,10 +83,10 @@ class TestPanopticonBase:
 
     def test_panopticon_weights(self, mocked_weights: Panopticon_Weights) -> None:
         model = panopticon_vitb14(weights=mocked_weights)
-        x_dict = dict(
-            imgs=torch.randn(2, 3, 224, 224),
-            chn_ids=torch.tensor([[664, 559, 493]]).repeat(2, 1),
-        )
+        x_dict = {
+            'imgs': torch.randn(2, 3, 224, 224),
+            'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),
+        }
         normed_cls_token = model(x_dict)
         assert tuple(normed_cls_token.shape) == (2, 768)
 
@@ -94,10 +94,10 @@ class TestPanopticonBase:
     def test_panopticon_download(self, weights: Panopticon_Weights) -> None:
         """Test forward pass with weights loaded."""
         model = panopticon_vitb14(weights)
-        x_dict = dict(
-            imgs=torch.randn(2, 3, 224, 224),
-            chn_ids=torch.tensor([[664, 559, 493]]).repeat(2, 1),
-        )
+        x_dict = {
+            'imgs': torch.randn(2, 3, 224, 224),
+            'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),
+        }
         normed_cls_token = model(x_dict)
         assert tuple(normed_cls_token.shape) == (2, 768)
 
@@ -223,6 +223,11 @@ class TestChnEmb:
         chn_ids = torch.ones(1, 3, 2)  # (B=1, C=3, full spectra)
         output = model(chn_ids)
         assert output.shape == (1, 3, 32)  # (B, C, embed_dim)
+
+    def test_invalid_input_shape(self) -> None:
+        model = ChnEmb(embed_dim=32)
+        with pytest.raises(ValueError, match='2D or 3D'):
+            model(torch.ones(3))
 
 
 class TestCrossAttnNoQueryProj:

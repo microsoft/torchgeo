@@ -126,7 +126,7 @@ class Vaihingen2D(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
 
@@ -154,7 +154,7 @@ class Vaihingen2D(NonGeoDataset):
             image = os.path.join(root, self.image_root, name)
             mask = os.path.join(root, name)
             if os.path.exists(image) and os.path.exists(mask):
-                self.files.append(dict(image=image, mask=mask))
+                self.files.append({'image': image, 'mask': mask})
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.

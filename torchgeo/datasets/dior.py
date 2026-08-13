@@ -8,11 +8,11 @@ from collections.abc import Callable
 from typing import Any, ClassVar, Literal
 from xml.etree import ElementTree
 
-import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -55,7 +55,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
         bboxes.append(bbox)
         labels.append(label)
 
-    return dict(filename=filename, bboxes=bboxes, labels=labels)
+    return {'filename': filename, 'bboxes': bboxes, 'labels': labels}
 
 
 class DIOR(NonGeoDataset):
@@ -115,17 +115,17 @@ class DIOR(NonGeoDataset):
         'trainval': {
             'images': {
                 'filename': 'Images_trainval.zip',
-                'md5': '070e9314120403e5c965d12fe5321cb0',
+                'sha256': 'f824dbd8152de43c0e0151f13d892dcc69ce2c3d18b952507cc843cc8ce85d27',
             },
             'labels': {
                 'filename': 'Annotations_trainval.zip',
-                'md5': '90e045de37255c5919bbecf659b72c1a',
+                'sha256': 'e688da8179324f6d1d0e84b54ed75b0922e45ce30817c4973f1c5b1efd03a8e4',
             },
         },
         'test': {
             'images': {
                 'filename': 'Images_test.zip',
-                'md5': '97f3cbc86de0867624a6a34190c694ae',
+                'sha256': 'a643bcdbaf3e8f9d9847a6ae023c2b624ae1e1dea278b2ca1b5ee90759426f1d',
             }
         },
     }
@@ -161,7 +161,7 @@ class DIOR(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DIOR dataset instance.
 
@@ -171,7 +171,7 @@ class DIOR(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found or corrupted and *download* is False.
@@ -289,10 +289,10 @@ class DIOR(NonGeoDataset):
 
         for key in files:
             filename = files[key]['filename']
-            md5 = files[key]['md5']
+            sha256 = files[key]['sha256']
             path = os.path.join(self.root, filename)
             if os.path.exists(path):
-                if self.checksum and not check_integrity(path, md5):
+                if self.checksum and not check_integrity(path, sha256=sha256):
                     raise RuntimeError('Dataset found, but corrupted.')
                 extract_archive(path)
                 exists.append(True)
@@ -316,12 +316,12 @@ class DIOR(NonGeoDataset):
 
         for key in files:
             filename = files[key]['filename']
-            md5 = files[key]['md5']
+            sha256 = files[key]['sha256']
             download_and_extract_archive(
                 self.url.format(filename),
                 self.root,
                 filename=filename,
-                md5=md5 if self.checksum else None,
+                sha256=sha256 if self.checksum else None,
             )
 
         # download the sample_df.csv file
@@ -382,7 +382,7 @@ class DIOR(NonGeoDataset):
                 label,
                 color='white',
                 fontsize=8,
-                bbox=dict(facecolor=color, alpha=box_alpha),
+                bbox={'facecolor': color, 'alpha': box_alpha},
             )
 
         if suptitle is not None:

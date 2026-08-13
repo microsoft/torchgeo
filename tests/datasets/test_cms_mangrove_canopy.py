@@ -8,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     CMSGlobalMangroveCanopy,
@@ -52,7 +52,7 @@ class TestCMSGlobalMangroveCanopy:
         )
         root = tmp_path
         shutil.copy(pathname, root)
-        CMSGlobalMangroveCanopy(root, country='Angola')
+        CMSGlobalMangroveCanopy(root, country='Angola', checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(

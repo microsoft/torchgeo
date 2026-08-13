@@ -229,16 +229,15 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
    $ python -m torchgeo fit --config tests/conf/io_raw.yaml
    $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
 
-This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the total time taken by ``train_dataloader_next`` (RandomPatchSampler) and ``val_next`` (GriddedPatchSampler). With this, you can create a table on your PR like:
+This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). Each run will output a table like below. You can add these two tables to your PR to describe I/O performance before and after your change.
 
-======  ============  ==========  =====================  ===================
- state  raw (random)  raw (grid)  preprocessed (random)  preprocessed (grid)
-======  ============  ==========  =====================  ===================
-before        17.223      10.974                 15.685               4.6075
- after        17.360      11.032                  9.613               4.6673
-======  ============  ==========  =====================  ===================
+=========== ========== =========  =========  ==================
+ Split       Strategy   Samples    Time (s)   Rate (samples/s)
+=========== ========== =========  =========  ==================
+Train        Random         928    8.35074           111.12790
+Validation   Grid           992    4.97084           199.56398
+=========== ========== =========  =========  ==================
 
-In this example, we see a 60% speed-up for RandomPatchSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
 
 Related Libraries
 -----------------
@@ -246,8 +245,8 @@ Related Libraries
 TorchGeo maintains a list of :ref:`related-libraries`. New GeoML libraries can be added to this list using the following scripts in ``docs/user/metrics``:
 
 1. Add the library, GitHub repository, Codecov, PyPI/CRAN, and Conda information to ``common.py``.
-2. (Optional) Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
-3. (Optional) Sort all dictionaries in ``common.py`` in order of first commit.
+2. Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
+3. Sort all dictionaries in ``common.py`` in order of first commit and remove inactive projects from ``index``.
 4. Run ``python3 update_github.py --api-key GITHUB_TOKEN`` to update ``github.csv``.
 5. Sort ``index`` in ``common.py`` and ``features.csv`` in the same order as ``github.csv``.
 6. Run ``python3 update_downloads.py --api-key PEPY_TOKEN`` to update ``downloads.csv``.

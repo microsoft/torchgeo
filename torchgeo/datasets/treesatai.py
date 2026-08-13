@@ -130,7 +130,7 @@ class TreeSatAI(NonGeoDataset):
         sensors: Sequence[Literal['aerial', 's1', 's2']] = all_sensors,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new TreeSatAI instance.
 
@@ -290,7 +290,7 @@ class TreeSatAI(NonGeoDataset):
         labels: list[tuple[str, float]] = []
         for i, pct in enumerate(multilabel):
             if pct > 0.001:
-                labels.append((self.classes[i], pct))
+                labels.append((self.classes[i], pct.item()))
 
         labels.sort(key=lambda label: label[1], reverse=True)
         return ', '.join([f'{genus}: {pct:.1%}' for genus, pct in labels])

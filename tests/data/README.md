@@ -12,14 +12,14 @@ import os
 import numpy as np
 import rasterio as rio
 
-ROOT = "data/landsat8"
-FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
+ROOT = 'data/landsat8'
+FILENAME = 'LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF'
 SIZE = 64
 
-with rio.open(os.path.join(ROOT, FILENAME), "r") as src:
-    dtype = src.profile["dtype"]
+with rio.open(os.path.join(ROOT, FILENAME), 'r') as src:
+    dtype = src.profile['dtype']
     Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE), dtype=dtype)
-    with rio.open(FILENAME, "w", **src.profile) as dst:
+    with rio.open(FILENAME, 'w', **src.profile) as dst:
         for i in dst.indexes:
             dst.write(Z, i)
 ```
@@ -39,13 +39,21 @@ from collections import OrderedDict
 
 import fiona
 
-ROOT = "data/cbf"
-FILENAME = "Ontario.geojson"
+ROOT = 'data/cbf'
+FILENAME = 'Ontario.geojson'
 
-rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
-with fiona.open(os.path.join(ROOT, FILENAME), "r") as src:
-    src.meta["schema"]["properties"] = OrderedDict()
-    with fiona.open(FILENAME, "w", **src.meta) as dst:
+rec = {
+    'type': 'Feature',
+    'id': '0',
+    'properties': OrderedDict(),
+    'geometry': {
+        'type': 'Polygon',
+        'coordinates': [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]],
+    },
+}
+with fiona.open(os.path.join(ROOT, FILENAME), 'r') as src:
+    src.meta['schema']['properties'] = OrderedDict()
+    with fiona.open(FILENAME, 'w', **src.meta) as dst:
         dst.write(rec)
 ```
 
@@ -64,7 +72,7 @@ SIZE = 64
 
 arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
 img = Image.fromarray(arr)
-img.save("01.png")
+img.save('01.png')
 ```
 
 ### Grayscale images
@@ -78,7 +86,7 @@ SIZE = 64
 
 arr = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE), dtype=DTYPE)
 img = Image.fromarray(arr)
-img.save("02.jpg")
+img.save('02.jpg')
 ```
 
 ### Audio wav files
@@ -88,7 +96,7 @@ import numpy as np
 from scipy.io import wavfile
 
 audio = np.random.randn(1).astype(np.float32)
-wavfile.write("01.wav", rate=22050, data=audio)
+wavfile.write('01.wav', rate=22050, data=audio)
 ```
 
 ### HDF5 datasets
@@ -103,9 +111,9 @@ NUM_CLASSES = 10
 
 images = np.random.randint(np.iinfo(DTYPE).max, size=(SIZE, SIZE, 3), dtype=DTYPE)
 masks = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE), dtype=DTYPE)
-with h5py.File("data.hdf5", "w") as f:
-    f.create_dataset("images", data=images)
-    f.create_dataset("masks", data=masks)
+with h5py.File('data.hdf5', 'w') as f:
+    f.create_dataset('images', data=images)
+    f.create_dataset('masks', data=masks)
 ```
 
 ### LAS Point Cloud files
@@ -115,7 +123,7 @@ import laspy
 
 num_points = 4
 
-las = laspy.read("0.las")
+las = laspy.read('0.las')
 las.points = las.points[:num_points]
 
 points = np.random.randint(low=0, high=100, size=(num_points,), dtype=las.x.dtype)
@@ -123,11 +131,11 @@ las.x = points
 las.y = points
 las.z = points
 
-if hasattr(las, "red"):
+if hasattr(las, 'red'):
     colors = np.random.randint(low=0, high=10, size=(num_points,), dtype=las.red.dtype)
     las.red = colors
     las.green = colors
     las.blue = colors
 
-las.write("0.las")
+las.write('0.las')
 ```

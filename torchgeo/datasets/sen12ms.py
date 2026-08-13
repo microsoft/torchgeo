@@ -170,7 +170,7 @@ class SEN12MS(NonGeoDataset):
         split: Literal['train', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
 
@@ -211,7 +211,7 @@ class SEN12MS(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         with open(os.path.join(self.root, split + '_list.txt')) as f:
-            self.ids = [line.rstrip() for line in f.readlines()]
+            self.ids = [line.rstrip() for line in f]
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.

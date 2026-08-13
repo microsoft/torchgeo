@@ -404,12 +404,12 @@ class NLCD(RasterDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | tuple[float, float] | None = None,
-        years: list[int] = [2024],
-        classes: list[int] = list(valid_classes),
+        years: list[int] | None = None,
+        classes: list[int] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -439,6 +439,10 @@ class NLCD(RasterDataset):
         .. versionadded:: 0.9
            The *time_series* parameter.
         """
+        if classes is None:
+            classes = list(self.valid_classes)
+        if years is None:
+            years = [2024]
         assert set(years) <= self.md5s.keys(), (
             'NLCD data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'

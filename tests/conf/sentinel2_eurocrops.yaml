@@ -1,5 +1,5 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SemanticSegmentation
   init_args:
     loss: 'ce'
     model: 'unet'
@@ -28,3 +28,4 @@ data:
       - 'B09'
       - 'B11'
       - 'B12'
+    eurocrops_checksum: false

@@ -12,9 +12,9 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 from einops import repeat
 from timm.models.vision_transformer import Block
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 BANDS_GROUPS_IDX: dict[str, Sequence[int]] = {
@@ -802,7 +802,7 @@ class Presto_Weights(WeightsEnum):
     """
 
     PRESTO = Weights(
-        url='https://hf.co/torchgeo/presto/resolve/40de9c69b1611bb11de7b572cf3d24bb60cb8c82/model-bfa691d3.pth',
+        url='https://hf.co/torchgeo/presto/resolve/43f8d500a930772d226b309a06ec32be6dc077dd/model-e5e57c68.pth',
         transforms=nn.Identity(),
         meta={
             'dataset': 'LEM (Presto pretraining dataset)',
@@ -834,7 +834,10 @@ def presto(weights: Presto_Weights | None = None, *args: Any, **kwargs: Any) -> 
 
     if weights:
         model.load_state_dict(
-            weights.get_state_dict(progress=True, map_location='cpu'), strict=True
+            weights.get_state_dict(
+                progress=True, map_location='cpu', check_hash=True, weights_only=True
+            ),
+            strict=True,
         )
 
     return model

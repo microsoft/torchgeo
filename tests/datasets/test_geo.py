@@ -15,12 +15,12 @@ import pytest
 import rasterio
 import shapely
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
-from torch import Tensor
+from rasterio.vrt import WarpedVRT
+from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -48,10 +48,12 @@ class CustomGeoDataset(GeoDataset):
         bounds: Sequence[
             tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]
         ] = [(0, 1, 2, 3, MINT, MAXT)],
-        crs: CRS = CRS.from_epsg(4087),
+        crs: CRS | None = None,
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
+        if crs is None:
+            crs = CRS.from_epsg(4087)
         data = {'filepath': ['file.tif'] * len(bounds)}
         geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
@@ -201,7 +203,7 @@ class TestGeoDataset:
     def test_and_nongeo(self, dataset: GeoDataset) -> None:
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # ty: ignore[unsupported-operator]
 
@@ -469,6 +471,20 @@ class TestRasterDataset:
         assert not math.isclose(naip1.res[0], naip2.res[0])
         assert not math.isclose(naip1.res[1], naip2.res[1])
 
+    def test_cached_load_warp_file_keyed_on_crs(self) -> None:
+        ds = NAIP(self.naip_dir)
+        filepath = ds.files[0]
+
+        # Native CRS is read without warping
+        native = ds._cached_load_warp_file(filepath, ds.crs)
+        assert not isinstance(native, WarpedVRT)
+        assert native.crs == ds.crs
+
+        # Foreign CRS is warped, verifying CRS is part of cache-key.
+        warped = ds._cached_load_warp_file(filepath, CRS.from_epsg(4326))
+        assert isinstance(warped, WarpedVRT)
+        assert warped.crs != native.crs
+
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
         root = os.path.join('tests', 'data', 'raster', dtype)
@@ -532,7 +548,7 @@ class TestRasterDataset:
     def test_nodata(self, tmp_path: Path) -> None:
         """Nodata handling across the read path."""
         nodata = np.finfo(np.float32).min
-        profile = {
+        profile: dict[str, Any] = {
             'driver': 'GTiff',
             'height': 8,
             'width': 8,
@@ -634,6 +650,10 @@ class TestXarrayDataset:
             IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_getitem_returns_source_data(self, dataset: XarrayDataset) -> None:
+        image = dataset[dataset.bounds]['image']
+        assert (image > 0).any()
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -937,7 +957,7 @@ class TestIntersectionDataset:
         ds1 = CustomNonGeoDataset()
         ds2 = CustomNonGeoDataset()
         with pytest.raises(
-            ValueError, match='IntersectionDataset only supports GeoDatasets'
+            TypeError, match='IntersectionDataset only supports GeoDatasets'
         ):
             IntersectionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
 
@@ -1335,11 +1355,11 @@ class TestUnionDataset:
         ds2 = CustomNonGeoDataset()
         ds3 = CustomGeoDataset()
         msg = 'UnionDataset only supports GeoDatasets'
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds2)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds1, ds3)  # ty: ignore[invalid-argument-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             UnionDataset(ds3, ds1)  # ty: ignore[invalid-argument-type]
 
     def test_invalid_index(self, dataset: UnionDataset) -> None:

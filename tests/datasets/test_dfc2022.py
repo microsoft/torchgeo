@@ -8,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from torch import nn
 
 from torchgeo.datasets import DFC2022, DatasetNotFoundError
 
@@ -49,7 +49,7 @@ class TestDFC2022:
             os.path.join('tests', 'data', 'dfc2022', 'val.zip'),
             os.path.join(tmp_path, 'val.zip'),
         )
-        DFC2022(root=tmp_path)
+        DFC2022(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'labeled_train.zip'), 'w') as f:

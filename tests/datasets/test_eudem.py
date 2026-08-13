@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
+from torch import nn
 
 from torchgeo.datasets import (
     EUDEM,
@@ -26,7 +26,7 @@ class TestEUDEM:
         shutil.copy(zipfile, tmp_path)
         root = tmp_path
         transforms = nn.Identity()
-        return EUDEM(root, transforms=transforms)
+        return EUDEM(root, transforms=transforms, checksum=False)
 
     def test_getitem(self, dataset: EUDEM) -> None:
         x = dataset[dataset.bounds]

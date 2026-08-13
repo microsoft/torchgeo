@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, Potsdam2D
 
@@ -43,7 +43,7 @@ class TestPotsdam2D:
             shutil.copyfile(
                 os.path.join(root, filename), os.path.join(tmp_path, filename)
             )
-        Potsdam2D(root=tmp_path)
+        Potsdam2D(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, '4_Ortho_RGBIR.zip'), 'w') as f:

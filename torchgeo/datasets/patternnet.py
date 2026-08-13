@@ -78,7 +78,7 @@ class PatternNet(NonGeoClassificationDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/PatternNet/resolve/2dbd901b00e301967a5c5146b25454f5d3455ad0/PatternNet.zip'
-    md5 = '96d54b3224c5350a98d55d5a7e6984ad'
+    sha256 = '456dd031950b0429518b8ec7d30a5c4b3f6456261ee1dd573a3eee43efb29958'
     filename = 'PatternNet.zip'
     directory = os.path.join('PatternNet', 'images')
 
@@ -87,7 +87,7 @@ class PatternNet(NonGeoClassificationDataset):
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new PatternNet dataset instance.
 
@@ -96,7 +96,7 @@ class PatternNet(NonGeoClassificationDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -134,7 +134,7 @@ class PatternNet(NonGeoClassificationDataset):
             self.url,
             self.root,
             filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            sha256=self.sha256 if self.checksum else None,
         )
 
     def _extract(self) -> None:

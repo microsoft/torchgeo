@@ -139,11 +139,11 @@ class MDAS(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        subareas: list[str] = ['sub_area_1'],
-        modalities: list[str] = ['3K_RGB', 'HySpex', 'Sentinel_2'],
+        subareas: list[str] | None = None,
+        modalities: list[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new MDAS dataset instance.
 
@@ -159,6 +159,10 @@ class MDAS(NonGeoDataset):
             AssertionError: If the subareas or modalities are not valid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        if modalities is None:
+            modalities = ['3K_RGB', 'HySpex', 'Sentinel_2']
+        if subareas is None:
+            subareas = ['sub_area_1']
         self.root = root
         self.download = download
         assert all(sub in self.valid_subareas for sub in subareas), (

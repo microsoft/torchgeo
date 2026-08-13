@@ -37,7 +37,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new LEVIR-CD base dataset instance.
 
@@ -276,7 +276,7 @@ class LEVIRCD(LEVIRCDBase):
 
         files = []
         for image1, image2, mask in zip(images1, images2, masks):
-            files.append(dict(image1=image1, image2=image2, mask=mask))
+            files.append({'image1': image1, 'image2': image2, 'mask': mask})
         return files
 
     def _check_integrity(self) -> bool:
@@ -286,10 +286,8 @@ class LEVIRCD(LEVIRCDBase):
             True if the dataset directories and split files are found, else False
         """
         return all(
-            [
-                os.path.exists(os.path.join(self.root, directory))
-                for directory in self.directories
-            ]
+            os.path.exists(os.path.join(self.root, directory))
+            for directory in self.directories
         )
 
     def _download(self) -> None:
@@ -361,7 +359,7 @@ class LEVIRCDPlus(LEVIRCDBase):
             image1 = os.path.join(root, self.directory, split, 'A', image)
             image2 = os.path.join(root, self.directory, split, 'B', image)
             mask = os.path.join(root, self.directory, split, 'label', image)
-            files.append(dict(image1=image1, image2=image2, mask=mask))
+            files.append({'image1': image1, 'image2': image2, 'mask': mask})
         return files
 
     def _check_integrity(self) -> bool:

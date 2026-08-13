@@ -201,7 +201,7 @@ class MillionAID(NonGeoDataset):
         task: Literal['multi-class', 'multi-label'] = 'multi-class',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
 
@@ -299,7 +299,7 @@ class MillionAID(NonGeoDataset):
         images = imgs_no_subcat + imgs_subcat
 
         files: list[Metadata] = [
-            dict(image=image, label=label) for image, label in zip(images, labels)
+            {'image': image, 'label': label} for image, label in zip(images, labels)
         ]
 
         return files

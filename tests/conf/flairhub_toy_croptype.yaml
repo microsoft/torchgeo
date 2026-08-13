@@ -1,0 +1,21 @@
+model:
+  class_path: SemanticSegmentation
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 8 # 4 (AERIAL_RGBI) + 4 (SPOT_RGBI)
+    num_classes: 23 # crop_type dataset_type
+    num_filters: 1
+    ignore_index: 22
+data:
+  class_path: FLAIRHUBToyDataModule
+  init_args:
+    batch_size: 1
+    concatenate_modalities: true
+  dict_kwargs:
+    root: 'tests/data/flair'
+    split_column: 'split_toy'
+    download: False
+    bands: ['AERIAL_RGBI', 'SPOT_RGBI']
+    dataset_type: 'crop_type'

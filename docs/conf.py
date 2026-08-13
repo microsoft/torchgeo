@@ -74,7 +74,6 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
-    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -151,6 +150,43 @@ html_favicon = os.path.join('_static', 'logo', 'favicon.ico')
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 
+# -- Options for linkcheck output -------------------------------------------------
+
+# Expected redirects
+linkcheck_allowed_redirects = {
+    'https://badge.fury.io/.*': '.*',
+    'https://doi.org/.*': '.*',
+    'https://hf.co/.*': 'https://huggingface.co/.*',
+    '.*': 'https://img.shields.io/.*',
+}
+
+# Expected missing anchors
+linkcheck_anchors_ignore_for_url = [
+    'https://docs.pytorch.org/.*',
+    'https://github.com/.*',
+]
+
+# URLs that require login or block bots
+linkcheck_ignore = [
+    'https://ai.meta.com/.*',
+    'https://code.earthengine.google.com/.*',
+    'https://console.cloud.google.com/.*',
+    'https://dl.acm.org/.*',
+    'https://esaopenarchive.org/.*',
+    'https://github.com/login',
+    'https://localhost:6006',
+    'https://medium.com/.*',
+    'https://www.gbif.org/.*',
+    'https://www.grss-ieee.org/.*',
+    'https://www.mdpi.com/.*',
+    'https://www.researchgate.net/.*',
+    'https://www.sciencedirect.com/.*',
+    'https://www.tandfonline.com/.*',
+    'https://www.youtube.com/.*',
+    'https://.*.onlinelibrary.wiley.com/.*',
+    'https://.*.slack.com/.*',
+]
+
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
@@ -179,13 +215,14 @@ intersphinx_mapping = {
     'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
+    'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
 # myst-parser
-suppress_warnings = ['myst.header']
+suppress_warnings = ['myst.header', 'ref.ref']
 
 # nbsphinx
 nbsphinx_execute = 'never'
@@ -222,7 +259,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         if sourcefile is None:
             return None
         source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
     # Make path relative to the repo root

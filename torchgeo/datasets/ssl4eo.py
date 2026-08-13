@@ -146,53 +146,53 @@ class SSL4EOL(SSL4EO):
     url = 'https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/e2467887e6a6bcd7547d9d5999f8d9bc3323dc31/{0}/ssl4eo_l_{0}.tar.gz{1}'
     checksums: ClassVar[dict[str, dict[str, str]]] = {
         'tm_toa': {
-            'aa': '553795b8d73aa253445b1e67c5b81f11',
-            'ab': 'e9e0739b5171b37d16086cb89ab370e8',
-            'ac': '6cb27189f6abe500c67343bfcab2432c',
-            'ad': '15a885d4f544d0c1849523f689e27402',
-            'ae': '35523336bf9f8132f38ff86413dcd6dc',
-            'af': 'fa1108436034e6222d153586861f663b',
-            'ag': 'd5c91301c115c00acaf01ceb3b78c0fe',
+            'aa': '6497dfadb892471a24b6c3d93e5b0efd5830421281375667defb52e9fc2e99e5',
+            'ab': '0c4d616ca1fbb19c19a06f634f4295c76135bdbae18394dfb11487310899d599',
+            'ac': '09071ca2ace91c5916f488ae934d50969f8beddbe27ae5cc88792a31adbbfa0f',
+            'ad': '7345009b3f54a322429e1f9187bc645265997e2eb33593920a73d7f5fdf50d71',
+            'ae': 'f912f20513f89b99c630e5b696095040bf03ee4f7bc59c1c91db3628d3e718fa',
+            'af': '0a8ce38c95bdefb30862f98c08256ec5898b114b792d0dd425bf58a15d602db9',
+            'ag': '779ff524858198316c4b812fdc8e0c5326fc3d9648fd62adb3414214b65d3608',
         },
         'etm_toa': {
-            'aa': '587c3efc7d0a0c493dfb36139d91ccdf',
-            'ab': 'ec34f33face893d2d8fd152496e1df05',
-            'ac': '947acc2c6bc3c1d1415ac92bab695380',
-            'ad': 'e31273dec921e187f5c0dc73af5b6102',
-            'ae': '43390a47d138593095e9a6775ae7dc75',
-            'af': '082881464ca6dcbaa585f72de1ac14fd',
-            'ag': 'de2511aaebd640bd5e5404c40d7494cb',
-            'ah': '124c5fbcda6871f27524ae59480dabc5',
-            'ai': '12b5f94824b7f102df30a63b1139fc57',
+            'aa': '36b18f3fb3d0163c5f2e2ec72fddb1034018fd3824b7f89fcfcfd23d0bc18dd4',
+            'ab': '1f50ab7ef2ea409e7f5033548922434d9dc9881b86693faae91dd2e6409a7519',
+            'ac': '6c4570553b4350765a6541d8bda12edccdc4a20c10358616af085b555fbdbc8b',
+            'ad': '52c8dabcea173009e43c0cfcaf6e113b6f2e3089a406370db0ec364e0a091201',
+            'ae': 'f5621debc63a81a84454132833da735514d26f8845f43127ebd7e5b71e9dee1c',
+            'af': 'cf776034fa42df1b61f252a2be7dd3868e2b89721ad3bc2cb2b070119175eea0',
+            'ag': '59757f09049ef21eec80a61920a539d2fda8cfcfa12c79b3bfe70edf8ddad24a',
+            'ah': 'bb0fb086b9240623fd4f4d1b22220bb93c8a6ab316883aa7f4c58dc57c0cd6ca',
+            'ai': '2e2e96f3bfe1dfe3ac535d98966854bae93d823830605071dcdaa6754f134d50',
         },
         'etm_sr': {
-            'aa': 'baa36a9b8e42e234bb44ab4046f8f2ac',
-            'ab': '9fb0f948c76154caabe086d2d0008fdf',
-            'ac': '99a55367178373805d357a096d68e418',
-            'ad': '59d53a643b9e28911246d4609744ef25',
-            'ae': '7abfcfc57528cb9c619c66ee307a2cc9',
-            'af': 'bb23cf26cc9fe156e7a68589ec69f43e',
-            'ag': '97347e5a81d24c93cf33d99bb46a5b91',
+            'aa': '49b41ea679c295a083d273d7c29672c1a0532d94377b4509ec8f80309ef176c4',
+            'ab': '2681880da886ef3949cab8d10916896454635d18cc63e236228969685d1b32da',
+            'ac': '9625cace7961658ffb33732d6fb0e9a8cff3ca8e1cc3b80f1aed63a0c7b37f11',
+            'ad': '4dd58e9d182b804d0f6459aaa298fc06984cec24530b3cc69db9356561582bd1',
+            'ae': 'bd49ee678400d752e5537f112257f172f097034da057fbf726d652c04f6b36ce',
+            'af': '07441efd63e4745cfda78925c390d0bc9e4c691c964bade34017a50685312e46',
+            'ag': '52080a68199f2f8edcd09a10c0060c40effd12a9cf665e9c5ed3420d80fd9eb4',
         },
         'oli_tirs_toa': {
-            'aa': '4711369b861c856ebfadbc861e928d3a',
-            'ab': '660a96cda1caf54df837c4b3c6c703f6',
-            'ac': 'c9b6a1117916ba318ac3e310447c60dc',
-            'ad': 'b8502e9e92d4a7765a287d21d7c9146c',
-            'ae': '5c11c14cfe45f78de4f6d6faf03f3146',
-            'af': '5b0ed3901be1000137ddd3a6d58d5109',
-            'ag': 'a3b6734f8fe6763dcf311c9464a05d5b',
-            'ah': '5e55f92e3238a8ab3e471be041f8111b',
-            'ai': 'e20617f73d0232a0c0472ce336d4c92f',
+            'aa': '9bdfb1350c29129207983db7eb6677389653f4e61e2002b4b772be76aff564a5',
+            'ab': '102acc3f87a0f06425d1c11b161ea4ed7e37cc4ba60c948e946c18f65644f4d5',
+            'ac': '7133a55c174c8b3dfe1563db0e0e9c85827f3f4ac94752bce22e9586cfe66cd9',
+            'ad': 'b07181606605e6e9116a82f4f2af81dd52738cba846f02404e5b9118c7a3ea01',
+            'ae': 'b33accff16554c6fe9273ea2019512421c6a6b6bb900d1035442c693dc71069e',
+            'af': '230ec04a60cd242c68867c283a1f5689c3b8f6d573e042a21ba484484f1082da',
+            'ag': 'a521b70ade95b8f255f237e5ddb53cf659ddfcb0de4736b8657d12f2b473560b',
+            'ah': 'cb1529c74475b7a9f1365945b2285c5164737f6b24e458e8493f05051a0e9dde',
+            'ai': '80303b44b0a0f4e2d9e8141cc0e7fb00317e6298eeb88f2d675c018362de526c',
         },
         'oli_sr': {
-            'aa': 'ca338511c9da4dcbfddda28b38ca9e0a',
-            'ab': '7f4100aa9791156958dccf1bb2a88ae0',
-            'ac': '6b0f18be2b63ba9da194cc7886dbbc01',
-            'ad': '57efbcc894d8da8c4975c29437d8b775',
-            'ae': '2594a0a856897f3f5a902c830186872d',
-            'af': 'a03839311a2b3dc17dfb9fb9bc4f9751',
-            'ag': '6a329d8fd9fdd591e400ab20f9d11dea',
+            'aa': 'c5c0b18ceb00e7dd645b26ec8362b0cdb0064be33cd21402fb73de6f7cdfe6ed',
+            'ab': '85ede1f18b26957e5a0644d1a414fc917e7451cd8e0d2e12e165c18a982c5ee6',
+            'ac': 'be85283037b10de7d10ed6dab34bb5949166d9f13c84c934ce49f1b3b4b2d887',
+            'ad': 'c10e08b7c0c44ed153e7f7d3a0fbb359cc2c137f2bee25ed24a846edbe8ef329',
+            'ae': 'dbcd8b0dda4917bfa841fd505c68e8890444a02704cf7969454d8f2cf946d09f',
+            'af': '871f0e73c259cf35cfb7e543c66f33f74209e0c1c7032fe48981c6398ddff0b7',
+            'ag': 'b2a1cbb10096228deebaed9422a23cdc5898c7d32afe33613899ddeb170d5a4d',
         },
     }
 
@@ -205,7 +205,7 @@ class SSL4EOL(SSL4EO):
         seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SSL4EOL instance.
 
@@ -216,7 +216,7 @@ class SSL4EOL(SSL4EO):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, verify the checksum after downloading files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -325,11 +325,11 @@ class SSL4EOL(SSL4EO):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for suffix, md5 in self.checksums[self.split].items():
+        for suffix, sha256 in self.checksums[self.split].items():
             download_url(
                 self.url.format(self.split, suffix),
                 self.root,
-                md5=md5 if self.checksum else None,
+                sha256=sha256 if self.checksum else None,
             )
 
     def _extract(self) -> None:
@@ -487,44 +487,44 @@ class SSL4EOS12(SSL4EO):
     }
     checksums: ClassVar[dict[str, dict[str, str]]] = {
         's1': {
-            'aa': '6df278053fc3e4c3fd7de2f77856e606',
-            'ab': '837755b4ba8d82faf254df9e5fec13a7',
-            'ac': '6400423305d6084e2006eede75cf288e',
-            'ad': '22a50d7362d9cbc9714e0740fe2122c7',
-            'ae': 'd6ac97ead00b4296a95376949c946b12',
-            'af': 'd8047814061431dc627b9ae345c80891',
-            'ag': '089ce0548cb7902ce873181cc61f5d70',
-            'ah': '745b48c2896ca764ef54f91e4e7c555e',
-            'ai': 'c36595cf9617b3b7ea722f63dcccbedc',
-            'aj': 'cf16f1d81e8bff2d663e4eba79ec6fa3',
+            'aa': 'c875a430ed19c48fa90ea2574785069eb939629beec372b42d8ba283aa26d5e6',
+            'ab': '517fe7eaa8a93b74ab8ea2cd5a8f65fb2130986266c7a702bcdd312afce2b396',
+            'ac': '0146dd447d6f89d6bfe88fec05155df586f0b10643a50a7d9cf22c37edd1c3a2',
+            'ad': '02871cc0d33356ad3d06f8a496d7f06d10121caa0e9078f095491bb8649f9d0d',
+            'ae': 'c4694fbba061ad89d4bfd1de2069b2a5cd19de2922d81f5a6364178d23948b61',
+            'af': 'c7ba827f7b35f8bd974ee626eca55358da55830d85a29ecbfaa6e4bf70811bae',
+            'ag': 'e37fac95aa0e78fe418e392652cecb5dfff72b98b0d6996fdf9c824da254bccb',
+            'ah': '1824079dfe4f844b0f6672582e296b74f25ffd5ae8c46ed92b70b08b7d5eb0e6',
+            'ai': 'b246750cdffe2c77dcea624c01aa5e6b53db73e33ce58082af4ce1fef5fb5b98',
+            'aj': '6d3253bb0b294c4cf14fe8e4f09505d370e32be20b0bb8de3a829ce004154535',
         },
         's2c': {
-            'aa': 'a3ef419cc65c4d8ac19b9acc55726166',
-            'ab': '580451e8fdf93067ad79202b95dd1a5c',
-            'ac': 'a6f7318868f5ba1d94fb9363b50307e4',
-            'ad': '86f324215b04cdf4242d07aaf3cdfe57',
-            'ae': '5895a545460f34b1712c17732e0f5533',
-            'af': '078078bc58d8ecc214ddfd838f796700',
-            'ag': '3557dd4c24a5942020391a5baaf51abb',
-            'ah': 'd59f89271e414648663d3acb66121761',
-            'ai': '1a213539c989d16da4e5b4e09feaa98a',
-            'aj': '0b229af5633c7f63486b6d7771b737db',
-            'ak': 'babe8bed884d31b891151f5717a83b5c',
-            'al': '8d1f5ad28ee868ab0595c889446b8e5f',
+            'aa': '1003dd0b4e11fdcca00855c3de23fa3209926c24074a36f40a07efeba377a9da',
+            'ab': '96dd31b2d53e131daa73604013678e21dd2b29ff4865c73a24ada77001f77a7a',
+            'ac': '23cb241e947de1da08bb9a53c6c9b088232bbf622c9aee2117e4b9bf8e93d83d',
+            'ad': 'e9502f21de324e6fc400c73af1a6486e1b75176c6511642763fb899537dada1e',
+            'ae': 'f47a7aaaeda7df30af9b892e54eb6c00941c706f82584c8c5b4481ee411e3e56',
+            'af': '207d2dc70378fc9c289b666fe1730821ec6dca0d2d6fb60d5325ba31b17de896',
+            'ag': '060e01cc896e1ed3e426ff965ed6aba2538d065b398575968b0f1ae92f6ef8bc',
+            'ah': 'c32211630526dad919891d1a6aae82b7d82829f343f2176f04b37378b49d1f61',
+            'ai': 'a62a34fe0708885b4bd0dcc3d8e2a14c0c29737d94f744b41381d2a6618ff240',
+            'aj': 'a6206d4e40569b9e3b92eb4d5174193543980b6710b02f847d3629c50fd89d59',
+            'ak': '5ae573daf729a0d32ad8d7998b78d91e4083289df1d4444feb4907b9091d9f03',
+            'al': '75ef65fdd931176ef82bc0d87dbd2c35202714499dfe7a3918bf48d01788538f',
         },
         's2a': {
-            'aa': 'ef847d906ab44cc9a94d086a89473833',
-            'ab': '4a6a8ed9e2a08887707d83bcb6eb57af',
-            'ac': '00b706a771df4c4df4cc70a20d790339',
-            'ad': '579024e84bd9ab0b86e1182792c8dcf9',
-            'ae': 'e259f3536355b665aea490c22c897e59',
-            'af': '2a15be319ad15f749bfd4ed85d14c172',
-            'ag': 'd8224cff1e727543473b0111e307110c',
-            'ah': '0015d8aa5ea9201e13b401fd61c36c6f',
-            'ai': 'dfce87c0a9550177fd4b82887902b6e3',
-            'aj': '688392701760b737ad74cb0e8c7fb731',
-            'ak': 'd8f3e4b110f22f0477973ed2c35586b6',
-            'al': '1cc3641cd52afedaa1c50d14d84a6664',
+            'aa': 'b124fe99809fa2eee663d683435399e8f8ffdbc7fc40c3e5cbe5b3e3d5f29752',
+            'ab': '31b624e24e41192340f449b90b6fefac2a6ba91e640467df4e4bd5b7ae15c36f',
+            'ac': '4a73229310e4f4cf61584353f1fc39ef715b08ce65e4bbd4033065391c26e262',
+            'ad': '3a0dfd18476ee1dd0f1dcc77e91a8b82312a1b9f64e977bcf4577407f63375d4',
+            'ae': 'd5a7d1f8c07de315710aa528d1aed877093a379f4d035d22d823212cc22fb0ae',
+            'af': '15f2e4a365f517ea272a14905caef8da5214c93ebf166e94820a1a9ae8bfa0d7',
+            'ag': '9f18d7544fcfa63ae1c3481cb452c8f00e298112bac7d08fe199433569963c1c',
+            'ah': 'c682a97d2fd420d6be214f0f3cf3d588940077d9fb7004d5b95d56e8c5532aa8',
+            'ai': 'a5dec0d93ac846c5c7f44a79b8d0ab5e2507a4543cb7acff78604fb7b6fe54d0',
+            'aj': 'ff8378e1f12a566f9ce440569f1aff5c373908f8fc32ca233ebd98e455bfd172',
+            'ak': 'e78649ee5de002b961c62fa02674ec6a4accbb67c69962754012af29a2d51dec',
+            'al': 'b5b43650d5a5fa0dbd4ab5cc791920757b98ffb4d684c8a7bb000e70a44b071a',
         },
     }
 
@@ -535,7 +535,7 @@ class SSL4EOS12(SSL4EO):
         seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
 
@@ -548,7 +548,7 @@ class SSL4EOS12(SSL4EO):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -664,11 +664,11 @@ class SSL4EOS12(SSL4EO):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for suffix, md5 in self.checksums[self.split].items():
+        for suffix, sha256 in self.checksums[self.split].items():
             download_url(
                 self.url.format(self.filenames[self.split], suffix),
                 self.root,
-                md5=md5 if self.checksum else None,
+                sha256=sha256 if self.checksum else None,
             )
 
     def _extract(self) -> None:

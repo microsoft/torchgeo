@@ -17,7 +17,7 @@ Benchmark Datasets
 
 Curated benchmark datasets allow for model training and evaluation. They typically provide both input images and output labels, and target a variety of downstream applications.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, SR = super resolution
    :header-rows: 1
    :align: center
    :file: datasets/benchmark.csv

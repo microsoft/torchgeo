@@ -7,11 +7,10 @@
 
 import segmentation_models_pytorch as smp
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from segmentation_models_pytorch.decoders.upernet.decoder import UPerNetDecoder
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 from torchvision.models.feature_extraction import create_feature_extractor
 from torchvision.models.swin_transformer import SwinTransformer
@@ -142,7 +141,9 @@ class SwinBackbone(Module):
 
         if backbone_pretrained:
             # load pretrained feature norm weights
-            state_dict = weights.get_state_dict(include_norms=True, progress=True)
+            state_dict = weights.get_state_dict(
+                include_norms=True, progress=True, check_hash=True, weights_only=True
+            )
             self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
     def forward(self, x: Tensor) -> list[Tensor]:

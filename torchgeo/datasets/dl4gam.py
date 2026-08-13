@@ -150,7 +150,7 @@ class DL4GAMAlps(NonGeoDataset):
         extra_features: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize the dataset.
 
@@ -317,7 +317,7 @@ class DL4GAMAlps(NonGeoDataset):
     def _prepare_files(self) -> None:
         """Prepare the files for the dataset."""
         # prepare the paths to the patches
-        self.fp_patches = sorted(list(self.dir_patches.rglob('*.nc')))
+        self.fp_patches = sorted(self.dir_patches.rglob('*.nc'))
 
         # get the glacier IDs of the current split of the cross-validation
         self.df_splits = pd.read_csv(self.fp_splits_csv)

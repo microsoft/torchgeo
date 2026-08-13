@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     CanadianBuildingFootprints,
@@ -33,7 +33,7 @@ class TestCanadianBuildingFootprints:
         root = tmp_path
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
-            root, res=(0.1, 0.1), transforms=transforms, download=True
+            root, res=(0.1, 0.1), transforms=transforms, download=True, checksum=False
         )
 
     def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
@@ -53,7 +53,7 @@ class TestCanadianBuildingFootprints:
         assert isinstance(ds, UnionDataset)
 
     def test_already_downloaded(self, dataset: CanadianBuildingFootprints) -> None:
-        CanadianBuildingFootprints(dataset.paths, download=True)
+        CanadianBuildingFootprints(dataset.paths, download=True, checksum=False)
 
     def test_plot(self, dataset: CanadianBuildingFootprints) -> None:
         index = dataset.bounds

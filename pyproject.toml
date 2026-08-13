@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # uv-build 0.7+ required for bdist reorganization
-    "uv_build>=0.7,<0.12",
+    "uv_build>=0.7,<0.13",
 ]
 build-backend = "uv_build"
 
@@ -86,6 +86,8 @@ dependencies = [
     "torchmetrics[detection]>=1.5",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
+    # tqdm 4.57+ required to match lightning's own tqdm dependency
+    "tqdm>=4.57",
     # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
@@ -106,24 +108,27 @@ datasets = [
     "rioxarray>=0.14.1",
     # scipy 1.11.2+ required for Python 3.12 wheels
     "scipy>=1.11.2",
-    # webdataset 0.2.4+ required for PyTorch tuple seed support
-    "webdataset>=0.2.4",
+    # tokenizers 0.14+ required for Python 3.12 wheels
+    # tokenizers does not yet provide wheels for Python 3.14t
+    "tokenizers>=0.14; python_version<'3.14'",
+    # webdataset 0.2.101+ required for security hardening
+    "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
-    # myst-parser 4+ required for sphinx 8+ compatibility
-    "myst-parser>=4",
+    # myst-parser 5.1+ required by sphinx-github-changelog 2+
+    "myst-parser>=5.1",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
     # pydata-sphinx-theme 0.18+ required for font awesome 7
     "pydata-sphinx-theme>=0.18",
     # sphinx 8+ required by pydata-sphinx-theme 0.18+
     "sphinx>=8",
-    # sphinx-github-changelog 1.7.2+ required for image URL fix
-    "sphinx-github-changelog>=1.7.2",
+    # sphinx-github-changelog 2+ converts GitHub markdown alerts to Sphinx admonitions
+    "sphinx-github-changelog>=2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
@@ -134,12 +139,14 @@ models = [
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
-    # ruff 0.9+ required for 2025 style guide
-    "ruff>=0.9",
+    # ruff 0.16+ required for 2026 style guide
+    "ruff>=0.16",
     # ty 0.0.46+ required for latest type checking changes
-    "ty>=0.0.46",
+    "ty>=0.0.62",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
+    # types-rasterio 1.5.0.20260728+ needed for https://github.com/python/typeshed/pull/16092
+    "types-rasterio>=1.5.0.20260728",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
@@ -166,7 +173,7 @@ torchgeo = "torchgeo.main:main"
 
 [project.urls]
 Codecov = "https://app.codecov.io/gh/torchgeo/torchgeo"
-Documentation = "https://torchgeo.readthedocs.io"
+Documentation = "https://docs.torchgeo.org"
 Homepage = "https://github.com/torchgeo/torchgeo"
 Slack = "https://torchgeo.slack.com"
 
@@ -202,6 +209,8 @@ filterwarnings = [
     'ignore:`torch.jit.script` is not supported in Python 3.14\+ and may break.:DeprecationWarning',
     # https://github.com/kornia/kornia/issues/3727
     'ignore:`torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.:DeprecationWarning',
+    # https://github.com/rasterio/rasterio/issues/3592
+    "ignore:Setting the shape on a NumPy array has been deprecated in NumPy 2.5:DeprecationWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -235,7 +244,6 @@ tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/
 [tool.ruff]
-extend-include = ["*.ipynb"]
 fix = true
 
 [tool.ruff.format]
@@ -244,12 +252,16 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "D", "I", "RUF", "UP"]
+extend-select = ["ANN", "CPY"]
 ignore = ["ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["ANN", "D"]
 "tests/**" = ["D"]
+
+[tool.ruff.lint.flake8-copyright]
+author = "TorchGeo Contributors"
+notice-rgx = 'Copyright \(c\)'
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false

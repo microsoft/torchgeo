@@ -199,7 +199,7 @@ class So2Sat(NonGeoDataset):
         split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
 
@@ -313,9 +313,7 @@ class So2Sat(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         md5 = self.md5s_by_version[self.version][self.split]
-        if not check_integrity(self.fn, md5 if self.checksum else None):
-            return False
-        return True
+        return check_integrity(self.fn, md5 if self.checksum else None)
 
     def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.

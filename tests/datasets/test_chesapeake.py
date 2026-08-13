@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     ChesapeakeCVPR,
@@ -33,8 +33,8 @@ class TestChesapeakeDC:
             '{state}_lulc_{year}_2022-Edition.zip',
         )
         monkeypatch.setattr(ChesapeakeDC, 'url', url)
-        md5s = {2018: ''}
-        monkeypatch.setattr(ChesapeakeDC, 'md5s', md5s)
+        sha256s = {2018: ''}
+        monkeypatch.setattr(ChesapeakeDC, 'sha256s', sha256s)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         transforms = nn.Identity()
         return ChesapeakeDC(tmp_path, transforms=transforms, download=True)
@@ -120,7 +120,15 @@ class TestChesapeakeCVPR:
         monkeypatch.setattr(
             ChesapeakeCVPR,
             '_files',
-            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
+            {
+                'base': (
+                    'de_1m_2013_extended-debuffered-test_tiles',
+                    'spatial_index.geojson',
+                ),
+                'prior_extension': (
+                    'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                ),
+            },
         )
         root = tmp_path
         transforms = nn.Identity()
@@ -174,6 +182,29 @@ class TestChesapeakeCVPR:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ChesapeakeCVPR(tmp_path)
+
+    def test_base_only_without_prior_extension(self, tmp_path: Path) -> None:
+        shutil.copy(
+            os.path.join(
+                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
+            ),
+            tmp_path,
+        )
+        ChesapeakeCVPR(tmp_path, splits=['de-test'], layers=['naip-new', 'lc'])
+
+    def test_prior_extension_missing(self, tmp_path: Path) -> None:
+        shutil.copy(
+            os.path.join(
+                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
+            ),
+            tmp_path,
+        )
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            ChesapeakeCVPR(
+                tmp_path,
+                splits=['de-test'],
+                layers=['naip-new', ChesapeakeCVPR.prior_layer],
+            )
 
     def test_out_of_bounds_index(self, dataset: ChesapeakeCVPR) -> None:
         with pytest.raises(

@@ -62,9 +62,9 @@ class SKIPPD(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'
-    md5: ClassVar[dict[str, str]] = {
-        'forecast': 'f4f3509ddcc83a55c433be9db2e51077',
-        'nowcast': '0000761d403e45bb5f86c21d3c69aa80',
+    sha256: ClassVar[dict[str, str]] = {
+        'forecast': 'c9d9695291838ac73e3ee4177dc9cb3fa2178cf132814767436e4df9db11ee8d',
+        'nowcast': '5c2e8d0dbece6f50ac299e76c69b6fced437d75cd121a9948ddc12611a6fd603',
     }
 
     data_file_name = '2017_2019_images_pv_processed_{}.hdf5'
@@ -81,7 +81,7 @@ class SKIPPD(NonGeoDataset):
         task: Literal['nowcast', 'forecast'] = 'nowcast',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -92,7 +92,7 @@ class SKIPPD(NonGeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, verify the checksum after downloading files (may be slow)
 
         Raises:
             AssertionError: if ``task`` or ``split`` is invalid
@@ -218,7 +218,7 @@ class SKIPPD(NonGeoDataset):
             self.url.format(self.zipfile_name.format(self.task)),
             self.root,
             filename=self.zipfile_name.format(self.task),
-            md5=self.md5[self.task] if self.checksum else None,
+            sha256=self.sha256[self.task] if self.checksum else None,
         )
         self._extract()
 

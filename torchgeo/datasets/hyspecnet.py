@@ -30,7 +30,7 @@ from .utils import (
 class HySpecNet11k(NonGeoDataset):
     """HySpecNet-11k dataset.
 
-    `HySpecNet-11k <https://doi.org/10.5061/dryad.fttdz08zh>`__ is a large-scale
+    `HySpecNet-11k <https://hyspecnet.rsim.berlin/>`__ is a large-scale
     benchmark dataset for hyperspectral image compression and self-supervised learning.
     It is made up of 11,483 nonoverlapping image patches acquired by the
     `EnMAP satellite <https://www.enmap.org/>`_. Each patch is a portion of 128 x 128
@@ -66,18 +66,18 @@ class HySpecNet11k(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/hyspecnet/resolve/13e110422a6925cbac0f11edff610219b9399227/'
-    md5s: ClassVar[dict[str, str]] = {
-        'hyspecnet-11k-01.tar.gz': '974aae9197006727b42ec81796049efe',
-        'hyspecnet-11k-02.tar.gz': 'f80574485f835b8a263b6c64076c0c62',
-        'hyspecnet-11k-03.tar.gz': '6bc1de573f97fa4a75b79719b9270cb3',
-        'hyspecnet-11k-04.tar.gz': '2463dc10653cb8be10d44951307c5e7d',
-        'hyspecnet-11k-05.tar.gz': '16c1bd9e684673e741c0849bd015c988',
-        'hyspecnet-11k-06.tar.gz': '8eef16b67d71af6eb4bc836d294fe3c4',
-        'hyspecnet-11k-07.tar.gz': 'f61f0e7d6b05c861e69026b09130a5d6',
-        'hyspecnet-11k-08.tar.gz': '19d390bc9e61b85e7d765f3077984976',
-        'hyspecnet-11k-09.tar.gz': '197ff47befe5b9de88be5e1321c5ce5d',
-        'hyspecnet-11k-10.tar.gz': '9e674cca126a9d139d6584be148d4bac',
-        'hyspecnet-11k-splits.tar.gz': '94fad9e3c979c612c29a045406247d6c',
+    sha256s: ClassVar[dict[str, str]] = {
+        'hyspecnet-11k-01.tar.gz': 'bd551f2b16d02ec6154b83dd75bc8640fdc4ef75b03680610d5cfec07d2e4d1d',
+        'hyspecnet-11k-02.tar.gz': '245afe0be3b6bd5ac8783c6351390ffb16c1c2320db48f09adbcb4bedbf79844',
+        'hyspecnet-11k-03.tar.gz': '31223d9b7ce1ebeb51138ab885658c0aeefa908df9fee4c2ca35605fc8a8c4ac',
+        'hyspecnet-11k-04.tar.gz': '9283deea3188705d6b3d4a5239e792c43d30498cc8c7615eb859b55b72e1084e',
+        'hyspecnet-11k-05.tar.gz': 'c5eb190d0336fe459273cff5e87c597430771f273f0a5226388e7efe6fd0c263',
+        'hyspecnet-11k-06.tar.gz': '8f9af9fcb4c22cc86066a6c60f876a65f4dc114d4c4be8e1d997e6a701c1ae6e',
+        'hyspecnet-11k-07.tar.gz': '39a8b75e56451a5590a3ae378d14f15edfb3326bbad5dd664cc2ca07cf4edeb1',
+        'hyspecnet-11k-08.tar.gz': 'c45d379b047d0e685e465a534550e1f144e83303a98d980493858d5513add656',
+        'hyspecnet-11k-09.tar.gz': '01d70d41f37f70e52ad562c5d7b3232784c8f3ec0ac8fdac9f7f4e44a7e8a7f8',
+        'hyspecnet-11k-10.tar.gz': '643248dd6d0e9c5bd297c040e16aaa67aacc6e7c2162824009aea74b4e440bcf',
+        'hyspecnet-11k-splits.tar.gz': '12d809d1e13ae4b2cf76b9eca2855e0bbab143372ebe728440eab383364cfb8b',
     }
 
     all_bands = EnMAP.all_bands
@@ -92,7 +92,7 @@ class HySpecNet11k(NonGeoDataset):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new HySpecNet11k instance.
 
@@ -105,7 +105,7 @@ class HySpecNet11k(NonGeoDataset):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -178,7 +178,7 @@ class HySpecNet11k(NonGeoDataset):
         if all(exists):
             return
 
-        for file, md5 in self.md5s.items():
+        for file, sha256 in self.sha256s.items():
             # Check if the file has already been downloaded
             path = os.path.join(self.root, file)
             if os.path.isfile(path):
@@ -188,7 +188,7 @@ class HySpecNet11k(NonGeoDataset):
             # Check if the user requested to download the dataset
             if self.download:
                 url = self.url + file
-                download_url(url, self.root, md5=md5 if self.checksum else None)
+                download_url(url, self.root, sha256=sha256 if self.checksum else None)
                 extract_archive(path)
                 continue
 

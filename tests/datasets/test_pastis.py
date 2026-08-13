@@ -5,13 +5,14 @@ import os
 import shutil
 from itertools import product
 from pathlib import Path
+from typing import Literal, cast
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import PASTIS, PASTIS100, DatasetNotFoundError
@@ -37,8 +38,7 @@ class TestPASTIS:
 
         root = tmp_path
         bands = params['bands']
-        mode = params['mode']
-        assert isinstance(mode, str)
+        mode = cast(Literal['semantic', 'instance'], params['mode'])
         transforms = nn.Identity()
 
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
@@ -88,7 +88,7 @@ class TestPASTIS:
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
         root = tmp_path
         shutil.copy(url, root)
-        PASTIS(root)
+        PASTIS(root, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -103,10 +103,6 @@ class TestPASTIS:
     def test_invalid_fold(self) -> None:
         with pytest.raises(AssertionError):
             PASTIS(folds=(0,))
-
-    def test_invalid_mode(self) -> None:
-        with pytest.raises(AssertionError):
-            PASTIS(mode='invalid')
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError, match='bands must be a subset of'):

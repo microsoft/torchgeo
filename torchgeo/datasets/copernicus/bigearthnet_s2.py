@@ -30,7 +30,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_bigearthnet_s1s2/bigearthnetv2.zip'
-    md5 = '269355db0449e0da7213c95f30c346d4'
+    sha256 = 'f0d0444ce88b6d208d6cc29d3790c500eb1ceb9c188560bf7ab54f11ed99b31b'
     zipfile = 'bigearthnetv2.zip'
     directory = 'bigearthnet_s1s2'
     filename = 'multilabel-{}.csv'
@@ -79,7 +79,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         bands: Sequence[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CopernicusBenchBigEarthNetS2 instance.
 
@@ -90,7 +90,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
-            checksum: If True, check the MD5 of the downloaded files (may be slow).
+            checksum: If True, verify the checksum of the downloaded files (may be slow).
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.

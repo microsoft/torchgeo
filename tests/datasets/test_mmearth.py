@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from matplotlib.figure import Figure
+from torch import nn
 
 from torchgeo.datasets import DatasetNotFoundError, MMEarth
 

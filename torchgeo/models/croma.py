@@ -122,16 +122,25 @@ class CROMA(nn.Module):
         Args:
             x_sar: Input mini-batch of SAR images [B, 2, H, W].
             x_optical: Input mini-batch of optical images [B, 12, H, W].
+
+        Raises:
+            ValueError: If an input required by the configured modalities is missing.
         """
         return_dict: dict[str, Tensor] = {}
 
-        if 'sar' in self.modalities and x_sar is not None:
+        if 'sar' in self.modalities:
+            if x_sar is None:
+                raise ValueError('x_sar is required when using the SAR modality')
             sar_encodings = self.s1_encoder(imgs=x_sar, attn_bias=self.attn_bias)
             sar_GAP = self.s1_GAP_FFN(sar_encodings.mean(dim=1))
             return_dict['sar_encodings'] = sar_encodings
             return_dict['sar_GAP'] = sar_GAP
 
-        if 'optical' in self.modalities and x_optical is not None:
+        if 'optical' in self.modalities:
+            if x_optical is None:
+                raise ValueError(
+                    'x_optical is required when using the optical modality'
+                )
             optical_encodings = self.s2_encoder(
                 imgs=x_optical, attn_bias=self.attn_bias
             )
@@ -141,8 +150,8 @@ class CROMA(nn.Module):
 
         if set(self.modalities) == {'sar', 'optical'}:
             joint_encodings = self.joint_encoder(
-                x=sar_encodings,
-                context=optical_encodings,
+                x=return_dict['sar_encodings'],
+                context=return_dict['optical_encodings'],
                 relative_position_bias=self.attn_bias,
             )
             joint_GAP = joint_encodings.mean(dim=1)
@@ -174,7 +183,9 @@ def get_2dalibi(num_heads: int, num_patches: int) -> Tensor:
         ratio = start
         return [start * ratio**i for i in range(n)]
 
-    slopes = torch.tensor(get_slopes(num_heads), dtype=torch.float32).unsqueeze(1)
+    slopes = torch.tensor(
+        get_slopes(num_heads), dtype=torch.get_default_dtype()
+    ).unsqueeze(1)
     idxs = []
     for p1 in points:
         for p2 in points:
@@ -254,8 +265,8 @@ class Attention(nn.Module):
         """
         x = self.input_norm(x)
         q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -318,8 +329,8 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(
-            lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v)
+        q, k, v = (
+            rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads) for t in (q, k, v)
         )
 
         attention_scores = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
@@ -545,7 +556,9 @@ def load_weights(model: CROMA, weights: WeightsEnum) -> None:
     Raises:
         AssertionError: If there are missing or unexpected keys.
     """
-    state_dict = weights.get_state_dict(progress=True)
+    state_dict = weights.get_state_dict(
+        progress=True, check_hash=True, weights_only=True
+    )
     missing_keys, unexpected_keys = [], []
 
     if 'sar' in model.modalities:
