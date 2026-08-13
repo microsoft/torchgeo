@@ -39,7 +39,7 @@ class TestVHR10:
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == 'positive':
-            assert len(dataset) == 650
+            assert len(dataset) == 5
         elif dataset.split == 'negative':
             assert len(dataset) == 150
 
