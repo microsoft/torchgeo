@@ -10,6 +10,7 @@
 """U-Net with Lightweight Temporal Attention Encoder (U-TAE)."""
 
 from collections.abc import Callable, Sequence
+from functools import partial
 from typing import Literal, cast
 
 import torch
@@ -347,10 +348,7 @@ class ConvLayer(nn.Module):
         elif norm == 'instance':
             nl = nn.InstanceNorm2d
         elif norm == 'group':
-
-            def nl(num_feats: int) -> nn.GroupNorm:
-                return nn.GroupNorm(num_channels=num_feats, num_groups=n_groups)
-
+            nl = partial(nn.GroupNorm, n_groups)
         else:
             nl = None
 
