@@ -110,7 +110,20 @@ class ObjectDetection(BaseTask):
     def forward(
         self, images: Tensor, targets: list[dict[str, Tensor]] | None = None
     ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
-        """Run a forward pass."""
+        """Run a forward pass.
+
+        Args:
+            images: Batched images with shape ``(B, C, H, W)``.
+            targets: Ground-truth annotations for each image. Each dictionary
+                contains ``boxes`` with shape ``(N, 4)`` in absolute ``xyxy``
+                coordinates and one-indexed ``labels`` with shape ``(N,)``.
+                If ``None``, the model runs in inference mode.
+
+        Returns:
+            A dictionary mapping loss names to scalar tensors when *targets* are
+            provided. Otherwise, a list containing one prediction dictionary per
+            image with absolute ``xyxy`` boxes, one-indexed labels, and scores.
+        """
         if not self.hparams['model'].startswith('rf-detr'):
             return self.model(images, targets)
 
