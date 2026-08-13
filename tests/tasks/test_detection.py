@@ -2,16 +2,20 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Any
 
 import pytest
 import torch
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torch import nn
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import VHR10, NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
+from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import ObjectDetection
 
 # MAP metric requires pycocotools to be installed
@@ -78,6 +82,45 @@ class TestObjectDetection:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
+
+    @pytest.mark.parametrize('source', ['enum', 'file'])
+    def test_rf_detr_weights(
+        self, source: str, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        rfdetr = pytest.importorskip('rfdetr')
+        expected = nn.Linear(2, 2)
+        with torch.no_grad():
+            for parameter in expected.parameters():
+                parameter.fill_(0.5)
+        state_dict = expected.state_dict()
+        weights: WeightsEnum | str
+        if source == 'enum':
+            weights_enum = ResNet18_Weights.SENTINEL2_ALL_MOCO
+            monkeypatch.setattr(
+                type(weights_enum),
+                'get_state_dict',
+                lambda *_args, **_kwargs: state_dict,
+            )
+            weights = weights_enum
+        else:
+            path = tmp_path / 'weights.pth'
+            torch.save(state_dict, path)
+            weights = str(path)
+
+        monkeypatch.setattr(
+            rfdetr.models,
+            'build_model_from_config',
+            lambda *_args, **_kwargs: nn.Linear(2, 2),
+        )
+        monkeypatch.setattr(
+            rfdetr.models,
+            'build_criterion_from_config',
+            lambda *_args, **_kwargs: (nn.Identity(), nn.Identity()),
+        )
+        model = ObjectDetection(model='rf-detr-nano', weights=weights, num_classes=2)
+
+        for key, value in model.model.state_dict().items():
+            assert torch.equal(value, state_dict[key])
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)

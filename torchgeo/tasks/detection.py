@@ -179,7 +179,7 @@ class ObjectDetection(BaseTask):
             }
             self.model_kwargs.setdefault('num_channels', in_channels)
             self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
-            self.model_kwargs['pretrain_weights'] = self.weights
+            self.model_kwargs['pretrain_weights'] = None
             model_config = variants[model](
                 num_classes=num_classes - 1, **self.model_kwargs
             )
