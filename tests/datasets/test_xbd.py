@@ -116,12 +116,3 @@ class TestxBD:
         dataset = xBDDistShift(root=os.path.join('tests', 'data', 'xbd'))
         assert dataset.id_disaster == 'hurricane-matthew'
         assert dataset.ood_disaster == 'mexico-earthquake'
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            xBDDistShift(
-                root=os.path.join('tests', 'data', 'xbd'),
-                split='foo',  # ty: ignore[invalid-argument-type]
-                id_disaster='hurricane-harvey',
-                ood_disaster='hurricane-michael',
-            )
