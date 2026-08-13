@@ -14,7 +14,7 @@ data:
     batch_size: 1
   dict_kwargs:
     root: 'tests/data/substation'
-    bands: [0, 1, 2]
+    bands: ['B1', 'B2', 'B3']
     num_of_timepoints: 4
     timepoint_aggregation: 'median'
     mask_2d: False

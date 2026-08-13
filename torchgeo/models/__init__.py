@@ -11,6 +11,7 @@ from .changevit import ChangeViT
 from .convlstm import Conv3dLSTM, ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
+from .deo import DEO, DEO_Weights, deo_base
 from .dofa import (
     DOFA,
     DOFABase16_Weights,
@@ -73,6 +74,7 @@ from .vit import (
 __all__ = (
     'BTC',
     'CROMA',
+    'DEO',
     'DOFA',
     'FCN',
     'LTAE',
@@ -89,6 +91,7 @@ __all__ = (
     'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
+    'DEO_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
     'EarthLoc',
@@ -129,6 +132,7 @@ __all__ = (
     'copernicusfm_base',
     'croma_base',
     'croma_large',
+    'deo_base',
     'dofa_base_patch16_224',
     'dofa_huge_patch14_224',
     'dofa_large_patch16_224',
