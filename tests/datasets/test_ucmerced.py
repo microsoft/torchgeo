@@ -49,7 +49,7 @@ class TestUCMerced:
     ) -> None:
         shutil.rmtree(dataset.root)
         shutil.copy(dataset.url + dataset.filename, tmp_path)
-        UCMerced(tmp_path)
+        UCMerced(tmp_path, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

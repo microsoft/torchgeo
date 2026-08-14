@@ -149,7 +149,7 @@ class GlobBiomass(RasterDataset):
         measurement: str = 'agb',
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new GlobBiomass instance.

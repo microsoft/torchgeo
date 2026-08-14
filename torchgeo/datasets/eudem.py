@@ -80,7 +80,7 @@ class EUDEM(RasterDataset):
         res: float | tuple[float, float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.

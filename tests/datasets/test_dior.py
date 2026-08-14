@@ -52,7 +52,7 @@ class TestDIOR:
                 os.path.join(str(tmp_path), path),
             )
 
-        DIOR(root=tmp_path)
+        DIOR(root=tmp_path, checksum=False)
 
     def test_getitem(self, dataset: DIOR) -> None:
         x = dataset[0]

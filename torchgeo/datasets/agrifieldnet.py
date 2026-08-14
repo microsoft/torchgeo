@@ -116,7 +116,7 @@ class AgriFieldNet(IntersectionDataset):
     """AgriFieldNet India Challenge dataset.
 
     The `AgriFieldNet India Challenge
-    <https://zindi.africa/competitions/agrifieldnet-india-challenge>`__ dataset
+    <https://zindi.world/competitions/agrifieldnet-india-challenge>`__ dataset
     includes satellite imagery from Sentinel-2 cloud free composites
     (single snapshot) and labels for crop type that were collected by ground survey.
     The Sentinel-2 data are then matched with corresponding labels.

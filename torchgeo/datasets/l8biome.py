@@ -147,7 +147,7 @@ class L8Biome(IntersectionDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new L8Biome instance.
@@ -225,7 +225,7 @@ class L8Biome(IntersectionDataset):
         paths = cast(Path, self.paths)
         for biome, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(biome), paths, sha246=sha256 if self.checksum else None
+                self.url.format(biome), paths, sha256=sha256 if self.checksum else None
             )
 
     def _extract(self) -> None:

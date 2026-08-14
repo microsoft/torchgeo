@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     PASTISDataModule,
     SEN12MSDataModule,
 )
-from torchgeo.datasets import RGBBandsMissingError
+from torchgeo.datasets import FLAIRHUB, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SemanticSegmentation
@@ -61,6 +61,8 @@ class TestSemanticSegmentation:
             'dlrsd',
             'dlrsd_no_val',
             'etci2021',
+            'flairhub_multimodal_landcover',
+            'flairhub_toy_croptype',
             'ftw',
             'geonrw',
             'gid15',
@@ -97,6 +99,10 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
+            case 'flairhub_multimodal_landcover' | 'flairhub_toy_croptype':
+                monkeypatch.setattr(
+                    FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+                )
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -217,7 +223,7 @@ class TestSemanticSegmentation:
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(
@@ -231,7 +237,7 @@ class TestSemanticSegmentation:
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(

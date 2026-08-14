@@ -143,7 +143,7 @@ class MDAS(NonGeoDataset):
         modalities: list[str] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new MDAS dataset instance.
 

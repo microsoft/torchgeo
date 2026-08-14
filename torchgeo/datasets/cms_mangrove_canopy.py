@@ -176,7 +176,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         country: str = all_countries[0],
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.

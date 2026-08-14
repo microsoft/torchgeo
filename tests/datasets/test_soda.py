@@ -39,6 +39,7 @@ class TestSODAA:
             bbox_orientation=bbox_orientation,
             transforms=transforms,
             download=True,
+            checksum=False,
         )
 
     def test_already_downloaded(self, dataset: SODAA) -> None:
@@ -66,7 +67,7 @@ class TestSODAA:
         files = ['Images.zip', 'Annotations.zip', 'sample_df.csv']
         for file in files:
             shutil.copy(os.path.join('tests', 'data', 'soda', file), tmp_path)
-        SODAA(root=tmp_path)
+        SODAA(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'Images.zip'), 'w') as f:

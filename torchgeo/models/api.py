@@ -19,6 +19,7 @@ from torchvision.models._api import WeightsEnum
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
+from .deo import DEO_Weights, deo_base
 from .dofa import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
@@ -39,6 +40,7 @@ from .resnet import (
     resnet50,
     resnet152,
 )
+from .satclip import SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
     Swin_B_Weights,
@@ -81,11 +83,13 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'olmoearth_v1': olmoearth_v1,
+    'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
+    'satclip': satclip,
     'scalemae_large_patch16': scalemae_large_patch16,
     'swin_t': swin_t,
     'swin_s': swin_s,
@@ -108,6 +112,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
+    deo_base: DEO_Weights,
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
@@ -117,6 +122,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
+    satclip: SatCLIP_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
     swin_t: Swin_T_Weights,
     swin_s: Swin_S_Weights,
@@ -136,6 +142,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
+    'deo_base': DEO_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
@@ -145,6 +152,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
+    'satclip': SatCLIP_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
     'swin_t': Swin_T_Weights,
     'swin_s': Swin_S_Weights,

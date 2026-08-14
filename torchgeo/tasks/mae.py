@@ -124,10 +124,12 @@ class MAE(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+                state_dict = weights.get_state_dict(
+                    progress=True, check_hash=True, weights_only=True
+                )
             else:
                 state_dict = get_weight(weights).get_state_dict(
-                    progress=True, weights_only=True
+                    progress=True, check_hash=True, weights_only=True
                 )
             load_state_dict(vit, state_dict)  # type: ignore[invalid-argument-type]
 

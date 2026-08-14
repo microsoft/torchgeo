@@ -134,7 +134,7 @@ class MMFlood(IntersectionDataset):
         include_hydro: bool = False,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         cache: bool = False,
         time_series: bool = False,
     ) -> None:

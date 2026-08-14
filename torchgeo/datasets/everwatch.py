@@ -90,7 +90,7 @@ class EverWatch(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new EverWatch dataset instance.
 
@@ -130,7 +130,7 @@ class EverWatch(NonGeoDataset):
 
         # group per image path to get all annotations for one sample
         self.annot_df['sample_index'] = pd.factorize(self.annot_df['image_path'])[0]
-        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])
+        self.annot_df = self.annot_df.set_index(['sample_index', self.annot_df.index])  # ty: ignore[invalid-argument-type]
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
