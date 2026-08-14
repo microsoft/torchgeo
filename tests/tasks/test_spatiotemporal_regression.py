@@ -9,10 +9,10 @@ import torch
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
-from torchgeo.trainers import SpatioTemporalRegressionTask
+from torchgeo.tasks import SpatioTemporalRegression
 
 # Temporarily set target_key to 'magnitude'
-SpatioTemporalRegressionTask.target_key = 'magnitude'
+SpatioTemporalRegression.target_key = 'magnitude'
 
 pytest.importorskip('h5py', minversion='3.10')
 
@@ -46,21 +46,21 @@ class TestSpatioTemporalRegressionTask:
             pass
 
     def test_predict_step(self) -> None:
-        st_task = SpatioTemporalRegressionTask(in_channels=4)
+        st_task = SpatioTemporalRegression(in_channels=4)
         # (B=2, T=3, C=4, H=16, W=16)
         batch = {'image': torch.randn(2, 3, 4, 16, 16)}
         prediction = st_task.predict_step(batch, 0)
         assert prediction.shape == (2, 1)
 
     def test_forward_shape(self) -> None:
-        task = SpatioTemporalRegressionTask(in_channels=10, num_outputs=20)
+        task = SpatioTemporalRegression(in_channels=10, num_outputs=20)
         x = torch.randn(2, 9, 10, 32, 32)
         y_hat = task(x)
         assert y_hat.shape == (2, 20)
 
     @pytest.mark.parametrize('loss', ['mse', 'mae'])
     def test_losses(self, loss: Literal['mse', 'mae']) -> None:
-        task = SpatioTemporalRegressionTask(in_channels=3, loss=loss)
+        task = SpatioTemporalRegression(in_channels=3, loss=loss)
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
             'magnitude': torch.randn(2),
@@ -73,4 +73,4 @@ class TestSpatioTemporalRegressionTask:
 
     def test_invalid_loss(self) -> None:
         with pytest.raises(ValueError, match='not valid'):
-            SpatioTemporalRegressionTask(in_channels=3, loss='invalid')  # type: ignore
+            SpatioTemporalRegression(in_channels=3, loss='invalid')  # type: ignore

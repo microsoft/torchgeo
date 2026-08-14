@@ -3,7 +3,6 @@
 
 """Trainers for spatiotemporal regression."""
 
-from collections.abc import Sequence
 from typing import Any, Literal
 
 from torch import Tensor
@@ -11,11 +10,11 @@ from torch import Tensor
 from ..datasets.utils import Sample
 from ..models import ConvLSTM
 from .base import BaseTask
-from .mixins import ClassificationMixin
+from .mixins import RegressionMixin
 
 
-class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
-    """Classification for spatiotemporal inputs."""
+class SpatioTemporalRegression(RegressionMixin, BaseTask):
+    """Regression for spatiotemporal inputs."""
 
     target_key = 'label'
 
@@ -23,19 +22,14 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
         self,
         model: Literal['convlstm'] | str = 'convlstm',
         in_channels: int = 3,
-        task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
-        num_classes: int | None = None,
-        num_labels: int | None = None,
-        labels: list[str] | None = None,
-        pos_weight: Tensor | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'ce',
-        class_weights: Tensor | Sequence[float] | None = None,
-        ignore_index: int | None = None,
+        num_outputs: int = 1,
+        num_filters: int = 3,
+        loss: Literal['mse', 'mae'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new SpatioTemporalClassificationTask instance.
+        """Initialize a new SpatioTemporalRegressionTask instance.
 
         Args:
             model: Video model name. Only ``'convlstm'`` is currently supported.
@@ -43,16 +37,9 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
                 be added later without reshaping the trainer API.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
-            task: Type of classification task, one of 'binary', 'multiclass', or
-                'multilabel'.
-            num_classes: Number of classes for classification.
-            num_labels: Number of labels for multilabel classification.
-            labels: Optional list of class names for computing metrics.
-            pos_weight: Optional tensor of shape (num_classes,) for weighting the
-                positive examples in binary/multilabel classification.
-            loss: One of 'ce', 'bce', 'jaccard', 'focal', or 'dice'.
-            class_weights: Optional tensor of class weights for handling imbalanced classes.
-            ignore_index: Index of the class to ignore in the loss computation.
+            num_outputs: Number of output values for regression.
+            num_filters: Number of filters for the ConvLSTM.
+            loss: One of 'mse', 'mae'.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
@@ -75,12 +62,10 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
     def configure_models(self) -> None:
         """Initialize the model."""
         in_channels: int = self.hparams['in_channels']
-        num_classes: int = (
-            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
-        )
+        num_outputs: int = self.hparams['num_outputs']
         self.model = ConvLSTM(
             input_dim=in_channels,
-            num_classes=num_classes,
+            num_classes=num_outputs,
             convolutional_head=False,
             **self.kwargs,
         )
@@ -97,9 +82,6 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
 
         metrics = getattr(self, f'{stage}_metrics')
         metrics(y_hat, y)
-
-        if self.hparams['loss'] == 'bce':
-            y = y.float()
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss, batch_size=batch_size)
@@ -145,7 +127,7 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the predicted class probabilities.
+        """Compute the predicted values.
 
         Args:
             batch: The output of your DataLoader.
@@ -153,15 +135,8 @@ class SpatioTemporalClassificationTask(ClassificationMixin, BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Output predicted values.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
-
-        match self.hparams['task']:
-            case 'binary' | 'multilabel':
-                y_hat = y_hat.sigmoid()
-            case 'multiclass':
-                y_hat = y_hat.softmax(dim=1)
-
         return y_hat

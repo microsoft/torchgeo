@@ -9,7 +9,7 @@ import torch
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
-from torchgeo.trainers import SpatioTemporalClassificationTask
+from torchgeo.tasks import SpatioTemporalClassification
 
 
 class TestSpatioTemporalClassificationTask:
@@ -44,7 +44,7 @@ class TestSpatioTemporalClassificationTask:
     def test_predict_step(
         self, task: Literal['binary', 'multiclass'], num_classes: int
     ) -> None:
-        st_task = SpatioTemporalClassificationTask(
+        st_task = SpatioTemporalClassification(
             in_channels=4, task=task, num_classes=num_classes
         )
         # (B=2, T=3, C=4, H=16, W=16)
@@ -53,7 +53,7 @@ class TestSpatioTemporalClassificationTask:
         assert prediction.shape == (2, num_classes)
 
     def test_forward_shape(self) -> None:
-        task = SpatioTemporalClassificationTask(
+        task = SpatioTemporalClassification(
             in_channels=10, task='multiclass', num_classes=20
         )
         x = torch.randn(2, 9, 10, 32, 32)
@@ -61,7 +61,7 @@ class TestSpatioTemporalClassificationTask:
         assert y_hat.shape == (2, 20)
 
     def test_binary_task(self) -> None:
-        model = SpatioTemporalClassificationTask(
+        model = SpatioTemporalClassification(
             in_channels=3, task='binary', num_classes=1
         )
         batch = {

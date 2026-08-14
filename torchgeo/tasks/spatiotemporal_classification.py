@@ -3,19 +3,19 @@
 
 """Trainers for spatiotemporal regression."""
 
+from collections.abc import Sequence
 from typing import Any, Literal
 
-import torch.nn as nn
 from torch import Tensor
-from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 
 from ..datasets.utils import Sample
 from ..models import ConvLSTM
 from .base import BaseTask
+from .mixins import ClassificationMixin
 
 
-class SpatioTemporalRegressionTask(BaseTask):
-    """Regression for spatiotemporal inputs."""
+class SpatioTemporalClassification(ClassificationMixin, BaseTask):
+    """Classification for spatiotemporal inputs."""
 
     target_key = 'label'
 
@@ -23,14 +23,19 @@ class SpatioTemporalRegressionTask(BaseTask):
         self,
         model: Literal['convlstm'] | str = 'convlstm',
         in_channels: int = 3,
-        num_outputs: int = 1,
-        num_filters: int = 3,
-        loss: Literal['mse', 'mae'] = 'mse',
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
+        labels: list[str] | None = None,
+        pos_weight: Tensor | None = None,
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'ce',
+        class_weights: Tensor | Sequence[float] | None = None,
+        ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new SpatioTemporalRegressionTask instance.
+        """Initialize a new SpatioTemporalClassification instance.
 
         Args:
             model: Video model name. Only ``'convlstm'`` is currently supported.
@@ -38,9 +43,16 @@ class SpatioTemporalRegressionTask(BaseTask):
                 be added later without reshaping the trainer API.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
-            num_outputs: Number of output values for regression.
-            num_filters: Number of filters for the ConvLSTM.
-            loss: One of 'mse', 'mae'.
+            task: Type of classification task, one of 'binary', 'multiclass', or
+                'multilabel'.
+            num_classes: Number of classes for classification.
+            num_labels: Number of labels for multilabel classification.
+            labels: Optional list of class names for computing metrics.
+            pos_weight: Optional tensor of shape (num_classes,) for weighting the
+                positive examples in binary/multilabel classification.
+            loss: One of 'ce', 'bce', 'jaccard', 'focal', or 'dice'.
+            class_weights: Optional tensor of class weights for handling imbalanced classes.
+            ignore_index: Index of the class to ignore in the loss computation.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
@@ -60,52 +72,15 @@ class SpatioTemporalRegressionTask(BaseTask):
         """
         return self.model(x, **kwargs)
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
-        loss: str = self.hparams['loss']
-        if loss == 'mse':
-            self.criterion = nn.MSELoss()
-        elif loss == 'mae':
-            self.criterion = nn.L1Loss()
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'mse' or 'mae' loss."
-            )
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
-        differences between the predicted and actual values (MSE) and its
-        square root (RMSE). Lower values are better.
-        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
-        differences between the predicted and actual values (MAE).
-        Lower values are better.
-        """
-        metrics = MetricCollection(
-            # https://github.com/astral-sh/ty/issues/2985
-            {
-                'RMSE': MeanSquaredError(squared=False),
-                'MSE': MeanSquaredError(squared=True),
-                'MAE': MeanAbsoluteError(),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
-
     def configure_models(self) -> None:
         """Initialize the model."""
         in_channels: int = self.hparams['in_channels']
-        num_outputs: int = self.hparams['num_outputs']
+        num_classes: int = (
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
+        )
         self.model = ConvLSTM(
             input_dim=in_channels,
-            num_classes=num_outputs,
+            num_classes=num_classes,
             convolutional_head=False,
             **self.kwargs,
         )
@@ -122,6 +97,9 @@ class SpatioTemporalRegressionTask(BaseTask):
 
         metrics = getattr(self, f'{stage}_metrics')
         metrics(y_hat, y)
+
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss, batch_size=batch_size)
@@ -167,7 +145,7 @@ class SpatioTemporalRegressionTask(BaseTask):
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the predicted values.
+        """Compute the predicted class probabilities.
 
         Args:
             batch: The output of your DataLoader.
@@ -175,8 +153,15 @@ class SpatioTemporalRegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted values.
+            Output predicted probabilities.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
+
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
+                y_hat = y_hat.sigmoid()
+            case 'multiclass':
+                y_hat = y_hat.softmax(dim=1)
+
         return y_hat
