@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import os
 import shutil
 from pathlib import Path
@@ -88,15 +89,22 @@ class TestChesapeakeDC:
 class TestChesapeakeCVPR:
     @pytest.fixture(
         params=[
-            ('naip-new', 'naip-old', 'nlcd'),
-            ('landsat-leaf-on', 'landsat-leaf-off', 'lc'),
-            ('naip-new', 'landsat-leaf-on', 'lc', 'nlcd', 'buildings'),
-            ('naip-new', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'),
+            params
+            for params in itertools.product(
+                [['de'], ['de', 'md']],
+                [['test'], ['test', 'train']],
+                [[], ['naip-new'], ['naip-new', 'naip-old']],
+                [[], ['lc'], ['lc', 'buildings']],
+            )
+            if params[2] or params[3]
         ]
     )
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> ChesapeakeCVPR:
+        state, split, image, mask = request.param
+        data_splits = [f'{s}-{sp}' for s in state for sp in split]
+        data_layers = image + mask
         monkeypatch.setattr(
             ChesapeakeCVPR,
             'urls',
@@ -118,16 +126,14 @@ class TestChesapeakeCVPR:
             },
         )
         monkeypatch.setattr(
-            ChesapeakeCVPR,
-            '_files',
-            ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
+            ChesapeakeCVPR, '_files', ['de_1m_2013_extended-debuffered-test_tiles']
         )
         root = tmp_path
         transforms = nn.Identity()
         return ChesapeakeCVPR(
             root,
-            splits=['de-test', 'de-test'],
-            layers=request.param,
+            splits=data_splits,
+            layers=data_layers,
             transforms=transforms,
             download=True,
         )
@@ -135,10 +141,10 @@ class TestChesapeakeCVPR:
     def test_getitem(self, dataset: ChesapeakeCVPR) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['mask'], torch.Tensor)
+        assert isinstance(x.get('mask', x.get('image')), torch.Tensor)
 
     def test_len(self, dataset: ChesapeakeCVPR) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) > 0
 
     def test_and(self, dataset: ChesapeakeCVPR) -> None:
         ds = dataset & dataset
@@ -149,7 +155,7 @@ class TestChesapeakeCVPR:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
-        ChesapeakeCVPR(root=dataset.root, splits=['de-test'], download=True)
+        ChesapeakeCVPR(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         root = tmp_path
@@ -169,7 +175,7 @@ class TestChesapeakeCVPR:
             ),
             root,
         )
-        ChesapeakeCVPR(root, splits=['de-test'])
+        ChesapeakeCVPR(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -187,12 +193,13 @@ class TestChesapeakeCVPR:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        if x['mask'].ndim == 2:
-            x['prediction'] = x['mask'].clone()
-        else:
-            x['prediction'] = x['mask'][0, :, :].clone()
-        dataset.plot(x)
-        plt.close()
+        if 'mask' in x:
+            if x['mask'].ndim == 2:
+                x['prediction'] = x['mask'].clone()
+            else:
+                x['prediction'] = x['mask'][0, :, :].clone()
+            dataset.plot(x)
+            plt.close()
 
     def test_partially_out_of_raster_query(self, dataset: ChesapeakeCVPR) -> None:
         # Regression test for https://github.com/torchgeo/torchgeo/issues/3678
@@ -206,9 +213,11 @@ class TestChesapeakeCVPR:
         shifted_x = slice(x.start + xshift, x.stop + xshift, x.step)
         sample = dataset[shifted_x, y, t]
         ref = dataset[dataset.bounds]
-        assert sample['image'].shape == ref['image'].shape
-        assert sample['mask'].shape == ref['mask'].shape
         # The shifted-right half of the query is outside the raster, so at
         # least one column on the right should be zero-filled.
-        assert torch.all(sample['image'][..., -1] == 0)
-        assert torch.all(sample['mask'][..., -1] == 0)
+        if 'image' in sample:
+            assert sample['image'].shape == ref['image'].shape
+            assert torch.all(sample['image'][..., -1] == 0)
+        if 'mask' in sample:
+            assert sample['mask'].shape == ref['mask'].shape
+            assert torch.all(sample['mask'][..., -1] == 0)
