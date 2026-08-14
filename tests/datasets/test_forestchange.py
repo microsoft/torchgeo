@@ -159,10 +159,7 @@ class TestForestChange:
 
     def test_preprocessed_missing_split_file(self, dataset: ForestChange) -> None:
         base = Path(dataset.root) / ForestChange.directory
-        try:
-            os.remove(base / f"{dataset.split}.txt")
-        except Exception:
-            pass
+        os.remove(base / f"{dataset.split}.txt")
         ForestChange(
             root=dataset.root,
             split=dataset.split,
@@ -191,13 +188,15 @@ class TestForestChange:
             split=dataset.split,
             download=False,
             max_length=4,
+            tokenizer=dataset.tokenizer,
         )
         sample = ds[0]
+        token_len = int(sample["token_len"])
         assert sample["token"].shape[0] == 4
-        assert sample["token_len"] <= 4
+        assert token_len <= 4
         assert torch.equal(
-            sample["token"][sample["token_len"] :],
-            torch.zeros(4 - sample["token_len"], dtype=torch.int64),
+            sample["token"][token_len:],
+            torch.zeros(4 - token_len, dtype=torch.int64),
         )
 
     def test_load_tokens_invalid_caption_index(self, dataset: ForestChange) -> None:
