@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -153,12 +153,14 @@ class PASTIS(NonGeoDataset):
     s1a_bands: ClassVar[tuple[str, ...]] = ('S1A_VV', 'S1A_VH', 'S1A_VV_VH')
     s1d_bands: ClassVar[tuple[str, ...]] = ('S1D_VV', 'S1D_VH', 'S1D_VV_VH')
 
+    mode: Literal['semantic', 'instance']
+
     def __init__(
         self,
         root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: Sequence[str] = s2_bands,
-        mode: str = 'semantic',
+        mode: Literal['semantic', 'instance'] = 'semantic',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = True,

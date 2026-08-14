@@ -79,6 +79,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
+from .flair import FLAIRHUB, FLAIRHUBBase, FLAIRHUBToy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -196,7 +197,8 @@ from .utils import (
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
-from .xbd import XView2, xBD
+from .worldstrat import WorldStrat
+from .xbd import XView2, xBD, xBDDistShift
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -211,6 +213,7 @@ __all__ = (
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
+    'FLAIRHUB',
     'GBIF',
     'GID15',
     'LEVIRCD',
@@ -299,6 +302,8 @@ __all__ = (
     'EuroSAT100',
     'EuroSATSpatial',
     'EverWatch',
+    'FLAIRHUBBase',
+    'FLAIRHUBToy',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
@@ -390,6 +395,7 @@ __all__ = (
     'Vaihingen2D',
     'VectorDataset',
     'WesternUSALiveFuelMoisture',
+    'WorldStrat',
     'XView2',
     'XarrayDataset',
     'ZueriCrop',
@@ -403,4 +409,5 @@ __all__ = (
     'time_series_split',
     'unbind_samples',
     'xBD',
+    'xBDDistShift',
 )

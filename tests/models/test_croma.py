@@ -51,6 +51,23 @@ class TestCROMA:
         if set(modalities) == {'sar', 'optical'}:
             assert 'joint_encodings' in out
 
+    @pytest.mark.parametrize(
+        'sar_images,optical_images,match',
+        [
+            (None, torch.randn(1, 12, 120, 120), 'x_sar is required'),
+            (torch.randn(1, 2, 120, 120), None, 'x_optical is required'),
+        ],
+    )
+    def test_missing_modality(
+        self,
+        sar_images: torch.Tensor | None,
+        optical_images: torch.Tensor | None,
+        match: str,
+    ) -> None:
+        model = CROMA()
+        with pytest.raises(ValueError, match=match):
+            model(sar_images, optical_images)
+
 
 class TestCROMABase:
     @pytest.fixture(params=[*CROMABase_Weights])
