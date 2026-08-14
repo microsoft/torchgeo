@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Trainers for spatiotemporal regression."""
+"""Trainers for spatiotemporal classification at image level."""
 
 from collections.abc import Sequence
 from typing import Any, Literal

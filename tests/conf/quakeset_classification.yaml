@@ -1,5 +1,5 @@
 model:
-  class_path: SpatioTemporalClassificationTask
+  class_path: SpatioTemporalClassification
   init_args:
     in_channels: 2
     task: 'binary'

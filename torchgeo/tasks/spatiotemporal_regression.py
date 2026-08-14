@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Trainers for spatiotemporal regression."""
+"""Trainers for spatiotemporal regression at image level."""
 
 from typing import Any, Literal
 
@@ -22,6 +22,7 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
         self,
         model: Literal['convlstm'] | str = 'convlstm',
         in_channels: int = 3,
+        labels: list[str] | None = None,
         num_outputs: int = 1,
         num_filters: int = 3,
         loss: Literal['mse', 'mae'] = 'mse',
@@ -32,11 +33,10 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
         """Initialize a new SpatioTemporalRegressionTask instance.
 
         Args:
-            model: Video model name. Only ``'convlstm'`` is currently supported.
-                The explicit model switch is kept so more video architectures can
-                be added later without reshaping the trainer API.
-            in_channels: Number of channels per timestep for inputs of shape
-                ``(B, T, C, H, W)``.
+            model: Spatiotemporal model name. Supported value is ``'convlstm'``.
+                        in_channels: Number of channels per timestep for inputs of shape
+                            ``(B, T, C, H, W)``.
+            labels: List of output channel names.
             num_outputs: Number of output values for regression.
             num_filters: Number of filters for the ConvLSTM.
             loss: One of 'mse', 'mae'.

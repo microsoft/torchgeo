@@ -13,7 +13,7 @@ from torchgeo.tasks import SpatioTemporalClassification
 
 
 class TestSpatioTemporalClassificationTask:
-    @pytest.mark.parametrize('name', ['quakeset'])
+    @pytest.mark.parametrize('name', ['quakeset_classification'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 

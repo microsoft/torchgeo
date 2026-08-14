@@ -1,5 +1,5 @@
 model:
-  class_path: SpatioTemporalRegressionTask
+  class_path: SpatioTemporalRegression
   init_args:
     in_channels: 2
     loss: 'mse'

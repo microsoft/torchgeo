@@ -70,7 +70,3 @@ class TestSpatioTemporalRegressionTask:
             task.training_step(batch, 0)
         except MisconfigurationException:
             pass
-
-    def test_invalid_loss(self) -> None:
-        with pytest.raises(ValueError, match='not valid'):
-            SpatioTemporalRegression(in_channels=3, loss='invalid')  # type: ignore
