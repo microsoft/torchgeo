@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from pyproj import CRS
 from torch import Tensor
 
-from .errors import DatasetNotFoundError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import GeoDataset, RasterDataset
 from .utils import GeoSlice, Path, Sample, download_url, quantile_normalization
 
@@ -253,14 +253,17 @@ class HabitAlp2(GeoDataset):
         year_files = self.data_files[year]
         mask_path = os.path.join(root, self.mask_files[year])
 
-        needs_rgb = any(b in ['R', 'G', 'B'] for b in self.bands)
+        rgb_requested = tuple(b for b in self.bands if b in ('R', 'G', 'B'))
+        needs_rgb = len(rgb_requested) > 0
         needs_cir = 'NIR' in self.bands
 
         image_datasets: list[GeoDataset] = []
 
         if needs_rgb:
             rgb_path = os.path.join(root, year_files['rgb'])
-            rgb_ds = _HabitAlp2RGB(rgb_path, crs=crs, res=res, cache=cache)
+            rgb_ds = _HabitAlp2RGB(
+                rgb_path, crs=crs, res=res, bands=rgb_requested, cache=cache
+            )
             image_datasets.append(rgb_ds)
 
         if needs_cir:
@@ -285,6 +288,14 @@ class HabitAlp2(GeoDataset):
         mask_ds = _HabitAlp2Mask(mask_path, crs=crs, res=res, cache=cache)
 
         self.dataset = image_ds & mask_ds
+
+        # Canonicalize band order to match actual tensor layout
+        canonical: list[str] = []
+        canonical.extend(rgb_requested)
+        if needs_cir:
+            canonical.append('NIR')
+        canonical.extend(b for b in self.terrain_bands if b in self.bands)
+        self.bands = tuple(canonical)
 
         self._res = self.dataset.res
         self.index = self.dataset.index
@@ -390,10 +401,7 @@ class HabitAlp2(GeoDataset):
             download_url(self.url + mask_file, self.root, mask_file)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -404,7 +412,13 @@ class HabitAlp2(GeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
+        if not all(b in self.bands for b in self.rgb_bands):
+            raise RGBBandsMissingError()
+
         ncols = 2
         showing_predictions = 'prediction' in sample
 
@@ -513,8 +527,6 @@ class HabitAlp2CD(GeoDataset):
         'Old Growth Density Loss',
     )
 
-    colormap = ('blue',)
-
     def __init__(
         self,
         root: Path = 'data',
@@ -612,6 +624,7 @@ class HabitAlp2CD(GeoDataset):
             download=download,
             checksum=checksum,
         )
+        self.bands = self.ds1.bands
 
         mask_path = os.path.join(root, self.change_mask_files[pair])
         if not os.path.exists(mask_path):
@@ -689,11 +702,7 @@ class HabitAlp2CD(GeoDataset):
         download_url(self.url + mask_file, self.root, mask_file)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-        alpha: float = 0.5,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -701,11 +710,15 @@ class HabitAlp2CD(GeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            alpha: opacity with which to render change mask overlay (binary task only)
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
+        if not all(b in self.bands for b in self.rgb_bands):
+            raise RGBBandsMissingError()
 
         def get_rgb(img: Tensor) -> Tensor:
             return quantile_normalization(img[:3].float()).permute(1, 2, 0)

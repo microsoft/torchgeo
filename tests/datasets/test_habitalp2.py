@@ -19,6 +19,7 @@ from torchgeo.datasets import (
     HabitAlp2,
     HabitAlp2CD,
     IntersectionDataset,
+    RGBBandsMissingError,
     UnionDataset,
 )
 
@@ -92,13 +93,26 @@ class TestHabitAlp2:
         with pytest.raises(AssertionError, match='not available for year'):
             HabitAlp2(tmp_path, year='2003', bands=('NIR',))
 
+    def test_plot_no_rgb(self, tmp_path: Path) -> None:
+        for folder in ['data_2013', 'labels']:
+            src_folder = os.path.join(DATA_DIR, folder)
+            dst_folder = os.path.join(tmp_path, folder)
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder)
+        ds = HabitAlp2(tmp_path, year='2013', bands=('dtm',))
+        x = ds[ds.bounds]
+        with pytest.raises(RGBBandsMissingError):
+            ds.plot(x)
+
     @pytest.mark.parametrize('bands', [('R', 'dtm'), ('NIR', 'dtm')])
     def test_download(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, bands: tuple[str, ...]
     ) -> None:
         monkeypatch.setattr(HabitAlp2, 'url', DATA_DIR + '/')
         monkeypatch.setattr('torchgeo.datasets.habitalp2.download_url', _copy_file)
-        HabitAlp2(tmp_path, download=True, year='2013', bands=bands)
+        ds = HabitAlp2(tmp_path, download=True, year='2013', bands=bands)
+        x = ds[ds.bounds]
+        assert x['image'].shape[0] == len(bands)
 
 
 class TestHabitAlp2CD:
@@ -136,9 +150,11 @@ class TestHabitAlp2CD:
         assert x['mask'].shape[0] == 1
 
     def test_plot_multiclass(self, multiclass_dataset: HabitAlp2CD) -> None:
-        multiclass_dataset.plot(
-            multiclass_dataset[multiclass_dataset.bounds], suptitle='Test'
-        )
+        x = multiclass_dataset[multiclass_dataset.bounds]
+        multiclass_dataset.plot(x, suptitle='Test')
+        plt.close()
+        x['prediction'] = x['mask'].clone()
+        multiclass_dataset.plot(x, suptitle='Prediction')
         plt.close()
 
     def test_len(self, dataset: HabitAlp2CD) -> None:
@@ -163,6 +179,23 @@ class TestHabitAlp2CD:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle='Test')
         plt.close()
+
+    def test_plot_prediction(self, dataset: HabitAlp2CD) -> None:
+        x = dataset[dataset.bounds]
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
+        plt.close()
+
+    def test_plot_no_rgb(self, tmp_path: Path) -> None:
+        for folder in ['data_2013', 'data_2020', 'labels']:
+            src_folder = os.path.join(DATA_DIR, folder)
+            dst_folder = os.path.join(tmp_path, folder)
+            if os.path.exists(src_folder):
+                shutil.copytree(src_folder, dst_folder)
+        ds = HabitAlp2CD(tmp_path, bands=('dtm',))
+        x = ds[ds.bounds]
+        with pytest.raises(RGBBandsMissingError):
+            ds.plot(x)
 
     def test_invalid_query(self, dataset: HabitAlp2CD) -> None:
         with pytest.raises(IndexError, match=r'not found in .* with bounds:'):
