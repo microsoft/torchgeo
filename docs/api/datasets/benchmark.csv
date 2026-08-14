@@ -31,6 +31,8 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`Forest Damage`,OD,Drone imagery,"1,543",4,"1,500x1,500",,RGB,CDLA-Permissive-1.0
 :ref:`GID-15`,S,Gaofen-2,150,15,"6,800x7,200",3,RGB,
 :ref:`GeoNRW`,S,Aerial,"7,783",11,"1,000x1,000",1,"RGB, DEM",CC-BY-4.0
+:ref:`HabitAlp2`,S,Aerial,3,24,variable,0.2,"RGB, CIR, LiDAR",CC-BY-4.0
+:ref:`HabitAlp2`,CD,Aerial,2,9,variable,0.2,"RGB, CIR, LiDAR",CC-BY-4.0
 :ref:`I/O Bench`,S,"Landsat, CDL",1,-,"8,000x8,000",30,MSI,CC-BY-4.0
 :ref:`IDTReeS`,"OD,C",Aerial,591,33,200x200,0.1--1,RGB,CC-BY-4.0
 :ref:`Inria Aerial Image Labeling`,S,Aerial,360,2,"5,000x5,000",0.3,RGB,
