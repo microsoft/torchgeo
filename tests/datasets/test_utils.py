@@ -750,7 +750,7 @@ class TestFindFiles:
                 str(root), []
             )
 
-        monkeypatch.setattr('torchgeo.datasets.utils._list_vsi_files', fake_list)
+        monkeypatch.setattr('torchgeo.datasets.utils._walk_vsi', fake_list)
         # Only the unzipped copies are returned, not the archived duplicates.
         assert find_files(prefix, '*.tif') == sorted(unzipped)
 
