@@ -3,13 +3,13 @@
 
 """HabitAlp2 datamodule."""
 
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import kornia.augmentation as K
 from kornia.constants import DataKey, Resample
 
 from ..datasets import GeoDataset, HabitAlp2, HabitAlp2CD
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
 
@@ -28,7 +28,7 @@ class HabitAlp2DataModule(GeoDataModule):
         patch_size: int | tuple[int, int] = 256,
         length: int | None = None,
         num_workers: int = 0,
-        task: str = 'segmentation',
+        task: Literal['segmentation', 'change_detection'] = 'segmentation',
         **kwargs: Any,
     ) -> None:
         """Initialize a new HabitAlp2DataModule instance.
@@ -42,6 +42,9 @@ class HabitAlp2DataModule(GeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.HabitAlp2` or
                 :class:`~torchgeo.datasets.HabitAlp2CD`.
+
+        Raises:
+            AssertionError: if ``task`` is invalid
         """
         assert task in ['segmentation', 'change_detection'], (
             f"task must be 'segmentation' or 'change_detection', got '{task}'"
@@ -96,14 +99,14 @@ class HabitAlp2DataModule(GeoDataModule):
         self.test_dataset = dataset
 
         if stage in ['fit']:
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset, self.patch_size, self.batch_size, self.length
+            self.train_sampler = RandomPatchSampler(
+                self.train_dataset, size=self.patch_size, length=self.length
             )
         if stage in ['fit', 'validate']:
-            self.val_sampler = GridGeoSampler(
-                self.val_dataset, self.patch_size, self.patch_size
+            self.val_sampler = GriddedPatchSampler(
+                self.val_dataset, size=self.patch_size, stride=self.patch_size
             )
         if stage in ['test']:
-            self.test_sampler = GridGeoSampler(
-                self.test_dataset, self.patch_size, self.patch_size
+            self.test_sampler = GriddedPatchSampler(
+                self.test_dataset, size=self.patch_size, stride=self.patch_size
             )

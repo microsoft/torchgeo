@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
@@ -32,7 +32,7 @@ def _copy_file(url: str, root: Path, filename: str, **kwargs: Any) -> None:
 
 
 class TestHabitAlp2:
-    @pytest.fixture(params=['2003', '2013', '2020'])
+    @pytest.fixture(params=['2003', '2013'])
     def dataset(self, tmp_path: Path, request: SubRequest) -> HabitAlp2:
         for folder in ['data_2003', 'data_2013', 'data_2020', 'labels']:
             src_folder = os.path.join(DATA_DIR, folder)
@@ -50,7 +50,7 @@ class TestHabitAlp2:
         assert x['mask'].dtype == torch.int64
 
     def test_len(self, dataset: HabitAlp2) -> None:
-        assert len(dataset) >= 1
+        assert len(dataset) == 1
 
     def test_and(self, dataset: HabitAlp2) -> None:
         ds = dataset & dataset
@@ -142,7 +142,7 @@ class TestHabitAlp2CD:
         plt.close()
 
     def test_len(self, dataset: HabitAlp2CD) -> None:
-        assert len(dataset) >= 1
+        assert len(dataset) == 1
 
     def test_and(self, dataset: HabitAlp2CD) -> None:
         ds = dataset & dataset

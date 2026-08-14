@@ -1,5 +1,5 @@
 model:
-  class_path: ChangeDetectionTask
+  class_path: ChangeDetection
   init_args:
     loss: 'ce'
     model: 'unet'

@@ -8,7 +8,6 @@ from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -16,14 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
-from .utils import (
-    GeoSlice,
-    Path,
-    Sample,
-    download_url,
-    draw_semantic_segmentation_masks,
-    percentile_normalization,
-)
+from .utils import GeoSlice, Path, Sample, download_url, quantile_normalization
 
 # These are private implementation helpers. RasterDataset's `separate_files`
 # mechanism assumes all band files share the same directory, which is not the
@@ -74,7 +66,7 @@ class HabitAlp2(GeoDataset):
 
     .. note::
        The 2020 epoch is intended as a held-out test period in the original dataset.
-       No official train/val/test split is provided — use the ``year`` argument to
+       No official train/val/test split is provided; use the ``year`` argument to
        select epochs manually.
 
     Dataset format:
@@ -91,9 +83,9 @@ class HabitAlp2(GeoDataset):
 
     url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/df01fe8ae22df182e7bf1c2e3e713dcfd92c0c81/'
 
-    valid_years: ClassVar[tuple[str, ...]] = ('2003', '2013', '2020')
+    valid_years = ('2003', '2013', '2020')
 
-    all_bands: ClassVar[tuple[str, ...]] = (
+    all_bands = (
         'R',
         'G',
         'B',
@@ -112,9 +104,9 @@ class HabitAlp2(GeoDataset):
         'tri',
     )
 
-    rgb_bands: ClassVar[tuple[str, ...]] = ('R', 'G', 'B')
+    rgb_bands = ('R', 'G', 'B')
 
-    terrain_bands: ClassVar[tuple[str, ...]] = (
+    terrain_bands = (
         'dtm',
         'dsm',
         'ndsm',
@@ -171,7 +163,7 @@ class HabitAlp2(GeoDataset):
         '2020': 'labels/classes_2020.tif',
     }
 
-    classes: ClassVar[tuple[str, ...]] = (
+    classes = (
         'Background',
         'Waterbody',
         'Gravel bank, shoal, fluviatile',
@@ -421,10 +413,8 @@ class HabitAlp2(GeoDataset):
 
         fig, axs = plt.subplots(1, ncols, figsize=(ncols * 4, 4))
 
-        image = sample['image'][:3].numpy()
-        image = np.transpose(image, (1, 2, 0))
-        image = percentile_normalization(image, axis=(0, 1))
-        image = np.clip(image, 0, 1)
+        image = quantile_normalization(sample['image'][:3].float())
+        image = image.permute(1, 2, 0).numpy()
 
         mask = sample['mask'].numpy()
 
@@ -481,7 +471,7 @@ class HabitAlp2CD(GeoDataset):
 
     .. note::
        The 2013→2020 pair is intended as a held-out test pair in the original dataset.
-       No official train/val/test split is provided — use the ``pair`` argument to
+       No official train/val/test split is provided; use the ``pair`` argument to
        select pairs manually.
 
     Dataset format:
@@ -498,12 +488,12 @@ class HabitAlp2CD(GeoDataset):
 
     url = HabitAlp2.url
 
-    valid_pairs: ClassVar[tuple[str, ...]] = ('2003_2013', '2013_2020')
-    valid_tasks: ClassVar[tuple[str, ...]] = ('binary', 'multiclass')
+    valid_pairs = ('2003_2013', '2013_2020')
+    valid_tasks = ('binary', 'multiclass')
 
-    all_bands: ClassVar[tuple[str, ...]] = HabitAlp2.all_bands
-    rgb_bands: ClassVar[tuple[str, ...]] = HabitAlp2.rgb_bands
-    terrain_bands: ClassVar[tuple[str, ...]] = HabitAlp2.terrain_bands
+    all_bands = HabitAlp2.all_bands
+    rgb_bands = HabitAlp2.rgb_bands
+    terrain_bands = HabitAlp2.terrain_bands
     data_files: ClassVar[dict[str, dict[str, str]]] = HabitAlp2.data_files
 
     change_mask_files: ClassVar[dict[str, str]] = {
@@ -511,7 +501,7 @@ class HabitAlp2CD(GeoDataset):
         '2013_2020': 'labels/habitalp_change_2013_2020.tif',
     }
 
-    multiclass_classes: ClassVar[tuple[str, ...]] = (
+    multiclass_classes = (
         'No change',
         'Mature Tree Density Loss',
         'Clearcut Loss',
@@ -523,7 +513,7 @@ class HabitAlp2CD(GeoDataset):
         'Old Growth Density Loss',
     )
 
-    colormap: ClassVar[tuple[str, ...]] = ('blue',)
+    colormap = ('blue',)
 
     def __init__(
         self,
@@ -717,31 +707,41 @@ class HabitAlp2CD(GeoDataset):
             a matplotlib Figure with the rendered sample
         """
 
-        def get_rgb(img: Tensor) -> 'np.typing.NDArray[np.float64]':
-            arr = img[:3].float().numpy()
-            arr = np.transpose(arr, (1, 2, 0))
-            arr = percentile_normalization(arr, axis=(0, 1))
-            return np.clip(arr, 0, 1).astype(np.float64)
+        def get_rgb(img: Tensor) -> Tensor:
+            return quantile_normalization(img[:3].float()).permute(1, 2, 0)
 
-        def get_masked(img: Tensor, mask: Tensor) -> 'np.typing.NDArray[np.uint8]':
-            rgb = (get_rgb(img) * 255).astype(np.uint8)
-            array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
-                torch.from_numpy(np.transpose(rgb, (2, 0, 1))),
-                mask.squeeze(0),
-                alpha=alpha,
-                colors=list(self.colormap),
-            )
-            return array
+        ncols = 3
+        showing_predictions = 'prediction' in sample
+        if showing_predictions:
+            ncols += 1
 
         if self.task == 'binary':
-            fig, axs = plt.subplots(ncols=2, figsize=(10, 5))
-            axs[0].imshow(get_masked(sample['image'][0], sample['mask']))
-            axs[1].imshow(get_masked(sample['image'][1], sample['mask']))
+            fig, axs = plt.subplots(1, ncols, figsize=(ncols * 5, 5))
+            axs[0].imshow(get_rgb(sample['image'][0]))
+            axs[1].imshow(get_rgb(sample['image'][1]))
+            axs[2].imshow(
+                sample['mask'].squeeze(0).numpy(),
+                cmap='gray',
+                interpolation='none',
+                vmin=0,
+                vmax=1,
+            )
             if show_titles:
                 axs[0].set_title(f'Pre change ({self.year1})')
                 axs[1].set_title(f'Post change ({self.year2})')
+                axs[2].set_title('Change mask')
+            if showing_predictions:
+                axs[3].imshow(
+                    sample['prediction'].squeeze(0).numpy(),
+                    cmap='gray',
+                    interpolation='none',
+                    vmin=0,
+                    vmax=1,
+                )
+                if show_titles:
+                    axs[3].set_title('Prediction')
         else:
-            fig, axs = plt.subplots(ncols=3, figsize=(15, 5))
+            fig, axs = plt.subplots(1, ncols, figsize=(ncols * 5, 5))
             axs[0].imshow(get_rgb(sample['image'][0]))
             axs[1].imshow(get_rgb(sample['image'][1]))
             axs[2].imshow(
@@ -755,6 +755,16 @@ class HabitAlp2CD(GeoDataset):
                 axs[0].set_title(f'Image ({self.year1})')
                 axs[1].set_title(f'Image ({self.year2})')
                 axs[2].set_title('Change mask')
+            if showing_predictions:
+                axs[3].imshow(
+                    sample['prediction'].squeeze(0).numpy(),
+                    vmin=0,
+                    vmax=8,
+                    cmap='tab10',
+                    interpolation='none',
+                )
+                if show_titles:
+                    axs[3].set_title('Prediction')
 
         for ax in axs:
             ax.axis('off')
