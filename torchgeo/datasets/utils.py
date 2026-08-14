@@ -14,6 +14,7 @@ import hashlib
 import importlib
 import os
 import pathlib
+import posixpath
 import shutil
 import subprocess
 import tarfile
@@ -1044,7 +1045,9 @@ def _as_archive(path: Path) -> _Archive | None:
             return _Archive(
                 str(path),
                 prefix + str(path),
-                os.path.join(os.path.dirname(str(path)), stem),
+                # posixpath so extract-dir comparisons hold on Windows (see
+                # _is_extracted); VSI paths are always POSIX-style.
+                posixpath.join(os.path.dirname(str(path)), stem),
             )
     return None
 
@@ -1105,9 +1108,13 @@ def _is_extracted(member: str, archive: _Archive, known: Container[str]) -> bool
     Returns:
         True if *member* is already present as a loose file, else False.
     """
+    # VSI and archive-internal paths are always POSIX-style, so join with
+    # posixpath: this keeps the *known* membership check correct on Windows
+    # (where os.path.join would insert '\'), while os.path.exists still accepts
+    # forward slashes for local paths.
     internal = member.removeprefix(archive.vsi_base).lstrip('/')
-    flat = os.path.join(os.path.dirname(archive.path), internal)
-    nested = os.path.join(archive.extract_dir, internal)
+    flat = posixpath.join(os.path.dirname(archive.path), internal)
+    nested = posixpath.join(archive.extract_dir, internal)
     return (
         flat in known
         or nested in known
