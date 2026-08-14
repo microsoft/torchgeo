@@ -9,6 +9,7 @@
     "version": "v0.10.0",
     "url": "https://docs.torchgeo.org/en/stable/",
     "preferred": true
+  },
   {
     "name": "0.9.0",
     "version": "v0.9.0",
