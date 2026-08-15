@@ -11,6 +11,7 @@ from torch import nn
 from torchvision import models as torchvision_models
 from torchvision import transforms
 from torchvision.models._api import Weights, WeightsEnum
+from torchvision.models.swin_transformer import ShiftedWindowAttention
 from torchvision.ops.misc import Permute
 
 
@@ -35,6 +36,17 @@ class DEO(nn.Module):
         # initialize the backbone
         self.feat_extr = torchvision_models.__dict__[model]()
         del self.feat_extr.features[0]
+        del self.feat_extr.head
+
+        # Swin window size used during pretraining (torchvision defaults to 7x7)
+        window_size = [12, 12]
+        for module in self.feat_extr.modules():
+            if isinstance(module, ShiftedWindowAttention):
+                shifted = sum(module.shift_size) > 0
+                module.window_size = list(window_size)
+                module.shift_size = [w // 2 if shifted else 0 for w in window_size]
+                module.define_relative_position_bias_table()
+                module.define_relative_position_index()
 
         # Conv layers for Swin
         norm_layer_ms = partial(nn.LayerNorm, eps=1e-5)
@@ -136,7 +148,7 @@ class DEO_Weights(WeightsEnum):
     """
 
     DEO_SWIN = Weights(
-        url='https://huggingface.co/SolaireTheSun/DEO/resolve/43bcb822955b8ceb3ca44ee2c4c0e059002bc0f8/DEO_swin_b.pth',
+        url='https://huggingface.co/SolaireTheSun/DEO/resolve/f973d29f6324fb12fca734778cf9d2ae539524bb/DEO_swin_b.pth',
         transforms=_deo_transforms,
         meta={
             'dataset': 'fMoW, fMoW-Sentinel',
