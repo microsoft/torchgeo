@@ -5,7 +5,7 @@
 
 import math
 from collections import OrderedDict
-from typing import cast
+from typing import Protocol, cast
 
 import torch.nn.functional as F
 from torch import Tensor
@@ -20,9 +20,25 @@ from torch.nn.modules import (
     Sigmoid,
     UpsamplingBilinear2d,
 )
-from torchvision.models import resnet
+from torchvision.models import resnet as torchvision_resnet
 from torchvision.models._api import WeightsEnum
 from torchvision.ops import FeaturePyramidNetwork as FPN
+
+from . import resnet as torchgeo_resnet
+from .resnet import ResNet18_Weights, ResNet50_Weights
+
+
+class _ResNetBackbone(Protocol):
+    """ResNet feature extraction interface."""
+
+    conv1: Module
+    bn1: Module
+    relu: Module
+    maxpool: Module
+    layer1: Module
+    layer2: Module
+    layer3: Module
+    layer4: Module
 
 
 class FarSeg(Module):
@@ -53,6 +69,9 @@ class FarSeg(Module):
             classes: number of output segmentation classes
             backbone_weights: Pre-trained model weights to use.
 
+        Raises:
+            ValueError: If the backbone is unsupported or does not match the weights.
+
         .. versionadded:: 0.9
            The *backbone_weights* parameter.
         """
@@ -64,7 +83,16 @@ class FarSeg(Module):
         else:
             raise ValueError(f'unknown backbone: {backbone}.')
 
-        self.backbone = getattr(resnet, backbone)(weights=backbone_weights)
+        if isinstance(backbone_weights, (ResNet18_Weights, ResNet50_Weights)):
+            expected_backbone = cast(str, backbone_weights.meta['model'])
+            if backbone != expected_backbone:
+                raise ValueError(
+                    f'backbone weights are for {expected_backbone}, not {backbone}.'
+                )
+            model = getattr(torchgeo_resnet, backbone)(weights=backbone_weights)
+        else:
+            model = getattr(torchvision_resnet, backbone)(weights=backbone_weights)
+        self.backbone = cast(_ResNetBackbone, model)
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
@@ -84,7 +112,10 @@ class FarSeg(Module):
         """
         x = self.backbone.conv1(x)
         x = self.backbone.bn1(x)
-        x = self.backbone.relu(x)
+        activation: Module | None = getattr(self.backbone, 'act1', None)
+        if activation is None:
+            activation = self.backbone.relu
+        x = activation(x)
         x = self.backbone.maxpool(x)
 
         c2 = self.backbone.layer1(x)
