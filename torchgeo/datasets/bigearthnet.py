@@ -904,7 +904,7 @@ class BigEarthNetV2(NonGeoDataset):
         for key, meta in self.metadata_locs.items():
             if key == 'metadata':
                 continue
-            parts = [os.path.join(self.root, f) for f in meta['files'].keys()]
+            parts = [os.path.join(self.root, f) for f in meta['files']]
             concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
             if not os.path.exists(concat_path):
                 with open(concat_path, 'wb') as outfile:
