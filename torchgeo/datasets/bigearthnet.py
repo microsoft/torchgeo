@@ -864,27 +864,27 @@ class BigEarthNetV2(NonGeoDataset):
         """Verify the integrity of the dataset."""
         keys: list[str] = ['s1', 's2'] if self.bands == 'all' else [self.bands]
         keys += ['maps', 'metadata']
-        if self.bands != 'all':
-            to_remove = 's1' if self.bands == 's2' else 's2'
-            self.metadata_locs.pop(to_remove, None)
-        filenames = []
-        for k in keys:
-            entry = self.metadata_locs[k]['files']
-            filenames += [k for k, _ in entry.items()]
-
-        exists = []
-        for file in filenames:
-            exists.append(os.path.exists(os.path.join(self.root, file)))
+        filenames = [
+            filename for key in keys for filename in self.metadata_locs[key]['files']
+        ]
+        exists = [
+            os.path.exists(os.path.join(self.root, filename)) for filename in filenames
+        ]
 
         if not all(exists) and not self.download:
             raise DatasetNotFoundError(self)
 
-        self._download()
-        self._extract()
+        self._download(keys)
+        self._extract(keys)
 
-    def _download(self) -> None:
-        """Download the required tarball parts using the URL template and sha256 sums."""
-        for meta in self.metadata_locs.values():
+    def _download(self, keys: list[str]) -> None:
+        """Download the required tarball parts using the URL template and sha256 sums.
+
+        Args:
+            keys: Metadata entries to download.
+        """
+        for key in keys:
+            meta = self.metadata_locs[key]
             for fname, sha256 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
@@ -895,15 +895,19 @@ class BigEarthNetV2(NonGeoDataset):
                         sha256=sha256 if self.checksum else None,
                     )
 
-    def _extract(self) -> None:
+    def _extract(self, keys: list[str]) -> None:
         """Extract the tarball parts.
 
         For each modality (s1, s2, maps), its parts are concatenated together and then extracted.
+
+        Args:
+            keys: Metadata entries to extract.
         """
         chunk_size = 2**15  # same as used in torchvision and ssl4eo
-        for key, meta in self.metadata_locs.items():
+        for key in keys:
             if key == 'metadata':
                 continue
+            meta = self.metadata_locs[key]
             parts = [os.path.join(self.root, f) for f in meta['files']]
             concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
             if not os.path.exists(concat_path):
