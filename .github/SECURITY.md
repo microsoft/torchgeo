@@ -27,6 +27,7 @@ The following examples _do_ constitute security vulnerabilities:
 This list is not exhaustive, and we encourage you to report when in doubt.
 
 [^1]: https://github.com/torchgeo/torchgeo/security/advisories/GHSA-ghq9-vc6f-8qjf
+
 [^2]: https://github.com/torchgeo/torchgeo/security/advisories/GHSA-6gm9-8jxc-p862
 
 ## Known Security Considerations
