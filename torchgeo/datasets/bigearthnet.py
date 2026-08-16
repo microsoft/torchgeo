@@ -448,7 +448,7 @@ class BigEarthNet(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        keys: list[str] = ['s1', 's2'] if self.bands == 'all' else [self.bands]
+        keys = ['s1', 's2'] if self.bands == 'all' else [self.bands]
         urls = [self.metadata[k]['url'] for k in keys]
         md5s = [self.metadata[k]['md5'] for k in keys]
         filenames = [self.metadata[k]['filename'] for k in keys]
@@ -862,7 +862,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        keys = ['s1', 's2'] if self.bands == 'all' else [self.bands]
+        keys: list[str] = ['s1', 's2'] if self.bands == 'all' else [self.bands]
         keys += ['maps', 'metadata']
         if self.bands != 'all':
             to_remove = 's1' if self.bands == 's2' else 's2'
