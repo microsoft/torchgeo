@@ -150,7 +150,7 @@ class TestCopernicusFMBase:
 
     def test_copernicusfm_variable(self) -> None:
         model = copernicusfm_base()
-        x = torch.rand(1, 1, 96, 96)
+        x = torch.rand(1, 1, 16, 16)
         metadata = torch.rand(1, 4) + 1
         language_embed = torch.rand(2048)
         input_mode = 'variable'
