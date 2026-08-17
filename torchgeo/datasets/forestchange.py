@@ -8,7 +8,7 @@ import os
 import textwrap
 from collections.abc import Callable, Iterator
 from random import randint
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import einops
 import matplotlib.pyplot as plt
