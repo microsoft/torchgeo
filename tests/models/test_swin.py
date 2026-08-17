@@ -56,9 +56,7 @@ class TestSwin_T:
 
     def test_transforms(self, weights: Swin_T_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: Swin_T_Weights) -> None:
@@ -66,7 +64,7 @@ class TestSwin_T:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -107,9 +105,7 @@ class TestSwin_S:
 
     def test_transforms(self, weights: Swin_S_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: Swin_S_Weights) -> None:
@@ -117,7 +113,7 @@ class TestSwin_S:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -167,9 +163,7 @@ class TestSwin_B:
 
     def test_transforms(self, weights: Swin_B_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: Swin_B_Weights) -> None:
@@ -177,7 +171,7 @@ class TestSwin_B:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -218,9 +212,7 @@ class TestSwin_V2_T:
 
     def test_transforms(self, weights: Swin_V2_T_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: Swin_V2_T_Weights) -> None:
@@ -228,7 +220,7 @@ class TestSwin_V2_T:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -269,9 +261,7 @@ class TestSwin_V2_B:
 
     def test_transforms(self, weights: Swin_V2_B_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: Swin_V2_B_Weights) -> None:
@@ -279,7 +269,7 @@ class TestSwin_V2_B:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow

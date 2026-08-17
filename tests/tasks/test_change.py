@@ -264,9 +264,9 @@ class TestChangeDetection:
         model = ChangeDetection(
             model='changevit', backbone='vit_tiny_patch16_224', in_channels=4
         )
-        x = torch.randn(1, 2, 4, 256, 256)
+        x = torch.randn(1, 2, 4, 32, 32)
         y = model(x)
-        assert y.shape == (1, 1, 256, 256)
+        assert y.shape == (1, 1, 32, 32)
 
     def test_changevit_num_classes(self) -> None:
         """Test ChangeViT with multiclass segmentation."""
@@ -276,16 +276,16 @@ class TestChangeDetection:
             task='multiclass',
             num_classes=5,
         )
-        x = torch.randn(1, 2, 3, 256, 256)
+        x = torch.randn(1, 2, 3, 32, 32)
         y = model(x)
-        assert y.shape == (1, 5, 256, 256)
+        assert y.shape == (1, 5, 32, 32)
 
     def test_changevit_predict(self) -> None:
         """Test ChangeViT predict_step to ensure input is not rearranged."""
         model = ChangeDetection(model='changevit', backbone='vit_tiny_patch16_224')
-        batch = {'image': torch.randn(1, 2, 3, 256, 256)}
+        batch = {'image': torch.randn(1, 2, 3, 32, 32)}
         y = model.predict_step(batch, batch_idx=0)
-        assert y.shape == (1, 1, 256, 256)
+        assert y.shape == (1, 1, 32, 32)
 
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:

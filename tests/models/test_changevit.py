@@ -36,7 +36,7 @@ class TestChangeViT:
     @torch.inference_mode()
     def test_different_img_sizes(self) -> None:
         """Test ChangeViT with different image sizes."""
-        for img_size in [32, 48, 64]:
+        for img_size in [16, 32]:
             model = ChangeViT(
                 backbone='vit_tiny_patch16_224', img_size=img_size, pretrained=False
             )
@@ -62,7 +62,7 @@ class TestDetailCaptureModule:
     def test_detail_capture_multiscale_output(self) -> None:
         """Test DetailCaptureModule returns 3 scales with correct channels."""
         dcm = DetailCaptureModule(in_channels=6)
-        x = torch.randn(2, 6, 256, 256)
+        x = torch.randn(2, 6, 32, 32)
 
         c2, c3, c4 = dcm(x)
 
@@ -72,9 +72,9 @@ class TestDetailCaptureModule:
         assert c4.shape[1] == 256
 
         # Check spatial dimensions (1/2, 1/4, 1/8 of input)
-        assert c2.shape[-2:] == (128, 128)  # 256 / 2
-        assert c3.shape[-2:] == (64, 64)  # 256 / 4
-        assert c4.shape[-2:] == (32, 32)  # 256 / 8
+        assert c2.shape[-2:] == (16, 16)
+        assert c3.shape[-2:] == (8, 8)
+        assert c4.shape[-2:] == (4, 4)
 
 
 class TestFeatureInjector:

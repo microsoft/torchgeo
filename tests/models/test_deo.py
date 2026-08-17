@@ -47,14 +47,14 @@ class TestDEO:
         model = deo_base(None, model_swin)
         model.eval()
         with torch.no_grad():
-            x = torch.randn(2, 3, 256, 256)
+            x = torch.randn(2, 3, 32, 32)
             model(x)
 
     def test_forward_ms(self, model_swin: str) -> None:
         model = deo_base(None, model_swin)
         model.eval()
         with torch.no_grad():
-            x = torch.randn(2, 10, 256, 256)
+            x = torch.randn(2, 10, 32, 32)
             model(x)
 
     @pytest.mark.slow

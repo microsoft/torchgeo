@@ -24,7 +24,7 @@ class TestBTC:
         model = BTC(backbone=backbone, backbone_pretrained=False)
         model.eval()
         with torch.inference_mode():
-            x = torch.randn(1, 2 * 3, 64, 64)
+            x = torch.randn(1, 2 * 3, 32, 32)
             model(x)
 
     @pytest.fixture
