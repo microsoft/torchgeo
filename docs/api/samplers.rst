@@ -52,17 +52,17 @@ The majority of spatial and temporal samplers have both random and sequential va
 Regions of Interest
 ^^^^^^^^^^^^^^^^^^^
 
-Spatial samplers use the full dataset footprint unless a :term:`region of interest (ROI)` is provided. The ``roi`` parameter accepts a Shapely polygon in the same CRS as the dataset. For example, the following sampler restricts patches to a 10 km by 10 km bounding box in a projected CRS with meter units:
+Spatial samplers use the full dataset footprint unless a :term:`region of interest (ROI)` is provided. The ``roi`` parameter accepts a Shapely polygon in the same CRS as the dataset. For example, the following sampler restricts Sentinel-2 patches to a 10 km by 10 km bounding box in UTM zone 11N:
 
 .. code-block:: python
 
    import shapely
    from torch.utils.data import DataLoader
 
-   from torchgeo.datasets import Landsat
+   from torchgeo.datasets import Sentinel2
    from torchgeo.samplers import RandomPatchSampler
 
-   dataset = Landsat(...)
+   dataset = Sentinel2('data/sentinel2', bands=['B02'])
    roi = shapely.box(500000, 4200000, 510000, 4210000)
    sampler = RandomPatchSampler(dataset, size=256, length=10000, roi=roi)
    dataloader = DataLoader(dataset, sampler=sampler)
