@@ -1,9 +1,7 @@
 Self-Supervised Learning Tasks
 ==============================
 
-TorchGeo ships several self-supervised learning (SSL) tasks. Because SSL has no labels, a training loss says very little about whether a task works: the losses are on different scales and measure different things, and a loss that falls steadily is entirely compatible with a representation that has collapsed. In one run during this benchmark, SimCLR's loss fell by 30% while every sample in the batch mapped to an identical vector.
-
-It is therefore non-trivial to determine whether an SSL training run is working at all without probing the learned representations over a dataset. A run that is silently producing a degenerate encoder looks, from the loss curve alone, much like a run that is working well. This matters most when contributing a new SSL task to TorchGeo: a new task that trains without error, and whose loss decreases, has not yet been shown to do anything useful.
+TorchGeo ships several self-supervised learning (SSL) tasks. Because SSL has no labels, a training loss says very little about whether a task works: the losses are on different scales and measure different things, and a loss that falls steadily is entirely compatible with a representation that has collapsed. It is therefore non-trivial to determine whether an SSL training run is working at all without probing the learned representations over a dataset. A run that is silently producing a degenerate encoder could look, from the loss curve alone, much like a run that is working well. This matters when contributing a new SSL task to TorchGeo: a new task that trains without error, and whose loss decreases, has not yet been shown to do anything useful.
 
 This page describes the tasks TorchGeo provides, defines a small benchmark for comparing them, and records the current numbers so that a new task can be judged against them on equal terms.
 
@@ -36,12 +34,11 @@ All SSL tasks subclass :class:`~torchgeo.tasks.BaseTask` and take a ``model`` ar
      - Generative. Masks most patches and reconstructs them.
      - Vision transformers only, since it operates on patch tokens.
 
-Each task builds its own augmentation pipeline, and the argument used to override it differs: ``augmentations`` for SimCLR, ``augmentation1`` and ``augmentation2`` for MoCo, ``transform`` for MAE, and nothing at all for BYOL. Passing the wrong name is silently ignored, so verify that a custom pipeline is actually installed before attributing a result to it.
 
-The benchmark
--------------
+Benchmarking
+------------
 
-The evaluation follows `Corley et al. 2024, "Revisiting pre-trained remote sensing model benchmarks: resizing and normalization matters" <https://arxiv.org/abs/2305.13456>`_: pretrain on EuroSAT without labels, freeze the encoder, and score the frozen features with a k-nearest-neighbour classifier. kNN is used rather than a linear probe because it has no optimizer, no learning rate, and no regularization of its own, so it measures the representation rather than the tuning of the probe.
+Our evaluation follows `Corley et al. 2024, "Revisiting pre-trained remote sensing model benchmarks: resizing and normalization matters" <https://arxiv.org/abs/2305.13456>`_: pretrain on EuroSAT 13 band multispectral without labels, freeze the encoder, and score the frozen features with a k-nearest-neighbour classifier. kNN is used rather than a linear probe because it has no optimizer, no learning rate, and no regularization of its own, so it measures the representation rather than the tuning of the probe.
 
 Hold all of the following fixed. Changing any of them makes a number incomparable to the table below.
 
@@ -73,108 +70,48 @@ Resizing to 224x224 matters more than it looks. The reference paper's central fi
 Results
 -------
 
-EuroSAT test-set kNN-5 top-1 accuracy, using each task's default augmentations. Every row is the best learning rate for that task and encoder, selected on validation.
+EuroSAT test-set kNN-5 top-1 accuracy for the reference baselines. None of these involve SSL pretraining; they exist to bound what a new SSL task has to beat before it can be said to have learned anything.
 
 .. list-table::
    :header-rows: 1
-   :widths: 24 20 16 16 24
+   :widths: 44 28 28
 
-   * - Task
+   * - Baseline
      - Encoder
      - Test acc
-     - lr [#lr]_
-     - Reproduce
    * - Image statistics [#floor]_
      - none
      - 0.8937
-     - --
-     - --
    * - Random initialization
      - ResNet-50
      - 0.8622
-     - --
-     - --
    * - Random initialization
      - ViT-S/16
      - 0.8507
-     - --
-     - --
-   * - Supervised ImageNet
+   * - Supervised ImageNet [#imagenet]_
      - ResNet-50
      - 0.8948
-     - --
-     - --
-   * - Supervised ImageNet
+   * - Supervised ImageNet [#imagenet]_
      - ViT-S/16
      - 0.9178
-     - --
-     - --
-   * - MoCo v3
-     - ResNet-50
-     - **0.9476**
-     - 1e-2
-     - ``moco_resnet50``
-   * - MoCo v3
-     - ViT-S/16
-     - 0.9396
-     - 1e-3
-     - ``moco_vit_small``
-   * - FroSSL [#frossl]_
-     - ViT-S/16
-     - 0.9400
-     - 2e-4
-     - --
-   * - FroSSL [#frossl]_
-     - ResNet-50
-     - 0.9156
-     - 2e-3
-     - --
-   * - BYOL [#byolfix]_
-     - ViT-S/16
-     - 0.9398
-     - 1e-4
-     - --
-   * - BYOL [#byolfix]_
-     - ResNet-50
-     - 0.9333
-     - 3e-4
-     - --
-   * - SimCLR
-     - ResNet-50
-     - 0.9393
-     - 1.5
-     - ``simclr_resnet50``
-   * - SimCLR
-     - ViT-S/16
-     - 0.9326
-     - 1.5
-     - ``simclr_vit_small``
-   * - MAE
-     - ViT-S/16
-     - 0.8978
-     - 7.5e-5
-     - ``mae_vit_small``
+
+Numbers for the SSL tasks themselves are deliberately omitted until they can be reproduced under this protocol, and will be added here as they are.
 
 Reading the table:
 
 * **Beat the floors, not just random init.** 52 hand-computed per-band image statistics, with no network at all, score 0.8937. A task that lands below that has not learned anything a mean and a standard deviation do not already capture. Supervised ImageNet transfer on a ViT is a harder floor at 0.9178.
-* **The learning rate is a property of the task and encoder together.** The best rates span four orders of magnitude, and the optimum moves with the encoder: FroSSL prefers 2e-4 on a ViT and 2e-3 on a ResNet. A new task needs its own sweep, not a borrowed default. The library defaults are tuned for batch 4096 and are far too large here; MoCo's default of 9.6 diverges to NaN under AdamW at this batch size.
 * **Differences of a few thousandths are not meaningful.** Every number comes from a single seed, so treat gaps below roughly 0.005 as noise.
 
 .. rubric:: Footnotes
 
-.. [#lr] Learning rates were selected on validation accuracy under a non-default augmentation pipeline and reused for the default pipeline reported here, so these numbers may understate what each task reaches with a dedicated sweep.
-
 .. [#floor] Per-band mean, standard deviation, minimum, and maximum of each image, concatenated into a 52-dimensional vector and fed to the same kNN probe. No network and no training.
 
-.. [#frossl] FroSSL is not part of TorchGeo. It is included as a worked example of evaluating a new task, ported from a pending `lightly <https://github.com/lightly-ai/lightly/pull/1962>`__ pull request.
+.. [#imagenet] These encoders are ImageNet-pretrained but were built with ``in_chans=13``, so timm adapts the pretrained 3-channel stem rather than reinitializing it: ``timm.models.adapt_input_conv`` tiles the RGB filters ``ceil(13 / 3) = 5`` times, truncates to 13 channels, and rescales by ``3 / 13`` to preserve the activation magnitude. The remaining layers are the unmodified ImageNet weights.
 
-.. [#byolfix] Measured with a corrected BYOL in which the target network is a real exponential moving average of the online network. The shipped :class:`~torchgeo.tasks.BYOL` passes one encoder to both wrappers, so the momentum update is a no-op.
+Running the benchmark
+---------------------
 
-Reproducing a row
------------------
-
-Rows with a name in the last column are reproducible from a configuration file using the shipped tasks and :class:`~torchgeo.datamodules.EuroSATDataModule`, whose default normalization is exactly the per-band standardization this protocol requires. For example, ``moco_resnet50``:
+Pretraining runs from a configuration file using the shipped tasks and :class:`~torchgeo.datamodules.EuroSATDataModule`, whose default normalization is exactly the per-band standardization this protocol requires. For example, MoCo v3 on a ResNet-50:
 
 .. code-block:: yaml
 
@@ -205,7 +142,7 @@ Rows with a name in the last column are reproducible from a configuration file u
 
    $ python -m torchgeo fit --config moco_resnet50.yaml
 
-The other rows differ only in ``model.init_args``:
+The other tasks differ only in ``model.init_args``:
 
 .. list-table::
    :header-rows: 1
@@ -222,7 +159,7 @@ The other rows differ only in ``model.init_args``:
    * - ``mae_vit_small``
      - ``class_path: MAE``, ``model: vit_small_patch16_224``, ``lr: 7.5e-05``, ``size: 224``, ``warmup_epochs: 10``
 
-All configurations use ``in_channels: 13`` and the same ``trainer`` and ``data`` blocks as above.
+All configurations use ``in_channels: 13`` and the same ``trainer`` and ``data`` blocks as above. The learning rates shown are starting points from exploratory runs rather than validated results, so sweep them rather than trusting them.
 
 Scoring is not part of ``torchgeo fit``: training writes a checkpoint, and the kNN probe is applied afterwards. Given a frozen encoder, the whole probe is:
 
@@ -264,7 +201,7 @@ A new SSL task should arrive with the same pieces as any other TorchGeo task:
 
 #. ``torchgeo/tasks/foo.py``, subclassing :class:`~torchgeo.tasks.BaseTask`.
 #. An entry in ``torchgeo/tasks/__init__.py``.
-#. ``tests/conf/<dataset>_foo.yaml`` plus a case in ``tests/tasks/test_foo.py``.
+#. Tests: TODO
 #. ``docs/api/tasks.rst``.
 
-Before claiming it works, sweep at least three or four learning rates, confirm the result clears the image-statistics floor, and check that the representation has not collapsed: the standard deviation of the embeddings should stay well away from zero, and the mean pairwise cosine similarity well away from one. Report the number alongside the table above, using the same protocol.
+Before claiming it works, sweep at least three or four learning rates and evaluate these checkpoints on the EuroSAT val set using the methodology described above. Do not borrow a library default: the shipped defaults follow the linear scaling rule at batch 4096, so MoCo v3's ``lr=9.6`` is ``0.6 x 4096 / 256`` and SimCLR's ``lr=4.8`` is ``0.3 x 4096 / 256``, both far too large at the batch size of 128 used here. Evaluate the best on additionally on the EuroSAT test split and compare the published numbers above. If it doesn't beat image-statistics, then something is likely wrong. Check that the representation has not collapsed: the standard deviation of the embeddings should stay well away from zero, and the mean pairwise cosine similarity well away from one. Report all of this in your PR!
