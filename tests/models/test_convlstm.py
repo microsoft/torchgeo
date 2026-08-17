@@ -19,8 +19,8 @@ class TestConvLSTM:
         b = 1
         t = 4
         c = 3
-        h = 64
-        w = 64
+        h = 16
+        w = 16
         input_tensor = torch.rand(b, t, c, h, w)
 
         model = ConvLSTM(input_dim=c, hidden_dim=16, kernel_size=(3, 3), num_layers=1)
@@ -35,8 +35,8 @@ class TestConvLSTM:
         b = 1
         t = 4
         c = 3
-        h = 64
-        w = 64
+        h = 16
+        w = 16
         hidden_dims = [16, 32]
         num_layers = 2
         input_tensor = torch.rand(b, t, c, h, w)
@@ -59,8 +59,8 @@ class TestConvLSTM:
         b = 1
         t = 4
         c = 3
-        h = 64
-        w = 64
+        h = 16
+        w = 16
         input_tensor = torch.rand(b, t, c, h, w)
 
         model = ConvLSTM(
@@ -80,8 +80,8 @@ class TestConvLSTM:
         b = 1
         t = 4
         c = 3
-        h = 64
-        w = 64
+        h = 16
+        w = 16
         input_tensor = torch.rand(b, t, c, h, w)
 
         model = ConvLSTM(
@@ -111,8 +111,8 @@ class TestConvLSTM:
         b = 1
         t = 4
         c = 3
-        h = 64
-        w = 64
+        h = 16
+        w = 16
         input_tensor = torch.rand(b, t, c, h, w)
 
         model = ConvLSTM(

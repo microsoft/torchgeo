@@ -295,7 +295,7 @@ class TestSemanticSegmentation:
     def test_predict_step_returns_dict(self) -> None:
         """Test that predict_step returns a dictionary."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert isinstance(result, dict)
@@ -303,7 +303,7 @@ class TestSemanticSegmentation:
     def test_predict_step_contains_required_keys(self) -> None:
         """Test that predict_step dict contains required keys."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert 'probabilities' in result
@@ -315,7 +315,7 @@ class TestSemanticSegmentation:
         num_classes = 10
         task = SemanticSegmentation(task='multiclass', num_classes=num_classes)
         batch_size = 2
-        height, width = 64, 64
+        height, width = 32, 32
         batch = {'image': torch.randn(batch_size, 3, height, width)}
         result = task.predict_step(batch, 0)
 
@@ -329,7 +329,7 @@ class TestSemanticSegmentation:
         bounds_tensor = torch.randn(2, 9)
         transform_tensor = torch.randn(2, 6)
         batch = {
-            'image': torch.randn(2, 3, 64, 64),
+            'image': torch.randn(2, 3, 32, 32),
             'bounds': bounds_tensor,
             'transform': transform_tensor,
         }

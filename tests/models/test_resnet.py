@@ -55,9 +55,7 @@ class TestResNet18:
 
     def test_transforms(self, weights: ResNet18_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ResNet18_Weights) -> None:
@@ -65,7 +63,7 @@ class TestResNet18:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -109,9 +107,7 @@ class TestResNet50:
 
     def test_transforms(self, weights: ResNet50_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ResNet50_Weights) -> None:
@@ -119,7 +115,7 @@ class TestResNet50:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -163,9 +159,7 @@ class TestResNet152:
 
     def test_transforms(self, weights: ResNet152_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ResNet152_Weights) -> None:
@@ -173,7 +167,7 @@ class TestResNet152:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow

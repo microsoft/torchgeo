@@ -20,7 +20,7 @@ class TestChangeStar:
     @torch.inference_mode()
     def test_changestar_farseg_classes(self) -> None:
         model = ChangeStarFarSeg(classes=4, backbone='resnet50')
-        x = torch.randn(2, 2, 3, 128, 128)
+        x = torch.randn(2, 2, 3, 32, 32)
         y = model(x)
 
         assert y['bi_seg_logit'].shape[2] == 4
@@ -29,18 +29,18 @@ class TestChangeStar:
     def test_changestar_farseg_output_size(self) -> None:
         model = ChangeStarFarSeg(classes=4, backbone='resnet50')
         model.eval()
-        x = torch.randn(2, 2, 3, 128, 128)
+        x = torch.randn(2, 2, 3, 32, 32)
         y = model(x)
 
-        assert y['bi_seg_logit'].shape[3] == 128 and y['bi_seg_logit'].shape[4] == 128
-        assert y['change_prob'].shape[2] == 128 and y['change_prob'].shape[3] == 128
+        assert y['bi_seg_logit'].shape[3] == 32 and y['bi_seg_logit'].shape[4] == 32
+        assert y['change_prob'].shape[2] == 32 and y['change_prob'].shape[3] == 32
 
         model.train()
         y = model(x)
 
-        assert y['bi_seg_logit'].shape[3] == 128 and y['bi_seg_logit'].shape[4] == 128
-        assert y['bi_change_logit'].shape[3] == 128
-        assert y['bi_change_logit'].shape[4] == 128
+        assert y['bi_seg_logit'].shape[3] == 32 and y['bi_seg_logit'].shape[4] == 32
+        assert y['bi_change_logit'].shape[3] == 32
+        assert y['bi_change_logit'].shape[4] == 32
 
     @pytest.mark.parametrize('backbone', BACKBONE)
     def test_valid_changestar_farseg_backbone(self, backbone: str) -> None:
@@ -90,9 +90,9 @@ class TestChangeStar:
         )
         m.eval()
 
-        y = m(torch.rand(3, 2, 3, 64, 64))
-        assert y['bi_seg_logit'].shape == (3, 2, 2, 64, 64)
-        assert y['change_prob'].shape == (3, 1, 64, 64)
+        y = m(torch.rand(3, 2, 3, 32, 32))
+        assert y['bi_seg_logit'].shape == (3, 2, 2, 32, 32)
+        assert y['change_prob'].shape == (3, 1, 32, 32)
 
     @torch.inference_mode()
     @pytest.mark.parametrize('inference_mode', ['t1t2', 't2t1', 'mean'])
@@ -121,8 +121,8 @@ class TestChangeStar:
         )
         m.eval()
 
-        x = torch.randn(2, 2, 3, 128, 128)
+        x = torch.randn(2, 2, 3, 32, 32)
         y = m(x)
 
-        assert y['bi_seg_logit'].shape == (2, 2, CLASSES, 128, 128)
-        assert y['change_prob'].shape == (2, 1, 128, 128)
+        assert y['bi_seg_logit'].shape == (2, 2, CLASSES, 32, 32)
+        assert y['change_prob'].shape == (2, 1, 32, 32)
