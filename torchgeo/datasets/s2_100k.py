@@ -55,7 +55,7 @@ class S2100k(NonGeoDataset):
         mode: Literal['both', 'points'] = 'both',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new S2100K dataset instance.
 

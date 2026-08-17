@@ -77,7 +77,7 @@ class xBD(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new xBD dataset instance.
 
@@ -115,20 +115,7 @@ class xBD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        files = self.files[index]
-        image1 = self._load_image(files['image1'])
-        image2 = self._load_image(files['image2'])
-        mask1 = self._load_target(files['mask1'])
-        mask2 = self._load_target(files['mask2'])
-
-        image = torch.stack(tensors=[image1, image2], dim=0)
-
-        # Dataset consists of semantic segmentation masks before and after event
-        # Convert to change detection by subtracting damage before from damage after
-        # Clamp to avoid potential negative numbers
-        mask = torch.clamp(mask2 - mask1, 0, 4)
-
-        sample = {'image': image, 'mask': mask}
+        sample = self._load_sample(self.files[index])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -171,6 +158,27 @@ class xBD(NonGeoDataset):
                 {'image1': image1, 'image2': image2, 'mask1': mask1, 'mask2': mask2}
             )
         return files
+
+    def _load_sample(self, files: dict[str, str]) -> Sample:
+        """Load a sample from a file record.
+
+        Args:
+            files: image and mask paths for a single sample
+
+        Returns:
+            image and change detection mask
+        """
+        image1 = self._load_image(files['image1'])
+        image2 = self._load_image(files['image2'])
+        mask1 = self._load_target(files['mask1'])
+        mask2 = self._load_target(files['mask2'])
+
+        image = torch.stack(tensors=[image1, image2], dim=0)
+        # Dataset consists of semantic segmentation masks before and after event
+        # Convert to change detection by subtracting damage before from damage after
+        # Clamp to avoid potential negative numbers
+        mask = torch.clamp(mask2 - mask1, 0, 4)
+        return {'image': image, 'mask': mask}
 
     def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
@@ -298,3 +306,164 @@ class xBD(NonGeoDataset):
 @deprecated('Use torchgeo.datasets.xBD instead')
 class XView2(xBD):
     """Deprecated alias for the xBD dataset."""
+
+
+class xBDDistShift(xBD):
+    """xBD dataset with a custom, disaster-based train/test split.
+
+    Uses disasters as the shift axis and converts damage masks to binary building masks.
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2412.13394
+
+    .. versionadded:: 0.10
+    """
+
+    classes: tuple[str, ...] = ('background', 'building')
+    colormap: tuple[str, ...] = ('blue',)
+    valid_disasters = (
+        'hurricane-harvey',
+        'socal-fire',
+        'hurricane-matthew',
+        'mexico-earthquake',
+        'guatemala-volcano',
+        'santa-rosa-wildfire',
+        'palu-tsunami',
+        'hurricane-florence',
+        'hurricane-michael',
+        'midwest-flooding',
+    )
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        split: Literal['train', 'test'] = 'train',
+        id_disaster: str = 'hurricane-matthew',
+        id_pre_post: Literal['pre', 'post', 'both'] = 'post',
+        ood_disaster: str = 'mexico-earthquake',
+        ood_pre_post: Literal['pre', 'post', 'both'] = 'post',
+        transforms: Callable[[Sample], Sample] | None = None,
+        checksum: bool = True,
+    ) -> None:
+        """Initialize a new xBDDistShift dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            split: one of "train" or "test"
+            id_disaster: disaster used as the in-distribution training set
+            id_pre_post: imagery to use for the in-distribution disaster
+            ood_disaster: disaster used as the out-of-distribution test set
+            ood_pre_post: imagery to use for the out-of-distribution disaster
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: If *split* or the disaster shift configuration is invalid.
+            DatasetNotFoundError: If dataset is not found.
+        """
+        assert {id_disaster, ood_disaster} <= set(self.valid_disasters)
+        assert id_disaster != ood_disaster
+        assert {id_pre_post, ood_pre_post} <= {'pre', 'post', 'both'}
+        self.id_disaster = id_disaster
+        self.id_pre_post = id_pre_post
+        self.ood_disaster = ood_disaster
+        self.ood_pre_post = ood_pre_post
+        super().__init__(root, split, transforms, checksum)
+
+    def _load_files(
+        self, root: Path, split: Literal['train', 'test']
+    ) -> list[dict[str, str]]:
+        """Return files matching the disaster selected for a split.
+
+        Args:
+            root: root directory of the dataset
+            split: subset of dataset, one of [train, test]
+
+        Returns:
+            list of dicts containing image and mask paths
+        """
+        disaster = self.id_disaster if split == 'train' else self.ood_disaster
+        pre_post = self.id_pre_post if split == 'train' else self.ood_pre_post
+        files = []
+        for split_info in self.metadata.values():
+            directory = split_info['directory']
+            image_root = os.path.join(root, directory, 'images')
+            mask_root = os.path.join(root, directory, 'targets')
+            for image in sorted(glob.glob(os.path.join(image_root, '*.png'))):
+                basename = os.path.basename(image)
+                image_disaster = basename.split('_')[0]
+                image_pre_post = 'pre' if 'pre_disaster' in basename else 'post'
+                if image_disaster != disaster or pre_post not in (
+                    'both',
+                    image_pre_post,
+                ):
+                    continue
+
+                mask = os.path.join(mask_root, basename.replace('.png', '_target.png'))
+                files.append({'image': image, 'mask': mask})
+
+        return files
+
+    def _load_sample(self, files: dict[str, str]) -> Sample:
+        """Load a binary building segmentation sample.
+
+        Args:
+            files: image and mask paths for a single sample
+
+        Returns:
+            image and binary building mask
+        """
+        image = self._load_image(files['image'])
+        mask = self._load_target(files['mask'])
+        mask = ((mask == 1) | (mask == 2)).long()
+        return {'image': image, 'mask': mask}
+
+    def plot(
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        alpha: float = 0.5,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`xBD.__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+            alpha: opacity with which to render predictions on top of the imagery
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        ncols = 1
+        image = draw_semantic_segmentation_masks(
+            sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
+        )
+        if 'prediction' in sample:
+            ncols += 1
+            prediction = draw_semantic_segmentation_masks(
+                sample['image'],
+                sample['prediction'],
+                alpha=alpha,
+                colors=list(self.colormap),
+            )
+
+        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10), squeeze=False)
+        axs[0, 0].imshow(image)
+        axs[0, 0].axis('off')
+        if ncols > 1:
+            axs[0, 1].imshow(prediction)
+            axs[0, 1].axis('off')
+
+        if show_titles:
+            axs[0, 0].set_title('Image')
+            if ncols > 1:
+                axs[0, 1].set_title('Prediction')
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

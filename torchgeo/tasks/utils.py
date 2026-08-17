@@ -73,9 +73,15 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
 
     Args:
         model: timm model
+
+    Raises:
+        ValueError: If the model has no child modules.
     """
     keys = []
     children = list(model.named_children())
+    if not children:
+        raise ValueError('model must contain at least one child module')
+
     while children != []:
         name, module = children[0]
         keys.append(name)

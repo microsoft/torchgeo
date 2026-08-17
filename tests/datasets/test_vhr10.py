@@ -26,7 +26,7 @@ class TestVHR10:
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return VHR10(root, split, transforms, download=True)
+        return VHR10(root, split, transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: VHR10) -> None:
         x = dataset[0]
@@ -38,17 +38,19 @@ class TestVHR10:
             assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: VHR10) -> None:
-        if dataset.split == 'positive':
-            assert len(dataset) == 650
-        elif dataset.split == 'negative':
-            assert len(dataset) == 150
+        assert len(dataset) == 5
 
     def test_already_downloaded(self, dataset: VHR10) -> None:
-        VHR10(root=dataset.root, download=True)
+        VHR10(root=dataset.root, download=True, checksum=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             VHR10(tmp_path)
+
+    def test_not_extracted(self, tmp_path: Path) -> None:
+        (tmp_path / VHR10.image_meta['filename']).touch()
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            VHR10(tmp_path, split='negative', checksum=False)
 
     def test_plot(self, dataset: VHR10) -> None:
         x = dataset[0]

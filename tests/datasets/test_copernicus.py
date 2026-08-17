@@ -64,6 +64,10 @@ class TestCopernicusBench:
     def test_getitem(self, dataset: CopernicusBench) -> None:
         x = dataset[0]
         assert isinstance(x['image'], torch.Tensor)
+        if dataset.name == 'biomass_s3':
+            assert torch.isfinite(x['image']).all()
+            assert x['image'].shape[-2:] == dataset.dataset.image_size
+            assert x['mask'].shape == dataset.dataset.image_size
         if not dataset.name.startswith(('dfc2020', 'lcz')):
             assert isinstance(x['lat'], torch.Tensor)
             assert isinstance(x['lon'], torch.Tensor)

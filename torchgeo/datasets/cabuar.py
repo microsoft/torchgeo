@@ -89,7 +89,7 @@ class CaBuAr(NonGeoDataset):
         bands: tuple[str, ...] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CaBuAr dataset instance.
 

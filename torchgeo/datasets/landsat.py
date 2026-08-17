@@ -195,7 +195,7 @@ class Landsat4TM(Landsat):
 
     filename_glob = 'LT04_*_{}.*'
 
-    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7')
     rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
     wavelengths: ClassVar[dict[str, float]] = {

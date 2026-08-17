@@ -211,7 +211,7 @@ class OpenBuildings(VectorDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] = 0.0001,
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 

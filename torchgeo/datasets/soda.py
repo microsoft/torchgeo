@@ -103,7 +103,7 @@ class SODAA(NonGeoDataset):
         bbox_orientation: Literal['oriented', 'horizontal'] = 'horizontal',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new instance of SODA-A dataset.
 

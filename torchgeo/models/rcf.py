@@ -119,7 +119,7 @@ class RCF(Module):
                 ]
 
             patches = self._normalize(patches)
-            self.weights = torch.tensor(patches)
+            self.weights = torch.tensor(patches, dtype=torch.get_default_dtype())
 
     def _normalize(
         self,

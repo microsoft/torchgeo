@@ -378,7 +378,8 @@ def swin_t(
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         # some weights do not contain final norm and cls head weights
         assert set(missing_keys) <= {
@@ -423,7 +424,8 @@ def swin_s(
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         # some weights do not contain final norm and cls head weights
         assert set(missing_keys) <= {
@@ -478,7 +480,8 @@ def swin_b(
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         # some weights do not contain final norm and cls head weights
         assert set(missing_keys) <= {
@@ -525,7 +528,8 @@ def swin_v2_t(
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         assert set(missing_keys) <= set()
         assert not unexpected_keys
@@ -564,7 +568,8 @@ def swin_v2_b(
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         assert set(missing_keys) <= set()
         assert not unexpected_keys

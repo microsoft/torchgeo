@@ -282,7 +282,7 @@ class BigEarthNet(NonGeoDataset):
         num_classes: int = 19,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new BigEarthNet dataset instance.
 
@@ -698,7 +698,7 @@ class BigEarthNetV2(NonGeoDataset):
         bands: Literal['s1', 's2', 'all'] = 'all',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new BigEarthNet V2 dataset instance.
 
