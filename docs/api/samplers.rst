@@ -62,7 +62,7 @@ Spatial samplers use the full dataset footprint unless a :term:`region of intere
    from torchgeo.datasets import Sentinel2
    from torchgeo.samplers import RandomPatchSampler
 
-   dataset = Sentinel2('data/sentinel2', bands=['B02'])
+   dataset = Sentinel2(...)
    roi = shapely.box(500000, 4200000, 510000, 4210000)
    sampler = RandomPatchSampler(dataset, size=256, length=10000, roi=roi)
    dataloader = DataLoader(dataset, sampler=sampler)
