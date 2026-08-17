@@ -8,7 +8,7 @@ Welcome to the TorchGeo user documentation. Here you'll find guides on installat
 
    installation
    contributing
-   ssl_trainers
+   ssl_tasks
    glossary
    alternatives
    changelog

@@ -1,26 +1,26 @@
-Self-Supervised Learning Trainers
-=================================
+Self-Supervised Learning Tasks
+==============================
 
-TorchGeo ships several self-supervised learning (SSL) trainers. Because SSL has no labels, a training loss says very little about whether a trainer works: the losses are on different scales and measure different things, and a loss that falls steadily is entirely compatible with a representation that has collapsed. In one run during this benchmark, SimCLR's loss fell by 30% while every sample in the batch mapped to an identical vector.
+TorchGeo ships several self-supervised learning (SSL) tasks. Because SSL has no labels, a training loss says very little about whether a task works: the losses are on different scales and measure different things, and a loss that falls steadily is entirely compatible with a representation that has collapsed. In one run during this benchmark, SimCLR's loss fell by 30% while every sample in the batch mapped to an identical vector.
 
-It is therefore non-trivial to determine whether an SSL training run is working at all without probing the learned representations over a dataset. A run that is silently producing a degenerate encoder looks, from the loss curve alone, much like a run that is working well. This matters most when contributing a new SSL task to TorchGeo: a new trainer that trains without error, and whose loss decreases, has not yet been shown to do anything useful.
+It is therefore non-trivial to determine whether an SSL training run is working at all without probing the learned representations over a dataset. A run that is silently producing a degenerate encoder looks, from the loss curve alone, much like a run that is working well. This matters most when contributing a new SSL task to TorchGeo: a new task that trains without error, and whose loss decreases, has not yet been shown to do anything useful.
 
-This page describes the trainers TorchGeo provides, defines a small benchmark for comparing them, and records the current numbers so that a new trainer can be judged against them on equal terms.
+This page describes the tasks TorchGeo provides, defines a small benchmark for comparing them, and records the current numbers so that a new task can be judged against them on equal terms.
 
 .. contents::
    :local:
    :depth: 1
 
-Available trainers
-------------------
+Available tasks
+---------------
 
-All SSL trainers subclass :class:`~torchgeo.tasks.BaseTask` and take a ``model`` argument naming any `timm <https://huggingface.co/docs/timm/reference/models>`__ encoder, plus ``in_channels`` so they can be used with multispectral imagery.
+All SSL tasks subclass :class:`~torchgeo.tasks.BaseTask` and take a ``model`` argument naming any `timm <https://huggingface.co/docs/timm/reference/models>`__ encoder, plus ``in_channels`` so they can be used with multispectral imagery.
 
 .. list-table::
    :header-rows: 1
    :widths: 14 46 40
 
-   * - Trainer
+   * - Task
      - Approach
      - Notes
    * - :class:`~torchgeo.tasks.SimCLR`
@@ -36,7 +36,7 @@ All SSL trainers subclass :class:`~torchgeo.tasks.BaseTask` and take a ``model``
      - Generative. Masks most patches and reconstructs them.
      - Vision transformers only, since it operates on patch tokens.
 
-Each trainer builds its own augmentation pipeline, and the argument used to override it differs: ``augmentations`` for SimCLR, ``augmentation1`` and ``augmentation2`` for MoCo, ``transform`` for MAE, and nothing at all for BYOL. Passing the wrong name is silently ignored, so verify that a custom pipeline is actually installed before attributing a result to it.
+Each task builds its own augmentation pipeline, and the argument used to override it differs: ``augmentations`` for SimCLR, ``augmentation1`` and ``augmentation2`` for MoCo, ``transform`` for MAE, and nothing at all for BYOL. Passing the wrong name is silently ignored, so verify that a custom pipeline is actually installed before attributing a result to it.
 
 The benchmark
 -------------
@@ -56,7 +56,7 @@ Hold all of the following fixed. Changing any of them makes a number incomparabl
    * - Normalization
      - Per-band standardization using ``MEAN`` and ``STD`` from ``torchgeo.datamodules.eurosat``, which is what :class:`~torchgeo.datamodules.EuroSATDataModule` applies by default
    * - Input size
-     - 224x224, produced by each trainer's ``RandomResizedCrop`` from the native 64x64 imagery
+     - 224x224, produced by each task's ``RandomResizedCrop`` from the native 64x64 imagery
    * - Pretraining
      - 60 epochs, batch size 128, mixed precision, one GPU, seed 0
    * - Features
@@ -73,13 +73,13 @@ Resizing to 224x224 matters more than it looks. The reference paper's central fi
 Results
 -------
 
-EuroSAT test-set kNN-5 top-1 accuracy, using each trainer's default augmentations. Every row is the best learning rate for that trainer and encoder, selected on validation.
+EuroSAT test-set kNN-5 top-1 accuracy, using each task's default augmentations. Every row is the best learning rate for that task and encoder, selected on validation.
 
 .. list-table::
    :header-rows: 1
    :widths: 24 20 16 16 24
 
-   * - Trainer
+   * - Task
      - Encoder
      - Test acc
      - lr [#lr]_
@@ -157,24 +157,24 @@ EuroSAT test-set kNN-5 top-1 accuracy, using each trainer's default augmentation
 
 Reading the table:
 
-* **Beat the floors, not just random init.** 52 hand-computed per-band image statistics, with no network at all, score 0.8937. A trainer that lands below that has not learned anything a mean and a standard deviation do not already capture. Supervised ImageNet transfer on a ViT is a harder floor at 0.9178.
-* **The learning rate is a property of the trainer and encoder together.** The best rates span four orders of magnitude, and the optimum moves with the encoder: FroSSL prefers 2e-4 on a ViT and 2e-3 on a ResNet. A new trainer needs its own sweep, not a borrowed default. The library defaults are tuned for batch 4096 and are far too large here; MoCo's default of 9.6 diverges to NaN under AdamW at this batch size.
+* **Beat the floors, not just random init.** 52 hand-computed per-band image statistics, with no network at all, score 0.8937. A task that lands below that has not learned anything a mean and a standard deviation do not already capture. Supervised ImageNet transfer on a ViT is a harder floor at 0.9178.
+* **The learning rate is a property of the task and encoder together.** The best rates span four orders of magnitude, and the optimum moves with the encoder: FroSSL prefers 2e-4 on a ViT and 2e-3 on a ResNet. A new task needs its own sweep, not a borrowed default. The library defaults are tuned for batch 4096 and are far too large here; MoCo's default of 9.6 diverges to NaN under AdamW at this batch size.
 * **Differences of a few thousandths are not meaningful.** Every number comes from a single seed, so treat gaps below roughly 0.005 as noise.
 
 .. rubric:: Footnotes
 
-.. [#lr] Learning rates were selected on validation accuracy under a non-default augmentation pipeline and reused for the default pipeline reported here, so these numbers may understate what each trainer reaches with a dedicated sweep.
+.. [#lr] Learning rates were selected on validation accuracy under a non-default augmentation pipeline and reused for the default pipeline reported here, so these numbers may understate what each task reaches with a dedicated sweep.
 
 .. [#floor] Per-band mean, standard deviation, minimum, and maximum of each image, concatenated into a 52-dimensional vector and fed to the same kNN probe. No network and no training.
 
-.. [#frossl] FroSSL is not part of TorchGeo. It is included as a worked example of evaluating a new trainer, ported from a pending `lightly <https://github.com/lightly-ai/lightly/pull/1962>`__ pull request.
+.. [#frossl] FroSSL is not part of TorchGeo. It is included as a worked example of evaluating a new task, ported from a pending `lightly <https://github.com/lightly-ai/lightly/pull/1962>`__ pull request.
 
 .. [#byolfix] Measured with a corrected BYOL in which the target network is a real exponential moving average of the online network. The shipped :class:`~torchgeo.tasks.BYOL` passes one encoder to both wrappers, so the momentum update is a no-op.
 
 Reproducing a row
 -----------------
 
-Rows with a name in the last column are reproducible from a configuration file using the shipped trainers and :class:`~torchgeo.datamodules.EuroSATDataModule`, whose default normalization is exactly the per-band standardization this protocol requires. For example, ``moco_resnet50``:
+Rows with a name in the last column are reproducible from a configuration file using the shipped tasks and :class:`~torchgeo.datamodules.EuroSATDataModule`, whose default normalization is exactly the per-band standardization this protocol requires. For example, ``moco_resnet50``:
 
 .. code-block:: yaml
 
@@ -224,7 +224,7 @@ The other rows differ only in ``model.init_args``:
 
 All configurations use ``in_channels: 13`` and the same ``trainer`` and ``data`` blocks as above.
 
-Scoring is not part of ``torchgeo fit``: the trainer writes a checkpoint, and the kNN probe is applied afterwards. Given a frozen encoder, the whole probe is:
+Scoring is not part of ``torchgeo fit``: training writes a checkpoint, and the kNN probe is applied afterwards. Given a frozen encoder, the whole probe is:
 
 .. code-block:: python
 
@@ -257,10 +257,10 @@ Scoring is not part of ``torchgeo fit``: the trainer writes a checkpoint, and th
 
 Features are extracted from unaugmented images, so pass the datamodule's validation or test loader rather than the training loader.
 
-Adding a new trainer
---------------------
+Adding a new task
+-----------------
 
-A new SSL trainer should arrive with the same pieces as any other task:
+A new SSL task should arrive with the same pieces as any other TorchGeo task:
 
 #. ``torchgeo/tasks/foo.py``, subclassing :class:`~torchgeo.tasks.BaseTask`.
 #. An entry in ``torchgeo/tasks/__init__.py``.
