@@ -65,7 +65,7 @@ class TestTileNet:
     def test_transforms(self, weights: TileNet_Weights) -> None:
         """Test that transforms run without error."""
         c = weights.meta['in_chans']
-        sample = {'image': torch.arange(c * 50 * 50, dtype=torch.float).view(c, 50, 50)}
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     @pytest.mark.slow

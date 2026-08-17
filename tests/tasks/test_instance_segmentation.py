@@ -123,6 +123,6 @@ class TestInstanceSegmentation:
     def test_multispectral_support(self, in_channels: int) -> None:
         model = InstanceSegmentation(in_channels=in_channels, num_classes=2)
         model.eval()
-        sample = [torch.randn(in_channels, 224, 224)]
+        sample = [torch.randn(in_channels, 32, 32)]
         with torch.inference_mode():
             model(sample)

@@ -82,9 +82,9 @@ class TestPanopticonBase:
         assert output.shape == (2, 768)  # (B, embed_dim)
 
     def test_panopticon_weights(self, mocked_weights: Panopticon_Weights) -> None:
-        model = panopticon_vitb14(weights=mocked_weights)
+        model = panopticon_vitb14(weights=mocked_weights, img_size=14)
         x_dict = {
-            'imgs': torch.randn(2, 3, 224, 224),
+            'imgs': torch.randn(2, 3, 14, 14),
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),
         }
         normed_cls_token = model(x_dict)
@@ -93,9 +93,9 @@ class TestPanopticonBase:
     @pytest.mark.slow
     def test_panopticon_download(self, weights: Panopticon_Weights) -> None:
         """Test forward pass with weights loaded."""
-        model = panopticon_vitb14(weights)
+        model = panopticon_vitb14(weights, img_size=14)
         x_dict = {
-            'imgs': torch.randn(2, 3, 224, 224),
+            'imgs': torch.randn(2, 3, 14, 14),
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),
         }
         normed_cls_token = model(x_dict)

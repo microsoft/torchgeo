@@ -55,21 +55,22 @@ class TestDOFA:
         num_classes = 10
         global_pool = num_channels % 2 == 0
         model = DOFA(
+            img_size=16,
             embed_dim=384,
             depth=12,
             num_heads=6,
             num_classes=num_classes,
             global_pool=global_pool,
         )
-        batch = torch.randn([batch_size, num_channels, 224, 224])
+        batch = torch.randn([batch_size, num_channels, 16, 16])
         out = model(batch, wavelengths)
         assert out.shape == torch.Size([batch_size, num_classes])
 
 
 class TestDOFASmall16:
     def test_dofa(self) -> None:
-        model = dofa_small_patch16_224()
-        x = torch.rand(1, 4, 224, 224)
+        model = dofa_small_patch16_224(img_size=16)
+        x = torch.rand(1, 4, 16, 16)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
@@ -91,8 +92,8 @@ class TestDOFABase16:
         return weights
 
     def test_dofa(self) -> None:
-        model = dofa_base_patch16_224()
-        x = torch.rand(1, 4, 224, 224)
+        model = dofa_base_patch16_224(img_size=16)
+        x = torch.rand(1, 4, 16, 16)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
@@ -101,9 +102,7 @@ class TestDOFABase16:
 
     def test_transforms(self, weights: DOFABase16_Weights) -> None:
         c = 4
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: DOFABase16_Weights) -> None:
@@ -111,7 +110,7 @@ class TestDOFABase16:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = 4
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -136,8 +135,8 @@ class TestDOFALarge16:
         return weights
 
     def test_dofa(self) -> None:
-        model = dofa_large_patch16_224()
-        x = torch.rand(1, 4, 224, 224)
+        model = dofa_large_patch16_224(img_size=16)
+        x = torch.rand(1, 4, 16, 16)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
@@ -146,9 +145,7 @@ class TestDOFALarge16:
 
     def test_transforms(self, weights: DOFALarge16_Weights) -> None:
         c = 4
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: DOFALarge16_Weights) -> None:
@@ -156,7 +153,7 @@ class TestDOFALarge16:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = 4
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -166,7 +163,7 @@ class TestDOFALarge16:
 
 class TestDOFAHuge14:
     def test_dofa(self) -> None:
-        model = dofa_huge_patch14_224()
-        x = torch.rand(1, 4, 224, 224)
+        model = dofa_huge_patch14_224(img_size=14)
+        x = torch.rand(1, 4, 14, 14)
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
