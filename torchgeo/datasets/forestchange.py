@@ -1,6 +1,3 @@
-# File: torchgeo/datasets/forest_change.py
-# (Paste your dataset file here — unchanged from your last message)
-
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
@@ -8,6 +5,7 @@
 
 import json
 import os
+import textwrap
 from collections.abc import Callable, Iterator
 from random import randint
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
@@ -39,9 +37,6 @@ class ForestChange(NonGeoDataset):
     multi-granularity natural-language captions describing forest cover
     changes in tropical and subtropical regions.
 
-    Captions are a fundamental part of the dataset and are always loaded;
-    whether they are consumed by a model is a downstream concern.
-
     Dataset features:
 
     * 334 annotated bi-temporal RGB image pairs at ~30 m/pixel resolution
@@ -57,9 +52,6 @@ class ForestChange(NonGeoDataset):
       ``<root>/Forest-Change-dataset/images/<split>/label/``
     * raw captions are stored in
       ``<root>/Forest-Change-dataset/ForestChatcaptions.json``
-    * on first use the dataset preprocesses captions into per-image
-      ``<root>/Forest-Change-dataset/captions/<stem>.json`` files and
-      per-split list files; subsequent loads skip preprocessing
 
     Dataset classes:
 
@@ -75,67 +67,54 @@ class ForestChange(NonGeoDataset):
 
        * `tokenizers <https://pypi.org/project/tokenizers/>`_ to tokenize the captions
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
     """
 
-    splits = ("train", "val", "test")
+    splits = ('train', 'val', 'test')
 
-    classes = ("no_change", "deforestation")
+    classes = ('no_change', 'deforestation')
 
-    directories = ("A", "B", "label")
+    directories = ('A', 'B', 'label')
 
-    directory = "Forest-Change-dataset"
+    directory = 'Forest-Change-dataset'
 
-    token_directory = "captions"
+    captions_filename = 'ForestChatcaptions.json'
 
-    captions_filename = "ForestChatcaptions.json"
-
-    special_tokens: ClassVar[list[str]] = ["<NULL>", "<UNK>", "<START>", "<END>"]
-
-    url = "https://hf.co/datasets/JimmyBrocko/Forest-Change/resolve/e8b25bf09c85ec85633d1b1b554f7bb23e47724d/Forest-Change-dataset.zip"
-    sha256 = "424931a075f00f8cf21d4d2f622df688de559494844df4876b59bde13d3d855d"
-    filename = "Forest-Change-dataset.zip"
+    url = 'https://hf.co/datasets/JimmyBrocko/Forest-Change/resolve/e8b25bf09c85ec85633d1b1b554f7bb23e47724d/Forest-Change-dataset.zip'
+    sha256 = '424931a075f00f8cf21d4d2f622df688de559494844df4876b59bde13d3d855d'
+    filename = 'Forest-Change-dataset.zip'
 
     def __init__(
         self,
-        root: Path = "data",
-        split: Literal["train", "val", "test"] = "train",
+        root: Path = 'data',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        max_length: int = 42,
         download: bool = False,
         checksum: bool = False,
-        tokenizer: "tokenizers.models.Model | None" = None,
+        tokenizer: 'tokenizers.models.Model | None' = None,
     ) -> None:
-        """Initialise a new dataset instance.
+        """Initialize a new ForestChange instance.
 
         Args:
-            root: root directory where the dataset can be found or will be
-                downloaded.  The zip extracts to
-                ``<root>/Forest-Change-dataset/``.
-            split: one of ``'train'``, ``'val'``, or ``'test'``.
+            root: root directory where dataset can be found
+            split: one of 'train', 'val', or 'test'
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            max_length: maximum token sequence length used when encoding
-                captions.
-            download: if ``True``, download the dataset if it is not
-                already present under ``root``.
-            checksum: if ``True``, verify the SHA256 of the downloaded zip
-                (may be slow).
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the SHA256 of the downloaded files (may be slow)
             tokenizer: a pre-trained tokenizer
                 (defaults to :class:`~tokenizers.models.BPE`).
 
         Raises:
-            AssertionError: if ``split`` is not a valid split name.
-            DatasetNotFoundError: if the dataset is not found and
-                ``download`` is ``False``.
-            DependencyNotFoundError: if tokenizers is not installed.
+            AssertionError: if *split* is invalid
+            DatasetNotFoundError: if dataset is not found and *download* is False
+            DependencyNotFoundError: if tokenizers is not installed
         """
         assert split in self.splits
 
         self.root = root
         self.split = split
         self.transforms = transforms
-        self.max_length = max_length
         self.checksum = checksum
 
         if download:
@@ -144,39 +123,32 @@ class ForestChange(NonGeoDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
-        if not self._check_preprocessed():
-            self._preprocess()
-
-        if tokenizer is None:
-            tokenizers = lazy_import("tokenizers")
-            Tokenizer = tokenizers.Tokenizer
-            models = tokenizers.models
-            pre_tokenizers = tokenizers.pre_tokenizers
-            processors = tokenizers.processors
-            trainers = tokenizers.trainers
-
-            tok = Tokenizer(models.BPE(unk_token="<UNK>"))
-            tok.pre_tokenizer = pre_tokenizers.Whitespace()
-            tok.post_processor = processors.TemplateProcessing(
-                single="<START> $A <END>", special_tokens=[("<START>", 2), ("<END>", 3)]
-            )
-            trainer = trainers.BpeTrainer(special_tokens=self.special_tokens)
-            tok.train_from_iterator(self._caption_iterator("train"), trainer)
-            tok.enable_padding(pad_id=0, pad_token="<NULL>", length=self.max_length)
-            tok.enable_truncation(max_length=self.max_length)
-            self.tokenizer = tok
-        else:
-            self.tokenizer = tokenizer
-
-        self.tokenizer.enable_padding(
-            pad_id=0, pad_token="<NULL>", length=self.max_length
+        captions_path = os.path.join(
+            str(self.root), self.directory, self.captions_filename
         )
-        self.tokenizer.enable_truncation(max_length=self.max_length)
+        with open(captions_path) as f:
+            data: dict[str, Any] = json.load(f)
+
+        self._captions_by_stem: dict[str, list[str]] = {}
+        for img in data['images']:
+            stem = os.path.splitext(img['filename'])[0]
+            self._captions_by_stem[stem] = [
+                sentence['raw'] for sentence in img['sentences'] if sentence['raw']
+            ]
 
         self.files = self._load_files()
 
+        if tokenizer is None:
+            tokenizers = lazy_import('tokenizers')
+            self.tokenizer = tokenizers.Tokenizer(tokenizers.models.BPE())
+            trainer = tokenizers.trainers.BpeTrainer()
+            train_captions = self._caption_iterator('train')
+            self.tokenizer.train_from_iterator(train_captions, trainer)
+        else:
+            self.tokenizer = tokenizer
+
     def __len__(self) -> int:
-        """Return the number of samples in the dataset.
+        """Return the number of data points in the dataset.
 
         Returns:
             length of the dataset
@@ -184,46 +156,25 @@ class ForestChange(NonGeoDataset):
         return len(self.files)
 
     def __getitem__(self, index: int) -> Sample:
-        """Return the sample at *index*.
-
-        Every sample dict contains:
-
-        * ``'image'``         - float32 ``(2, C, H, W)`` stacked bi-temporal
-          tensor
-        * ``'mask'``          - int64 ``(1, H, W)`` binary change mask
-        * ``'name'``          - filename stem (str)
-        * ``'token_all'``     - int64 ``(N, max_length)`` all encoded captions
-        * ``'token_all_len'`` - int64 ``(N, 1)`` length of each caption
-        * ``'token'``         - int64 ``(max_length,)`` selected caption
-        * ``'token_len'``     - scalar int64 length of selected caption
-
-        For train split entries with a caption-index suffix in the split
-        file (e.g. ``train_000037.png-0``), the indexed caption is returned
-        as ``token`` / ``token_len``.  For all other entries a caption
-        is chosen at random.
+        """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            data and labels at that index
-
+            data and label at that index
         """
         f = self.files[index]
-        image1 = self._load_image(f["image1"])
-        image2 = self._load_image(f["image2"])
-        mask = self._load_target(f["mask"])
+        image1 = self._load_image(f['image1'])
+        image2 = self._load_image(f['image2'])
+        mask = self._load_target(f['mask'])
 
-        stem = f["name"].split("_aug")[0].split("_rep")[0]
-        caption_path = os.path.join(
-            str(self.root), self.directory, self.token_directory, stem + ".json"
-        )
+        captions = self._captions_by_stem.get(f['name'], [])
 
         sample: Sample = {
-            "image": torch.stack([image1, image2]),
-            "mask": mask,
-            "name": f["name"],
-            **self._load_tokens(caption_path, f["token_id"]),
+            'image': torch.stack([image1, image2]),
+            'mask': mask,
+            'caption': self._load_tokens(captions, f['token_id']),
         }
 
         if self.transforms is not None:
@@ -246,48 +197,50 @@ class ForestChange(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 3
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
 
-        image1 = sample["image"][0].permute(1, 2, 0).numpy().astype(np.uint8)
-
-        image2 = sample["image"][1].permute(1, 2, 0).numpy().astype(np.uint8)
+        image1 = sample['image'][0].permute(1, 2, 0).numpy().astype(np.uint8)
+        image2 = sample['image'][1].permute(1, 2, 0).numpy().astype(np.uint8)
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image1)
-        axs[0].axis("off")
+        axs[0].axis('off')
 
         axs[1].imshow(image2)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
-        axs[2].imshow(sample["mask"][0], cmap="gray", interpolation="none")
-        axs[2].axis("off")
+        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
+        axs[2].axis('off')
 
-        if "prediction" in sample:
-            axs[3].imshow(sample["prediction"][0], cmap="gray", interpolation="none")
-            axs[3].axis("off")
+        caption = sample['caption'].numpy()
+        caption_text = textwrap.wrap(self.tokenizer.decode(caption))
+
+        if 'caption_prediction' in sample:
+            pred_caption = sample['caption_prediction'].numpy()
+            caption_text += ['Predicted:'] + textwrap.wrap(
+                self.tokenizer.decode(pred_caption)
+            )
+
+        if 'prediction' in sample:
+            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
+            axs[3].axis('off')
 
             if show_titles:
-                axs[3].set_title("Prediction")
+                axs[3].set_title('Prediction')
 
         if show_titles:
-            axs[0].set_title("Image 1")
-            axs[1].set_title("Image 2")
-            axs[2].set_title("Mask")
-
-        captions = [self._decode_tokens(tokens) for tokens in sample["token_all"]]
-
-        caption_text = "\n".join(
-            f"{i + 1}. {caption}" for i, caption in enumerate(captions)
-        )
+            axs[0].set_title('Image 1')
+            axs[1].set_title('Image 2')
+            axs[2].set_title('Mask')
 
         fig.text(
             0.5,
             0.01,
-            f"Captions:\n{caption_text}",
-            ha="center",
-            va="bottom",
+            'Captions:\n' + '\n'.join(caption_text),
+            ha='center',
+            va='bottom',
             wrap=True,
             fontsize=10,
         )
@@ -300,10 +253,10 @@ class ForestChange(NonGeoDataset):
         return fig
 
     def _check_integrity(self) -> bool:
-        """Check that the raw extracted dataset exists under ``root``.
+        """Check the integrity of the dataset structure.
 
         Returns:
-            ``True`` if the image directories and captions JSON are present
+            True if the image directories and captions JSON are found, else False
         """
         captions_path = os.path.join(
             str(self.root), self.directory, self.captions_filename
@@ -314,30 +267,16 @@ class ForestChange(NonGeoDataset):
             for directory in self.directories:
                 if not os.path.exists(
                     os.path.join(
-                        str(self.root), self.directory, "images", split, directory
+                        str(self.root), self.directory, 'images', split, directory
                     )
                 ):
                     return False
         return True
 
-    def _check_preprocessed(self) -> bool:
-        """Check that per-image caption files and split files exist.
-
-        Returns:
-            ``True`` if all preprocessing outputs are present
-        """
-        base = os.path.join(str(self.root), self.directory)
-        if not os.path.exists(os.path.join(base, self.token_directory)):
-            return False
-        for split in self.splits:
-            if not os.path.exists(os.path.join(base, f"{split}.txt")):
-                return False
-        return True
-
     def _download(self) -> None:
-        """Download and extract the dataset zip."""
+        """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
         download_and_extract_archive(
             self.url,
@@ -346,193 +285,104 @@ class ForestChange(NonGeoDataset):
             sha256=self.sha256 if self.checksum else None,
         )
 
-    def _preprocess(self) -> None:
-        """Preprocess raw captions JSON into per-image caption files.
-
-        Reads ``ForestChatcaptions.json``, writes individual
-        ``captions/<stem>.json`` files (each containing the list of raw
-        caption strings for that image) and the per-split list ``.txt``
-        files.  Runs once on first use; subsequent instantiations skip this step.
-        """
-        print("Preprocessing captions (one-time operation)...")
-        base = os.path.join(str(self.root), self.directory)
-        caption_dir = os.path.join(base, self.token_directory)
-        os.makedirs(caption_dir, exist_ok=True)
-
-        captions_path = os.path.join(base, self.captions_filename)
-        with open(captions_path) as f:
-            data: dict[str, Any] = json.load(f)
-
-        all_captions: list[tuple[str, list[str]]] = []
-        for img in data["images"]:
-            captions = [
-                sentence["raw"] for sentence in img["sentences"] if sentence["raw"]
-            ]
-            all_captions.append((img["filename"], captions))
-
-        all_captions.sort()
-
-        for split in self.splits:
-            list_path = os.path.join(base, f"{split}.txt")
-            if os.path.exists(list_path):
-                os.remove(list_path)
-
-        for filename, captions in all_captions:
-            stem = os.path.splitext(filename)[0]
-            with open(os.path.join(caption_dir, stem + ".json"), "w") as f:
-                json.dump(captions, f)
-
-            prefix = stem.split("_")[0]
-            if prefix in self.splits:
-                with open(os.path.join(base, f"{prefix}.txt"), "a") as f:
-                    f.write(filename + "\n")
-
     def _caption_iterator(self, split: str) -> Iterator[str]:
         """Yield every raw caption belonging to *split*.
 
         Args:
-            split: split whose captions should be yielded.
+            split: split whose captions should be yielded
 
         Yields:
-            individual raw caption strings.
+            individual raw caption strings
         """
-        base = os.path.join(str(self.root), self.directory)
-        list_path = os.path.join(base, f"{split}.txt")
-        with open(list_path) as f:
-            names = [line.strip() for line in f if line.strip()]
-
-        for name in names:
+        img_dir = os.path.join(str(self.root), self.directory, 'images', split, 'A')
+        for name in sorted(os.listdir(img_dir)):
             stem = os.path.splitext(name)[0]
-            caption_path = os.path.join(base, self.token_directory, stem + ".json")
-            with open(caption_path) as f:
-                captions: list[str] = json.load(f)
-            yield from captions
-
-    def _decode_tokens(self, tokens: Tensor) -> str:
-        """Convert an encoded caption tensor into a human-readable sentence.
-
-        Args:
-            tokens: Tensor of token indices representing an encoded caption.
-
-        Returns:
-            Decoded caption string.
-        """
-        return self.tokenizer.decode(tokens.tolist())
+            yield from self._captions_by_stem.get(stem, [])
 
     def _load_files(self) -> list[dict[str, Any]]:
-        """Build the file list from the split text file.
+        """Return the paths of the files in the dataset.
 
         Returns:
-            list of dicts with keys ``image1``, ``image2``, ``mask``,
-            ``token_id``, and ``name``
+            list of dicts containing paths for each pair of image1, image2, mask,
+            plus the caption index and stem name
         """
-        base = os.path.join(str(self.root), self.directory)
-        list_path = os.path.join(base, f"{self.split}.txt")
-        with open(list_path) as f:
-            img_ids = [line.strip() for line in f if line.strip()]
+        img_dir = os.path.join(str(self.root), self.directory, 'images', self.split)
+        names = sorted(os.listdir(os.path.join(img_dir, 'A')))
 
         files: list[dict[str, Any]] = []
-        for name in img_ids:
-            if "-" in name:
-                base_name = name.split("-")[0]
-                token_id: int | None = int(name.split("-")[-1])
-            else:
-                base_name = name
-                token_id = None
-
-            stem = os.path.splitext(base_name)[0]
-            img_dir = os.path.join(base, "images", self.split)
+        for name in names:
+            stem = os.path.splitext(name)[0]
+            # train uses a random caption each call, val/test always use the
+            # first caption so evaluation is reproducible
+            token_id = None if self.split == 'train' else 0
             files.append(
                 {
-                    "image1": os.path.join(img_dir, "A", base_name),
-                    "image2": os.path.join(img_dir, "B", base_name),
-                    "mask": os.path.join(img_dir, "label", base_name),
-                    "token_id": token_id,
-                    "name": stem,
+                    'image1': os.path.join(img_dir, 'A', name),
+                    'image2': os.path.join(img_dir, 'B', name),
+                    'mask': os.path.join(img_dir, 'label', name),
+                    'token_id': token_id,
+                    'name': stem,
                 }
             )
         return files
 
     def _load_image(self, path: Path) -> Tensor:
-        """Load a single RGB image as a float32 CHW tensor.
+        """Load a single image.
 
         Args:
-            path: path to the image file
+            path: path to the image
 
         Returns:
-            float32 tensor of shape ``(C, H, W)``
+            the image
         """
         with Image.open(str(path)) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
-            return einops.rearrange(tensor, "h w c -> c h w")
+            return einops.rearrange(tensor, 'h w c -> c h w')
 
     def _load_target(self, path: Path) -> Tensor:
-        """Load and binarise a change mask.
-
-        Any non-zero pixel is mapped to class ``1``.
+        """Load the target mask for a single image.
 
         Args:
-            path: path to the mask image
+            path: path to the image
 
         Returns:
-            int64 tensor of shape ``(1, H, W)``
+            the target mask
         """
         with Image.open(str(path)) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1).to(torch.long)
             return tensor.unsqueeze(0)
 
-    def _load_tokens(
-        self, caption_path: Path, token_id: int | None
-    ) -> dict[str, Tensor]:
-        """Load and encode captions for a single sample.
+    def _load_tokens(self, captions: list[str], token_id: int | None) -> Tensor:
+        """Select and tokenize a single caption for a sample.
 
         Args:
-            caption_path: path to the JSON file of raw caption strings.
-            token_id: index of the caption to use as the primary
-                ``token`` / ``token_len`` pair. When ``None`` a caption
+            captions: raw caption strings for this sample
+            token_id: index of the caption to encode. If None, a caption
                 is chosen at random.
 
         Returns:
-            dict with keys ``token_all``, ``token_all_len``, ``token``,
-            ``token_len``
+            encoded caption
 
         Raises:
             ValueError: if the sample contains no captions or if
-                ``token_id`` is outside the valid caption range.
+                ``token_id`` is outside the valid caption range
         """
-        with open(str(caption_path)) as f:
-            captions: list[str] = json.load(f)
-
         n = len(captions)
         if n == 0:
-            raise ValueError("No captions available for sample")
-
-        encodings = self.tokenizer.encode_batch(captions)
-
-        token_all = np.array([e.ids for e in encodings], dtype=np.int64)
-        token_all_len = np.array(
-            [[sum(e.attention_mask)] for e in encodings], dtype=np.int64
-        )
+            raise ValueError('No captions available for sample')
 
         if token_id is not None:
             if not 0 <= token_id < n:
                 raise ValueError(
-                    f"Caption index {token_id} out of range for sample "
-                    f"with {n} captions"
+                    f'Caption index {token_id} out of range for sample '
+                    f'with {n} captions'
                 )
             j = token_id
         else:
             j = randint(0, n - 1)
 
-        token = token_all[j]
-        token_len = int(token_all_len[j, 0])
-
-        return {
-            "token": torch.from_numpy(token).long(),
-            "token_all": torch.from_numpy(token_all).long(),
-            "token_len": torch.tensor(token_len, dtype=torch.int64),
-            "token_all_len": torch.from_numpy(token_all_len).long(),
-        }
+        output = self.tokenizer.encode(captions[j])
+        return torch.tensor(output.ids)
