@@ -49,6 +49,29 @@ This data loader will iterate over all valid locations and all valid times, with
 
 The majority of spatial and temporal samplers have both random and sequential variants. Random variants are recommended at training time to maximize the diversity of the dataset, while sequential variants are recommended at inference time to ensure complete coverage of the dataset.
 
+Regions of Interest
+^^^^^^^^^^^^^^^^^^^
+
+Spatial samplers use the full dataset footprint unless a :term:`region of interest (ROI)` is provided. The ``roi`` parameter accepts a Shapely polygon in the same CRS as the dataset. For example, the following sampler restricts patches to a 10 km by 10 km bounding box in a projected CRS with meter units:
+
+.. code-block:: python
+
+   import shapely
+   from torch.utils.data import DataLoader
+
+   from torchgeo.datasets import Landsat
+   from torchgeo.samplers import RandomPatchSampler
+
+   dataset = Landsat(...)
+   roi = shapely.box(500000, 4200000, 510000, 4210000)
+   sampler = RandomPatchSampler(dataset, size=256, length=10000, roi=roi)
+   dataloader = DataLoader(dataset, sampler=sampler)
+
+
+Reproject geometries to ``dataset.crs`` before using them as an ROI. The sampler intersects the ROI with the dataset footprint, so portions outside the dataset are ignored.
+
+Temporal samplers provide an analogous ``toi`` parameter that accepts a :class:`pandas.Interval`. Spatial and temporal samplers can be combined with the ``@`` operator to restrict both the location and time range.
+
 Spatial Samplers
 ^^^^^^^^^^^^^^^^
 
