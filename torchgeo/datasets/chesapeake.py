@@ -666,12 +666,16 @@ class ChesapeakeCVPR(UnionDataset):
 
         .. versionadded:: 0.4
         """
-        image = np.rollaxis(sample['image'].numpy(), 0, 3)
-        mask = sample['mask'].numpy()
-        if mask.ndim == 3:
-            mask = np.rollaxis(mask, 0, 3)
-        else:
-            mask = np.expand_dims(mask, 2)
+        image = sample.get('image')
+        if image is not None:
+            image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        mask = sample.get('mask')
+        if mask is not None:
+            mask = mask.numpy()
+            if mask.ndim == 3:
+                mask = np.rollaxis(mask, 0, 3)
+            else:
+                mask = np.expand_dims(mask, 2)
 
         num_panels = len(self.layers)
         showing_predictions = 'prediction' in sample
@@ -679,59 +683,73 @@ class ChesapeakeCVPR(UnionDataset):
             predictions = sample['prediction'].numpy()
             num_panels += 1
 
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        fig, axs = plt.subplots(
+            1, num_panels, figsize=(num_panels * 4, 5), squeeze=False
+        )
 
         i = 0
         for layer in self.layers:
             if layer == 'naip-new' or layer == 'naip-old':
+                if image is None:
+                    continue
                 img = image[:, :, :3] / 255
                 image = image[:, :, 4:]
-                axs[i].axis('off')
-                axs[i].imshow(img)
+                axs[0, i].axis('off')
+                axs[0, i].imshow(img)
             elif layer == 'landsat-leaf-on' or layer == 'landsat-leaf-off':
+                if image is None:
+                    continue
                 img = image[:, :, [3, 2, 1]] / 3000
                 image = image[:, :, 9:]
-                axs[i].axis('off')
-                axs[i].imshow(img)
+                axs[0, i].axis('off')
+                axs[0, i].imshow(img)
             elif layer == 'nlcd':
+                if mask is None:
+                    continue
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(
+                axs[0, i].imshow(
                     img, vmin=0, vmax=255, cmap=NLCD.cmap, interpolation='none'
                 )
-                axs[i].axis('off')
+                axs[0, i].axis('off')
             elif layer == 'lc':
+                if mask is None:
+                    continue
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(
+                axs[0, i].imshow(
                     img, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
                 )
-                axs[i].axis('off')
+                axs[0, i].axis('off')
             elif layer == 'buildings':
+                if mask is None:
+                    continue
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
-                axs[i].axis('off')
+                axs[0, i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
+                axs[0, i].axis('off')
             elif layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
+                if mask is None:
+                    continue
                 img = (mask[:, :, :4] @ self.prior_color_matrix) / 255
                 mask = mask[:, :, 4:]
-                axs[i].imshow(img)
-                axs[i].axis('off')
+                axs[0, i].imshow(img)
+                axs[0, i].axis('off')
 
             if show_titles:
                 if layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
-                    axs[i].set_title('prior')
+                    axs[0, i].set_title('prior')
                 else:
-                    axs[i].set_title(layer)
+                    axs[0, i].set_title(layer)
             i += 1
 
         if showing_predictions:
-            axs[i].imshow(
+            axs[0, i].imshow(
                 predictions, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
             )
-            axs[i].axis('off')
+            axs[0, i].axis('off')
             if show_titles:
-                axs[i].set_title('Predictions')
+                axs[0, i].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
