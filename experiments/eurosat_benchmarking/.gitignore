@@ -1,0 +1,6 @@
+outputs/
+data
+__pycache__/
+*.ckpt
+# Per-run JSON records; results.csv is the committed aggregate.
+results/

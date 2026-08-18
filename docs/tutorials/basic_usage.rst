@@ -8,6 +8,7 @@ The following tutorials introduce the basic concepts and components of TorchGeo:
 * `Pretrained Weights <pretrained_weights.ipynb>`_: Models and pretrained weights
 * `Embeddings <embeddings.ipynb>`_: Using pretrained models to extract fixed-length embeddings
 * `Lightning Tasks <tasks.ipynb>`_: PyTorch Lightning data modules and tasks
+* `Evaluating SSL Checkpoints <ssl_knn_eval.ipynb>`_: Scoring a self-supervised encoder with a kNN probe
 * `Command-Line Interface <cli.ipynb>`_: TorchGeo's command-line interface
 
 .. toctree::
@@ -19,4 +20,5 @@ The following tutorials introduce the basic concepts and components of TorchGeo:
    pretrained_weights
    embeddings
    tasks
+   ssl_knn_eval
    cli
