@@ -20,16 +20,11 @@ from torchvision.models._api import WeightsEnum
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import (
-    MultiScaleRoIAlign,
-    box_convert,
-    feature_pyramid_network,
-    misc,
-)
+from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError
-from ..datasets.utils import Sample, lazy_import
+from ..datasets.utils import Sample
 from .base import BaseTask
 from .utils import GeneralizedRCNNTransformNoOp
 
@@ -107,54 +102,6 @@ class ObjectDetection(BaseTask):
         self.model_kwargs = kwargs
         super().__init__()
 
-    def forward(
-        self, images: Tensor, targets: list[dict[str, Tensor]] | None = None
-    ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
-        """Run a forward pass.
-
-        Args:
-            images: Batched images with shape ``(B, C, H, W)``.
-            targets: Ground-truth annotations for each image. Each dictionary
-                contains ``boxes`` with shape ``(N, 4)`` in absolute ``xyxy``
-                coordinates and one-indexed ``labels`` with shape ``(N,)``.
-                If ``None``, the model runs in inference mode.
-
-        Returns:
-            A dictionary mapping loss names to scalar tensors when *targets* are
-            provided. Otherwise, a list containing one prediction dictionary per
-            image with absolute ``xyxy`` boxes, one-indexed labels, and scores.
-        """
-        if not self.hparams['model'].startswith('rf-detr'):
-            return self.model(images, targets)
-
-        height, width = images.shape[-2:]
-        if targets is not None:
-            scale = images.new_tensor([width, height, width, height])
-            targets = [
-                {
-                    'boxes': box_convert(target['boxes'], 'xyxy', 'cxcywh') / scale,
-                    'labels': target['labels'] - 1,
-                }
-                for target in targets
-            ]
-
-        outputs = self.model(images, targets)
-        if targets is not None:
-            losses = self.rf_detr_criterion(outputs, targets)
-            return {
-                key: losses[key] * self.rf_detr_criterion.weight_dict[key]
-                for key in losses
-                if key in self.rf_detr_criterion.weight_dict
-            }
-
-        sizes = torch.tensor(
-            [[height, width]] * len(images), device=images.device, dtype=torch.int64
-        )
-        predictions: list[dict[str, Tensor]] = self.rf_detr_postprocess(outputs, sizes)
-        for prediction in predictions:
-            prediction['labels'] += 1
-        return predictions
-
     def configure_models(self) -> None:
         """Initialize the model.
 
@@ -168,37 +115,11 @@ class ObjectDetection(BaseTask):
         freeze_backbone: bool = self.hparams['freeze_backbone']
 
         if model.startswith('rf-detr'):
-            rfdetr_config = lazy_import('rfdetr.config')
-            rfdetr_models = lazy_import('rfdetr.models')
+            from ..models.rfdetr import RFDETR
 
-            variants = {
-                'rf-detr-nano': rfdetr_config.RFDETRNanoConfig,
-                'rf-detr-small': rfdetr_config.RFDETRSmallConfig,
-                'rf-detr-medium': rfdetr_config.RFDETRMediumConfig,
-                'rf-detr-large': rfdetr_config.RFDETRLargeConfig,
-            }
-            self.model_kwargs.setdefault('num_channels', in_channels)
-            self.model_kwargs.setdefault('freeze_encoder', freeze_backbone)
-            self.model_kwargs['pretrain_weights'] = None
-            model_config = variants[model](
-                num_classes=num_classes - 1, **self.model_kwargs
-            )
-            train_config = rfdetr_config.TrainConfig(dataset_dir='.', output_dir='.')
-            self.model = rfdetr_models.build_model_from_config(
-                model_config, train_config
-            )
-            if self.weights is not None:
-                if isinstance(self.weights, WeightsEnum):
-                    state_dict = self.weights.get_state_dict(
-                        progress=True, check_hash=True, weights_only=True
-                    )
-                else:
-                    state_dict = torch.load(
-                        self.weights, map_location='cpu', weights_only=True
-                    )
-                self.model.load_state_dict(state_dict)
-            self.rf_detr_criterion, self.rf_detr_postprocess = (
-                rfdetr_models.build_criterion_from_config(model_config, train_config)
+            self.model_kwargs['pretrain_weights'] = self.weights
+            self.model = RFDETR(
+                model, num_classes, in_channels, freeze_backbone, **self.model_kwargs
             )
             return
 
