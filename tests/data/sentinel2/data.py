@@ -186,7 +186,7 @@ def _nodata_corner(t: Affine, height: int, width: int) -> Polygon:
     return Polygon([t * (0, 0), t * (cutoff, 0), t * (0, cutoff)])
 
 
-def create_metadata_file(raster_path: str, nodata_value: float | None) -> None:
+def create_metadata_file(raster_path: str, nodata: float | None) -> None:
     product_root = get_product_root(raster_path)
     metadata_path = os.path.join(product_root, 'MTD_MSIL1C.xml')
 
@@ -197,9 +197,7 @@ def create_metadata_file(raster_path: str, nodata_value: float | None) -> None:
 
     bounds = Polygon([t * (0, 0), t * (w, 0), t * (w, h), t * (0, h)])
     valid_footprint = (
-        bounds.difference(_nodata_corner(t, h, w))
-        if nodata_value is not None
-        else bounds
+        bounds.difference(_nodata_corner(t, h, w)) if nodata is not None else bounds
     )
 
     # .SAFE format always stores the valid footprint in WGS84
@@ -215,9 +213,7 @@ def create_metadata_file(raster_path: str, nodata_value: float | None) -> None:
         f.write(xml_content)
 
 
-def create_file(
-    path: str, dtype: str, num_channels: int, nodata_value: float | None
-) -> None:
+def create_file(path: str, dtype: str, num_channels: int, nodata: float | None) -> None:
     res = 10
     root, _ = os.path.splitext(path)
     if root.endswith('m'):
@@ -245,12 +241,12 @@ def create_file(
             dtype=profile['dtype'],
         )
 
-    if nodata_value is not None:
+    if nodata is not None:
         # Simulates Sentinel-2 acquisitions not fully covering the MGRS cell.
         t = profile['transform']
         corner = _nodata_corner(t, raster_height, raster_width)
         mask = rasterize([corner], out_shape=(raster_height, raster_width), transform=t)
-        Z[mask == 1] = nodata_value
+        Z[mask == 1] = nodata
 
     with rasterio.open(path, 'w', **profile) as src:
         for i in range(1, profile['count'] + 1):
@@ -269,11 +265,11 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
         prev_root = None
         for value in hierarchy:
             path = os.path.join(directory, value)
-            nodata_value = 0
-            create_file(path, dtype='uint16', num_channels=1, nodata_value=nodata_value)
+            nodata = 0
+            create_file(path, dtype='uint16', num_channels=1, nodata=nodata)
             # Create the metadata file once for each product
             if (curr_root := get_product_root(path)) != prev_root:
-                create_metadata_file(path, nodata_value)
+                create_metadata_file(path, nodata)
                 prev_root = curr_root
 
 
