@@ -206,9 +206,10 @@ class HabitAlp2(GeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`CRS` to warp to (passed through to internal RasterDataset
-                instances; HabitAlp2 extends GeoDataset directly so crs/res must
-                be forwarded explicitly)
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (passed through to internal RasterDataset instances; HabitAlp2
+                extends GeoDataset directly so crs/res must be forwarded
+                explicitly)
             res: resolution in units of CRS (defaults to resolution of first file)
             year: one of "2003", "2013", or "2020"
             bands: bands to load (defaults to RGB only for 2003, RGB+NIR for 2013/2020)
@@ -544,9 +545,10 @@ class HabitAlp2CD(GeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: :term:`CRS` to warp to (passed through to internal RasterDataset
-                instances; HabitAlp2CD extends GeoDataset directly so crs/res must
-                be forwarded explicitly)
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (passed through to internal RasterDataset instances; HabitAlp2CD
+                extends GeoDataset directly so crs/res must be forwarded
+                explicitly)
             res: resolution in units of CRS (defaults to resolution of first file)
             pair: one of "2003_2013" or "2013_2020"
             task: one of "binary" (mask binarized to 0/1) or "multiclass" (mask with
