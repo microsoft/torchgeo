@@ -177,7 +177,8 @@ def tilenet(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=True
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=True,
         )
         assert missing_keys == []
         assert unexpected_keys == []

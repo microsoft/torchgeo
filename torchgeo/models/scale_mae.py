@@ -189,7 +189,7 @@ class ScaleMAELarge16_Weights(WeightsEnum):
     """
 
     FMOW_RGB = Weights(
-        url='https://hf.co/isaaccorley/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
+        url='https://hf.co/isaaccorley/vit_large_patch16_224_fmow_rgb_scalemae/resolve/75650aaca720ef9c6638d16f5b4375f0022c56c9/vit_large_patch16_224_fmow_rgb_scalemae-386989c9.pth',
         transforms=_scale_mae_transforms,
         meta={
             'dataset': 'fMoW',
@@ -236,7 +236,9 @@ def scalemae_large_patch16(
     )
 
     if weights:
-        state_dict = weights.get_state_dict(progress=True, weights_only=True)
+        state_dict = weights.get_state_dict(
+            progress=True, check_hash=True, weights_only=True
+        )
 
         if 'img_size' in kwargs and weights.meta['img_size'] != kwargs['img_size']:
             state_dict = interpolate_pos_embed(model, state_dict)

@@ -10,6 +10,14 @@ Model Architectures
 
 TorchGeo contains a number of model architectures depending on the task you are trying to solve and your model inputs.
 
+Geographic Coordinates (:math:`\scriptstyle B \times 2`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   models/satclip
+
 1D Time Series (:math:`\scriptstyle B \times T \times C`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -28,6 +36,7 @@ TorchGeo contains a number of model architectures depending on the task you are 
 
    models/copernicus-fm
    models/croma
+   models/deo
    models/dofa
    models/earthloc
    models/farseg
@@ -160,3 +169,15 @@ Atmospheric
    :header-rows: 1
    :align: center
    :file: weights/atmospheric.csv
+
+
+Location
+^^^^^^^^
+
+These weights encode geographic coordinates instead of image pixels.
+
+.. csv-table::
+   :widths: 45 10 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/location.csv

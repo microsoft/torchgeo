@@ -218,10 +218,11 @@ class MoCo(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
-        self.augmentation1 = augmentation1 or aug1
-        self.augmentation2 = augmentation2 or aug2
+        self.augmentation1 = aug1 if augmentation1 is None else augmentation1
+        self.augmentation2 = aug2 if augmentation2 is None else augmentation2
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -245,12 +246,14 @@ class MoCo(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+                state_dict = weights.get_state_dict(
+                    progress=True, check_hash=True, weights_only=True
+                )
             elif os.path.exists(weights):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(
-                    progress=True, weights_only=True
+                    progress=True, check_hash=True, weights_only=True
                 )
             utils.load_state_dict(self.backbone, state_dict)
 

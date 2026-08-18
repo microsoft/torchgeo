@@ -680,7 +680,7 @@ class ResNet50_Weights(WeightsEnum):
     )
 
     SENTINEL2_ALL_SECO_ECO = Weights(
-        url='https://hf.co/torchgeo/seco-eco/resolve/aea279ea46572cfca5876ac1f9d8d8595fcdeb3b/resnet50_sentinel2_all_seco_eco-90ec322f.pth',
+        url='https://hf.co/torchgeo/seco-eco/resolve/3ede08c40f70534eb1132057ee338b99e54319f0/resnet50_sentinel2_all_seco_eco-a273eb78.pth',
         transforms=_seco_eco_transforms,
         meta={
             'dataset': 'SSL4Eco Dataset',
@@ -707,7 +707,7 @@ class ResNet50_Weights(WeightsEnum):
     )
 
     SENTINEL2_ALL_NDVI_SECO_ECO = Weights(
-        url='https://hf.co/torchgeo/seco-eco-ndvi/resolve/44fae184c63b73e15a32be816e023957dc4c56c1/resnet50_sentinel2_all_ndvi_seco_eco-65292b83.pth',
+        url='https://hf.co/torchgeo/seco-eco-ndvi/resolve/134eb071d078874edf4c70cb6c4ea62dbe924190/resnet50_sentinel2_all_ndvi_seco_eco-3a74b167.pth',
         transforms=_seco_eco_transforms,
         meta={
             'dataset': 'SSL4Eco Dataset',
@@ -889,7 +889,8 @@ def resnet18(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
@@ -924,7 +925,8 @@ def resnet50(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         # used when features_only = True
@@ -959,7 +961,8 @@ def resnet152(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         # used when features_only = True

@@ -63,10 +63,13 @@ def resize_abs_pos_embed(
 
     # Interpolate position embedding
     pos_embed = pos_embed.reshape(1, old_size[0], old_size[1], -1).permute(0, 3, 1, 2)
+    dtype = pos_embed.dtype
+    pos_embed = pos_embed.float()
     pos_embed = F.interpolate(
         pos_embed, size=new_size, mode=interpolation, antialias=antialias
     )
     pos_embed = pos_embed.permute(0, 2, 3, 1).reshape(1, new_ntok, -1)
+    pos_embed = pos_embed.to(dtype)
 
     # Add back extra prefix tokens
     if posemb_prefix is not None:
@@ -115,7 +118,7 @@ def pi_resize_patch_embed(
     ) -> Tensor:
         mat = []
         for i in range(np.prod(old_shape)):
-            basis_vec = torch.zeros(old_shape)
+            basis_vec = torch.zeros(old_shape, dtype=torch.float32)
             basis_vec[np.unravel_index(i, old_shape)] = 1.0
             mat.append(resize(basis_vec, new_shape).reshape(-1))
         resize_matrix = torch.stack(mat)
@@ -124,7 +127,7 @@ def pi_resize_patch_embed(
 
     # Calculate pseudo-inverse of resize matrix
     resize_matrix_pinv = calculate_pinv(old_patch_size, new_patch_size)
-    resize_matrix_pinv = resize_matrix_pinv.to(patch_embed.device)
+    resize_matrix_pinv = resize_matrix_pinv.to(patch_embed)
 
     def resample_patch_embed(patch_embed: Tensor) -> Tensor:
         h, w = new_patch_size
@@ -206,7 +209,7 @@ class FourierExpansion(nn.Module):
         prod = torch.einsum('...i,j->...ij', x, 2 * np.pi / wavelengths)
         encoding = torch.cat((torch.sin(prod), torch.cos(prod)), dim=-1)
 
-        return encoding.float()  # Cast to `float32` to avoid incompatibilities.
+        return encoding.to(torch.get_default_dtype())
 
 
 class DynamicPatchEmbed(nn.Module):
@@ -595,8 +598,8 @@ class CopernicusFM(nn.Module):
             Output mini-batch.
         """
         if input_mode == 'spectral':
-            wvs = torch.tensor(wavelengths, device=x.device).float()
-            bws = torch.tensor(bandwidths, device=x.device).float()
+            wvs = torch.tensor(wavelengths, device=x.device, dtype=x.dtype)
+            bws = torch.tensor(bandwidths, device=x.device, dtype=x.dtype)
             x = self.patch_embed_spectral(
                 x, wavelengths=wvs, bandwidths=bws, kernel_size=kernel_size
             )
@@ -757,7 +760,8 @@ def copernicusfm_base(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
 
         # Both fc_norm and head are generated dynamically

@@ -57,6 +57,11 @@ SouthAfricaCropType
 Non-geospatial DataModules
 --------------------------
 
+Air Quality
+^^^^^^^^^^^
+
+.. autoclass:: AirQualityDataModule
+
 BigEarthNet
 ^^^^^^^^^^^
 
@@ -87,6 +92,11 @@ Cloud Cover Detection
 
 .. autoclass:: CloudCoverDetectionDataModule
 
+Copernicus-Bench Biomass-S3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CopernicusBenchBiomassS3DataModule
+
 COWC
 ^^^^
 
@@ -101,6 +111,11 @@ Digital Typhoon
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: DigitalTyphoonDataModule
+
+DLRSD
+^^^^^
+
+.. autoclass:: DLRSDDataModule
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -128,6 +143,12 @@ FireRisk
 ^^^^^^^^
 
 .. autoclass:: FireRiskDataModule
+
+FLAIR-HUB
+^^^^^^^^^
+
+.. autoclass:: FLAIRHUBDataModule
+.. autoclass:: FLAIRHUBToyDataModule
 
 GeoNRW
 ^^^^^^

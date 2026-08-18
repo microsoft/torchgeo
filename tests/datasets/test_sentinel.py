@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -173,8 +174,10 @@ class TestSentinel2:
 
         def read_footprint_wkt(filepath: str) -> str:
             metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
-            with rasterio.open(metadata_path) as src:
-                return src.tags()['FOOTPRINT']
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                with rasterio.open(metadata_path) as src:
+                    return src.tags()['FOOTPRINT']
 
         expected = GeoSeries(
             ds.index['filepath'].map(read_footprint_wkt).map(shapely.wkt.loads),
