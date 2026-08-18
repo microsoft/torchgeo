@@ -124,7 +124,7 @@ def olmoearth_v1_unet_decoder(
     * `olmoearth-pretrain-minimal <https://pypi.org/project/olmoearth-pretrain-minimal/>`_:
       to build the decoder.
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
 
     Args:
         in_dim: Number of input feature channels, i.e. the embedding dimension
