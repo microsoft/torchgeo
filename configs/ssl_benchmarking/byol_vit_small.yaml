@@ -9,11 +9,11 @@ trainer:
   enable_progress_bar: false
   limit_val_batches: 0
   num_sanity_val_steps: 0
-  default_root_dir: outputs/moco_resnet50_lr0p0001
+  default_root_dir: output/ssl_benchmarking/byol_vit_small
   callbacks:
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: outputs/moco_resnet50_lr0p0001/checkpoints
+        dirpath: output/ssl_benchmarking/byol_vit_small/checkpoints
         filename: epoch{epoch:03d}
         auto_insert_metric_name: false
         every_n_epochs: 20
@@ -25,18 +25,16 @@ trainer:
   logger:
     - class_path: lightning.pytorch.loggers.CSVLogger
       init_args:
-        save_dir: outputs/moco_resnet50_lr0p0001
+        save_dir: output/ssl_benchmarking/byol_vit_small
         name: csv
         version: ''
         flush_logs_every_n_steps: 50
 model:
-  class_path: MoCo
+  class_path: BYOL
   init_args:
-    model: resnet50
+    model: vit_small_patch16_224
     in_channels: 13
-    version: 3
     lr: 0.0001
-    size: 224
 data:
   class_path: EuroSATDataModule
   init_args:
