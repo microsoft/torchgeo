@@ -374,7 +374,7 @@ class HabitAlp2(GeoDataset):
         os.makedirs(os.path.join(self.root, 'labels'), exist_ok=True)
 
         year_files = self.data_files[self.year]
-        needs_rgb = any(b in ['R', 'G', 'B'] for b in self.bands)
+        needs_rgb = any(b in ('R', 'G', 'B') for b in self.bands)
         needs_cir = 'NIR' in self.bands
 
         if needs_rgb and 'rgb' in year_files:
