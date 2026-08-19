@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     PASTISDataModule,
     SEN12MSDataModule,
 )
-from torchgeo.datasets import RGBBandsMissingError
+from torchgeo.datasets import FLAIRHUB, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SemanticSegmentation
@@ -61,6 +61,8 @@ class TestSemanticSegmentation:
             'dlrsd',
             'dlrsd_no_val',
             'etci2021',
+            'flairhub_multimodal_landcover',
+            'flairhub_toy_croptype',
             'ftw',
             'geonrw',
             'gid15',
@@ -97,6 +99,10 @@ class TestSemanticSegmentation:
         match name:
             case 'ftw':
                 pytest.importorskip('pyarrow')
+            case 'flairhub_multimodal_landcover' | 'flairhub_toy_croptype':
+                monkeypatch.setattr(
+                    FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+                )
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -217,7 +223,7 @@ class TestSemanticSegmentation:
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(
@@ -231,7 +237,7 @@ class TestSemanticSegmentation:
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(
@@ -289,7 +295,7 @@ class TestSemanticSegmentation:
     def test_predict_step_returns_dict(self) -> None:
         """Test that predict_step returns a dictionary."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert isinstance(result, dict)
@@ -297,7 +303,7 @@ class TestSemanticSegmentation:
     def test_predict_step_contains_required_keys(self) -> None:
         """Test that predict_step dict contains required keys."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert 'probabilities' in result
@@ -309,7 +315,7 @@ class TestSemanticSegmentation:
         num_classes = 10
         task = SemanticSegmentation(task='multiclass', num_classes=num_classes)
         batch_size = 2
-        height, width = 64, 64
+        height, width = 32, 32
         batch = {'image': torch.randn(batch_size, 3, height, width)}
         result = task.predict_step(batch, 0)
 
@@ -323,7 +329,7 @@ class TestSemanticSegmentation:
         bounds_tensor = torch.randn(2, 9)
         transform_tensor = torch.randn(2, 6)
         batch = {
-            'image': torch.randn(2, 3, 64, 64),
+            'image': torch.randn(2, 3, 32, 32),
             'bounds': bounds_tensor,
             'transform': transform_tensor,
         }

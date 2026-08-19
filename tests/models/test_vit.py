@@ -66,9 +66,7 @@ class TestViTSmall16:
 
     def test_transforms(self, weights: ViTSmall16_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTSmall16_Weights) -> None:
@@ -76,7 +74,7 @@ class TestViTSmall16:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -123,9 +121,7 @@ class TestViTBase16:
 
     def test_transforms(self, weights: ViTBase16_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTBase16_Weights) -> None:
@@ -133,7 +129,7 @@ class TestViTBase16:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -180,9 +176,7 @@ class TestViTLarge16:
 
     def test_transforms(self, weights: ViTLarge16_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTLarge16_Weights) -> None:
@@ -190,7 +184,7 @@ class TestViTLarge16:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -237,9 +231,7 @@ class TestViTHuge14:
 
     def test_transforms(self, weights: ViTHuge14_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTHuge14_Weights) -> None:
@@ -247,7 +239,7 @@ class TestViTHuge14:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -297,12 +289,7 @@ class TestViTSmall14_DINOv2:
 
     def test_transforms(self, weights: ViTSmall14_DINOv2_Weights) -> None:
         c = weights.meta['in_chans']
-        img_size = weights.meta['img_size']
-        if isinstance(img_size, int):
-            h = w = img_size
-        else:
-            h, w = img_size
-        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTSmall14_DINOv2_Weights) -> None:
@@ -310,7 +297,7 @@ class TestViTSmall14_DINOv2:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow
@@ -358,12 +345,7 @@ class TestViTBase14_DINOv2:
 
     def test_transforms(self, weights: ViTBase14_DINOv2_Weights) -> None:
         c = weights.meta['in_chans']
-        img_size = weights.meta['img_size']
-        if isinstance(img_size, int):
-            h = w = img_size
-        else:
-            h, w = img_size
-        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ViTBase14_DINOv2_Weights) -> None:
@@ -371,7 +353,7 @@ class TestViTBase14_DINOv2:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow

@@ -12,3 +12,4 @@ data:
     band_set: 's2'
   dict_kwargs:
     root: 'tests/data/so2sat'
+    checksum: false

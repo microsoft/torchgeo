@@ -33,13 +33,8 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class TestInstanceSegmentation:
     @pytest.mark.parametrize('name', ['vhr10_ins_seg'])
-    def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
-    ) -> None:
+    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
-
-        if name.startswith('vhr10'):
-            monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
 
         args = [
             '--config',
@@ -75,10 +70,9 @@ class TestInstanceSegmentation:
             InstanceSegmentation(backbone='invalid_backbone')
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -90,10 +84,9 @@ class TestInstanceSegmentation:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
         monkeypatch.setattr(VHR10DataModule, 'plot', plot_missing_bands)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -106,7 +99,7 @@ class TestInstanceSegmentation:
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictInstanceSegmentationDataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0
+            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(num_classes=11)
         trainer = Trainer(
@@ -130,6 +123,6 @@ class TestInstanceSegmentation:
     def test_multispectral_support(self, in_channels: int) -> None:
         model = InstanceSegmentation(in_channels=in_channels, num_classes=2)
         model.eval()
-        sample = [torch.randn(in_channels, 224, 224)]
+        sample = [torch.randn(in_channels, 32, 32)]
         with torch.inference_mode():
             model(sample)

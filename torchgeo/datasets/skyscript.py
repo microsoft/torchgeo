@@ -81,7 +81,7 @@ class SkyScript(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         tokenizer: 'tokenizers.models.Model | None' = None,
     ) -> None:
         """Initialize a new SkyScript instance.

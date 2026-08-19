@@ -199,7 +199,7 @@ class So2Sat(NonGeoDataset):
         split: Literal['train', 'validation', 'test'] = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
 

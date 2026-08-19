@@ -3,6 +3,7 @@
 
 """BYOL task for self-supervised learning (SSL)."""
 
+import copy
 import os
 from typing import Any
 
@@ -252,16 +253,28 @@ class BYOLModule(nn.Module):
 
         self.beta = beta
         self.in_channels = in_channels
+        # The target network must be a copy of the online network, otherwise both
+        # networks share the same weights and the momentum update is a no-op. The
+        # copy is made before any hooks are registered on the online network.
+        target_model = copy.deepcopy(model)
         self.backbone = BackboneWrapper(
             model, projection_size, hidden_size, layer=hidden_layer
         )
         self.predictor = MLP(projection_size, projection_size, hidden_size)
         self.target = BackboneWrapper(
-            model, projection_size, hidden_size, layer=hidden_layer
+            target_model, projection_size, hidden_size, layer=hidden_layer
         )
 
-        # Perform a single forward pass to initialize the wrapper correctly
+        # Perform a single forward pass to initialize the wrappers correctly
         self.backbone(torch.zeros(2, self.in_channels, *image_size))
+        with torch.no_grad():
+            self.target(torch.zeros(2, self.in_channels, *image_size))
+
+        # Initialize the target network with the same weights as the online network.
+        # The target network is only ever updated via the momentum update.
+        self.target.load_state_dict(self.backbone.state_dict())
+        for param in self.target.parameters():
+            param.requires_grad = False
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the backbone model through the MLP and prediction head.
@@ -277,7 +290,9 @@ class BYOLModule(nn.Module):
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
-        for p, pt in zip(self.backbone.parameters(), self.target.parameters()):
+        for p, pt in zip(
+            self.backbone.parameters(), self.target.parameters(), strict=True
+        ):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
@@ -333,18 +348,23 @@ class BYOL(BaseTask):
 
         # Create backbone
         backbone = timm.create_model(
-            self.hparams['model'], in_chans=in_channels, pretrained=weights is True
+            self.hparams['model'],
+            in_chans=in_channels,
+            num_classes=0,
+            pretrained=weights is True,
         )
 
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+                state_dict = weights.get_state_dict(
+                    progress=True, check_hash=True, weights_only=True
+                )
             elif os.path.exists(weights):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(
-                    progress=True, weights_only=True
+                    progress=True, check_hash=True, weights_only=True
                 )
             utils.load_state_dict(backbone, state_dict)
 
