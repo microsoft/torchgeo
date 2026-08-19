@@ -148,7 +148,7 @@ class DEO_Weights(WeightsEnum):
     """
 
     DEO_SWIN = Weights(
-        url='https://huggingface.co/SolaireTheSun/DEO/resolve/f973d29f6324fb12fca734778cf9d2ae539524bb/DEO_swin_b.pth',
+        url='https://huggingface.co/SolaireTheSun/DEO/resolve/e3111b635eda09ae534973b444db58b412c87f4c/filename-06c431372992ada3da5eb25362a4c6d477428b066c803e228e5de00272fad775.pth',
         transforms=_deo_transforms,
         meta={
             'dataset': 'fMoW, fMoW-Sentinel',
@@ -185,15 +185,9 @@ def deo_base(weights: DEO_Weights | None = None, *args: Any, **kwargs: Any) -> D
         state_dict = weights.get_state_dict(
             progress=True, check_hash=True, weights_only=True
         )
-        model.load_state_dict(state_dict, strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
 
-        assert set(model.state_dict()) & set(state_dict)
-        assert tuple(
-            state_dict['feat_extr.features.0.0.attn.relative_position_bias_table'].shape
-        ) == tuple(
-            model.state_dict()[
-                'feat_extr.features.0.0.attn.relative_position_bias_table'
-            ].shape
-        )
+        assert not missing_keys
+        assert not unexpected_keys
 
     return model
