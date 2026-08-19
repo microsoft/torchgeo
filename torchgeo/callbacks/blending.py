@@ -26,6 +26,25 @@ class PatchMetadata(TypedDict):
     edge_deltas: NotRequired[tuple[int, int, int, int]]
 
 
+def _patch_bounds_in_output_crs(
+    meta: PatchMetadata, output_crs: str | None
+) -> tuple[float, float, float, float]:
+    """Return a patch's geographic bounds expressed in the output CRS.
+
+    Today every patch is in the output CRS, and the bounds are returned directly.
+    When native-CRS samples are implemented, reproject the bounds to the output CRS.
+    ``rasterio.warp.transform_bounds(patch_crs, output_crs, *meta['geo_bbox'])``
+
+    Args:
+        meta: Metadata for a single patch.
+        output_crs: CRS the mosaic is written in.
+
+    Returns:
+        Patch bounds as ``(xmin, ymin, xmax, ymax)`` in the output CRS.
+    """
+    return meta['geo_bbox']
+
+
 def _get_edge_deltas(
     geo_bbox: tuple[float, float, float, float],
     scene_bounds: tuple[float, float, float, float],
@@ -63,7 +82,10 @@ def _get_edge_deltas(
 
 
 def _reconstruct_scene_from_patches(
-    patch_metadata: list[PatchMetadata], patch_size: tuple[int, int], delta: int = 0
+    patch_metadata: list[PatchMetadata],
+    patch_size: tuple[int, int],
+    delta: int = 0,
+    output_crs: str | None = None,
 ) -> tuple[tuple[int, int], Affine]:
     """Reconstruct scene-level transform and shape from per-patch transforms.
 
@@ -80,6 +102,7 @@ def _reconstruct_scene_from_patches(
                 | 0  0  1 |
         patch_size: Size of each patch as (height, width) in pixels.
         delta: Pixels to crop from patch edges before blending.
+        output_crs: CRS the scene is reconstructed in (used to place each patch).
 
     Returns:
         output_shape: (height, width) of full scene.
@@ -105,10 +128,11 @@ def _reconstruct_scene_from_patches(
                 f'but patch {meta["patch_id"]} has ({t[0]}, {t[4]})'
             )
 
-    all_geo_xmin = [meta['geo_bbox'][0] for meta in patch_metadata]
-    all_geo_xmax = [meta['geo_bbox'][2] for meta in patch_metadata]
-    all_geo_ymin = [meta['geo_bbox'][1] for meta in patch_metadata]
-    all_geo_ymax = [meta['geo_bbox'][3] for meta in patch_metadata]
+    boxes = [_patch_bounds_in_output_crs(meta, output_crs) for meta in patch_metadata]
+    all_geo_xmin = [b[0] for b in boxes]
+    all_geo_xmax = [b[2] for b in boxes]
+    all_geo_ymin = [b[1] for b in boxes]
+    all_geo_ymax = [b[3] for b in boxes]
 
     scene_bounds = (
         min(all_geo_xmin),
@@ -121,7 +145,7 @@ def _reconstruct_scene_from_patches(
     patch_h, patch_w = patch_size
 
     for meta in patch_metadata:
-        geo_bbox = meta['geo_bbox']
+        geo_bbox = _patch_bounds_in_output_crs(meta, output_crs)
         top, bottom, left, right = _get_edge_deltas(
             geo_bbox, scene_bounds, x_res, delta
         )
@@ -331,6 +355,76 @@ def _query_grid_index(
     return [patch_metadata[idx] for idx in candidate_indices]
 
 
+def _resolve_output_grid(
+    patch_metadata: list[PatchMetadata],
+    output_crs: str | None,
+    patch_size: tuple[int, int],
+    delta: int,
+    dataset_bounds: tuple[float, float, float, float] | None,
+    dataset_res: tuple[float, float] | None,
+) -> tuple[tuple[int, int], Affine]:
+    """Resolve the output grid (shape + transform) and assign each patch's pixel window.
+
+    Single decision point for the output grid. Extent and resolution come from the
+    dataset when known, otherwise from the patches. Sets ``meta['bbox']`` and
+    ``meta['edge_deltas']`` on each patch as a side effect, which the merge relies on.
+
+    Args:
+        patch_metadata: Metadata for every written patch.
+        output_crs: CRS the mosaic is written in.
+        patch_size: Patch size as ``(height, width)`` in pixels.
+        delta: Pixels to crop from patch edges before blending.
+        dataset_bounds: Scene bounds ``(minx, miny, maxx, maxy)``, if known upfront.
+        dataset_res: Scene resolution ``(xres, yres)``, if known upfront.
+
+    Returns:
+        output_shape: ``(height, width)`` of the full scene.
+        scene_transform: Affine transform for the full scene.
+    """
+    patch_h, patch_w = patch_size
+
+    if dataset_bounds is not None and dataset_res is not None:
+        minx, miny, maxx, maxy = dataset_bounds
+        x_res_ds, y_res_ds = dataset_res
+        output_width = round((maxx - minx) / x_res_ds)
+        output_height = round((maxy - miny) / y_res_ds)
+        output_shape = (output_height, output_width)
+        scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
+        scene_bounds = dataset_bounds
+
+        first_transform = patch_metadata[0]['transform']
+        x_res = first_transform[0]
+        y_res = abs(first_transform[4])
+
+        for meta in patch_metadata:
+            geo_bbox = _patch_bounds_in_output_crs(meta, output_crs)
+            top, bottom, left, right = _get_edge_deltas(
+                geo_bbox, scene_bounds, x_res, delta
+            )
+            meta['edge_deltas'] = (top, bottom, left, right)
+
+            patch_geo_xmin = geo_bbox[0] + left * x_res
+            patch_geo_ymax = geo_bbox[3] - top * y_res
+            effective_patch_w = patch_w - left - right
+            effective_patch_h = patch_h - top - bottom
+
+            patch_col_start = round((patch_geo_xmin - minx) / x_res)
+            patch_row_start = round((maxy - patch_geo_ymax) / y_res)
+
+            meta['bbox'] = (
+                patch_col_start,
+                patch_row_start,
+                patch_col_start + effective_patch_w,
+                patch_row_start + effective_patch_h,
+            )
+
+        return output_shape, scene_transform
+    else:
+        return _reconstruct_scene_from_patches(
+            patch_metadata, (patch_h, patch_w), delta, output_crs
+        )
+
+
 def weighted_merge(
     patch_metadata: list[PatchMetadata],
     num_classes: int,
@@ -357,7 +451,8 @@ def weighted_merge(
         blend_method: 'cosine' or 'linear'. Cosine blending uses a Hann window
             weight mask to reduce edge artifacts, as recommended by
             https://doi.org/10.1371/journal.pone.0229839.
-        crs: Coordinate reference system.
+        crs: Coordinate reference system the mosaic is written in (the output CRS
+            every patch is placed onto).
         output_path: Where to save GeoTIFF.
         chunk_size: Size of chunks for processing.
         cog_config: COG configuration.
@@ -371,44 +466,9 @@ def weighted_merge(
     with rasterio.open(patch_metadata[0]['file']) as src:
         patch_h, patch_w = src.height, src.width
 
-    if dataset_bounds is not None and dataset_res is not None:
-        minx, miny, maxx, maxy = dataset_bounds
-        x_res_ds, y_res_ds = dataset_res
-        output_width = round((maxx - minx) / x_res_ds)
-        output_height = round((maxy - miny) / y_res_ds)
-        output_shape = (output_height, output_width)
-        scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
-        scene_bounds = dataset_bounds
-
-        first_transform = patch_metadata[0]['transform']
-        x_res = first_transform[0]
-        y_res = abs(first_transform[4])
-
-        for meta in patch_metadata:
-            geo_bbox = meta['geo_bbox']
-            top, bottom, left, right = _get_edge_deltas(
-                geo_bbox, scene_bounds, x_res, delta
-            )
-            meta['edge_deltas'] = (top, bottom, left, right)
-
-            patch_geo_xmin = geo_bbox[0] + left * x_res
-            patch_geo_ymax = geo_bbox[3] - top * y_res
-            effective_patch_w = patch_w - left - right
-            effective_patch_h = patch_h - top - bottom
-
-            patch_col_start = round((patch_geo_xmin - minx) / x_res)
-            patch_row_start = round((maxy - patch_geo_ymax) / y_res)
-
-            meta['bbox'] = (
-                patch_col_start,
-                patch_row_start,
-                patch_col_start + effective_patch_w,
-                patch_row_start + effective_patch_h,
-            )
-    else:
-        output_shape, scene_transform = _reconstruct_scene_from_patches(
-            patch_metadata, (patch_h, patch_w), delta
-        )
+    output_shape, scene_transform = _resolve_output_grid(
+        patch_metadata, crs, (patch_h, patch_w), delta, dataset_bounds, dataset_res
+    )
 
     grid_size = chunk_size * 2
     grid = _build_grid_index(patch_metadata, grid_size)
