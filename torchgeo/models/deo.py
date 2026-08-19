@@ -187,4 +187,13 @@ def deo_base(weights: DEO_Weights | None = None, *args: Any, **kwargs: Any) -> D
         )
         model.load_state_dict(state_dict, strict=False)
 
+        assert set(model.state_dict()) & set(state_dict)
+        assert tuple(
+            state_dict['feat_extr.features.0.0.attn.relative_position_bias_table'].shape
+        ) == tuple(
+            model.state_dict()[
+                'feat_extr.features.0.0.attn.relative_position_bias_table'
+            ].shape
+        )
+
     return model
