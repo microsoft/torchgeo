@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+import types
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import rasterio
@@ -70,7 +71,7 @@ class GeoTIFFWriter:
 
         self.dataset: Any = None
 
-    def __enter__(self) -> GeoTIFFWriter:
+    def __enter__(self) -> Self:
         """Open GeoTIFF for writing.
 
         Returns:
@@ -88,7 +89,7 @@ class GeoTIFFWriter:
             'compress': self.cog_config.get('compress', 'lzw'),
         }
 
-        self.dataset = rasterio.open(self.output_path, 'w', **kwargs)
+        self.dataset = rasterio.open(self.output_path, 'w', **kwargs)  # ty: ignore[no-matching-overload]
         return self
 
     def write_chunk(
@@ -105,10 +106,15 @@ class GeoTIFFWriter:
             raise RuntimeError('Writer not opened. Use with statement.')
 
         h, w = data.shape
-        window = Window(x_offset, y_offset, w, h)  # ty: ignore[too-many-positional-arguments]
+        window = Window(x_offset, y_offset, w, h)
         self.dataset.write(data, 1, window=window)
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         """Close dataset on exit.
 
         Args:
