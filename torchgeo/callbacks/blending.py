@@ -50,6 +50,8 @@ def _get_edge_deltas(
     scene_bounds: tuple[float, float, float, float],
     pixel_size: float,
     delta: int,
+    *,
+    north_up: bool = True,
 ) -> tuple[int, int, int, int]:
     """Compute per-edge crop amounts based on boundary proximity.
 
@@ -61,22 +63,39 @@ def _get_edge_deltas(
     floating-point imprecision. This means patches within 1.5 pixels of a scene
     boundary are treated as boundary-touching.
 
+    Returns deltas in **array order**: top means first rows of the array, bottom
+    means last rows. For north-up rasters the first row is geo ymax; for south-up
+    it is geo ymin.
+
     Args:
         geo_bbox: Patch bounds as (xmin, ymin, xmax, ymax) in geo coordinates.
         scene_bounds: Scene bounds as (minx, miny, maxx, maxy) in geo coordinates.
         pixel_size: Size of one pixel in geo units.
         delta: Default pixels to crop from edges.
+        north_up: Whether the raster has a negative y-resolution (north at the top).
+            South-up rasters (positive y-resolution) swap top/bottom assignments.
 
     Returns:
-        Tuple of (top, bottom, left, right) crop amounts in pixels.
+        Tuple of (top, bottom, left, right) crop amounts in pixels, where top/bottom
+        refer to array rows (not geographic direction).
     """
     minx, miny, maxx, maxy = scene_bounds
     tolerance = abs(pixel_size) * 1.5
 
-    top = 0 if abs(geo_bbox[3] - maxy) < tolerance else delta
-    bottom = 0 if abs(geo_bbox[1] - miny) < tolerance else delta
     left = 0 if abs(geo_bbox[0] - minx) < tolerance else delta
     right = 0 if abs(geo_bbox[2] - maxx) < tolerance else delta
+
+    at_geo_top = abs(geo_bbox[3] - maxy) < tolerance
+    at_geo_bottom = abs(geo_bbox[1] - miny) < tolerance
+
+    if north_up:
+        # Array row 0 = geo ymax (north)
+        top = 0 if at_geo_top else delta
+        bottom = 0 if at_geo_bottom else delta
+    else:
+        # Array row 0 = geo ymin (south)
+        top = 0 if at_geo_bottom else delta
+        bottom = 0 if at_geo_top else delta
 
     return top, bottom, left, right
 
@@ -92,6 +111,9 @@ def _reconstruct_scene_from_patches(
     This leverages per-patch transforms to reconstruct the full scene metadata
     without needing upfront dataset information. Converts geo coordinates to
     pixel coordinates using a global reference frame.
+
+    Supports both north-up (negative y-resolution) and south-up (positive
+    y-resolution) rasters, determined automatically from the patch transforms.
 
     Args:
         patch_metadata: List of dicts with 'geo_bbox' and 'transform'.
@@ -118,7 +140,7 @@ def _reconstruct_scene_from_patches(
 
     first_transform = patch_metadata[0]['transform']
     x_res = first_transform[0]
-    y_res = first_transform[4]
+    y_res = first_transform[4]  # signed: negative for north-up, positive for south-up
 
     for meta in patch_metadata[1:]:
         t = meta['transform']
@@ -140,24 +162,32 @@ def _reconstruct_scene_from_patches(
         max(all_geo_xmax),
         max(all_geo_ymax),
     )
-    global_geo_xmin, _, _, global_geo_ymax = scene_bounds
+    global_geo_xmin = scene_bounds[0]
+    north_up = y_res < 0
+    # For north-up the origin row sits at ymax; for south-up at ymin
+    origin_y = scene_bounds[3] if north_up else scene_bounds[1]
 
     patch_h, patch_w = patch_size
 
     for meta in patch_metadata:
         geo_bbox = _patch_bounds_in_output_crs(meta, output_crs)
         top, bottom, left, right = _get_edge_deltas(
-            geo_bbox, scene_bounds, x_res, delta
+            geo_bbox, scene_bounds, x_res, delta, north_up=north_up
         )
         meta['edge_deltas'] = (top, bottom, left, right)
 
         patch_geo_xmin = geo_bbox[0] + left * x_res
-        patch_geo_ymax = geo_bbox[3] - top * abs(y_res)
         effective_patch_w = patch_w - left - right
         effective_patch_h = patch_h - top - bottom
 
+        # Compute the y coordinate of this patch's array origin (row 0 after crop)
+        if north_up:
+            patch_origin_y = geo_bbox[3] - top * abs(y_res)
+        else:
+            patch_origin_y = geo_bbox[1] + top * y_res
+
         patch_col_start = round((patch_geo_xmin - global_geo_xmin) / x_res)
-        patch_row_start = round((global_geo_ymax - patch_geo_ymax) / abs(y_res))
+        patch_row_start = round((patch_origin_y - origin_y) / y_res)
 
         meta['bbox'] = (
             patch_col_start,
@@ -186,9 +216,9 @@ def _reconstruct_scene_from_patches(
         )
 
     scene_geo_xmin = global_geo_xmin + min_x * x_res
-    scene_geo_ymax = global_geo_ymax + min_y * y_res
+    scene_origin_y = origin_y + min_y * y_res
 
-    scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_geo_ymax)
+    scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_origin_y)
 
     output_width = max_x - min_x
     output_height = max_y - min_y
@@ -389,27 +419,39 @@ def _resolve_output_grid(
         output_width = round((maxx - minx) / x_res_ds)
         output_height = round((maxy - miny) / y_res_ds)
         output_shape = (output_height, output_width)
-        scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
-        scene_bounds = dataset_bounds
 
         first_transform = patch_metadata[0]['transform']
         x_res = first_transform[0]
-        y_res = abs(first_transform[4])
+        y_res_signed = first_transform[4]
+        north_up = y_res_signed < 0
+        y_res = abs(y_res_signed)
+
+        if north_up:
+            scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
+        else:
+            scene_transform = Affine(x_res_ds, 0, minx, 0, y_res_ds, miny)
+
+        scene_bounds = dataset_bounds
+        origin_y = maxy if north_up else miny
 
         for meta in patch_metadata:
             geo_bbox = _patch_bounds_in_output_crs(meta, output_crs)
             top, bottom, left, right = _get_edge_deltas(
-                geo_bbox, scene_bounds, x_res, delta
+                geo_bbox, scene_bounds, x_res, delta, north_up=north_up
             )
             meta['edge_deltas'] = (top, bottom, left, right)
 
             patch_geo_xmin = geo_bbox[0] + left * x_res
-            patch_geo_ymax = geo_bbox[3] - top * y_res
             effective_patch_w = patch_w - left - right
             effective_patch_h = patch_h - top - bottom
 
+            if north_up:
+                patch_origin_y = geo_bbox[3] - top * y_res
+            else:
+                patch_origin_y = geo_bbox[1] + top * y_res
+
             patch_col_start = round((patch_geo_xmin - minx) / x_res)
-            patch_row_start = round((maxy - patch_geo_ymax) / y_res)
+            patch_row_start = round((patch_origin_y - origin_y) / y_res_signed)
 
             meta['bbox'] = (
                 patch_col_start,
