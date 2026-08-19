@@ -16,7 +16,10 @@ from tqdm import tqdm
 
 
 class PatchMetadata(TypedDict):
-    """Metadata for a single prediction patch."""
+    """Metadata for a single prediction patch.
+
+    .. versionadded:: 0.11
+    """
 
     patch_id: int
     file: Path
@@ -218,7 +221,7 @@ def _reconstruct_scene_from_patches(
     scene_geo_xmin = global_geo_xmin + min_x * x_res
     scene_origin_y = origin_y + min_y * y_res
 
-    scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_origin_y)
+    scene_transform = Affine(x_res, 0, scene_geo_xmin, 0, y_res, scene_origin_y)  # ty: ignore[call-non-callable]
 
     output_width = max_x - min_x
     output_height = max_y - min_y
@@ -427,9 +430,9 @@ def _resolve_output_grid(
         y_res = abs(y_res_signed)
 
         if north_up:
-            scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)
+            scene_transform = Affine(x_res_ds, 0, minx, 0, -y_res_ds, maxy)  # ty: ignore[call-non-callable]
         else:
-            scene_transform = Affine(x_res_ds, 0, minx, 0, y_res_ds, miny)
+            scene_transform = Affine(x_res_ds, 0, minx, 0, y_res_ds, miny)  # ty: ignore[call-non-callable]
 
         scene_bounds = dataset_bounds
         origin_y = maxy if north_up else miny
@@ -484,6 +487,8 @@ def weighted_merge(
 
     Uses chunked processing with spatial indexing for memory-efficient
     merging of arbitrarily large scenes.
+
+    .. versionadded:: 0.11
 
     Args:
         patch_metadata: List of dicts with 'file', 'bbox', 'transform'.

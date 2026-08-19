@@ -49,7 +49,7 @@ def _save_test_patch(
         width=one_hot.shape[2],
         count=one_hot.shape[0],
         dtype='uint8',
-        transform=Affine(*transform),
+        transform=Affine(*transform),  # ty: ignore[call-non-callable]
         crs=crs,
     ) as dst:
         dst.write(one_hot)
@@ -71,7 +71,7 @@ class TestReconstructSceneFromPatches:
         shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (64, 64)
-        assert transform == Affine(10.0, 0, 0, 0, -10.0, 1000)
+        assert transform == Affine(10.0, 0, 0, 0, -10.0, 1000)  # ty: ignore[call-non-callable]
         assert meta[0]['bbox'] == (0, 0, 64, 64)
 
     def test_two_patches_horizontal(self) -> None:
@@ -92,7 +92,7 @@ class TestReconstructSceneFromPatches:
         shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (64, 96)
-        assert transform == Affine(1.0, 0, 100.0, 0, -1.0, 200.0)
+        assert transform == Affine(1.0, 0, 100.0, 0, -1.0, 200.0)  # ty: ignore[call-non-callable]
         assert meta[0]['bbox'] == (0, 0, 64, 64)
         assert meta[1]['bbox'] == (32, 0, 96, 64)
 
@@ -127,7 +127,7 @@ class TestReconstructSceneFromPatches:
         shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (64, 64)
-        assert transform == Affine(10.0, 0, 0, 0, 10.0, 0)
+        assert transform == Affine(10.0, 0, 0, 0, 10.0, 0)  # ty: ignore[call-non-callable]
         assert meta[0]['bbox'] == (0, 0, 64, 64)
 
     def test_two_patches_vertical_south_up(self) -> None:
@@ -148,7 +148,7 @@ class TestReconstructSceneFromPatches:
         shape, transform = _reconstruct_scene_from_patches(meta, (64, 64), delta=0)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         assert shape == (96, 64)
-        assert transform == Affine(1.0, 0, 0.0, 0, 1.0, 0.0)
+        assert transform == Affine(1.0, 0, 0.0, 0, 1.0, 0.0)  # ty: ignore[call-non-callable]
         assert meta[0]['bbox'] == (0, 0, 64, 64)
         assert meta[1]['bbox'] == (0, 32, 64, 96)
 

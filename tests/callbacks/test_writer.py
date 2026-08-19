@@ -19,7 +19,7 @@ class TestGeoTIFFWriter:
     def test_write_single_chunk(self, tmp_path: Path) -> None:
         """Test writing single chunk."""
         output = tmp_path / 'test.tif'
-        transform = Affine(1, 0, 0, 0, -1, 100)
+        transform = Affine(1, 0, 0, 0, -1, 100)  # ty: ignore[call-non-callable]
 
         writer = GeoTIFFWriter(
             output_path=output,
@@ -45,7 +45,7 @@ class TestGeoTIFFWriter:
     def test_write_multiple_chunks(self, tmp_path: Path) -> None:
         """Test writing multiple chunks."""
         output = tmp_path / 'test.tif'
-        transform = Affine(1, 0, 0, 0, -1, 100)
+        transform = Affine(1, 0, 0, 0, -1, 100)  # ty: ignore[call-non-callable]
 
         writer = GeoTIFFWriter(
             output_path=output,
@@ -72,7 +72,7 @@ class TestGeoTIFFWriter:
     def test_write_without_context_raises(self, tmp_path: Path) -> None:
         """Test writing without context manager raises error."""
         output = tmp_path / 'test.tif'
-        transform = Affine(1, 0, 0, 0, -1, 100)
+        transform = Affine(1, 0, 0, 0, -1, 100)  # ty: ignore[call-non-callable]
 
         writer = GeoTIFFWriter(
             output_path=output,
@@ -90,7 +90,7 @@ class TestGeoTIFFWriter:
     def test_finalize_with_overviews(self, tmp_path: Path) -> None:
         """Test finalize creates overviews when configured."""
         output = tmp_path / 'test_cog.tif'
-        transform = Affine(1, 0, 0, 0, -1, 256)
+        transform = Affine(1, 0, 0, 0, -1, 256)  # ty: ignore[call-non-callable]
 
         writer = GeoTIFFWriter(
             output_path=output,

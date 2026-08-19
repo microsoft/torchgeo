@@ -18,6 +18,8 @@ from rasterio.windows import Window
 class GeoTIFFWriter:
     """GeoTIFF writer with chunked writing and COG support.
 
+    .. versionadded:: 0.11
+
     Example::
 
         writer = GeoTIFFWriter(
