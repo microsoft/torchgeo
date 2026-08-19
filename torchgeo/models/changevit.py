@@ -11,10 +11,9 @@ from typing import Any
 
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules import Module
 
 
@@ -270,7 +269,7 @@ class ChangeViT(Module):
             **kwargs,
         )
 
-        embed_dim: int = self.encoder.embed_dim  # ty: ignore[invalid-assignment]
+        embed_dim: int = self.encoder.embed_dim
 
         self.detail_capture = DetailCaptureModule(
             in_channels=in_channels * 2, pretrained=pretrained

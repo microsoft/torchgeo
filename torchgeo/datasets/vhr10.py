@@ -72,12 +72,12 @@ class VHR10(NonGeoDataset):
     image_meta: ClassVar[dict[str, str]] = {
         'url': 'https://hf.co/datasets/isaaccorley/vhr10/resolve/60ecc4be33609184e2224606858cd00b7daba8df/NWPU%20VHR-10%20dataset.zip',
         'filename': 'NWPU VHR-10 dataset.zip',
-        'md5': '6add6751469c12dd8c8d6223064c6c4d',
+        'sha256': '3e8c0299bad6b5d2b4d4034095c3581f50a02bc0dcb97fca70f6ad739f7cbf53',
     }
     target_meta: ClassVar[dict[str, str]] = {
         'url': 'https://hf.co/datasets/isaaccorley/vhr10/resolve/7e7968ad265dadc4494e0ca4a079e0b63dc6f3f8/annotations.json',
         'filename': 'annotations.json',
-        'md5': '7c76ec50c17a61bb0514050d20f22c08',
+        'sha256': 'dde27d9362d9c6aa358a1cab160c9e075e57405d3fe876de049973c6e6150f0e',
     }
 
     categories = (
@@ -110,7 +110,7 @@ class VHR10(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` argument is invalid
@@ -205,11 +205,11 @@ class VHR10(NonGeoDataset):
         """Check integrity of dataset.
 
         Returns:
-            True if dataset files are found and/or MD5s match, else False
+            True if dataset files are found and/or checksums match, else False
         """
         image: bool = check_integrity(
             os.path.join(self.root, self.image_meta['filename']),
-            self.image_meta['md5'] if self.checksum else None,
+            sha256=self.image_meta['sha256'] if self.checksum else None,
         )
 
         # Annotations only needed for "positive" image set
@@ -219,7 +219,7 @@ class VHR10(NonGeoDataset):
                 os.path.join(
                     self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']
                 ),
-                self.target_meta['md5'] if self.checksum else None,
+                sha256=self.target_meta['sha256'] if self.checksum else None,
             )
 
         return image and target
@@ -235,7 +235,7 @@ class VHR10(NonGeoDataset):
             self.image_meta['url'],
             self.root,
             filename=self.image_meta['filename'],
-            md5=self.image_meta['md5'] if self.checksum else None,
+            sha256=self.image_meta['sha256'] if self.checksum else None,
         )
 
         # Annotations only needed for "positive" image set
@@ -245,7 +245,7 @@ class VHR10(NonGeoDataset):
                 self.target_meta['url'],
                 os.path.join(self.root, 'NWPU VHR-10 dataset'),
                 self.target_meta['filename'],
-                self.target_meta['md5'] if self.checksum else None,
+                sha256=self.target_meta['sha256'] if self.checksum else None,
             )
 
     def plot(
@@ -341,7 +341,6 @@ class VHR10(NonGeoDataset):
             scores = sample['prediction_score']
             labels = sample['prediction_label']
             boxes = sample['prediction_bbox_xyxy']
-            masks = sample['prediction_mask']
             for i in range(len(labels)):
                 score = scores[i]
                 if score < 0.5:
@@ -379,7 +378,8 @@ class VHR10(NonGeoDataset):
                     )
 
                 # Masks
-                if show_feats in {'masks', 'both'}:
+                if 'prediction_mask' in sample and show_feats in {'masks', 'both'}:
+                    masks = sample['prediction_mask']
                     mask = masks[i]
                     alpha = mask * mask_alpha
                     mask = mask * class_num
@@ -390,7 +390,5 @@ class VHR10(NonGeoDataset):
 
         if suptitle is not None:
             fig.suptitle(suptitle)
-
-        fig.tight_layout()
 
         return fig

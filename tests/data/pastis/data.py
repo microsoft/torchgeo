@@ -32,9 +32,7 @@ def create_file(path: str) -> None:
         t = np.random.randint(1, MAX_NUM_TIME_STEPS)
         if fn.startswith('S2'):
             data = np.random.randint(0, 256, size=(t, 10, SIZE, SIZE)).astype(np.int16)
-        elif fn.startswith('S1A'):
-            data = np.random.randint(0, 256, size=(t, 3, SIZE, SIZE)).astype(np.float16)
-        elif fn.startswith('S1D'):
+        elif fn.startswith(('S1A', 'S1D')):
             data = np.random.randint(0, 256, size=(t, 3, SIZE, SIZE)).astype(np.float16)
         elif fn.startswith('TARGET'):
             data = np.random.randint(0, 20, size=(3, SIZE, SIZE)).astype(np.uint8)

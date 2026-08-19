@@ -9,6 +9,7 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import inspect
 import os
 import sys
 
@@ -36,11 +37,13 @@ release = torchgeo.__version__
 extensions = [
     'myst_parser',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.linkcode',
     'nbsphinx',
+    'sphinx_github_changelog',
 ]
 
 # List of patterns, relative to source directory, that match files and
@@ -48,9 +51,8 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 5.3+ required to allow section titles inside autodoc class docstrings
-# https://github.com/sphinx-doc/sphinx/pull/10887
-needs_sphinx = '5.3'
+# Sphinx 8.0+ required by pydata-sphinx-theme 0.18.0+
+needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
@@ -62,6 +64,7 @@ nitpick_ignore = [
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
+    ('py:class', 'numpy._typing._array_like.NDArray'),
     ('py:class', 'numpy.uint8'),
     ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
     ('py:class', 'timm.models.resnet.ResNet'),
@@ -72,7 +75,6 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
-    ('py:class', 'torchgeo.datasets.skyscript.CaptionSample'),
 ]
 
 
@@ -84,7 +86,7 @@ html_theme = 'pydata_sphinx_theme'
 
 # Define the version we use for matching in the version switcher.
 version_match = os.environ.get('READTHEDOCS_VERSION')
-json_url = 'https://torchgeo.readthedocs.io/en/latest/_static/switcher.json'
+json_url = 'https://docs.torchgeo.org/en/latest/_static/switcher.json'
 
 # If READTHEDOCS_VERSION doesn't exist, we're not on RTD
 # If it is an integer, we're in a PR build and the version isn't correct.
@@ -126,6 +128,11 @@ html_theme_options = {
             'name': 'YouTube',
             'url': 'https://www.youtube.com/@TorchGeo',
             'icon': 'fa-brands fa-youtube',
+        },
+        {
+            'name': 'Hugging Face',
+            'url': 'https://huggingface.co/torchgeo',
+            'icon': 'fa-brands fa-hugging-face',
         },
     ],
     'analytics': {'google_analytics_id': 'UA-209075005-1'},
@@ -172,6 +179,7 @@ intersphinx_mapping = {
     'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
+    'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
@@ -184,3 +192,47 @@ suppress_warnings = ['myst.header']
 nbsphinx_execute = 'never'
 with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
     nbsphinx_prolog = f.read()
+
+# sphinx-github-changelog
+sphinx_github_changelog_token = os.environ.get('SPHINX_GITHUB_CHANGELOG_TOKEN')
+
+
+# sphinx.ext.linkcode
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """Resolve a GitHub URL for the given Python object."""
+    if domain != 'py':
+        return None
+
+    modname = info.get('module', '')
+    fullname = info.get('fullname', '')
+    if not modname:
+        return None
+
+    try:
+        mod = sys.modules.get(modname)
+        if mod is None:
+            __import__(modname)
+            mod = sys.modules[modname]
+
+        obj = mod
+        for part in fullname.split('.'):
+            obj = getattr(obj, part)
+
+        obj = inspect.unwrap(obj)
+        sourcefile = inspect.getsourcefile(obj)
+        if sourcefile is None:
+            return None
+        source, lineno = inspect.getsource(obj), inspect.getsourcelines(obj)[1]
+    except Exception:  # noqa: BLE001
+        return None
+
+    # Make path relative to the repo root
+    sourcefile = os.path.relpath(
+        sourcefile, start=os.path.join(os.path.dirname(__file__), '..')
+    )
+
+    lineend = lineno + source.count('\n') - 1
+    return (
+        f'https://github.com/torchgeo/torchgeo/blob/main/{sourcefile}'
+        f'#L{lineno}-L{lineend}'
+    )

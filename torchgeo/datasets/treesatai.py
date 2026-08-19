@@ -99,10 +99,10 @@ class TreeSatAI(NonGeoDataset):
 
     # https://zenodo.org/records/6780578/files/220629_doc_TreeSatAI_benchmark_archive.pdf
     all_sensors: tuple[Literal['aerial', 's1', 's2'], ...] = ('aerial', 's1', 's2')
-    all_bands: ClassVar[dict[str, list[str]]] = {
-        'aerial': ['IR', 'G', 'B', 'R'],
-        's1': ['VV', 'VH', 'VV/VH'],
-        's2': [
+    all_bands_dict: ClassVar[dict[str, tuple[str, ...]]] = {
+        'aerial': ('IR', 'G', 'B', 'R'),
+        's1': ('VV', 'VH', 'VV/VH'),
+        's2': (
             'B02',
             'B03',
             'B04',
@@ -115,12 +115,12 @@ class TreeSatAI(NonGeoDataset):
             'B12',
             'B01',
             'B09',
-        ],
+        ),
     }
-    rgb_bands: ClassVar[dict[str, list[str]]] = {
-        'aerial': ['R', 'G', 'B'],
-        's1': ['VV', 'VH', 'VV/VH'],
-        's2': ['B04', 'B03', 'B02'],
+    rgb_bands_dict: ClassVar[dict[str, tuple[str, ...]]] = {
+        'aerial': ('R', 'G', 'B'),
+        's1': ('VV', 'VH', 'VV/VH'),
+        's2': ('B04', 'B03', 'B02'),
     }
 
     def __init__(
@@ -253,7 +253,10 @@ class TreeSatAI(NonGeoDataset):
 
         for i, sensor in enumerate(self.sensors):
             image = sample[f'image_{sensor}']
-            bands = [self.all_bands[sensor].index(b) for b in self.rgb_bands[sensor]]
+            bands = [
+                self.all_bands_dict[sensor].index(b)
+                for b in self.rgb_bands_dict[sensor]
+            ]
             image = rearrange(image[bands], 'c h w -> h w c')
             image = quantile_normalization(image)
             ax[0, i].imshow(image)
@@ -287,7 +290,7 @@ class TreeSatAI(NonGeoDataset):
         labels: list[tuple[str, float]] = []
         for i, pct in enumerate(multilabel):
             if pct > 0.001:
-                labels.append((self.classes[i], pct))
+                labels.append((self.classes[i], pct.item()))
 
         labels.sort(key=lambda label: label[1], reverse=True)
         return ', '.join([f'{genus}: {pct:.1%}' for genus, pct in labels])

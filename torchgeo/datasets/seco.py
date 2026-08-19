@@ -99,7 +99,7 @@ class SeasonalContrastS2(NonGeoDataset):
             AssertionError: if ``version`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert version in self.metadata.keys()
+        assert version in self.metadata
         assert seasons in range(5)
         for band in bands:
             assert band in self.all_bands
@@ -255,7 +255,7 @@ class SeasonalContrastS2(NonGeoDataset):
         for i in range(self.seasons):
             image = sample['image'][indices + i * len(self.bands)]
             image = einops.rearrange(image, 'c h w -> h w c')
-            image = quantile_normalization(image, 0, 1)
+            image = quantile_normalization(image)
 
             axes[i].imshow(image)
             axes[i].axis('off')

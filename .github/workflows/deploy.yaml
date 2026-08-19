@@ -9,20 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.6.0
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: '3.14'
           activate-environment: true
       - name: Install dependencies
         run: uv pip install build
       - name: List dependencies
-        run: uv pip list
+        run: uv tree
       - name: Build project
         run: python -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: pypi-dist
           path: dist/
@@ -43,4 +43,4 @@ jobs:
           name: pypi-dist
           path: dist/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.1

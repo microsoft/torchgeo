@@ -1,5 +1,5 @@
 model:
-  class_path: SimCLRTask
+  class_path: SimCLR
   init_args:
     model: 'resnet18'
     in_channels: 12

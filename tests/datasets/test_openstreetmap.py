@@ -210,9 +210,7 @@ class TestOpenStreetMap:
             OpenStreetMap
         )  # Create instance without __init__
         dataset.bbox = bbox
-        dataset.classes: list[OSMClassConfig] = [
-            {'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}
-        ]
+        dataset.classes = [{'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}]
         dataset.root = pathlib.Path(root)
         assert not dataset._check_integrity()
 
@@ -509,9 +507,7 @@ class TestOpenStreetMap:
         # Direct call to _download_data
         dataset = OpenStreetMap.__new__(OpenStreetMap)
         dataset.bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        dataset.classes: list[OSMClassConfig] = [
-            {'name': 'building', 'selector': [{'building': '*'}]}
-        ]
+        dataset.classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
         dataset.root = tmp_path
 
         with pytest.raises(ValueError, match='No features found in the specified area'):
@@ -538,7 +534,7 @@ class TestOpenStreetMap:
 
         # Make all requests fail
         def mock_post_fail(*_: Any, **__: Any) -> NoReturn:
-            raise Exception('Connection failed')
+            raise RuntimeError('Connection failed')
 
         monkeypatch.setattr(
             'torchgeo.datasets.openstreetmap.requests.post', mock_post_fail
@@ -580,9 +576,9 @@ class TestOpenStreetMap:
             # Valid case - should not raise
             ([{'name': 'building', 'selector': [{'building': '*'}]}], None, None),
             # Invalid cases
-            ([], ValueError, 'classes must be a non-empty list'),
-            ('invalid', ValueError, 'classes must be a non-empty list'),
-            (['invalid'], ValueError, 'Class 0 must be a dictionary'),
+            ([], TypeError, 'classes must be a non-empty list'),
+            ('invalid', TypeError, 'classes must be a non-empty list'),
+            (['invalid'], TypeError, 'Class 0 must be a dictionary'),
             (
                 [{'name': 'test'}],
                 ValueError,
@@ -590,12 +586,12 @@ class TestOpenStreetMap:
             ),
             (
                 [{'name': 'test', 'selector': 'invalid'}],
-                ValueError,
+                TypeError,
                 'Class 0 selector must be a list',
             ),
             (
                 [{'name': 'test', 'selector': ['invalid']}],
-                ValueError,
+                TypeError,
                 'Class 0 selector 0 must be a dictionary',
             ),
         ],

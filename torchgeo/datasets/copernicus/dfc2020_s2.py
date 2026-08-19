@@ -26,7 +26,7 @@ class CopernicusBenchDFC2020S2(CopernicusBenchBase):
     """
 
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_dfc2020_s1s2/dfc2020.zip'
-    md5 = 'f10ba017dab6f38b7a6857b169ea924b'
+    sha256 = '5fef94b3481489941f3d409db25615212cc17f906cee48fdbe29b7bccedbc9fd'
     zipfile = 'dfc2020.zip'
     directory = 'dfc2020_s1s2'
     filename = 'dfc-{}-new.csv'

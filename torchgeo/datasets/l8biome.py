@@ -15,7 +15,14 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import (
+    GeoSlice,
+    Path,
+    Sample,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class L8BiomeImage(RasterDataset):
@@ -120,15 +127,15 @@ class L8Biome(IntersectionDataset):
 
     url = 'https://hf.co/datasets/torchgeo/l8biome/resolve/f76df19accce34d2acc1878d88b9491bc81f94c8/{}.tar.gz'
 
-    md5s: ClassVar[dict[str, str]] = {
-        'barren': '0eb691822d03dabd4f5ea8aadd0b41c3',
-        'forest': '4a5645596f6bb8cea44677f746ec676e',
-        'grass_crops': 'a69ed5d6cb227c5783f026b9303cdd3c',
-        'shrubland': '19df1d0a604faf6aab46d6a7a5e6da6a',
-        'snow_ice': 'af8b189996cf3f578e40ee12e1f8d0c9',
-        'urban': '5450195ed95ee225934b9827bea1e8b0',
-        'water': 'a81153415eb662c9e6812c2a8e38c743',
-        'wetlands': '1f86cc354631ca9a50ce54b7cab3f557',
+    sha256s: ClassVar[dict[str, str]] = {
+        'barren': '96104e03b50e6fed6a7e0d695133653c2b30893b6c25b4e06fe2f0947a2c96ea',
+        'forest': '55b3728ae82a2cc67dec25cd0a262eb1f3e78f65d101b9f9a3c06577c851c912',
+        'grass_crops': '86a436d51bb511022352b029f8acc8f9a308f390982cbbd3ae5024dd23ebf24c',
+        'shrubland': '5a4891ebe03c45e97407e59b8101b0467317235015fc3ab12ca32c7e915a6be9',
+        'snow_ice': 'b8ef5ce0b3442a7444b48b6b4076bf975567d6d7764fc1c5bd60700936c0eb3f',
+        'urban': '19e05ab8d80082f0ea6a6c53ab9989d6c7b5cbc93a3c18deebda8ca56bc43e9d',
+        'water': 'd9b6d554b1c8f7987d53ab81fa8fbd565bb73a87a702cc3cb161bf6a9373f83a',
+        'wetlands': 'ae8ad56992ca314ba6c10ba5e360f77b9590bb1d7b455032e5937bc078ffc8cc',
     }
 
     def __init__(
@@ -157,7 +164,7 @@ class L8Biome(IntersectionDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            checksum: if True, verify the checksum of the downloaded files (may be slow)
             time_series: if True, stack data along the time series dimension
                 [T, C, H, W]. If False, merge data into a [C, H, W] mosaic.
 
@@ -216,9 +223,9 @@ class L8Biome(IntersectionDataset):
         """Download the dataset."""
         assert isinstance(self.paths, str | os.PathLike)
         paths = cast(Path, self.paths)
-        for biome, md5 in self.md5s.items():
+        for biome, sha256 in self.sha256s.items():
             download_url(
-                self.url.format(biome), paths, md5=md5 if self.checksum else None
+                self.url.format(biome), paths, sha246=sha256 if self.checksum else None
             )
 
     def _extract(self) -> None:
@@ -253,9 +260,7 @@ class L8Biome(IntersectionDataset):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         mask = sample['mask'].numpy().astype('uint8').squeeze()
 

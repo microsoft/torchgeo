@@ -22,6 +22,8 @@ from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
 
+pytestmark = pytest.mark.filterwarnings('ignore:Use .* instead:DeprecationWarning')
+
 
 class CustomBatchGeoSampler(BatchGeoSampler):
     def __iter__(self) -> Iterator[list[GeoSlice]]:
@@ -45,7 +47,8 @@ class CustomGeoDataset(GeoDataset):
 
 class TestBatchGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 100, 100)]
         return CustomGeoDataset(geometry)
 
@@ -84,7 +87,8 @@ class TestBatchGeoSampler:
 
 class TestRandomBatchGeoSampler:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomGeoDataset:
+    @classmethod
+    def dataset(cls) -> CustomGeoDataset:
         geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
         return CustomGeoDataset(geometry)
 

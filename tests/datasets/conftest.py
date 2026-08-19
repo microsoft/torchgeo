@@ -3,10 +3,12 @@
 
 import os
 import shutil
+from collections.abc import Generator
 from typing import Any
 
 import pytest
 from _pytest.fixtures import SubRequest
+from _pytest.tmpdir import TempPathFactory
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
@@ -29,6 +31,20 @@ def download_url(monkeypatch: MonkeyPatch, request: SubRequest) -> None:
         pass
     monkeypatch.setattr('torchgeo.datasets.copernicus.embed.download_url', copy)
     monkeypatch.setattr('torchgeo.datasets.copernicus.lcz_s2.download_url', copy)
+
+
+@pytest.fixture(scope='module')
+def temp_archive(
+    request: SubRequest, tmp_path_factory: TempPathFactory
+) -> Generator[tuple[str, str], None, None]:
+    dir_not_zipped = request.param
+    dir_zipped = shutil.make_archive(
+        tmp_path_factory.mktemp('archive') / dir_not_zipped,
+        'zip',
+        root_dir=dir_not_zipped,
+    )
+    yield dir_not_zipped, dir_zipped
+    os.remove(dir_zipped)
 
 
 @pytest.fixture

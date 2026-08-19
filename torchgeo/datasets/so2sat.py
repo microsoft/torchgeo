@@ -313,9 +313,7 @@ class So2Sat(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         md5 = self.md5s_by_version[self.version][self.split]
-        if not check_integrity(self.fn, md5 if self.checksum else None):
-            return False
-        return True
+        return check_integrity(self.fn, md5 if self.checksum else None)
 
     def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.
@@ -362,7 +360,7 @@ class So2Sat(NonGeoDataset):
 
         image = sample['image'][rgb_indices]
         image = einops.rearrange(image, 'c h w -> h w c')
-        image = quantile_normalization(image, 0, 1)
+        image = quantile_normalization(image)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]

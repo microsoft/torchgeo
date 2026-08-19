@@ -13,7 +13,7 @@ from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path, Sample
+from .utils import Path, Sample, quantile_normalization
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -130,9 +130,7 @@ class Landsat(RasterDataset, abc.ABC):
                 raise RGBBandsMissingError()
 
         image = sample['image'][rgb_indices].permute(1, 2, 0).float()
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
+        image = quantile_normalization(image)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 

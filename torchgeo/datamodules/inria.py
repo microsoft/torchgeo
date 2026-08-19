@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 
 from ..datasets import InriaAerialImageLabeling
-from ..datasets.utils import Sample
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -84,24 +83,3 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         if stage in ['predict']:
             # Test set masks are not public, use for prediction instead
             self.predict_dataset = InriaAerialImageLabeling(split='test', **self.kwargs)
-
-    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-
-        .. versionadded:: 0.7
-        """
-        # This solves a special case where if batch_size=1 the mask won't be stacked correctly
-        if 'mask' in batch and batch['mask'].ndim == 3:
-            batch['mask'] = batch['mask'].unsqueeze(0)
-            batch = super().on_after_batch_transfer(batch, dataloader_idx)
-            batch['mask'] = batch['mask'].squeeze(dim=1)
-            return batch
-        else:
-            return super().on_after_batch_transfer(batch, dataloader_idx)

@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import torch
-import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 
 from torchgeo.datasets import (
     ChesapeakeCVPR,
@@ -33,8 +33,8 @@ class TestChesapeakeDC:
             '{state}_lulc_{year}_2022-Edition.zip',
         )
         monkeypatch.setattr(ChesapeakeDC, 'url', url)
-        md5s = {2018: ''}
-        monkeypatch.setattr(ChesapeakeDC, 'md5s', md5s)
+        sha256s = {2018: ''}
+        monkeypatch.setattr(ChesapeakeDC, 'sha256s', sha256s)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         transforms = nn.Identity()
         return ChesapeakeDC(tmp_path, transforms=transforms, download=True)
@@ -202,3 +202,22 @@ class TestChesapeakeCVPR:
             x['prediction'] = x['mask'][0, :, :].clone()
         dataset.plot(x)
         plt.close()
+
+    def test_partially_out_of_raster_query(self, dataset: ChesapeakeCVPR) -> None:
+        # Regression test for https://github.com/torchgeo/torchgeo/issues/3678
+        # Constructs a query whose right half lies outside the tile's raster
+        # footprint (after EPSG:3857 -> UTM reprojection). Before the fix the
+        # dataset returned a clipped tensor, which broke downstream transforms
+        # like K.CenterCrop. After the fix the returned tensor must match the
+        # requested patch shape, with the out-of-raster region zero-filled.
+        x, y, t = dataset.bounds
+        xshift = (x.stop - x.start) / 2
+        shifted_x = slice(x.start + xshift, x.stop + xshift, x.step)
+        sample = dataset[shifted_x, y, t]
+        ref = dataset[dataset.bounds]
+        assert sample['image'].shape == ref['image'].shape
+        assert sample['mask'].shape == ref['mask'].shape
+        # The shifted-right half of the query is outside the raster, so at
+        # least one column on the right should be zero-filled.
+        assert torch.all(sample['image'][..., -1] == 0)
+        assert torch.all(sample['mask'][..., -1] == 0)
