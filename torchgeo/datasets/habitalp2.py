@@ -72,7 +72,7 @@ class HabitAlp2(GeoDataset):
     Dataset format:
 
     * images are multi-band GeoTIFFs
-    * masks are single-band GeoTIFFs with class IDs 1-23
+    * masks are single-band GeoTIFFs with class IDs 0-23 (0=background)
 
     If you use this dataset in your research, please cite the following paper:
 
