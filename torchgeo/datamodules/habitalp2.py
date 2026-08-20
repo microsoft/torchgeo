@@ -19,7 +19,7 @@ class HabitAlp2DataModule(GeoDataModule):
 
     Supports both semantic segmentation and change detection tasks.
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
     """
 
     def __init__(
