@@ -8,8 +8,10 @@ from collections.abc import Callable, Sequence
 from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from matplotlib.figure import Figure
+from matplotlib.patches import Patch
 from pyproj import CRS
 from torch import Tensor
 
@@ -78,7 +80,7 @@ class HabitAlp2(GeoDataset):
 
     * https://doi.org/10.48550/arXiv.2511.00073
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
     """
 
     url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/df01fe8ae22df182e7bf1c2e3e713dcfd92c0c81/'
@@ -432,16 +434,11 @@ class HabitAlp2(GeoDataset):
         image = image.permute(1, 2, 0).numpy()
 
         mask = sample['mask'].numpy()
+        cmap = plt.colormaps.get_cmap('tab20').resampled(24)
 
         axs[0].imshow(image)
         axs[0].axis('off')
-        axs[1].imshow(
-            mask,
-            vmin=0,
-            vmax=23,
-            cmap=plt.colormaps.get_cmap('tab20').resampled(24),
-            interpolation='none',
-        )
+        axs[1].imshow(mask, vmin=0, vmax=23, cmap=cmap, interpolation='none')
         axs[1].axis('off')
 
         if show_titles:
@@ -450,16 +447,23 @@ class HabitAlp2(GeoDataset):
 
         if showing_predictions:
             prediction = sample['prediction'].numpy()
-            axs[2].imshow(
-                prediction,
-                vmin=0,
-                vmax=23,
-                cmap=plt.colormaps.get_cmap('tab20').resampled(24),
-                interpolation='none',
-            )
+            axs[2].imshow(prediction, vmin=0, vmax=23, cmap=cmap, interpolation='none')
             axs[2].axis('off')
             if show_titles:
                 axs[2].set_title('Prediction')
+
+        present = np.unique(mask)
+        legend_elements = [
+            Patch(facecolor=cmap(i / 23), edgecolor='k', label=self.classes[i])
+            for i in present
+            if i < len(self.classes)
+        ]
+        axs[-1].legend(
+            handles=legend_elements,
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            fontsize='small',
+        )
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -498,7 +502,7 @@ class HabitAlp2CD(GeoDataset):
 
     * https://doi.org/10.48550/arXiv.2511.00073
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
     """
 
     url = HabitAlp2.url
@@ -757,16 +761,12 @@ class HabitAlp2CD(GeoDataset):
                 if show_titles:
                     axs[3].set_title('Prediction')
         else:
+            cmap = plt.colormaps.get_cmap('tab10')
             fig, axs = plt.subplots(1, ncols, figsize=(ncols * 5, 5))
+            mask = sample['mask'].squeeze(0).numpy()
             axs[0].imshow(get_rgb(sample['image'][0]))
             axs[1].imshow(get_rgb(sample['image'][1]))
-            axs[2].imshow(
-                sample['mask'].squeeze(0).numpy(),
-                vmin=0,
-                vmax=8,
-                cmap='tab10',
-                interpolation='none',
-            )
+            axs[2].imshow(mask, vmin=0, vmax=8, cmap=cmap, interpolation='none')
             if show_titles:
                 axs[0].set_title(f'Image ({self.year1})')
                 axs[1].set_title(f'Image ({self.year2})')
@@ -776,11 +776,24 @@ class HabitAlp2CD(GeoDataset):
                     sample['prediction'].squeeze(0).numpy(),
                     vmin=0,
                     vmax=8,
-                    cmap='tab10',
+                    cmap=cmap,
                     interpolation='none',
                 )
                 if show_titles:
                     axs[3].set_title('Prediction')
+
+            present = np.unique(mask)
+            legend_elements = [
+                Patch(facecolor=cmap(i / 8), edgecolor='k', label=self.classes[i])
+                for i in present
+                if i < len(self.classes)
+            ]
+            axs[-1].legend(
+                handles=legend_elements,
+                bbox_to_anchor=(1.05, 1),
+                loc='upper left',
+                fontsize='small',
+            )
 
         for ax in axs:
             ax.axis('off')
