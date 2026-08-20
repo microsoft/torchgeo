@@ -683,6 +683,7 @@ class HabitAlp2CD(GeoDataset):
 
         image = torch.stack([sample1['image'].float(), sample2['image'].float()], dim=0)
         mask = mask_sample['mask'].long().unsqueeze(0)
+        mask[mask > 8] = 0
         if self.task == 'binary':
             mask = (mask > 0).long()
 
