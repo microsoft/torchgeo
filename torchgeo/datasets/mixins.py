@@ -98,3 +98,4 @@ class PlottingMixin:
         fig.tight_layout()
         
         return fig
+    
