@@ -21,6 +21,8 @@ class DigitalTyphoonDataModule(NonGeoDataModule):
     .. versionadded:: 0.6
     """
 
+    std = torch.tensor(255)
+
     valid_split_types = ('time', 'typhoon_id')
 
     def __init__(

@@ -23,6 +23,8 @@ class SpaceNetBaseDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         spacenet_ds_class: type[SpaceNet],

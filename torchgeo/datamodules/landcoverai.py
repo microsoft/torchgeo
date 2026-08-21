@@ -17,6 +17,8 @@ class LandCoverAIDataModule(NonGeoDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
@@ -52,6 +54,8 @@ class LandCoverAI100DataModule(NonGeoDataModule):
 
     .. versionadded:: 0.7
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

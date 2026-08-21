@@ -17,6 +17,8 @@ class BRIGHTDFC2025DataModule(NonGeoDataModule):
     .. versionadded:: 0.8
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
     ) -> None:

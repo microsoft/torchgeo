@@ -21,6 +21,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
     and test sets.
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         train_splits: list[str],

@@ -15,6 +15,8 @@ class SustainBenchCropYieldDataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self, batch_size: int = 32, num_workers: int = 0, **kwargs: Any
     ) -> None:

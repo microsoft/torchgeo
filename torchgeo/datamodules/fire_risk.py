@@ -17,6 +17,8 @@ class FireRiskDataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:

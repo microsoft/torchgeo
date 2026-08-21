@@ -16,6 +16,8 @@ class IOBenchDataModule(GeoDataModule):
     .. versionadded:: 0.6
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 32,

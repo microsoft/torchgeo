@@ -19,6 +19,8 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,
