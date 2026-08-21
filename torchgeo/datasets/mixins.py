@@ -6,12 +6,13 @@
 from typing import cast
 
 import matplotlib.pyplot as plt
+from einops import rearrange
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
-from einops import rearrange
 
 from .errors import RGBBandsMissingError
 from .utils import Sample, quantile_normalization
+
 
 class PlottingMixin:
     """Mixin for dataset plotting.
