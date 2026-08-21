@@ -12,7 +12,6 @@ import torch
 from kornia.constants import DataKey, Resample
 
 from ..datasets import GeoDataset, HabitAlp2, HabitAlp2CD, random_grid_cell_assignment
-from ..datasets.utils import download_url
 from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -102,7 +101,6 @@ class HabitAlp2DataModule(GeoDataModule):
         """
         dataset = cast(GeoDataset, self.dataset_class(**self.kwargs))
 
-        # Determine the year for outline selection
         if self.task == 'segmentation':
             year = int(self.kwargs.get('year', '2013'))
         else:
@@ -111,24 +109,13 @@ class HabitAlp2DataModule(GeoDataModule):
                 pair = f'{pair[:4]}_{pair[4:]}'
             year = int(pair.split('_')[1])
 
-        # Download outlines GPKG if not present
         outlines_path = os.path.join(dataset.root, HabitAlp2.outlines_file)
-        if not os.path.exists(outlines_path):
-            os.makedirs(os.path.dirname(outlines_path), exist_ok=True)
-            download_url(
-                HabitAlp2.url + HabitAlp2.outlines_file,
-                dataset.root,
-                HabitAlp2.outlines_file,
-            )
-
-        # Clip dataset index to the outline for the target year
         outlines = gpd.read_file(outlines_path)
         outline = outlines[outlines['year'] == year].geometry.union_all()
         clipped = dataset.index.copy()
         clipped['geometry'] = clipped.geometry.intersection(outline)
         dataset.index = clipped[~clipped.is_empty]
 
-        # Geographic train/val/test split
         generator = torch.Generator().manual_seed(0)
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(

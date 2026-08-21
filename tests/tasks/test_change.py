@@ -65,6 +65,7 @@ class TestChangeDetection:
             'cabuar',
             'chabud',
             'habitalp2_cd',
+            'habitalp2_cd_int',
             'levircd',
             'levircdplus',
             'oscd',

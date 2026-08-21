@@ -405,6 +405,11 @@ class HabitAlp2(GeoDataset):
         if not os.path.exists(mask_path):
             download_url(self.url + mask_file, self.root, mask_file)
 
+        outlines_path = os.path.join(self.root, self.outlines_file)
+        if not os.path.exists(outlines_path):
+            os.makedirs(os.path.dirname(outlines_path), exist_ok=True)
+            download_url(self.url + self.outlines_file, self.root, self.outlines_file)
+
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:

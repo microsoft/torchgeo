@@ -81,8 +81,7 @@ def generate_change_mask(path: str) -> None:
 
 
 def generate_outlines(path: str) -> None:
-    """Generate fake outlines GPKG for geographic splits."""
-    # Cover the test raster extent (500000-500064, 5299936-5300000) with margin
+    """Generate fake study area outlines GPKG."""
     poly = box(499990, 5299930, 500070, 5300010)
     outlines = gpd.GeoDataFrame(
         {'year': [2003, 2013, 2020]},
