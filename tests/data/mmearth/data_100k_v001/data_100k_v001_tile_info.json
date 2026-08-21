@@ -1,0 +1,912 @@
+{
+    "0": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l1c",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "1": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l2a",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "2": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l2a",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "3": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l1c",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "4": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l2a",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "5": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l1c",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "6": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l1c",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "7": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l1c",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "8": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l2a",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    },
+    "9": {
+        "S2_DATE": "2018-07-16",
+        "S2_type": "l2a",
+        "CRS": "EPSG:32721",
+        "lat": -14.499441524746077,
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "b1",
+                "slope"
+            ],
+            "era5": [
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
+            ],
+            "dynamic_world": [
+                "label"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "Map"
+            ]
+        }
+    }
+}

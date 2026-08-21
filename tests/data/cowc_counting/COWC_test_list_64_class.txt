@@ -1,0 +1,6 @@
+Toronto_ISPRS/test/fake_01.png 12
+Selwyn_LINZ/test/fake_03.png 8
+Potsdam_ISPRS/test/fake_05.png 12
+Vaihingen_ISPRS/test/fake_07.png 11
+Columbus_CSUAV_AFRL/test/fake_09.png 16
+Utah_AGRC/test/fake_11.png 4

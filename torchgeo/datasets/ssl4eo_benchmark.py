@@ -1,0 +1,378 @@
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
+
+"""Self-Supervised Learning for Earth Observation Benchmark Datasets."""
+
+import glob
+import os
+from collections.abc import Callable
+from typing import ClassVar, Literal
+
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
+import torch
+from matplotlib.colors import Colormap
+from matplotlib.figure import Figure
+from torch import Tensor
+
+from .cdl import CDL
+from .errors import DatasetNotFoundError
+from .geo import NonGeoDataset
+from .nlcd import NLCD
+from .utils import Path, Sample, download_url, extract_archive
+
+
+class SSL4EOLBenchmark(NonGeoDataset):
+    """SSL4EO Landsat Benchmark Evaluation Dataset.
+
+    Dataset is intended to be used for evaluation of SSL techniques. Each
+    benchmark dataset consists of 25,000 images with corresponding land
+    cover classification masks.
+
+    Dataset format:
+
+    * Input landsat image and single channel mask
+    * 25,000 total samples split into train, val, test (70%, 15%, 15%)
+    * NLCD dataset version has 17 classes
+    * CDL dataset version has 134 classes
+
+    Each patch has the following properties:
+
+    * 264 x 264 pixels
+    * Resampled to 30 m resolution (7920 x 7920 m)
+    * Single multispectral GeoTIFF file
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
+
+    .. versionadded:: 0.5
+    """
+
+    url = 'https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz'
+
+    valid_sensors = ('tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr')
+    valid_products = ('cdl', 'nlcd')
+    valid_splits = ('train', 'val', 'test')
+
+    image_root = 'ssl4eo_l_{}_benchmark'
+    img_sha256s: ClassVar[dict[str, str]] = {
+        'tm_toa': 'b279c12c1360beb4faf605e3c0c83d08e9a0b98bef82c8adc85532e3359ab585',
+        'etm_toa': 'e6ba623a348309efecbd8161365fd34ca6877c7003bc4f7127dfc3472eef9613',
+        'etm_sr': '050613d7ec7ae651f708656684003129b5cc8a9cb78b996b46cc7107b28c4be6',
+        'oli_tirs_toa': '7cea175c09534e9178bd0e9ee017058055a5b8f301d76c0b19c7d726e07c3bdf',
+        'oli_sr': 'fb5074a719c5bbc8cf546aaddc58ed2dc8b5a902202bd28d5eb3f35d4085df2a',
+    }
+
+    mask_dir_dict: ClassVar[dict[str, str]] = {
+        'tm_toa': 'ssl4eo_l_tm_{}',
+        'etm_toa': 'ssl4eo_l_etm_{}',
+        'etm_sr': 'ssl4eo_l_etm_{}',
+        'oli_tirs_toa': 'ssl4eo_l_oli_{}',
+        'oli_sr': 'ssl4eo_l_oli_{}',
+    }
+    mask_sha256s: ClassVar[dict[str, dict[str, str]]] = {
+        'tm': {
+            'cdl': '0aabd12537cae8ef33b38cdc0a6fb24405ce259b813df92313b7f481cb2bd34b',
+            'nlcd': '2371109835f8f2667409109d872ca3bea58840d3fc6d232757bc0692b1d982dd',
+        },
+        'etm': {
+            'cdl': '952f39691fec80d06c72a3e20659e126df717328888d643312a93c4854d83e82',
+            'nlcd': '2c0f31fb855b44c071fe43af45c59ee713c66430825954d0f24da9e32da7a7d3',
+        },
+        'oli': {
+            'cdl': '60463aecd7e96e7528cd3d888767e619b02e33760d9c340b4f2d1a0b021b24bb',
+            'nlcd': '42e13f84eb22f1776f544b92e5e78942357fe80beb38d1550847759fd4cb1e18',
+        },
+    }
+
+    year_dict: ClassVar[dict[str, int]] = {
+        'tm_toa': 2011,
+        'etm_toa': 2019,
+        'etm_sr': 2019,
+        'oli_tirs_toa': 2019,
+        'oli_sr': 2019,
+    }
+
+    rgb_indices: ClassVar[dict[str, list[int]]] = {
+        'tm_toa': [2, 1, 0],
+        'etm_toa': [2, 1, 0],
+        'etm_sr': [2, 1, 0],
+        'oli_tirs_toa': [3, 2, 1],
+        'oli_sr': [3, 2, 1],
+    }
+
+    split_percentages = (0.7, 0.15, 0.15)
+
+    cmaps: ClassVar[dict[str, Colormap]] = {'nlcd': NLCD.cmap, 'cdl': CDL.cmap}
+    valid_classes: ClassVar[dict[str, tuple[int, ...]]] = {
+        'nlcd': NLCD.valid_classes,
+        'cdl': CDL.valid_classes,
+    }
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        sensor: Literal['etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'] = 'oli_sr',
+        product: Literal['cdl', 'nlcd'] = 'cdl',
+        split: Literal['train', 'val', 'test'] = 'train',
+        classes: list[int] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
+        download: bool = False,
+        checksum: bool = True,
+    ) -> None:
+        """Initialize a new SSL4EO Landsat Benchmark instance.
+
+        Args:
+            root: root directory where dataset can be found
+            sensor: one of ['etm_toa', 'etm_sr', 'oli_tirs_toa, 'oli_sr']
+            product: mask target, one of ['cdl', 'nlcd']
+            split: dataset split, one of ['train', 'val', 'test']
+            classes: list of classes to include, the rest will be mapped to 0
+                (defaults to all classes for the chosen product)
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, verify the checksum after downloading files (may be slow)
+
+        Raises:
+            AssertionError: if any arguments are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+        """
+        assert sensor in self.valid_sensors, (
+            f'Only supports one of {self.valid_sensors}, but found {sensor}.'
+        )
+        self.sensor = sensor
+        assert product in self.valid_products, (
+            f'Only supports one of {self.valid_products}, but found {product}.'
+        )
+        self.product = product
+        assert split in self.valid_splits, (
+            f'Only supports one of {self.valid_splits}, but found {split}.'
+        )
+        self.split = split
+
+        self.cmap = self.cmaps[product]
+        if classes is None:
+            self.classes = self.valid_classes[product]
+        else:
+            self.classes = classes
+
+        assert set(self.classes) <= set(self.valid_classes[product]), (
+            f'Only the following classes are valid: {self.valid_classes[product]}.'
+        )
+
+        self.root = root
+        self.transforms = transforms
+        self.download = download
+        self.checksum = checksum
+        self.ordinal_map = torch.zeros(
+            self.valid_classes[product][-1] + 1, dtype=torch.long
+        )
+        self.inverse_map = torch.zeros(len(self.classes), dtype=torch.long)
+        self.img_dir_name = self.image_root.format(self.sensor)
+        self.mask_dir_name = self.mask_dir_dict[self.sensor].format(self.product)
+
+        self._verify()
+
+        self.sample_collection = self.retrieve_sample_collection()
+
+        # train, val, test split
+        np.random.seed(0)
+        sizes = (np.array(self.split_percentages) * len(self.sample_collection)).astype(
+            int
+        )
+        cutoffs = np.cumsum(sizes)[:-1]
+        sample_indices = np.arange(len(self.sample_collection))
+        np.random.shuffle(sample_indices)
+        groups = np.split(sample_indices, cutoffs)
+        split_indices = {'train': groups[0], 'val': groups[1], 'test': groups[2]}[
+            self.split
+        ]
+
+        self.sample_collection = [self.sample_collection[idx] for idx in split_indices]
+
+        # Map chosen classes to ordinal numbers, all others mapped to background class
+        for v, k in enumerate(self.classes):
+            self.ordinal_map[k] = v
+            self.inverse_map[v] = k
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the extracted files already exist
+        img_pathname = os.path.join(self.root, self.img_dir_name, '**', 'all_bands.tif')
+        exists = []
+        exists.append(bool(glob.glob(img_pathname, recursive=True)))
+        mask_pathname = os.path.join(
+            self.root,
+            self.mask_dir_name,
+            '**',
+            f'{self.product}_{self.year_dict[self.sensor]}.tif',
+        )
+        exists.append(bool(glob.glob(mask_pathname, recursive=True)))
+
+        if all(exists):
+            return
+        # Check if the tar.gz files have already been downloaded
+        exists = []
+        img_pathname = os.path.join(self.root, f'{self.img_dir_name}.tar.gz')
+        exists.append(os.path.exists(img_pathname))
+
+        mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
+        exists.append(os.path.exists(mask_pathname))
+
+        if all(exists):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        # download imagery
+        download_url(
+            self.url.format(self.img_dir_name),
+            self.root,
+            sha256=self.img_sha256s[self.sensor] if self.checksum else None,
+        )
+        # download mask
+        download_url(
+            self.url.format(self.mask_dir_name),
+            self.root,
+            sha256=(
+                self.mask_sha256s[self.sensor.split('_')[0]][self.product]
+                if self.checksum
+                else None
+            ),
+        )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        img_pathname = os.path.join(self.root, f'{self.img_dir_name}.tar.gz')
+        extract_archive(img_pathname)
+
+        mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
+        extract_archive(mask_pathname)
+
+    def __getitem__(self, index: int) -> Sample:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            image and sample
+        """
+        img_path, mask_path = self.sample_collection[index]
+
+        sample = {
+            'image': self._load_image(img_path),
+            'mask': self._load_mask(mask_path),
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.sample_collection)
+
+    def retrieve_sample_collection(self) -> list[tuple[str, str]]:
+        """Retrieve paths to samples in data directory."""
+        img_paths = glob.glob(
+            os.path.join(self.root, self.img_dir_name, '**', 'all_bands.tif'),
+            recursive=True,
+        )
+        img_paths = sorted(img_paths)
+        sample_collection: list[tuple[str, str]] = []
+        for img_path in img_paths:
+            mask_path = img_path.replace(self.img_dir_name, self.mask_dir_name).replace(
+                'all_bands.tif', f'{self.product}_{self.year_dict[self.sensor]}.tif'
+            )
+            sample_collection.append((img_path, mask_path))
+        return sample_collection
+
+    def _load_image(self, path: Path) -> Tensor:
+        """Load the input image.
+
+        Args:
+            path: path to input image
+
+        Returns:
+            image
+        """
+        with rasterio.open(path) as src:
+            image = torch.from_numpy(src.read()).float()
+        return image
+
+    def _load_mask(self, path: Path) -> Tensor:
+        """Load the mask.
+
+        Args:
+            path: path to mask
+
+        Returns:
+            mask
+        """
+        with rasterio.open(path) as src:
+            mask = torch.from_numpy(src.read(1)).long()
+        mask = self.ordinal_map[mask]
+        return mask
+
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        ncols = 2
+        image = sample['image'][self.rgb_indices[self.sensor]].permute(1, 2, 0)
+        image = image / 255
+
+        mask = self.inverse_map[sample['mask']]
+
+        showing_predictions = 'prediction' in sample
+        if showing_predictions:
+            pred = self.inverse_map[sample['prediction']]
+            ncols = 3
+
+        fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
+        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 255, 'interpolation': 'none'}
+
+        ax[0].imshow(image)
+        ax[0].axis('off')
+        ax[1].imshow(mask, **kwargs)
+        ax[1].axis('off')
+        if show_titles:
+            ax[0].set_title('Image')
+            ax[1].set_title('Mask')
+
+        if showing_predictions:
+            ax[2].imshow(pred, **kwargs)
+            if show_titles:
+                ax[2].set_title('Prediction')
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig

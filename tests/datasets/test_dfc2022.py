@@ -1,0 +1,77 @@
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
+
+import os
+import shutil
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import pytest
+import torch
+from _pytest.fixtures import SubRequest
+from torch import nn
+
+from torchgeo.datasets import DFC2022, DatasetNotFoundError
+
+
+class TestDFC2022:
+    @pytest.fixture(params=['train', 'train-unlabeled', 'val'])
+    def dataset(self, request: SubRequest) -> DFC2022:
+        root = os.path.join('tests', 'data', 'dfc2022')
+        split = request.param
+        transforms = nn.Identity()
+        return DFC2022(root, split, transforms)
+
+    def test_getitem(self, dataset: DFC2022) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert x['image'].ndim == 3
+        assert x['image'].shape[0] == 4
+
+        if dataset.split == 'train':
+            assert isinstance(x['mask'], torch.Tensor)
+            assert x['mask'].ndim == 2
+
+    def test_len(self, dataset: DFC2022) -> None:
+        assert len(dataset) == 2
+
+    def test_extract(self, tmp_path: Path) -> None:
+        shutil.copyfile(
+            os.path.join('tests', 'data', 'dfc2022', 'labeled_train.zip'),
+            os.path.join(tmp_path, 'labeled_train.zip'),
+        )
+        shutil.copyfile(
+            os.path.join('tests', 'data', 'dfc2022', 'unlabeled_train.zip'),
+            os.path.join(tmp_path, 'unlabeled_train.zip'),
+        )
+        shutil.copyfile(
+            os.path.join('tests', 'data', 'dfc2022', 'val.zip'),
+            os.path.join(tmp_path, 'val.zip'),
+        )
+        DFC2022(root=tmp_path, checksum=False)
+
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(os.path.join(tmp_path, 'labeled_train.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
+            DFC2022(root=tmp_path, checksum=True)
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            DFC2022(tmp_path)
+
+    def test_plot(self, dataset: DFC2022) -> None:
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle='Test')
+        plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
+        if dataset.split == 'train':
+            x['prediction'] = x['mask'].clone()
+            dataset.plot(x)
+            plt.close()
+            del x['mask']
+            dataset.plot(x)
+            plt.close()

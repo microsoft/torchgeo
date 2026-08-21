@@ -1,0 +1,4 @@
+# Do not change line endings on test data, it will change the MD5
+/tests/data/*/** -text
+# Test data generation files are fine though
+/tests/data/**/data.py text

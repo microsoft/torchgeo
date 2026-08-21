@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentation
+  init_args:
+    loss: 'ce'
+    model: 'deeplabv3+'
+    backbone: 'resnet18'
+    in_channels: 4
+    num_classes: 128
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: NAIPChesapeakeDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 32
+  dict_kwargs:
+    naip_paths: 'tests/data/naip'
+    chesapeake_paths: 'tests/data/chesapeake/lulc'

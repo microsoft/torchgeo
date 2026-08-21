@@ -1,0 +1,87 @@
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
+
+"""TorchGeo pre-trained model repository configuration file.
+
+* https://pytorch.org/hub/
+* https://docs.pytorch.org/docs/stable/hub.html
+"""
+
+from torchgeo.models import (
+    aurora_swin_unet,
+    convlstm,
+    copernicusfm_base,
+    croma_base,
+    croma_large,
+    deo_base,
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
+    earthloc,
+    ltae,
+    olmoearth_v1,
+    panopticon_vitb14,
+    presto,
+    resnet18,
+    resnet50,
+    resnet152,
+    satclip,
+    scalemae_large_patch16,
+    swin_b,
+    swin_s,
+    swin_t,
+    swin_v2_b,
+    swin_v2_t,
+    tessera,
+    tilenet,
+    unet,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
+    vit_small_patch16_224,
+)
+
+__all__ = (
+    'aurora_swin_unet',
+    'convlstm',
+    'copernicusfm_base',
+    'croma_base',
+    'croma_large',
+    'deo_base',
+    'dofa_base_patch16_224',
+    'dofa_large_patch16_224',
+    'earthloc',
+    'ltae',
+    'olmoearth_v1',
+    'panopticon_vitb14',
+    'presto',
+    'resnet18',
+    'resnet50',
+    'resnet152',
+    'satclip',
+    'scalemae_large_patch16',
+    'swin_b',
+    'swin_s',
+    'swin_t',
+    'swin_v2_b',
+    'swin_v2_t',
+    'tessera',
+    'tilenet',
+    'unet',
+    'vit_base_patch14_dinov2',
+    'vit_base_patch16_224',
+    'vit_huge_patch14_224',
+    'vit_large_patch16_224',
+    'vit_small_patch14_dinov2',
+    'vit_small_patch16_224',
+)
+
+dependencies = [
+    'kornia',
+    'aurora',
+    'olmoearth_pretrain_minimal',
+    'segmentation_models_pytorch',
+    'timm',
+    'torchvision',
+]

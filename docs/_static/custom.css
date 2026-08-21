@@ -1,0 +1,21 @@
+/* TorchGeo Brand Colors */
+html {
+  --pst-color-primary: #ee4c2c !important; /* TorchGeo orange for primary elements */
+  --pst-color-secondary: #0078d7 !important; /* TorchGeo blue for secondary (navbar hover) */
+  --pst-color-secondary-highlight: #ee4c2c !important; /* Torchgeo orange for hover states */
+  --pst-color-accent: #ee4c2c !important; /* TorchGeo orange for focus outlines */
+  --pst-color-link: #0078d7 !important; /* TorchGeo blue for links */
+  --pst-color-link-hover: #ee4c2c !important; /* Orange on hover */
+}
+
+/* Active sidebar items use primary color */
+.bd-sidebar .nav-link.active {
+  border-left-color: #ee4c2c;
+  color: #ee4c2c;
+}
+
+/* Hide Jupyter notebook input/output prompts */
+.nbinput .prompt,
+.nboutput .prompt {
+  display: none;
+}

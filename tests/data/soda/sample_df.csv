@@ -1,0 +1,8 @@
+image_path,label_path,split
+Images/00001.jpg,Annotations/train/00001.json,train
+Images/00002.jpg,Annotations/train/00002.json,train
+Images/00003.jpg,Annotations/train/00003.json,train
+Images/00004.jpg,Annotations/val/00004.json,val
+Images/00005.jpg,Annotations/val/00005.json,val
+Images/00006.jpg,Annotations/test/00006.json,test
+Images/00007.jpg,Annotations/test/00007.json,test

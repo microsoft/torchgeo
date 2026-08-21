@@ -1,0 +1,15 @@
+model:
+  class_path: IOBench
+data:
+  class_path: IOBenchDataModule
+  dict_kwargs:
+    root: 'data/io'
+    split: 'preprocessed'
+    download: true
+    checksum: true
+trainer:
+  accelerator: 'cpu'
+  max_epochs: 1
+  num_sanity_val_steps: 0
+  profiler:
+    class_path: IOProfiler

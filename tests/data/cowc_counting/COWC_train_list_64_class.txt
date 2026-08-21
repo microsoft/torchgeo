@@ -1,0 +1,12 @@
+Toronto_ISPRS/train/fake_01.png 13
+Toronto_ISPRS/train/fake_02.png 1
+Selwyn_LINZ/train/fake_03.png 16
+Selwyn_LINZ/train/fake_04.png 15
+Potsdam_ISPRS/train/fake_05.png 9
+Potsdam_ISPRS/train/fake_06.png 15
+Vaihingen_ISPRS/train/fake_07.png 18
+Vaihingen_ISPRS/train/fake_08.png 6
+Columbus_CSUAV_AFRL/train/fake_09.png 4
+Columbus_CSUAV_AFRL/train/fake_10.png 9
+Utah_AGRC/train/fake_11.png 3
+Utah_AGRC/train/fake_12.png 19
