@@ -83,7 +83,7 @@ class HabitAlp2(GeoDataset):
     .. versionadded:: 0.11
     """
 
-    url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/df01fe8ae22df182e7bf1c2e3e713dcfd92c0c81/'
+    url = 'https://huggingface.co/datasets/JR-DIGITAL/habitalp2.0/resolve/fbb154a49975f0d3348f40c181f977961be9b670/'
 
     valid_years = ('2003', '2013', '2020')
 
@@ -164,6 +164,8 @@ class HabitAlp2(GeoDataset):
         '2013': 'labels/classes_2013.tif',
         '2020': 'labels/classes_2020.tif',
     }
+
+    outlines_file = 'splits/outlines.gpkg'
 
     classes = (
         'Background',
