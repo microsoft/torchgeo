@@ -5,15 +5,13 @@
 
 from typing import cast
 
-from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
+from einops import rearrange
 
 from .errors import RGBBandsMissingError
-from .utils import (
-    Sample,
-    quantile_normalization,
-    )
+from .utils import Sample, quantile_normalization
 
 class PlottingMixin:
     """Mixin for dataset plotting.
@@ -33,9 +31,7 @@ class PlottingMixin:
     def plot(
         self, 
         sample: Sample, 
-        show_titles: bool = True, 
-        quantile_norm: bool = False, 
-        time_step: int | None = None,
+        show_titles: bool = True,
         suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
@@ -43,8 +39,6 @@ class PlottingMixin:
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
-            quantile_norm: flag indicating whether to apply quantile normalization
-            time_step: time step at which to access image, beginning with 0
             suptitle: optional string to use as a suptitle
         
         Returns:
@@ -56,10 +50,7 @@ class PlottingMixin:
         .. versionadded:: 0.11
         """
 
-        if time_step is not None:
-            image = sample['image'][time_step]
-        else:
-            image = sample['image']
+        image = sample['image']
         
         if self.rgb_bands:
             rgb_indices = []
@@ -69,47 +60,36 @@ class PlottingMixin:
                 else:
                     raise RGBBandsMissingError()
             image = image[rgb_indices]
-        else:
-            image = image[:3]
 
-        image = image.permute(1, 2, 0).float()
-        
-        if quantile_norm:
-            image = quantile_normalization(image)
+        image = rearrange(image, 'c h w -> h w c')
+        image = image.float()
 
-        mask_keys = [key for key in sample.keys() if key.startswith('mask') or key == ('prediction')]
-        ncols = 1 + len(mask_keys)
+        image = quantile_normalization(image)
 
-        fig, axs = plt.subplots(1, ncols, figsize=(4 * ncols, 4), squeeze=False)
-        axs = axs[0]
+        fig, ax = plt.subplots(figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis('off')
 
-        axs[0].imshow(image)
-        axs[0].axis('off')
-    
         if show_titles:
             title = ''
             if 'label' in sample:
                 label = cast(int, sample['label'].item())
                 if hasattr(self, 'classes'):
-                    title = f'Label: {self.classes[label]}'
+                    title += f'Label: {self.classes[label]}'
                 else:
-                    title = f'Label: {label}'
-            elif time_step is not None:
-                title += f' (t={time_step})'
+                    title += f'Label: {label}'
+
+                if 'prediction' in sample:
+                    prediction = cast(int, sample['prediction'].item())
+                    if hasattr(self, 'classes'):
+                        title += f'\nPrediction: {self.classes[prediction]}'
+                    else:
+                        title += f'\nPrediction: {prediction}'
+
             else:
                 title = 'Image'
-            axs[0].set_title(title)
 
-        for i, key in enumerate(mask_keys, start=1):
-            mask = sample[key]
-
-            mask = mask.squeeze()
-
-            axs[i].imshow(mask, interpolation='none')
-            axs[i].axis('off')
-
-            if show_titles:
-                axs[i].set_title(key)
+            ax.set_title(title)
         
         if suptitle is not None:
             plt.suptitle(suptitle)
