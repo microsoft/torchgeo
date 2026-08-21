@@ -5,10 +5,12 @@
 
 import os
 
+import geopandas as gpd
 import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
+from shapely.geometry import MultiPolygon, box
 
 SIZE = 64
 NUM_CLASSES = 24
@@ -78,6 +80,18 @@ def generate_change_mask(path: str) -> None:
         src.write(data)
 
 
+def generate_outlines(path: str) -> None:
+    """Generate fake outlines GPKG for geographic splits."""
+    # Cover the test raster extent (500000-500064, 5299936-5300000) with margin
+    poly = box(499990, 5299930, 500070, 5300010)
+    outlines = gpd.GeoDataFrame(
+        {'year': [2003, 2013, 2020]},
+        geometry=[MultiPolygon([poly])] * 3,
+        crs='EPSG:32633',
+    )
+    outlines.to_file(path, driver='GPKG')
+
+
 if __name__ == '__main__':
     terrain_layers = [
         'dtm',
@@ -117,3 +131,6 @@ if __name__ == '__main__':
 
     generate_change_mask('labels/habitalp_change_2003_2013.tif')
     generate_change_mask('labels/habitalp_change_2013_2020.tif')
+
+    os.makedirs('splits', exist_ok=True)
+    generate_outlines('splits/outlines.gpkg')

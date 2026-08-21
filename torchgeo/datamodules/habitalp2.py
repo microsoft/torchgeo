@@ -3,12 +3,16 @@
 
 """HabitAlp2 datamodule."""
 
+import os
 from typing import Any, Literal, cast
 
+import geopandas as gpd
 import kornia.augmentation as K
+import torch
 from kornia.constants import DataKey, Resample
 
-from ..datasets import GeoDataset, HabitAlp2, HabitAlp2CD
+from ..datasets import GeoDataset, HabitAlp2, HabitAlp2CD, random_grid_cell_assignment
+from ..datasets.utils import download_url
 from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from ..samplers.utils import _to_tuple
 from .geo import GeoDataModule
@@ -88,15 +92,49 @@ class HabitAlp2DataModule(GeoDataModule):
             )
 
     def setup(self, stage: str) -> None:
-        """Set up datasets.
+        """Set up datasets and samplers.
+
+        Clips the dataset index to the geographic outline for the target year,
+        then applies a random grid cell assignment for train/val/test splitting.
 
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         dataset = cast(GeoDataset, self.dataset_class(**self.kwargs))
-        self.train_dataset = dataset
-        self.val_dataset = dataset
-        self.test_dataset = dataset
+
+        # Determine the year for outline selection
+        if self.task == 'segmentation':
+            year = int(self.kwargs.get('year', '2013'))
+        else:
+            pair = str(self.kwargs.get('pair', '2013_2020'))
+            if '_' not in pair and len(pair) == 8 and pair.isdigit():
+                pair = f'{pair[:4]}_{pair[4:]}'
+            year = int(pair.split('_')[1])
+
+        # Download outlines GPKG if not present
+        outlines_path = os.path.join(dataset.root, HabitAlp2.outlines_file)
+        if not os.path.exists(outlines_path):
+            os.makedirs(os.path.dirname(outlines_path), exist_ok=True)
+            download_url(
+                HabitAlp2.url + HabitAlp2.outlines_file,
+                dataset.root,
+                HabitAlp2.outlines_file,
+            )
+
+        # Clip dataset index to the outline for the target year
+        outlines = gpd.read_file(outlines_path)
+        outline = outlines[outlines['year'] == year].geometry.union_all()
+        clipped = dataset.index.copy()
+        clipped['geometry'] = clipped.geometry.intersection(outline)
+        dataset.index = clipped[~clipped.is_empty]
+
+        # Geographic train/val/test split
+        generator = torch.Generator().manual_seed(0)
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_grid_cell_assignment(
+                dataset, [0.7, 0.15, 0.15], grid_size=10, generator=generator
+            )
+        )
 
         if stage in ['fit']:
             self.train_sampler = RandomPatchSampler(
