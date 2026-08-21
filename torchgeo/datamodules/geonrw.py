@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 from torch.utils.data import Subset
 
 from ..datasets import GeoNRW

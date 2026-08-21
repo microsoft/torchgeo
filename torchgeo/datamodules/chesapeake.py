@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 import torch.nn.functional as F
 
 from ..datasets import ChesapeakeCVPR

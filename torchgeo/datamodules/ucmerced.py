@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 
 from ..datasets import UCMerced
 from .geo import NonGeoDataModule

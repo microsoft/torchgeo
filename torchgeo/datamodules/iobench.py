@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import IOBench
 from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from .geo import GeoDataModule

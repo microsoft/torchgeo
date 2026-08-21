@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import FAIR1M
 from .geo import NonGeoDataModule
 from .utils import collate_fn_detection

@@ -7,6 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import shapely
+import torch
 from matplotlib.figure import Figure
 
 from ..datasets import (

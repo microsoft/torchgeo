@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import USAVars
 from .geo import NonGeoDataModule
 

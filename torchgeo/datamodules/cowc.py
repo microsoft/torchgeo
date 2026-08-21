@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import torch
 from torch import Generator
 from torch.utils.data import random_split
 

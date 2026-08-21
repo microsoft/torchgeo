@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 
 from ..datasets import LandCoverAI, LandCoverAI100
 from .geo import NonGeoDataModule

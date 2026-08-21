@@ -7,6 +7,7 @@ import copy
 from collections import defaultdict
 from typing import Any
 
+import torch
 from torch.utils.data import Subset
 
 from ..datasets import DigitalTyphoon
