@@ -5,6 +5,7 @@ import enum
 from collections.abc import Callable
 
 import pytest
+from _pytest.mark.structures import ParameterSet
 from torch import nn
 from torchvision.models._api import WeightsEnum
 
@@ -78,14 +79,16 @@ from torchgeo.models import (
     vit_small_patch16_224,
 )
 
+memory_intensive = pytest.mark.xdist_group('memory_intensive')
+
 builders = [
-    aurora_swin_unet,
+    pytest.param(aurora_swin_unet, marks=memory_intensive),
     copernicusfm_base,
     croma_base,
-    croma_large,
+    pytest.param(croma_large, marks=memory_intensive),
     deo_base,
     dofa_base_patch16_224,
-    dofa_huge_patch14_224,
+    pytest.param(dofa_huge_patch14_224, marks=memory_intensive),
     dofa_large_patch16_224,
     dofa_small_patch16_224,
     earthloc,
@@ -97,7 +100,7 @@ builders = [
     resnet50,
     resnet152,
     satclip,
-    scalemae_large_patch16,
+    pytest.param(scalemae_large_patch16, marks=memory_intensive),
     swin_t,
     swin_s,
     swin_b,
@@ -108,8 +111,8 @@ builders = [
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
-    vit_huge_patch14_224,
-    vit_large_patch16_224,
+    pytest.param(vit_huge_patch14_224, marks=memory_intensive),
+    pytest.param(vit_large_patch16_224, marks=memory_intensive),
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 ]
@@ -181,7 +184,10 @@ def test_get_weight(enum: type[WeightsEnum]) -> None:
 
 
 def test_list_models() -> None:
-    models = [builder.__name__ for builder in builders]
+    models = [
+        (builder.values[0] if isinstance(builder, ParameterSet) else builder).__name__
+        for builder in builders
+    ]
     assert set(models) == set(list_models())
 
 

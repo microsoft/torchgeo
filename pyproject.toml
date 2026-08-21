@@ -229,6 +229,7 @@ filterwarnings = [
 ]
 markers = [
     "slow: marks tests as slow",
+    "xdist_group: marks tests to run on the same pytest-xdist worker",
 ]
 norecursedirs = [
     ".ipynb_checkpoints",
