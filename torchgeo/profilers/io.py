@@ -53,7 +53,7 @@ class IOProfiler(Profiler):
             self.info[split] = {
                 'batch_size': loader.batch_size,
                 'samples': len(loader.sampler),
-                'strategy': type(loader.sampler).__name__,
+                'strategy': loader.sampler.__class__.__name__,
                 'drop_last': loader.drop_last,
                 'max_epochs': self._lightning_module.trainer.max_epochs,
             }
