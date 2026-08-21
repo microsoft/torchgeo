@@ -1,2 +1,0 @@
-imagesource:dummy
-gsd:1.0

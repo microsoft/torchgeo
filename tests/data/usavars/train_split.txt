@@ -1,3 +1,0 @@
-tile_0,0.tif
-tile_0,0.tif
-tile_0,0.tif

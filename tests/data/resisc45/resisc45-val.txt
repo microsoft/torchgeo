@@ -1,9 +1,0 @@
-airplane_001.jpg
-airplane_002.jpg
-airplane_003.jpg
-airport_001.jpg
-airport_002.jpg
-airport_003.jpg
-baseball_diamond_001.jpg
-baseball_diamond_002.jpg
-baseball_diamond_003.jpg

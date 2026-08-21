@@ -1,2 +1,0 @@
-AnnualCrop_1.tif
-Forest_1.tif
