@@ -38,9 +38,7 @@ class SpatioTemporalClassification(ClassificationMixin, BaseTask):
         """Initialize a new SpatioTemporalClassification instance.
 
         Args:
-            model: Video model name. Only ``'convlstm'`` is currently supported.
-                The explicit model switch is kept so more video architectures can
-                be added later without reshaping the trainer API.
+            model: Spatiotemporal model name. Supported value is ``'convlstm'``.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
             task: Type of classification task, one of 'binary', 'multiclass', or

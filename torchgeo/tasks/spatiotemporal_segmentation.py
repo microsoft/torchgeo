@@ -82,9 +82,9 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             case 'convlstm':
                 self.model = ConvLSTM(
                     input_dim=in_channels,
-            num_classes=num_classes,
-            convolutional_head=True,
-            **self.kwargs,
+                    num_classes=num_classes,
+                    convolutional_head=True,
+                    **self.kwargs,
                 )
             case 'conv3dlstm':
                 self.model = Conv3dLSTM(

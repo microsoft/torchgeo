@@ -11,6 +11,8 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.tasks import SpatioTemporalClassification
 
+pytest.importorskip('h5py', minversion='3.10')
+
 
 class TestSpatioTemporalClassificationTask:
     @pytest.mark.parametrize('name', ['quakeset_classification'])

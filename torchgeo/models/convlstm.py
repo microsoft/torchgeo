@@ -116,7 +116,7 @@ class ConvLSTM(nn.Module):
         return_all_layers: bool = False,
         num_classes: int = 1,
         head_kernel_size: int = 1,
-        convolutional_head: bool = False,
+        convolutional_head: bool = True,
     ) -> None:
         """Initializes the ConvLSTM model.
 

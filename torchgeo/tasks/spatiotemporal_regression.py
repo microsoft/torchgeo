@@ -34,8 +34,7 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
 
         Args:
             model: Spatiotemporal model name. Supported value is ``'convlstm'``.
-                        in_channels: Number of channels per timestep for inputs of shape
-                            ``(B, T, C, H, W)``.
+            in_channels: Number of channels per timestep for inputs of shape ``(B, T, C, H, W)``.
             labels: List of output channel names.
             num_outputs: Number of output values for regression.
             num_filters: Number of filters for the ConvLSTM.
