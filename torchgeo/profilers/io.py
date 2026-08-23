@@ -3,6 +3,7 @@
 """A custom I/O Profiler."""
 
 import time
+import warnings
 from collections import defaultdict
 from typing import override
 
@@ -15,12 +16,21 @@ class IOProfiler(Profiler):
     .. versionadded:: 0.10
     """
 
-    def __init__(self, dirpath: str | None = None, filename: str | None = None) -> None:
+    def __init__(
+        self,
+        dirpath: str | None = None,
+        filename: str | None = None,
+        batch_size: int | None = None,
+    ) -> None:
         """Initialise profiler.
+
+        .. deprecated:: 0.11
+            The *batch_size* parameter.
 
         Args:
             dirpath: root directory to save profiler's results
             filename: name of the file where the profiler's results will be saved
+            batch_size: batch size used by data loader
         """
         super().__init__(dirpath=dirpath, filename=filename)
         self.start_time = {}
@@ -28,6 +38,8 @@ class IOProfiler(Profiler):
         self.end_time = {}
         self.action_total_time = defaultdict(float)
         self.info = {}
+        if batch_size is not None:
+            warnings.warn('The batch_size parameter is deprecated.', DeprecationWarning)
 
     @override
     def start(self, action_name: str) -> None:
