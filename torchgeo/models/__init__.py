@@ -118,7 +118,7 @@ __all__ = (
     'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
-    "TSViT",
+    'TSViT',
     'Tessera',
     'Tessera_Weights',
     'TileNet',

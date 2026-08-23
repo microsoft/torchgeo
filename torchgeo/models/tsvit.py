@@ -71,13 +71,13 @@ class Attention(nn.Module):
         """Forward pass."""
         _, _, _, h = *x.shape, self.heads
         qkv = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=h) for t in qkv)
+        q, k, v = (rearrange(t, 'b n (h d) -> b h n d', h=h) for t in qkv)
 
-        dots = torch.einsum("b h i d, b h j d -> b h i j", q, k) * self.scale
+        dots = torch.einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
         attn = dots.softmax(dim=-1)
 
-        out = torch.einsum("b h i j, b h j d -> b h i d", attn, v)
-        out = rearrange(out, "b h n d -> b n (h d)")
+        out = torch.einsum('b h i j, b h j d -> b h i d', attn, v)
+        out = rearrange(out, 'b h n d -> b n (h d)')
         return self.to_out(out)
 
 
@@ -85,12 +85,7 @@ class TransformerBlock(nn.Module):
     """Single Transformer encoder block."""
 
     def __init__(
-        self,
-        dim: int,
-        heads: int,
-        dim_head: int,
-        mlp_dim: int,
-        dropout: float = 0.0,
+        self, dim: int, heads: int, dim_head: int, mlp_dim: int, dropout: float = 0.0
     ) -> None:
         """Initialize the block."""
         super().__init__()
@@ -159,7 +154,7 @@ class TSViT(nn.Module):
         dim_head: int = 64,
         dropout: float = 0.0,
         emb_dropout: float = 0.0,
-        pool: str = "cls",
+        pool: str = 'cls',
         scale_dim: int = 4,
     ) -> None:
         """Initialize the TSViT model."""
@@ -177,17 +172,17 @@ class TSViT(nn.Module):
         self.pool = pool
         self.scale_dim = scale_dim
 
-        assert self.pool in {"cls", "mean"}, "pool type must be either cls or mean"
-        assert (
-            self.image_size % self.patch_size == 0
-        ), "Image dimensions must be divisible by patch size."
+        assert self.pool in {'cls', 'mean'}, 'pool type must be either cls or mean'
+        assert self.image_size % self.patch_size == 0, (
+            'Image dimensions must be divisible by patch size.'
+        )
 
         num_patches = self.num_patches_1d**2
         patch_dim = (num_channels - 1) * self.patch_size**2
 
         self.to_patch_embedding = nn.Sequential(
             Rearrange(
-                "b t c (h p1) (w p2) -> (b h w) t (p1 p2 c)",
+                'b t c (h p1) (w p2) -> (b h w) t (p1 p2 c)',
                 p1=self.patch_size,
                 p2=self.patch_size,
             ),
@@ -249,7 +244,7 @@ class TSViT(nn.Module):
         x = x.reshape(-1, T, self.dim)
 
         cls_temporal_tokens = repeat(
-            self.temporal_token, "() N d -> b N d", b=B * self.num_patches_1d**2
+            self.temporal_token, '() N d -> b N d', b=B * self.num_patches_1d**2
         )
         x = torch.cat((cls_temporal_tokens, x), dim=1)
 
@@ -268,7 +263,7 @@ class TSViT(nn.Module):
 
         x = rearrange(
             x,
-            "b c (h1 w1) (p1 p2) -> b c (h1 p1) (w1 p2)",
+            'b c (h1 w1) (p1 p2) -> b c (h1 p1) (w1 p2)',
             h1=self.num_patches_1d,
             w1=self.num_patches_1d,
             p1=self.patch_size,

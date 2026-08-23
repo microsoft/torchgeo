@@ -26,6 +26,6 @@ class TestTSViT:
         # Shape: (Batch, Time, Height, Width, Channels)
         x = torch.rand(2, 16, 24, 24, 14)
         y = model(x)
-        
+
         # Expected output shape: (Batch, Classes, Height, Width)
         assert y.shape == (2, 20, 24, 24)
