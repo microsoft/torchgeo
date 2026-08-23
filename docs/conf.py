@@ -56,6 +56,18 @@ needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
+    # objects.inv is temporarily unavailable
+    ('py:class', 'lightning.pytorch.core.datamodule.LightningDataModule'),
+    ('py:class', 'lightning.pytorch.core.module.LightningModule'),
+    ('py:class', 'lightning.pytorch.profilers.profiler.Profiler'),
+    ('py:class', 'torchmetrics.Accuracy'),
+    ('py:class', 'torchmetrics.F1Score'),
+    ('py:class', 'torchmetrics.JaccardIndex'),
+    ('py:class', 'torchmetrics.MeanAbsoluteError'),
+    ('py:class', 'torchmetrics.MeanSquaredError'),
+    ('py:class', 'torchmetrics.Precision'),
+    ('py:class', 'torchmetrics.Recall'),
+    ('py:class', 'torchmetrics.detection.mean_ap.MeanAveragePrecision'),
     # Undocumented classes
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
