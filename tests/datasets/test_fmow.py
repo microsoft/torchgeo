@@ -12,7 +12,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from torch import nn
 
-from torchgeo.datasets import FMoW, DatasetNotFoundError
+from torchgeo.datasets import DatasetNotFoundError, FMoW
 
 
 class TestFMoW:
