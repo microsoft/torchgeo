@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import pytest
@@ -24,7 +24,7 @@ class TestTSViT:
     def test_forward(self, model: TSViT) -> None:
         # Create dummy batch of Satellite Image Time Series
         # Shape: (Batch, Time, Height, Width, Channels)
-        x = torch.randn(2, 16, 24, 24, 14)
+        x = torch.rand(2, 16, 24, 24, 14)
         y = model(x)
         
         # Expected output shape: (Batch, Classes, Height, Width)

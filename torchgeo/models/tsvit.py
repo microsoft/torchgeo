@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Time-Series Vision Transformer (TSViT) model."""
@@ -81,8 +81,33 @@ class Attention(nn.Module):
         return self.to_out(out)
 
 
+class TransformerBlock(nn.Module):
+    """Single Transformer encoder block."""
+
+    def __init__(
+        self,
+        dim: int,
+        heads: int,
+        dim_head: int,
+        mlp_dim: int,
+        dropout: float = 0.0,
+    ) -> None:
+        """Initialize the block."""
+        super().__init__()
+        self.attn = PreNorm(
+            dim, Attention(dim, heads=heads, dim_head=dim_head, dropout=dropout)
+        )
+        self.ff = PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass."""
+        x = self.attn(x) + x
+        x = self.ff(x) + x
+        return x
+
+
 class Transformer(nn.Module):
-    """Standard Transformer encoder block."""
+    """Standard Transformer encoder."""
 
     def __init__(
         self,
@@ -93,31 +118,20 @@ class Transformer(nn.Module):
         mlp_dim: int,
         dropout: float = 0.0,
     ) -> None:
-        """Initialize the Transformer block."""
+        """Initialize the Transformer."""
         super().__init__()
-        self.layers = nn.ModuleList([])
+        self.layers = nn.ModuleList(
+            [
+                TransformerBlock(dim, heads, dim_head, mlp_dim, dropout)
+                for _ in range(depth)
+            ]
+        )
         self.norm = nn.LayerNorm(dim)
-        for _ in range(depth):
-            self.layers.append(
-                nn.ModuleList(
-                    [
-                        PreNorm(
-                            dim,
-                            Attention(
-                                dim, heads=heads, dim_head=dim_head, dropout=dropout
-                            ),
-                        ),
-                        PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout)),
-                    ]
-                )
-            )
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
         for layer in self.layers:
-            attn, ff = layer[0], layer[1]
-            x = attn(x) + x
-            x = ff(x) + x
+            x = layer(x)
         return self.norm(x)
 
 
