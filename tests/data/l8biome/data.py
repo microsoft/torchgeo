@@ -48,7 +48,7 @@ filenames: FILENAME_HIERARCHY = {
 
 
 def create_file(path: str) -> None:
-    dtype = 'uint8'
+    dtype = 'uint8' if path.endswith('_fixedmask.TIF') else 'uint16'
     profile = {
         'driver': 'COG',
         'compression': 'LZW',
@@ -60,15 +60,13 @@ def create_file(path: str) -> None:
         'transform': Affine(30.0, 0.0, 339885.0, 0.0, -30.0, 8286915.0),
     }
 
-    Z = np.random.randn(SIZE, SIZE).astype(profile['dtype'])
-
     if path.endswith('_fixedmask.TIF'):
         Z = np.random.choice(
             np.array([0, 64, 128, 192, 255], dtype=dtype), size=(SIZE, SIZE)
         )
         profile['count'] = 1
     else:
-        Z = np.random.randint(256, size=(SIZE, SIZE), dtype=dtype)
+        Z = np.random.randint(65536, size=(SIZE, SIZE), dtype=dtype)
         profile['count'] = 11
 
     with rasterio.open(path, 'w', **profile) as src:
