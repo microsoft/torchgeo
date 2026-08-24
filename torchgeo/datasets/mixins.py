@@ -3,7 +3,7 @@
 
 """Mixins for dataset classes."""
 
-#from collections.abc import Sequence
+from typing import ClassVar, Sequence
 
 import matplotlib.pyplot as plt
 from einops import rearrange
@@ -27,7 +27,7 @@ class PlottingMixin:
     rgb_bands: tuple[str, ...] = ()
 
     #: Names of classes in the dataset
-    #classes: Sequence[object] = ()
+    classes: ClassVar[Sequence[object]] = ()
 
     #: Color map for the dataset
     cmap: str | Colormap | None = None
