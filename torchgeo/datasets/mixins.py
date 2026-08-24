@@ -33,16 +33,16 @@ class PlottingMixin:
     cmap: str | Colormap | None = None
 
     def plot(
-        self, 
-        sample: Sample, 
-        show_titles: bool = True, 
+        self,
+        sample: Sample,
+        show_titles: bool = True,
         suptitle: str | None = None,
         time_step: int = 0,
         show_labels: bool = True,
         variables_to_plot: list[str] | None = None,
         band_idx: int = 0,
         show_legend: bool = True,
-        ) -> Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
