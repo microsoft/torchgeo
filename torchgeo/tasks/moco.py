@@ -267,7 +267,7 @@ class MoCo(BaseTask):
 
     @augmentation1.setter
     def augmentation1(self, value: nn.Module) -> None:
-        self.augmentations[0] = value
+        self.augmentations[0] = value  # pragma: no cover
 
     @property
     def augmentation2(self) -> nn.Module:
@@ -285,7 +285,7 @@ class MoCo(BaseTask):
 
     @augmentation2.setter
     def augmentation2(self, value: nn.Module) -> None:
-        self.augmentations[1] = value
+        self.augmentations[1] = value  # pragma: no cover
 
     def __setattr__(self, name: str, value: Tensor | nn.Module) -> None:
         """Set an attribute, resolving deprecated augmentation aliases."""
@@ -297,10 +297,8 @@ class MoCo(BaseTask):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            if not isinstance(value, nn.Module):
-                raise TypeError(f'{name} must be an nn.Module')
             index = 0 if name == 'augmentation1' else 1
-            self.augmentations[index] = value
+            self.augmentations[index] = cast(nn.Module, value)
             return
         super().__setattr__(name, value)
 

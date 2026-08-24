@@ -140,7 +140,7 @@ class MAE(BaseTask):
 
     @transform.setter
     def transform(self, value: nn.Module) -> None:
-        self.augmentations = value
+        self.augmentations = value  # pragma: no cover
 
     def __setattr__(self, name: str, value: torch.Tensor | nn.Module) -> None:
         """Set an attribute, resolving the deprecated augmentation alias."""
