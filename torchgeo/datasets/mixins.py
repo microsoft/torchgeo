@@ -3,7 +3,8 @@
 
 """Mixins for dataset classes."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from einops import rearrange
