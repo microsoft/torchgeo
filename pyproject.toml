@@ -161,6 +161,8 @@ tests = [
     "pytest>=7.3.2",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
+    "pytest-xdist>=3.0.2",
     # pytest-socket 0.3.4+ required for wheels
     "pytest-socket>=0.3.4",
 ]
@@ -229,6 +231,7 @@ filterwarnings = [
 ]
 markers = [
     "slow: marks tests as slow",
+    "xdist_group: marks tests to run on the same pytest-xdist worker",
 ]
 norecursedirs = [
     ".ipynb_checkpoints",
