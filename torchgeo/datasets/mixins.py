@@ -3,8 +3,8 @@
 
 """Mixins for dataset classes."""
 
-from typing import cast
 from collections.abc import Sequence
+from typing import cast
 
 import matplotlib.pyplot as plt
 from einops import rearrange
