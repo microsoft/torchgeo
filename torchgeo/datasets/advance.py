@@ -177,7 +177,7 @@ class ADVANCE(NonGeoDataset):
         """
         with Image.open(path) as img:
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -193,7 +193,7 @@ class ADVANCE(NonGeoDataset):
         """
         siw = lazy_import('scipy.io.wavfile')
         array = siw.read(path, mmap=True)[1]
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         tensor = tensor.unsqueeze(0)
         return tensor
 
