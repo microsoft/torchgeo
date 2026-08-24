@@ -51,14 +51,14 @@ class IOProfiler(Profiler):
         self.start_time[action_name] = time.perf_counter()
         split = None
         if 'train_dataloader_next' in action_name:
-            split = 'train'
+            split = 'Train'
         elif 'val_next' in action_name:
-            split = 'val'
+            split = 'Validation'
 
         if split is not None and split not in self.info:
             loader = getattr(
                 self._lightning_module.trainer,
-                f'{split}_{"dataloaders" if split == "val" else "dataloader"}',
+                'val_dataloaders' if split == 'Validation' else 'train_dataloader',
             )
             self.info[split] = {
                 'batch_size': loader.batch_size,
@@ -86,7 +86,7 @@ class IOProfiler(Profiler):
         """Print summary.
 
         Returns:
-             summary table containing split, strategy, drop last, number of samples, time (s), and sampling rate (samples/s)
+             summary table containing split, strategy, number of samples, time (s), and sampling rate (samples/s)
         """
         res = '\nProfile Summary \n'
         res += f'\n| {"Split":<10} | {"Strategy":<20} | {"Samples":<10} | {"Time (s)":<10} | {"Rate (samples/s)":<16} |'
@@ -94,9 +94,9 @@ class IOProfiler(Profiler):
         for action_name in self.action_count:
             split = None
             if 'train_dataloader_next' in action_name:
-                split = 'train'
+                split = 'Train'
             elif 'val_next' in action_name:
-                split = 'val'
+                split = 'Validation'
             if split:
                 total_time = self.action_total_time[action_name]
                 if self.info[split]['drop_last'] == 1:
@@ -110,7 +110,6 @@ class IOProfiler(Profiler):
                     samples = self.info[split]['samples']
                 total_samples = samples * self.info[split]['max_epochs']
                 rate = 0.0 if total_time == 0 else total_samples / total_time
-                split_name = 'Train' if split == 'train' else 'Validation'
-                res += f'\n| {split_name:<10} | {self.info[split]["strategy"]:<20} | {total_samples:>10} | {total_time:>10.3f} | {rate:>16.3f} |'
+                res += f'\n| {split:<10} | {self.info[split]["strategy"]:<20} | {total_samples:>10} | {total_time:>10.3f} | {rate:>16.3f} |'
 
         return res
