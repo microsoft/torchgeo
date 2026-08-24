@@ -260,7 +260,9 @@ class LoveDA(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: Sample, show_titles: bool = True, suptitle: str | None = None) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

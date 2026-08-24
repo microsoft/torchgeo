@@ -167,7 +167,10 @@ class SolarPlantsBrazil(NonGeoDataset):
         return torch.from_numpy(bin_mask).long()
 
     def plot(
-        self, sample: dict[str, torch.Tensor], show_titles: bool = True, suptitle: str | None = None
+        self,
+        sample: dict[str, torch.Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the SolarPlantsBrazil dataset.
 

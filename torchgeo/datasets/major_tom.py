@@ -84,7 +84,9 @@ class MajorTOMEmbeddings(NonGeoDataset):
 
         return sample
 
-    def plot(self, sample: Sample, show_titles: bool = True, suptitle: str | None = None,) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
