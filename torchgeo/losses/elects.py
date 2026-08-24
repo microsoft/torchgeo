@@ -26,7 +26,7 @@ class EarlyRewardLoss(Module):
     <https://doi.org/10.1016/j.isprsjprs.2022.12.016>`_. It balances
     classification accuracy against making correct predictions early in a sequence.
 
-    .. versionadded:: 0.10
+    .. versionadded:: 0.11
     """
 
     def __init__(
