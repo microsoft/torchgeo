@@ -8,7 +8,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.models import OlmoEarthV1_Weights, olmoearth_v1
+from torchgeo.models import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 
 pytest.importorskip('olmoearth_pretrain_minimal')
 
@@ -38,3 +38,22 @@ class TestOlmoEarthV1:
     @pytest.mark.slow
     def test_olmoearth_v1_download(self, weights: OlmoEarthV1_Weights) -> None:
         olmoearth_v1(weights=weights)
+
+
+class TestOlmoEarthV1UNetDecoder:
+    def test_olmoearth_v1_unet_decoder(self) -> None:
+        olmoearth_v1_unet_decoder()
+
+    def test_forward(self) -> None:
+        in_dim, num_classes, patch_size = 32, 5, 8
+        decoder = olmoearth_v1_unet_decoder(
+            in_dim=in_dim, num_classes=num_classes, patch_size=patch_size
+        )
+        # Patch tokens: (B, H_p, W_p, in_dim) -> logits (B, num_classes, H, W).
+        x = torch.randn(2, 4, 4, in_dim)
+        out = decoder(x)
+        assert out.shape == (2, num_classes, 4 * patch_size, 4 * patch_size)
+
+    def test_invalid_patch_size(self) -> None:
+        with pytest.raises(ValueError, match='patch_size must be a power of two'):
+            olmoearth_v1_unet_decoder(patch_size=6)
