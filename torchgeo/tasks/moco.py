@@ -130,9 +130,12 @@ class MoCo(BaseTask):
     * v3: https://arxiv.org/abs/2104.02057
 
     .. versionadded:: 0.5
+
+    .. versionchanged:: 0.11
+       Data augmentation pipelines are now exposed through *augmentations*.
     """
 
-    ignore = ('weights', 'augmentation1', 'augmentation2')
+    ignore = ('weights', 'augmentations', 'augmentation1', 'augmentation2')
     monitor = 'train_loss'
 
     def __init__(
@@ -156,6 +159,7 @@ class MoCo(BaseTask):
         grayscale_weights: Tensor | None = None,
         augmentation1: nn.Module | None = None,
         augmentation2: nn.Module | None = None,
+        augmentations: tuple[nn.Module | None, nn.Module | None] | None = None,
     ) -> None:
         """Initialize a new MoCo instance.
 
@@ -192,11 +196,17 @@ class MoCo(BaseTask):
                 Defaults to MoCo augmentation.
             augmentation2: Data augmentation for 2nd branch.
                 Defaults to MoCo augmentation.
+            augmentations: Data augmentations for the first and second branches. A
+                ``None`` entry uses the default augmentation for that branch. Defaults
+                to MoCo augmentations.
 
         Raises:
             AssertionError: If an invalid version of MoCo is requested.
+            ValueError: If both *augmentations* and a deprecated augmentation argument
+                are provided.
 
         Warns:
+            DeprecationWarning: If a deprecated augmentation argument is provided.
             UserWarning: If hyperparameters do not match MoCo version requested.
         """
         # Validate hyperparameters
@@ -221,8 +231,111 @@ class MoCo(BaseTask):
         if grayscale_weights is None:
             grayscale_weights = torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
-        self.augmentation1 = aug1 if augmentation1 is None else augmentation1
-        self.augmentation2 = aug2 if augmentation2 is None else augmentation2
+        if augmentations is not None:
+            if augmentation1 is not None or augmentation2 is not None:
+                raise ValueError(
+                    'augmentations cannot be combined with augmentation1 or '
+                    'augmentation2'
+                )
+            custom_aug1, custom_aug2 = augmentations
+            aug1 = aug1 if custom_aug1 is None else custom_aug1
+            aug2 = aug2 if custom_aug2 is None else custom_aug2
+        elif augmentation1 is not None or augmentation2 is not None:
+            warnings.warn(
+                'augmentation1 and augmentation2 are deprecated; use augmentations '
+                'instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            aug1 = aug1 if augmentation1 is None else augmentation1
+            aug2 = aug2 if augmentation2 is None else augmentation2
+        self.augmentations = nn.ModuleList([aug1, aug2])
+
+    @property
+    def augmentation1(self) -> nn.Module:
+        """Deprecated alias for the first augmentation pipeline.
+
+        .. deprecated:: 0.11
+           Use ``augmentations[0]`` instead.
+        """
+        warnings.warn(
+            'augmentation1 is deprecated; use augmentations[0] instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.augmentations[0]
+
+    @augmentation1.setter
+    def augmentation1(self, value: nn.Module) -> None:
+        self.augmentations[0] = value
+
+    @property
+    def augmentation2(self) -> nn.Module:
+        """Deprecated alias for the second augmentation pipeline.
+
+        .. deprecated:: 0.11
+           Use ``augmentations[1]`` instead.
+        """
+        warnings.warn(
+            'augmentation2 is deprecated; use augmentations[1] instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.augmentations[1]
+
+    @augmentation2.setter
+    def augmentation2(self, value: nn.Module) -> None:
+        self.augmentations[1] = value
+
+    def __setattr__(self, name: str, value: Tensor | nn.Module) -> None:
+        """Set an attribute, resolving deprecated augmentation aliases."""
+        if name in {'augmentation1', 'augmentation2'} and 'augmentations' in (
+            self.__dict__.get('_modules', {})
+        ):
+            warnings.warn(
+                f'{name} is deprecated; use augmentations instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if not isinstance(value, nn.Module):
+                raise TypeError(f'{name} must be an nn.Module')
+            index = 0 if name == 'augmentation1' else 1
+            self.augmentations[index] = value
+            return
+        super().__setattr__(name, value)
+
+    def _load_from_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        prefix: str,
+        local_metadata: dict[str, object],
+        strict: bool,
+        missing_keys: list[str],
+        unexpected_keys: list[str],
+        error_msgs: list[str],
+    ) -> None:
+        """Load checkpoints saved with the deprecated augmentation attributes."""
+        for old_name, new_name in (
+            ('augmentation1', 'augmentations.0'),
+            ('augmentation2', 'augmentations.1'),
+        ):
+            old_prefix = f'{prefix}{old_name}.'
+            new_prefix = f'{prefix}{new_name}.'
+            for key in list(state_dict):
+                if key.startswith(old_prefix):
+                    new_key = f'{new_prefix}{key.removeprefix(old_prefix)}'
+                    if new_key not in state_dict:
+                        state_dict[new_key] = state_dict[key]
+                    del state_dict[key]
+        super()._load_from_state_dict(
+            state_dict,
+            prefix,
+            local_metadata,
+            strict,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
+        )
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -387,8 +500,8 @@ class MoCo(BaseTask):
             x2 = x[:, in_channels:]
 
         with torch.no_grad():
-            x1 = self.augmentation1(x1)
-            x2 = self.augmentation2(x2)
+            x1 = self.augmentations[0](x1)
+            x2 = self.augmentations[1](x2)
 
         m = self.hparams['moco_momentum']
         if self.hparams['version'] == 1:

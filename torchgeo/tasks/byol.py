@@ -5,6 +5,7 @@
 
 import copy
 import os
+import warnings
 from typing import Any
 
 import timm
@@ -214,6 +215,9 @@ class BYOLModule(nn.Module):
 
     See https://arxiv.org/abs/2006.07733 for more details (and please cite it if you
     use it in your own work).
+
+    .. versionchanged:: 0.11
+       The augmentation pipeline is now exposed through *augmentations*.
     """
 
     def __init__(
@@ -224,8 +228,9 @@ class BYOLModule(nn.Module):
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        augment_fn: nn.Module | None = None,
+        augmentations: nn.Module | None = None,
         beta: float = 0.99,
+        augment_fn: nn.Module | None = None,
         **kwargs: Any,
     ) -> None:
         """Sets up a model for pre-training with BYOL using projection heads.
@@ -238,18 +243,35 @@ class BYOLModule(nn.Module):
             in_channels: number of input channels to the model
             projection_size: size of first layer of the projection MLP
             hidden_size: size of the hidden layer of the projection MLP
-            augment_fn: an instance of a module that performs data augmentation
+            augmentations: Data augmentation pipeline. Defaults to SimCLR
+                augmentation.
             beta: the speed at which the target backbone is updated using the main
                 backbone
+            augment_fn: Deprecated alias for *augmentations*.
             **kwargs: Additional keyword arguments passed to :class:`nn.Module`
+
+        Raises:
+            ValueError: If both *augmentations* and *augment_fn* are provided.
+
+        Warns:
+            DeprecationWarning: If *augment_fn* is provided.
         """
         super().__init__()
 
-        self.augment: nn.Module
-        if augment_fn is None:
-            self.augment = SimCLRAugmentation(image_size)
-        else:
-            self.augment = augment_fn
+        if augmentations is not None and augment_fn is not None:
+            raise ValueError('augmentations cannot be combined with augment_fn')
+        if augment_fn is not None:
+            warnings.warn(
+                'augment_fn is deprecated; use augmentations instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            augmentations = augment_fn
+        self.augmentations = (
+            augmentations
+            if augmentations is not None
+            else SimCLRAugmentation(image_size)
+        )
 
         self.beta = beta
         self.in_channels = in_channels
@@ -275,6 +297,64 @@ class BYOLModule(nn.Module):
         self.target.load_state_dict(self.backbone.state_dict())
         for param in self.target.parameters():
             param.requires_grad = False
+
+    @property
+    def augment(self) -> nn.Module:
+        """Deprecated alias for the augmentation pipeline.
+
+        .. deprecated:: 0.11
+           Use *augmentations* instead.
+        """
+        warnings.warn(
+            'augment is deprecated; use augmentations instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.augmentations
+
+    @augment.setter
+    def augment(self, value: nn.Module) -> None:
+        self.augmentations = value
+
+    def __setattr__(self, name: str, value: Tensor | nn.Module) -> None:
+        """Set an attribute, resolving the deprecated augmentation alias."""
+        if name == 'augment' and 'augmentations' in self.__dict__.get('_modules', {}):
+            warnings.warn(
+                'augment is deprecated; use augmentations instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            name = 'augmentations'
+        super().__setattr__(name, value)
+
+    def _load_from_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        prefix: str,
+        local_metadata: dict[str, object],
+        strict: bool,
+        missing_keys: list[str],
+        unexpected_keys: list[str],
+        error_msgs: list[str],
+    ) -> None:
+        """Load checkpoints saved with the deprecated augmentation attribute."""
+        old_prefix = f'{prefix}augment.'
+        new_prefix = f'{prefix}augmentations.'
+        for key in list(state_dict):
+            if key.startswith(old_prefix):
+                new_key = f'{new_prefix}{key.removeprefix(old_prefix)}'
+                if new_key not in state_dict:
+                    state_dict[new_key] = state_dict[key]
+                del state_dict[key]
+        super()._load_from_state_dict(
+            state_dict,
+            prefix,
+            local_metadata,
+            strict,
+            missing_keys,
+            unexpected_keys,
+            error_msgs,
+        )
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the backbone model through the MLP and prediction head.
@@ -308,6 +388,7 @@ class BYOL(BaseTask):
     * https://arxiv.org/abs/2006.07733
     """
 
+    ignore = ('weights', 'augmentations')
     monitor = 'train_loss'
 
     def __init__(
@@ -317,6 +398,7 @@ class BYOL(BaseTask):
         in_channels: int = 3,
         lr: float = 1e-3,
         patience: int = 10,
+        augmentations: nn.Module | None = None,
     ) -> None:
         """Initialize a new BYOL instance.
 
@@ -329,6 +411,8 @@ class BYOL(BaseTask):
             in_channels: Number of input channels to model.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
+            augmentations: Data augmentation pipeline. Defaults to SimCLR
+                augmentation.
 
         .. versionchanged:: 0.4
            *backbone_name* was renamed to *backbone*. Changed backbone support from
@@ -340,6 +424,26 @@ class BYOL(BaseTask):
         """
         self.weights = weights
         super().__init__()
+        if augmentations is not None:
+            self.augmentations = augmentations
+
+    @property
+    def augmentations(self) -> nn.Module:
+        """Data augmentation pipeline."""
+        return self.model.augmentations
+
+    @augmentations.setter
+    def augmentations(self, value: nn.Module) -> None:
+        self.model.augmentations = value
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set an attribute, forwarding augmentations to the BYOL model."""
+        if name == 'augmentations' and 'model' in self.__dict__.get('_modules', {}):
+            if not isinstance(value, nn.Module):
+                raise TypeError('augmentations must be an nn.Module')
+            self.model.augmentations = value
+            return
+        super().__setattr__(name, value)
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -402,8 +506,8 @@ class BYOL(BaseTask):
             x2 = x[:, in_channels:]
 
         with torch.no_grad():
-            x1 = self.model.augment(x1)
-            x2 = self.model.augment(x2)
+            x1 = self.model.augmentations(x1)
+            x2 = self.model.augmentations(x2)
 
         pred1 = self(x1)
         pred2 = self(x2)
