@@ -449,7 +449,7 @@ class ResNet50_Weights(WeightsEnum):
         meta={
             'dataset': 'SSL4EO-L',
             'in_chans': 6,
-            'model': 'resnet18',
+            'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
@@ -463,7 +463,7 @@ class ResNet50_Weights(WeightsEnum):
         meta={
             'dataset': 'SSL4EO-L',
             'in_chans': 6,
-            'model': 'resnet18',
+            'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
@@ -816,7 +816,7 @@ class ResNet152_Weights(WeightsEnum):
         meta={
             'dataset': 'SatlasPretrain',
             'in_chans': 9,
-            'model': 'resnet50',
+            'model': 'resnet152',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
             'bands': _satlas_sentinel2_bands,
@@ -829,7 +829,7 @@ class ResNet152_Weights(WeightsEnum):
         meta={
             'dataset': 'SatlasPretrain',
             'in_chans': 3,
-            'model': 'resnet50',
+            'model': 'resnet152',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
             'bands': _satlas_bands,
@@ -842,7 +842,7 @@ class ResNet152_Weights(WeightsEnum):
         meta={
             'dataset': 'SatlasPretrain',
             'in_chans': 9,
-            'model': 'resnet50',
+            'model': 'resnet152',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
             'bands': _satlas_sentinel2_bands,
@@ -855,7 +855,7 @@ class ResNet152_Weights(WeightsEnum):
         meta={
             'dataset': 'SatlasPretrain',
             'in_chans': 3,
-            'model': 'resnet50',
+            'model': 'resnet152',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
             'bands': _satlas_bands,

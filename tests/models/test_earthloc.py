@@ -40,13 +40,13 @@ class TestEarthLoc:
     def test_earthloc_weights(self, mocked_weights: EarthLoc_Weights) -> None:
         earthloc(weights=mocked_weights)
 
-    def test_earthloc_forward(self, mocked_weights: EarthLoc_Weights) -> None:
-        model = earthloc(weights=mocked_weights)
-        c = mocked_weights.meta['in_chans']
-        h = w = mocked_weights.meta['image_size']
+    def test_earthloc_forward(self) -> None:
+        c, h, w = 3, 32, 32
+        desc_dim = 128
+        model = earthloc(in_channels=c, image_size=h, desc_dim=desc_dim)
         x = torch.randn(1, c, h, w)
         y = model(x)
-        assert y.shape == (1, mocked_weights.meta['desc_dim'])
+        assert y.shape == (1, desc_dim)
 
     def test_bands(self, weights: EarthLoc_Weights) -> None:
         if 'bands' in weights.meta:
@@ -54,9 +54,7 @@ class TestEarthLoc:
 
     def test_transforms(self, weights: EarthLoc_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: EarthLoc_Weights) -> None:
@@ -64,7 +62,7 @@ class TestEarthLoc:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     @pytest.mark.slow

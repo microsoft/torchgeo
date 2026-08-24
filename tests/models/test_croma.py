@@ -32,7 +32,7 @@ class TestCROMA:
     @pytest.mark.parametrize('modalities', [['sar'], ['optical'], ['sar', 'optical']])
     def test_croma(self, modalities: list[str]) -> None:
         batch_size = 2
-        model = CROMA(modalities=modalities)
+        model = CROMA(modalities=modalities, image_size=8)
         if 'sar' in modalities:
             sar_images = torch.randn(
                 [batch_size, 2, model.image_size, model.image_size]
@@ -54,8 +54,8 @@ class TestCROMA:
     @pytest.mark.parametrize(
         'sar_images,optical_images,match',
         [
-            (None, torch.randn(1, 12, 120, 120), 'x_sar is required'),
-            (torch.randn(1, 2, 120, 120), None, 'x_optical is required'),
+            (None, torch.randn(1, 12, 8, 8), 'x_sar is required'),
+            (torch.randn(1, 2, 8, 8), None, 'x_optical is required'),
         ],
     )
     def test_missing_modality(
@@ -64,7 +64,11 @@ class TestCROMA:
         optical_images: torch.Tensor | None,
         match: str,
     ) -> None:
-        model = CROMA()
+        model = CROMA(image_size=8)
+        if sar_images is not None:
+            sar_images = sar_images.to(torch.get_default_dtype())
+        if optical_images is not None:
+            optical_images = optical_images.to(torch.get_default_dtype())
         with pytest.raises(ValueError, match=match):
             model(sar_images, optical_images)
 
@@ -96,6 +100,7 @@ class TestCROMABase:
         croma_base(weights=weights)
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestCROMALarge:
     @pytest.fixture(params=[*CROMALarge_Weights])
     def weights(self, request: SubRequest) -> CROMALarge_Weights:
