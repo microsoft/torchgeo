@@ -332,11 +332,12 @@ class EnMAP(RasterDataset):
         bands = bands or self.default_bands
         super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
-    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, show_titles: bool = True, suptitle: str | None = None,) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`RasterDataset.__getitem__`.
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:

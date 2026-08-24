@@ -33,15 +33,7 @@ class PlottingMixin:
     cmap: str | Colormap | None = None
 
     def plot(
-        self,
-        sample: Sample,
-        show_titles: bool = True,
-        suptitle: str | None = None,
-        time_step: int = 0,
-        show_labels: bool = True,
-        variables_to_plot: list[str] | None = None,
-        band_idx: int = 0,
-        show_legend: bool = True,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -49,11 +41,6 @@ class PlottingMixin:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            time_step: time step at which to access image, beginning with 0
-            show_labels: flag indicating whether to show labels above panel
-            variables_to_plot: a list of valid variable to be drawn in the plot
-            band_idx: which of the nine histograms to index
-            show_legend: flag indicating whether to show a legend for the segmentation masks
 
         Returns:
             a matplotlib Figure with the rendered sample

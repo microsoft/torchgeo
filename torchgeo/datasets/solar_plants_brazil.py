@@ -167,13 +167,14 @@ class SolarPlantsBrazil(NonGeoDataset):
         return torch.from_numpy(bin_mask).long()
 
     def plot(
-        self, sample: dict[str, torch.Tensor], suptitle: str | None = None
+        self, sample: dict[str, torch.Tensor], show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the SolarPlantsBrazil dataset.
 
         Args:
             sample: A dictionary with 'image' and 'mask' tensors. Optionally,
                 a 'prediction' tensor can be provided to visualize model outputs.
+            show_titles: Flag indicating whether to show titles above each panel.
             suptitle: Optional string to use as a suptitle.
 
         Returns:

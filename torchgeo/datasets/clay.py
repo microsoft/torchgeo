@@ -89,12 +89,13 @@ class ClayEmbeddings(NonGeoDataset):
 
         return sample
 
-    def plot(self, sample: Sample, show_titles: bool = True) -> Figure:
+    def plot(self, sample: Sample, show_titles: bool = True, suptitle: str | None = None,) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: optional string to use as a suptitle
 
         Returns:
             A matplotlib Figure with the rendered sample.
