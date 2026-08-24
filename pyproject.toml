@@ -161,6 +161,8 @@ tests = [
     "pytest>=7.3.2",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # pytest-rerunfailures 14+ required for pytest 8.2+ compatibility
+    "pytest-rerunfailures>=14",
     # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
     "pytest-xdist>=3.0.2",
     # pytest-socket 0.3.4+ required for wheels
@@ -190,7 +192,8 @@ show_missing = true
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
-addopts = "-m 'not slow' --disable-socket"
+# Retry only transient rasterio I/O errors seen flaking on CI runners, not real failures
+addopts = "-m 'not slow' --disable-socket --reruns 2 --reruns-delay 1 --only-rerun RasterioIOError"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control
