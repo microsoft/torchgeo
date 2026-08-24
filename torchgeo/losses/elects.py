@@ -46,7 +46,7 @@ class EarlyRewardLoss(Module):
         """
         if not 0 <= alpha <= 1:
             raise ValueError(f'Invalid alpha value: {alpha}')
-        if epsilon < 0:
+        if not 0 <= epsilon:
             raise ValueError(f'Invalid epsilon value: {epsilon}')
 
         super().__init__()
