@@ -49,13 +49,11 @@ class IOProfiler(Profiler):
             action_name: name of the action that should be profiled
         """
         self.start_time[action_name] = time.perf_counter()
-        split = (
-            'train'
-            if 'train_dataloader_next' in action_name
-            else 'val'
-            if 'val_next' in action_name
-            else None
-        )
+        split = None
+        if 'train_dataloader_next' in action_name:
+            split = 'train'
+        elif 'val_next' in action_name:
+            split = 'val'
 
         if split is not None and split not in self.info:
             loader = getattr(
@@ -91,20 +89,17 @@ class IOProfiler(Profiler):
              summary table containing split, strategy, drop last, number of samples, time (s), and sampling rate (samples/s)
         """
         res = '\nProfile Summary \n'
-        res += f'\n| {"Split":<10} | {"Strategy":<20} | {"Drop last":<10} | {"Samples":<10} | {"Time (s)":<10} | {"Rate (samples/s)":<16} |'
-        res += f'\n| {":":-<10} | {":":-<20} | {":":-<10} | {":":->10} | {":":->10} | {":":->16} |'
+        res += f'\n| {"Split":<10} | {"Strategy":<20} | {"Samples":<10} | {"Time (s)":<10} | {"Rate (samples/s)":<16} |'
+        res += f'\n| {":":-<10} | {":":-<20} | {":":->10} | {":":->10} | {":":->16} |'
         for action_name in self.action_count:
-            split = (
-                'train'
-                if 'train_dataloader_next' in action_name
-                else 'val'
-                if 'val_next' in action_name
-                else None
-            )
+            split = None
+            if 'train_dataloader_next' in action_name:
+                split = 'train'
+            elif 'val_next' in action_name:
+                split = 'val'
             if split:
                 total_time = self.action_total_time[action_name]
-                drop_last = 'True' if self.info[split]['drop_last'] == 1 else 'False'
-                if drop_last == 'True':
+                if self.info[split]['drop_last'] == 1:
                     num_batches = (
                         self.action_count[action_name] // self.info[split]['max_epochs']
                         if self.info[split]['max_epochs'] > 0
@@ -116,6 +111,6 @@ class IOProfiler(Profiler):
                 total_samples = samples * self.info[split]['max_epochs']
                 rate = 0.0 if total_time == 0 else total_samples / total_time
                 split_name = 'Train' if split == 'train' else 'Validation'
-                res += f'\n| {split_name:<10} | {self.info[split]["strategy"]:<20} | {drop_last:<10} | {total_samples:>10} | {total_time:>10.3f} | {rate:>16.3f} |'
+                res += f'\n| {split_name:<10} | {self.info[split]["strategy"]:<20} | {total_samples:>10} | {total_time:>10.3f} | {rate:>16.3f} |'
 
         return res
