@@ -3,7 +3,7 @@
 
 """Mixins for dataset classes."""
 
-from typing import cast
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 from einops import rearrange
@@ -27,20 +27,33 @@ class PlottingMixin:
     rgb_bands: tuple[str, ...] = ()
 
     #: Names of classes in the dataset
-    classes: tuple[str, ...] = ()
+    classes: Sequence[object] = ()
 
     #: Color map for the dataset
     cmap: str | Colormap | None = None
 
     def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
-    ) -> Figure:
+        self, 
+        sample: Sample, 
+        show_titles: bool = True, 
+        suptitle: str | None = None,
+        time_step: int = 0,
+        show_labels: bool = True,
+        variables_to_plot: list[str] | None = None,
+        band_idx: int = 0,
+        show_legend: bool = True,
+        ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+            time_step: time step at which to access image, beginning with 0
+            show_labels: flag indicating whether to show labels above panel
+            variables_to_plot: a list of valid variable to be drawn in the plot
+            band_idx: which of the nine histograms to index
+            show_legend: flag indicating whether to show a legend for the segmentation masks
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -73,19 +86,22 @@ class PlottingMixin:
 
         if show_titles:
             title = ''
+
             if 'label' in sample:
-                label = cast(int, sample['label'].item())
-                if hasattr(self, 'classes'):
-                    title += f'Label: {self.classes[label]}'
-                else:
-                    title += f'Label: {label}'
+                label = sample['label'].item()
+                if isinstance(label, int):
+                    if hasattr(self, 'classes'):
+                        title += f'Label: {self.classes[label]}'
+                    else:
+                        title += f'Label: {label}'
 
                 if 'prediction' in sample:
-                    prediction = cast(int, sample['prediction'].item())
-                    if hasattr(self, 'classes'):
-                        title += f'\nPrediction: {self.classes[prediction]}'
-                    else:
-                        title += f'\nPrediction: {prediction}'
+                    prediction = sample['prediction'].item()
+                    if isinstance(prediction, int):
+                        if hasattr(self, 'classes'):
+                            title += f'\nPrediction: {self.classes[prediction]}'
+                        else:
+                            title += f'\nPrediction: {prediction}'
 
             else:
                 title = 'Image'
