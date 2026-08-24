@@ -9,14 +9,17 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import pytest
+import rasterio
 import shapely
 import torch
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
+from rasterio.vrt import WarpedVRT
 from torch import Tensor, nn
 from torch.utils.data import ConcatDataset
 
@@ -468,6 +471,20 @@ class TestRasterDataset:
         assert not math.isclose(naip1.res[0], naip2.res[0])
         assert not math.isclose(naip1.res[1], naip2.res[1])
 
+    def test_cached_load_warp_file_keyed_on_crs(self) -> None:
+        ds = NAIP(self.naip_dir)
+        filepath = ds.files[0]
+
+        # Native CRS is read without warping
+        native = ds._cached_load_warp_file(filepath, ds.crs)
+        assert not isinstance(native, WarpedVRT)
+        assert native.crs == ds.crs
+
+        # Foreign CRS is warped, verifying CRS is part of cache-key.
+        warped = ds._cached_load_warp_file(filepath, CRS.from_epsg(4326))
+        assert isinstance(warped, WarpedVRT)
+        assert warped.crs != native.crs
+
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
         root = os.path.join('tests', 'data', 'raster', dtype)
@@ -527,6 +544,41 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+    def test_nodata(self, tmp_path: Path) -> None:
+        """Source nodata is preserved, and ``nodata`` overrides it."""
+        nodata = -9999.0
+        profile: dict[str, Any] = {
+            'driver': 'GTiff',
+            'height': 8,
+            'width': 8,
+            'count': 1,
+            'dtype': 'float32',
+            'crs': CRS.from_epsg(32616),
+            'transform': rasterio.transform.from_origin(0, 80, 10, 10),
+            'nodata': nodata,
+        }
+        data = np.full((1, 8, 8), 5.0, dtype='float32')
+        data[0, 0, 0] = nodata  # one genuine nodata pixel
+        with rasterio.open(tmp_path / 'image.tif', 'w', **profile) as src:
+            src.write(data)
+
+        # The file's own nodata is preserved: on read, for masking, and warping.
+        ds = RasterDataset(tmp_path)
+        image = ds[ds.bounds]['image']
+        assert (image[image != nodata] == 5).all()
+        with ds._load_warp_file(ds.files[0]) as src:
+            assert (src.dataset_mask() == 0).sum() == 1
+        with ds._load_warp_file(ds.files[0], crs=CRS.from_epsg(4326)) as vrt:
+            assert vrt.nodata == nodata
+
+        # Setting `nodata` overrides which value is treated as nodata.
+        class Override(RasterDataset):
+            nodata = 5.0
+
+        ds_override = Override(tmp_path)
+        with ds_override._load_warp_file(ds_override.files[0]) as vrt:
+            assert (vrt.dataset_mask() == 0).sum() > 1
 
     @pytest.mark.parametrize('x,y', [(-2, 2), (2, -2), (-2, -2)])
     def test_malformed_res(self, x: int, y: int) -> None:
@@ -597,9 +649,33 @@ class TestXarrayDataset:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
+    def test_getitem_returns_source_data(self, dataset: XarrayDataset) -> None:
+        image = dataset[dataset.bounds]['image']
+        assert (image > 0).any()
+
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             XarrayDataset(tmp_path)
+
+    def test_nodata(self) -> None:
+        pytest.importorskip('h5py', minversion='3.10')
+        root = os.path.join('tests', 'data', 'hdf5')
+
+        # Extend the query east of the data so part of the window is nodata.
+        ds = XarrayDataset(root)
+        x, y, t = ds.bounds
+        query = (slice(x.start, x.stop + 30, x.step), y, t)
+
+        # By default, nodata regions fall back to the source's fill (NaN here).
+        assert torch.isnan(ds[query]['image']).any()
+
+        # Setting `nodata` fills those regions with the override value instead.
+        class Override(XarrayDataset):
+            nodata = -9999.0
+
+        image = Override(root)[query]['image']
+        assert (image == -9999).any()
+        assert not torch.isnan(image).any()
 
 
 class TestVectorDataset:

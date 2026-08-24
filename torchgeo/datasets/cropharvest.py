@@ -46,7 +46,7 @@ class CropHarvest(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://openreview.net/forum?id=JtjzUXPEaCu
+    * https://neurips.cc/virtual/2021/29874
 
     This dataset requires the following additional library to be installed:
 
@@ -100,7 +100,7 @@ class CropHarvest(NonGeoDataset):
         root: Path = 'data',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new CropHarvest dataset instance.
 

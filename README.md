@@ -12,7 +12,7 @@ Community:
 [![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
 [![radiant earth](https://img.shields.io/badge/Radiant_Earth-sponsor-469695?logo=radiantearth)](https://github.com/sponsors/torchgeo)
 [![huggingface](https://img.shields.io/badge/Hugging_Face-join-FFD21E?logo=huggingface)](https://huggingface.co/torchgeo)
-[![zenodo](https://img.shields.io/badge/Zenodo-join-1682D4?logo=zenodo)](https://zenodo.org/communities/torchgeo)
+[![zenodo](https://img.shields.io/badge/Zenodo-join-1682D4?logo=zenodo)](https://zenodo.org/communities/torchgeo/records)
 [![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/join-ecosystem/)
 [![youtube](https://img.shields.io/badge/YouTube-subscribe-FF0000?logo=youtube)](https://www.youtube.com/@TorchGeo)
 
@@ -22,7 +22,7 @@ Packaging:
 [![spack](https://img.shields.io/spack/v/py-torchgeo)](https://packages.spack.io/package.html?name=py-torchgeo)
 
 Testing:
-[![docs](https://app.readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
+[![docs](https://app.readthedocs.org/projects/torchgeo/badge/?version=latest)](https://docs.torchgeo.org/en/stable/)
 [![style](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml)
 [![codecov](https://codecov.io/gh/torchgeo/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://app.codecov.io/gh/torchgeo/torchgeo)
@@ -41,11 +41,11 @@ or with [uv](https://docs.astral.sh/uv/):
 uv add torchgeo
 ```
 
-For [conda](https://docs.conda.io/en/latest/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
+For [conda](https://docs.conda.io/en/latest/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://docs.torchgeo.org/en/stable/user/installation.html).
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io/en/stable/). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/), and [YouTube channel](https://www.youtube.com/@TorchGeo).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://docs.torchgeo.org/en/stable/). This includes API documentation, contributing instructions, and several [tutorials](https://docs.torchgeo.org/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/), and [YouTube channel](https://www.youtube.com/@TorchGeo).
 
 <p float="left">
     <a href="https://www.youtube.com/watch?v=0HfykJa-foE">
@@ -69,12 +69,12 @@ from torch.utils.data import DataLoader
 from torchgeo.datamodules import InriaAerialImageLabelingDataModule
 from torchgeo.datasets import CDL, Landsat7, Landsat8, VHR10, stack_samples
 from torchgeo.samplers import RandomPatchSampler
-from torchgeo.trainers import SemanticSegmentationTask
+from torchgeo.tasks import SemanticSegmentation
 ```
 
 ### Geospatial datasets and samplers
 
-Many remote sensing applications involve working with [_geospatial datasets_](https://torchgeo.readthedocs.io/en/stable/api/datasets.html#geospatial-datasets)—datasets with geographic metadata. These datasets can be challenging to work with due to the sheer variety of data. Geospatial imagery is often multispectral with a different number of spectral bands and spatial resolution for every satellite. In addition, each file may be in a different coordinate reference system (CRS), requiring the data to be reprojected into a matching CRS.
+Many remote sensing applications involve working with [_geospatial datasets_](https://docs.torchgeo.org/en/stable/api/datasets.html#torchgeo.datasets.GeoDataset)—datasets with geographic metadata. These datasets can be challenging to work with due to the sheer variety of data. Geospatial imagery is often multispectral with a different number of spectral bands and spatial resolution for every satellite. In addition, each file may be in a different coordinate reference system (CRS), requiring the data to be reprojected into a matching CRS.
 
 <img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/docs/_static/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
 
@@ -93,7 +93,7 @@ cdl = CDL(paths='...', download=True, checksum=True)
 dataset = landsat & cdl
 ```
 
-This dataset can now be used with a PyTorch data loader. Unlike benchmark datasets, geospatial datasets often include very large images. For example, the CDL dataset consists of a single image covering the entire continental United States. In order to sample from these datasets using geospatial coordinates, TorchGeo defines a number of [_samplers_](https://torchgeo.readthedocs.io/en/stable/api/samplers.html). In this example, we'll use a random sampler that returns 256 x 256 pixel images and 10,000 samples per epoch. We also use a custom collation function to combine each sample dictionary into a mini-batch of samples.
+This dataset can now be used with a PyTorch data loader. Unlike benchmark datasets, geospatial datasets often include very large images. For example, the CDL dataset consists of a single image covering the entire continental United States. In order to sample from these datasets using geospatial coordinates, TorchGeo defines a number of [_samplers_](https://docs.torchgeo.org/en/stable/api/samplers.html). In this example, we'll use a random sampler that returns 256 x 256 pixel images and 10,000 samples per epoch. We also use a custom collation function to combine each sample dictionary into a mini-batch of samples.
 
 ```python
 sampler = RandomPatchSampler(dataset, size=256, length=10000)
@@ -126,7 +126,7 @@ These combinations require that all queries are present in both datasets, and ca
 
 ### Benchmark datasets
 
-TorchGeo includes a number of [_benchmark datasets_](https://torchgeo.readthedocs.io/en/stable/api/datasets.html#non-geospatial-datasets)—datasets that include both input images and target labels. This includes datasets for tasks like image classification, regression, semantic segmentation, object detection, instance segmentation, change detection, and more.
+TorchGeo includes a number of [_benchmark datasets_](https://docs.torchgeo.org/en/stable/api/datasets.html#torchgeo.datasets.NonGeoDataset)—datasets that include both input images and target labels. This includes datasets for tasks like image classification, regression, semantic segmentation, object detection, instance segmentation, change detection, and more.
 
 If you've used [torchvision](https://docs.pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
 
@@ -164,7 +164,7 @@ All TorchGeo datasets are compatible with PyTorch data loaders, making them easy
 
 ### Pre-trained Weights
 
-Pre-trained weights have proven to be tremendously beneficial for transfer learning tasks in computer vision. Practitioners usually utilize models pre-trained on the ImageNet dataset, containing RGB images. However, remote sensing data often goes beyond RGB with additional multispectral channels that can vary across sensors. TorchGeo is the first library to support models pre-trained on different multispectral sensors, and adopts torchvision's [multi-weight API](https://pytorch.org/blog/introducing-torchvision-new-multi-weight-support-api/). A summary of currently available weights can be seen in the [docs](https://torchgeo.readthedocs.io/en/stable/api/models.html#pretrained-weights). To create a [timm](https://github.com/huggingface/pytorch-image-models) Resnet-18 model with weights that have been pretrained on Sentinel-2 imagery, you can do the following:
+Pre-trained weights have proven to be tremendously beneficial for transfer learning tasks in computer vision. Practitioners usually utilize models pre-trained on the ImageNet dataset, containing RGB images. However, remote sensing data often goes beyond RGB with additional multispectral channels that can vary across sensors. TorchGeo is the first library to support models pre-trained on different multispectral sensors, and adopts torchvision's [multi-weight API](https://pytorch.org/blog/introducing-torchvision-new-multi-weight-support-api/). A summary of currently available weights can be seen in the [docs](https://docs.torchgeo.org/en/stable/api/models.html#pretrained-weights). To create a [timm](https://github.com/huggingface/pytorch-image-models) Resnet-18 model with weights that have been pretrained on Sentinel-2 imagery, you can do the following:
 
 ```python
 import timm
@@ -173,21 +173,22 @@ from torchgeo.models import ResNet18_Weights
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
 model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'], num_classes=10)
 model.load_state_dict(
-    weights.get_state_dict(progress=True, weights_only=True), strict=False
+    weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+    strict=False,
 )
 ```
 
-These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
+These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://docs.torchgeo.org/en/stable/tutorials/pretrained_weights.html).
 
 ### Reproducibility with Lightning
 
-In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [_datamodules_](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [_trainers_](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
+In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [_datamodules_](https://docs.torchgeo.org/en/stable/api/datamodules.html) with well-defined train-val-test splits and [_tasks_](https://docs.torchgeo.org/en/stable/api/tasks.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
 
 ```python
 datamodule = InriaAerialImageLabelingDataModule(
     root='...', batch_size=64, num_workers=6
 )
-task = SemanticSegmentationTask(
+task = SemanticSegmentation(
     model='unet',
     backbone='resnet50',
     weights=True,
@@ -219,7 +220,7 @@ torchgeo --help
 # See valid trainer options
 torchgeo fit --help
 # See valid model options
-torchgeo fit --model.help ClassificationTask
+torchgeo fit --model.help Classification
 # See valid data options
 torchgeo fit --data.help EuroSAT100DataModule
 ```
@@ -230,7 +231,7 @@ Using the following config file:
 trainer:
   max_epochs: 20
 model:
-  class_path: ClassificationTask
+  class_path: Classification
   init_args:
     model: 'resnet18'
     in_channels: 13
@@ -283,6 +284,6 @@ If you use this software in your work, please cite our [paper](https://doi.org/1
 
 ## Contributing
 
-This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html) for more information.
+This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://docs.torchgeo.org/en/stable/user/contributing.html) for more information.
 
 This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on [Slack](https://torchgeo.slack.com/join/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw) with any additional questions or comments.

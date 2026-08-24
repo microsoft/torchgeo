@@ -19,6 +19,7 @@ from torchvision.models._api import WeightsEnum
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
+from .deo import DEO_Weights, deo_base
 from .dofa import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
@@ -28,7 +29,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -39,6 +40,7 @@ from .resnet import (
     resnet50,
     resnet152,
 )
+from .satclip import SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import (
     Swin_B_Weights,
@@ -81,11 +83,14 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'olmoearth_v1': olmoearth_v1,
+    'olmoearth_v1_unet_decoder': olmoearth_v1_unet_decoder,
+    'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
+    'satclip': satclip,
     'scalemae_large_patch16': scalemae_large_patch16,
     'swin_t': swin_t,
     'swin_s': swin_s,
@@ -103,13 +108,12 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
 }
 
-_model_weights: dict[
-    str | Callable[..., nn.Module], WeightsEnum
-] = {  # ty :ignore[invalid-assignment]
+_model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     aurora_swin_unet: Aurora_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
+    deo_base: DEO_Weights,
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
@@ -119,6 +123,7 @@ _model_weights: dict[
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
+    satclip: SatCLIP_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
     swin_t: Swin_T_Weights,
     swin_s: Swin_S_Weights,
@@ -138,6 +143,7 @@ _model_weights: dict[
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
+    'deo_base': DEO_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
@@ -147,6 +153,7 @@ _model_weights: dict[
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
+    'satclip': SatCLIP_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
     'swin_t': Swin_T_Weights,
     'swin_s': Swin_S_Weights,
@@ -182,7 +189,7 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     return model
 
 
-def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
+def get_model_weights(name: Callable[..., nn.Module] | str) -> type[WeightsEnum]:
     """Get the weights enum class associated with a given model.
 
     .. versionadded:: 0.4
@@ -212,7 +219,7 @@ def get_weight(name: str) -> WeightsEnum:
     """
     for weight_name, weight_enum in _model_weights.items():
         if isinstance(weight_name, str):
-            for sub_weight_enum in weight_enum:  # ty: ignore[not-iterable]
+            for sub_weight_enum in weight_enum:
                 if name == str(sub_weight_enum):
                     return sub_weight_enum
 

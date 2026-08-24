@@ -36,6 +36,7 @@ from rasterio.io import DatasetReader
 from rasterio.transform import Affine, array_bounds, from_gcps
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -378,6 +379,9 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
+    #: Nodata value for the dataset. If None, the source files' nodata value is used.
+    nodata: float | None = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -482,7 +486,10 @@ class RasterDataset(GeoDataset):
                     if crs is None:
                         with rasterio.Env(OSR_WKT_FORMAT='WKT2_2018'):
                             crs = PROJ_CRS.from_user_input(vrt.crs)
-                    geometries.append(shapely.box(*vrt.bounds))
+                    footprint = self.footprint_from_datasource(vrt)
+                    if footprint is None:
+                        footprint = shapely.box(*vrt.bounds)
+                    geometries.append(footprint)
                     if res is None:
                         res = vrt.res
                 except rasterio.errors.RasterioIOError:
@@ -547,6 +554,8 @@ class RasterDataset(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
+        out_crs = self.crs
+
         if self.separate_files:
             data_list: list[Tensor] = []
             for band in self.bands:
@@ -554,10 +563,14 @@ class RasterDataset(GeoDataset):
                 for filepath in df.filepath:
                     filepath = self._update_filepath(band, filepath)
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_or_stack(band_filepaths, index))
+                data_list.append(
+                    self._merge_or_stack(band_filepaths, index, out_crs=out_crs)
+                )
             data = torch.cat(data_list, dim=-3)
         else:
-            data = self._merge_or_stack(df.filepath, index, self.band_indexes)
+            data = self._merge_or_stack(
+                df.filepath, index, self.band_indexes, out_crs=out_crs
+            )
 
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
@@ -627,6 +640,7 @@ class RasterDataset(GeoDataset):
         filepaths: Sequence[str],
         index: GeoSlice,
         band_indexes: Sequence[int] | None = None,
+        out_crs: PROJ_CRS | None = None,
     ) -> Tensor:
         """Load and combine one or more files.
 
@@ -637,14 +651,18 @@ class RasterDataset(GeoDataset):
             filepaths: one or more files to load and merge
             index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             band_indexes: indexes of bands to be used
+            out_crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to :attr:`crs`). Files already in this CRS are read
+                without warping.
 
         Returns:
             image/mask at that index
         """
+        out_crs = out_crs or self.crs
         if self.cache:
-            vrt_fhs = [self._cached_load_warp_file(fp) for fp in filepaths]
+            vrt_fhs = [self._cached_load_warp_file(fp, out_crs) for fp in filepaths]
         else:
-            vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
+            vrt_fhs = [self._load_warp_file(fp, out_crs) for fp in filepaths]
 
         x, y, _ = self._disambiguate_slice(index)
         kwargs: dict[str, Any] = {
@@ -664,16 +682,19 @@ class RasterDataset(GeoDataset):
         return tensor
 
     @functools.lru_cache(maxsize=128)  # noqa: B019
-    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader | WarpedVRT:
+    def _cached_load_warp_file(
+        self, filepath: Path, crs: PROJ_CRS
+    ) -> DatasetReader | WarpedVRT:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
             filepath: file to load and warp
+            crs: :term:`coordinate reference system (CRS)` to warp to
 
         Returns:
             file handle of warped VRT
         """
-        return self._load_warp_file(filepath)
+        return self._load_warp_file(filepath, crs)
 
     def _load_warp_file(
         self, filepath: Path, crs: PROJ_CRS | None = None
@@ -719,7 +740,11 @@ class RasterDataset(GeoDataset):
             )
         )
 
-        if needs_warp:
+        if needs_warp or self.nodata is not None:
+            # Only override the source nodata when explicitly set, else uses src.nodata.
+            override: dict[str, Any] = {}
+            if self.nodata is not None:
+                override['src_nodata'] = self.nodata
             vrt = WarpedVRT(
                 src,
                 crs=dst_crs,
@@ -728,6 +753,7 @@ class RasterDataset(GeoDataset):
                 width=dst_width,
                 src_crs=src_crs,
                 src_transform=src_transform,
+                **override,
             )
             src.close()
             return vrt
@@ -798,6 +824,26 @@ class RasterDataset(GeoDataset):
 
         return dst_transform, dst_width, dst_height, needs_warp
 
+    def footprint_from_datasource(
+        self, datasource: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon | None:
+        """Compute the spatial footprint of the dataset from a file handle.
+
+        Called during indexing for each file in the dataset.
+        Override this in subclasses to compute a more precise footprint than
+        just the raster bounds (e.g., by reading a metadata file).
+
+        Args:
+            datasource: An open raster dataset.
+
+        Returns:
+            The true footprint in the dataset's CRS, or ``None`` if the metadata
+            file is not found (falling back to the raster's bounding box).
+
+        .. versionadded:: 0.10
+        """
+        return
+
 
 class XarrayDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files.
@@ -810,6 +856,9 @@ class XarrayDataset(GeoDataset):
 
     .. versionadded:: 0.8
     """
+
+    #: Nodata value for the dataset. If None, the source files' nodata value is used.
+    nodata: float | None = None
 
     def __init__(
         self,
@@ -912,7 +961,9 @@ class XarrayDataset(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
-        image = self._merge_files(df.filepath, index)
+        out_crs = self.crs
+
+        image = self._merge_files(df.filepath, index, out_crs=out_crs)
         transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
         sample: Sample = {
             'bounds': self._slice_to_tensor(index),
@@ -925,12 +976,16 @@ class XarrayDataset(GeoDataset):
 
         return sample
 
-    def _merge_files(self, filepaths: Sequence[str], index: GeoSlice) -> Tensor:
+    def _merge_files(
+        self, filepaths: Sequence[str], index: GeoSlice, out_crs: PROJ_CRS
+    ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
             index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            out_crs: :term:`coordinate reference system (CRS)` to reproject to. Files
+                already in this CRS are read without reprojection.
 
         Returns:
             image at that index
@@ -941,7 +996,8 @@ class XarrayDataset(GeoDataset):
 
         x, y, t = self._disambiguate_slice(index)
         bounds = (x.start, y.start, x.stop, y.stop)
-        res = (x.step, y.step)
+        # merge_datasets requires a positive resolution
+        res = (abs(x.step), abs(y.step))
 
         with ExitStack() as stack:
             datasets = []
@@ -950,16 +1006,31 @@ class XarrayDataset(GeoDataset):
                     xr.open_dataset(filepath, decode_times=True, decode_coords='all')
                 )
 
+                # A CRS-less source is assumed to already be in the dataset CRS
                 if src.rio.crs is None:
                     src = src.rio.write_crs(self.crs)
 
-                if src.rio.crs != self.crs or res != src.rio.resolution():
-                    src = src.rio.reproject(self.crs, resolution=res)
+                # Flip to north-up if the y-axis is ascending or merge_datasets
+                # will silently return an all-nodata array.
+                y_dim = src.rio.y_dim
+                if src[y_dim][0] < src[y_dim][-1]:
+                    src = src.isel({y_dim: slice(None, None, -1)})
+
+                if src.rio.crs != out_crs or res != src.rio.resolution():
+                    src = src.rio.reproject(out_crs, resolution=res)
+
+                # Only override the source nodata when explicitly set
+                if self.nodata is not None:
+                    for var in self.data_vars:
+                        src[var] = src[var].rio.write_nodata(self.nodata)
 
                 datasets.append(src)
 
+            # Pass the override explicitly; merge_datasets does not reliably pick
+            # it up from write_nodata when the source already encodes a nodata.
+            # When None, it reads the source's own value and falls back to 0.
             dataset = rioxr.merge.merge_datasets(
-                datasets, bounds=bounds, res=res, nodata=0, crs=self.crs
+                datasets, bounds=bounds, res=res, nodata=self.nodata, crs=out_crs
             )
             dataset = dataset.sel(time=t)
 
@@ -1127,6 +1198,8 @@ class VectorDataset(GeoDataset):
                 f'index: {index} not found in dataset with bounds: {self.bounds}'
             )
 
+        out_crs = self.crs
+
         shapes = []
         for filepath in df.filepath:
             if pathlib.Path(filepath).suffix.lower() == '.parquet':
@@ -1134,13 +1207,13 @@ class VectorDataset(GeoDataset):
             else:
                 src = gpd.read_file(filepath, layer=self.layer)
 
-            # We need to know the bounding box of the index in the source CRS
-            transformer = pyproj.Transformer.from_crs(self.crs, src.crs, always_xy=True)
+            # We need to know the bounding box of the query in the source CRS
+            transformer = pyproj.Transformer.from_crs(out_crs, src.crs, always_xy=True)
             (minx, miny) = transformer.transform(x.start, y.start)
             (maxx, maxy) = transformer.transform(x.stop, y.stop)
 
             src = src.cx[minx:maxx, miny:maxy]
-            src.to_crs(self.crs, inplace=True)
+            src.to_crs(out_crs, inplace=True)
 
             # Get label values to use for rendering each geometry
             labels = np.array(

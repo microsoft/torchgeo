@@ -119,7 +119,7 @@ class MapInWild(NonGeoDataset):
         split: Literal['train', 'validation', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new MapInWild dataset instance.
 

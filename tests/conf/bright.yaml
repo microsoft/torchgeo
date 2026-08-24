@@ -1,5 +1,5 @@
 model:
-  class_path: ChangeDetectionTask
+  class_path: ChangeDetection
   init_args:
     model: 'unet'
     backbone: 'resnet18'
@@ -13,3 +13,4 @@ data:
     batch_size: 1
   dict_kwargs:
     root: 'tests/data/bright'
+    checksum: false

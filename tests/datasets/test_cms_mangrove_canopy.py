@@ -52,7 +52,7 @@ class TestCMSGlobalMangroveCanopy:
         )
         root = tmp_path
         shutil.copy(pathname, root)
-        CMSGlobalMangroveCanopy(root, country='Angola')
+        CMSGlobalMangroveCanopy(root, country='Angola', checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(

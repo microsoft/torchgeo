@@ -40,3 +40,5 @@ class TestBioMassters:
             sample['prediction'] = sample['label']
         dataset.plot(sample)
         plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()

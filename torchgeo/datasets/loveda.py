@@ -97,7 +97,7 @@ class LoveDA(NonGeoDataset):
         scene: Sequence[Literal['urban', 'rural']] = ['urban', 'rural'],
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new LoveDA dataset instance.
 

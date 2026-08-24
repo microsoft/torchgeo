@@ -3,6 +3,7 @@
 
 """Copernicus-Pretrain dataset."""
 
+import os
 import random
 from collections.abc import Iterator
 from typing import Any, ClassVar
@@ -99,6 +100,9 @@ class CopernicusPretrain(IterableDataset[Sample]):
             *args: Arguments passed to WebDataset base class.
             **kwargs: Keyword arguments passed to WebDataset base class.
         """
+        # https://github.com/torchgeo/torchgeo/security/advisories/GHSA-6gm9-8jxc-p862
+        os.environ['WDS_PYTORCH_WEIGHTS_ONLY'] = '1'
+
         wds = lazy_import('webdataset')
 
         self.dataset = (

@@ -5,24 +5,24 @@
 index = [
     'TorchGeo',
     'TerraTorch',
-    'OTB',
     'DeepForest',
+    'OTB',
     'Raster Vision',
+    'GeoAI',
     'samgeo',
     'spopt',
-    'GDL',
-    'GeoAI',
-    'SITS',
     'SPy',
-    'srai',
+    'GDL',
+    'py4dgeo',
+    'SITS',
     'ML4Floods',
+    'srai',
     'GeoTessera',
     'AIDE',
     'scikit-eo',
     'Myria3D',
-    'OTBTF',
-    'GeoDeep',
     'rs-embed',
+    'GeoDeep',
     'torchange',
 ]
 
@@ -67,21 +67,22 @@ name_to_github = {
     'GeoTessera': ('ucam-eo', 'geotessera'),
     'torchange': ('Z-Zheng', 'pytorch-change-models'),
     'rs-embed': ('cybergis', 'rs-embed'),
+    'py4dgeo': ('3dgeo-heidelberg', 'py4dgeo'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
     'spopt': ('gh', 'pysal', 'spopt'),
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
+    'py4dgeo': ('gh', '3dgeo-heidelberg', 'py4dgeo'),
 }
 # TODO: remove these as coverage statistics are reported
 # Manually computed using `pytest --cov=<src>` or `coverage run`
 hardcoded_coverage = {
     'SPy': 69,
-    'OTB': 56,
+    'OTB': 50,
     'Raster Vision': 90,
     'GDL': 7,
-    'OTBTF': 55,
     'DeepForest': 87,
     'ML4Floods': 0,
     'Myria3D': 57,
@@ -113,6 +114,7 @@ name_to_pypi = {
     'GeoTessera': 'geotessera',
     'torchange': 'torchange',
     'rs-embed': 'rs-embed',
+    'py4dgeo': 'py4dgeo',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {

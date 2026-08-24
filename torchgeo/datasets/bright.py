@@ -93,7 +93,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new BRIGHT DFC2025 dataset instance.
 

@@ -16,7 +16,7 @@ BATCH_SIZE = [1, 2]
 
 
 class TestChangeViT:
-    @torch.no_grad()
+    @torch.inference_mode()
     @pytest.mark.parametrize('b', BATCH_SIZE)
     def test_forward(self, b: int) -> None:
         """Test ChangeViT forward pass with different batch sizes."""
@@ -33,10 +33,10 @@ class TestChangeViT:
         # Output: [B, 1, H, W] - binary change detection logits
         assert y.shape == (b, 1, 32, 32)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def test_different_img_sizes(self) -> None:
         """Test ChangeViT with different image sizes."""
-        for img_size in [32, 48, 64]:
+        for img_size in [16, 32]:
             model = ChangeViT(
                 backbone='vit_tiny_patch16_224', img_size=img_size, pretrained=False
             )
@@ -44,7 +44,7 @@ class TestChangeViT:
             y = model(x)
             assert y.shape == (1, 1, img_size, img_size)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def test_components(self) -> None:
         """Test ChangeViT has required components."""
         model = ChangeViT(
@@ -58,11 +58,11 @@ class TestChangeViT:
 
 
 class TestDetailCaptureModule:
-    @torch.no_grad()
+    @torch.inference_mode()
     def test_detail_capture_multiscale_output(self) -> None:
         """Test DetailCaptureModule returns 3 scales with correct channels."""
         dcm = DetailCaptureModule(in_channels=6)
-        x = torch.randn(2, 6, 256, 256)
+        x = torch.randn(2, 6, 32, 32)
 
         c2, c3, c4 = dcm(x)
 
@@ -72,13 +72,13 @@ class TestDetailCaptureModule:
         assert c4.shape[1] == 256
 
         # Check spatial dimensions (1/2, 1/4, 1/8 of input)
-        assert c2.shape[-2:] == (128, 128)  # 256 / 2
-        assert c3.shape[-2:] == (64, 64)  # 256 / 4
-        assert c4.shape[-2:] == (32, 32)  # 256 / 8
+        assert c2.shape[-2:] == (16, 16)
+        assert c3.shape[-2:] == (8, 8)
+        assert c4.shape[-2:] == (4, 4)
 
 
 class TestFeatureInjector:
-    @torch.no_grad()
+    @torch.inference_mode()
     def test_feature_injector_output_shape(self) -> None:
         """Test FeatureInjector preserves ViT feature shape."""
         vit_dim = 384
@@ -101,7 +101,7 @@ class TestFeatureInjector:
 
 
 class TestChangeViTDecoder:
-    @torch.no_grad()
+    @torch.inference_mode()
     def test_decoder_output_shape(self) -> None:
         """Test ChangeViTDecoder returns bidirectional predictions."""
         decoder = ChangeViTDecoder(in_channels=384, num_classes=1)

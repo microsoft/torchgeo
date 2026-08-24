@@ -542,7 +542,7 @@ class SatlasPretrain(NonGeoDataset):
         labels: Iterable[str] = ('land_cover',),
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SatlasPretrain instance.
 

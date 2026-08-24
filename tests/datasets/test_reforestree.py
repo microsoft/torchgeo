@@ -44,7 +44,7 @@ class TestReforesTree:
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'reforestree', 'reforesTree.zip')
         shutil.copy(url, tmp_path)
-        ReforesTree(root=tmp_path)
+        ReforesTree(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'reforesTree.zip'), 'w') as f:

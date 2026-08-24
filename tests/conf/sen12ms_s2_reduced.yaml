@@ -1,5 +1,5 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: SemanticSegmentation
   init_args:
     loss: 'ce'
     model: 'unet'
@@ -14,3 +14,4 @@ data:
     band_set: 's2-reduced'
   dict_kwargs:
     root: 'tests/data/sen12ms'
+    checksum: false

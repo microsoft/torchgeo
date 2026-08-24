@@ -15,7 +15,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the below information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: November 2025*
+   *Last updated: August 2026*
 
 Features
 --------
@@ -109,7 +109,6 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _SITS: https://github.com/e-sensing/sits
 .. _Raster Vision: https://github.com/azavea/raster-vision
 .. _GDL: https://github.com/NRCan/geo-deep-learning
-.. _OTBTF: https://github.com/remicres/otbtf
 .. _spopt: https://github.com/pysal/spopt
 .. _DeepForest: https://github.com/weecology/DeepForest
 .. _ML4Floods: https://github.com/spaceml-org/ml4floods
@@ -119,9 +118,10 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _samgeo: https://github.com/opengeos/segment-geospatial
 .. _GeoAI: https://github.com/opengeos/geoai
 .. _scikit-eo: https://github.com/yotarazona/scikit-eo
-.. _TerraTorch: https://github.com/terrastackai/terratorch
+.. _TerraTorch: https://github.com/torchgeo/terratorch
 .. _GeoTessera: https://github.com/ucam-eo/geotessera
 .. _GeoDeep: https://github.com/uav4geo/GeoDeep
 .. _torchange: https://github.com/Z-Zheng/pytorch-change-models
 .. _AIDE: https://github.com/microsoft/aerial_wildlife_detection
 .. _rs-embed: https://github.com/cybergis/rs-embed
+.. _py4dgeo: https://github.com/3dgeo-heidelberg/py4dgeo

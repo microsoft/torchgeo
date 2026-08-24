@@ -81,7 +81,7 @@ class SKIPPD(NonGeoDataset):
         task: Literal['nowcast', 'forecast'] = 'nowcast',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
