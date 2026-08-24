@@ -38,17 +38,19 @@ class HansenGlobalForestChange(RasterDataset):
     * gain: binary forest gain 2000-2012
     * datamask: 1 = land, 2 = water, 0 = no data
 
-    No download is provided; users export the bands they need from the
-    Earth Engine catalog asset above (see this project's
-    ``setup_data_loading.export_layers`` for an example export call) and
-    point this dataset at the resulting directory.
-
     If you use this dataset in your research, please cite the following
     paper:
 
     * https://doi.org/10.1126/science.1244693
 
-    .. versionadded:: 0.8
+    .. note::
+       No download is provided. Users must export the bands they need from
+       the `Earth Engine catalog asset
+       <https://developers.google.com/earth-engine/datasets/catalog/UMD_hansen_global_forest_change_2025_v1_13>`__
+       above (e.g. using ``ee.batch.Export.image.toDrive``) and point this
+       dataset at the resulting directory.
+
+    .. versionadded:: 0.11
     """
 
     filename_glob = 'hansen_*.tif'

@@ -22,10 +22,6 @@ from torchgeo.datasets import (
 class TestHansenGlobalForestChange:
     @pytest.fixture
     def dataset(self, tmp_path: Path) -> HansenGlobalForestChange:
-        # Fixture GeoTIFFs are plain files (no download/checksum step, since
-        # this dataset is populated from the user's own Earth Engine export
-        # rather than a fixed downloadable archive), so we just copy them
-        # into a fresh tmp_path the same way GlobBiomass copies its zips.
         src = os.path.join('tests', 'data', 'hansen_gfc')
         for name in os.listdir(src):
             if name.endswith('.tif'):
