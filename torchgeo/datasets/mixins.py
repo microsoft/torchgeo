@@ -61,7 +61,6 @@ class PlottingMixin:
             image = image[rgb_indices]
 
         image = rearrange(image, 'c h w -> h w c')
-        image = image.float()
 
         image = quantile_normalization(image)
 
