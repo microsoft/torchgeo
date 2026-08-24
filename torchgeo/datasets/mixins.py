@@ -3,8 +3,8 @@
 
 """Mixins for dataset classes."""
 
+from typing import cast
 from collections.abc import Sequence
-from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from einops import rearrange
@@ -26,9 +26,6 @@ class PlottingMixin:
 
     #: Names of RGB bands in the dataset
     rgb_bands: tuple[str, ...] = ()
-
-    #: Names of classes in the dataset
-    classes: ClassVar[Sequence[object]] = ()
 
     #: Color map for the dataset
     cmap: str | Colormap | None = None
@@ -79,7 +76,8 @@ class PlottingMixin:
                 label = sample['label'].item()
                 if isinstance(label, int):
                     if hasattr(self, 'classes'):
-                        title += f'Label: {self.classes[label]}'
+                        classes = cast(Sequence[object], self.classes)
+                        title += f'Label: {classes[label]}'
                     else:
                         title += f'Label: {label}'
 
@@ -87,7 +85,8 @@ class PlottingMixin:
                     prediction = sample['prediction'].item()
                     if isinstance(prediction, int):
                         if hasattr(self, 'classes'):
-                            title += f'\nPrediction: {self.classes[prediction]}'
+                            classes = cast(Sequence[object], self.classes)
+                            title += f'\nPrediction: {classes[prediction]}'
                         else:
                             title += f'\nPrediction: {prediction}'
 
