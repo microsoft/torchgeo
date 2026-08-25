@@ -50,6 +50,7 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
         transform: Affine,
         dtype: str = 'uint8',
         nodata: float | None = None,
+        overwrite: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize writer.
@@ -63,6 +64,7 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
             transform: Affine transform.
             dtype: Output data type.
             nodata: Value to use for nodata pixels.
+            overwrite: If True, overwrite an existing file at *output_path*.
             **kwargs: Additional keyword arguments passed to the GDAL COG
                 driver (e.g. ``compress``, ``overview_resampling``).
         """
@@ -74,6 +76,7 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
         self.transform = transform
         self.dtype = dtype
         self.nodata = nodata
+        self.overwrite = overwrite
         self.kwargs = kwargs
 
         self.tmp_path = self.output_path.with_suffix('.tmp.tif')
@@ -85,6 +88,10 @@ class GeoTIFFWriter(contextlib.AbstractContextManager['GeoTIFFWriter']):
         Returns:
             GeoTIFFWriter instance.
         """
+        if self.output_path.exists() and not self.overwrite:
+            msg = f'Output path already exists: {self.output_path}'
+            raise FileExistsError(msg)
+
         self.dataset = rasterio.open(
             self.tmp_path,
             'w',

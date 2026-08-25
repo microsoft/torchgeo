@@ -231,6 +231,46 @@ class TestGeoTIFFWriter:
         assert not writer.tmp_path.exists()
         assert not output.exists()
 
+    def test_output_path_exists(self, tmp_path: Path) -> None:
+        """Test that entering the writer raises if output_path already exists."""
+        output = tmp_path / 'test.tif'
+        output.touch()
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+        )
+
+        with pytest.raises(FileExistsError, match='already exists'):
+            writer.__enter__()
+
+    def test_overwrite(self, tmp_path: Path) -> None:
+        """Test that overwrite=True allows replacing an existing file."""
+        output = tmp_path / 'test.tif'
+        output.touch()
+        transform = Affine(1, 0, 0, 0, -1, 100)
+
+        writer = GeoTIFFWriter(
+            output_path=output,
+            width=64,
+            height=64,
+            num_bands=1,
+            crs='EPSG:32631',
+            transform=transform,
+            overwrite=True,
+        )
+
+        with writer:
+            writer.write_chunk(np.ones((64, 64), dtype=np.uint8), 0, 0)
+
+        with rasterio.open(output) as src:
+            assert src.width == 64
+
     def test_exception_cleans_up(self, tmp_path: Path) -> None:
         """Test an exception in the with block propagates and leaves no files."""
         output = tmp_path / 'test.tif'
