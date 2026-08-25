@@ -5,7 +5,7 @@
 
 import math
 from collections import OrderedDict
-from typing import Protocol, cast
+from typing import cast
 
 import torch.nn.functional as F
 from torch import Tensor
@@ -26,19 +26,6 @@ from torchvision.ops import FeaturePyramidNetwork as FPN
 
 from . import resnet as torchgeo_resnet
 from .resnet import ResNet18_Weights, ResNet50_Weights
-
-
-class _ResNetBackbone(Protocol):
-    """ResNet feature extraction interface."""
-
-    conv1: Module
-    bn1: Module
-    relu: Module
-    maxpool: Module
-    layer1: Module
-    layer2: Module
-    layer3: Module
-    layer4: Module
 
 
 class FarSeg(Module):
@@ -92,7 +79,7 @@ class FarSeg(Module):
             model = getattr(torchgeo_resnet, backbone)(weights=backbone_weights)
         else:
             model = getattr(torchvision_resnet, backbone)(weights=backbone_weights)
-        self.backbone = cast(_ResNetBackbone, model)
+        self.backbone = model
 
         self.fpn = FPN(
             in_channels_list=[max_channels // (2 ** (3 - i)) for i in range(4)],
