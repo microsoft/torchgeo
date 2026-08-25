@@ -35,25 +35,25 @@ class OlmoEarthV1_Weights(WeightsEnum):
     """
 
     NANO = Weights(
-        url='https://huggingface.co/allenai/OlmoEarth-v1-Nano/resolve/c48459cd6264704b9d1761a2904c46eb98755fda/weights.pth',
+        url='https://huggingface.co/allenai/OlmoEarth-v1-Nano/resolve/529248a4dc3c54014c56b7504641cec98de31d1c/weights-795c68419a658fd22ccf8f2e020607675f963e9ef3b93d8e368bb17646765347.pth',
         transforms=_olmoearth_transforms,
         meta=_olmoearth_meta
         | {'model_size': 'nano', 'hf_repo': 'allenai/OlmoEarth-v1-Nano'},
     )
     TINY = Weights(
-        url='https://huggingface.co/allenai/OlmoEarth-v1-Tiny/resolve/edd9418badc5a9f769ba1aa622cb6d0af4586f8b/weights.pth',
+        url='https://huggingface.co/allenai/OlmoEarth-v1-Tiny/resolve/885784437d4e2d632b7bf51b4233426c6f4479dc/weights-66b9827af383bc444d7909a406a5b62c072bb08d6804ff47a247c2dce8fad9a4.pth',
         transforms=_olmoearth_transforms,
         meta=_olmoearth_meta
         | {'model_size': 'tiny', 'hf_repo': 'allenai/OlmoEarth-v1-Tiny'},
     )
     BASE = Weights(
-        url='https://huggingface.co/allenai/OlmoEarth-v1-Base/resolve/93589e2dee5b5c95a660d1e9365bc017ea7f35d6/weights.pth',
+        url='https://huggingface.co/allenai/OlmoEarth-v1-Base/resolve/4bd1392a4539404d2c74276c39f3cb4cfff466cc/weights-551c1cc53337c6faaddead88071d7ebd2bd53ec271600fa6f0ee0a518c8b6e11.pth',
         transforms=_olmoearth_transforms,
         meta=_olmoearth_meta
         | {'model_size': 'base', 'hf_repo': 'allenai/OlmoEarth-v1-Base'},
     )
     LARGE = Weights(
-        url='https://huggingface.co/allenai/OlmoEarth-v1-Large/resolve/8cf072c70d4a1c403531ca9a9653bb1f8f60eb83/weights.pth',
+        url='https://huggingface.co/allenai/OlmoEarth-v1-Large/resolve/b2c9f41de3d8454cb37f0cd9cc3e79ec7c4af435/weights-1adb5026bd520c54bc415a1282386954927623bab81d01be2f5b6379cc039035.pth',
         transforms=_olmoearth_transforms,
         meta=_olmoearth_meta
         | {'model_size': 'large', 'hf_repo': 'allenai/OlmoEarth-v1-Large'},
@@ -97,7 +97,15 @@ def olmoearth_v1(
         state_dict = weights.get_state_dict(
             progress=True, check_hash=True, weights_only=True
         )
-        model.load_state_dict(state_dict, strict=False)
+        # The checkpoints are keyed encoder.*/decoder.*, but OlmoEarthPretrain_v1 holds the
+        # network in self.model, so its parameters are model.encoder.* etc. Without re-keying
+        # the two name sets are disjoint and strict=False silently drops every tensor, leaving
+        # the returned model randomly initialized.
+        state_dict = {f'model.{key}': value for key, value in state_dict.items()}
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+
+        assert not missing_keys
+        assert not unexpected_keys
     return model
 
 
