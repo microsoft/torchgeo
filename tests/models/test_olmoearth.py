@@ -1,7 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import re
 from pathlib import Path
 
 import pytest
