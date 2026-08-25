@@ -43,9 +43,9 @@ imagery_channels = {
 imagery_dtypes = {
     'PAN': 'uint16',
     'PS-RGB': 'uint8',
-    'PS-RGBNIR': 'uint8',
-    'RGBNIR': 'uint8',
-    'SAR-Intensity': 'uint8',
+    'PS-RGBNIR': 'uint16',
+    'RGBNIR': 'uint16',
+    'SAR-Intensity': 'float32',
 }
 
 
@@ -63,7 +63,10 @@ def generate_geotiff_files(
 ) -> None:
     for imagery_type in imagery_types:
         dtype = imagery_dtypes[imagery_type]
-        Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE)).astype(dtype)
+        if dtype == 'float32':
+            Z = (np.random.rand(SIZE, SIZE) * 70).astype(dtype)
+        else:
+            Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE)).astype(dtype)
         for i in range(1, NUM_SAMPLES + 1):
             if test and imagery_type == 'SAR-Intensity':
                 path = os.path.join(
