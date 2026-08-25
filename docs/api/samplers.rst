@@ -52,7 +52,7 @@ The majority of spatial and temporal samplers have both random and sequential va
 Regions of Interest
 ^^^^^^^^^^^^^^^^^^^
 
-Spatial samplers use the full dataset footprint unless a :term:`region of interest (ROI)` is provided. The ``roi`` parameter accepts a Shapely polygon in the same CRS as the dataset. For example, the following sampler restricts Sentinel-2 patches to a 10 km by 10 km bounding box in UTM zone 11N:
+Spatial samplers use the full spatial extent of the dataset unless a :term:`region of interest (ROI)` is provided. The ``roi`` parameter accepts a Shapely geometry in the same CRS as the dataset. For example, the following sampler restricts Sentinel-2 patches to a 10 km by 10 km bounding box in UTM zone 11N, where coordinates are measured in meters:
 
 .. code-block:: python
 
