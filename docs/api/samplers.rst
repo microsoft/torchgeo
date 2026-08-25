@@ -70,7 +70,7 @@ Spatial samplers use the full spatial extent of the dataset unless a :term:`regi
 
 Reproject geometries to ``dataset.crs`` before using them as an ROI. The sampler intersects the ROI with the dataset's spatial extent, so portions of the ROI outside the dataset are ignored.
 
-Temporal samplers provide an analogous ``toi`` parameter that accepts a :class:`pandas.Interval`. Spatial and temporal samplers can be combined with the ``@`` operator to restrict both the location and time range.
+Temporal samplers similarly accept a ``toi`` parameter containing a :class:`pandas.Interval`. Spatial and temporal samplers can be combined with the ``@`` operator to restrict sampling by both location and time.
 
 Spatial Samplers
 ^^^^^^^^^^^^^^^^
