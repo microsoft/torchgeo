@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.datasets import SSL4EOS12, ChesapeakeCVPR, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import MoCo
@@ -46,6 +46,25 @@ class TestMoCo:
         if name.startswith('seco'):
             monkeypatch.setattr(SeasonalContrastS2, '__len__', lambda self: 2)
 
+        if name.startswith('chesapeake_cvpr'):
+            # Tell ChesapeakeCVPR that only the fixture tile is available so it
+            # doesn't try to (re-)extract the archives on every test run.
+            # Without this, parallel test workers can extract into the same
+            # shared tests/data directory at once and corrupt each other's reads.
+            monkeypatch.setattr(
+                ChesapeakeCVPR,
+                '_files',
+                {
+                    'base': (
+                        'de_1m_2013_extended-debuffered-test_tiles',
+                        'spatial_index.geojson',
+                    ),
+                    'prior_extension': (
+                        'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                    ),
+                },
+            )
+
         if name.startswith('ssl4eo_s12'):
             monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
 
@@ -77,6 +96,12 @@ class TestMoCo:
             MoCo(version=3, layers=2, memory_bank_size=0)
         with pytest.warns(UserWarning, match='MoCo v3 does not use a memory bank'):
             MoCo(version=3, layers=3, memory_bank_size=10)
+
+    def test_grayscale_weights_tensor(self) -> None:
+        weights = torch.ones(4)
+        task = MoCo(in_channels=4, grayscale_weights=weights)
+        assert task.augmentation1 is not None
+        assert task.augmentation2 is not None
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:

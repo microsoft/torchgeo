@@ -82,7 +82,7 @@ class ChaBuD(NonGeoDataset):
         bands: Sequence[str] = all_bands,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new ChaBuD dataset instance.
 

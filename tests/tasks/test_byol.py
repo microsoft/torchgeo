@@ -12,7 +12,7 @@ from torch import nn
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.datasets import SSL4EOS12, ChesapeakeCVPR, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import BYOL
@@ -57,6 +57,25 @@ class TestBYOL:
 
         if name.startswith('seco'):
             monkeypatch.setattr(SeasonalContrastS2, '__len__', lambda self: 2)
+
+        if name.startswith('chesapeake_cvpr'):
+            # Tell ChesapeakeCVPR that only the fixture tile is available so it
+            # doesn't try to (re-)extract the archives on every test run.
+            # Without this, parallel test workers can extract into the same
+            # shared tests/data directory at once and corrupt each other's reads.
+            monkeypatch.setattr(
+                ChesapeakeCVPR,
+                '_files',
+                {
+                    'base': (
+                        'de_1m_2013_extended-debuffered-test_tiles',
+                        'spatial_index.geojson',
+                    ),
+                    'prior_extension': (
+                        'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                    ),
+                },
+            )
 
         if name.startswith('ssl4eo_s12'):
             monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
@@ -104,18 +123,22 @@ class TestBYOL:
             BYOL(model='resnet18', in_channels=13, weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
-        BYOL(
-            model=mocked_weights.meta['model'],
-            weights=mocked_weights,
-            in_channels=mocked_weights.meta['in_chans'],
-        )
+        match = 'num classes .* != num classes in pretrained model'
+        with pytest.warns(UserWarning, match=match):
+            BYOL(
+                model=mocked_weights.meta['model'],
+                weights=mocked_weights,
+                in_channels=mocked_weights.meta['in_chans'],
+            )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
-        BYOL(
-            model=mocked_weights.meta['model'],
-            weights=str(mocked_weights),
-            in_channels=mocked_weights.meta['in_chans'],
-        )
+        match = 'num classes .* != num classes in pretrained model'
+        with pytest.warns(UserWarning, match=match):
+            BYOL(
+                model=mocked_weights.meta['model'],
+                weights=str(mocked_weights),
+                in_channels=mocked_weights.meta['in_chans'],
+            )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:

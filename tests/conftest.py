@@ -11,7 +11,9 @@ import torchvision
 from pytest import MonkeyPatch
 
 
-def load(*args: Any, progress: bool = False, **kwargs: Any) -> Any:
+def load(
+    *args: Any, progress: bool = False, check_hash: bool = False, **kwargs: Any
+) -> Any:
     return torch.load(*args, **kwargs)
 
 

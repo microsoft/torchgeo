@@ -29,7 +29,7 @@ def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
         AssertionError: If *embed_dim* is not even.
     """
     assert embed_dim % 2 == 0
-    omega = torch.arange(embed_dim // 2, dtype=torch.float32, device=pos.device)
+    omega = torch.arange(embed_dim // 2, dtype=pos.dtype, device=pos.device)
     omega /= embed_dim / 2.0
     omega = 1.0 / 10000**omega  # (D/2,)
 
@@ -327,13 +327,15 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wavelengths: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1 VV/VH,
+                the DOFA v1 weights use ``[3.75, 3.75]`` as modality placeholders
+                rather than physical wavelengths.
 
         Returns:
             Output mini-batch.
         """
         # embed patches
-        wavelist = torch.tensor(wavelengths, device=x.device).float()
+        wavelist = torch.tensor(wavelengths, device=x.device, dtype=x.dtype)
         self.waves = wavelist
 
         x, _ = self.patch_embed(x, self.waves)
@@ -375,7 +377,9 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wavelengths: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm). For Sentinel-1 VV/VH,
+                the DOFA v1 weights use ``[3.75, 3.75]`` as modality placeholders
+                rather than physical wavelengths.
 
         Returns:
             Output mini-batch.
@@ -473,7 +477,8 @@ def dofa_base_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
@@ -511,7 +516,8 @@ def dofa_large_patch16_224(
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True, weights_only=True), strict=False
+            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
+            strict=False,
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {

@@ -143,9 +143,12 @@ class SimCLR(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
-        self.augmentations = augmentations or simclr_augmentations(
-            size, grayscale_weights
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
+        self.augmentations = (
+            simclr_augmentations(size, grayscale_weights)
+            if augmentations is None
+            else augmentations
         )
 
     def configure_models(self) -> None:
@@ -163,12 +166,14 @@ class SimCLR(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+                state_dict = weights.get_state_dict(
+                    progress=True, check_hash=True, weights_only=True
+                )
             elif os.path.exists(weights):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(
-                    progress=True, weights_only=True
+                    progress=True, check_hash=True, weights_only=True
                 )
             utils.load_state_dict(self.backbone, state_dict)
 

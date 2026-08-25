@@ -49,7 +49,7 @@ class TestVaihingen2D:
             shutil.copyfile(
                 os.path.join(root, filename), os.path.join(tmp_path, filename)
             )
-        Vaihingen2D(root=tmp_path)
+        Vaihingen2D(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         filenames = [

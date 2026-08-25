@@ -52,7 +52,7 @@ class CopernicusEmbed(RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new CopernicusEmbed instance.

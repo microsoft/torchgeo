@@ -2,13 +2,20 @@
 # Licensed under the MIT License.
 
 import os
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import pyproj
 import pytest
+import rasterio
+import shapely
+import shapely.wkt
 import torch
 from _pytest.fixtures import SubRequest
+from geopandas import GeoSeries
+from geopandas.testing import assert_geoseries_equal
 from torch import nn
 
 from torchgeo.datasets import (
@@ -159,3 +166,32 @@ class TestSentinel2:
 
     def test_float_res(self, dataset: Sentinel2) -> None:
         Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)
+
+    @pytest.mark.parametrize('crs', [None, pyproj.CRS('EPSG:3857')])
+    def test_true_footprint_from_metadata(self, crs: pyproj.CRS | None) -> None:
+        root = os.path.join('tests', 'data', 'sentinel2')
+        ds = Sentinel2(root, res=(10.0, 10.0), crs=crs, bands=['B02'])
+
+        def read_footprint_wkt(filepath: str) -> str:
+            metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                with rasterio.open(metadata_path) as src:
+                    return src.tags()['FOOTPRINT']
+
+        expected = GeoSeries(
+            ds.index['filepath'].map(read_footprint_wkt).map(shapely.wkt.loads),
+            crs='EPSG:4326',
+        ).to_crs(ds.crs)
+        assert_geoseries_equal(ds.index.geometry, expected)
+
+    def test_footprint_none_without_metadata(
+        self, dataset: Sentinel2, tmp_path: Path
+    ) -> None:
+        filepath = next(iter(dataset.files))
+        # Move this raster to a directory where it does not find metadata file
+        link = tmp_path / Path(filepath).name
+        link.symlink_to(Path(filepath).resolve())
+
+        with rasterio.open(link) as src:
+            assert dataset.footprint_from_datasource(src) is None

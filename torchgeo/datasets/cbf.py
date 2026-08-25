@@ -69,7 +69,7 @@ class CanadianBuildingFootprints(VectorDataset):
         res: float | tuple[float, float] = (0.00001, 0.00001),
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 

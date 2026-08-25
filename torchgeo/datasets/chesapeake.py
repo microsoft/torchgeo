@@ -220,7 +220,7 @@ class Chesapeake(RasterDataset, ABC):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new Chesapeake instance.
@@ -452,7 +452,7 @@ class ChesapeakeCVPR(UnionDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    subdatasets = ('base', 'prior_extension')
+    subdatasets: tuple[str, ...] = ('base', 'prior_extension')
     urls: ClassVar[dict[str, str]] = {
         'base': 'https://lilawildlife.blob.core.windows.net/lila-wildlife/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
         'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
@@ -518,36 +518,43 @@ class ChesapeakeCVPR(UnionDataset):
         + [f'{state}-test' for state in states]
     )
 
-    # these are used to check the integrity of the dataset
-    _files = (
-        'de_1m_2013_extended-debuffered-test_tiles',
-        'de_1m_2013_extended-debuffered-train_tiles',
-        'de_1m_2013_extended-debuffered-val_tiles',
-        'md_1m_2013_extended-debuffered-test_tiles',
-        'md_1m_2013_extended-debuffered-train_tiles',
-        'md_1m_2013_extended-debuffered-val_tiles',
-        'ny_1m_2013_extended-debuffered-test_tiles',
-        'ny_1m_2013_extended-debuffered-train_tiles',
-        'ny_1m_2013_extended-debuffered-val_tiles',
-        'pa_1m_2013_extended-debuffered-test_tiles',
-        'pa_1m_2013_extended-debuffered-train_tiles',
-        'pa_1m_2013_extended-debuffered-val_tiles',
-        'va_1m_2014_extended-debuffered-test_tiles',
-        'va_1m_2014_extended-debuffered-train_tiles',
-        'va_1m_2014_extended-debuffered-val_tiles',
-        'wv_1m_2014_extended-debuffered-test_tiles',
-        'wv_1m_2014_extended-debuffered-train_tiles',
-        'wv_1m_2014_extended-debuffered-val_tiles',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-        'spatial_index.geojson',
-    )
+    # the layer that is only distributed in the prior extension archive
+    prior_layer = 'prior_from_cooccurrences_101_31_no_osm_no_buildings'
+
+    # these are used to check the integrity of each subdataset
+    _files: ClassVar[dict[str, tuple[str, ...]]] = {
+        'base': (
+            'de_1m_2013_extended-debuffered-test_tiles',
+            'de_1m_2013_extended-debuffered-train_tiles',
+            'de_1m_2013_extended-debuffered-val_tiles',
+            'md_1m_2013_extended-debuffered-test_tiles',
+            'md_1m_2013_extended-debuffered-train_tiles',
+            'md_1m_2013_extended-debuffered-val_tiles',
+            'ny_1m_2013_extended-debuffered-test_tiles',
+            'ny_1m_2013_extended-debuffered-train_tiles',
+            'ny_1m_2013_extended-debuffered-val_tiles',
+            'pa_1m_2013_extended-debuffered-test_tiles',
+            'pa_1m_2013_extended-debuffered-train_tiles',
+            'pa_1m_2013_extended-debuffered-val_tiles',
+            'va_1m_2014_extended-debuffered-test_tiles',
+            'va_1m_2014_extended-debuffered-train_tiles',
+            'va_1m_2014_extended-debuffered-val_tiles',
+            'wv_1m_2014_extended-debuffered-test_tiles',
+            'wv_1m_2014_extended-debuffered-train_tiles',
+            'wv_1m_2014_extended-debuffered-val_tiles',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
+            'spatial_index.geojson',
+        ),
+        'prior_extension': (
+            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+        ),
+    }
 
     def __init__(
         self,
@@ -557,7 +564,7 @@ class ChesapeakeCVPR(UnionDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -578,6 +585,11 @@ class ChesapeakeCVPR(UnionDataset):
         Raises:
             AssertionError: if ``splits`` or ``layers`` are not valid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.10
+           Only the subdatasets required by *layers* are verified and downloaded.
+           The prior extension archive is no longer needed unless
+           ``"prior_from_cooccurrences_101_31_no_osm_no_buildings"`` is requested.
         """
         assert set(splits) <= set(self.splits)
         assert set(layers) <= set(self.valid_layers)
@@ -588,6 +600,11 @@ class ChesapeakeCVPR(UnionDataset):
         self.cache = cache
         self.download = download
         self.checksum = checksum
+
+        if self.prior_layer in layers:
+            self.subdatasets = ('base', 'prior_extension')
+        else:
+            self.subdatasets = ('base',)
 
         self._verify()
 
@@ -617,7 +634,11 @@ class ChesapeakeCVPR(UnionDataset):
             return os.path.exists(os.path.join(self.root, filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self._files)):
+        if all(
+            exists(filename)
+            for subdataset in self.subdatasets
+            for filename in self._files[subdataset]
+        ):
             return
 
         # Check if the zip files have already been downloaded

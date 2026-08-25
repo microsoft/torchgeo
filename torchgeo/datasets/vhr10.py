@@ -3,6 +3,7 @@
 
 """NWPU VHR-10 dataset."""
 
+import glob
 import json
 import os
 from collections import defaultdict
@@ -100,7 +101,7 @@ class VHR10(NonGeoDataset):
         split: Literal['positive', 'negative'] = 'positive',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new VHR-10 dataset instance.
 
@@ -129,6 +130,14 @@ class VHR10(NonGeoDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
+        directory = os.path.join(
+            self.root, 'NWPU VHR-10 dataset', f'{self.split} image set'
+        )
+        self.files = sorted(glob.glob(os.path.join(directory, '*.jpg')))
+
+        if not self.files:
+            raise DatasetNotFoundError(self)
+
         if split == 'positive':
             path = os.path.join(self.root, 'NWPU VHR-10 dataset', 'annotations.json')
             with open(path) as f:
@@ -136,8 +145,11 @@ class VHR10(NonGeoDataset):
 
                 # Gather image shapes
                 out_shapes = []
+                image_ids = {}
                 for image in annotations['images']:
                     out_shapes.append((image['height'], image['width']))
+                    image_ids[image['file_name']] = image['id']
+                self.ids = [image_ids[os.path.basename(file)] for file in self.files]
 
                 self.labels = defaultdict(list)
                 self.boxes = defaultdict(list)
@@ -170,20 +182,17 @@ class VHR10(NonGeoDataset):
         """
         sample = {}
 
-        # Both 'positive' and 'negative' splits have an image
-        split = f'{self.split} image set'
-        file = f'{index + 1:03d}.jpg'
-        path = os.path.join(self.root, 'NWPU VHR-10 dataset', split, file)
-        with Image.open(path) as f:
+        with Image.open(self.files[index]) as f:
             tensor = torch.from_numpy(np.array(f)).float()
             tensor = einops.rearrange(tensor, 'h w c -> c h w')
             sample['image'] = tensor
 
         # Only 'positive' split has target labels
         if self.split == 'positive':
-            sample['label'] = torch.tensor(self.labels[index])
-            sample['bbox_xyxy'] = torch.tensor(self.boxes[index])
-            sample['mask'] = torch.stack(self.masks[index])
+            id_ = self.ids[index]
+            sample['label'] = torch.tensor(self.labels[id_])
+            sample['bbox_xyxy'] = torch.tensor(self.boxes[id_])
+            sample['mask'] = torch.stack(self.masks[id_])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -196,10 +205,7 @@ class VHR10(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        if self.split == 'positive':
-            return 650
-        else:
-            return 150
+        return len(self.files)
 
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.

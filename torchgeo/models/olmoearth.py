@@ -94,6 +94,63 @@ def olmoearth_v1(
         model_size=model_size, model_version='v1', **kwargs
     )
     if weights is not None:
-        state_dict = weights.get_state_dict(progress=True, weights_only=True)
+        state_dict = weights.get_state_dict(
+            progress=True, check_hash=True, weights_only=True
+        )
         model.load_state_dict(state_dict, strict=False)
     return model
+
+
+def olmoearth_v1_unet_decoder(
+    in_dim: int = 768,
+    num_classes: int = 1,
+    patch_size: int = 16,
+    conv_layers_per_resolution: int = 1,
+    **kwargs: Any,
+) -> nn.Module:
+    """UNet-style decoder head for OlmoEarth v1 features.
+
+    A progressive upsampling decoder that turns OlmoEarth ViT patch tokens of
+    shape ``(B, H_p, W_p, in_dim)`` into per-pixel logits of shape
+    ``(B, num_classes, H, W)`` where ``H = H_p * patch_size``, for segmentation
+    or regression on top of a frozen or fine-tuned backbone.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2511.13655
+
+    This model requires the following additional library to be installed:
+
+    * `olmoearth-pretrain-minimal <https://pypi.org/project/olmoearth-pretrain-minimal/>`_:
+      to build the decoder.
+
+    .. versionadded:: 0.11
+
+    Args:
+        in_dim: Number of input feature channels, i.e. the embedding dimension
+            of the OlmoEarth backbone that produces the patch tokens.
+        num_classes: Number of output channels (segmentation classes or
+            regression targets).
+        patch_size: Backbone patch size. The decoder performs
+            ``log2(patch_size)`` upsampling stages, so this must be a power of
+            two (4, 8, 16, ...).
+        conv_layers_per_resolution: Number of 3x3 conv + ReLU blocks applied at
+            each upsampling resolution.
+        **kwargs: Additional keyword arguments passed to
+            ``olmoearth_pretrain_minimal.UNetDecoder``.
+
+    Returns:
+        A UNet-style decoder head.
+
+    Raises:
+        ValueError: If *patch_size* is not a power of two.
+    """
+    olmoearth = lazy_import('olmoearth_pretrain_minimal')
+    decoder: nn.Module = olmoearth.UNetDecoder(
+        in_dim=in_dim,
+        num_classes=num_classes,
+        patch_size=patch_size,
+        conv_layers_per_resolution=conv_layers_per_resolution,
+        **kwargs,
+    )
+    return decoder

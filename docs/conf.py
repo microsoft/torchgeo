@@ -56,6 +56,18 @@ needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
+    # objects.inv is temporarily unavailable
+    ('py:class', 'lightning.pytorch.core.datamodule.LightningDataModule'),
+    ('py:class', 'lightning.pytorch.core.module.LightningModule'),
+    ('py:class', 'lightning.pytorch.profilers.profiler.Profiler'),
+    ('py:class', 'torchmetrics.Accuracy'),
+    ('py:class', 'torchmetrics.F1Score'),
+    ('py:class', 'torchmetrics.JaccardIndex'),
+    ('py:class', 'torchmetrics.MeanAbsoluteError'),
+    ('py:class', 'torchmetrics.MeanSquaredError'),
+    ('py:class', 'torchmetrics.Precision'),
+    ('py:class', 'torchmetrics.Recall'),
+    ('py:class', 'torchmetrics.detection.mean_ap.MeanAveragePrecision'),
     # Undocumented classes
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
@@ -150,6 +162,43 @@ html_favicon = os.path.join('_static', 'logo', 'favicon.ico')
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 
+# -- Options for linkcheck output -------------------------------------------------
+
+# Expected redirects
+linkcheck_allowed_redirects = {
+    'https://badge.fury.io/.*': '.*',
+    'https://doi.org/.*': '.*',
+    'https://hf.co/.*': 'https://huggingface.co/.*',
+    '.*': 'https://img.shields.io/.*',
+}
+
+# Expected missing anchors
+linkcheck_anchors_ignore_for_url = [
+    'https://docs.pytorch.org/.*',
+    'https://github.com/.*',
+]
+
+# URLs that require login or block bots
+linkcheck_ignore = [
+    'https://ai.meta.com/.*',
+    'https://code.earthengine.google.com/.*',
+    'https://console.cloud.google.com/.*',
+    'https://dl.acm.org/.*',
+    'https://esaopenarchive.org/.*',
+    'https://github.com/login',
+    'https://localhost:6006',
+    'https://medium.com/.*',
+    'https://www.gbif.org/.*',
+    'https://www.grss-ieee.org/.*',
+    'https://www.mdpi.com/.*',
+    'https://www.researchgate.net/.*',
+    'https://www.sciencedirect.com/.*',
+    'https://www.tandfonline.com/.*',
+    'https://www.youtube.com/.*',
+    'https://.*.onlinelibrary.wiley.com/.*',
+    'https://.*.slack.com/.*',
+]
+
 # -- Extension configuration -------------------------------------------------
 
 # sphinx.ext.autodoc
@@ -166,7 +215,8 @@ autodoc_typehints_description_target = 'documented'
 intersphinx_mapping = {
     'einops': ('https://einops.rocks/', None),
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
-    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
+    # objects.inv is temporarily unavailable
+    # 'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
@@ -180,12 +230,13 @@ intersphinx_mapping = {
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
     'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
-    'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
+    # objects.inv is temporarily unavailable
+    # 'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
 # myst-parser
-suppress_warnings = ['myst.header']
+suppress_warnings = ['myst.header', 'ref.ref']
 
 # nbsphinx
 nbsphinx_execute = 'never'

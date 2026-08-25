@@ -8,7 +8,7 @@ build-backend = "uv_build"
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 [project]
 name = "torchgeo"
-version = "0.10.0.dev0"
+version = "0.11.0.dev1"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -86,6 +86,8 @@ dependencies = [
     "torchmetrics[detection]>=1.5",
     # torchvision 0.17+ required for Python 3.12 wheels
     "torchvision>=0.17",
+    # tqdm 4.57+ required to match lightning's own tqdm dependency
+    "tqdm>=4.57",
     # typing-extensions 4.8+ required by torch 2.2
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.8",
@@ -109,30 +111,30 @@ datasets = [
     # tokenizers 0.14+ required for Python 3.12 wheels
     # tokenizers does not yet provide wheels for Python 3.14t
     "tokenizers>=0.14; python_version<'3.14'",
-    # webdataset 0.2.4+ required for PyTorch tuple seed support
-    "webdataset>=0.2.4",
+    # webdataset 0.2.101+ required for security hardening
+    "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
-    # myst-parser 4+ required for sphinx 8+ compatibility
-    "myst-parser>=4",
+    # myst-parser 5.1+ required by sphinx-github-changelog 2+
+    "myst-parser>=5.1",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
     # pydata-sphinx-theme 0.18+ required for font awesome 7
     "pydata-sphinx-theme>=0.18",
     # sphinx 8+ required by pydata-sphinx-theme 0.18+
     "sphinx>=8",
-    # sphinx-github-changelog 1.7.2+ required for image URL fix
-    "sphinx-github-changelog>=1.7.2",
+    # sphinx-github-changelog 2+ converts GitHub markdown alerts to Sphinx admonitions
+    "sphinx-github-changelog>=2",
 ]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
-    # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
-    "olmoearth-pretrain-minimal>=0.0.2",
+    # olmoearth-pretrain-minimal 0.0.7+ required for UNetDecoder support
+    "olmoearth-pretrain-minimal>=0.0.7",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
@@ -159,6 +161,8 @@ tests = [
     "pytest>=7.3.2",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
+    "pytest-xdist>=3.0.2",
     # pytest-socket 0.3.4+ required for wheels
     "pytest-socket>=0.3.4",
 ]
@@ -171,7 +175,7 @@ torchgeo = "torchgeo.main:main"
 
 [project.urls]
 Codecov = "https://app.codecov.io/gh/torchgeo/torchgeo"
-Documentation = "https://torchgeo.readthedocs.io"
+Documentation = "https://docs.torchgeo.org"
 Homepage = "https://github.com/torchgeo/torchgeo"
 Slack = "https://torchgeo.slack.com"
 
@@ -227,6 +231,7 @@ filterwarnings = [
 ]
 markers = [
     "slow: marks tests as slow",
+    "xdist_group: marks tests to run on the same pytest-xdist worker",
 ]
 norecursedirs = [
     ".ipynb_checkpoints",

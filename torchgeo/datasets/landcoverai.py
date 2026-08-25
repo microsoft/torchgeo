@@ -79,7 +79,7 @@ class LandCoverAIBase(Dataset[Sample], abc.ABC):
     )
 
     def __init__(
-        self, root: Path = 'data', download: bool = False, checksum: bool = False
+        self, root: Path = 'data', download: bool = False, checksum: bool = True
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -194,7 +194,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
         time_series: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai NonGeo dataset instance.
@@ -317,7 +317,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 

@@ -10,7 +10,7 @@ from torchgeo.models import FCN
 class TestFCN:
     def test_in_channels(self) -> None:
         model = FCN(in_channels=5, classes=4, num_filters=10)
-        x = torch.randn(2, 5, 64, 64)
+        x = torch.randn(2, 5, 32, 32)
         model(x)
 
         model = FCN(in_channels=3, classes=4, num_filters=10)
@@ -20,7 +20,7 @@ class TestFCN:
 
     def test_classes(self) -> None:
         model = FCN(in_channels=5, classes=4, num_filters=10)
-        x = torch.randn(2, 5, 64, 64)
+        x = torch.randn(2, 5, 32, 32)
         y = model(x)
 
         assert y.shape[1] == 4
