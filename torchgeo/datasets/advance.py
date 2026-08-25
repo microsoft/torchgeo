@@ -196,7 +196,7 @@ class ADVANCE(NonGeoDataset):
         """
         siw = lazy_import('scipy.io.wavfile')
         array = siw.read(path, mmap=True)[1]
-        tensor = torch.from_numpy(array).float()
+        tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor
 
