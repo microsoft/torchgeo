@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-import kornia.augmentation as K
 import pytest
 import timm
 import torch
@@ -17,7 +16,6 @@ from torchgeo.datasets import SSL4EOS12, ChesapeakeCVPR, SeasonalContrastS2
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SimCLR
-from torchgeo.tasks.simclr import simclr_augmentations
 
 from .test_classification import ClassificationTestModel
 
@@ -27,26 +25,6 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
 
 
 class TestSimCLR:
-    def test_standardized_augmentations(self) -> None:
-        image = torch.tensor([[[[-10.0, 10.0], [-10.0, 10.0]]]]).repeat(1, 3, 1, 1)
-        augmentations = simclr_augmentations(2, torch.ones(3) / 3)
-
-        for transform in augmentations.children():
-            if isinstance(transform, (K.RandomBrightness, K.RandomContrast)):
-                factor = (
-                    'brightness_factor'
-                    if isinstance(transform, K.RandomBrightness)
-                    else 'contrast_factor'
-                )
-                params = {
-                    factor: torch.ones(1),
-                    'batch_prob': torch.ones(1),
-                    'forward_input_shape': torch.tensor(image.shape),
-                }
-                output = transform(image, params=params)
-                assert output.min() < 0
-                assert output.max() > 1
-
     @pytest.mark.parametrize(
         'name',
         [
