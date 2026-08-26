@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 
 from ..datasets import UCMerced
 from .geo import NonGeoDataModule
@@ -16,6 +17,8 @@ class UCMercedDataModule(NonGeoDataModule):
 
     Uses random train/val/test splits.
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import torch
 from torch.utils.data import Subset
 
 from ..datasets import TropicalCyclone
@@ -22,6 +23,8 @@ class TropicalCycloneDataModule(NonGeoDataModule):
         Class name changed from CycloneDataModule to TropicalCycloneDataModule to be
         consistent with TropicalCyclone dataset.
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
