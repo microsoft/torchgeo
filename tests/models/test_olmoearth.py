@@ -25,7 +25,7 @@ class TestOlmoEarthV1:
         weights = OlmoEarthV1_Weights.NANO
         path = tmp_path / 'weights.pth'
         model = olmoearth_v1(model_size='nano')
-        torch.save(model.state_dict(), path)
+        torch.save(model.model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
@@ -34,6 +34,15 @@ class TestOlmoEarthV1:
 
     def test_olmoearth_v1_weights(self, mocked_weights: OlmoEarthV1_Weights) -> None:
         olmoearth_v1(weights=mocked_weights)
+
+    def test_olmoearth_v1_weights_are_applied(
+        self, mocked_weights: OlmoEarthV1_Weights
+    ) -> None:
+        one = olmoearth_v1(weights=mocked_weights).state_dict()
+        two = olmoearth_v1(weights=mocked_weights).state_dict()
+        assert one.keys() == two.keys()
+        for key, value in one.items():
+            assert torch.equal(value, two[key]), key
 
     @pytest.mark.slow
     def test_olmoearth_v1_download(self, weights: OlmoEarthV1_Weights) -> None:
