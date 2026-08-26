@@ -3,6 +3,7 @@
 
 """TorchGeo losses."""
 
+from .elects import EarlyRewardLoss
 from .qr import QRLoss, RQLoss
 
-__all__ = ('QRLoss', 'RQLoss')
+__all__ = ('EarlyRewardLoss', 'QRLoss', 'RQLoss')
