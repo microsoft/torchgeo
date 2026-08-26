@@ -1,52 +1,137 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import hashlib
+import importlib
+import re
+from collections.abc import Callable
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
+from torchvision.models._api import WeightsEnum
 
-from torchgeo.models import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
+from torchgeo.models import (
+    OlmoEarthV1_1_Weights,
+    OlmoEarthV1_2_Weights,
+    OlmoEarthV1_Weights,
+    olmoearth_v1,
+    olmoearth_v1_1,
+    olmoearth_v1_2,
+    olmoearth_v1_unet_decoder,
+)
+from torchgeo.models import olmoearth as olmoearth_module
 
 pytest.importorskip('olmoearth_pretrain_minimal')
 
 
-class TestOlmoEarthV1:
-    @pytest.fixture(params=[*OlmoEarthV1_Weights])
-    def weights(self, request: SubRequest) -> OlmoEarthV1_Weights:
+class TestOlmoEarth:
+    @pytest.fixture(
+        params=[
+            (olmoearth_v1, OlmoEarthV1_Weights),
+            (olmoearth_v1_1, OlmoEarthV1_1_Weights),
+            (olmoearth_v1_2, OlmoEarthV1_2_Weights),
+        ]
+    )
+    def family(
+        self, request: SubRequest
+    ) -> tuple[Callable[..., nn.Module], type[WeightsEnum]]:
         return request.param
 
-    @pytest.fixture
-    def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> OlmoEarthV1_Weights:
-        weights = OlmoEarthV1_Weights.NANO
-        path = tmp_path / 'weights.pth'
-        model = olmoearth_v1(model_size='nano')
-        torch.save(model.model.state_dict(), path)
-        monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
+    @pytest.fixture(
+        params=[
+            (builder, weights)
+            for builder, enum in (
+                (olmoearth_v1, OlmoEarthV1_Weights),
+                (olmoearth_v1_1, OlmoEarthV1_1_Weights),
+                (olmoearth_v1_2, OlmoEarthV1_2_Weights),
+            )
+            for weights in enum
+        ]
+    )
+    def weights(
+        self, request: SubRequest
+    ) -> tuple[Callable[..., nn.Module], WeightsEnum]:
+        return request.param
 
-    def test_olmoearth_v1(self) -> None:
-        olmoearth_v1()
-
-    def test_olmoearth_v1_weights(self, mocked_weights: OlmoEarthV1_Weights) -> None:
-        olmoearth_v1(weights=mocked_weights)
-
-    def test_olmoearth_v1_weights_are_applied(
-        self, mocked_weights: OlmoEarthV1_Weights
+    def test_random_init(
+        self, family: tuple[Callable[..., nn.Module], type[WeightsEnum]]
     ) -> None:
-        one = olmoearth_v1(weights=mocked_weights).state_dict()
-        two = olmoearth_v1(weights=mocked_weights).state_dict()
-        assert one.keys() == two.keys()
-        for key, value in one.items():
-            assert torch.equal(value, two[key]), key
+        builder, _ = family
+        builder()
+
+    def test_every_weight_is_pinned(
+        self, family: tuple[Callable[..., nn.Module], type[WeightsEnum]]
+    ) -> None:
+        """Each entry must pin a commit so its architecture and weights cannot change."""
+        _, enum = family
+        for weights in enum:
+            revision = weights.meta['revision']
+            assert re.fullmatch(r'[0-9a-f]{40}', revision), weights
+            assert f'/resolve/{revision}/' in weights.url, weights
+
+    def test_pinned_revision_is_used(
+        self,
+        family: tuple[Callable[..., nn.Module], type[WeightsEnum]],
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        """The pinned commit must reach the Hub for both the config and the weights."""
+        builder, enum = family
+        weights = next(iter(enum))
+        requested: list[tuple[str, str, str]] = []
+
+        def fake_download(repo_id: str, filename: str, revision: str) -> str:
+            requested.append((repo_id, filename, revision))
+            return str(tmp_path / filename)
+
+        monkeypatch.setattr(olmoearth_module, '_verified_download', fake_download)
+        olmoearth = importlib.import_module('olmoearth_pretrain_minimal')
+        monkeypatch.setattr(
+            olmoearth,
+            'load_model_from_path',
+            lambda directory: olmoearth.OlmoEarthPretrain_v1(model_size='nano'),
+        )
+
+        builder(weights=weights)
+        assert requested == [
+            (weights.meta['hf_repo'], 'config.json', weights.meta['revision']),
+            (weights.meta['hf_repo'], 'weights.pth', weights.meta['revision']),
+        ]
+
+    def test_corrupted_download_is_rejected(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """A file of the right size but wrong contents must fail.
+
+        hf_hub_download only checks size, so this is the case it cannot catch.
+        """
+        path = tmp_path / 'weights.pth'
+        path.write_bytes(b'pretend checkpoint')
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        hub = importlib.import_module('huggingface_hub')
+        monkeypatch.setattr(hub, 'hf_hub_download', lambda **kwargs: str(path))
+        monkeypatch.setattr(hub, 'hf_hub_url', lambda **kwargs: 'https://example')
+        monkeypatch.setattr(
+            hub, 'get_hf_file_metadata', lambda url: SimpleNamespace(etag=digest)
+        )
+
+        olmoearth_module._verified_download('allenai/repo', 'weights.pth', 'abc')
+
+        path.write_bytes(b'pretend checkpoinT')  # same length, one byte different
+        with pytest.raises(RuntimeError, match='failed its integrity check'):
+            olmoearth_module._verified_download('allenai/repo', 'weights.pth', 'abc')
 
     @pytest.mark.slow
-    def test_olmoearth_v1_download(self, weights: OlmoEarthV1_Weights) -> None:
-        olmoearth_v1(weights=weights)
+    def test_download(
+        self, weights: tuple[Callable[..., nn.Module], WeightsEnum]
+    ) -> None:
+        builder, w = weights
+        builder(weights=w)
 
 
 class TestOlmoEarthV1UNetDecoder:

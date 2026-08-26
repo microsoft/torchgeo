@@ -29,7 +29,15 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
+from .olmoearth import (
+    OlmoEarthV1_1_Weights,
+    OlmoEarthV1_2_Weights,
+    OlmoEarthV1_Weights,
+    olmoearth_v1,
+    olmoearth_v1_1,
+    olmoearth_v1_2,
+    olmoearth_v1_unet_decoder,
+)
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -83,6 +91,8 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'olmoearth_v1': olmoearth_v1,
+    'olmoearth_v1_1': olmoearth_v1_1,
+    'olmoearth_v1_2': olmoearth_v1_2,
     'olmoearth_v1_unet_decoder': olmoearth_v1_unet_decoder,
     'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
@@ -118,6 +128,8 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
     olmoearth_v1: OlmoEarthV1_Weights,
+    olmoearth_v1_1: OlmoEarthV1_1_Weights,
+    olmoearth_v1_2: OlmoEarthV1_2_Weights,
     panopticon_vitb14: Panopticon_Weights,
     presto: Presto_Weights,
     resnet18: ResNet18_Weights,
@@ -148,6 +160,8 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
     'olmoearth_v1': OlmoEarthV1_Weights,
+    'olmoearth_v1_1': OlmoEarthV1_1_Weights,
+    'olmoearth_v1_2': OlmoEarthV1_2_Weights,
     'panopticon_vitb14': Panopticon_Weights,
     'presto': Presto_Weights,
     'resnet18': ResNet18_Weights,
