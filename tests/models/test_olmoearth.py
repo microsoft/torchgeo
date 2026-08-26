@@ -1,12 +1,10 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import importlib
 import re
 from collections.abc import Callable
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import torch
@@ -24,7 +22,6 @@ from torchgeo.models import (
     olmoearth_v1_2,
     olmoearth_v1_unet_decoder,
 )
-from torchgeo.models import olmoearth as olmoearth_module
 
 pytest.importorskip('olmoearth_pretrain_minimal')
 
@@ -74,22 +71,32 @@ class TestOlmoEarth:
             assert re.fullmatch(r'[0-9a-f]{40}', revision), weights
             assert f'/resolve/{revision}/' in weights.url, weights
 
-    def test_pinned_revision_is_used(
+    def test_every_weight_carries_digests(
+        self, family: tuple[Callable[..., nn.Module], type[WeightsEnum]]
+    ) -> None:
+        """Each entry must record a sha256 for both artifacts it downloads."""
+        _, enum = family
+        for weights in enum:
+            for key in ('config_sha256', 'weights_sha256'):
+                assert re.fullmatch(r'[0-9a-f]{64}', weights.meta[key]), (weights, key)
+
+    def test_pinned_url_and_digests_are_used(
         self,
         family: tuple[Callable[..., nn.Module], type[WeightsEnum]],
-        tmp_path: Path,
         monkeypatch: MonkeyPatch,
+        tmp_path: Path,
     ) -> None:
-        """The pinned commit must reach the Hub for both the config and the weights."""
+        """Both artifacts must be fetched at the pinned commit with their own digest."""
         builder, enum = family
         weights = next(iter(enum))
-        requested: list[tuple[str, str, str]] = []
+        requested: list[tuple[str, str | None]] = []
 
-        def fake_download(repo_id: str, filename: str, revision: str) -> str:
-            requested.append((repo_id, filename, revision))
-            return str(tmp_path / filename)
+        def fake_download(url: str, dst: str, hash_prefix: str | None = None) -> None:
+            requested.append((url, hash_prefix))
+            Path(dst).write_text('{}')
 
-        monkeypatch.setattr(olmoearth_module, '_verified_download', fake_download)
+        monkeypatch.setattr(torch.hub, 'get_dir', lambda: str(tmp_path))
+        monkeypatch.setattr(torch.hub, 'download_url_to_file', fake_download)
         olmoearth = importlib.import_module('olmoearth_pretrain_minimal')
         monkeypatch.setattr(
             olmoearth,
@@ -98,33 +105,13 @@ class TestOlmoEarth:
         )
 
         builder(weights=weights)
+        repo = weights.meta['hf_repo']
+        revision = weights.meta['revision']
+        base = f'https://huggingface.co/{repo}/resolve/{revision}'
         assert requested == [
-            (weights.meta['hf_repo'], 'config.json', weights.meta['revision']),
-            (weights.meta['hf_repo'], 'weights.pth', weights.meta['revision']),
+            (f'{base}/config.json', weights.meta['config_sha256']),
+            (f'{base}/weights.pth', weights.meta['weights_sha256']),
         ]
-
-    def test_corrupted_download_is_rejected(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch
-    ) -> None:
-        """A file of the right size but wrong contents must fail.
-
-        hf_hub_download only checks size, so this is the case it cannot catch.
-        """
-        path = tmp_path / 'weights.pth'
-        path.write_bytes(b'pretend checkpoint')
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        hub = importlib.import_module('huggingface_hub')
-        monkeypatch.setattr(hub, 'hf_hub_download', lambda **kwargs: str(path))
-        monkeypatch.setattr(hub, 'hf_hub_url', lambda **kwargs: 'https://example')
-        monkeypatch.setattr(
-            hub, 'get_hf_file_metadata', lambda url: SimpleNamespace(etag=digest)
-        )
-
-        olmoearth_module._verified_download('allenai/repo', 'weights.pth', 'abc')
-
-        path.write_bytes(b'pretend checkpoinT')  # same length, one byte different
-        with pytest.raises(RuntimeError, match='failed its integrity check'):
-            olmoearth_module._verified_download('allenai/repo', 'weights.pth', 'abc')
 
     @pytest.mark.slow
     def test_download(

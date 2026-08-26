@@ -3,10 +3,10 @@
 
 """Pre-trained OlmoEarth v1 models."""
 
-import hashlib
 import os
 from typing import Any
 
+import torch
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -18,7 +18,6 @@ _olmoearth_transforms = nn.Identity()
 # pinned and verified alongside the weights.
 _CONFIG_FILENAME = 'config.json'
 _WEIGHTS_FILENAME = 'weights.pth'
-_SHA256_LENGTH = 64
 
 _olmoearth_meta = {
     'dataset': 'Major TOM',
@@ -30,6 +29,8 @@ _olmoearth_meta = {
     'model_size': None,
     'hf_repo': None,
     'revision': None,
+    'config_sha256': None,
+    'weights_sha256': None,
 }
 
 
@@ -51,6 +52,8 @@ class OlmoEarthV1_Weights(WeightsEnum):
             'model_size': 'nano',
             'hf_repo': 'allenai/OlmoEarth-v1-Nano',
             'revision': '529248a4dc3c54014c56b7504641cec98de31d1c',
+            'config_sha256': '088f5314909cfcfd75c2ba4b07c9f88f5ca919d88235b702467046f5fab3a35a',
+            'weights_sha256': '795c68419a658fd22ccf8f2e020607675f963e9ef3b93d8e368bb17646765347',
         },
     )
     TINY = Weights(
@@ -61,6 +64,8 @@ class OlmoEarthV1_Weights(WeightsEnum):
             'model_size': 'tiny',
             'hf_repo': 'allenai/OlmoEarth-v1-Tiny',
             'revision': '885784437d4e2d632b7bf51b4233426c6f4479dc',
+            'config_sha256': '975dc2d755688c3010f9fecb662b62784d335731d701d8dda3f9ea0ccec88781',
+            'weights_sha256': '66b9827af383bc444d7909a406a5b62c072bb08d6804ff47a247c2dce8fad9a4',
         },
     )
     BASE = Weights(
@@ -71,6 +76,8 @@ class OlmoEarthV1_Weights(WeightsEnum):
             'model_size': 'base',
             'hf_repo': 'allenai/OlmoEarth-v1-Base',
             'revision': '4bd1392a4539404d2c74276c39f3cb4cfff466cc',
+            'config_sha256': 'bd7759b9185f3d51607ca8d554c9be6ca87d932bc46fbc0f75524b0c3d5512bf',
+            'weights_sha256': '551c1cc53337c6faaddead88071d7ebd2bd53ec271600fa6f0ee0a518c8b6e11',
         },
     )
     LARGE = Weights(
@@ -81,6 +88,8 @@ class OlmoEarthV1_Weights(WeightsEnum):
             'model_size': 'large',
             'hf_repo': 'allenai/OlmoEarth-v1-Large',
             'revision': 'b2c9f41de3d8454cb37f0cd9cc3e79ec7c4af435',
+            'config_sha256': 'bd5f0fe3f571cf8beed64072d6c0029d6072223e6dce0b84b689c34d6638bbf1',
+            'weights_sha256': '1adb5026bd520c54bc415a1282386954927623bab81d01be2f5b6379cc039035',
         },
     )
 
@@ -90,7 +99,7 @@ class OlmoEarthV1_1_Weights(WeightsEnum):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2511.13655
+    * https://arxiv.org/html/2605.20804v1
 
     .. versionadded:: 0.11
     """
@@ -103,6 +112,8 @@ class OlmoEarthV1_1_Weights(WeightsEnum):
             'model_size': 'nano',
             'hf_repo': 'allenai/OlmoEarth-v1_1-Nano',
             'revision': '6c16c7da0d05a1c4f32c2a7f9233e07c9ebfa61a',
+            'config_sha256': '7a7cbd2b1b06e500869e9bc00293ec0714a50da92676dc8ac9b1cf026da470bd',
+            'weights_sha256': '883561154dd4eb874a3e28bb0559c15aa06bd8a2e4ffb54a0d6bc4bc15777eb3',
         },
     )
     TINY = Weights(
@@ -113,6 +124,8 @@ class OlmoEarthV1_1_Weights(WeightsEnum):
             'model_size': 'tiny',
             'hf_repo': 'allenai/OlmoEarth-v1_1-Tiny',
             'revision': '74fab5714f763d6b94f8b1536bdd3300d77f45e8',
+            'config_sha256': '01dcb438144d8f70647ab2d11aef656a1632f3b5af1fdf9263c111127ad7bbc3',
+            'weights_sha256': '2a3fe8132adf9ff2ca96d00c9e376b8925bfe430fda6140749b3b92764c67ae1',
         },
     )
     BASE = Weights(
@@ -123,6 +136,8 @@ class OlmoEarthV1_1_Weights(WeightsEnum):
             'model_size': 'base',
             'hf_repo': 'allenai/OlmoEarth-v1_1-Base',
             'revision': '4ef31d45f80c1d4fcce18f9cde40c1b5e4d96cf4',
+            'config_sha256': 'c74db2ea8c80b7568da926826e4f6cbca7e8cd1a2d0af45568f94af82722d336',
+            'weights_sha256': '37fc73d542618f28357583fd17307002a4bdfb5321142c08e928102341105989',
         },
     )
 
@@ -145,6 +160,8 @@ class OlmoEarthV1_2_Weights(WeightsEnum):
             'model_size': 'nano',
             'hf_repo': 'allenai/OlmoEarth-v1_2-Nano',
             'revision': 'e1f693ae2a7d5b57871a978e9d09e22d05206747',
+            'config_sha256': '4cd2888e79dc543f262cc3d86fcd30d667068fd53a728ca5bd306d5ddb509d1d',
+            'weights_sha256': '2773fca48c238d78adde5e83b7d140a63d36c9e5f73746b8dbadaed743020378',
         },
     )
     SMALL = Weights(
@@ -155,6 +172,8 @@ class OlmoEarthV1_2_Weights(WeightsEnum):
             'model_size': 'small',
             'hf_repo': 'allenai/OlmoEarth-v1_2-Small',
             'revision': 'a207c9a789483f95de1e9fb06acadb3da3775863',
+            'config_sha256': '254703d9b5da4a6679003ff21f2da964a25d903fea70dc0b2cce5d0cd388f70b',
+            'weights_sha256': '459796ed5680bc85926f9a0e023476d14cb637bc19f826575c43836c909a5fa6',
         },
     )
     TINY = Weights(
@@ -165,6 +184,8 @@ class OlmoEarthV1_2_Weights(WeightsEnum):
             'model_size': 'tiny',
             'hf_repo': 'allenai/OlmoEarth-v1_2-Tiny',
             'revision': '12a9fdbfeff905d7e147e7497f9f7a95c518eefc',
+            'config_sha256': 'bb11f91f5afbd6138f75feee3f66fc0e272da089d05a6e515713c799057155ac',
+            'weights_sha256': '835c0b21ab010c4c4515faafa44dc1a41c9bc512d3a30af184803c4f4257697d',
         },
     )
     BASE = Weights(
@@ -175,50 +196,38 @@ class OlmoEarthV1_2_Weights(WeightsEnum):
             'model_size': 'base',
             'hf_repo': 'allenai/OlmoEarth-v1_2-Base',
             'revision': '581aa9baaa7aed4348c0903617eb92ee9f89e2ec',
+            'config_sha256': '0d531a67ad3e477e7011efabcceb01ed80f430aa0a0a3d344fe18cec0f229b8a',
+            'weights_sha256': '57f7b66faf206db1307670673839e639d3a19c305f6ad968c62392ad3e88deec',
         },
     )
 
 
-def _verified_download(repo: str, filename: str, revision: str) -> str:
-    """Download one artifact at a pinned revision and check it against the Hub's digest.
+def _download_pinned(weights: WeightsEnum) -> str:
+    """Download a checkpoint's config and weights into one directory.
 
-    ``hf_hub_download`` only checks the downloaded file's size, so a truncated or corrupted
-    file of the right length is accepted. The Hub's ETag carries a digest of the contents:
-    the sha256 for a git-LFS file, the git blob sha1 for a regular git file.
+    Both files are pinned to a commit and checked against the sha256 recorded in *weights*,
+    so neither the architecture nor the weights can change under a pinned release.
 
     Args:
-        repo: Hugging Face repo ID.
-        filename: File to download from the repo.
-        revision: Git revision to pin to, e.g. a commit hash.
+        weights: Pre-trained weights to download.
 
     Returns:
-        Local path to the downloaded file.
-
-    Raises:
-        RuntimeError: If the Hub reports no digest, or the contents do not match it.
+        Directory holding the downloaded ``config.json`` and ``weights.pth``.
     """
-    hub = lazy_import('huggingface_hub')
-    path = hub.hf_hub_download(repo_id=repo, filename=filename, revision=revision)
-    url = hub.hf_hub_url(repo_id=repo, filename=filename, revision=revision)
-    etag = hub.get_hf_file_metadata(url).etag
-    if etag is None:
-        raise RuntimeError(
-            f'{repo}/{filename} has no ETag to verify its contents against'
-        )
+    repo = weights.meta['hf_repo']
+    revision = weights.meta['revision']
+    directory = os.path.join(torch.hub.get_dir(), 'checkpoints', repo, revision)
+    os.makedirs(directory, exist_ok=True)
 
-    with open(path, 'rb') as f:
-        if len(etag) == _SHA256_LENGTH:
-            digest = hashlib.file_digest(f, 'sha256').hexdigest()
-        else:
-            # git names a blob by hashing 'blob <size>\0' followed by the contents
-            header = b'blob %d\0' % os.path.getsize(path)
-            digest = hashlib.file_digest(f, lambda: hashlib.sha1(header)).hexdigest()
-
-    if digest != etag:
-        raise RuntimeError(
-            f'{repo}/{filename} failed its integrity check: expected {etag}, got {digest}'
-        )
-    return path
+    for filename, key in (
+        (_CONFIG_FILENAME, 'config_sha256'),
+        (_WEIGHTS_FILENAME, 'weights_sha256'),
+    ):
+        path = os.path.join(directory, filename)
+        if not os.path.exists(path):
+            url = f'https://huggingface.co/{repo}/resolve/{revision}/{filename}'
+            torch.hub.download_url_to_file(url, path, hash_prefix=weights.meta[key])
+    return directory
 
 
 def _olmoearth(
@@ -228,7 +237,7 @@ def _olmoearth(
 
     Pre-trained models are built from the checkpoint's own config rather than from
     *model_version*, since that is what records the architecture and which modalities the
-    encoder was trained to ingest. Both artifacts are pinned to a commit and verified.
+    encoder was trained to ingest.
 
     Args:
         weights: Pre-trained weights. If ``None``, model is randomly initialized.
@@ -247,11 +256,7 @@ def _olmoearth(
         )
         return random
 
-    repo = weights.meta['hf_repo']
-    revision = weights.meta['revision']
-    for filename in (_CONFIG_FILENAME, _WEIGHTS_FILENAME):
-        path = _verified_download(repo, filename, revision)
-    pretrained: nn.Module = olmoearth.load_model_from_path(os.path.dirname(path))
+    pretrained: nn.Module = olmoearth.load_model_from_path(_download_pinned(weights))
     return pretrained
 
 
@@ -290,7 +295,7 @@ def olmoearth_v1_1(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2511.13655
+    * https://arxiv.org/html/2605.20804v1
 
     This model requires the following additional library to be installed:
 
