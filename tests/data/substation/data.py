@@ -32,7 +32,7 @@ def create_file(path: str, value: Literal['image', 'mask']) -> None:
 
         if value == 'image':
             # Generate image data with shape (4, 13, SIZE, SIZE) for timepoints and channels
-            data = np.random.rand(4, 13, SIZE, SIZE).astype(np.float32)
+            data = (np.random.rand(4, 13, SIZE, SIZE) * 6000).astype(np.float32)
         elif value == 'mask':
             # Generate mask data with shape (SIZE, SIZE) with 4 classes
             data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)
