@@ -147,6 +147,48 @@ class TestTSViT:
         with pytest.raises(KeyError, match='Missing checkpoint key'):
             convert_tsvit_checkpoint(legacy, model)
 
+    def test_missing_another_transformer_checkpoint_key(self, model: TSViT) -> None:
+        """Test another missing Transformer checkpoint parameter."""
+        legacy = self._make_legacy_state_dict(model)
+        legacy.pop('space_transformer.layers.0.1.fn.net.3.bias')
+
+        with pytest.raises(KeyError, match='Missing checkpoint key'):
+            convert_tsvit_checkpoint(legacy, model)
+
+    def test_missing_later_transformer_checkpoint_key(self, model: TSViT) -> None:
+        """Test a missing later Transformer checkpoint parameter."""
+        legacy = self._make_legacy_state_dict(model)
+        legacy.pop('space_transformer.layers.3.1.fn.net.3.bias')
+
+        with pytest.raises(KeyError, match='Missing checkpoint key'):
+            convert_tsvit_checkpoint(legacy, model)
+
+    def test_missing_final_transformer_checkpoint_key(self, model: TSViT) -> None:
+        """Test a missing final Transformer normalization parameter."""
+        legacy = self._make_legacy_state_dict(model)
+        legacy.pop('space_transformer.norm.bias')
+
+        with pytest.raises(KeyError, match='Missing checkpoint key'):
+            convert_tsvit_checkpoint(legacy, model)
+
+    def test_converted_checkpoint_key_not_in_model(
+        self, model: TSViT, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test detection of an unexpected converted checkpoint parameter."""
+        legacy = self._make_legacy_state_dict(model)
+
+        original_state_dict = model.state_dict
+
+        def incomplete_state_dict() -> dict[str, torch.Tensor]:
+            state_dict = original_state_dict()
+            state_dict.pop('temporal_token')
+            return state_dict
+
+        monkeypatch.setattr(model, 'state_dict', incomplete_state_dict)
+
+        with pytest.raises(ValueError, match='Converted checkpoint key not in model'):
+            convert_tsvit_checkpoint(legacy, model)
+
     def test_checkpoint_shape_mismatch(self, model: TSViT) -> None:
         """Test validation of converted checkpoint tensor shapes."""
         legacy = self._make_legacy_state_dict(model)
