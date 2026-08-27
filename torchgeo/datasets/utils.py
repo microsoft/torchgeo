@@ -884,8 +884,26 @@ def quantile_normalization(
     if (img == nodata).all():
         return img
 
-    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
-    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
+    values = img[img != nodata]
+    if not img.is_floating_point() and not img.is_complex():
+        img = img.float()
+        values = values.float()
+    dim = -1 if dim is None else dim
+    has_nan = torch.isnan(values).any()
+
+    def _quantile(q: float | Tensor, higher: bool) -> Tensor:
+        ranks = torch.as_tensor(q).detach().cpu().double() * (values.numel() - 1)
+        ranks = torch.ceil(ranks) if higher else torch.floor(ranks)
+        if has_nan:
+            ranks.fill_(values.numel() - 1)
+        quantiles = [
+            torch.kthvalue(values, int(rank) + 1, dim).values
+            for rank in ranks.flatten()
+        ]
+        return torch.stack(quantiles).reshape(ranks.shape)
+
+    lower = _quantile(lower, higher=True)
+    upper = _quantile(upper, higher=False)
     img = (img - lower) / (upper - lower + 1e-5)
     return torch.clamp(img, 0, 1)
 
