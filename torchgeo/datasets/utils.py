@@ -888,7 +888,7 @@ def quantile_normalization(
     if not img.is_floating_point() and not img.is_complex():
         img = img.float()
         values = values.float()
-    dim = -1 if dim is None else dim
+    quantile_dim = -1 if dim is None else dim
     has_nan = torch.isnan(values).any()
 
     def _quantile(q: float | Tensor, higher: bool) -> Tensor:
@@ -897,7 +897,7 @@ def quantile_normalization(
         if has_nan:
             ranks.fill_(values.numel() - 1)
         quantiles = [
-            torch.kthvalue(values, int(rank) + 1, dim).values
+            torch.kthvalue(values, int(rank) + 1, quantile_dim).values
             for rank in ranks.flatten()
         ]
         return torch.stack(quantiles).reshape(ranks.shape)
