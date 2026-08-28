@@ -29,6 +29,7 @@ from .ltae import LTAE
 from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
+from .prithvi import Prithvi, PrithviV2_Weights, prithvi_eo_v2_300
 from .rcf import MOSAIKS, RCF
 from .resnet import (
     ResNet18_Weights,
@@ -104,6 +105,8 @@ __all__ = (
     'Panopticon_Weights',
     'Presto',
     'Presto_Weights',
+    'Prithvi',
+    'PrithviV2_Weights',
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
@@ -146,6 +149,7 @@ __all__ = (
     'olmoearth_v1_unet_decoder',
     'panopticon_vitb14',
     'presto',
+    'prithvi_eo_v2_300',
     'resnet18',
     'resnet50',
     'resnet152',
