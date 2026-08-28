@@ -56,18 +56,6 @@ needs_sphinx = '8.0'
 
 nitpicky = True
 nitpick_ignore = [
-    # objects.inv is temporarily unavailable
-    ('py:class', 'lightning.pytorch.core.datamodule.LightningDataModule'),
-    ('py:class', 'lightning.pytorch.core.module.LightningModule'),
-    ('py:class', 'lightning.pytorch.profilers.profiler.Profiler'),
-    ('py:class', 'torchmetrics.Accuracy'),
-    ('py:class', 'torchmetrics.F1Score'),
-    ('py:class', 'torchmetrics.JaccardIndex'),
-    ('py:class', 'torchmetrics.MeanAbsoluteError'),
-    ('py:class', 'torchmetrics.MeanSquaredError'),
-    ('py:class', 'torchmetrics.Precision'),
-    ('py:class', 'torchmetrics.Recall'),
-    ('py:class', 'torchmetrics.detection.mean_ap.MeanAveragePrecision'),
     # Undocumented classes
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
@@ -215,8 +203,7 @@ autodoc_typehints_description_target = 'documented'
 intersphinx_mapping = {
     'einops': ('https://einops.rocks/', None),
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
-    # objects.inv is temporarily unavailable
-    # 'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
+    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
@@ -230,8 +217,7 @@ intersphinx_mapping = {
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
     'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
-    # objects.inv is temporarily unavailable
-    # 'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
+    'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
