@@ -144,6 +144,8 @@ class PatchEmbed3D(nn.Module):
     .. versionadded:: 0.11
     """
 
+    grid_size: tuple[int, int, int]
+
     def __init__(
         self,
         input_size: tuple[int, int, int] = (4, 224, 224),
@@ -165,7 +167,9 @@ class PatchEmbed3D(nn.Module):
         super().__init__()
         self.input_size = input_size
         self.patch_size = patch_size
-        self.grid_size = tuple(s // p for s, p in zip(input_size, patch_size))
+        t_size, h_size, w_size = input_size
+        tp_size, hp_size, wp_size = patch_size
+        self.grid_size = (t_size // tp_size, h_size // hp_size, w_size // wp_size)
         if min(self.grid_size) < 1:
             raise ValueError(
                 f'Patch size {patch_size} is bigger than input size {input_size}.'
@@ -307,6 +311,10 @@ class Prithvi(nn.Module):
 
     .. versionadded:: 0.11
     """
+
+    pos_embed: Tensor
+    cls_token: Tensor
+    patch_embed: PatchEmbed3D
 
     def __init__(
         self,
