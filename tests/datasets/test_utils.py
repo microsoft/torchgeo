@@ -615,7 +615,7 @@ def test_quantile_normalization_subsamples_large_input(
     normalized = quantile_normalization(img)
 
     assert normalized.shape == img.shape
-    assert seen_sizes == [2**24, 2**24]
+    assert seen_sizes == [2**23 + 1, 2**23 + 1]
 
 
 @pytest.mark.parametrize(
