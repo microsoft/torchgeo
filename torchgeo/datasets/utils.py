@@ -889,8 +889,13 @@ def quantile_normalization(
     if (img == nodata).all():
         return img
 
-    lower = torch.quantile(img[img != nodata], lower, dim, interpolation='higher')
-    upper = torch.quantile(img[img != nodata], upper, dim, interpolation='lower')
+    values = img[img != nodata].float()
+    max_elements = 2**24
+    if values.numel() > max_elements:
+        stride = (values.numel() + max_elements - 1) // max_elements
+        values = values[::stride]
+    lower = torch.quantile(values, lower, dim, interpolation='higher')
+    upper = torch.quantile(values, upper, dim, interpolation='lower')
     img = (img - lower) / (upper - lower + 1e-5)
     return torch.clamp(img, 0, 1)
 

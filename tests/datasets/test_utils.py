@@ -594,6 +594,13 @@ def test_quantile_normalization(img: Tensor) -> None:
     assert 0 <= img.min() <= img.max() <= 1
 
 
+def test_quantile_normalization_integer_input() -> None:
+    img = torch.tensor([[1, 2], [3, 4]], dtype=torch.int16)
+    normalized = quantile_normalization(img)
+    assert normalized.dtype == torch.float32
+    assert 0 <= normalized.min() <= normalized.max() <= 1
+
+
 @pytest.mark.parametrize(
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
