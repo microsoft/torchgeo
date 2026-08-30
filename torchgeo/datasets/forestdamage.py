@@ -103,7 +103,7 @@ class ForestDamage(NonGeoDataset):
     """
 
     classes = ('other', 'H', 'LD', 'HD')
-    url = 'https://lilablobssc.blob.core.windows.net/larch-casebearer/Data_Set_Larch_Casebearer.zip'
+    url = 'https://lilawildlife.blob.core.windows.net/lila-wildlife/larch-casebearer/Data_Set_Larch_Casebearer.zip'
     data_dir = 'Data_Set_Larch_Casebearer'
     md5 = '907815bcc739bff89496fac8f8ce63d7'
 
