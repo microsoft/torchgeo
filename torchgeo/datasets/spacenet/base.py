@@ -330,8 +330,9 @@ class SpaceNet(NonGeoDataset, ABC):
             for tarball, md5 in zip(
                 self.tarballs[self.split][aoi], self.md5s[self.split][aoi]
             ):
-                if os.path.exists(os.path.join(root, tarball)):
-                    extract_archive(os.path.join(root, tarball), root)
+                path = os.path.join(root, os.path.basename(tarball))
+                if os.path.exists(path):
+                    extract_archive(path, root)
                     continue
 
                 # Check if the user requested to download the dataset
@@ -341,11 +342,9 @@ class SpaceNet(NonGeoDataset, ABC):
                 # Download the dataset
                 url = self.url.format(dataset_id=self.dataset_id, tarball=tarball)
                 aws = which('aws')
-                aws('s3', 'cp', '--no-sign-request', url, root)
-                check_integrity(
-                    os.path.join(root, tarball), md5 if self.checksum else None
-                )
-                extract_archive(os.path.join(root, tarball), root)
+                aws('s3', 'cp', '--no-sign-request', url, path)
+                check_integrity(path, md5 if self.checksum else None)
+                extract_archive(path, root)
                 images, masks = self._list_files(aoi)
                 self.images.extend(images)
                 self.masks.extend(masks)

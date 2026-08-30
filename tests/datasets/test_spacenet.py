@@ -72,6 +72,25 @@ class TestSpaceNet:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             dataset.__class__(root=os.path.join(tmp_path, 'dummy'))
 
+    def test_nested_tarball(
+        self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        tarballs = {
+            'train': {
+                1: [
+                    os.path.join('train', tarball)
+                    for tarball in SpaceNet1.tarballs['train'][1]
+                ]
+            }
+        }
+        monkeypatch.setattr(SpaceNet1, 'tarballs', tarballs)
+        url = os.path.join(
+            'tests', 'data', 'spacenet', 'spacenet1', '{dataset_id}', '{tarball}'
+        )
+        monkeypatch.setattr(SpaceNet1, 'url', url)
+        dataset = SpaceNet1(tmp_path, download=True)
+        assert len(dataset) == 4
+
     def test_plot(self, dataset: SpaceNet) -> None:
         x = dataset[0]
         dataset.plot(x, show_titles=False)
