@@ -394,6 +394,7 @@ def download_url(
     filename: Path | None = None,
     md5: str | None = None,
     max_redirect_hops: int = 3,
+    timeout: float = 60,
     **kwargs: str | None,
 ) -> None:
     """Download a file from a url and place it in root.
@@ -409,6 +410,7 @@ def download_url(
         filename: File path to save to. Defaults to the basename of the URL.
         md5: Expected MD5 checksum.
         max_redirect_hops: Maximum number of allowed redirection attempts.
+        timeout: Socket timeout in seconds for each read operation.
         **kwargs: Expected checksum for any valid :mod:`hashlib` algorithm.
 
     Raises:
@@ -431,7 +433,7 @@ def download_url(
         # interrupted download cannot leave a truncated file behind.
         tmp = f'{fpath}.tmp'
         try:
-            with urllib.request.urlopen(request) as response:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 total = response.headers.get('Content-Length')
                 expected = int(total) if total else None
                 with (
