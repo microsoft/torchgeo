@@ -5,6 +5,7 @@ import os
 import pickle
 import re
 import shutil
+import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -371,6 +372,21 @@ def test_extract_archive(from_path: str, tmp_path: Path) -> None:
     shutil.copy(from_path, tmp_path)
     from_path = os.path.join(tmp_path, os.path.basename(from_path))
     extract_archive(from_path, tmp_path, remove_finished=True)
+
+
+def test_extract_archive_skips_self_member(tmp_path: Path) -> None:
+    archive = tmp_path / 'archive.tar'
+    payload = tmp_path / 'payload'
+    payload.write_bytes(b'data')
+    with tarfile.open(archive, 'w') as tar:
+        tar.add(payload, arcname='payload')
+    with tarfile.open(archive, 'a') as tar:
+        tar.add(payload, arcname=archive.name)
+
+    output = tmp_path / 'output'
+    extract_archive(str(archive), str(output))
+    assert (output / 'payload').read_bytes() == b'data'
+    assert not (output / archive.name).exists()
 
 
 def test_download_url(tmp_path: Path) -> None:

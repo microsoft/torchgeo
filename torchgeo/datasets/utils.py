@@ -380,7 +380,9 @@ def extract_archive(
             dst.write(src.read())
     else:
         with tarfile.open(from_path, 'r') as t:
-            t.extractall(to_path, filter='data')
+            archive_name = os.path.basename(from_path)
+            members = [m for m in t.getmembers() if m.name != archive_name]
+            t.extractall(to_path, members=members, filter='data')
 
     if remove_finished:
         os.remove(from_path)
