@@ -19,6 +19,14 @@ pytest.importorskip('laspy', minversion='2.5.3')
 
 
 class TestIDTReeS:
+    def test_filter_empty_boxes(self) -> None:
+        boxes = torch.empty((0, 4))
+        filtered, labels = IDTReeS._filter_boxes(
+            IDTReeS.__new__(IDTReeS), (200, 200), 1, boxes, None
+        )
+        assert filtered.shape == (0, 4)
+        assert labels is None
+
     @pytest.fixture(params=zip(['train', 'test', 'test'], ['task1', 'task1', 'task2']))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
