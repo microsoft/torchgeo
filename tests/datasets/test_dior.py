@@ -81,7 +81,6 @@ class TestDIOR:
             DIOR(tmp_path)
 
     def test_plot(self, dataset: DIOR) -> None:
-        if dataset.split != 'test':
-            x = dataset[0].copy()
-            dataset.plot(x, suptitle='Test')
-            plt.close()
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle='Test')
+        plt.close()
