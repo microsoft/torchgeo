@@ -21,7 +21,7 @@ class TestAirQuality:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> AirQuality:
         url = os.path.join('tests', 'data', 'air_quality', 'data.csv')
-        monkeypatch.setattr(AirQuality, 'url', url)
+        monkeypatch.setattr(AirQuality, 'url', Path(url).absolute().as_uri())
         input_features, target_features = request.param
         return AirQuality(
             tmp_path,
