@@ -36,7 +36,7 @@ class SpaceNet8(SpaceNet):
     }
     md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
-            0: ['81383a9050b93e8f70c8557d4568e8a2', 'fa40ae3cf6ac212c90073bf93d70bd95']
+            0: ['5f1c9ac3ea94f2909da593d894680ea2', 'fa40ae3cf6ac212c90073bf93d70bd95']
         },
         'test': {0: ['d41d8cd98f00b204e9800998ecf8427e']},
     }
