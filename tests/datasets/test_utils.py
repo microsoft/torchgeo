@@ -601,6 +601,23 @@ def test_quantile_normalization_integer_input() -> None:
     assert 0 <= normalized.min() <= normalized.max() <= 1
 
 
+def test_quantile_normalization_subsamples_large_input(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    seen_sizes: list[int] = []
+
+    def quantile(values: Tensor, *args: Any, **kwargs: Any) -> Tensor:
+        seen_sizes.append(values.numel())
+        return torch.tensor(0.0)
+
+    monkeypatch.setattr(torch, 'quantile', quantile)
+    img = torch.ones(2**24 + 1)
+    normalized = quantile_normalization(img)
+
+    assert normalized.shape == img.shape
+    assert seen_sizes == [2**24, 2**24]
+
+
 @pytest.mark.parametrize(
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
