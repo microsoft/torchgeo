@@ -465,6 +465,7 @@ def download_and_extract_archive(
     filename: Path | None = None,
     md5: str | None = None,
     remove_finished: bool = False,
+    timeout: float = 60,
     **kwargs: str | None,
 ) -> None:
     """Download and extract a remote archive.
@@ -481,6 +482,7 @@ def download_and_extract_archive(
         filename: File path to save to. Defaults to the basename of the URL.
         md5: Expected MD5 checksum.
         remove_finished: If True, remove *filename* after extraction.
+        timeout: Socket timeout in seconds for each read operation.
         **kwargs: Expected checksum for any valid :module:`hashlib` algorithm.
     """
     download_root = os.path.expanduser(download_root)
@@ -488,7 +490,7 @@ def download_and_extract_archive(
     filename = filename or os.path.basename(url)
     from_path = os.path.join(download_root, filename)
 
-    download_url(url, download_root, filename, md5, 3, **kwargs)
+    download_url(url, download_root, filename, md5, 3, timeout, **kwargs)
     extract_archive(from_path, extract_root, remove_finished)
 
 

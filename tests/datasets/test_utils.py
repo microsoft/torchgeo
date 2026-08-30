@@ -5,7 +5,6 @@ import os
 import pickle
 import re
 import shutil
-import socket
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -409,10 +408,10 @@ def test_download_url_timeout(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
 
     def stall(*args: Any, **kwargs: Any) -> None:
         calls.append(kwargs['timeout'])
-        raise socket.timeout('simulated stall')
+        raise TimeoutError('simulated stall')
 
     monkeypatch.setattr('urllib.request.urlopen', stall)
-    with pytest.raises(socket.timeout, match='simulated stall'):
+    with pytest.raises(TimeoutError, match='simulated stall'):
         download_url('https://example.com/file', tmp_path, timeout=5)
     assert calls == [5]
 
