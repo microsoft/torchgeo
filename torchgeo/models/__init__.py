@@ -40,6 +40,7 @@ from .resnet import (
 )
 from .satclip import SatCLIP, SatCLIP_Weights, satclip
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
+from .seq2seq import Seq2Seq
 from .swin import (
     Swin_B_Weights,
     Swin_S_Weights,
@@ -111,6 +112,7 @@ __all__ = (
     'SatCLIP_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
+    'Seq2Seq',
     'SwinBackbone_Weights',
     'Swin_B_Weights',
     'Swin_S_Weights',
