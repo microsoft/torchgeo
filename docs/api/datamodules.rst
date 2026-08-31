@@ -16,6 +16,11 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+HabitAlp2
+^^^^^^^^^
+
+.. autoclass:: HabitAlp2DataModule
+
 L7 Irish
 ^^^^^^^^
 

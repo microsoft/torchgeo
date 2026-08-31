@@ -1,0 +1,23 @@
+model:
+  class_path: SemanticSegmentation
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    num_classes: 24
+    num_filters: 1
+data:
+  class_path: HabitAlp2DataModule
+  init_args:
+    batch_size: 1
+    patch_size: 16
+    length: 1
+    task: 'segmentation'
+  dict_kwargs:
+    root: 'tests/data/habitalp'
+    year: '2013'
+    bands:
+      - R
+      - G
+      - B

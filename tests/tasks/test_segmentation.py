@@ -66,6 +66,7 @@ class TestSemanticSegmentation:
             'ftw',
             'geonrw',
             'gid15',
+            'habitalp2_seg',
             'inria',
             'l7irish',
             'l8biome',
