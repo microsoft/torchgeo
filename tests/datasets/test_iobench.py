@@ -29,7 +29,7 @@ class TestIOBench:
         monkeypatch.setattr(IOBench, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return IOBench(root, transforms=transforms, download=True)
+        return IOBench(root, transforms=transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: IOBench) -> None:
         x = dataset[dataset.bounds]

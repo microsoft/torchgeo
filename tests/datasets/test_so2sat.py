@@ -21,7 +21,7 @@ class TestSo2Sat:
         root = os.path.join('tests', 'data', 'so2sat')
         split = request.param
         transforms = nn.Identity()
-        return So2Sat(root=root, split=split, transforms=transforms)
+        return So2Sat(root=root, split=split, transforms=transforms, checksum=False)
 
     def test_getitem(self, dataset: So2Sat) -> None:
         x = dataset[0]
@@ -55,7 +55,7 @@ class TestSo2Sat:
         plt.close()
 
     def test_plot_rgb(self, dataset: So2Sat) -> None:
-        dataset = So2Sat(root=dataset.root, bands=('S2_B03',))
+        dataset = So2Sat(root=dataset.root, bands=('S2_B03',), checksum=False)
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):

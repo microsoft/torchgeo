@@ -112,7 +112,7 @@ class SpaceNet(NonGeoDataset, ABC):
         mask: str | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SpaceNet Dataset instance.
 
@@ -341,7 +341,7 @@ class SpaceNet(NonGeoDataset, ABC):
                 # Download the dataset
                 url = self.url.format(dataset_id=self.dataset_id, tarball=tarball)
                 aws = which('aws')
-                aws('s3', 'cp', url, root)
+                aws('s3', 'cp', '--no-sign-request', url, root)
                 check_integrity(
                     os.path.join(root, tarball), md5 if self.checksum else None
                 )

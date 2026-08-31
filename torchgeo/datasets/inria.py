@@ -69,7 +69,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         root: Path = 'data',
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[Sample], Sample] | None = None,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new InriaAerialImageLabeling Dataset instance.
 

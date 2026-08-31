@@ -59,8 +59,8 @@ def moco_augmentations(
             T.RandomGrayscale(weights=weights, p=0.2),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.4, p=1)
-            K.RandomBrightness(brightness=(0.6, 1.4), p=1.0),
-            K.RandomContrast(contrast=(0.6, 1.4), p=1.0),
+            K.RandomBrightness(brightness=(0.6, 1.4), clip_output=False, p=1.0),
+            K.RandomContrast(contrast=(0.6, 1.4), clip_output=False, p=1.0),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             data_keys=['input'],
@@ -73,8 +73,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8
             # )
-            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
-            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
+            K.RandomBrightness(brightness=(0.6, 1.4), clip_output=False, p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), clip_output=False, p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.5),
             K.RandomHorizontalFlip(),
@@ -89,8 +89,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
-            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
-            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
+            K.RandomBrightness(brightness=(0.6, 1.4), clip_output=False, p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), clip_output=False, p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=1),
             K.RandomHorizontalFlip(),
@@ -103,11 +103,10 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
-            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
-            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
+            K.RandomBrightness(brightness=(0.6, 1.4), clip_output=False, p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), clip_output=False, p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.1),
-            K.RandomSolarize(p=0.2),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             data_keys=['input'],
@@ -218,10 +217,11 @@ class MoCo(BaseTask):
         self.weights = weights
         super().__init__()
 
-        grayscale_weights = grayscale_weights or torch.ones(in_channels)
+        if grayscale_weights is None:
+            grayscale_weights = torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
-        self.augmentation1 = augmentation1 or aug1
-        self.augmentation2 = augmentation2 or aug2
+        self.augmentation1 = aug1 if augmentation1 is None else augmentation1
+        self.augmentation2 = aug2 if augmentation2 is None else augmentation2
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -245,12 +245,14 @@ class MoCo(BaseTask):
         # Load weights
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True, weights_only=True)
+                state_dict = weights.get_state_dict(
+                    progress=True, check_hash=True, weights_only=True
+                )
             elif os.path.exists(weights):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(
-                    progress=True, weights_only=True
+                    progress=True, check_hash=True, weights_only=True
                 )
             utils.load_state_dict(self.backbone, state_dict)
 

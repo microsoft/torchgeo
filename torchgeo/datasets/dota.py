@@ -179,7 +179,7 @@ class DOTA(NonGeoDataset):
         bbox_orientation: Literal['horizontal', 'oriented'] = 'oriented',
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new DOTA dataset instance.
 

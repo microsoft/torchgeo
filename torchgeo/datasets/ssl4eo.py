@@ -205,7 +205,7 @@ class SSL4EOL(SSL4EO):
         seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SSL4EOL instance.
 
@@ -535,7 +535,7 @@ class SSL4EOS12(SSL4EO):
         seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
 

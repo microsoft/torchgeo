@@ -542,7 +542,7 @@ class SatlasPretrain(NonGeoDataset):
         labels: Iterable[str] = ('land_cover',),
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
-        checksum: bool = False,
+        checksum: bool = True,
     ) -> None:
         """Initialize a new SatlasPretrain instance.
 
@@ -702,7 +702,7 @@ class SatlasPretrain(NonGeoDataset):
 
                 # Download and extract the tarball
                 aws = which('aws')
-                aws('s3', 'cp', self.url + tarball, self.root)
+                aws('s3', 'cp', '--no-sign-request', self.url + tarball, self.root)
                 check_integrity(path, md5 if self.checksum else None)
                 extract_archive(path)
 

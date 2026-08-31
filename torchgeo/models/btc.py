@@ -142,7 +142,7 @@ class SwinBackbone(Module):
         if backbone_pretrained:
             # load pretrained feature norm weights
             state_dict = weights.get_state_dict(
-                include_norms=True, progress=True, weights_only=True
+                include_norms=True, progress=True, check_hash=True, weights_only=True
             )
             self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
