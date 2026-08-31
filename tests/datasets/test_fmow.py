@@ -92,7 +92,7 @@ class TestFMoW:
         x = dataset[0].copy()
         fig = dataset.plot(x, suptitle='Test')
         assert fig.axes[0].get_title() == 'Label: airport'
-        assert fig.get_suptitle() == 'Test'
+        assert fig.texts[0].get_text() == 'Test'
         assert len(fig.axes[0].patches) == 2
         plt.close(fig)
 
