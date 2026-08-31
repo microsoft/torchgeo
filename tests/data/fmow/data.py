@@ -19,7 +19,7 @@ def create_metadata_file(
 ) -> None:
     """Create dummy metadata JSON file."""
     if boxes is None:
-        boxes = [{'box': [1, 2, 3, 4]}]
+        boxes = [{'box': [1, 2, 3, 4]}, {'box': [5, 6, 7, 8]}]
 
     metadata = {'bounding_boxes': boxes}
     with open(path, 'w', encoding='utf-8') as f:

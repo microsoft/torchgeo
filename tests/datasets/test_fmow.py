@@ -37,10 +37,12 @@ class TestFMoW:
         assert isinstance(x['label'], torch.Tensor)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert x['image'].shape == (3, 32, 32)
-        assert x['image'].dtype == torch.uint8
+        assert x['image'].dtype == torch.float32
         assert x['label'].item() == 0
         assert x['bbox_xyxy'].dtype == torch.float32
-        assert torch.equal(x['bbox_xyxy'], torch.tensor([[1.0, 2.0, 4.0, 6.0]]))
+        assert torch.equal(
+            x['bbox_xyxy'], torch.tensor([[1.0, 2.0, 4.0, 6.0], [5.0, 6.0, 12.0, 14.0]])
+        )
 
     def test_len(self, dataset: FMoW) -> None:
         assert len(dataset) == 1
@@ -78,11 +80,20 @@ class TestFMoW:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             FMoW(root=tmp_path, split='train')
 
+    def test_false_detection_ignored(self, tmp_path: Path) -> None:
+        src_dir = Path('tests', 'data', 'fmow', 'train', 'airport', 'airport_0')
+        dst_dir = tmp_path / 'train' / 'false_detection' / 'false_detection_0'
+        shutil.copytree(src_dir, dst_dir)
+
+        with pytest.raises(DatasetNotFoundError):
+            FMoW(root=tmp_path, split='train')
+
     def test_plot(self, dataset: FMoW) -> None:
         x = dataset[0].copy()
         fig = dataset.plot(x, suptitle='Test')
         assert fig.axes[0].get_title() == 'Label: airport'
         assert fig.get_suptitle() == 'Test'
+        assert len(fig.axes[0].patches) == 2
         plt.close(fig)
 
         fig = dataset.plot(x, show_titles=False)

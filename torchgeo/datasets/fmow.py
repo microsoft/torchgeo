@@ -12,6 +12,7 @@ from typing import ClassVar, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib import patches
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -154,7 +155,13 @@ class FMoW(NonGeoDataset):
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
         pattern = os.path.join(self.root, self.split, '*', '*', '*_rgb.jpg')
-        self.image_paths = sorted(glob.glob(pattern))
+        image_paths = glob.glob(pattern)
+        self.image_paths = sorted(
+            path
+            for path in image_paths
+            if os.path.basename(os.path.dirname(os.path.dirname(path)))
+            in self.class_to_idx
+        )
 
         if not self.image_paths:
             raise DatasetNotFoundError(self)
@@ -192,7 +199,7 @@ class FMoW(NonGeoDataset):
         return sample
 
     def _load_image(self, path: Path) -> Tensor:
-        """Load an image as a C x H x W uint8 tensor.
+        """Load an image as a C x H x W float tensor.
 
         Args:
             path: path to image file
@@ -202,7 +209,7 @@ class FMoW(NonGeoDataset):
         """
         with Image.open(path) as img:
             array: np.typing.NDArray[np.uint8] = np.array(img.convert('RGB'))
-            tensor: Tensor = torch.from_numpy(array).permute(2, 0, 1)
+            tensor: Tensor = torch.from_numpy(array).permute(2, 0, 1).float()
             return tensor
 
     def _load_bounding_boxes(self, image_path: Path) -> Tensor:
@@ -239,11 +246,27 @@ class FMoW(NonGeoDataset):
         Returns:
             Matplotlib Figure containing plotted sample
         """
-        image = sample['image'].permute(1, 2, 0).numpy()
+        image = sample['image'].permute(1, 2, 0)
+        if image.is_floating_point() and image.max() > 1:
+            image = image / 255
+        image = image.numpy()
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
         ax.axis('off')
+
+        for box in sample['bbox_xyxy']:
+            x1, y1, x2, y2 = box.tolist()
+            ax.add_patch(
+                patches.Rectangle(
+                    (x1, y1),
+                    x2 - x1,
+                    y2 - y1,
+                    linewidth=1,
+                    edgecolor='red',
+                    facecolor='none',
+                )
+            )
 
         if show_titles:
             title = ''
