@@ -1264,18 +1264,21 @@ class VectorDataset(GeoDataset):
                         shape = shapely.geometry.shape(s[0])
                         p = convert_poly_coords(shape, transform, inverse=True)
                         p = shapely.clip_by_rect(p, 0, 0, width, height)
+                        mask = rasterio.features.rasterize(
+                            [(s[0], i + 1)],
+                            out_shape=(round(height), round(width)),
+                            transform=transform,
+                        )
 
+                        if mask.max() == 0:
+                            # Skip empty masks
+                            continue
                         # Get labels
                         label_list.append(s[1])
 
                         # xmin, ymin, xmax, ymax format
                         box_list.append(p.bounds)
 
-                        mask = rasterio.features.rasterize(
-                            [(s[0], i + 1)],
-                            out_shape=(round(height), round(width)),
-                            transform=transform,
-                        )
                         mask_list.append(mask)
 
                     labels = np.array(label_list).astype(np.int32)
