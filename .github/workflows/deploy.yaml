@@ -15,6 +15,7 @@ jobs:
         with:
           python-version: '3.14'
           activate-environment: true
+          enable-cache: false
       - name: Build project
         run: uv build
       - name: Upload artifacts
@@ -38,6 +39,7 @@ jobs:
         with:
           python-version: '3.14'
           activate-environment: true
+          enable-cache: false
       - name: Download artifacts
         uses: actions/download-artifact@v8.0.1
         with:
