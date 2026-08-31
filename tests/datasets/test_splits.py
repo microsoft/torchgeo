@@ -193,6 +193,29 @@ def test_random_grid_cell_assignment() -> None:
         random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=1)
 
 
+def test_random_grid_cell_assignment_partial_cells() -> None:
+    # A triangle does not fill its bounding box, so some grid cells fall
+    # entirely outside the geometry and are skipped.
+    geometry = [Polygon([(0, 0), (3, 0), (0, 3)])]
+    ds = CustomGeoDataset(geometry=geometry)
+
+    train_ds, val_ds, test_ds = random_grid_cell_assignment(
+        ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=3
+    )
+
+    # At least one grid cell does not intersect the triangle and is dropped
+    total_cells = len(train_ds) + len(val_ds) + len(test_ds)
+    assert 0 < total_cells < 3**2
+
+    # No overlap
+    assert no_overlap(train_ds, val_ds)
+    assert no_overlap(val_ds, test_ds)
+    assert no_overlap(test_ds, train_ds)
+
+    # Union equals original geometry
+    assert isclose(total_area(train_ds | val_ds | test_ds), total_area(ds))
+
+
 def test_roi_split() -> None:
     geometry = [
         shapely.box(0, 0, 1, 1),
