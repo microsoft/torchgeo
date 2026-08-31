@@ -28,7 +28,7 @@ updates:
     versioning-strategy: 'widen'
   - package-ecosystem: 'uv'
     allow:
-      dependency-type: 'indirect'
+    - dependency-type: 'all'
     directory: '/'
     groups:
       all:
