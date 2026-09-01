@@ -60,6 +60,7 @@ from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .substation import SubstationDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
+from .tessera_cdl_datamodule import TesseraCDLDataModule
 from .treesatai import TreeSatAIDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
@@ -139,6 +140,7 @@ __all__ = (
     'SpaceNetBaseDataModule',
     'SubstationDataModule',
     'SustainBenchCropYieldDataModule',
+    'TesseraCDLDataModule',
     'TreeSatAIDataModule',
     'TropicalCycloneDataModule',
     'UCMercedDataModule',

@@ -10,6 +10,7 @@ import pytest
 import torch
 from torch import nn
 
+from tests.data.tessera.data import ensure_tessera_data
 from torchgeo.datasets import (
     DatasetNotFoundError,
     IntersectionDataset,
@@ -55,3 +56,15 @@ class TestTesseraEmbeddings:
             IndexError, match=r'index: .* not found in dataset with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_fixture_uses_fixed_structure(self, tmp_path: Path) -> None:
+        ensure_tessera_data(tmp_path)
+
+        filename = (
+            tmp_path
+            / 'global_0.1_degree_representation'
+            / '2024'
+            / 'grid_0.05_51.35'
+            / 'grid_0.05_51.35_2024.tiff'
+        )
+        assert filename.exists()
