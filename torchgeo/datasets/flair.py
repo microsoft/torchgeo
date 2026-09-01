@@ -480,7 +480,7 @@ class FLAIRHUBBase(NonGeoDataset):
     sentinel2_ts_rgb_bands = ('B04', 'B03', 'B02')
 
     # SENTINEL2_MSK-SC (Sentinel-2 scene classification mask)
-    sentinel2_msk_sc_bands = ('snow', 'cloud')  # snow and cloud probabilty mask
+    sentinel2_msk_sc_bands = ('snow', 'cloud')  # snow and cloud probability mask
 
     # SENTINEL1_ASC_TS (Sentinel-1 ASC time series)
     sentinel1_asc_ts_bands = ('VV', 'VH')
