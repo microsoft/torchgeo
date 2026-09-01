@@ -144,6 +144,7 @@ from .potsdam import Potsdam2D
 from .presto import PrestoEmbeddings
 from .prisma import PRISMA
 from .quakeset import QuakeSet
+from .rareplanes import RarePlanes
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -195,6 +196,7 @@ from .utils import (
 )
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
+from .visdrone import VisDrone
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .worldstrat import WorldStrat
 from .xbd import XView2, xBD, xBDDistShift
@@ -225,6 +227,7 @@ __all__ = (
     'PASTIS',
     'PASTIS100',
     'PRISMA',
+    'RarePlanes',
     'RESISC45',
     'SEN12MS',
     'SKIPPD',
@@ -233,6 +236,7 @@ __all__ = (
     'SSL4EOL',
     'SSL4EOS12',
     'VHR10',
+    'VisDrone',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
     'AirQuality',

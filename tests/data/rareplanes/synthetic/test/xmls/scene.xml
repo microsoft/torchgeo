@@ -1,0 +1,8 @@
+<image>
+<object><category0>Airplane</category0><bndbox2D>
+<xmin>1</xmin><ymin>2</ymin><xmax>4</xmax><ymax>6</ymax>
+</bndbox2D></object>
+<object><category0>Airport</category0><bndbox2D>
+<xmin>0</xmin><ymin>0</ymin><xmax>1</xmax><ymax>1</ymax>
+</bndbox2D></object>
+</image>
