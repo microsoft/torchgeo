@@ -22,6 +22,8 @@ class Vaihingen2DDataModule(NonGeoDataModule):
     .. versionadded:: 0.2
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,

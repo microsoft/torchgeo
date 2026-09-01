@@ -20,6 +20,8 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
     Uses the train/test splits from the dataset.
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,

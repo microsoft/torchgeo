@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 import torch.nn.functional as F
 
 from ..datasets import ChesapeakeCVPR
@@ -20,6 +21,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
     Uses the random splits defined per state to partition tiles into train, val,
     and test sets.
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,

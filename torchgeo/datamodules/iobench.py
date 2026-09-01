@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import IOBench
 from ..samplers import GriddedPatchSampler, RandomPatchSampler
 from .geo import GeoDataModule
@@ -15,6 +17,8 @@ class IOBenchDataModule(GeoDataModule):
 
     .. versionadded:: 0.6
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,

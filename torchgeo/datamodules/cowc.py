@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import torch
 from torch import Generator
 from torch.utils.data import random_split
 
@@ -14,6 +15,8 @@ from .geo import NonGeoDataModule
 
 class COWCCountingDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the COWC Counting dataset."""
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

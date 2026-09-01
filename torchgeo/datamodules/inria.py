@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 
 from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
@@ -20,6 +21,8 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.3
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,

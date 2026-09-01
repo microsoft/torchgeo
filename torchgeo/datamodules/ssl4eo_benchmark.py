@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 from kornia.constants import DataKey, Resample
 
 from ..datasets import SSL4EOLBenchmark
@@ -18,6 +19,8 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.5
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,

@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import FAIR1M
 from .geo import NonGeoDataModule
 from .utils import collate_fn_detection
@@ -15,6 +17,8 @@ class FAIR1MDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.2
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any

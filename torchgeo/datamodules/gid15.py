@@ -22,6 +22,8 @@ class GID15DataModule(NonGeoDataModule):
     .. versionadded:: 0.4
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,

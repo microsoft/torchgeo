@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 from torch.utils.data import Subset
 
 from ..datasets import GeoNRW
@@ -22,6 +23,8 @@ class GeoNRWDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.6
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, size: int = 256, **kwargs: Any

@@ -7,6 +7,7 @@ import copy
 from collections import defaultdict
 from typing import Any
 
+import torch
 from torch.utils.data import Subset
 
 from ..datasets import DigitalTyphoon
@@ -20,6 +21,8 @@ class DigitalTyphoonDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.6
     """
+
+    std = torch.tensor(255)
 
     valid_split_types = ('time', 'typhoon_id')
 

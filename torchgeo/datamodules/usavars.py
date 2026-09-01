@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import USAVars
 from .geo import NonGeoDataModule
 
@@ -16,6 +18,8 @@ class USAVarsDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.3
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
