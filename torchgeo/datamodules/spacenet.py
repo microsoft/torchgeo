@@ -122,12 +122,12 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
         )
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
+            K.Normalize(mean=self.mean, std=self.std),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=None,
             keepdim=True,

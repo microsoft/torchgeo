@@ -49,15 +49,15 @@ class Potsdam2DDataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
         )
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.RandomCrop(self.patch_size, pad_if_needed=True),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )

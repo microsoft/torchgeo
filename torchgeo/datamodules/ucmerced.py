@@ -31,8 +31,8 @@ class UCMercedDataModule(NonGeoDataModule):
         super().__init__(UCMerced, batch_size, num_workers, **kwargs)
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size=(256, 256)),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )

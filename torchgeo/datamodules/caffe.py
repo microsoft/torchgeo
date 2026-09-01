@@ -40,17 +40,17 @@ class CaFFeDataModule(NonGeoDataModule):
         self.size = size
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.Resize((size, size)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.Resize((size, size)),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )

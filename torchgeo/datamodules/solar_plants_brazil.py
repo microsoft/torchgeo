@@ -59,17 +59,17 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
         self.std = STD
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.RandomCrop(self.patch_size, pad_if_needed=True),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(size=self.patch_size),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )

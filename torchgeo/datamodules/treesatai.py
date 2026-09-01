@@ -91,9 +91,9 @@ class TreeSatAIDataModule(NonGeoDataModule):
         self.sensors = kwargs.get('sensors', TreeSatAI.all_sensors)
 
         self.train_aug = K.AugmentationSequential(
+            K.Resize(self.patch_size),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            K.Resize(self.patch_size),
             data_keys=None,
             keepdim=True,
         )

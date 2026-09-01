@@ -50,17 +50,17 @@ class ReforesTreeDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(self.mean, self.std),
             K.RandomCrop(self.patch_size, pad_if_needed=True),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
+            K.Normalize(self.mean, self.std),
             data_keys=None,
             keepdim=True,
         )
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=None,
             keepdim=True,
         )
