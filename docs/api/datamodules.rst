@@ -54,6 +54,11 @@ SouthAfricaCropType
 
 .. autoclass:: SouthAfricaCropTypeDataModule
 
+Tessera
+^^^^^^^
+
+.. autoclass:: TesseraCDLDataModule
+
 Non-geospatial DataModules
 --------------------------
 
