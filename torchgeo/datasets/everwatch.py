@@ -243,12 +243,17 @@ class EverWatch(NonGeoDataset):
         )
 
     def plot(
-        self, sample: Sample, suptitle: str | None = None, box_alpha: float = 0.7
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        box_alpha: float = 0.7,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             box_alpha: alpha value for boxes
 

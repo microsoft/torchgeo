@@ -236,13 +236,13 @@ class USAVars(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.dirname + '.zip'))
 
     def plot(
-        self, sample: Sample, show_labels: bool = True, suptitle: str | None = None
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            show_labels: flag indicating whether to show labels above panel
+            show_titles: flag indicating whether to show titles above panel
             suptitle: optional string to use as a suptitle
 
         Returns:
@@ -255,7 +255,7 @@ class USAVars(NonGeoDataset):
         axs.imshow(image)
         axs.axis('off')
 
-        if show_labels:
+        if show_titles:
             labels = [(lab, val) for lab, val in sample.items() if lab != 'image']
             label_string = ''
             for lab, val in labels:

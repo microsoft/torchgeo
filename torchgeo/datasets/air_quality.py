@@ -151,11 +151,19 @@ class AirQuality(NonGeoDataset):
         self.input_data.interpolate(inplace=True)
         self.target_data.interpolate(inplace=True)
 
-    def plot(self, sample: Sample, features: Sequence[str] | None = None) -> Figure:
+    def plot(
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        features: Sequence[str] | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
             features: List of features to plot (defaults to *target_features*).
 
         Returns:
