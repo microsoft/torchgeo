@@ -47,11 +47,12 @@ class PlottingMixin:
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
+        dataset = getattr(self, 'dataset', self)
 
         rgb_indices = []
-        for band in self.dataset.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
+        for band in dataset.rgb_bands:
+            if band in dataset.bands:
+                rgb_indices.append(dataset.bands.index(band))
             else:
                 raise RGBBandsMissingError()
 
@@ -73,9 +74,9 @@ class PlottingMixin:
         if 'label' in sample:
             if sample['label'].dim() == 0:
                 # Multiclass classification
-                label: Any = self.classes[sample['label']]
+                label: Any = dataset.classes[sample['label']]
                 if 'prediction' in sample:
-                    prediction: Any = self.classes[sample['prediction']]
+                    prediction: Any = dataset.classes[sample['prediction']]
             else:
                 # Multilabel classification
                 label = sample['label'].numpy().nonzero()[0]
@@ -87,19 +88,16 @@ class PlottingMixin:
                 title += f'\nPrediction: {prediction}'
 
         # Image
-        if self.rgb_bands:
+        if dataset.rgb_bands:
             images = images[:, rgb_indices]
-            if set(self.rgb_bands) <= {'VV', 'VH', 'HH', 'HV'}:
+            if set(dataset.rgb_bands) <= {'VV', 'VH', 'HH', 'HV'}:
                 # SAR
                 vv = images[:, 0]
                 vh = images[:, 1]
                 images = torch.stack([vv, vh, (vv + vh) / 2], dim=1)
-
+                images = quantile_normalization(images)
         else:
             images = images[:, :3]
-
-            if images.shape[1] == 2:
-                images = images[:, :1]
 
         images = quantile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
@@ -111,12 +109,12 @@ class PlottingMixin:
 
         # Mask
         if 'mask' in sample:
-            kwargs: dict[str, Any] = {'cmap': self.cmap}
-            if hasattr(self, 'classes'):
+            kwargs: dict[str, Any] = {'cmap': dataset.cmap}
+            if hasattr(dataset, 'classes'):
                 # Semantic segmentation
                 kwargs |= {
                     'vmin': 0,
-                    'vmax': len(self.classes) - 1,
+                    'vmax': len(cast(Sequence[object], dataset.classes)) - 1,
                     'interpolation': 'none',
                 }
             mask = sample['mask']
