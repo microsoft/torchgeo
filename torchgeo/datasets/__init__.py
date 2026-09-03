@@ -120,6 +120,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
+from .landslide4sense import Landslide4Sense
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
@@ -337,6 +338,7 @@ __all__ = (
     'Landsat7',
     'Landsat8',
     'Landsat9',
+    'Landslide4Sense',
     'LoveDA',
     'MMEarth',
     'MMFlood',
