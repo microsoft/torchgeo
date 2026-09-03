@@ -3,12 +3,12 @@
 
 """PASTIS datamodule."""
 
+from collections.abc import Sequence
+
 from functools import partial
 from typing import Any
 
 import kornia.augmentation as K
-import torch
-from torch.utils.data import random_split
 
 from ..datasets import PASTIS, PASTIS100
 from ..datasets.utils import pad_across_batches
@@ -25,8 +25,9 @@ class PASTISDataModule(NonGeoDataModule):
         self,
         batch_size: int = 32,
         num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
+        train_folds: Sequence[int] = (1, 2, 3),
+        val_folds: Sequence[int] = (4,),
+        test_folds: Sequence[int] = (5,),
         padding_length: int = 61,
         **kwargs: Any,
     ) -> None:
@@ -35,8 +36,9 @@ class PASTISDataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            val_split_pct: Percentage of the dataset to use as a validation set.
-            test_split_pct: Percentage of the dataset to use as a test set.
+            train_folds: List of fold indices for training split.
+            val_folds: List of fold indices for validation split.
+            test_folds: List of fold indices for test split.
             padding_length: Padding length of the time series.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.PASTIS`.
@@ -44,6 +46,9 @@ class PASTISDataModule(NonGeoDataModule):
         super().__init__(
             PASTIS, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
+        self.train_folds = train_folds
+        self.val_folds = val_folds
+        self.test_folds = test_folds
         self.padding_length = padding_length
         # Use a picklable callable for multiprocessing DataLoader workers.
         # Local lambdas fail under ``spawn`` with "Can't get local object ...".
@@ -51,8 +56,6 @@ class PASTISDataModule(NonGeoDataModule):
             pad_across_batches, padding_length=self.padding_length
         )
 
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
         self.aug = K.AugmentationSequential(
             K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
             data_keys=None,
@@ -65,17 +68,12 @@ class PASTISDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = PASTIS(**self.kwargs)
-        generator = torch.Generator().manual_seed(0)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset,
-            [
-                1 - self.val_split_pct - self.test_split_pct,
-                self.val_split_pct,
-                self.test_split_pct,
-            ],
-            generator,
-        )
+        if stage in ['fit']:
+            self.train_dataset = PASTIS(folds=self.train_folds, **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = PASTIS(folds=self.val_folds, **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = PASTIS(folds=self.test_folds, **self.kwargs)
 
 
 class PASTIS100DataModule(NonGeoDataModule):
@@ -88,8 +86,9 @@ class PASTIS100DataModule(NonGeoDataModule):
         self,
         batch_size: int = 32,
         num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
+        train_folds: Sequence[int] = (1, 2, 3),
+        val_folds: Sequence[int] = (4,),
+        test_folds: Sequence[int] = (5,),
         padding_length: int = 61,
         **kwargs: Any,
     ) -> None:
@@ -98,8 +97,9 @@ class PASTIS100DataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            val_split_pct: Percentage of the dataset to use as a validation set.
-            test_split_pct: Percentage of the dataset to use as a test set.
+            train_folds: List of fold indices for training split.
+            val_folds: List of fold indices for validation split.
+            test_folds: List of fold indices for test split  .
             padding_length: Padding length of the time series.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.PASTIS100`.
@@ -107,6 +107,9 @@ class PASTIS100DataModule(NonGeoDataModule):
         super().__init__(
             PASTIS100, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
+        self.train_folds = train_folds
+        self.val_folds = val_folds
+        self.test_folds = test_folds
         self.padding_length = padding_length
         # Use a picklable callable for multiprocessing DataLoader workers.
         # Local lambdas fail under ``spawn`` with "Can't get local object ...".
@@ -114,8 +117,6 @@ class PASTIS100DataModule(NonGeoDataModule):
             pad_across_batches, padding_length=self.padding_length
         )
 
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
         self.aug = K.AugmentationSequential(
             K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
             data_keys=None,
@@ -128,14 +129,9 @@ class PASTIS100DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = PASTIS100(**self.kwargs)
-        generator = torch.Generator().manual_seed(0)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset,
-            [
-                1 - self.val_split_pct - self.test_split_pct,
-                self.val_split_pct,
-                self.test_split_pct,
-            ],
-            generator,
-        )
+        if stage in ['fit']:
+            self.train_dataset = PASTIS100(folds=self.train_folds, **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = PASTIS100(folds=self.val_folds, **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = PASTIS100(folds=self.test_folds, **self.kwargs)
