@@ -3,6 +3,7 @@
 
 collect_ignore = [
     'change_detection.ipynb',
+    'crop_type_mapping.ipynb',
     'earth_surface_water.ipynb',
     'earthquake_detection.ipynb',
     'naip_road_segmentation.ipynb',
