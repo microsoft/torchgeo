@@ -64,6 +64,16 @@ class TestIDTReeS:
                 assert x['bbox_xyxy'].shape[-1] == 4
                 assert x['bbox_xyxy'].shape[0] > 0
 
+    def test_getitem_without_annotations(self, dataset: IDTReeS) -> None:
+        if dataset.split != 'train':
+            pytest.skip('Only the training split contains labels')
+
+        dataset.labels = dataset.labels.iloc[0:0]
+        sample = dataset[0]
+
+        assert sample['bbox_xyxy'].shape == (0, 4)
+        assert sample['label'].shape == (0,)
+
     def test_len(self, dataset: IDTReeS) -> None:
         assert len(dataset) == 3
 
