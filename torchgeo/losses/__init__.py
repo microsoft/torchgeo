@@ -5,5 +5,6 @@
 
 from .elects import EarlyRewardLoss
 from .qr import QRLoss, RQLoss
+from .quantile import PinballLoss
 
-__all__ = ('EarlyRewardLoss', 'QRLoss', 'RQLoss')
+__all__ = ('EarlyRewardLoss', 'PinballLoss', 'QRLoss', 'RQLoss')

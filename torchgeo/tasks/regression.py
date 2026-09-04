@@ -4,6 +4,7 @@
 """Tasks for regression."""
 
 import os
+from collections.abc import Sequence
 from typing import Literal
 
 import kornia.augmentation as K
@@ -18,6 +19,7 @@ from torchvision.models._api import WeightsEnum
 from ..datamodules import BaseDataModule
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..datasets.utils import Sample
+from ..losses import PinballLoss
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -38,11 +40,12 @@ class Regression(RegressionMixin, BaseTask):
         num_outputs: int = 1,
         labels: list[str] | None = None,
         num_filters: int = 3,
-        loss: Literal['mae', 'mse'] = 'mse',
+        loss: Literal['mae', 'mse', 'pinball'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
+        quantiles: Sequence[float] = (0.1, 0.5, 0.9),
     ) -> None:
         """Initialize a new Regression instance.
 
@@ -61,7 +64,8 @@ class Regression(RegressionMixin, BaseTask):
             num_outputs: Number of prediction outputs.
             labels: List of feature names.
             num_filters: Number of filters. Only applicable when model='fcn'.
-            loss: One of 'mse' or 'mae'.
+            loss: One of 'mse', 'mae', or 'pinball'. Quantile regression with
+                'pinball' requires num_outputs=1.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to linear probe
@@ -69,6 +73,14 @@ class Regression(RegressionMixin, BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the regression head. Does not support FCN models.
                 Only applicable to PixelwiseRegression.
+            quantiles: Quantile levels to predict when loss='pinball'. Must include
+                0.5, which is used for metrics and plotting. Predictions contain
+                one channel per quantile, in this order. These estimates are not
+                calibrated prediction intervals.
+
+        Raises:
+            ValueError: If pinball loss is used with multiple targets, invalid
+                quantile levels, or without the median quantile.
 
         .. versionchanged:: 0.4
            Change regression model support from torchvision.models to timm
@@ -82,7 +94,17 @@ class Regression(RegressionMixin, BaseTask):
 
         .. versionadded:: 0.10
            The *labels* parameter.
+
+        .. versionadded:: 0.11
+           The *quantiles* parameter and 'pinball' loss.
         """
+        self.median_index = None
+        if loss == 'pinball':
+            if num_outputs != 1 or 0.5 not in quantiles:
+                raise ValueError(
+                    'Pinball loss requires num_outputs=1 and quantile 0.5.'
+                )
+            self.median_index = quantiles.index(0.5)
         self.weights = weights
         super().__init__()
 
@@ -92,7 +114,11 @@ class Regression(RegressionMixin, BaseTask):
         weights = self.weights
         self.model = timm.create_model(
             self.hparams['model'],
-            num_classes=self.hparams['num_outputs'],
+            num_classes=(
+                len(self.hparams['quantiles'])
+                if self.median_index is not None
+                else self.hparams['num_outputs']
+            ),
             in_chans=self.hparams['in_channels'],
             pretrained=weights is True,
         )
@@ -118,6 +144,13 @@ class Regression(RegressionMixin, BaseTask):
             for param in self.model.get_classifier().parameters():  # ty: ignore[call-non-callable]
                 param.requires_grad = True
 
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        if self.hparams['loss'] == 'pinball':
+            self.criterion = PinballLoss(self.hparams['quantiles'])
+        else:
+            super().configure_losses()
+
     def training_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
@@ -140,6 +173,8 @@ class Regression(RegressionMixin, BaseTask):
             y = y.unsqueeze(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
         self.log('train_loss', loss, batch_size=batch_size)
+        if self.median_index is not None:
+            y_hat = y_hat[:, self.median_index : self.median_index + 1].contiguous()
         self.train_metrics(y_hat, y)
 
         return loss
@@ -163,6 +198,8 @@ class Regression(RegressionMixin, BaseTask):
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
+        if self.median_index is not None:
+            y_hat = y_hat[:, self.median_index : self.median_index + 1].contiguous()
         self.val_metrics(y_hat, y)
 
         if (
@@ -218,6 +255,8 @@ class Regression(RegressionMixin, BaseTask):
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, batch_size=batch_size)
+        if self.median_index is not None:
+            y_hat = y_hat[:, self.median_index : self.median_index + 1].contiguous()
         self.test_metrics(y_hat, y)
 
     def predict_step(
@@ -231,7 +270,8 @@ class Regression(RegressionMixin, BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Regression predictions. With pinball loss, the shape is (B, Q)
+            or (B, Q, H, W), with channels in the order of *quantiles*.
         """
         x = batch['image']
         y_hat: Tensor = self(x)
@@ -253,6 +293,9 @@ class PixelwiseRegression(Regression):
         model = self.hparams['model']
         backbone = self.hparams['backbone']
         in_channels = self.hparams['in_channels']
+        num_outputs = (
+            len(self.hparams['quantiles']) if self.median_index is not None else 1
+        )
 
         match model:
             case 'unet':
@@ -260,19 +303,19 @@ class PixelwiseRegression(Regression):
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                 )
             case 'deeplabv3+':
                 self.model = smp.DeepLabV3Plus(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                 )
             case 'fcn':
                 self.model = FCN(
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                     num_filters=self.hparams['num_filters'],
                 )
             case 'upernet':
@@ -280,21 +323,21 @@ class PixelwiseRegression(Regression):
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                 )
             case 'segformer':
                 self.model = smp.Segformer(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                 )
             case 'dpt':
                 self.model = smp.DPT(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_outputs,
                 )
 
         if model != 'fcn' and weights and weights is not True:
