@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -30,8 +30,9 @@ class TestSouthAfricaCropType:
         azcopy: Executable,
         monkeypatch: MonkeyPatch,
         tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> SouthAfricaCropType:
-        url = os.path.join('tests', 'data', 'south_africa_crop_type')
+        url = test_data('south_africa_crop_type')
         monkeypatch.setattr(SouthAfricaCropType, 'url', url)
         bands = request.param
         transforms = nn.Identity()
@@ -63,15 +64,15 @@ class TestSouthAfricaCropType:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SouthAfricaCropType(tmp_path)
 
-    def test_plot(self) -> None:
-        path = os.path.join('tests', 'data', 'south_africa_crop_type')
+    def test_plot(self, test_data: Callable[[str], str]) -> None:
+        path = test_data('south_africa_crop_type')
         ds = SouthAfricaCropType(path)
         x = ds[ds.bounds]
         ds.plot(x, suptitle='Test')
         plt.close()
 
-    def test_plot_prediction(self) -> None:
-        path = os.path.join('tests', 'data', 'south_africa_crop_type')
+    def test_plot_prediction(self, test_data: Callable[[str], str]) -> None:
+        path = test_data('south_africa_crop_type')
         ds = SouthAfricaCropType(path)
         x = ds[ds.bounds]
         x['prediction'] = x['mask'].clone()
@@ -84,8 +85,8 @@ class TestSouthAfricaCropType:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_rgb_bands_absent_plot(self) -> None:
-        path = os.path.join('tests', 'data', 'south_africa_crop_type')
+    def test_rgb_bands_absent_plot(self, test_data: Callable[[str], str]) -> None:
+        path = test_data('south_africa_crop_type')
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):

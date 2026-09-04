@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,9 +25,13 @@ class TestCOWC:
 class TestCOWCCounting:
     @pytest.fixture(params=['train', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> COWC:
-        base_url = os.path.join('tests', 'data', 'cowc_counting') + os.sep
+        base_url = test_data('cowc_counting') + os.sep
         monkeypatch.setattr(COWCCounting, 'base_url', base_url)
         root = tmp_path
         split = request.param
@@ -72,9 +77,13 @@ class TestCOWCCounting:
 class TestCOWCDetection:
     @pytest.fixture(params=['train', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> COWC:
-        base_url = os.path.join('tests', 'data', 'cowc_detection') + os.sep
+        base_url = test_data('cowc_detection') + os.sep
         monkeypatch.setattr(COWCDetection, 'base_url', base_url)
         root = tmp_path
         split = request.param

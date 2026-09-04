@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,8 +17,8 @@ pytest.importorskip('h5py', minversion='3.10')
 
 class TestSo2Sat:
     @pytest.fixture(params=['train', 'validation', 'test'])
-    def dataset(self, request: SubRequest) -> So2Sat:
-        root = os.path.join('tests', 'data', 'so2sat')
+    def dataset(self, request: SubRequest, test_data: Callable[[str], str]) -> So2Sat:
+        root = test_data('so2sat')
         split = request.param
         transforms = nn.Identity()
         return So2Sat(root=root, split=split, transforms=transforms, checksum=False)

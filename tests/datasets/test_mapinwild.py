@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,9 +21,13 @@ from torchgeo.datasets import DatasetNotFoundError, MapInWild
 class TestMapInWild:
     @pytest.fixture(params=['train', 'validation', 'test'])
     def dataset(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, request: SubRequest
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> MapInWild:
-        urls = os.path.join('tests', 'data', 'mapinwild')
+        urls = test_data('mapinwild')
         monkeypatch.setattr(MapInWild, 'url', urls)
 
         root = tmp_path
@@ -63,23 +68,23 @@ class TestMapInWild:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             MapInWild(root=tmp_path)
 
-    def test_downloaded_not_extracted(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'mapinwild', '*', '*')
+    def test_downloaded_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('mapinwild'), '*', '*')
         pathname_glob = glob.glob(pathname)
         root = tmp_path
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
         MapInWild(root, download=False, checksum=False)
 
-    def test_corrupted(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'mapinwild', '**', '*.zip')
+    def test_corrupted(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        pathname = os.path.join(test_data('mapinwild'), '**', '*.zip')
         pathname_glob = glob.glob(pathname, recursive=True)
         root = tmp_path
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
-        splitfile = os.path.join(
-            'tests', 'data', 'mapinwild', 'split_IDs', 'split_IDs.csv'
-        )
+        splitfile = os.path.join(test_data('mapinwild'), 'split_IDs', 'split_IDs.csv')
         shutil.copy(splitfile, root)
         with open(os.path.join(tmp_path, 'mask.zip'), 'w') as f:
             f.write('bad')

@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,17 +14,19 @@ from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, HySpecNet11k, RGBBandsMissingError
 
-root = os.path.join('tests', 'data', 'hyspecnet')
+root = os.path.join('hyspecnet')
 sha256s = {'hyspecnet-11k-01.tar.gz': '', 'hyspecnet-11k-splits.tar.gz': ''}
 
 
 class TestHySpecNet11k:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> HySpecNet11k:
-        monkeypatch.setattr(HySpecNet11k, 'url', root + os.sep)
+    def dataset(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> HySpecNet11k:
+        monkeypatch.setattr(HySpecNet11k, 'url', test_data(root) + os.sep)
         monkeypatch.setattr(HySpecNet11k, 'sha256s', sha256s)
         transforms = nn.Identity()
-        return HySpecNet11k(root, transforms=transforms)
+        return HySpecNet11k(test_data(root), transforms=transforms)
 
     def test_getitem(self, dataset: HySpecNet11k) -> None:
         x = dataset[0]
@@ -36,8 +39,10 @@ class TestHySpecNet11k:
     def test_download(self, dataset: HySpecNet11k, tmp_path: Path) -> None:
         HySpecNet11k(tmp_path, download=True)
 
-    def test_extract(self, dataset: HySpecNet11k, tmp_path: Path) -> None:
-        for file in glob.iglob(os.path.join(root, '*.tar.gz')):
+    def test_extract(
+        self, dataset: HySpecNet11k, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        for file in glob.iglob(os.path.join(test_data(root), '*.tar.gz')):
             shutil.copy(file, tmp_path)
         HySpecNet11k(tmp_path)
 

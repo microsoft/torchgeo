@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -21,9 +22,13 @@ class TestSODAA:
         params=product(['train', 'val', 'test'], ['horizontal', 'oriented'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SODAA:
-        url = os.path.join('tests', 'data', 'soda', '{}')
+        url = os.path.join(test_data('soda'), '{}')
         monkeypatch.setattr(SODAA, 'url', url)
         files = {
             'images': {'filename': 'Images.zip'},
@@ -63,10 +68,12 @@ class TestSODAA:
         else:
             assert len(dataset) == 2
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         files = ['Images.zip', 'Annotations.zip', 'sample_df.csv']
         for file in files:
-            shutil.copy(os.path.join('tests', 'data', 'soda', file), tmp_path)
+            shutil.copy(os.path.join(test_data('soda'), file), tmp_path)
         SODAA(root=tmp_path, checksum=False)
 
     def test_corrupted(self, tmp_path: Path) -> None:

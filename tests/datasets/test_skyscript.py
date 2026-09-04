@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,10 @@ tokenizers = pytest.importorskip('tokenizers', minversion='0.14')
 
 class TestSkyScript:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SkyScript:
-        url = os.path.join('tests', 'data', 'skyscript', '{}')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> SkyScript:
+        url = os.path.join(test_data('skyscript'), '{}')
         monkeypatch.setattr(SkyScript, 'url', url)
         transforms = nn.Identity()
         return SkyScript(tmp_path, transforms=transforms, download=True)

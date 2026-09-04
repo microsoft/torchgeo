@@ -7,8 +7,7 @@ import os
 import shutil
 from typing import Any
 
-import fiona
-import fiona.transform
+import geopandas as gpd
 import numpy as np
 import rasterio
 import shapely.geometry
@@ -243,48 +242,25 @@ def generate_test_data(root: str) -> None:
                 data_profile['vals'],
             )
 
-    # build the spatial index
-    schema = {
-        'geometry': 'Polygon',
-        'properties': {
-            'split': 'str',
-            'naip': 'str',
-            'nlcd': 'str',
-            'roads': 'str',
-            'water': 'str',
-            'waterways': 'str',
-            'waterbodies': 'str',
-            'buildings': 'str',
-            'lc': 'str',
-            'prior_no_osm_no_buildings': 'str',
-            'prior': 'str',
-        },
-    }
-    with fiona.open(
-        os.path.join(folder_path, 'spatial_index.geojson'),
-        'w',
-        driver='GeoJSON',
-        crs='EPSG:3857',
-        schema=schema,
-    ) as dst:
-        for prefix in tile_list:
-            img_path = os.path.join(folder_path, f'{prefix}_a_naip.tif')
-            with rasterio.open(img_path) as f:
-                geom = shapely.geometry.mapping(shapely.geometry.box(*f.bounds))
-                geom = fiona.transform.transform_geom(
-                    f.crs.to_string(), 'EPSG:3857', geom
-                )
-
-            row = {
-                'geometry': geom,
-                'properties': {
-                    'split': prefix.split('/')[0].replace('_tiles-debuffered', '')
-                },
-            }
-            for suffix, data_profile in layer_data_profiles.items():
-                key = suffix_to_key_map[suffix]
-                row['properties'][key] = f'{prefix}_{suffix}.tif'
-            dst.write(row)
+    rows = []
+    for prefix in tile_list:
+        img_path = os.path.join(folder_path, f'{prefix}_a_naip.tif')
+        with rasterio.open(img_path) as f:
+            geometry = (
+                gpd.GeoSeries([shapely.geometry.box(*f.bounds)], crs=f.crs)
+                .to_crs('EPSG:3857')
+                .iloc[0]
+            )
+        row = {
+            'geometry': geometry,
+            'split': prefix.split('/')[0].replace('_tiles-debuffered', ''),
+        }
+        for suffix in layer_data_profiles:
+            row[suffix_to_key_map[suffix]] = f'{prefix}_{suffix}.tif'
+        rows.append(row)
+    gpd.GeoDataFrame(rows, crs='EPSG:3857').to_file(
+        os.path.join(folder_path, 'spatial_index.geojson'), driver='GeoJSON'
+    )
 
     # Create archive
     archive_path = os.path.join(root, 'enviroatlas_lotp')

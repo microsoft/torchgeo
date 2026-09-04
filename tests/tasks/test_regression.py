@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
@@ -70,12 +70,16 @@ class TestRegression:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
         if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
             pytest.importorskip('h5py', minversion='3.10')
 
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         monkeypatch.setattr(timm, 'create_model', self.create_model)
 
@@ -161,10 +165,15 @@ class TestRegression:
             in_channels=weights.meta['in_chans'],
         )
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot)
         datamodule = TropicalCycloneDataModule(
-            root='tests/data/cyclone', batch_size=1, num_workers=0
+            root=test_data('cyclone'), batch_size=1, num_workers=0
         )
         model = Regression(model='resnet18')
         trainer = Trainer(
@@ -175,10 +184,15 @@ class TestRegression:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot_missing_bands)
         datamodule = TropicalCycloneDataModule(
-            root='tests/data/cyclone', batch_size=1, num_workers=0
+            root=test_data('cyclone'), batch_size=1, num_workers=0
         )
         model = Regression(model='resnet18')
         trainer = Trainer(
@@ -189,9 +203,9 @@ class TestRegression:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool, test_data: Callable[[str], str]) -> None:
         datamodule = PredictRegressionDataModule(
-            root='tests/data/cyclone', batch_size=1, num_workers=0
+            root=test_data('cyclone'), batch_size=1, num_workers=0
         )
         model = Regression(model='resnet18')
         trainer = Trainer(
@@ -231,9 +245,13 @@ class TestPixelwiseRegression:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', self.create_model)
         monkeypatch.setattr(smp, 'DeepLabV3Plus', self.create_model)

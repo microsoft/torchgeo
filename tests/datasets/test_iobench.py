@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,8 +25,10 @@ from torchgeo.datasets import (
 
 class TestIOBench:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> IOBench:
-        url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> IOBench:
+        url = os.path.join(test_data('iobench'), '{}.tar.gz')
         monkeypatch.setattr(IOBench, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
@@ -56,8 +59,10 @@ class TestIOBench:
     def test_already_extracted(self, dataset: IOBench) -> None:
         IOBench(dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'iobench', '*.tar.gz')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('iobench'), '*.tar.gz')
         root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)

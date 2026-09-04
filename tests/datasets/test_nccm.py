@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,11 +22,13 @@ from torchgeo.datasets import (
 
 class TestNCCM:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> NCCM:
         urls = {
-            2017: os.path.join('tests', 'data', 'nccm', 'CDL2017_clip.tif'),
-            2018: os.path.join('tests', 'data', 'nccm', 'CDL2018_clip1.tif'),
-            2019: os.path.join('tests', 'data', 'nccm', 'CDL2019_clip.tif'),
+            2017: os.path.join(test_data('nccm'), 'CDL2017_clip.tif'),
+            2018: os.path.join(test_data('nccm'), 'CDL2018_clip1.tif'),
+            2019: os.path.join(test_data('nccm'), 'CDL2019_clip.tif'),
         }
         monkeypatch.setattr(NCCM, 'urls', urls)
         transforms = nn.Identity()

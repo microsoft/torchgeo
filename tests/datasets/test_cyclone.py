@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,8 +24,9 @@ class TestTropicalCyclone:
         azcopy: Executable,
         monkeypatch: MonkeyPatch,
         tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> TropicalCyclone:
-        url = os.path.join('tests', 'data', 'cyclone')
+        url = test_data('cyclone')
         monkeypatch.setattr(TropicalCyclone, 'url', url)
         monkeypatch.setattr(TropicalCyclone, 'size', 2)
         root = tmp_path

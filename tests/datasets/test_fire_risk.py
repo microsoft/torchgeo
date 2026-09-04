@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ from torchgeo.datasets import DatasetNotFoundError, FireRisk
 class TestFireRisk:
     @pytest.fixture(params=['train', 'val'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> FireRisk:
-        url = os.path.join('tests', 'data', 'fire_risk', 'FireRisk.zip')
+        url = os.path.join(test_data('fire_risk'), 'FireRisk.zip')
         monkeypatch.setattr(FireRisk, 'url', url)
         root = tmp_path
         split = request.param

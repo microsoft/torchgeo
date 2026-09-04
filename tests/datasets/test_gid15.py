@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,9 +18,13 @@ from torchgeo.datasets import GID15, DatasetNotFoundError
 class TestGID15:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> GID15:
-        url = os.path.join('tests', 'data', 'gid15', 'gid-15.zip')
+        url = os.path.join(test_data('gid15'), 'gid-15.zip')
         monkeypatch.setattr(GID15, 'url', url)
         root = tmp_path
         split = request.param

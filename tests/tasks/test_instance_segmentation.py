@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -33,8 +33,10 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class TestInstanceSegmentation:
     @pytest.mark.parametrize('name', ['vhr10_ins_seg'])
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+    def test_trainer(
+        self, name: str, fast_dev_run: bool, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config(name + '.yaml')
 
         args = [
             '--config',
@@ -69,10 +71,15 @@ class TestInstanceSegmentation:
         with pytest.raises(ValueError, match=match):
             InstanceSegmentation(backbone='invalid_backbone')
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(VHR10DataModule, 'plot', plot)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
+            root=test_data('vhr10'), batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -83,10 +90,15 @@ class TestInstanceSegmentation:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(VHR10DataModule, 'plot', plot_missing_bands)
         datamodule = VHR10DataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
+            root=test_data('vhr10'), batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(in_channels=3, num_classes=11)
         trainer = Trainer(
@@ -97,9 +109,9 @@ class TestInstanceSegmentation:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool, test_data: Callable[[str], str]) -> None:
         datamodule = PredictInstanceSegmentationDataModule(
-            root='tests/data/vhr10', batch_size=1, num_workers=0, checksum=False
+            root=test_data('vhr10'), batch_size=1, num_workers=0, checksum=False
         )
         model = InstanceSegmentation(num_classes=11)
         trainer = Trainer(

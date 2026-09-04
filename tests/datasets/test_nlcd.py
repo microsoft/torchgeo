@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -23,8 +24,10 @@ from torchgeo.datasets import (
 
 class TestNLCD:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
-        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> NLCD:
+        url = os.path.join(test_data('nlcd'), 'Annual_NLCD_LndCov_{}_CU_C1V1.zip')
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -39,8 +42,8 @@ class TestNLCD:
     def test_len(self, dataset: NLCD) -> None:
         assert len(dataset) == 2
 
-    def test_classes(self) -> None:
-        root = os.path.join('tests', 'data', 'nlcd')
+    def test_classes(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('nlcd')
         classes = list(NLCD.valid_classes)[5:]
         ds = NLCD(root, years=[2019], classes=classes)
         sample = ds[ds.bounds]
@@ -63,8 +66,10 @@ class TestNLCD:
     def test_already_extracted(self, dataset: NLCD) -> None:
         NLCD(dataset.paths, years=[2011, 2019])
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'nlcd', '*_CU_C1V1.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('nlcd'), '*_CU_C1V1.zip')
         root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)

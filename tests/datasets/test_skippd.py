@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 from typing import Literal
@@ -22,10 +23,14 @@ pytest.importorskip('h5py', minversion='3.10')
 class TestSKIPPD:
     @pytest.fixture(params=product(['nowcast', 'forecast'], ['trainval', 'test']))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SKIPPD:
         task, split = request.param
-        url = os.path.join('tests', 'data', 'skippd', '{}')
+        url = os.path.join(test_data('skippd'), '{}')
         monkeypatch.setattr(SKIPPD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -39,10 +44,13 @@ class TestSKIPPD:
 
     @pytest.mark.parametrize('task', ['nowcast', 'forecast'])
     def test_already_downloaded(
-        self, tmp_path: Path, task: Literal['nowcast', 'forecast']
+        self,
+        tmp_path: Path,
+        task: Literal['nowcast', 'forecast'],
+        test_data: Callable[[str], str],
     ) -> None:
         pathname = os.path.join(
-            'tests', 'data', 'skippd', f'2017_2019_images_pv_processed_{task}.zip'
+            test_data('skippd'), f'2017_2019_images_pv_processed_{task}.zip'
         )
         root = tmp_path
         shutil.copy(pathname, root)

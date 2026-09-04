@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,9 +20,13 @@ pytest.importorskip('h5py', minversion='3.10')
 class TestQuakeSet:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> QuakeSet:
-        url = os.path.join('tests', 'data', 'quakeset', 'earthquakes.h5')
+        url = os.path.join(test_data('quakeset'), 'earthquakes.h5')
         monkeypatch.setattr(QuakeSet, 'url', url)
         root = tmp_path
         split = request.param

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,9 +20,13 @@ pytest.importorskip('h5py', minversion='3.10')
 class TestChaBuD:
     @pytest.fixture(params=zip([ChaBuD.all_bands, ChaBuD.rgb_bands], ['train', 'val']))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> ChaBuD:
-        data_dir = os.path.join('tests', 'data', 'chabud')
+        data_dir = test_data('chabud')
         url = os.path.join(data_dir, 'train_eval.hdf5')
         monkeypatch.setattr(ChaBuD, 'url', url)
         bands, split = request.param

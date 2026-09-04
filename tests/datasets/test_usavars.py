@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -28,33 +29,37 @@ class TestUSAVars:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> USAVars:
-        data_url = os.path.join('tests', 'data', 'usavars', '{}')
+        data_url = os.path.join(test_data('usavars'), '{}')
         monkeypatch.setattr(USAVars, 'data_url', data_url)
 
         label_urls = {
-            'elevation': os.path.join('tests', 'data', 'usavars', 'elevation.csv'),
-            'population': os.path.join('tests', 'data', 'usavars', 'population.csv'),
-            'treecover': os.path.join('tests', 'data', 'usavars', 'treecover.csv'),
-            'income': os.path.join('tests', 'data', 'usavars', 'income.csv'),
-            'nightlights': os.path.join('tests', 'data', 'usavars', 'nightlights.csv'),
-            'roads': os.path.join('tests', 'data', 'usavars', 'roads.csv'),
-            'housing': os.path.join('tests', 'data', 'usavars', 'housing.csv'),
+            'elevation': os.path.join(test_data('usavars'), 'elevation.csv'),
+            'population': os.path.join(test_data('usavars'), 'population.csv'),
+            'treecover': os.path.join(test_data('usavars'), 'treecover.csv'),
+            'income': os.path.join(test_data('usavars'), 'income.csv'),
+            'nightlights': os.path.join(test_data('usavars'), 'nightlights.csv'),
+            'roads': os.path.join(test_data('usavars'), 'roads.csv'),
+            'housing': os.path.join(test_data('usavars'), 'housing.csv'),
         }
         monkeypatch.setattr(USAVars, 'label_urls', label_urls)
 
         split_metadata = {
             'train': {
-                'url': os.path.join('tests', 'data', 'usavars', 'train_split.txt'),
+                'url': os.path.join(test_data('usavars'), 'train_split.txt'),
                 'filename': 'train_split.txt',
             },
             'val': {
-                'url': os.path.join('tests', 'data', 'usavars', 'val_split.txt'),
+                'url': os.path.join(test_data('usavars'), 'val_split.txt'),
                 'filename': 'val_split.txt',
             },
             'test': {
-                'url': os.path.join('tests', 'data', 'usavars', 'test_split.txt'),
+                'url': os.path.join(test_data('usavars'), 'test_split.txt'),
                 'filename': 'test_split.txt',
             },
         }
@@ -94,8 +99,10 @@ class TestUSAVars:
     def test_already_extracted(self, dataset: USAVars) -> None:
         USAVars(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'usavars', 'uar.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('usavars'), 'uar.zip')
         root = tmp_path
         shutil.copy(pathname, root)
         csvs = [
@@ -108,10 +115,10 @@ class TestUSAVars:
             'housing.csv',
         ]
         for csv in csvs:
-            shutil.copy(os.path.join('tests', 'data', 'usavars', csv), root)
+            shutil.copy(os.path.join(test_data('usavars'), csv), root)
         splits = ['train_split.txt', 'val_split.txt', 'test_split.txt']
         for split in splits:
-            shutil.copy(os.path.join('tests', 'data', 'usavars', split), root)
+            shutil.copy(os.path.join(test_data('usavars'), split), root)
 
         USAVars(root)
 

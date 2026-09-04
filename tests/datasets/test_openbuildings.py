@@ -4,6 +4,7 @@
 import json
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,13 +25,13 @@ from torchgeo.datasets import (
 
 class TestOpenBuildings:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> OpenBuildings:
         root = tmp_path
+        shutil.copy(os.path.join(test_data('openbuildings'), 'tiles.geojson'), root)
         shutil.copy(
-            os.path.join('tests', 'data', 'openbuildings', 'tiles.geojson'), root
-        )
-        shutil.copy(
-            os.path.join('tests', 'data', 'openbuildings', '000_buildings.csv.gz'), root
+            os.path.join(test_data('openbuildings'), '000_buildings.csv.gz'), root
         )
         md5s = {'000_buildings.csv.gz': 'fake'}
         monkeypatch.setattr(OpenBuildings, 'md5s', md5s)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -25,11 +26,15 @@ class TestDigitalTyphoon:
         ]
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> DigitalTyphoon:
         sequence_length, min_features, max_features = request.param
 
-        url = os.path.join('tests', 'data', 'digital_typhoon', 'WP.tar.gz{0}')
+        url = os.path.join(test_data('digital_typhoon'), 'WP.tar.gz{0}')
         monkeypatch.setattr(DigitalTyphoon, 'url', url)
 
         root = tmp_path
@@ -58,8 +63,10 @@ class TestDigitalTyphoon:
     def test_already_downloaded(self, dataset: DigitalTyphoon) -> None:
         DigitalTyphoon(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'digital_typhoon')
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('digital_typhoon')
         filenames = ['WP.tar.gzaa', 'WP.tar.gzab']
         for filename in filenames:
             shutil.copyfile(os.path.join(root, filename), tmp_path / filename)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -30,12 +31,16 @@ class TestEnviroAtlas:
         ]
     )
     def dataset(
-        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        request: SubRequest,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> EnviroAtlas:
         monkeypatch.setattr(
             EnviroAtlas,
             'url',
-            os.path.join('tests', 'data', 'enviroatlas', 'enviroatlas_lotp.zip'),
+            os.path.join(test_data('enviroatlas'), 'enviroatlas_lotp.zip'),
         )
         monkeypatch.setattr(
             EnviroAtlas,
@@ -71,10 +76,12 @@ class TestEnviroAtlas:
     def test_already_extracted(self, dataset: EnviroAtlas) -> None:
         EnviroAtlas(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         root = tmp_path
         shutil.copy(
-            os.path.join('tests', 'data', 'enviroatlas', 'enviroatlas_lotp.zip'), root
+            os.path.join(test_data('enviroatlas'), 'enviroatlas_lotp.zip'), root
         )
         EnviroAtlas(root)
 

@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,9 +22,13 @@ pytest.importorskip('laspy', minversion='2.5.3')
 class TestIDTReeS:
     @pytest.fixture(params=zip(['train', 'test', 'test'], ['task1', 'task1', 'task2']))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> IDTReeS:
-        data_dir = os.path.join('tests', 'data', 'idtrees')
+        data_dir = test_data('idtrees')
         metadata = {
             'train': {
                 'url': os.path.join(data_dir, 'IDTREES_competition_train_v2.zip'),
@@ -74,8 +79,10 @@ class TestIDTReeS:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             IDTReeS(tmp_path)
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'idtrees', '*.zip')
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('idtrees'), '*.zip')
         root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)

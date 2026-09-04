@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -27,8 +28,10 @@ class TestGoogleSatelliteEmbedding:
             'x086q72fv2f9q1x4a-0000000000-0000000000.tiff',
         ]
     )
-    def dataset(self, request: SubRequest) -> GoogleSatelliteEmbedding:
-        paths = os.path.join('tests', 'data', 'gse', request.param)
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> GoogleSatelliteEmbedding:
+        paths = os.path.join(test_data('gse'), request.param)
         transforms = nn.Identity()
         return GoogleSatelliteEmbedding(paths, transforms=transforms)
 

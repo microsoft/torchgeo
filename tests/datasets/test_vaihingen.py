@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,13 +18,18 @@ from torchgeo.datasets import DatasetNotFoundError, Vaihingen2D
 
 class TestVaihingen2D:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Vaihingen2D:
+    def dataset(
+        self,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
+    ) -> Vaihingen2D:
         splits = {
             'train': ['top_mosaic_09cm_area1.tif', 'top_mosaic_09cm_area11.tif'],
             'test': ['top_mosaic_09cm_area6.tif', 'top_mosaic_09cm_area24.tif'],
         }
         monkeypatch.setattr(Vaihingen2D, 'splits', splits)
-        root = os.path.join('tests', 'data', 'vaihingen')
+        root = test_data('vaihingen')
         split = request.param
         transforms = nn.Identity()
         return Vaihingen2D(root, split, transforms)
@@ -39,8 +45,8 @@ class TestVaihingen2D:
     def test_len(self, dataset: Vaihingen2D) -> None:
         assert len(dataset) == 2
 
-    def test_extract(self, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'vaihingen')
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        root = test_data('vaihingen')
         filenames = [
             'ISPRS_semantic_labeling_Vaihingen.zip',
             'ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip',

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,8 +16,8 @@ class TestMajorTOMEmbeddings:
     pytest.importorskip('pyarrow')
 
     @pytest.fixture
-    def dataset(self) -> MajorTOMEmbeddings:
-        root = os.path.join('tests', 'data', 'major_tom', 'embeddings', 'embeddings')
+    def dataset(self, test_data: Callable[[str], str]) -> MajorTOMEmbeddings:
+        root = os.path.join(test_data('major_tom/embeddings'), 'embeddings')
         transforms = nn.Identity()
         return MajorTOMEmbeddings(root, transforms=transforms)
 

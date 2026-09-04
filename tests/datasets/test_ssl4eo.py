@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,9 +21,13 @@ from torchgeo.datasets import SSL4EOL, SSL4EOS12, DatasetNotFoundError
 class TestSSL4EOL:
     @pytest.fixture(params=zip(SSL4EOL.metadata.keys(), [1, 1, 2, 2, 4]))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SSL4EOL:
-        url = os.path.join('tests', 'data', 'ssl4eo', 'l', 'ssl4eo_l_{0}.tar.gz{1}')
+        url = os.path.join(test_data('ssl4eo/l'), 'ssl4eo_l_{0}.tar.gz{1}')
         monkeypatch.setattr(SSL4EOL, 'url', url)
 
         checksums = {
@@ -58,8 +63,10 @@ class TestSSL4EOL:
     def test_already_extracted(self, dataset: SSL4EOL) -> None:
         SSL4EOL(dataset.root, dataset.split, dataset.seasons)
 
-    def test_already_downloaded(self, dataset: SSL4EOL, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'ssl4eo', 'l', '*.tar.gz*')
+    def test_already_downloaded(
+        self, dataset: SSL4EOL, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('ssl4eo/l'), '*.tar.gz*')
         root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
@@ -79,8 +86,10 @@ class TestSSL4EOL:
 
 class TestSSL4EOS12:
     @pytest.fixture(params=zip(SSL4EOS12.metadata.keys(), [1, 2, 4]))
-    def dataset(self, request: SubRequest) -> SSL4EOS12:
-        root = os.path.join('tests', 'data', 'ssl4eo', 's12')
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> SSL4EOS12:
+        root = test_data('ssl4eo/s12')
         split, seasons = request.param
         transforms = nn.Identity()
         return SSL4EOS12(root, split, seasons, transforms)
@@ -99,15 +108,19 @@ class TestSSL4EOS12:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 2 * 251079
 
-    def test_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'ssl4eo', 's12', '{0}.tar.gz.part{1}')
+    def test_download(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('ssl4eo/s12'), '{0}.tar.gz.part{1}')
         checksums = {'s2c': {'aa': '', 'ab': ''}}
         monkeypatch.setattr(SSL4EOS12, 'url', url)
         monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
         SSL4EOS12(tmp_path, download=True)
 
-    def test_extract(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'ssl4eo', 's12')
+    def test_extract(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('ssl4eo/s12')
         checksums = {'s2c': {'aa': '', 'ab': ''}}
         monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
         for filename in ['s2_l1c.tar.gz.partaa', 's2_l1c.tar.gz.partab']:

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,14 +23,14 @@ from torchgeo.datasets import (
 
 class TestEsri2020:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Esri2020:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> Esri2020:
         zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
         monkeypatch.setattr(Esri2020, 'zipfile', zipfile)
 
         url = os.path.join(
-            'tests',
-            'data',
-            'esri2020',
+            test_data('esri2020'),
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         monkeypatch.setattr(Esri2020, 'url', url)
@@ -48,11 +49,11 @@ class TestEsri2020:
     def test_already_extracted(self, dataset: Esri2020) -> None:
         Esri2020(dataset.paths, download=True)
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         url = os.path.join(
-            'tests',
-            'data',
-            'esri2020',
+            test_data('esri2020'),
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         shutil.copy(url, tmp_path)
@@ -83,8 +84,8 @@ class TestEsri2020:
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_url(self) -> None:
-        ds = Esri2020(os.path.join('tests', 'data', 'esri2020'))
+    def test_url(self, test_data: Callable[[str], str]) -> None:
+        ds = Esri2020(test_data('esri2020'))
         assert 'ai4edataeuwest.blob.core.windows.net' in ds.url
 
     def test_invalid_index(self, dataset: Esri2020) -> None:

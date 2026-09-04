@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +21,8 @@ from torchgeo.datasets import (
 class TestGBIF:
     @pytest.fixture(scope='class')
     @classmethod
-    def dataset(cls) -> GBIF:
-        root = os.path.join('tests', 'data', 'gbif')
+    def dataset(cls, test_data: Callable[[str], str]) -> GBIF:
+        root = test_data('gbif')
         return GBIF(root)
 
     def test_getitem(self, dataset: GBIF) -> None:

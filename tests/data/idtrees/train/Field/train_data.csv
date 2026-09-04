@@ -1,0 +1,45 @@
+indvdID,siteID,taxonID,scientificName,taxonRank,utmZone,nlcdClass,elevation,growthForm,plantStatus,stemDiameter,height,maxCrownDiameter,ninetyCrownDiameter,canopyPosition
+MLBS01628,MLBS,ACPE,Acer pensylvanicum L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, physically damaged",13.9,6.5,6.1,3.6,Mostly shaded
+MLBS01675,MLBS,ACPE,Acer pensylvanicum L.,species,17N,deciduousForest,1310.19,single bole tree,Live,22.8,8.4,8.2,6.4,Mostly shaded
+MLBS01671A,MLBS,ACPE,Acer pensylvanicum L.,species,17N,deciduousForest,1310.19,multi-bole tree,Live,10.3,7.5,8.6,4.9,Mostly shaded
+MLBS01643,MLBS,ACPE,Acer pensylvanicum L.,species,17N,deciduousForest,1310.19,single bole tree,Live,17.5,9.1,6.0,6.0,Mostly shaded
+MLBS01642,MLBS,ACRU,Acer rubrum L.,species,17N,deciduousForest,1310.19,single bole tree,Live,12.5,7.9,8.7,5.7,Mostly shaded
+MLBS01661,MLBS,ACRU,Acer rubrum L.,species,17N,deciduousForest,1310.19,single bole tree,No longer qualifies,22.7,11.9,7.7,6.4,Partially shaded
+MLBS01661,MLBS,ACRU,Acer rubrum L.,species,17N,deciduousForest,1310.19,single bole tree,Live,22.7,11.9,7.7,6.4,Partially shaded
+MLBS01681,MLBS,AMLA,Amelanchier laevis Wiegand,species,17N,deciduousForest,1310.19,single bole tree,Live,15.4,7.8,3.3,2.7,Partially shaded
+MLBS01640,MLBS,BETUL,Betula sp.,genus,17N,deciduousForest,1310.19,single bole tree,Live,17.4,8.8,9.1,6.9,Mostly shaded
+OSBS00115,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,"Live, disease damaged",10.5,13.4,,,
+OSBS00119,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,"Live, disease damaged",11.3,10.0,,,
+OSBS00116,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,"Live, disease damaged",10.7,10.0,,,
+OSBS00111,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,Live,15.7,13.9,,,
+OSBS00122,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,Live,22.4,14.9,,,
+OSBS00123,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,single bole tree,Live,25.9,14.5,,,
+OSBS00121,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.22,small tree,Live,5.4,5.6,,,
+OSBS03744,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,43.71,single bole tree,"Live, disease damaged",23.9,15.8,,,
+OSBS03743,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,43.71,single bole tree,Live,21.8,16.5,,,
+OSBS03752,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,43.71,single bole tree,"Live, disease damaged",20.2,15.7,,,
+OSBS03749,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,43.71,single bole tree,"Live, disease damaged",26.0,17.3,,,
+OSBS03750,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,43.71,single bole tree,"Live, disease damaged",20.5,15.1,,,
+OSBS03757,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.16,single bole tree,Live,11.6,11.8,,,
+OSBS03748,OSBS,PIPA2,Pinus palustris Mill.,species,17N,evergreenForest,44.16,single bole tree,Live,14.8,13.5,,,
+MLBS01887,MLBS,QUAL,Quercus alba L.,species,17N,deciduousForest,780.97,single bole tree,Live,31.0,23.0,10.8,5.5,Partially shaded
+OSBS03754,OSBS,QUGE2,Quercus geminata Small,species,17N,evergreenForest,43.71,single bole tree,"Live,  other damage",21.3,12.5,,,
+OSBS03753,OSBS,QUGE2,Quercus geminata Small,species,17N,evergreenForest,43.71,single bole tree,"Live,  other damage",22.2,12.8,,,
+OSBS03755,OSBS,QUGE2,Quercus geminata Small,species,17N,evergreenForest,43.71,single bole tree,Live,21.9,13.7,,,
+OSBS00114,OSBS,QULA2,Quercus laevis Walter,species,17N,evergreenForest,44.22,single bole tree,"Live,  other damage",33.1,13.8,,,
+OSBS00120,OSBS,QULA2,Quercus laevis Walter,species,17N,evergreenForest,44.22,single bole tree,"Live,  other damage",30.7,15.2,,,
+OSBS03742,OSBS,QULA2,Quercus laevis Walter,species,17N,evergreenForest,43.71,single bole tree,Live,12.7,10.9,,,
+OSBS03746,OSBS,QULA2,Quercus laevis Walter,species,17N,evergreenForest,43.71,single bole tree,Live,23.7,9.2,,,
+MLBS01678,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Live,27.0,11.8,7.2,6.5,Partially shaded
+MLBS01660,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,No longer qualifies,13.9,9.0,3.9,2.9,Mostly shaded
+MLBS01660,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Live,13.9,9.0,3.9,2.9,Mostly shaded
+MLBS01666A,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,multi-bole tree,Standing dead,24.9,11.1,8.8,5.7,Partially shaded
+MLBS01647,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Live,33.5,12.0,10.0,7.6,Partially shaded
+MLBS01645,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, insect damaged",35.9,11.8,9.1,5.5,Partially shaded
+MLBS01651,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, insect damaged",24.9,10.7,7.5,5.2,Partially shaded
+MLBS01636,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, insect damaged",28.5,12.5,8.0,3.7,Partially shaded
+MLBS01679,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Standing dead,30.0,12.1,5.9,4.6,Partially shaded
+MLBS01637,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, insect damaged",25.6,13.5,6.9,5.3,Partially shaded
+MLBS01648,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Live,24.7,12.0,7.5,4.1,Partially shaded
+MLBS01641,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,Live,40.3,12.5,10.2,9.9,Full sun
+MLBS01674,MLBS,QURU,Quercus rubra L.,species,17N,deciduousForest,1310.19,single bole tree,"Live, insect damaged",20.2,10.8,3.5,3.0,Partially shaded

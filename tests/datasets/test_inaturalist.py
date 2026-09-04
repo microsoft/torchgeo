@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +21,8 @@ from torchgeo.datasets import (
 class TestINaturalist:
     @pytest.fixture(scope='class')
     @classmethod
-    def dataset(cls) -> INaturalist:
-        root = os.path.join('tests', 'data', 'inaturalist')
+    def dataset(cls, test_data: Callable[[str], str]) -> INaturalist:
+        root = test_data('inaturalist')
         return INaturalist(root)
 
     def test_getitem(self, dataset: INaturalist) -> None:

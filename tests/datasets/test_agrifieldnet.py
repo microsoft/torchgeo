@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,9 +24,13 @@ from torchgeo.datasets.utils import Executable
 class TestAgriFieldNet:
     @pytest.fixture
     def dataset(
-        self, azcopy: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> AgriFieldNet:
-        url = os.path.join('tests', 'data', 'agrifieldnet')
+        url = test_data('agrifieldnet')
         monkeypatch.setattr(AgriFieldNet, 'url', url)
         transforms = nn.Identity()
         return AgriFieldNet(tmp_path, transforms=transforms, download=True)

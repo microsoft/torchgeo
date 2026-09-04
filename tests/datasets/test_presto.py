@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,8 +20,8 @@ from torchgeo.datasets import (
 
 class TestPrestoEmbeddings:
     @pytest.fixture
-    def dataset(self) -> PrestoEmbeddings:
-        paths = os.path.join('tests', 'data', 'presto')
+    def dataset(self, test_data: Callable[[str], str]) -> PrestoEmbeddings:
+        paths = test_data('presto')
         transforms = nn.Identity()
         return PrestoEmbeddings(paths, transforms=transforms)
 

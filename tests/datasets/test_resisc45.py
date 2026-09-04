@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,19 +19,21 @@ from torchgeo.datasets import RESISC45, DatasetNotFoundError
 class TestRESISC45:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> RESISC45:
-        url = os.path.join('tests', 'data', 'resisc45', 'NWPU-RESISC45.zip')
+        url = os.path.join(test_data('resisc45'), 'NWPU-RESISC45.zip')
         monkeypatch.setattr(RESISC45, 'url', url)
         monkeypatch.setattr(
             RESISC45,
             'split_urls',
             {
-                'train': os.path.join(
-                    'tests', 'data', 'resisc45', 'resisc45-train.txt'
-                ),
-                'val': os.path.join('tests', 'data', 'resisc45', 'resisc45-val.txt'),
-                'test': os.path.join('tests', 'data', 'resisc45', 'resisc45-test.txt'),
+                'train': os.path.join(test_data('resisc45'), 'resisc45-train.txt'),
+                'val': os.path.join(test_data('resisc45'), 'resisc45-val.txt'),
+                'test': os.path.join(test_data('resisc45'), 'resisc45-test.txt'),
             },
         )
         root = tmp_path

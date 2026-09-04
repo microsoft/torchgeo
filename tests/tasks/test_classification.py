@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -95,12 +95,16 @@ class TestClassification:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
         if name.startswith('so2sat') or name == 'quakeset':
             pytest.importorskip('h5py', minversion='3.10')
 
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         monkeypatch.setattr(timm, 'create_model', create_model)
 
@@ -208,10 +212,15 @@ class TestClassification:
         task = Classification(num_classes=3)
         assert task.hparams['class_weights'] is None
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
         datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
+            root=test_data('eurosat'), batch_size=1, num_workers=0
         )
         model = Classification(model='resnet18', in_channels=13, num_classes=10)
         trainer = Trainer(
@@ -222,10 +231,15 @@ class TestClassification:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(EuroSATDataModule, 'plot', plot_missing_bands)
         datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
+            root=test_data('eurosat'), batch_size=1, num_workers=0
         )
         model = Classification(model='resnet18', in_channels=13, num_classes=10)
         trainer = Trainer(
@@ -236,10 +250,12 @@ class TestClassification:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_binary_predict(self, fast_dev_run: bool) -> None:
+    def test_binary_predict(
+        self, fast_dev_run: bool, test_data: Callable[[str], str]
+    ) -> None:
         pytest.importorskip('h5py', minversion='3.10')
         datamodule = PredictBinaryDataModule(
-            root='tests/data/quakeset', batch_size=1, num_workers=0
+            root=test_data('quakeset'), batch_size=1, num_workers=0
         )
         model = Classification(
             model='resnet18', in_channels=4, task='binary', loss='bce'
@@ -252,9 +268,11 @@ class TestClassification:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_multiclass_predict(self, fast_dev_run: bool) -> None:
+    def test_multiclass_predict(
+        self, fast_dev_run: bool, test_data: Callable[[str], str]
+    ) -> None:
         datamodule = PredictMulticlassDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
+            root=test_data('eurosat'), batch_size=1, num_workers=0
         )
         model = Classification(
             model='resnet18',
@@ -271,9 +289,11 @@ class TestClassification:
         )
         trainer.predict(model=model, datamodule=datamodule)
 
-    def test_multilabel_predict(self, fast_dev_run: bool) -> None:
+    def test_multilabel_predict(
+        self, fast_dev_run: bool, test_data: Callable[[str], str]
+    ) -> None:
         datamodule = PredictMultilabelDataModule(
-            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
+            root=test_data('bigearthnet/v1'), batch_size=1, num_workers=0
         )
         model = Classification(
             model='resnet18',
@@ -302,9 +322,9 @@ class TestClassification:
 
 
 class TestMultiLabelClassificationTask:
-    def test_trainer(self, fast_dev_run: bool) -> None:
+    def test_trainer(self, fast_dev_run: bool, test_data: Callable[[str], str]) -> None:
         datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
+            root=test_data('bigearthnet/v1'), batch_size=1, num_workers=0
         )
 
         with pytest.deprecated_call():

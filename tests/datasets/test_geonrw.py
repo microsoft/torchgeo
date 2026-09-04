@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ from torchgeo.datasets import DatasetNotFoundError, GeoNRW
 class TestGeoNRW:
     @pytest.fixture(params=['train', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> GeoNRW:
-        url = os.path.join('tests', 'data', 'geonrw', 'nrw_dataset.tar.gz')
+        url = os.path.join(test_data('geonrw'), 'nrw_dataset.tar.gz')
         monkeypatch.setattr(GeoNRW, 'url', url)
         monkeypatch.setattr(GeoNRW, 'train_list', ['aachen', 'bergisch', 'bielefeld'])
         monkeypatch.setattr(GeoNRW, 'test_list', ['duesseldorf'])
@@ -46,9 +51,11 @@ class TestGeoNRW:
     def test_already_downloaded(self, dataset: GeoNRW) -> None:
         GeoNRW(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         filename = 'nrw_dataset.tar.gz'
-        dir = os.path.join('tests', 'data', 'geonrw')
+        dir = test_data('geonrw')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,9 +23,13 @@ class TestBigEarthNet:
         params=zip(['all', 's1', 's2'], [43, 19, 19], ['train', 'val', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> BigEarthNet:
-        data_dir = os.path.join('tests', 'data', 'bigearthnet', 'v1')
+        data_dir = test_data('bigearthnet/v1')
         metadata = {
             's1': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S1-v1.0.tar.gz'),
@@ -145,9 +150,13 @@ class TestBigEarthNet:
 class TestBigEarthNetV2:
     @pytest.fixture(params=zip(['all', 's1', 's2'], ['train', 'val', 'test']))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> BigEarthNetV2:
-        url = os.path.join('tests', 'data', 'bigearthnet', 'v2', '{}')
+        url = os.path.join(test_data('bigearthnet/v2'), '{}')
         monkeypatch.setattr(BigEarthNetV2, 'url', url)
         metadata = {
             's1': {

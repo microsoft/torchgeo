@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,9 +18,13 @@ from torchgeo.datasets.utils import Executable
 class TestSatlasPretrain:
     @pytest.fixture
     def dataset(
-        self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        aws: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> SatlasPretrain:
-        url = os.path.join('tests', 'data', 'satlas', '')
+        url = os.path.join(test_data('satlas'), '')
         monkeypatch.setattr(SatlasPretrain, 'url', url)
         images = ('landsat', 'naip', 'sentinel1', 'sentinel2')
         products = (*images, 'static', 'metadata')

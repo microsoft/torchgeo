@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,16 +19,18 @@ pytest.importorskip('h5py', minversion='3.10')
 
 class TestCropHarvest:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> CropHarvest:
         monkeypatch.setitem(
             CropHarvest.file_dict['features'],
             'url',
-            os.path.join('tests', 'data', 'cropharvest', 'features.tar.gz'),
+            os.path.join(test_data('cropharvest'), 'features.tar.gz'),
         )
         monkeypatch.setitem(
             CropHarvest.file_dict['labels'],
             'url',
-            os.path.join('tests', 'data', 'cropharvest', 'labels.geojson'),
+            os.path.join(test_data('cropharvest'), 'labels.geojson'),
         )
 
         root = tmp_path

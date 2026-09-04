@@ -3,11 +3,15 @@
 
 import os
 from collections import OrderedDict
+from collections.abc import Callable
+from functools import cache
 from pathlib import Path
+from typing import Any
 
 import pytest
 import timm
 import torch
+import yaml
 from _pytest.fixtures import SubRequest
 from torch import Tensor
 from torch.nn.modules import Module
@@ -48,3 +52,30 @@ def checkpoint(
     path = os.path.join(str(tmp_path), f'model_{request.param}.ckpt')
     torch.save(checkpoint, path)
     return path
+
+
+@pytest.fixture(scope='session')
+def test_config(
+    test_data: Callable[[str], str], tmp_path_factory: pytest.TempPathFactory
+) -> Callable[[str], str]:
+    """Resolve training configuration paths against the generated fake data."""
+    root = tmp_path_factory.mktemp('test-configs')
+
+    def resolve(value: Any) -> Any:
+        if isinstance(value, str) and value.startswith('tests/data/'):
+            return test_data(value.removeprefix('tests/data/'))
+        if isinstance(value, dict):
+            return {key: resolve(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [resolve(item) for item in value]
+        return value
+
+    @cache
+    def generate(name: str) -> str:
+        source = Path(__file__).parents[1] / 'conf' / name
+        config = resolve(yaml.safe_load(source.read_text()))
+        destination = root / name
+        destination.write_text(yaml.safe_dump(config))
+        return str(destination)
+
+    return generate

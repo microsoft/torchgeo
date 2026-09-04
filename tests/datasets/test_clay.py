@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ pytest.importorskip('pyarrow')
 
 class TestClayEmbeddings:
     @pytest.fixture(params=['v0_sentinel', 'v1.5_naip', 'v1.5_sentinel'])
-    def dataset(self, request: SubRequest) -> ClayEmbeddings:
-        root = os.path.join('tests', 'data', 'clay', request.param)
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> ClayEmbeddings:
+        root = os.path.join(test_data('clay'), request.param)
         transforms = nn.Identity()
         return ClayEmbeddings(root, transforms=transforms)
 

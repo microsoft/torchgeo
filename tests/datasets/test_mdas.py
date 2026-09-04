@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -42,9 +43,13 @@ class TestMDAS:
         ]
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> MDAS:
-        url = os.path.join('tests', 'data', 'mdas', 'Augsburg_data_4_publication.zip')
+        url = os.path.join(test_data('mdas'), 'Augsburg_data_4_publication.zip')
         monkeypatch.setattr(MDAS, 'url', url)
 
         params = request.param
@@ -81,9 +86,11 @@ class TestMDAS:
     def test_already_downloaded(self, dataset: MDAS) -> None:
         MDAS(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         filename = 'Augsburg_data_4_publication.zip'
-        dir = os.path.join('tests', 'data', 'mdas')
+        dir = test_data('mdas')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )

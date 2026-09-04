@@ -15,11 +15,11 @@ SIZE = 32
 np.random.seed(0)
 
 PATHS = [
-    os.path.join('cropharvest', 'features', 'arrays', '0_TestDataset1.h5'),
-    os.path.join('cropharvest', 'features', 'arrays', '1_TestDataset1.h5'),
-    os.path.join('cropharvest', 'features', 'arrays', '2_TestDataset1.h5'),
-    os.path.join('cropharvest', 'features', 'arrays', '0_TestDataset2.h5'),
-    os.path.join('cropharvest', 'features', 'arrays', '1_TestDataset2.h5'),
+    os.path.join('features', 'arrays', '0_TestDataset1.h5'),
+    os.path.join('features', 'arrays', '1_TestDataset1.h5'),
+    os.path.join('features', 'arrays', '2_TestDataset1.h5'),
+    os.path.join('features', 'arrays', '0_TestDataset2.h5'),
+    os.path.join('features', 'arrays', '1_TestDataset2.h5'),
 ]
 
 
@@ -115,7 +115,7 @@ def create_file(path: str) -> None:
 
 
 if __name__ == '__main__':
-    directory = 'cropharvest'
+    directory = '.'
 
     # remove old data
     to_remove = [

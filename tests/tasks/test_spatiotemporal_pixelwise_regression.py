@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import pytest
 from lightning.pytorch import Trainer
@@ -16,8 +16,10 @@ from torchgeo.tasks import SpatioTemporalPixelwiseRegression
 
 class TestSpatioTemporalPixelwiseRegression:
     @pytest.mark.parametrize('name', ['copernicus_biomass_s3_ts'])
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+    def test_trainer(
+        self, name: str, fast_dev_run: bool, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config(name + '.yaml')
 
         args = [
             '--config',
@@ -42,8 +44,8 @@ class TestSpatioTemporalPixelwiseRegression:
         except MisconfigurationException:
             pass
 
-    def test_predict(self) -> None:
-        root = os.path.join('tests', 'data', 'copernicus', 'l3_biomass_s3')
+    def test_predict(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('copernicus/l3_biomass_s3')
         model = SpatioTemporalPixelwiseRegression(
             in_channels=3, hidden_dim=8, num_layers=1
         )

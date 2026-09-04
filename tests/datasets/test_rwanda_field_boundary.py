@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -28,8 +28,9 @@ class TestRwandaFieldBoundary:
         monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> RwandaFieldBoundary:
-        url = os.path.join('tests', 'data', 'rwanda_field_boundary')
+        url = test_data('rwanda_field_boundary')
         monkeypatch.setattr(RwandaFieldBoundary, 'url', url)
         monkeypatch.setattr(RwandaFieldBoundary, 'splits', {'train': 1, 'test': 1})
 

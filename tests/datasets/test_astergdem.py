@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +22,8 @@ from torchgeo.datasets import (
 
 class TestAsterGDEM:
     @pytest.fixture
-    def dataset(self, tmp_path: Path) -> AsterGDEM:
-        zipfile = os.path.join('tests', 'data', 'astergdem', 'astergdem.zip')
+    def dataset(self, tmp_path: Path, test_data: Callable[[str], str]) -> AsterGDEM:
+        zipfile = os.path.join(test_data('astergdem'), 'astergdem.zip')
         shutil.unpack_archive(zipfile, tmp_path, 'zip')
         root = tmp_path
         transforms = nn.Identity()

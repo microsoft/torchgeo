@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -23,12 +24,16 @@ from torchgeo.datasets import (
 class TestEuroCrops:
     @pytest.fixture(params=[None, ['1000000010'], ['1000000000'], ['2000000000']])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> EuroCrops:
         classes = request.param
         monkeypatch.setattr(EuroCrops, 'zenodo_files', [('AA.zip', '')])
         monkeypatch.setattr(EuroCrops, 'hcat_md5', '')
-        base_url = os.path.join('tests', 'data', 'eurocrops') + os.sep
+        base_url = test_data('eurocrops') + os.sep
         monkeypatch.setattr(EuroCrops, 'base_url', base_url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path

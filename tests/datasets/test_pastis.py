@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 from typing import Literal, cast
@@ -31,7 +32,11 @@ class TestPASTIS:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> PASTIS:
         base_class: type[PASTIS] = request.param[0]
         params: dict[str, str | tuple[str, ...]] = request.param[1]
@@ -41,7 +46,7 @@ class TestPASTIS:
         mode = cast(Literal['semantic', 'instance'], params['mode'])
         transforms = nn.Identity()
 
-        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
+        url = os.path.join(test_data('pastis'), 'PASTIS-R.zip')
         monkeypatch.setattr(base_class, 'url', url)
         return base_class(
             root=root,
@@ -84,8 +89,10 @@ class TestPASTIS:
             download=True,
         )
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('pastis'), 'PASTIS-R.zip')
         root = tmp_path
         shutil.copy(url, root)
         PASTIS(root, checksum=False)

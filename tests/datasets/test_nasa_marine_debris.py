@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,9 +17,13 @@ from torchgeo.datasets.utils import Executable
 class TestNASAMarineDebris:
     @pytest.fixture
     def dataset(
-        self, azcopy: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> NASAMarineDebris:
-        url = os.path.join('tests', 'data', 'nasa_marine_debris')
+        url = test_data('nasa_marine_debris')
         monkeypatch.setattr(NASAMarineDebris, 'url', url)
         transforms = nn.Identity()
         return NASAMarineDebris(tmp_path, transforms, download=True)

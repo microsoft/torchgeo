@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,9 +18,13 @@ from torchgeo.datasets import LEVIRCD, DatasetNotFoundError, LEVIRCDPlus
 class TestLEVIRCD:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> LEVIRCD:
-        directory = os.path.join('tests', 'data', 'levircd', 'levircd')
+        directory = test_data('levircd/levircd')
         splits = {
             'train': {
                 'url': os.path.join(directory, 'train.zip'),
@@ -67,9 +72,13 @@ class TestLEVIRCD:
 class TestLEVIRCDPlus:
     @pytest.fixture(params=['train', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> LEVIRCDPlus:
-        url = os.path.join('tests', 'data', 'levircd', 'levircdplus', 'LEVIR-CD+.zip')
+        url = os.path.join(test_data('levircd/levircdplus'), 'LEVIR-CD+.zip')
         monkeypatch.setattr(LEVIRCDPlus, 'url', url)
         root = tmp_path
         split = request.param

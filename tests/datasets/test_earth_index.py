@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,8 +16,8 @@ pytest.importorskip('pyarrow')
 
 class TestEarthIndexEmbeddings:
     @pytest.fixture
-    def dataset(self) -> EarthIndexEmbeddings:
-        root = os.path.join('tests', 'data', 'earth_index', '2024')
+    def dataset(self, test_data: Callable[[str], str]) -> EarthIndexEmbeddings:
+        root = os.path.join(test_data('earth_index'), '2024')
         transforms = nn.Identity()
         return EarthIndexEmbeddings(root, transforms=transforms)
 

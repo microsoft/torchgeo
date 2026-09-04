@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -23,10 +24,10 @@ from torchgeo.datasets import (
 
 class TestGlobalMangroveWatch:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> GlobalMangroveWatch:
-        url = os.path.join(
-            'tests', 'data', 'globalmangrovewatch', 'gmw_v3_{}_gtiff.zip'
-        )
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> GlobalMangroveWatch:
+        url = os.path.join(test_data('globalmangrovewatch'), 'gmw_v3_{}_gtiff.zip')
         monkeypatch.setattr(GlobalMangroveWatch, 'url', url)
         transforms = nn.Identity()
         return GlobalMangroveWatch(
@@ -62,10 +63,10 @@ class TestGlobalMangroveWatch:
         ds = GlobalMangroveWatch(dataset.paths, years=[1996])
         assert len(ds) == 1
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join(
-            'tests', 'data', 'globalmangrovewatch', 'gmw_v3_*_gtiff.zip'
-        )
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('globalmangrovewatch'), 'gmw_v3_*_gtiff.zip')
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, tmp_path)
         GlobalMangroveWatch(tmp_path, years=[2020], checksum=False)

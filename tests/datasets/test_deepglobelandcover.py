@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, DeepGlobeLandCover
 
 class TestDeepGlobeLandCover:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, request: SubRequest) -> DeepGlobeLandCover:
-        root = os.path.join('tests', 'data', 'deepglobelandcover')
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> DeepGlobeLandCover:
+        root = test_data('deepglobelandcover')
         split = request.param
         transforms = nn.Identity()
         return DeepGlobeLandCover(root, split, transforms)
@@ -31,8 +34,8 @@ class TestDeepGlobeLandCover:
     def test_len(self, dataset: DeepGlobeLandCover) -> None:
         assert len(dataset) == 3
 
-    def test_extract(self, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'deepglobelandcover')
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        root = test_data('deepglobelandcover')
         filename = 'data.zip'
         shutil.copyfile(os.path.join(root, filename), os.path.join(tmp_path, filename))
         DeepGlobeLandCover(root=tmp_path, checksum=False)

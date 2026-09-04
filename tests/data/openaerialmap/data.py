@@ -47,4 +47,4 @@ def create_dummy_data(root: str, tiles: list[tuple[int, int, int]]) -> None:
 
 if __name__ == '__main__':
     dummy_tiles = [(372608, 213968, 19), (372609, 213968, 19)]
-    create_dummy_data('tests/data/openaerialmap', dummy_tiles)
+    create_dummy_data('.', dummy_tiles)

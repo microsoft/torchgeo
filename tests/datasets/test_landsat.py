@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -27,8 +27,8 @@ class TestLandsat8:
             ['SR_B4', 'SR_B3', 'SR_B2', 'SR_QA_AEROSOL'],
         ]
     )
-    def dataset(self, request: SubRequest) -> Landsat8:
-        root = os.path.join('tests', 'data', 'landsat8')
+    def dataset(self, request: SubRequest, test_data: Callable[[str], str]) -> Landsat8:
+        root = test_data('landsat8')
         bands = request.param
         transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)

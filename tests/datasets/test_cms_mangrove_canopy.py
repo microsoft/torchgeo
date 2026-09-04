@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,11 +23,11 @@ from torchgeo.datasets import (
 class TestCMSGlobalMangroveCanopy:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
     ) -> CMSGlobalMangroveCanopy:
         zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
         monkeypatch.setattr(CMSGlobalMangroveCanopy, 'zipfile', zipfile)
-        root = os.path.join('tests', 'data', 'cms_mangrove_canopy')
+        root = test_data('cms_mangrove_canopy')
         transforms = nn.Identity()
         country = 'Angola'
         return CMSGlobalMangroveCanopy(root, country=country, transforms=transforms)
@@ -43,12 +44,11 @@ class TestCMSGlobalMangroveCanopy:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CMSGlobalMangroveCanopy(tmp_path)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         pathname = os.path.join(
-            'tests',
-            'data',
-            'cms_mangrove_canopy',
-            'CMS_Global_Map_Mangrove_Canopy_1665.zip',
+            test_data('cms_mangrove_canopy'), 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
         )
         root = tmp_path
         shutil.copy(pathname, root)

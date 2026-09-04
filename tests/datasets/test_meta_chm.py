@@ -1,8 +1,10 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+
 import os
 import urllib.request
+from collections.abc import Callable
 from typing import BinaryIO
 
 import matplotlib.pyplot as plt
@@ -15,14 +17,16 @@ from torchgeo.datasets import IntersectionDataset, MetaCHM, UnionDataset
 
 pytest.importorskip('pyarrow')
 
-ROOT = os.path.join('tests', 'data', 'meta_chm')
-
 
 class TestMetaCHM:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> MetaCHM:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> MetaCHM:
+        root = test_data('meta_chm')
+
         def urlopen(*args: object, **kwargs: object) -> BinaryIO:
-            return open(os.path.join(ROOT, 'items.parquet'), 'rb')
+            return open(os.path.join(root, 'items.parquet'), 'rb')
 
         monkeypatch.setattr(urllib.request, 'urlopen', urlopen)
         return MetaCHM(transforms=nn.Identity())

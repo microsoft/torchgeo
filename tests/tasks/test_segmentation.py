@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -94,7 +94,11 @@ class TestSemanticSegmentation:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
         match name:
             case 'ftw':
@@ -123,7 +127,7 @@ class TestSemanticSegmentation:
                     },
                 )
 
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)
         monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
@@ -229,8 +233,10 @@ class TestSemanticSegmentation:
         task = SemanticSegmentation(num_classes=3)
         assert task.hparams['class_weights'] is None
 
-    def test_forward_deprecates_spatiotemporal_input(self) -> None:
-        datamodule = PASTISDataModule(root='tests/data/pastis', batch_size=1)
+    def test_forward_deprecates_spatiotemporal_input(
+        self, test_data: Callable[[str], str]
+    ) -> None:
+        datamodule = PASTISDataModule(root=test_data('pastis'), batch_size=1)
         model = SemanticSegmentation(model='fcn', in_channels=610, num_classes=20)
         trainer = Trainer(
             accelerator='cpu', fast_dev_run=True, log_every_n_steps=1, max_epochs=1
@@ -239,10 +245,15 @@ class TestSemanticSegmentation:
         with pytest.warns(DeprecationWarning, match=msg):
             trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
+            root=test_data('sen12ms'), batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(
@@ -253,10 +264,15 @@ class TestSemanticSegmentation:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
         datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0, checksum=False
+            root=test_data('sen12ms'), batch_size=1, num_workers=0, checksum=False
         )
         model = SemanticSegmentation(backbone='resnet18', in_channels=15, num_classes=6)
         trainer = Trainer(

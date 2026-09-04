@@ -64,12 +64,8 @@ def create_file(path: str, dtype: str) -> None:
 
 if __name__ == '__main__':
     for year in years:
-        filename = os.path.join(
-            'tests', 'data', 'nlcd', f'Annual_NLCD_LndCov_{year}_CU_C1V1.tif'
-        )
+        filename = os.path.join(f'Annual_NLCD_LndCov_{year}_CU_C1V1.tif')
         create_file(filename, dtype='int8')
-        zipfilename = os.path.join(
-            'tests', 'data', 'nlcd', f'Annual_NLCD_LndCov_{year}_CU_C1V1.zip'
-        )
+        zipfilename = os.path.join(f'Annual_NLCD_LndCov_{year}_CU_C1V1.zip')
         with zipfile.ZipFile(zipfilename, 'w') as zip:
             zip.write(filename, arcname=filename)

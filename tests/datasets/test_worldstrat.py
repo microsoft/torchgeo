@@ -1,8 +1,10 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import hashlib
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,36 +19,35 @@ from torchgeo.datasets import DatasetNotFoundError, WorldStrat
 
 class TestWorldStrat:
     @pytest.fixture(autouse=True)
-    def fake_file_info(self, monkeypatch: MonkeyPatch) -> None:
-        url = os.path.join('tests', 'data', 'worldstrat')
+    def fake_file_info(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
+        url = test_data('worldstrat')
 
         file_info_dict = {
             'hr_dataset': {
                 'url': os.path.join(url, 'hr_dataset.zip'),
                 'filename': 'hr_dataset.zip',
-                'sha256': '44b60bc03ad45281886c65c85c6c09f3aa2931d1f154ac985470eb0329e4085b',
             },
             'lr_dataset_l1c': {
                 'url': os.path.join(url, 'lr_dataset_l1c.zip'),
                 'filename': 'lr_dataset_l1c.zip',
-                'sha256': '6e29fe2d2ea65c3a1269f0344f61f2f1eb0e01a2eff64f6a9dd26745d10b6e90',
             },
             'lr_dataset_l2a': {
                 'url': os.path.join(url, 'lr_dataset_l2a.zip'),
                 'filename': 'lr_dataset_l2a.zip',
-                'sha256': '6f39eedc1c0aff78dd4bb8f69c26f87993c86e19411ebd24f486babfa875a545',
             },
             'metadata': {
                 'url': os.path.join(url, 'metadata.csv'),
                 'filename': 'metadata.csv',
-                'sha256': 'bfc8f0ab3dc48617d83146eefd609d03ae41e533bc5009476289708d6892d692',
             },
             'train_val_test_split': {
                 'url': os.path.join(url, 'stratified_train_val_test_split.csv'),
                 'filename': 'stratified_train_val_test_split.csv',
-                'sha256': '776653b439385ea7061bfaf27d57eabebceb81c66479e76de67fa3f02ef82539',
             },
         }
+        for info in file_info_dict.values():
+            info['sha256'] = hashlib.sha256(Path(info['url']).read_bytes()).hexdigest()
         monkeypatch.setattr(WorldStrat, 'file_info_dict', file_info_dict)
 
     @pytest.fixture(params=['train', 'val', 'test'])
@@ -96,7 +97,9 @@ class TestWorldStrat:
     def test_already_downloaded(self, dataset: WorldStrat) -> None:
         WorldStrat(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         file_list = [
             'hr_dataset.zip',
             'lr_dataset_l1c.zip',
@@ -104,7 +107,7 @@ class TestWorldStrat:
             'metadata.csv',
             'stratified_train_val_test_split.csv',
         ]
-        dir = os.path.join('tests', 'data', 'worldstrat')
+        dir = test_data('worldstrat')
         for filename in file_list:
             shutil.copyfile(
                 os.path.join(dir, filename), os.path.join(str(tmp_path), filename)

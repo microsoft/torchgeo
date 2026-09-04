@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -22,9 +23,13 @@ class TestCaBuAr:
         params=product([CaBuAr.all_bands, CaBuAr.rgb_bands], ['train', 'val', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> CaBuAr:
-        data_dir = os.path.join('tests', 'data', 'cabuar')
+        data_dir = test_data('cabuar')
         urls = (
             os.path.join(data_dir, '512x512.hdf5'),
             os.path.join(data_dir, 'chabud_test.h5'),

@@ -1,8 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-
-import os
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -17,8 +16,10 @@ class TestBioMassters:
     @pytest.fixture(
         params=product(['train', 'test'], [['S1'], ['S2'], ['S1', 'S2']], [True, False])
     )
-    def dataset(self, request: SubRequest) -> BioMassters:
-        root = os.path.join('tests', 'data', 'biomassters')
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> BioMassters:
+        root = test_data('biomassters')
         split, sensors, as_time_series = request.param
         return BioMassters(
             root, split=split, sensors=sensors, as_time_series=as_time_series

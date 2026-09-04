@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 from typing import Literal
@@ -34,10 +35,14 @@ class TestSSL4EOLBenchmark:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SSL4EOLBenchmark:
         root = tmp_path
-        url = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat', '{}.tar.gz')
+        url = os.path.join(test_data('ssl4eo_benchmark_landsat'), '{}.tar.gz')
         monkeypatch.setattr(SSL4EOLBenchmark, 'url', url)
 
         sensor, product, split = request.param
@@ -66,9 +71,12 @@ class TestSSL4EOLBenchmark:
 
     @pytest.mark.parametrize('product,base_class', [('nlcd', NLCD), ('cdl', CDL)])
     def test_classes(
-        self, product: Literal['nlcd', 'cdl'], base_class: RasterDataset
+        self,
+        product: Literal['nlcd', 'cdl'],
+        base_class: RasterDataset,
+        test_data: Callable[[str], str],
     ) -> None:
-        root = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat')
+        root = test_data('ssl4eo_benchmark_landsat')
         classes = list(base_class.valid_classes)[5:]
         ds = SSL4EOLBenchmark(root, product=product, classes=classes)
         sample = ds[0]
@@ -91,8 +99,10 @@ class TestSSL4EOLBenchmark:
             download=True,
         )
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat', '*.tar.gz')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('ssl4eo_benchmark_landsat'), '*.tar.gz')
         root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -18,7 +19,12 @@ from torchgeo.datasets import DatasetNotFoundError, xBD, xBDDistShift
 
 class TestxBD:
     @pytest.fixture(params=product([xBD, xBDDistShift], ['train', 'test']))
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> xBD:
+    def dataset(
+        self,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
+    ) -> xBD:
         base_class: type[xBD] = request.param[0]
         split = request.param[1]
         monkeypatch.setattr(
@@ -35,7 +41,7 @@ class TestxBD:
                 },
             },
         )
-        root = os.path.join('tests', 'data', 'xbd')
+        root = test_data('xbd')
         transforms = nn.Identity()
         if base_class is xBDDistShift:
             return base_class(
@@ -65,13 +71,13 @@ class TestxBD:
     def test_len(self, dataset: xBD) -> None:
         assert len(dataset) == 2
 
-    def test_extract(self, tmp_path: Path) -> None:
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
         shutil.copyfile(
-            os.path.join('tests', 'data', 'xbd', 'train_images_labels_targets.tar.gz'),
+            os.path.join(test_data('xbd'), 'train_images_labels_targets.tar.gz'),
             os.path.join(tmp_path, 'train_images_labels_targets.tar.gz'),
         )
         shutil.copyfile(
-            os.path.join('tests', 'data', 'xbd', 'test_images_labels_targets.tar.gz'),
+            os.path.join(test_data('xbd'), 'test_images_labels_targets.tar.gz'),
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'),
         )
         xBD(root=tmp_path, checksum=False)
@@ -102,9 +108,9 @@ class TestxBD:
         dataset.plot(x)
         plt.close()
 
-    def test_pre_post_both(self) -> None:
+    def test_pre_post_both(self, test_data: Callable[[str], str]) -> None:
         dataset = xBDDistShift(
-            root=os.path.join('tests', 'data', 'xbd'),
+            root=test_data('xbd'),
             split='train',
             id_disaster='hurricane-harvey',
             id_pre_post='both',
@@ -112,7 +118,7 @@ class TestxBD:
         )
         assert len(dataset) == 4
 
-    def test_default_configuration(self) -> None:
-        dataset = xBDDistShift(root=os.path.join('tests', 'data', 'xbd'))
+    def test_default_configuration(self, test_data: Callable[[str], str]) -> None:
+        dataset = xBDDistShift(root=test_data('xbd'))
         assert dataset.id_disaster == 'hurricane-matthew'
         assert dataset.ood_disaster == 'mexico-earthquake'

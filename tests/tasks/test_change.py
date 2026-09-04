@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
@@ -75,13 +75,17 @@ class TestChangeDetection:
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
         match name:
             case 'cabuar' | 'chabud':
                 pytest.importorskip('h5py', minversion='3.10')
 
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)
 
@@ -108,9 +112,9 @@ class TestChangeDetection:
         except MisconfigurationException:
             pass
 
-    def test_predict(self, fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool, test_data: Callable[[str], str]) -> None:
         datamodule = PredictChangeDetectionDataModule(
-            root=os.path.join('tests', 'data', 'oscd'),
+            root=test_data('oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,
@@ -290,10 +294,15 @@ class TestChangeDetection:
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetection(loss=loss_fn)
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot)
         datamodule = OSCDDataModule(
-            root=os.path.join('tests', 'data', 'oscd'),
+            root=test_data('oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,
@@ -308,10 +317,15 @@ class TestChangeDetection:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot_missing_bands)
         datamodule = OSCDDataModule(
-            root=os.path.join('tests', 'data', 'oscd'),
+            root=test_data('oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,
@@ -346,9 +360,11 @@ class TestChangeDetection:
     def test_jaccard_ignore_index(self, loss_fn: Literal['jaccard']) -> None:
         ChangeDetection(task='multiclass', num_classes=5, loss=loss_fn, ignore_index=0)
 
-    def test_multiclass_validation(self, fast_dev_run: bool) -> None:
+    def test_multiclass_validation(
+        self, fast_dev_run: bool, test_data: Callable[[str], str]
+    ) -> None:
         datamodule = OSCDDataModule(
-            root=os.path.join('tests', 'data', 'oscd'),
+            root=test_data('oscd'),
             batch_size=2,
             patch_size=16,
             val_split_pct=0.5,
@@ -370,9 +386,11 @@ class TestChangeDetection:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_multiclass_predict(self, fast_dev_run: bool) -> None:
+    def test_multiclass_predict(
+        self, fast_dev_run: bool, test_data: Callable[[str], str]
+    ) -> None:
         datamodule = PredictChangeDetectionDataModule(
-            root=os.path.join('tests', 'data', 'oscd'),
+            root=test_data('oscd'),
             batch_size=2,
             patch_size=16,
             val_split_pct=0.5,

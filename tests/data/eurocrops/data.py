@@ -4,13 +4,11 @@
 # Licensed under the MIT License.
 
 import csv
-import os
 import zipfile
 
-import fiona
+import geopandas as gpd
 from rasterio.crs import CRS
 from shapely import Polygon
-from shapely.geometry import mapping
 
 # Size of example crop field polygon in projection units.
 # This is set to align with Sentinel-2 test data, which is a 128x128 image at 10
@@ -19,18 +17,13 @@ SIZE = 1280
 
 
 def create_data_file(dataname: str) -> None:
-    schema = {'geometry': 'Polygon', 'properties': {'EC_hcat_c': 'str'}}
-    with fiona.open(
-        dataname, 'w', crs=CRS.from_epsg(32616), driver='ESRI Shapefile', schema=schema
-    ) as shpfile:
-        coordinates = [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
-        # The offset aligns with tests/data/sentinel2/data.py.
-        offset = [399960, 4500000 - SIZE]
-        coordinates = [[x + offset[0], y + offset[1]] for x, y in coordinates]
-
-        polygon = Polygon(coordinates)
-        properties = {'EC_hcat_c': '1000000010'}
-        shpfile.write({'geometry': mapping(polygon), 'properties': properties})
+    coordinates = [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
+    # The offset aligns with the Sentinel-2 test data.
+    offset = [399960, 4500000 - SIZE]
+    polygon = Polygon([[x + offset[0], y + offset[1]] for x, y in coordinates])
+    gpd.GeoDataFrame(
+        {'EC_hcat_c': ['1000000010']}, geometry=[polygon], crs=CRS.from_epsg(32616)
+    ).to_file(dataname, driver='ESRI Shapefile')
 
 
 def create_csv(fname: str) -> None:
@@ -60,9 +53,6 @@ if __name__ == '__main__':
         zipf.write(dataname)
         for name in supportnames:
             zipf.write(name)
-    os.remove(dataname)
-    for name in supportnames:
-        os.remove(name)
 
     # create csv metadata file
     create_csv(csvname)

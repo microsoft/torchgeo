@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,13 +25,11 @@ from torchgeo.datasets import (
 
 class TestChesapeakeDC:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ChesapeakeDC:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> ChesapeakeDC:
         url = os.path.join(
-            'tests',
-            'data',
-            'chesapeake',
-            'lulc',
-            '{state}_lulc_{year}_2022-Edition.zip',
+            test_data('chesapeake/lulc'), '{state}_lulc_{year}_2022-Edition.zip'
         )
         monkeypatch.setattr(ChesapeakeDC, 'url', url)
         sha256s = {2018: ''}
@@ -58,9 +57,11 @@ class TestChesapeakeDC:
     def test_already_extracted(self, dataset: ChesapeakeDC) -> None:
         ChesapeakeDC(dataset.paths, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         url = os.path.join(
-            'tests', 'data', 'chesapeake', 'lulc', 'dc_lulc_2018_2022-Edition.zip'
+            test_data('chesapeake/lulc'), 'dc_lulc_2018_2022-Edition.zip'
         )
         shutil.copy(url, tmp_path)
         ChesapeakeDC(tmp_path)
@@ -95,24 +96,21 @@ class TestChesapeakeCVPR:
         ]
     )
     def dataset(
-        self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        request: SubRequest,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> ChesapeakeCVPR:
         monkeypatch.setattr(
             ChesapeakeCVPR,
             'urls',
             {
                 'base': os.path.join(
-                    'tests',
-                    'data',
-                    'chesapeake',
-                    'cvpr',
-                    'cvpr_chesapeake_landcover.zip',
+                    test_data('chesapeake/cvpr'), 'cvpr_chesapeake_landcover.zip'
                 ),
                 'prior_extension': os.path.join(
-                    'tests',
-                    'data',
-                    'chesapeake',
-                    'cvpr',
+                    test_data('chesapeake/cvpr'),
                     'cvpr_chesapeake_landcover_prior_extension.zip',
                 ),
             },
@@ -159,20 +157,17 @@ class TestChesapeakeCVPR:
     def test_already_extracted(self, dataset: ChesapeakeCVPR) -> None:
         ChesapeakeCVPR(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         root = tmp_path
         shutil.copy(
-            os.path.join(
-                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
-            ),
+            os.path.join(test_data('chesapeake/cvpr'), 'cvpr_chesapeake_landcover.zip'),
             root,
         )
         shutil.copy(
             os.path.join(
-                'tests',
-                'data',
-                'chesapeake',
-                'cvpr',
+                test_data('chesapeake/cvpr'),
                 'cvpr_chesapeake_landcover_prior_extension.zip',
             ),
             root,
@@ -183,20 +178,20 @@ class TestChesapeakeCVPR:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ChesapeakeCVPR(tmp_path)
 
-    def test_base_only_without_prior_extension(self, tmp_path: Path) -> None:
+    def test_base_only_without_prior_extension(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         shutil.copy(
-            os.path.join(
-                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
-            ),
+            os.path.join(test_data('chesapeake/cvpr'), 'cvpr_chesapeake_landcover.zip'),
             tmp_path,
         )
         ChesapeakeCVPR(tmp_path, splits=['de-test'], layers=['naip-new', 'lc'])
 
-    def test_prior_extension_missing(self, tmp_path: Path) -> None:
+    def test_prior_extension_missing(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         shutil.copy(
-            os.path.join(
-                'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
-            ),
+            os.path.join(test_data('chesapeake/cvpr'), 'cvpr_chesapeake_landcover.zip'),
             tmp_path,
         )
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

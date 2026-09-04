@@ -6,6 +6,7 @@ import os
 import pathlib
 import time
 import warnings
+from collections.abc import Callable
 from typing import Any, NoReturn
 
 import geopandas as gpd
@@ -24,8 +25,8 @@ from torchgeo.datasets.openstreetmap import OSMClassConfig
 
 class TestOpenStreetMap:
     @pytest.fixture
-    def dataset(self) -> OpenStreetMap:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def dataset(self, test_data: Callable[[str], str]) -> OpenStreetMap:
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         classes: list[OSMClassConfig] = [
             {'name': 'building', 'selector': [{'building': '*'}]}
@@ -39,19 +40,19 @@ class TestOpenStreetMap:
         monkeypatch.setattr(OpenStreetMap, '_check_integrity', lambda _: True)
 
     @pytest.fixture
-    def common_test_params(self) -> dict[str, Any]:
+    def common_test_params(self, test_data: Callable[[str], str]) -> dict[str, Any]:
         """Common test parameters used across multiple tests."""
         return {
-            'root': os.path.join('tests', 'data', 'openstreetmap'),
+            'root': test_data('openstreetmap'),
             'bbox': (2.3520, 48.8565, 2.3525, 48.8570),
             'classes': [{'name': 'building', 'selector': [{'building': '*'}]}],
         }
 
     @pytest.fixture
-    def multi_channel_params(self) -> dict[str, Any]:
+    def multi_channel_params(self, test_data: Callable[[str], str]) -> dict[str, Any]:
         """Parameters for multi-class tests to reduce file duplication."""
         return {
-            'root': os.path.join('tests', 'data', 'openstreetmap'),
+            'root': test_data('openstreetmap'),
             'bbox': (2.3520, 48.8565, 2.3525, 48.8570),
             'classes': [
                 {'name': 'building', 'selector': [{'building': '*'}]},
@@ -60,8 +61,8 @@ class TestOpenStreetMap:
             ],
         }
 
-    def test_init_no_download(self) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def test_init_no_download(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('openstreetmap')
         # Use a different bbox that won't have test data
         bbox = (0.0, 0.0, 0.001, 0.001)
         classes: list[OSMClassConfig] = [
@@ -82,8 +83,10 @@ class TestOpenStreetMap:
         assert dataset.bbox == common_test_params['bbox']
         assert dataset.classes == common_test_params['classes']
 
-    def test_custom_query(self, mock_download_and_integrity: None) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def test_custom_query(
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Test custom selector combinations in classes
@@ -96,8 +99,10 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
         assert dataset.classes == classes
 
-    def test_build_overpass_query(self, mock_download_and_integrity: None) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def test_build_overpass_query(
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         classes: list[OSMClassConfig] = [
@@ -110,8 +115,10 @@ class TestOpenStreetMap:
             '48.8565,2.352,48.857,2.3525' in query
         )  # bbox format: south,west,north,east
 
-    def test_get_data_filename(self, mock_download_and_integrity: None) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def test_get_data_filename(
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         classes: list[OSMClassConfig] = [
@@ -123,9 +130,12 @@ class TestOpenStreetMap:
         assert 'osm_features' in filename.name
 
     def test_getitem(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
+        self,
+        mock_download_and_integrity: None,
+        monkeypatch: MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Mock GeoDataFrame with building and label
@@ -179,8 +189,8 @@ class TestOpenStreetMap:
     @pytest.mark.parametrize(
         'paths_input,expected_root_name',
         [
-            ('tests/data/openstreetmap', 'openstreetmap'),  # string path
-            (pathlib.Path('tests/data/openstreetmap'), 'openstreetmap'),  # Path object
+            ('openstreetmap', 'openstreetmap'),  # string path
+            (pathlib.Path('openstreetmap'), 'openstreetmap'),  # Path object
         ],
     )
     def test_paths_parameter_variations(
@@ -189,18 +199,21 @@ class TestOpenStreetMap:
         common_test_params: dict[str, Any],
         paths_input: Any,
         expected_root_name: str,
+        test_data: Callable[[str], str],
     ) -> None:
         """Test different types and formats for paths parameter."""
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
-            paths=paths_input,
+            paths=type(paths_input)(test_data(str(paths_input))),
             classes=common_test_params['classes'],
         )
         assert dataset.root.name == expected_root_name
         assert isinstance(dataset.root, pathlib.Path)
 
-    def test_check_integrity(self, monkeypatch: MonkeyPatch) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+    def test_check_integrity(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         monkeypatch.setattr(OpenStreetMap, '_download_data', lambda _: None)
@@ -215,9 +228,9 @@ class TestOpenStreetMap:
         assert not dataset._check_integrity()
 
     def test_build_overpass_query_multiple_selectors(
-        self, mock_download_and_integrity: None
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
     ) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Test query with multiple selectors in one class
@@ -251,10 +264,13 @@ class TestOpenStreetMap:
         assert '48.8565,2.352,48.857,2.3525' in query
 
     def test_rate_limiting(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
+        self,
+        mock_download_and_integrity: None,
+        monkeypatch: MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
         """Test rate limiting functionality."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         classes: list[OSMClassConfig] = [
@@ -273,9 +289,11 @@ class TestOpenStreetMap:
         # Should take at least the minimum interval (with small tolerance for timing)
         assert end_time - start_time >= dataset._min_request_interval * 0.9
 
-    def test_parse_overpass_response(self, mock_download_and_integrity: None) -> None:
+    def test_parse_overpass_response(
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
+    ) -> None:
         """Test parsing of Overpass API response."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         classes: list[OSMClassConfig] = [
@@ -316,10 +334,10 @@ class TestOpenStreetMap:
         assert gdf.iloc[0]['amenity'] == 'restaurant'
 
     def test_parse_overpass_response_empty(
-        self, mock_download_and_integrity: None
+        self, mock_download_and_integrity: None, test_data: Callable[[str], str]
     ) -> None:
         """Test parsing empty Overpass API response."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         classes: list[OSMClassConfig] = [
@@ -405,10 +423,12 @@ class TestOpenStreetMap:
             assert geom.geom_type == expected_geom_type
             assert extra_checks(geom)
 
-    def test_plot_without_bounds_key(self, monkeypatch: MonkeyPatch) -> None:
+    def test_plot_without_bounds_key(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         """Test plot method with a proper sample from dataset."""
 
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Mock GeoDataFrame with actual data
@@ -432,7 +452,9 @@ class TestOpenStreetMap:
         assert fig is not None
         plt.close()
 
-    def test_download_data_success(self, monkeypatch: MonkeyPatch) -> None:
+    def test_download_data_success(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         """Test successful data download."""
 
         # Create proper mock response for requests
@@ -468,7 +490,7 @@ class TestOpenStreetMap:
             2.401 + unique_offset,
             48.901 + unique_offset,
         )
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
 
         # Create dataset which should trigger download (covers lines 216-239)
         classes: list[OSMClassConfig] = [
@@ -485,7 +507,10 @@ class TestOpenStreetMap:
         os.remove(data_file)
 
     def test_download_empty_response_raises_error(
-        self, monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: pathlib.Path,
+        test_data: Callable[[str], str],
     ) -> None:
         """Test download method raises ValueError for empty API response."""
         # Mock empty API response
@@ -521,7 +546,7 @@ class TestOpenStreetMap:
             2.701 + unique_offset,
             48.971 + unique_offset,
         )
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         classes: list[OSMClassConfig] = [
             {'name': 'building', 'selector': [{'building': '*'}]}
         ]
@@ -529,7 +554,9 @@ class TestOpenStreetMap:
         with pytest.raises(ValueError, match='No features found in the specified area'):
             OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=True)
 
-    def test_download_data_all_endpoints_fail(self, monkeypatch: MonkeyPatch) -> None:
+    def test_download_data_all_endpoints_fail(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         """Test download failure when all endpoints fail."""
 
         # Make all requests fail
@@ -548,7 +575,7 @@ class TestOpenStreetMap:
             2.601 + unique_offset,
             48.961 + unique_offset,
         )
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
 
         # Should raise RuntimeError when all endpoints fail (covers line 251)
         monkeypatch.setattr(OpenStreetMap, '_rate_limit', lambda _: None)
@@ -665,9 +692,9 @@ class TestOpenStreetMap:
         other_feature = {'properties': {'shop': 'bakery'}}
         assert dataset._get_class_label(other_feature) == 0
 
-    def test_feature_matches_selector(self) -> None:
+    def test_feature_matches_selector(self, test_data: Callable[[str], str]) -> None:
         """Test feature matching logic."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         classes: list[OSMClassConfig] = [
             {'name': 'building', 'selector': [{'building': '*'}]}
@@ -709,9 +736,11 @@ class TestOpenStreetMap:
             {'building': pd.NA}, {'building': '*'}
         )
 
-    def test_feature_matches_selector_json_properties(self) -> None:
+    def test_feature_matches_selector_json_properties(
+        self, test_data: Callable[[str], str]
+    ) -> None:
         """Test feature matching with JSON string properties (from GeoDataFrame)."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         classes: list[OSMClassConfig] = [
             {'name': 'building', 'selector': [{'building': '*'}]}
@@ -872,10 +901,10 @@ class TestOpenStreetMap:
             assert 0 in unique_labels
 
     def test_feature_matches_selector_json_decode_error(
-        self, monkeypatch: MonkeyPatch
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
     ) -> None:
         """Test feature matching with JSON decode error fallback."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         classes: list[OSMClassConfig] = [
             {'name': 'building', 'selector': [{'building': '*'}]}
@@ -891,10 +920,13 @@ class TestOpenStreetMap:
         assert not result
 
     def test_plot_with_bounds_filtering(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
+        self,
+        mock_download_and_integrity: None,
+        monkeypatch: MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
         """Test plot method with bounds filtering."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Create mock GeoDataFrame with data
@@ -916,10 +948,13 @@ class TestOpenStreetMap:
         plt.close()
 
     def test_plot_prediction(
-        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
+        self,
+        mock_download_and_integrity: None,
+        monkeypatch: MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
         """Test plot method with prediction."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
+        root = test_data('openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         # Create mock GeoDataFrame with data

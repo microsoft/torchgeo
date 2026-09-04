@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ GT = ['CO(GT)', 'NMHC(GT)', 'C6H6(GT)', 'NOx(GT)', 'NO2(GT)']
 class TestAirQuality:
     @pytest.fixture(params=[(None, None), (GT, None), (None, GT), (GT, GT)])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> AirQuality:
-        url = os.path.join('tests', 'data', 'air_quality', 'data.csv')
+        url = os.path.join(test_data('air_quality'), 'data.csv')
         monkeypatch.setattr(AirQuality, 'url', url)
         input_features, target_features = request.param
         return AirQuality(
@@ -48,8 +53,8 @@ class TestAirQuality:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             AirQuality(tmp_path)
 
-    def test_already_downloaded(self) -> None:
-        root = os.path.join('tests', 'data', 'air_quality')
+    def test_already_downloaded(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('air_quality')
         AirQuality(root)
 
     @pytest.mark.parametrize('features', [None, GT])

@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -25,9 +26,11 @@ from torchgeo.datasets import (
 
 class TestL7Irish:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> L7Irish:
         sha256s = {'austral': '', 'boreal': ''}
-        url = os.path.join('tests', 'data', 'l7irish', '{}.tar.gz')
+        url = os.path.join(test_data('l7irish'), '{}.tar.gz')
         monkeypatch.setattr(L7Irish, 'url', url)
         monkeypatch.setattr(L7Irish, 'sha256s', sha256s)
         root = tmp_path
@@ -61,8 +64,10 @@ class TestL7Irish:
         L7Irish(paths, download=True)
         L7Irish([paths], download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'l7irish', '*.tar.gz')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('l7irish'), '*.tar.gz')
         root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)

@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,8 +13,10 @@ from torchgeo.datasets import unbind_samples
 
 class TestUSAVarsDataModule:
     @pytest.fixture
-    def datamodule(self, request: SubRequest) -> USAVarsDataModule:
-        root = os.path.join('tests', 'data', 'usavars')
+    def datamodule(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> USAVarsDataModule:
+        root = test_data('usavars')
         batch_size = 1
         num_workers = 0
 

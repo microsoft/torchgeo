@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +18,13 @@ from torchgeo.datasets.utils import Executable
 class TestWesternUSALiveFuelMoisture:
     @pytest.fixture
     def dataset(
-        self, azcopy: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> WesternUSALiveFuelMoisture:
-        url = os.path.join('tests', 'data', 'western_usa_live_fuel_moisture')
+        url = test_data('western_usa_live_fuel_moisture')
         monkeypatch.setattr(WesternUSALiveFuelMoisture, 'url', url)
         transforms = nn.Identity()
         return WesternUSALiveFuelMoisture(

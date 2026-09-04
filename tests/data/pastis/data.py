@@ -6,8 +6,9 @@
 import os
 import shutil
 
-import fiona
+import geopandas as gpd
 import numpy as np
+from shapely.geometry import box
 
 SIZE = 32
 NUM_SAMPLES = 5
@@ -58,25 +59,14 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
 if __name__ == '__main__':
     create_directory('PASTIS-R', filenames)
 
-    schema = {'geometry': 'Polygon', 'properties': {'Fold': 'int', 'ID_PATCH': 'int'}}
-    with fiona.open(
-        os.path.join('PASTIS-R', 'metadata.geojson'),
-        'w',
-        'GeoJSON',
+    gpd.GeoDataFrame(
+        {
+            'Fold': [(i % 5) + 1 for i in range(NUM_SAMPLES)],
+            'ID_PATCH': list(range(NUM_SAMPLES)),
+        },
+        geometry=[box(0, 0, 1, 1)] * NUM_SAMPLES,
         crs='EPSG:4326',
-        schema=schema,
-    ) as f:
-        for i in range(NUM_SAMPLES):
-            f.write(
-                {
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
-                    },
-                    'id': str(i),
-                    'properties': {'Fold': (i % 5) + 1, 'ID_PATCH': i},
-                }
-            )
+    ).to_file(os.path.join('PASTIS-R', 'metadata.geojson'), driver='GeoJSON')
 
     filename = 'PASTIS-R.zip'
     shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', 'PASTIS-R')

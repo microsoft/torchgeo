@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +22,8 @@ from torchgeo.datasets import (
 
 class TestEUDEM:
     @pytest.fixture
-    def dataset(self, tmp_path: Path) -> EUDEM:
-        zipfile = os.path.join('tests', 'data', 'eudem', 'eu_dem_v11_E30N10.zip')
+    def dataset(self, tmp_path: Path, test_data: Callable[[str], str]) -> EUDEM:
+        zipfile = os.path.join(test_data('eudem'), 'eu_dem_v11_E30N10.zip')
         shutil.copy(zipfile, tmp_path)
         root = tmp_path
         transforms = nn.Identity()

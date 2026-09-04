@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,8 +19,8 @@ from torchgeo.datasets import (
 
 class TestEmbeddedSeamlessData:
     @pytest.fixture
-    def dataset(self) -> EmbeddedSeamlessData:
-        paths = os.path.join('tests', 'data', 'esd')
+    def dataset(self, test_data: Callable[[str], str]) -> EmbeddedSeamlessData:
+        paths = test_data('esd')
         return EmbeddedSeamlessData(paths, transforms=torch.nn.Identity())
 
     def test_getitem(self, dataset: EmbeddedSeamlessData) -> None:

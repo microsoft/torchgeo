@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
@@ -19,9 +20,13 @@ from torchgeo.datasets import DatasetNotFoundError, SustainBenchCropYield
 class TestSustainBenchCropYield:
     @pytest.fixture(params=['train', 'dev', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SustainBenchCropYield:
-        url = os.path.join('tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip')
+        url = os.path.join(test_data('sustainbench_crop_yield'), 'soybeans.zip')
         monkeypatch.setattr(SustainBenchCropYield, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -37,10 +42,10 @@ class TestSustainBenchCropYield:
     def test_already_extracted(self, dataset: SustainBenchCropYield) -> None:
         SustainBenchCropYield(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join(
-            'tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip'
-        )
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('sustainbench_crop_yield'), 'soybeans.zip')
         root = tmp_path
         shutil.copy(pathname, root)
         SustainBenchCropYield(root)

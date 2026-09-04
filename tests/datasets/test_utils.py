@@ -1,10 +1,12 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import hashlib
 import os
 import pickle
 import re
 import shutil
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -339,10 +341,14 @@ class TestBoundingBox:
             BoundingBox(0, 1, 2, 3, MAXT, MINT)
 
 
-def test_check_integrity() -> None:
-    fpath = 'tests/data/vhr10/NWPU VHR-10 dataset.zip'
-    md5 = '91dd532523a543fb8dee0887e4188e9b'
-    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+def test_check_integrity(test_data: Callable[[str], str]) -> None:
+    fpath = os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')
+    md5 = hashlib.md5(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
+    sha256 = hashlib.sha256(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
 
     assert check_integrity(fpath)
     assert check_integrity(fpath, md5=md5)
@@ -358,25 +364,34 @@ def test_check_integrity() -> None:
 @pytest.mark.parametrize(
     'from_path',
     [
-        os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip'),
-        os.path.join('tests', 'data', 'satlas', 'metadata.tar'),
-        os.path.join('tests', 'data', 'cropharvest', 'features.tar.gz'),
-        os.path.join('tests', 'data', 'cowc_counting', 'COWC_Counting_Utah_AGRC.tbz'),
-        os.path.join(
-            'tests', 'data', 'cowc_counting', 'COWC_test_list_64_class.txt.bz2'
-        ),
+        'vhr10/NWPU VHR-10 dataset.zip',
+        'satlas/metadata.tar',
+        'geonrw/nrw_dataset.tar.gz',
+        'cowc_counting/COWC_Counting_Utah_AGRC.tbz',
+        'cowc_counting/COWC_test_list_64_class.txt.bz2',
     ],
 )
-def test_extract_archive(from_path: str, tmp_path: Path) -> None:
+def test_extract_archive(
+    from_path: str, tmp_path: Path, test_data: Callable[[str], str]
+) -> None:
+    from_path = test_data(from_path)
     shutil.copy(from_path, tmp_path)
     from_path = os.path.join(tmp_path, os.path.basename(from_path))
     extract_archive(from_path, tmp_path, remove_finished=True)
 
 
-def test_download_url(tmp_path: Path) -> None:
-    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
-    md5 = '91dd532523a543fb8dee0887e4188e9b'
-    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+def test_download_url(tmp_path: Path, test_data: Callable[[str], str]) -> None:
+    url = (
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip'))
+        .absolute()
+        .as_uri()
+    )
+    md5 = hashlib.md5(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
+    sha256 = hashlib.sha256(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
 
     download_url(url, tmp_path)
     download_url(url, tmp_path, md5=md5)
@@ -386,8 +401,14 @@ def test_download_url(tmp_path: Path) -> None:
         download_url(url, tmp_path, md5=md5 + '2')
 
 
-def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+def test_download_url_interrupted(
+    tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+) -> None:
+    url = (
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip'))
+        .absolute()
+        .as_uri()
+    )
     filename = 'NWPU VHR-10 dataset.zip'
 
     def interrupt(*args: Any, **kwargs: Any) -> None:
@@ -403,8 +424,14 @@ def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> N
     assert list(tmp_path.iterdir()) == []
 
 
-def test_download_url_truncated(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+def test_download_url_truncated(
+    tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+) -> None:
+    url = (
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip'))
+        .absolute()
+        .as_uri()
+    )
     filename = 'NWPU VHR-10 dataset.zip'
 
     def truncate(fsrc: Any, fdst: Any, *args: Any, **kwargs: Any) -> None:
@@ -419,10 +446,16 @@ def test_download_url_truncated(tmp_path: Path, monkeypatch: MonkeyPatch) -> Non
     assert list(tmp_path.iterdir()) == []
 
 
-def test_download_and_extract_archive(tmp_path: Path) -> None:
-    url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
-    md5 = '91dd532523a543fb8dee0887e4188e9b'
-    sha256 = '21005d3c5ddbe7429248205d509431a32ca55a100f9b083783545b843ef6ce3b'
+def test_download_and_extract_archive(
+    tmp_path: Path, test_data: Callable[[str], str]
+) -> None:
+    url = str(Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')))
+    md5 = hashlib.md5(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
+    sha256 = hashlib.sha256(
+        Path(os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')).read_bytes()
+    ).hexdigest()
 
     download_and_extract_archive(url, tmp_path)
     download_and_extract_archive(url, tmp_path, md5=md5)
@@ -620,8 +653,10 @@ def test_lazy_import_missing(name: str) -> None:
         lazy_import(name)
 
 
-def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
-    source = os.path.join('tests', 'data', 'cyclone')
+def test_azcopy(
+    tmp_path: Path, azcopy: Executable, test_data: Callable[[str], str]
+) -> None:
+    source = test_data('cyclone')
     azcopy('sync', source, tmp_path, '--recursive=true')
     assert os.path.exists(tmp_path / 'test')
 
@@ -671,21 +706,23 @@ def test_pad_across_batches() -> None:
 class TestFindFiles:
     # find_files resolves a local directory and a zip of that same directory
     # identically, so both are tested against the same data.
-    vector_dir = os.path.join('tests', 'data', 'vector')
+    vector_dir = os.path.join('vector')
 
-    def test_file(self) -> None:
+    def test_file(self, test_data: Callable[[str], str]) -> None:
         """A file resolves to itself."""
-        path = os.path.join(self.vector_dir, 'vector_2024.geojson')
+        path = os.path.join(test_data(self.vector_dir), 'vector_2024.geojson')
         assert find_files(path) == [path]
 
-    def test_directory(self) -> None:
+    def test_directory(self, test_data: Callable[[str], str]) -> None:
         """A directory resolves to the files within it matching the glob."""
-        found = find_files(self.vector_dir, '*.geojson')
+        found = find_files(test_data(self.vector_dir), '*.geojson')
         assert [Path(p).name for p in found] == ['vector_2024.geojson']
 
-    def test_non_existing(self) -> None:
+    def test_non_existing(self, test_data: Callable[[str], str]) -> None:
         """A path that does not exist resolves to nothing."""
-        assert find_files(os.path.join(self.vector_dir, 'non_existing')) == []
+        assert (
+            find_files(os.path.join(test_data(self.vector_dir), 'non_existing')) == []
+        )
 
     @pytest.mark.parametrize('temp_archive', [vector_dir], indirect=True)
     def test_archive_file(self, temp_archive: tuple[str, str]) -> None:
@@ -737,25 +774,25 @@ def test_binary_mask_to_polygon(res: float, north_up: bool) -> None:
 # The .SAFE format omits the nodata value from the raster profile,
 # so we declare it via a WarpedVRT.
 SENTINEL2_TILE = os.path.join(
-    'tests/data/sentinel2',
+    'sentinel2',
     'S2A_MSIL1C_20220412T162841_N0400_R083_T16TFM_20220412T202300.SAFE',
     'GRANULE/L1C_T16TFM_A035544_20220412T163959/IMG_DATA',
     'T16TFM_20220412T162841_B02.jp2',
 )
 
 
-def test_get_valid_footprint_all_valid() -> None:
+def test_get_valid_footprint_all_valid(test_data: Callable[[str], str]) -> None:
     # When nodata value is not declared in the raster,
     # every pixel is valid and the calculated footprint becomes its bounds.
-    with rasterio.open(SENTINEL2_TILE) as dataset:
+    with rasterio.open(test_data(SENTINEL2_TILE)) as dataset:
         footprint = get_valid_footprint_from_datasource(dataset)
         assert footprint.equals(box(*dataset.bounds))
 
 
-def test_get_valid_footprint_partial_nodata() -> None:
+def test_get_valid_footprint_partial_nodata(test_data: Callable[[str], str]) -> None:
     # The .SAFE profile omits the nodata value, so we declare it via src_nodata
     with (
-        rasterio.open(SENTINEL2_TILE) as raster,
+        rasterio.open(test_data(SENTINEL2_TILE)) as raster,
         WarpedVRT(raster, src_nodata=0) as dataset,
     ):
         # _clean_binary_mask's 3D read_masks OR-combine must match the 2D dataset_mask.

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,8 +18,10 @@ pytest.importorskip('h5py', minversion='3.10')
 
 class TestZueriCrop:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
-        url = os.path.join('tests', 'data', 'zuericrop') + os.sep
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> ZueriCrop:
+        url = test_data('zuericrop') + os.sep
         monkeypatch.setattr(ZueriCrop, 'url', url)
         root = tmp_path
         transforms = nn.Identity()

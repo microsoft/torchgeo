@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,13 +18,18 @@ from torchgeo.datasets import DatasetNotFoundError, Potsdam2D
 
 class TestPotsdam2D:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Potsdam2D:
+    def dataset(
+        self,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
+    ) -> Potsdam2D:
         splits = {
             'train': ['top_potsdam_2_10', 'top_potsdam_2_11'],
             'test': ['top_potsdam_5_15', 'top_potsdam_6_15'],
         }
         monkeypatch.setattr(Potsdam2D, 'splits', splits)
-        root = os.path.join('tests', 'data', 'potsdam')
+        root = test_data('potsdam')
         split = request.param
         transforms = nn.Identity()
         return Potsdam2D(root, split, transforms)
@@ -37,8 +43,8 @@ class TestPotsdam2D:
     def test_len(self, dataset: Potsdam2D) -> None:
         assert len(dataset) == 2
 
-    def test_extract(self, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'potsdam')
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        root = test_data('potsdam')
         for filename in ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']:
             shutil.copyfile(
                 os.path.join(root, filename), os.path.join(tmp_path, filename)

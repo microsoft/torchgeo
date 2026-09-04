@@ -1,8 +1,8 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
 import warnings
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -43,8 +43,10 @@ class TestSentinel1:
             ['VH', 'VV'],
         ]
     )
-    def dataset(self, request: SubRequest) -> Sentinel1:
-        root = os.path.join('tests', 'data', 'sentinel1')
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> Sentinel1:
+        root = test_data('sentinel1')
         bands = request.param
         transforms = nn.Identity()
         return Sentinel1(root, bands=bands, transforms=transforms)
@@ -104,8 +106,8 @@ class TestSentinel1:
 
 class TestSentinel2:
     @pytest.fixture
-    def dataset(self) -> Sentinel2:
-        root = os.path.join('tests', 'data', 'sentinel2')
+    def dataset(self, test_data: Callable[[str], str]) -> Sentinel2:
+        root = test_data('sentinel2')
         res = (10.0, 10.0)
         transforms = nn.Identity()
         bands = [
@@ -168,8 +170,10 @@ class TestSentinel2:
         Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)
 
     @pytest.mark.parametrize('crs', [None, pyproj.CRS('EPSG:3857')])
-    def test_true_footprint_from_metadata(self, crs: pyproj.CRS | None) -> None:
-        root = os.path.join('tests', 'data', 'sentinel2')
+    def test_true_footprint_from_metadata(
+        self, crs: pyproj.CRS | None, test_data: Callable[[str], str]
+    ) -> None:
+        root = test_data('sentinel2')
         ds = Sentinel2(root, res=(10.0, 10.0), crs=crs, bands=['B02'])
 
         def read_footprint_wkt(filepath: str) -> str:

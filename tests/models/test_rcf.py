@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import pytest
 import torch
@@ -44,8 +44,8 @@ class TestRCF:
         weights2 = RCF(seed=1, mode='gaussian').weights
         assert torch.allclose(weights1, weights2)
 
-    def test_empirical(self) -> None:
-        root = os.path.join('tests', 'data', 'eurosat')
+    def test_empirical(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('eurosat')
         ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split='train')
         model = RCF(
             in_channels=3, features=4, kernel_size=3, mode='empirical', dataset=ds
@@ -59,8 +59,8 @@ class TestRCF:
 
 
 class TestMOSAIKS:
-    def test_model(self) -> None:
-        root = os.path.join('tests', 'data', 'eurosat')
+    def test_model(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('eurosat')
         ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split='train')
         model = MOSAIKS(in_channels=3, features=8, dataset=ds)
         output = model(torch.randn(2, 3, 8, 8))

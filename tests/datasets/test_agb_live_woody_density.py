@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,13 +22,11 @@ from torchgeo.datasets import (
 class TestAbovegroundLiveWoodyBiomassDensity:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
     ) -> AbovegroundLiveWoodyBiomassDensity:
         transforms = nn.Identity()
         url = os.path.join(
-            'tests',
-            'data',
-            'agb_live_woody_density',
+            test_data('agb_live_woody_density'),
             'Aboveground_Live_Woody_Biomass_Density.geojson',
         )
         monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, 'url', url)

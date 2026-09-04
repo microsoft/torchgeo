@@ -93,7 +93,7 @@ From this output, you can see that all tests pass, but many lines of code in ``t
 
 These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
-.. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
+.. note:: If you add a new dataset, the tests will require some form of data to run. Add a generator in ``tests/data/<dataset>/data.py`` and request its output using the ``test_data`` pytest fixture. Generated files are created once per test session in a temporary directory and should not be committed. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
 
 .. _linters:
 

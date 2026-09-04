@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -24,13 +25,11 @@ class TestSpaceNet:
         aws: Executable,
         monkeypatch: MonkeyPatch,
         tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> SpaceNet:
         dataset_class: type[SpaceNet] = request.param
         url = os.path.join(
-            'tests',
-            'data',
-            'spacenet',
-            dataset_class.__name__.lower(),
+            test_data('spacenet/' + dataset_class.__name__.lower()),
             '{dataset_id}',
             'train',
             '{tarball}',

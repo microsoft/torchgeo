@@ -39,7 +39,7 @@ def create_tile(quadkey: str, minx: float, miny: float, date: str) -> dict:
     with rasterio.open(path, 'w', **profile) as dst:
         dst.write(data)
 
-    href = os.path.join('tests', 'data', 'meta_chm', path)
+    href = os.path.abspath(path)
     return {
         'datetime': pd.Timestamp(date, tz='UTC'),
         'assets': {'chm': {'href': href}},

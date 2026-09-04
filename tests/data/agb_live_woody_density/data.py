@@ -23,9 +23,7 @@ base_file = {
             'type': 'Feature',
             'properties': {
                 'tile_id': '00N_000E',
-                'Mg_px_1_download': os.path.join(
-                    'tests', 'data', 'agb_live_woody_density', '00N_000E.tif'
-                ),
+                'Mg_px_1_download': os.path.join(os.getcwd(), '00N_000E.tif'),
                 'ObjectId': 1,
                 'Shape__Area': 1245542622548.8701,
                 'Shape__Length': 4464169.7655813899,

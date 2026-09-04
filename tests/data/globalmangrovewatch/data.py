@@ -40,7 +40,7 @@ def create_file(path: str) -> None:
 
 
 if __name__ == '__main__':
-    root = os.path.join('tests', 'data', 'globalmangrovewatch')
+    root = '.'
     for year in years:
         directory = os.path.join(root, f'gmw_v3_{year}')
         os.makedirs(directory, exist_ok=True)

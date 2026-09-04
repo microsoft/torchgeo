@@ -47,7 +47,7 @@ for typhoon_id in range(NUM_TYHOON_IDS):
         day=np.random.randint(1, 29),
         hour=np.random.randint(0, 24),
     )
-    times = pd.date_range(start=start_time, periods=NUM_IMAGES_PER_ID, freq='H')
+    times = pd.date_range(start=start_time, periods=NUM_IMAGES_PER_ID, freq='h')
     df = pd.DataFrame(
         {
             'id': np.repeat(typhoon_id, NUM_IMAGES_PER_ID),

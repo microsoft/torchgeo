@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -26,9 +27,13 @@ class TestMMFlood:
         params=product([True, False], [True, False], ['train', 'val', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> MMFlood:
-        url = os.path.join('tests', 'data', 'mmflood') + os.sep
+        url = test_data('mmflood') + os.sep
 
         monkeypatch.setattr(MMFlood, 'url', url)
         monkeypatch.setattr(MMFlood, '_nparts', 2)

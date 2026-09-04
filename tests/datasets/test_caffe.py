@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ from torchgeo.datasets import CaFFe, DatasetNotFoundError
 class TestCaFFe:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> CaFFe:
-        url = os.path.join('tests', 'data', 'caffe', 'caffe.zip')
+        url = os.path.join(test_data('caffe'), 'caffe.zip')
         monkeypatch.setattr(CaFFe, 'url', url)
         root = tmp_path
         split = request.param
@@ -44,9 +49,11 @@ class TestCaFFe:
     def test_already_downloaded(self, dataset: CaFFe) -> None:
         CaFFe(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         filename = 'caffe.zip'
-        dir = os.path.join('tests', 'data', 'caffe')
+        dir = test_data('caffe')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )

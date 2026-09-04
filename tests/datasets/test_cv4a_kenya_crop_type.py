@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,9 +22,13 @@ from torchgeo.datasets.utils import Executable
 class TestCV4AKenyaCropType:
     @pytest.fixture
     def dataset(
-        self, azcopy: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+        self,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
     ) -> CV4AKenyaCropType:
-        url = os.path.join('tests', 'data', 'cv4a_kenya_crop_type')
+        url = test_data('cv4a_kenya_crop_type')
         monkeypatch.setattr(CV4AKenyaCropType, 'url', url)
         monkeypatch.setattr(CV4AKenyaCropType, 'tiles', list(map(str, range(1))))
         monkeypatch.setattr(CV4AKenyaCropType, 'dates', ['20190606'])

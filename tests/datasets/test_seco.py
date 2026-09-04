@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -30,17 +31,21 @@ class TestSeasonalContrastS2:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SeasonalContrastS2:
         monkeypatch.setitem(
             SeasonalContrastS2.metadata['100k'],
             'url',
-            os.path.join('tests', 'data', 'seco', 'seco_100k.zip'),
+            os.path.join(test_data('seco'), 'seco_100k.zip'),
         )
         monkeypatch.setitem(
             SeasonalContrastS2.metadata['1m'],
             'url',
-            os.path.join('tests', 'data', 'seco', 'seco_1m.zip'),
+            os.path.join(test_data('seco'), 'seco_1m.zip'),
         )
         root = tmp_path
         version, seasons, bands = request.param
@@ -72,8 +77,10 @@ class TestSeasonalContrastS2:
     def test_already_extracted(self, dataset: SeasonalContrastS2) -> None:
         SeasonalContrastS2(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'seco', '*.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('seco'), '*.zip')
         root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
@@ -102,11 +109,11 @@ class TestSeasonalContrastS2:
             x['prediction'] = torch.tensor(1)
             dataset.plot(x)
 
-    def test_no_rgb_plot(self) -> None:
+    def test_no_rgb_plot(self, test_data: Callable[[str], str]) -> None:
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
-            root = os.path.join('tests', 'data', 'seco')
+            root = test_data('seco')
             dataset = SeasonalContrastS2(root, bands=['B1'])
             x = dataset[0]
             dataset.plot(x, suptitle='Test')

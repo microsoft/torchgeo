@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from torch import Tensor, nn
 
 from torchgeo.datasets import DatasetNotFoundError, TreeSatAI
 
-root = os.path.join('tests', 'data', 'treesatai')
+root = os.path.join('treesatai')
 md5s = {
     'aerial_60m_acer_pseudoplatanus.zip': '',
     'labels.zip': '',
@@ -26,11 +27,13 @@ md5s = {
 
 class TestTreeSatAI:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> TreeSatAI:
-        monkeypatch.setattr(TreeSatAI, 'url', root + os.sep)
+    def dataset(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> TreeSatAI:
+        monkeypatch.setattr(TreeSatAI, 'url', test_data(root) + os.sep)
         monkeypatch.setattr(TreeSatAI, 'md5s', md5s)
         transforms = nn.Identity()
-        return TreeSatAI(root, transforms=transforms)
+        return TreeSatAI(test_data(root), transforms=transforms)
 
     def test_getitem(self, dataset: TreeSatAI) -> None:
         x = dataset[0]
@@ -45,8 +48,10 @@ class TestTreeSatAI:
     def test_download(self, dataset: TreeSatAI, tmp_path: Path) -> None:
         TreeSatAI(tmp_path, download=True)
 
-    def test_extract(self, dataset: TreeSatAI, tmp_path: Path) -> None:
-        for file in glob.iglob(os.path.join(root, '*.*')):
+    def test_extract(
+        self, dataset: TreeSatAI, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        for file in glob.iglob(os.path.join(test_data(root), '*.*')):
             shutil.copy(file, tmp_path)
         TreeSatAI(tmp_path)
 

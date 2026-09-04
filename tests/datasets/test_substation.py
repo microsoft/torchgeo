@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -69,9 +70,14 @@ class TestSubstation:
             },
         ]
     )
-    def dataset(self, request: pytest.FixtureRequest, tmp_path: Path) -> Substation:
+    def dataset(
+        self,
+        request: pytest.FixtureRequest,
+        tmp_path: Path,
+        test_data: Callable[[str], str],
+    ) -> Substation:
         """Fixture for the Substation with parameterization."""
-        root = os.path.join('tests', 'data', 'substation')
+        root = test_data('substation')
         transforms = nn.Identity()
         return Substation(root, transforms=transforms, **request.param)
 
@@ -99,16 +105,18 @@ class TestSubstation:
         else:
             assert x['mask'].shape == torch.Size([32, 32])
 
-    def test_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-        url = os.path.join('tests', 'data', 'substation')
+    def test_download(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
+        url = test_data('substation')
         filename = Substation.filename_images
         maskname = Substation.filename_masks
         monkeypatch.setattr(Substation, 'url_for_images', os.path.join(url, filename))
         monkeypatch.setattr(Substation, 'url_for_masks', os.path.join(url, maskname))
         Substation(tmp_path, download=True)
 
-    def test_extract(self, tmp_path: Path) -> None:
-        root = os.path.join('tests', 'data', 'substation')
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        root = test_data('substation')
         filename = Substation.filename_images
         maskname = Substation.filename_masks
         shutil.copyfile(os.path.join(root, filename), tmp_path / filename)
@@ -129,8 +137,8 @@ class TestSubstation:
         dataset.plot(sample)
         plt.close()
 
-    def test_plot_rgb_missing(self) -> None:
-        root = os.path.join('tests', 'data', 'substation')
+    def test_plot_rgb_missing(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('substation')
         dataset = Substation(root, bands=['B1', 'B5', 'B6'])
         sample = dataset[0]
         with pytest.raises(RGBBandsMissingError):

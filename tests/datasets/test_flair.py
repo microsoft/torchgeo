@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 from typing import Literal
@@ -16,26 +17,31 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import FLAIRHUB, DatasetNotFoundError, FLAIRHUBToy
 from torchgeo.datasets.flair import AvailableBands
 
-_TEST_DATA = Path('tests') / 'data' / 'flair'
 _DOMAIN_YEARS = {'D006': ['2020'], 'D012': ['2019'], 'D032': ['2019']}
 
 
 class TestFLAIRHUB:
     @pytest.fixture(params=product([FLAIRHUB, FLAIRHUBToy], ['train', 'val', 'test']))
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> FLAIRHUB | FLAIRHUBToy:
         dataset_class: type[FLAIRHUB | FLAIRHUBToy] = request.param[0]
         split = request.param[1]
 
         if dataset_class is FLAIRHUB:
             monkeypatch.setattr(FLAIRHUB, 'domain_years', dict(_DOMAIN_YEARS))
-            monkeypatch.setattr(FLAIRHUB, 'download_link', str(_TEST_DATA))
+            monkeypatch.setattr(
+                FLAIRHUB, 'download_link', str(Path(test_data('flair')))
+            )
         else:
             monkeypatch.setattr(
                 FLAIRHUBToy,
                 'download_link',
-                str(_TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip'),
+                str(Path(test_data('flair')) / 'FLAIR-HUB_TOY_DATASET.zip'),
             )
 
         return dataset_class(
@@ -77,10 +83,10 @@ class TestFLAIRHUB:
             FLAIRHUB(bands=['invalidband'])  # ty: ignore[invalid-argument-type]
 
     def test_all_modalities_plot(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
     ) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(_TEST_DATA, root)
+        shutil.copytree(Path(test_data('flair')), root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', {'D006': ['2020']})
 
         bands: list[AvailableBands] = [
@@ -110,11 +116,12 @@ class TestFLAIRHUB:
         dataset_type: Literal['crop_type_2', 'crop_type_3'],
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
         """crop_type_2 and crop_type_3 mask loading (deeper LPIS levels).
         Basic crop_type already tested by trainer/flairhub_croptype config."""
         root = tmp_path / 'flair'
-        shutil.copytree(_TEST_DATA, root)
+        shutil.copytree(Path(test_data('flair')), root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', dict(_DOMAIN_YEARS))
 
         dataset = FLAIRHUB(root=root, bands=['AERIAL_RGBI'], dataset_type=dataset_type)
@@ -122,10 +129,12 @@ class TestFLAIRHUB:
         assert isinstance(x['mask'], Tensor)
         assert isinstance(x['image_aerial_rgbi'], Tensor)
 
-    def test_zip_reload(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_zip_reload(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         """Missing directory is re-extracted from existing zip."""
         root = tmp_path / 'flair'
-        shutil.copytree(_TEST_DATA, root)
+        shutil.copytree(Path(test_data('flair')), root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', dict(_DOMAIN_YEARS))
 
         directory = root / 'D006-2020_AERIAL_RGBI'
@@ -135,9 +144,11 @@ class TestFLAIRHUB:
         assert directory.is_dir()
         assert not (root / 'D006-2020_AERIAL_RGBI.zip').exists()
 
-    def test_corrupted(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_corrupted(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(_TEST_DATA, root)
+        shutil.copytree(Path(test_data('flair')), root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', {'D006': ['2020']})
 
         shutil.rmtree(root / 'GLOBAL_ALL_MTD')
@@ -145,9 +156,11 @@ class TestFLAIRHUB:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             FLAIRHUB(root=root, checksum=True, bands=['AERIAL_RGBI'])
 
-    def test_corrupted_modality(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_corrupted_modality(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         root = tmp_path / 'flair'
-        shutil.copytree(_TEST_DATA, root)
+        shutil.copytree(Path(test_data('flair')), root)
         monkeypatch.setattr(FLAIRHUB, 'domain_years', {'D006': ['2020']})
 
         directory = root / 'D006-2020_AERIAL_RGBI'
@@ -156,9 +169,13 @@ class TestFLAIRHUB:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             FLAIRHUB(root=root, checksum=True, bands=['AERIAL_RGBI'])
 
-    def test_toy_checksum(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_toy_checksum(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
         monkeypatch.setattr(
-            FLAIRHUBToy, 'download_link', str(_TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip')
+            FLAIRHUBToy,
+            'download_link',
+            str(Path(test_data('flair')) / 'FLAIR-HUB_TOY_DATASET.zip'),
         )
         monkeypatch.setattr(
             FLAIRHUBToy,
@@ -180,9 +197,11 @@ class TestFLAIRHUB:
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             FLAIRHUBToy(root=tmp_path, checksum=True, bands=['AERIAL_RGBI'])
 
-    def test_toy_reextract_and_missing_splits(self, tmp_path: Path) -> None:
+    def test_toy_reextract_and_missing_splits(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         shutil.copy(
-            _TEST_DATA / 'FLAIR-HUB_TOY_DATASET.zip',
+            Path(test_data('flair')) / 'FLAIR-HUB_TOY_DATASET.zip',
             tmp_path / 'FLAIR-HUB_TOY_DATASET.zip',
         )
         dataset = FLAIRHUBToy(

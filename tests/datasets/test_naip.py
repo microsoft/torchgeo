@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,8 +20,8 @@ from torchgeo.datasets import (
 
 class TestNAIP:
     @pytest.fixture
-    def dataset(self) -> NAIP:
-        root = os.path.join('tests', 'data', 'naip')
+    def dataset(self, test_data: Callable[[str], str]) -> NAIP:
+        root = test_data('naip')
         transforms = nn.Identity()
         return NAIP(root, transforms=transforms)
 

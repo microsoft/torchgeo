@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -28,9 +29,13 @@ class TestDL4GAMAlps:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> DL4GAMAlps:
-        url = Path('tests', 'data', 'dl4gam_alps')
+        url = Path(test_data('dl4gam_alps'))
         download_metadata = {
             'dataset_small': {'url': str(url / 'dataset_small.tar.gz'), 'checksum': ''},
             'dataset_large': {'url': str(url / 'dataset_large.tar.gz'), 'checksum': ''},
@@ -81,10 +86,12 @@ class TestDL4GAMAlps:
     def test_already_downloaded_and_extracted(self, dataset: DL4GAMAlps) -> None:
         DL4GAMAlps(root=dataset.root, download=False, version=dataset.version)
 
-    def test_already_downloaded_but_not_yet_extracted(self, tmp_path: Path) -> None:
-        fp_archive = Path('tests', 'data', 'dl4gam_alps', 'dataset_small.tar.gz')
+    def test_already_downloaded_but_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        fp_archive = Path(test_data('dl4gam_alps'), 'dataset_small.tar.gz')
         shutil.copyfile(fp_archive, Path(str(tmp_path), fp_archive.name))
-        fp_splits = Path('tests', 'data', 'dl4gam_alps', 'splits.csv')
+        fp_splits = Path(test_data('dl4gam_alps'), 'splits.csv')
         shutil.copyfile(fp_splits, Path(str(tmp_path), fp_splits.name))
         DL4GAMAlps(root=str(tmp_path), download=False)
 

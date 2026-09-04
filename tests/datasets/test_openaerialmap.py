@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import NotRequired, TypedDict
 
@@ -134,8 +135,8 @@ class TestTileUtils:
 
 class TestOpenAerialMap:
     @pytest.fixture
-    def dataset(self) -> OpenAerialMap:
-        root = os.path.join('tests', 'data', 'openaerialmap')
+    def dataset(self, test_data: Callable[[str], str]) -> OpenAerialMap:
+        root = test_data('openaerialmap')
         transforms = nn.Identity()
         return OpenAerialMap(root, transforms=transforms)
 
@@ -194,8 +195,9 @@ class TestOpenAerialMap:
         mock_bbox: tuple[float, float, float, float],
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
-        src_dir = os.path.join('tests', 'data', 'openaerialmap')
+        src_dir = test_data('openaerialmap')
         valid_file = next(f for f in os.listdir(src_dir) if f.endswith('.tif'))
         shutil.copy(os.path.join(src_dir, valid_file), tmp_path / valid_file)
 
@@ -488,9 +490,12 @@ class TestOpenAerialMap:
         dataset._download()
 
     def test_download_full_flow(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        test_data: Callable[[str], str],
     ) -> None:
-        src_dir = os.path.join('tests', 'data', 'openaerialmap')
+        src_dir = test_data('openaerialmap')
         for f in os.listdir(src_dir):
             if f.endswith('.tif'):
                 shutil.copy(os.path.join(src_dir, f), tmp_path / f)

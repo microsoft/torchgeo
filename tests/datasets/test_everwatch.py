@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, EverWatch
 
 class TestEverWatch:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EverWatch:
-        data_dir = os.path.join('tests', 'data', 'everwatch')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> EverWatch:
+        data_dir = test_data('everwatch')
         url = os.path.join(data_dir, 'everwatch-benchmark.zip')
         monkeypatch.setattr(EverWatch, 'url', url)
         root = tmp_path
@@ -42,8 +45,10 @@ class TestEverWatch:
         else:
             assert len(dataset) == 2
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'everwatch', 'everwatch-benchmark.zip')
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('everwatch'), 'everwatch-benchmark.zip')
         shutil.copy(url, tmp_path)
         EverWatch(root=tmp_path, checksum=False)
 

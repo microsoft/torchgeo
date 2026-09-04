@@ -1,4 +1,20 @@
-This directory contains fake data used to test torchgeo. Depending on the type of dataset, fake data can be created in multiple ways:
+This directory contains generators and source metadata for fake data used to test TorchGeo. The session-scoped `test_data` pytest fixture runs each requested dataset's `data.py` scripts once in an isolated temporary directory. It returns the generated root, shared by the dataset, datamodule, and task tests in that worker. Generated files are not checked into Git.
+
+Request a generated dataset directory explicitly:
+
+```python
+from collections.abc import Callable
+
+
+def test_dataset(test_data: Callable[[str], str]) -> None:
+    dataset = MyDataset(root=test_data('my_dataset'))
+```
+
+Each `data.py` runs in its own directory, with source metadata copied alongside it. Use paths relative to that directory, or its absolute working directory for embedded local download URLs. The subprocess keeps random seeds and working-directory changes independent of the tests. Scripts must generate every binary fixture they use, including download archives, and should use the same optional dependencies as their datasets. Text metadata such as split lists and annotations can remain as generator inputs.
+
+Task tests use `test_config` to resolve the `tests/data/` paths in `tests/conf/*.yaml` against these generated directories. To regenerate files manually, run `data.py` from its directory with the repository root on `PYTHONPATH`; do not add its outputs to Git.
+
+Depending on the type of dataset, fake data can be created in multiple ways:
 
 ## GeoDataset
 

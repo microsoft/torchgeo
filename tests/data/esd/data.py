@@ -85,14 +85,7 @@ def write_mock_geotiff(
 
 # 2024 image (02VMN)
 write_mock_geotiff(
-    path=os.path.join(
-        'tests',
-        'data',
-        'esd',
-        'SDC30_EBD_V001',
-        '2024',
-        'SDC30_EBD_V001_02VMN_2024_mock.tif',
-    ),
+    path=os.path.join('SDC30_EBD_V001', '2024', 'SDC30_EBD_V001_02VMN_2024_mock.tif'),
     origin_x=399945.0,
     origin_y=6800055.0,
 )

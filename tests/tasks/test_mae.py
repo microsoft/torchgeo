@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -27,9 +27,13 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
 class TestMAE:
     @pytest.mark.parametrize('name', ['ssl4eo_s12_mae_1', 'ssl4eo_s12_mae_2'])
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         if name.startswith('ssl4eo_s12'):
             monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
@@ -51,8 +55,10 @@ class TestMAE:
 
         main(['fit', *args])
 
-    def test_full_scheduler(self, monkeypatch: MonkeyPatch) -> None:
-        config = os.path.join('tests', 'conf', 'ssl4eo_s12_mae_1.yaml')
+    def test_full_scheduler(
+        self, monkeypatch: MonkeyPatch, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config('ssl4eo_s12_mae_1.yaml')
         monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
         monkeypatch.setattr(timm, 'create_model', create_model)
 

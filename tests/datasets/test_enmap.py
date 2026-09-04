@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +21,8 @@ from torchgeo.datasets import (
 
 class TestEnMAP:
     @pytest.fixture
-    def dataset(self) -> EnMAP:
-        root = os.path.join('tests', 'data', 'enmap')
+    def dataset(self, test_data: Callable[[str], str]) -> EnMAP:
+        root = test_data('enmap')
         transforms = nn.Identity()
         return EnMAP(root, transforms=transforms)
 

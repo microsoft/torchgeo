@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,12 +23,12 @@ from torchgeo.datasets import (
 class TestCanadianBuildingFootprints:
     @pytest.fixture
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
     ) -> CanadianBuildingFootprints:
         monkeypatch.setattr(
             CanadianBuildingFootprints, 'provinces_territories', ['Alberta']
         )
-        url = os.path.join('tests', 'data', 'cbf') + os.sep
+        url = test_data('cbf') + os.sep
         monkeypatch.setattr(CanadianBuildingFootprints, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path

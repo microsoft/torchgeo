@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import pytest
 from lightning.pytorch import Trainer
@@ -14,8 +14,10 @@ from torchgeo.tasks import TemporalRegression
 
 class TestTemporalRegression:
     @pytest.mark.parametrize('name', ['air_quality_mse', 'air_quality_mae'])
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+    def test_trainer(
+        self, name: str, fast_dev_run: bool, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config(name + '.yaml')
 
         args = [
             '--config',
@@ -40,8 +42,8 @@ class TestTemporalRegression:
         except MisconfigurationException:
             pass
 
-    def test_predict(self) -> None:
-        root = os.path.join('tests', 'data', 'air_quality')
+    def test_predict(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('air_quality')
         model = TemporalRegression(in_channels=17, num_outputs=17, len_max_seq=3)
         datamodule = AirQualityDataModule(root=root)
         datamodule.predict_dataset = AirQuality(root)

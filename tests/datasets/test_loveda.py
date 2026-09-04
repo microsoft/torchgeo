@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,21 +18,25 @@ from torchgeo.datasets import DatasetNotFoundError, LoveDA
 class TestLoveDA:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> LoveDA:
         info_dict = {
             'train': {
-                'url': os.path.join('tests', 'data', 'loveda', 'Train.zip'),
+                'url': os.path.join(test_data('loveda'), 'Train.zip'),
                 'filename': 'Train.zip',
                 'md5': '',
             },
             'val': {
-                'url': os.path.join('tests', 'data', 'loveda', 'Val.zip'),
+                'url': os.path.join(test_data('loveda'), 'Val.zip'),
                 'filename': 'Val.zip',
                 'md5': '',
             },
             'test': {
-                'url': os.path.join('tests', 'data', 'loveda', 'Test.zip'),
+                'url': os.path.join(test_data('loveda'), 'Test.zip'),
                 'filename': 'Test.zip',
                 'md5': '',
             },

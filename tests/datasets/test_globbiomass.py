@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,13 +22,9 @@ from torchgeo.datasets import (
 
 class TestGlobBiomass:
     @pytest.fixture
-    def dataset(self, tmp_path: Path) -> GlobBiomass:
-        shutil.copy(
-            os.path.join('tests', 'data', 'globbiomass', 'N00E020_agb.zip'), tmp_path
-        )
-        shutil.copy(
-            os.path.join('tests', 'data', 'globbiomass', 'N00E020_gsv.zip'), tmp_path
-        )
+    def dataset(self, tmp_path: Path, test_data: Callable[[str], str]) -> GlobBiomass:
+        shutil.copy(os.path.join(test_data('globbiomass'), 'N00E020_agb.zip'), tmp_path)
+        shutil.copy(os.path.join(test_data('globbiomass'), 'N00E020_gsv.zip'), tmp_path)
         root = tmp_path
         transforms = nn.Identity()
         return GlobBiomass(root, transforms=transforms, checksum=False)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,27 +17,35 @@ from torchgeo.datasets import FAIR1M, DatasetNotFoundError
 
 
 class TestFAIR1M:
-    test_root = os.path.join('tests', 'data', 'fair1m')
+    test_root = os.path.join('fair1m')
 
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> FAIR1M:
         urls = {
             'train': (
-                os.path.join(self.test_root, 'train', 'part1', 'images.zip'),
-                os.path.join(self.test_root, 'train', 'part1', 'labelXml.zip'),
-                os.path.join(self.test_root, 'train', 'part2', 'images.zip'),
-                os.path.join(self.test_root, 'train', 'part2', 'labelXmls.zip'),
+                os.path.join(test_data(self.test_root), 'train', 'part1', 'images.zip'),
+                os.path.join(
+                    test_data(self.test_root), 'train', 'part1', 'labelXml.zip'
+                ),
+                os.path.join(test_data(self.test_root), 'train', 'part2', 'images.zip'),
+                os.path.join(
+                    test_data(self.test_root), 'train', 'part2', 'labelXmls.zip'
+                ),
             ),
             'val': (
-                os.path.join(self.test_root, 'validation', 'images.zip'),
-                os.path.join(self.test_root, 'validation', 'labelXmls.zip'),
+                os.path.join(test_data(self.test_root), 'validation', 'images.zip'),
+                os.path.join(test_data(self.test_root), 'validation', 'labelXmls.zip'),
             ),
             'test': (
-                os.path.join(self.test_root, 'test', 'images0.zip'),
-                os.path.join(self.test_root, 'test', 'images1.zip'),
-                os.path.join(self.test_root, 'test', 'images2.zip'),
+                os.path.join(test_data(self.test_root), 'test', 'images0.zip'),
+                os.path.join(test_data(self.test_root), 'test', 'images1.zip'),
+                os.path.join(test_data(self.test_root), 'test', 'images2.zip'),
             ),
         }
         monkeypatch.setattr(FAIR1M, 'urls', urls)

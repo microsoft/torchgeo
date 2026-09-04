@@ -1,6 +1,8 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+from collections.abc import Callable
+
 """Unit tests for the SolarPlantsBrazil dataset."""
 
 import os
@@ -15,13 +17,13 @@ from pytest import MonkeyPatch
 from torchgeo.datasets import DatasetNotFoundError, SolarPlantsBrazil
 from torchgeo.datasets.utils import Sample
 
-root = os.path.join('tests', 'data', 'solar_plants_brazil')
+root = os.path.join('solar_plants_brazil')
 
 
 class TestSolarPlantsBrazil:
     @pytest.fixture
-    def dataset_root(self) -> str:
-        return os.path.join('tests', 'data', 'solar_plants_brazil')
+    def dataset_root(self, test_data: Callable[[str], str]) -> str:
+        return test_data('solar_plants_brazil')
 
     @pytest.fixture
     def dataset(self, dataset_root: str) -> SolarPlantsBrazil:
@@ -68,11 +70,13 @@ class TestSolarPlantsBrazil:
         with pytest.raises(DatasetNotFoundError):
             SolarPlantsBrazil(root=tmp_path, split='train')
 
-    def test_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-        monkeypatch.setattr(SolarPlantsBrazil, 'url', root + os.sep)
+    def test_download(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> None:
+        monkeypatch.setattr(SolarPlantsBrazil, 'url', test_data(root) + os.sep)
         SolarPlantsBrazil(tmp_path, split='train', download=True)
 
-    def test_extract(self, tmp_path: Path) -> None:
-        zip_path = os.path.join(root, SolarPlantsBrazil.filename)
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        zip_path = os.path.join(test_data(root), SolarPlantsBrazil.filename)
         shutil.copy(zip_path, tmp_path)
         SolarPlantsBrazil(tmp_path, split='train')

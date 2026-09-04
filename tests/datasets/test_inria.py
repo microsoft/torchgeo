@@ -1,7 +1,9 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, InriaAerialImageLabeling
 
 class TestInriaAerialImageLabeling:
     @pytest.fixture(params=['train', 'val', 'test'])
-    def dataset(self, request: SubRequest) -> InriaAerialImageLabeling:
-        root = Path('tests/data/inria')
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> InriaAerialImageLabeling:
+        root = Path(test_data('inria'))
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
             root, split=request.param, transforms=transforms, checksum=False
@@ -52,8 +56,8 @@ class TestInriaAerialImageLabeling:
         with pytest.raises(RuntimeError, match='Dataset corrupted'):
             InriaAerialImageLabeling(root=tmp_path, checksum=True)
 
-    def test_extract(self, tmp_path: Path) -> None:
-        src = Path('tests/data/inria/NEW2-AerialImageDataset.zip')
+    def test_extract(self, tmp_path: Path, test_data: Callable[[str], str]) -> None:
+        src = Path(os.path.join(test_data('inria'), 'NEW2-AerialImageDataset.zip'))
         shutil.copy(src, tmp_path)
         InriaAerialImageLabeling(tmp_path, checksum=False)
 

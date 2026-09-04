@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,8 +19,8 @@ from torchgeo.datasets import (
 
 class TestGlobalBuildingMap:
     @pytest.fixture
-    def dataset(self) -> GlobalBuildingMap:
-        paths = os.path.join('tests', 'data', 'gbm')
+    def dataset(self, test_data: Callable[[str], str]) -> GlobalBuildingMap:
+        paths = test_data('gbm')
         return GlobalBuildingMap(paths)
 
     def test_getitem(self, dataset: GlobalBuildingMap) -> None:

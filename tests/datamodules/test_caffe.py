@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import pytest
@@ -11,8 +11,8 @@ from torchgeo.datamodules import CaFFeDataModule
 
 class TestCaFFeDataModule:
     @pytest.fixture
-    def datamodule(self) -> CaFFeDataModule:
-        root = os.path.join('tests', 'data', 'caffe')
+    def datamodule(self, test_data: Callable[[str], str]) -> CaFFeDataModule:
+        root = test_data('caffe')
         batch_size = 2
         num_workers = 0
         dm = CaFFeDataModule(root=root, batch_size=batch_size, num_workers=num_workers)

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,8 +16,13 @@ from torchgeo.datasets import DatasetNotFoundError, S2100k
 
 class TestS2100k:
     @pytest.fixture(params=['both', 'points'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> S2100k:
-        root = Path('tests', 'data', 's2_100k')
+    def dataset(
+        self,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
+    ) -> S2100k:
+        root = Path(test_data('s2_100k'))
         mode = request.param
         monkeypatch.setattr(S2100k, 'url', root)
         transforms = Identity()

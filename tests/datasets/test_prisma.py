@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -20,8 +20,8 @@ from torchgeo.datasets import (
 
 class TestPRISMA:
     @pytest.fixture
-    def dataset(self) -> PRISMA:
-        paths = os.path.join('tests', 'data', 'prisma')
+    def dataset(self, test_data: Callable[[str], str]) -> PRISMA:
+        paths = test_data('prisma')
         transforms = nn.Identity()
         return PRISMA(paths, transforms=transforms)
 

@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import pytest
 import torch
@@ -16,8 +16,10 @@ class TestSpatioTemporalSegmentation:
         'name',
         ['pastis', 'pastis100', 'pastis_conv3dlstm', 'pastis_focal', 'pastis_jaccard'],
     )
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+    def test_trainer(
+        self, name: str, fast_dev_run: bool, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config(name + '.yaml')
 
         args = [
             '--config',

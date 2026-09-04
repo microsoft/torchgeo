@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,11 +18,15 @@ from torchgeo.datasets import VHR10, DatasetNotFoundError
 class TestVHR10:
     @pytest.fixture(params=['positive', 'negative'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> VHR10:
-        url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip')
+        url = os.path.join(test_data('vhr10'), 'NWPU VHR-10 dataset.zip')
         monkeypatch.setitem(VHR10.image_meta, 'url', url)
-        url = os.path.join('tests', 'data', 'vhr10', 'annotations.json')
+        url = os.path.join(test_data('vhr10'), 'annotations.json')
         monkeypatch.setitem(VHR10.target_meta, 'url', url)
         root = tmp_path
         split = request.param

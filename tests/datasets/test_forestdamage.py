@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, ForestDamage
 
 class TestForestDamage:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ForestDamage:
-        data_dir = os.path.join('tests', 'data', 'forestdamage')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> ForestDamage:
+        data_dir = test_data('forestdamage')
         url = os.path.join(data_dir, 'Data_Set_Larch_Casebearer.zip')
         monkeypatch.setattr(ForestDamage, 'url', url)
         root = tmp_path
@@ -39,10 +42,10 @@ class TestForestDamage:
     def test_len(self, dataset: ForestDamage) -> None:
         assert len(dataset) == 2
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
-        url = os.path.join(
-            'tests', 'data', 'forestdamage', 'Data_Set_Larch_Casebearer.zip'
-        )
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('forestdamage'), 'Data_Set_Larch_Casebearer.zip')
         shutil.copy(url, tmp_path)
         ForestDamage(root=tmp_path, checksum=False)
 

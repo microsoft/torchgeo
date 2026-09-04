@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -25,8 +26,10 @@ from torchgeo.datasets import (
 
 class TestLandCoverAIGeo:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> LandCoverAIGeo:
+        url = os.path.join(test_data('landcoverai'), 'landcover.ai.v1.zip')
         monkeypatch.setattr(LandCoverAIGeo, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
@@ -41,8 +44,10 @@ class TestLandCoverAIGeo:
     def test_already_extracted(self, dataset: LandCoverAIGeo) -> None:
         LandCoverAIGeo(dataset.root, download=True)
 
-    def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
+    def test_already_downloaded(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('landcoverai'), 'landcover.ai.v1.zip')
         root = tmp_path
         shutil.copy(url, root)
         LandCoverAIGeo(root)
@@ -73,11 +78,15 @@ class TestLandCoverAI:
         params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> LandCoverAI:
         base_class: type[LandCoverAI] = request.param[0]
         split = request.param[1]
-        url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
+        url = os.path.join(test_data('landcoverai'), 'landcover.ai.v1.zip')
         monkeypatch.setattr(base_class, 'url', url)
         monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
@@ -101,8 +110,10 @@ class TestLandCoverAI:
     def test_already_extracted(self, dataset: LandCoverAI) -> None:
         LandCoverAI(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
+    def test_already_downloaded(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('landcoverai'), 'landcover.ai.v1.zip')
         root = tmp_path
         # Copy with the expected filename for LandCoverAI
         shutil.copy(url, os.path.join(root, 'output.zip'))

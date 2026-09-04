@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, PatternNet
 
 class TestPatternNet:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
-        url = os.path.join('tests', 'data', 'patternnet', 'PatternNet.zip')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> PatternNet:
+        url = os.path.join(test_data('patternnet'), 'PatternNet.zip')
         monkeypatch.setattr(PatternNet, 'url', url)
         root = tmp_path
         transforms = nn.Identity()

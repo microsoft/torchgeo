@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -22,25 +23,23 @@ class TestOSCD:
         params=zip([OSCD, OSCD100], [OSCD.all_bands, OSCD.rgb_bands], ['train', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> OSCD:
         urls = {
             'Onera Satellite Change Detection dataset - Images.zip': os.path.join(
-                'tests',
-                'data',
-                'oscd',
+                test_data('oscd'),
                 'Onera Satellite Change Detection dataset - Images.zip',
             ),
             'Onera Satellite Change Detection dataset - Train Labels.zip': os.path.join(
-                'tests',
-                'data',
-                'oscd',
+                test_data('oscd'),
                 'Onera Satellite Change Detection dataset - Train Labels.zip',
             ),
             'Onera Satellite Change Detection dataset - Test Labels.zip': os.path.join(
-                'tests',
-                'data',
-                'oscd',
+                test_data('oscd'),
                 'Onera Satellite Change Detection dataset - Test Labels.zip',
             ),
         }
@@ -74,8 +73,10 @@ class TestOSCD:
     def test_already_extracted(self, dataset: OSCD) -> None:
         type(dataset)(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'oscd', '*Onera*.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('oscd'), '*Onera*.zip')
         root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)

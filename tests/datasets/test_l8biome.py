@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -25,9 +26,11 @@ from torchgeo.datasets import (
 
 class TestL8Biome:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> L8Biome:
         sha256s = {'barren': '', 'forest': ''}
-        url = os.path.join('tests', 'data', 'l8biome', '{}.tar.gz')
+        url = os.path.join(test_data('l8biome'), '{}.tar.gz')
         monkeypatch.setattr(L8Biome, 'url', url)
         monkeypatch.setattr(L8Biome, 'sha256s', sha256s)
         root = tmp_path
@@ -61,8 +64,10 @@ class TestL8Biome:
         L8Biome(paths, download=True)
         L8Biome([paths], download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'l8biome', '*.tar.gz')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('l8biome'), '*.tar.gz')
         root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)

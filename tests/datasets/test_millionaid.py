@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,8 +20,10 @@ class TestMillionAID:
         scope='class', params=zip(['train', 'test'], ['multi-class', 'multi-label'])
     )
     @classmethod
-    def dataset(cls, request: SubRequest) -> MillionAID:
-        root = os.path.join('tests', 'data', 'millionaid')
+    def dataset(
+        cls, request: SubRequest, test_data: Callable[[str], str]
+    ) -> MillionAID:
+        root = test_data('millionaid')
         split, task = request.param
         transforms = nn.Identity()
         return MillionAID(root=root, split=split, task=task, transforms=transforms)
@@ -40,8 +43,10 @@ class TestMillionAID:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             MillionAID(tmp_path)
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'millionaid', 'train.zip')
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('millionaid'), 'train.zip')
         shutil.copy(url, tmp_path)
         MillionAID(tmp_path, checksum=False)
 

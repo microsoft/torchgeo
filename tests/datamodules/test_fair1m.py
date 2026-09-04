@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import pytest
@@ -11,8 +11,8 @@ from torchgeo.datamodules import FAIR1MDataModule
 
 class TestFAIR1MDataModule:
     @pytest.fixture
-    def datamodule(self) -> FAIR1MDataModule:
-        root = os.path.join('tests', 'data', 'fair1m')
+    def datamodule(self, test_data: Callable[[str], str]) -> FAIR1MDataModule:
+        root = test_data('fair1m')
         batch_size = 2
         num_workers = 0
         dm = FAIR1MDataModule(root=root, batch_size=batch_size, num_workers=num_workers)

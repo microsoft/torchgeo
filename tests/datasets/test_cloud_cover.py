@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -27,8 +27,9 @@ class TestCloudCoverDetection:
         monkeypatch: MonkeyPatch,
         tmp_path: Path,
         request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> CloudCoverDetection:
-        url = os.path.join('tests', 'data', 'ref_cloud_cover_detection_challenge_v1')
+        url = test_data('ref_cloud_cover_detection_challenge_v1')
         monkeypatch.setattr(CloudCoverDetection, 'url', url)
         root = tmp_path
         split = request.param

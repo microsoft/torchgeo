@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -23,9 +24,13 @@ class TestDOTA:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> DOTA:
-        url = os.path.join('tests', 'data', 'dota', '{}')
+        url = os.path.join(test_data('dota'), '{}')
         monkeypatch.setattr(DOTA, 'url', url)
 
         file_info = {
@@ -117,7 +122,9 @@ class TestDOTA:
     def test_already_downloaded(self, dataset: DOTA) -> None:
         DOTA(root=dataset.root, download=True)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         files = [
             'dotav1.0_images_train.tar.gz',
             'dotav1.0_annotations_train.tar.gz',
@@ -133,8 +140,7 @@ class TestDOTA:
         ]
         for path in files:
             shutil.copyfile(
-                os.path.join('tests', 'data', 'dota', path),
-                os.path.join(str(tmp_path), path),
+                os.path.join(test_data('dota'), path), os.path.join(str(tmp_path), path)
             )
 
         DOTA(root=tmp_path, checksum=False)

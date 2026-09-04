@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -51,13 +52,15 @@ class TestCopernicusBench:
             ('aq_o3_s5p', 'l3_airquality_s5p', {'mode': 'seasonal'}),
         ]
     )
-    def dataset(self, request: SubRequest) -> CopernicusBench:
+    def dataset(
+        self, request: SubRequest, test_data: Callable[[str], str]
+    ) -> CopernicusBench:
         dataset, directory, kwargs = request.param
 
         if dataset == 'lcz_s2':
             pytest.importorskip('h5py', minversion='3.10')
 
-        root = os.path.join('tests', 'data', 'copernicus', directory)
+        root = test_data('copernicus/' + directory)
         transforms = nn.Identity()
         return CopernicusBench(dataset, root, transforms=transforms, **kwargs)
 
@@ -133,10 +136,10 @@ class TestCopernicusBench:
 
 class TestCopernicusPretrain:
     @pytest.fixture
-    def dataset(self) -> CopernicusPretrain:
+    def dataset(self, test_data: Callable[[str], str]) -> CopernicusPretrain:
         pytest.importorskip('webdataset')
 
-        root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
+        root = test_data('copernicus/pretrain')
         shards = 'example-000000.tar'
         # WebDataset requires forward slash for paths, even on Windows
         urls = os.path.join(root, shards).replace('\\', '/')
@@ -172,8 +175,10 @@ class TestCopernicusPretrain:
 
 class TestCopernicusEmbed:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch) -> CopernicusEmbed:
-        paths = os.path.join('tests', 'data', 'copernicus', 'embed')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
+    ) -> CopernicusEmbed:
+        paths = test_data('copernicus/embed')
         monkeypatch.setattr(
             CopernicusEmbed, 'url', os.path.join(paths, 'embed_map_310k.tif')
         )

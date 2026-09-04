@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,18 +18,23 @@ from torchgeo.datasets import DatasetNotFoundError, MMEarth
 pytest.importorskip('h5py', minversion='3.10')
 
 data_dir_dict = {
-    'MMEarth': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001'),
-    'MMEarth64': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001_64'),
-    'MMEarth100k': os.path.join('tests', 'data', 'mmearth', 'data_100k_v001'),
+    'MMEarth': os.path.join('data_1M_v001'),
+    'MMEarth64': os.path.join('data_1M_v001_64'),
+    'MMEarth100k': os.path.join('data_100k_v001'),
 }
 
 
 class TestMMEarth:
     @pytest.fixture(params=['MMEarth', 'MMEarth64', 'MMEarth100k'])
-    def dataset(self, tmp_path: Path, request: SubRequest) -> MMEarth:
+    def dataset(
+        self, tmp_path: Path, request: SubRequest, test_data: Callable[[str], str]
+    ) -> MMEarth:
         root = tmp_path
         subset = request.param
-        shutil.copytree(data_dir_dict[subset], root / Path(data_dir_dict[subset]).name)
+        shutil.copytree(
+            os.path.join(test_data('mmearth'), data_dir_dict[subset]),
+            root / Path(data_dir_dict[subset]).name,
+        )
         transforms = nn.Identity()
         return MMEarth(root, subset=subset, transforms=transforms)
 

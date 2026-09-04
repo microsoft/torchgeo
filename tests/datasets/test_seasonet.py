@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -28,42 +29,40 @@ class TestSeasoNet:
         )
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> SeasoNet:
         monkeypatch.setitem(
             SeasoNet.metadata[0],
             'url',
-            os.path.join('tests', 'data', 'seasonet', 'spring.zip'),
+            os.path.join(test_data('seasonet'), 'spring.zip'),
         )
         monkeypatch.setitem(
             SeasoNet.metadata[1],
             'url',
-            os.path.join('tests', 'data', 'seasonet', 'summer.zip'),
+            os.path.join(test_data('seasonet'), 'summer.zip'),
         )
         monkeypatch.setitem(
-            SeasoNet.metadata[2],
-            'url',
-            os.path.join('tests', 'data', 'seasonet', 'fall.zip'),
+            SeasoNet.metadata[2], 'url', os.path.join(test_data('seasonet'), 'fall.zip')
         )
         monkeypatch.setitem(
             SeasoNet.metadata[3],
             'url',
-            os.path.join('tests', 'data', 'seasonet', 'winter.zip'),
+            os.path.join(test_data('seasonet'), 'winter.zip'),
         )
         monkeypatch.setitem(
-            SeasoNet.metadata[4],
-            'url',
-            os.path.join('tests', 'data', 'seasonet', 'snow.zip'),
+            SeasoNet.metadata[4], 'url', os.path.join(test_data('seasonet'), 'snow.zip')
         )
         monkeypatch.setitem(
             SeasoNet.metadata[5],
             'url',
-            os.path.join('tests', 'data', 'seasonet', 'splits.zip'),
+            os.path.join(test_data('seasonet'), 'splits.zip'),
         )
         monkeypatch.setitem(
-            SeasoNet.metadata[6],
-            'url',
-            os.path.join('tests', 'data', 'seasonet', 'meta.csv'),
+            SeasoNet.metadata[6], 'url', os.path.join(test_data('seasonet'), 'meta.csv')
         )
         root = tmp_path
         split, seasons, bands, grids, concat_seasons = request.param
@@ -108,8 +107,10 @@ class TestSeasoNet:
     def test_already_extracted(self, dataset: SeasoNet) -> None:
         SeasoNet(root=dataset.root)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        paths = os.path.join('tests', 'data', 'seasonet', '*.*')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        paths = os.path.join(test_data('seasonet'), '*.*')
         root = tmp_path
         for path in glob.iglob(paths):
             shutil.copy(path, root)
@@ -151,11 +152,11 @@ class TestSeasoNet:
         dataset.plot(x)
         plt.close()
 
-    def test_plot_no_rgb(self) -> None:
+    def test_plot_no_rgb(self, test_data: Callable[[str], str]) -> None:
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
-            root = os.path.join('tests', 'data', 'seasonet')
+            root = test_data('seasonet')
             dataset = SeasoNet(root, bands=['10m_IR'])
             x = dataset[0]
             dataset.plot(x)

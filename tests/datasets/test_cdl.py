@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -23,8 +24,10 @@ from torchgeo.datasets import (
 
 class TestCDL:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
-        url = os.path.join('tests', 'data', 'cdl', '{}_30m_cdls.zip')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> CDL:
+        url = os.path.join(test_data('cdl'), '{}_30m_cdls.zip')
         monkeypatch.setattr(CDL, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path
@@ -39,8 +42,8 @@ class TestCDL:
     def test_len(self, dataset: CDL) -> None:
         assert len(dataset) == 2
 
-    def test_classes(self) -> None:
-        root = os.path.join('tests', 'data', 'cdl')
+    def test_classes(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('cdl')
         classes = list(CDL.valid_classes)[:5]
         ds = CDL(root, years=[2023], classes=classes)
         sample = ds[ds.bounds]
@@ -63,8 +66,10 @@ class TestCDL:
     def test_already_extracted(self, dataset: CDL) -> None:
         CDL(dataset.paths, years=[2023, 2022])
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join('tests', 'data', 'cdl', '*_30m_cdls.zip')
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        pathname = os.path.join(test_data('cdl'), '*_30m_cdls.zip')
         root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)

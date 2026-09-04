@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,9 +20,13 @@ from torchgeo.datasets import DatasetNotFoundError, UCMerced
 class TestUCMerced:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> UCMerced:
-        url = os.path.join('tests', 'data', 'ucmerced') + os.sep
+        url = test_data('ucmerced') + os.sep
         monkeypatch.setattr(UCMerced, 'url', url)
         split = request.param
         transforms = nn.Identity()

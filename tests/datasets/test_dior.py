@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ from torchgeo.datasets import DIOR, DatasetNotFoundError
 class TestDIOR:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> DIOR:
-        url = os.path.join('tests', 'data', 'dior', '{}')
+        url = os.path.join(test_data('dior'), '{}')
         monkeypatch.setattr(DIOR, 'url', url)
 
         files = {
@@ -39,7 +44,9 @@ class TestDIOR:
     def test_already_downloaded(self, dataset: DIOR) -> None:
         DIOR(root=dataset.root, download=True)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         files = [
             'Images_trainval.zip',
             'Annotations_trainval.zip',
@@ -48,8 +55,7 @@ class TestDIOR:
         ]
         for path in files:
             shutil.copyfile(
-                os.path.join('tests', 'data', 'dior', path),
-                os.path.join(str(tmp_path), path),
+                os.path.join(test_data('dior'), path), os.path.join(str(tmp_path), path)
             )
 
         DIOR(root=tmp_path, checksum=False)

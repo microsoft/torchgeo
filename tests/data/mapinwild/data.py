@@ -77,7 +77,7 @@ stop = {
     's2_winter_part2': np.iinfo(np.uint16).max,
 }
 
-folder_path = os.path.join(os.getcwd(), 'tests', 'data', 'mapinwild')
+folder_path = os.getcwd()
 
 dict_all = {
     's2_sum': ['s2_summer_part1', 's2_summer_part2'],
@@ -142,12 +142,12 @@ for i, source in zip(keys, modality_download_list):
     root = os.path.dirname(directory)
 
     # Compress data
-    shutil.make_archive(directory, 'zip', root_dir=root, base_dir=source)
+    mode = source.split('_part')[0].lower()
+    os.makedirs(mode, exist_ok=True)
+    shutil.make_archive(
+        os.path.join(mode, source), 'zip', root_dir=root, base_dir=source
+    )
 
-tvt_split = pd.DataFrame(
-    [['1', '2', '3'], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
-    index=['0', '1', '2'],
-    columns=['train', 'validation', 'test'],
-)
-tvt_split.dropna()
-tvt_split.to_csv(os.path.join(folder_path, 'split_IDs.csv'))
+tvt_split = pd.DataFrame([['1', '1', '1']], columns=['train', 'validation', 'test'])
+os.makedirs('split_IDs', exist_ok=True)
+tvt_split.to_csv(os.path.join('split_IDs', 'split_IDs.csv'))

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,9 +19,13 @@ from torchgeo.datasets import BRIGHTDFC2025, DatasetNotFoundError
 class TestBRIGHTDFC2025:
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> BRIGHTDFC2025:
-        url = os.path.join('tests', 'data', 'bright', 'dfc25_track2_trainval.zip')
+        url = os.path.join(test_data('bright'), 'dfc25_track2_trainval.zip')
         monkeypatch.setattr(BRIGHTDFC2025, 'url', url)
         root = tmp_path
         split = request.param
@@ -47,9 +52,11 @@ class TestBRIGHTDFC2025:
     def test_already_downloaded(self, dataset: BRIGHTDFC2025) -> None:
         BRIGHTDFC2025(root=dataset.root)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+    def test_not_yet_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         filename = 'dfc25_track2_trainval.zip'
-        dir = os.path.join('tests', 'data', 'bright')
+        dir = test_data('bright')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )

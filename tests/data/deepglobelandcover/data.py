@@ -59,6 +59,7 @@ def generate_test_data(root: str, n_samples: int = 3) -> None:
     # Create archive
     shutil.make_archive(folder_path, 'zip', folder_path)
     shutil.rmtree(folder_path)
+    shutil.unpack_archive(os.path.join(root, 'data.zip'), root)
 
 
 if __name__ == '__main__':

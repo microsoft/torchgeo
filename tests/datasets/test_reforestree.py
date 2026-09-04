@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,8 +17,10 @@ from torchgeo.datasets import DatasetNotFoundError, ReforesTree
 
 class TestReforesTree:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
-        data_dir = os.path.join('tests', 'data', 'reforestree')
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> ReforesTree:
+        data_dir = test_data('reforestree')
         url = os.path.join(data_dir, 'reforesTree.zip')
         monkeypatch.setattr(ReforesTree, 'url', url)
         root = tmp_path
@@ -41,8 +44,10 @@ class TestReforesTree:
     def test_len(self, dataset: ReforesTree) -> None:
         assert len(dataset) == 5
 
-    def test_not_extracted(self, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'reforestree', 'reforesTree.zip')
+    def test_not_extracted(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('reforestree'), 'reforesTree.zip')
         shutil.copy(url, tmp_path)
         ReforesTree(root=tmp_path, checksum=False)
 

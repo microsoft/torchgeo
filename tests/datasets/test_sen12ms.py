@@ -1,7 +1,8 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+import hashlib
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,26 +18,18 @@ from torchgeo.datasets import SEN12MS, DatasetNotFoundError, RGBBandsMissingErro
 
 class TestSEN12MS:
     @pytest.fixture(params=['train', 'test'])
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SEN12MS:
+    def dataset(
+        self,
+        monkeypatch: MonkeyPatch,
+        request: SubRequest,
+        test_data: Callable[[str], str],
+    ) -> SEN12MS:
+        root = test_data('sen12ms')
         md5s = [
-            'b7d9e183a460979e997b443517a78ded',
-            '7131dbb098c832fff84c2b8a0c8f1126',
-            'b1057fea6ced6d648e5b16efeac352ad',
-            '2da32111fcfb80939aea7b18c2250fa8',
-            'c688ad6475660dbdbc36f66a1dd07da7',
-            '2ecd0dce2a21372513955c604b07e24f',
-            'dbc84c03edf77a68f789a6f7d2ea66a9',
-            '3e42a7dc4bb1ecd8c588930bf49b5c2b',
-            'c29053cb8cf5d75e333b1b51d37f62fe',
-            '5b6880526bc6da488154092741392042',
-            'd1b51c39b1013f2779fecf1f362f6c28',
-            '078def1e13ce4e88632d65f5c73a6259',
-            '02d5128ac1fc2bf8762091b4f319762d',
-            '02d5128ac1fc2bf8762091b4f319762d',
+            hashlib.md5((Path(root) / filename).read_bytes()).hexdigest()
+            for filename in SEN12MS.filenames
         ]
-
         monkeypatch.setattr(SEN12MS, 'md5s', md5s)
-        root = os.path.join('tests', 'data', 'sen12ms')
         split = request.param
         transforms = nn.Identity()
         return SEN12MS(root, split, transforms=transforms, checksum=True)
@@ -67,13 +60,13 @@ class TestSEN12MS:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SEN12MS(tmp_path, checksum=False)
 
-    def test_check_integrity_light(self) -> None:
-        root = os.path.join('tests', 'data', 'sen12ms')
+    def test_check_integrity_light(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('sen12ms')
         ds = SEN12MS(root, checksum=False)
         assert isinstance(ds, SEN12MS)
 
-    def test_band_subsets(self) -> None:
-        root = os.path.join('tests', 'data', 'sen12ms')
+    def test_band_subsets(self, test_data: Callable[[str], str]) -> None:
+        root = test_data('sen12ms')
         for bands in SEN12MS.BAND_SETS.values():
             ds = SEN12MS(root, bands=bands, checksum=False)
             x = ds[0]['image']

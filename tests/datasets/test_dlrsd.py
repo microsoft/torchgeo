@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,10 +20,14 @@ from torchgeo.datasets import DLRSD, DatasetNotFoundError, DLRSDBase, DLRSDMulti
 class TestDLRSD:
     @pytest.fixture(params=[DLRSD, DLRSDMultilabel])
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> DLRSDBase:
         base_class: type[DLRSDBase] = request.param
-        url = os.path.join('tests', 'data', 'dlrsd') + os.sep
+        url = test_data('dlrsd') + os.sep
         monkeypatch.setattr(base_class, 'url', url)
         transforms = nn.Identity()
         return base_class(tmp_path, transforms, download=True)

@@ -1,7 +1,9 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
+
 import os
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,10 +23,12 @@ from torchgeo.datasets import (
 
 class TestSouthAmericaSoybean:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SouthAmericaSoybean:
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> SouthAmericaSoybean:
         transforms = nn.Identity()
         url = os.path.join(
-            'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_{}.tif'
+            test_data('south_america_soybean'), 'SouthAmerica_Soybean_{}.tif'
         )
 
         monkeypatch.setattr(SouthAmericaSoybean, 'url', url)
@@ -52,9 +56,11 @@ class TestSouthAmericaSoybean:
     def test_already_extracted(self, dataset: SouthAmericaSoybean) -> None:
         SouthAmericaSoybean(dataset.paths, download=True)
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
+    def test_already_downloaded(
+        self, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
         pathname = os.path.join(
-            'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_2002.tif'
+            test_data('south_america_soybean'), 'SouthAmerica_Soybean_2002.tif'
         )
         root = tmp_path
         shutil.copy(pathname, root)

@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -24,12 +25,16 @@ class TestFieldsOfTheWorld:
         params=product(['train', 'val', 'test'], ['2-class', '3-class', 'instance'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> FieldsOfTheWorld:
         split, task = request.param
 
         monkeypatch.setattr(FieldsOfTheWorld, 'valid_countries', ['austria'])
-        base_url = os.path.join('tests', 'data', 'ftw') + '/'
+        base_url = test_data('ftw') + '/'
         monkeypatch.setattr(FieldsOfTheWorld, 'base_url', base_url)
         root = tmp_path
         transforms = nn.Identity()
@@ -54,8 +59,10 @@ class TestFieldsOfTheWorld:
     def test_already_extracted(self, dataset: FieldsOfTheWorld) -> None:
         FieldsOfTheWorld(root=dataset.root, download=True)
 
-    def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        url = os.path.join('tests', 'data', 'ftw', 'austria.zip')
+    def test_already_downloaded(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, test_data: Callable[[str], str]
+    ) -> None:
+        url = os.path.join(test_data('ftw'), 'austria.zip')
         root = tmp_path
         shutil.copy(url, root)
         FieldsOfTheWorld(root)

@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 
 import pytest
 
@@ -11,8 +11,10 @@ from torchgeo.main import main
 
 class TestClassification:
     @pytest.mark.parametrize('name', ['iobench'])
-    def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+    def test_trainer(
+        self, name: str, fast_dev_run: bool, test_config: Callable[[str], str]
+    ) -> None:
+        config = test_config(name + '.yaml')
 
         args = [
             '--config',

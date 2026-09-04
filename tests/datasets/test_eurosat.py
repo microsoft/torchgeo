@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from itertools import product
 from pathlib import Path
 
@@ -28,11 +29,15 @@ class TestEuroSAT:
         params=product([EuroSAT, EuroSATSpatial, EuroSAT100], ['train', 'val', 'test'])
     )
     def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+        self,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+        test_data: Callable[[str], str],
     ) -> EuroSAT:
         base_class: type[EuroSAT] = request.param[0]
         split = request.param[1]
-        url = os.path.join('tests', 'data', 'eurosat') + os.sep
+        url = test_data('eurosat') + os.sep
         monkeypatch.setattr(base_class, 'url', url)
         transforms = nn.Identity()
         return base_class(tmp_path, split=split, transforms=transforms, download=True)
@@ -77,7 +82,7 @@ class TestEuroSAT:
             EuroSAT(root=tmp_path, split='train', download=False)
 
     def test_image_folder_present_split_file_missing(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, test_data: Callable[[str], str]
     ) -> None:
         """Test that split file is downloaded if missing but image folder is present."""
 
@@ -87,9 +92,7 @@ class TestEuroSAT:
         (class_dir / 'AnnualCrop_1.tif').touch()
         split_file = tmp_path / 'eurosat-train.txt'
         assert not split_file.exists()
-        monkeypatch.setattr(
-            EuroSAT, 'url', os.path.join('tests', 'data', 'eurosat') + os.sep
-        )
+        monkeypatch.setattr(EuroSAT, 'url', test_data('eurosat') + os.sep)
         EuroSAT(root=tmp_path, split='train', download=True)
         assert split_file.exists()
 

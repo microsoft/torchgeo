@@ -3,7 +3,7 @@
 
 import os
 import shutil
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
@@ -35,11 +35,13 @@ def download_url(monkeypatch: MonkeyPatch, request: SubRequest) -> None:
 
 @pytest.fixture(scope='module')
 def temp_archive(
-    request: SubRequest, tmp_path_factory: TempPathFactory
+    request: SubRequest,
+    tmp_path_factory: TempPathFactory,
+    test_data: Callable[[str], str],
 ) -> Generator[tuple[str, str], None, None]:
-    dir_not_zipped = request.param
+    dir_not_zipped = test_data(request.param)
     dir_zipped = shutil.make_archive(
-        tmp_path_factory.mktemp('archive') / dir_not_zipped,
+        str(tmp_path_factory.mktemp('archive') / os.path.basename(dir_not_zipped)),
         'zip',
         root_dir=dir_not_zipped,
     )

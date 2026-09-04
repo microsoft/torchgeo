@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -21,8 +21,8 @@ from torchgeo.datasets import (
 
 class TestAirphen:
     @pytest.fixture
-    def dataset(self) -> Airphen:
-        paths = os.path.join('tests', 'data', 'airphen')
+    def dataset(self, test_data: Callable[[str], str]) -> Airphen:
+        paths = test_data('airphen')
         bands = ['B1', 'B3', 'B4']
         transforms = nn.Identity()
         return Airphen(paths, bands=bands, transforms=transforms)

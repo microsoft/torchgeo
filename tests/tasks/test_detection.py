@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -36,9 +36,13 @@ class TestObjectDetection:
         'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self,
+        monkeypatch: MonkeyPatch,
+        name: str,
+        fast_dev_run: bool,
+        test_config: Callable[[str], str],
     ) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
+        config = test_config(name + '.yaml')
 
         if name.startswith('vhr10'):
             monkeypatch.setattr(VHR10, '__len__', lambda self: 5)
@@ -76,10 +80,15 @@ class TestObjectDetection:
         with pytest.raises(ValueError, match=match):
             ObjectDetection(backbone='invalid_backbone')
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot)
         datamodule = NASAMarineDebrisDataModule(
-            root='tests/data/nasa_marine_debris', batch_size=1, num_workers=0
+            root=test_data('nasa_marine_debris'), batch_size=1, num_workers=0
         )
         model = ObjectDetection(backbone='resnet18', num_classes=2)
         trainer = Trainer(
@@ -90,10 +99,15 @@ class TestObjectDetection:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_rgb(
+        self,
+        monkeypatch: MonkeyPatch,
+        fast_dev_run: bool,
+        test_data: Callable[[str], str],
+    ) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, 'plot', plot_missing_bands)
         datamodule = NASAMarineDebrisDataModule(
-            root='tests/data/nasa_marine_debris', batch_size=1, num_workers=0
+            root=test_data('nasa_marine_debris'), batch_size=1, num_workers=0
         )
         model = ObjectDetection(backbone='resnet18', num_classes=2)
         trainer = Trainer(
@@ -104,9 +118,9 @@ class TestObjectDetection:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool, test_data: Callable[[str], str]) -> None:
         datamodule = PredictObjectDetectionDataModule(
-            root='tests/data/nasa_marine_debris', batch_size=1, num_workers=0
+            root=test_data('nasa_marine_debris'), batch_size=1, num_workers=0
         )
         model = ObjectDetection(backbone='resnet18', num_classes=2)
         trainer = Trainer(
