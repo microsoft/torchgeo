@@ -80,6 +80,7 @@ from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .flair import FLAIRHUB, FLAIRHUBBase, FLAIRHUBToy
+from .forestchange import ForestChange
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -305,6 +306,7 @@ __all__ = (
     'FLAIRHUBToy',
     'FieldsOfTheWorld',
     'FireRisk',
+    'ForestChange',
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',

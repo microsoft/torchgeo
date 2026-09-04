@@ -23,6 +23,7 @@ from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialData
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
 from .flair import FLAIRHUBDataModule, FLAIRHUBToyDataModule
+from .forestchange import ForestChangeDataModule
 from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
@@ -94,6 +95,7 @@ __all__ = (
     'FLAIRHUBToyDataModule',
     'FieldsOfTheWorldDataModule',
     'FireRiskDataModule',
+    'ForestChangeDataModule',
     'GID15DataModule',
     'GeoDataModule',
     'GeoNRWDataModule',
