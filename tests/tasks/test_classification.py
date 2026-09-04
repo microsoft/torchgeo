@@ -18,9 +18,8 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
     MisconfigurationException,
-    QuakeSetDataModule,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import Classification
@@ -41,11 +40,6 @@ class ClassificationTestModel(Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
-
-
-class PredictBinaryDataModule(QuakeSetDataModule):
-    def setup(self, stage: str) -> None:
-        self.predict_dataset = QuakeSet(split='test', **self.kwargs)
 
 
 class PredictMulticlassDataModule(EuroSATDataModule):
@@ -83,7 +77,6 @@ class TestClassification:
             'eurosat100',
             'eurosatspatial',
             'fire_risk',
-            'quakeset',
             'patternnet',
             'resisc45',
             'so2sat_all',
@@ -97,7 +90,7 @@ class TestClassification:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name.startswith('so2sat') or name == 'quakeset':
+        if name.startswith('so2sat'):
             pytest.importorskip('h5py', minversion='3.10')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
@@ -235,22 +228,6 @@ class TestClassification:
             max_epochs=1,
         )
         trainer.validate(model=model, datamodule=datamodule)
-
-    def test_binary_predict(self, fast_dev_run: bool) -> None:
-        pytest.importorskip('h5py', minversion='3.10')
-        datamodule = PredictBinaryDataModule(
-            root='tests/data/quakeset', batch_size=1, num_workers=0
-        )
-        model = Classification(
-            model='resnet18', in_channels=4, task='binary', loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.predict(model=model, datamodule=datamodule)
 
     def test_multiclass_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictMulticlassDataModule(

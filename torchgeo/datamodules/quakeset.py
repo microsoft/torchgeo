@@ -34,9 +34,14 @@ class QuakeSetDataModule(NonGeoDataModule):
         """
         super().__init__(QuakeSet, batch_size, num_workers, **kwargs)
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomHorizontalFlip(p=0.5),
-            K.RandomVerticalFlip(p=0.5),
+            K.VideoSequential(
+                K.RandomHorizontalFlip(p=0.5), K.RandomVerticalFlip(p=0.5)
+            ),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(self.mean, self.std)),
             data_keys=None,
             keepdim=True,
         )

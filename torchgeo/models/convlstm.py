@@ -8,6 +8,7 @@
 from typing import Literal, cast
 
 import torch
+from timm.layers.classifier import ClassifierHead
 from torch import nn
 
 
@@ -115,6 +116,7 @@ class ConvLSTM(nn.Module):
         return_all_layers: bool = False,
         num_classes: int = 1,
         head_kernel_size: int = 1,
+        convolutional_head: bool = True,
     ) -> None:
         """Initializes the ConvLSTM model.
 
@@ -134,6 +136,9 @@ class ConvLSTM(nn.Module):
             num_classes: Optional number of segmentation classes for an attached
                 prediction head.
             head_kernel_size: Kernel size for the optional segmentation head.
+            convolutional_head: If ``False``, uses global average pooling followed by a
+                fully connected head for image-level prediction. If ``True``, uses a
+                convolutional head for dense prediction.
         """
         super().__init__()
 
@@ -173,12 +178,11 @@ class ConvLSTM(nn.Module):
             )
 
         self.cell_list = nn.ModuleList(cell_list)
-        padding = head_kernel_size // 2
-        self.head = nn.Conv2d(
-            in_channels=self.hidden_dim[-1],
-            out_channels=self.num_classes,
-            kernel_size=head_kernel_size,
-            padding=padding,
+        self.head = ClassifierHead(
+            in_features=self.hidden_dim[-1],
+            num_classes=self.num_classes,
+            use_conv=convolutional_head,
+            pool_type='' if convolutional_head else 'avg',
         )
 
     def forward_features(
@@ -328,7 +332,6 @@ class Conv3dLSTM(ConvLSTM):
             output_mode: Whether to return per-pixel maps or chip-level outputs.
             return_sequence: If ``True``, return predictions for every timestep.
             pooling: Pooling method used when ``output_mode='chip'``.
-
         Raises:
             ValueError: If an unsupported option or even kernel size is provided.
         """
@@ -362,6 +365,7 @@ class Conv3dLSTM(ConvLSTM):
             return_all_layers=return_all_layers,
             num_classes=num_outputs,
             head_kernel_size=head_kernel_size,
+            convolutional_head=output_mode == 'pixel',
         )
 
         self.input_dim = input_dim
@@ -453,7 +457,10 @@ class Conv3dLSTM(ConvLSTM):
             output = self.pool(output).flatten(1)
             return output.reshape(b, t, c)
 
-        return self.pool(output).flatten(1)
+        if output.ndim == 4:
+            return self.pool(output).flatten(1)
+
+        return output
 
     def forward(
         self,
@@ -482,7 +489,11 @@ class Conv3dLSTM(ConvLSTM):
         if self.return_sequence:
             b, t, c, h, w = layer_output.shape
             features = layer_output.reshape(b * t, c, h, w)
-            output = self.head(features).reshape(b, t, self.num_outputs, h, w)
+            output = self.head(features)
+            if output.ndim == 4:
+                output = output.reshape(b, t, self.num_outputs, h, w)
+            else:
+                output = output.reshape(b, t, self.num_outputs)
         else:
             features = self._select_features(layer_output, lengths=lengths)
             output = self.head(features)

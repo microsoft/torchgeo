@@ -1,0 +1,141 @@
+# Copyright (c) TorchGeo Contributors. All rights reserved.
+# Licensed under the MIT License.
+
+"""Trainers for spatiotemporal regression at image level."""
+
+from typing import Any, Literal
+
+from torch import Tensor
+
+from ..datasets.utils import Sample
+from ..models import ConvLSTM
+from .base import BaseTask
+from .mixins import RegressionMixin
+
+
+class SpatioTemporalRegression(RegressionMixin, BaseTask):
+    """Regression for spatiotemporal inputs."""
+
+    target_key = 'label'
+
+    def __init__(
+        self,
+        model: Literal['convlstm'] | str = 'convlstm',
+        in_channels: int = 3,
+        labels: list[str] | None = None,
+        num_outputs: int = 1,
+        num_filters: int = 3,
+        loss: Literal['mse', 'mae'] = 'mse',
+        lr: float = 1e-3,
+        patience: int = 10,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new SpatioTemporalRegressionTask instance.
+
+        Args:
+            model: Spatiotemporal model name. Supported value is ``'convlstm'``.
+            in_channels: Number of channels per timestep for inputs of shape ``(B, T, C, H, W)``.
+            labels: List of output channel names.
+            num_outputs: Number of output values for regression.
+            num_filters: Number of filters for the ConvLSTM.
+            loss: One of 'mse', 'mae'.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            **kwargs: Additional keyword arguments passed to the model constructor.
+        """
+        self.kwargs = kwargs
+        super().__init__()
+
+    def forward(self, x: Tensor, **kwargs: Any) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            x: Input tensor of shape (B, T, C, H, W).
+            **kwargs: Additional keyword arguments passed to the model.
+
+        Returns:
+            Output tensor of shape (B, num_outputs).
+        """
+        return self.model(x, **kwargs)
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        in_channels: int = self.hparams['in_channels']
+        num_outputs: int = self.hparams['num_outputs']
+        self.model = ConvLSTM(
+            input_dim=in_channels,
+            num_classes=num_outputs,
+            convolutional_head=False,
+            **self.kwargs,
+        )
+
+    def _shared_step(self, batch: Any, stage: str) -> Tensor:
+        """Compute the loss and metrics for the given stage."""
+        x = batch['image']
+        y = batch[self.target_key]
+        batch_size = x.shape[0]
+        kwargs: dict[str, Tensor] = {}
+        if (lengths := batch.get('length')) is not None:
+            kwargs['lengths'] = lengths
+        y_hat = self(x, **kwargs).squeeze(1)
+
+        metrics = getattr(self, f'{stage}_metrics')
+        metrics(y_hat, y)
+
+        loss: Tensor = self.criterion(y_hat, y)
+        self.log(f'{stage}_loss', loss, batch_size=batch_size)
+        return loss
+
+    def training_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            The loss tensor.
+        """
+        return self._shared_step(batch, 'train')
+
+    def validation_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
+        self._shared_step(batch, 'val')
+
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
+        self._shared_step(batch, 'test')
+
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted values.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            Output predicted values.
+        """
+        x = batch['image']
+        y_hat: Tensor = self(x)
+        return y_hat

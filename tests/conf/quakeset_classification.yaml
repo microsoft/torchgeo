@@ -1,0 +1,13 @@
+model:
+  class_path: SpatioTemporalClassification
+  init_args:
+    in_channels: 2
+    task: 'binary'
+    loss: 'bce'
+    num_classes: 1
+data:
+  class_path: QuakeSetDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/quakeset'

@@ -1,10 +1,9 @@
 model:
-  class_path: Classification
+  class_path: SpatioTemporalRegression
   init_args:
-    loss: 'bce'
-    model: 'resnet18'
-    in_channels: 4
-    task: 'binary'
+    in_channels: 2
+    loss: 'mse'
+    num_outputs: 1
 data:
   class_path: QuakeSetDataModule
   init_args:

@@ -33,7 +33,7 @@ class TestQuakeSet:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert x['image'].shape[0] == 4
+        assert x['image'].shape[:2] == (2, 2)
 
     def test_len(self, dataset: QuakeSet) -> None:
         assert len(dataset) == 8
