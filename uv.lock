@@ -3940,7 +3940,7 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.57" },
     { name = "ty", marker = "extra == 'style'", specifier = ">=0.0.62" },
     { name = "types-geopandas", marker = "extra == 'style'", specifier = ">=1.0" },
-    { name = "types-rasterio", marker = "extra == 'style'", specifier = ">=1.5.0.20260728" },
+    { name = "types-rasterio", marker = "extra == 'style'", specifier = ">=1.5.1" },
     { name = "types-requests", marker = "extra == 'style'", specifier = ">=2.25" },
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
     { name = "typing-extensions", specifier = ">=4.8" },

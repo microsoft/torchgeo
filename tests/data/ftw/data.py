@@ -9,7 +9,7 @@ import zipfile
 import numpy as np
 import pandas as pd
 import rasterio
-from affine import Affine
+from rasterio import Affine
 
 np.random.seed(0)
 
