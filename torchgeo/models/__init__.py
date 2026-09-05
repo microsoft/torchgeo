@@ -74,7 +74,6 @@ from .vit import (
 
 __all__ = (
     'BTC',
-    'BidirectionalConvLSTM',
     'CROMA',
     'DEO',
     'DOFA',
@@ -83,6 +82,7 @@ __all__ = (
     'MOSAIKS',
     'RCF',
     'Aurora_Weights',
+    'BidirectionalConvLSTM',
     'CROMABase_Weights',
     'CROMALarge_Weights',
     'ChangeMixin',
