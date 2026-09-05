@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from torch import Tensor
 
-from ..models import Conv3dLSTM, ConvLSTM
+from ..models import BidirectionalConvLSTM, Conv3dLSTM, ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
 
@@ -21,7 +21,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
 
     def __init__(
         self,
-        model: Literal['convlstm', 'conv3dlstm'] = 'convlstm',
+        model: Literal['convlstm', 'conv3dlstm', 'bidirectional_convlstm'] = 'convlstm',
         in_channels: int = 3,
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
@@ -38,8 +38,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         """Initialize a new SpatioTemporalSegmentation instance.
 
         Args:
-            model: Spatiotemporal model name. Supported values are ``'convlstm'``
-                and ``'conv3dlstm'``.
+            model: Spatiotemporal model name. Supported values are ``'convlstm'``,
+                ``'conv3dlstm'``, and ``'bidirectional_convlstm'``.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
             task: One of 'binary', 'multiclass', or 'multilabel'.
@@ -86,6 +86,10 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             case 'conv3dlstm':
                 self.model = Conv3dLSTM(
                     input_dim=in_channels, num_outputs=num_classes, **self.kwargs
+                )
+            case 'bidirectional_convlstm':
+                self.model = BidirectionalConvLSTM(
+                    input_dim=in_channels, num_classes=num_classes, **self.kwargs
                 )
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:

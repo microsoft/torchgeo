@@ -5,6 +5,7 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
+from .bidirectional_convlstm import BidirectionalConvLSTM
 from .btc import BTC
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .changevit import ChangeViT
@@ -73,6 +74,7 @@ from .vit import (
 
 __all__ = (
     'BTC',
+    'BidirectionalConvLSTM',
     'CROMA',
     'DEO',
     'DOFA',
