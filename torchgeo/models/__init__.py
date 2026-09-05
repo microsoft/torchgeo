@@ -26,7 +26,19 @@ from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
+from .olmoearth import (
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthTiny_Weights,
+    olmoearth_base,
+    olmoearth_large,
+    olmoearth_nano,
+    olmoearth_small,
+    olmoearth_tiny,
+    olmoearth_v1_unet_decoder,
+)
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
 from .rcf import MOSAIKS, RCF
@@ -99,7 +111,11 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
-    'OlmoEarthV1_Weights',
+    'OlmoEarthBase_Weights',
+    'OlmoEarthLarge_Weights',
+    'OlmoEarthNano_Weights',
+    'OlmoEarthSmall_Weights',
+    'OlmoEarthTiny_Weights',
     'Panopticon',
     'Panopticon_Weights',
     'Presto',
@@ -142,7 +158,11 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
-    'olmoearth_v1',
+    'olmoearth_base',
+    'olmoearth_large',
+    'olmoearth_nano',
+    'olmoearth_small',
+    'olmoearth_tiny',
     'olmoearth_v1_unet_decoder',
     'panopticon_vitb14',
     'presto',

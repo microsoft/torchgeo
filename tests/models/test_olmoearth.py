@@ -1,52 +1,90 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-from pathlib import Path
-
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 
-from torchgeo.models import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
+from torchgeo.models import (
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthTiny_Weights,
+    olmoearth_base,
+    olmoearth_large,
+    olmoearth_nano,
+    olmoearth_small,
+    olmoearth_tiny,
+    olmoearth_v1_unet_decoder,
+)
 
 pytest.importorskip('olmoearth_pretrain_minimal')
 
 
-class TestOlmoEarthV1:
-    @pytest.fixture(params=[*OlmoEarthV1_Weights])
-    def weights(self, request: SubRequest) -> OlmoEarthV1_Weights:
+class TestOlmoEarthNano:
+    @pytest.fixture(params=[*OlmoEarthNano_Weights])
+    def weights(self, request: SubRequest) -> OlmoEarthNano_Weights:
         return request.param
 
-    @pytest.fixture
-    def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> OlmoEarthV1_Weights:
-        weights = OlmoEarthV1_Weights.NANO
-        path = tmp_path / 'weights.pth'
-        model = olmoearth_v1(model_size='nano')
-        torch.save(model.model.state_dict(), path)
-        monkeypatch.setattr(weights.value, 'url', str(path))
-        return weights
-
-    def test_olmoearth_v1(self) -> None:
-        olmoearth_v1()
-
-    def test_olmoearth_v1_weights(self, mocked_weights: OlmoEarthV1_Weights) -> None:
-        olmoearth_v1(weights=mocked_weights)
-
-    def test_olmoearth_v1_weights_are_applied(
-        self, mocked_weights: OlmoEarthV1_Weights
-    ) -> None:
-        one = olmoearth_v1(weights=mocked_weights).state_dict()
-        two = olmoearth_v1(weights=mocked_weights).state_dict()
-        assert one.keys() == two.keys()
-        for key, value in one.items():
-            assert torch.equal(value, two[key]), key
+    def test_olmoearth(self) -> None:
+        olmoearth_nano()
 
     @pytest.mark.slow
-    def test_olmoearth_v1_download(self, weights: OlmoEarthV1_Weights) -> None:
-        olmoearth_v1(weights=weights)
+    def test_olmoearth_download(self, weights: OlmoEarthNano_Weights) -> None:
+        olmoearth_nano(weights=weights)
+
+
+class TestOlmoEarthTiny:
+    @pytest.fixture(params=[*OlmoEarthTiny_Weights])
+    def weights(self, request: SubRequest) -> OlmoEarthTiny_Weights:
+        return request.param
+
+    def test_olmoearth(self) -> None:
+        olmoearth_tiny()
+
+    @pytest.mark.slow
+    def test_olmoearth_download(self, weights: OlmoEarthTiny_Weights) -> None:
+        olmoearth_tiny(weights=weights)
+
+
+class TestOlmoEarthSmall:
+    @pytest.fixture(params=[*OlmoEarthSmall_Weights])
+    def weights(self, request: SubRequest) -> OlmoEarthSmall_Weights:
+        return request.param
+
+    def test_olmoearth(self) -> None:
+        olmoearth_small()
+
+    @pytest.mark.slow
+    def test_olmoearth_download(self, weights: OlmoEarthSmall_Weights) -> None:
+        olmoearth_small(weights=weights)
+
+
+class TestOlmoEarthBase:
+    @pytest.fixture(params=[*OlmoEarthBase_Weights])
+    def weights(self, request: SubRequest) -> OlmoEarthBase_Weights:
+        return request.param
+
+    def test_olmoearth(self) -> None:
+        olmoearth_base()
+
+    @pytest.mark.slow
+    def test_olmoearth_download(self, weights: OlmoEarthBase_Weights) -> None:
+        olmoearth_base(weights=weights)
+
+
+class TestOlmoEarthLarge:
+    @pytest.fixture(params=[*OlmoEarthLarge_Weights])
+    def weights(self, request: SubRequest) -> OlmoEarthLarge_Weights:
+        return request.param
+
+    def test_olmoearth(self) -> None:
+        olmoearth_large()
+
+    @pytest.mark.slow
+    def test_olmoearth_download(self, weights: OlmoEarthLarge_Weights) -> None:
+        olmoearth_large(weights=weights)
 
 
 class TestOlmoEarthV1UNetDecoder:

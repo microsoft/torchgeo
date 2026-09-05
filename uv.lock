@@ -2308,7 +2308,7 @@ wheels = [
 
 [[package]]
 name = "olmoearth-pretrain-minimal"
-version = "0.0.7"
+version = "0.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "einops" },
@@ -2317,9 +2317,9 @@ dependencies = [
     { name = "torch" },
     { name = "universal-pathlib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/74/46d2c0f78b27c2ba760fe795b88cba2f1fcf3dc67aa85ef23b7638f33505/olmoearth_pretrain_minimal-0.0.7.tar.gz", hash = "sha256:c200a11dcb504eaf3a8777510c237ed86c97c52887f782e92d07c74761f93241", size = 81239, upload-time = "2026-08-17T23:22:26.419Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/96/f8/f3fe2d8d9527d768f771d3f148bc7d3cf8928491edb7ab7758861d248b74/olmoearth_pretrain_minimal-0.0.8.tar.gz", hash = "sha256:c6d903ecbc700e4c7880da0b969fd8fc00db276bd2983a8ecab41316a0350f4b", size = 81513, upload-time = "2026-08-28T18:02:00.048Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/cc/1eb2da483688c4295fd4d2f37d4f9c9146ed4ee63792d9641585bdca86a9/olmoearth_pretrain_minimal-0.0.7-py3-none-any.whl", hash = "sha256:e1d9daa4d4aeaba3356679c913cb89d3346ca6df00e88964c0fe530678d8320e", size = 81892, upload-time = "2026-08-17T23:22:24.796Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/0f/26231415d80712c88589d50c7a6cd2609040da931d1e3dd86bb935429a3b/olmoearth_pretrain_minimal-0.0.8-py3-none-any.whl", hash = "sha256:3913cba530d162aed4e1dc462bdc58dd5c7eae09fe5d2d521827ba0c6e3af894", size = 81964, upload-time = "2026-08-28T18:01:58.687Z" },
 ]
 
 [[package]]
@@ -3909,7 +3909,7 @@ requires-dist = [
     { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.8.5" },
     { name = "netcdf4", marker = "extra == 'datasets'", specifier = ">=1.6.5" },
     { name = "numpy", specifier = ">=1.26" },
-    { name = "olmoearth-pretrain-minimal", marker = "extra == 'models'", specifier = ">=0.0.7" },
+    { name = "olmoearth-pretrain-minimal", marker = "extra == 'models'", specifier = ">=0.0.8" },
     { name = "packaging", marker = "extra == 'tests'", specifier = ">=21" },
     { name = "pandas", specifier = ">=2.1.1" },
     { name = "pandas", extras = ["parquet"], marker = "extra == 'datasets'", specifier = ">=2.1.1" },
