@@ -16,8 +16,8 @@ class BidirectionalConvLSTM(nn.Module):
     then concatenates the terminal features from both directions. This provides
     each prediction with context from the beginning and end of the sequence.
 
-    Inspired by the bidirectional ConvLSTM baseline from the `U-TAE/PaPs
-    repository <https://github.com/VSainteuf/utae-paps>`_.
+    Inspired by the ``BConvLSTM`` implementation in the `U-TAE/PaPs repository
+    <https://github.com/VSainteuf/utae-paps/blob/main/src/backbones/convlstm.py#L239-L321>`_.
 
     If you use this model in your research, please cite the following papers:
 
