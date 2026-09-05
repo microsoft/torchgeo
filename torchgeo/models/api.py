@@ -32,6 +32,7 @@ from .earthloc import EarthLoc_Weights, earthloc
 from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
+from .prithvi import PrithviV2_Weights, prithvi_eo_v2_300
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -87,6 +88,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
+    'prithvi_eo_v2_300': prithvi_eo_v2_300,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
@@ -120,6 +122,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     olmoearth_v1: OlmoEarthV1_Weights,
     panopticon_vitb14: Panopticon_Weights,
     presto: Presto_Weights,
+    prithvi_eo_v2_300: PrithviV2_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
@@ -150,6 +153,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'olmoearth_v1': OlmoEarthV1_Weights,
     'panopticon_vitb14': Panopticon_Weights,
     'presto': Presto_Weights,
+    'prithvi_eo_v2_300': PrithviV2_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
