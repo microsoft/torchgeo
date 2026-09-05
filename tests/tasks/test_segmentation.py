@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     PASTISDataModule,
     SEN12MSDataModule,
 )
-from torchgeo.datasets import FLAIRHUB, RGBBandsMissingError
+from torchgeo.datasets import FLAIRHUB, ChesapeakeCVPR, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SemanticSegmentation
@@ -102,6 +102,25 @@ class TestSemanticSegmentation:
             case 'flairhub_multimodal_landcover' | 'flairhub_toy_croptype':
                 monkeypatch.setattr(
                     FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+                )
+            case _ if name.startswith('chesapeake_cvpr'):
+                # Tell ChesapeakeCVPR that only the fixture tile is available so
+                # it doesn't try to (re-)extract the archives on every test run.
+                # Without this, parallel test workers can extract into the same
+                # shared tests/data directory at once and corrupt each other's
+                # reads.
+                monkeypatch.setattr(
+                    ChesapeakeCVPR,
+                    '_files',
+                    {
+                        'base': (
+                            'de_1m_2013_extended-debuffered-test_tiles',
+                            'spatial_index.geojson',
+                        ),
+                        'prior_extension': (
+                            'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                        ),
+                    },
                 )
 
         config = os.path.join('tests', 'conf', name + '.yaml')
@@ -295,7 +314,7 @@ class TestSemanticSegmentation:
     def test_predict_step_returns_dict(self) -> None:
         """Test that predict_step returns a dictionary."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert isinstance(result, dict)
@@ -303,7 +322,7 @@ class TestSemanticSegmentation:
     def test_predict_step_contains_required_keys(self) -> None:
         """Test that predict_step dict contains required keys."""
         task = SemanticSegmentation(task='multiclass', num_classes=10)
-        batch = {'image': torch.randn(2, 3, 64, 64)}
+        batch = {'image': torch.randn(2, 3, 32, 32)}
         result = task.predict_step(batch, 0)
 
         assert 'probabilities' in result
@@ -315,7 +334,7 @@ class TestSemanticSegmentation:
         num_classes = 10
         task = SemanticSegmentation(task='multiclass', num_classes=num_classes)
         batch_size = 2
-        height, width = 64, 64
+        height, width = 32, 32
         batch = {'image': torch.randn(batch_size, 3, height, width)}
         result = task.predict_step(batch, 0)
 
@@ -329,7 +348,7 @@ class TestSemanticSegmentation:
         bounds_tensor = torch.randn(2, 9)
         transform_tensor = torch.randn(2, 6)
         batch = {
-            'image': torch.randn(2, 3, 64, 64),
+            'image': torch.randn(2, 3, 32, 32),
             'bounds': bounds_tensor,
             'transform': transform_tensor,
         }

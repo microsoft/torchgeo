@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 from torchgeo.models import ScaleMAELarge16_Weights, scalemae_large_patch16
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestScaleMAE:
     @pytest.fixture(params=[*ScaleMAELarge16_Weights])
     def weights(self, request: SubRequest) -> ScaleMAELarge16_Weights:
@@ -31,8 +32,8 @@ class TestScaleMAE:
         scalemae_large_patch16()
 
     def test_scalemae_forward_pass(self) -> None:
-        model = scalemae_large_patch16(img_size=64, num_classes=2)
-        x = torch.randn(1, 3, 64, 64)
+        model = scalemae_large_patch16(img_size=32, num_classes=2)
+        x = torch.randn(1, 3, 32, 32)
         y = model(x)
         assert y.shape == (1, 2)
 
@@ -41,9 +42,7 @@ class TestScaleMAE:
 
     def test_transforms(self, weights: ScaleMAELarge16_Weights) -> None:
         c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
-        }
+        sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
         weights.transforms(sample)
 
     def test_export_transforms(self, weights: ScaleMAELarge16_Weights) -> None:
@@ -51,7 +50,7 @@ class TestScaleMAE:
         torch = pytest.importorskip('torch', minversion='2.6.0')
         torch.compiler.reset()
         c = weights.meta['in_chans']
-        inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
+        inputs = (torch.randn(1, c, 32, 32, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
 
     def test_scalemae_weights_diff_image_size(

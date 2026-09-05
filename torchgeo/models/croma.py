@@ -122,16 +122,25 @@ class CROMA(nn.Module):
         Args:
             x_sar: Input mini-batch of SAR images [B, 2, H, W].
             x_optical: Input mini-batch of optical images [B, 12, H, W].
+
+        Raises:
+            ValueError: If an input required by the configured modalities is missing.
         """
         return_dict: dict[str, Tensor] = {}
 
-        if 'sar' in self.modalities and x_sar is not None:
+        if 'sar' in self.modalities:
+            if x_sar is None:
+                raise ValueError('x_sar is required when using the SAR modality')
             sar_encodings = self.s1_encoder(imgs=x_sar, attn_bias=self.attn_bias)
             sar_GAP = self.s1_GAP_FFN(sar_encodings.mean(dim=1))
             return_dict['sar_encodings'] = sar_encodings
             return_dict['sar_GAP'] = sar_GAP
 
-        if 'optical' in self.modalities and x_optical is not None:
+        if 'optical' in self.modalities:
+            if x_optical is None:
+                raise ValueError(
+                    'x_optical is required when using the optical modality'
+                )
             optical_encodings = self.s2_encoder(
                 imgs=x_optical, attn_bias=self.attn_bias
             )
@@ -141,8 +150,8 @@ class CROMA(nn.Module):
 
         if set(self.modalities) == {'sar', 'optical'}:
             joint_encodings = self.joint_encoder(
-                x=sar_encodings,
-                context=optical_encodings,
+                x=return_dict['sar_encodings'],
+                context=return_dict['optical_encodings'],
                 relative_position_bias=self.attn_bias,
             )
             joint_GAP = joint_encodings.mean(dim=1)

@@ -19,6 +19,7 @@ from torchvision.models._api import WeightsEnum
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
+from .deo import DEO_Weights, deo_base
 from .dofa import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
@@ -28,7 +29,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -82,6 +83,8 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'olmoearth_v1': olmoearth_v1,
+    'olmoearth_v1_unet_decoder': olmoearth_v1_unet_decoder,
+    'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
     'resnet18': resnet18,
@@ -110,6 +113,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
+    deo_base: DEO_Weights,
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
@@ -139,6 +143,7 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
+    'deo_base': DEO_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,

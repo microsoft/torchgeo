@@ -5,6 +5,7 @@ import enum
 from collections.abc import Callable
 
 import pytest
+from _pytest.mark.structures import ParameterSet
 from torch import nn
 from torchvision.models._api import WeightsEnum
 
@@ -13,6 +14,7 @@ from torchgeo.models import (
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
+    DEO_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
@@ -42,6 +44,7 @@ from torchgeo.models import (
     copernicusfm_base,
     croma_base,
     croma_large,
+    deo_base,
     dofa_base_patch16_224,
     dofa_huge_patch14_224,
     dofa_large_patch16_224,
@@ -52,6 +55,7 @@ from torchgeo.models import (
     get_weight,
     list_models,
     olmoearth_v1,
+    olmoearth_v1_unet_decoder,
     panopticon_vitb14,
     presto,
     resnet18,
@@ -75,24 +79,28 @@ from torchgeo.models import (
     vit_small_patch16_224,
 )
 
+memory_intensive = pytest.mark.xdist_group('memory_intensive')
+
 builders = [
-    aurora_swin_unet,
+    pytest.param(aurora_swin_unet, marks=memory_intensive),
     copernicusfm_base,
     croma_base,
-    croma_large,
+    pytest.param(croma_large, marks=memory_intensive),
+    deo_base,
     dofa_base_patch16_224,
-    dofa_huge_patch14_224,
+    pytest.param(dofa_huge_patch14_224, marks=memory_intensive),
     dofa_large_patch16_224,
     dofa_small_patch16_224,
     earthloc,
     olmoearth_v1,
+    olmoearth_v1_unet_decoder,
     panopticon_vitb14,
     presto,
     resnet18,
     resnet50,
     resnet152,
     satclip,
-    scalemae_large_patch16,
+    pytest.param(scalemae_large_patch16, marks=memory_intensive),
     swin_t,
     swin_s,
     swin_b,
@@ -103,8 +111,8 @@ builders = [
     unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
-    vit_huge_patch14_224,
-    vit_large_patch16_224,
+    pytest.param(vit_huge_patch14_224, marks=memory_intensive),
+    pytest.param(vit_large_patch16_224, marks=memory_intensive),
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 ]
@@ -113,6 +121,7 @@ enums = [
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
+    DEO_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
@@ -145,7 +154,7 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
-    if builder == olmoearth_v1:
+    if builder in (olmoearth_v1, olmoearth_v1_unet_decoder):
         pytest.importorskip('olmoearth_pretrain_minimal')
 
     model = get_model(builder.__name__)
@@ -154,7 +163,11 @@ def test_get_model(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
-    models_without_weights = [dofa_huge_patch14_224, dofa_small_patch16_224]
+    models_without_weights = [
+        dofa_huge_patch14_224,
+        dofa_small_patch16_224,
+        olmoearth_v1_unet_decoder,
+    ]
     if builder in models_without_weights:
         return
 
@@ -171,7 +184,10 @@ def test_get_weight(enum: type[WeightsEnum]) -> None:
 
 
 def test_list_models() -> None:
-    models = [builder.__name__ for builder in builders]
+    models = [
+        (builder.values[0] if isinstance(builder, ParameterSet) else builder).__name__
+        for builder in builders
+    ]
     assert set(models) == set(list_models())
 
 

@@ -14,6 +14,7 @@ from torchgeo.models import Aurora_Weights, aurora_swin_unet
 pytest.importorskip('aurora')
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestAurora:
     @pytest.fixture(params=[*Aurora_Weights])
     def weights(self, request: SubRequest) -> Aurora_Weights:
