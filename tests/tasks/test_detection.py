@@ -33,11 +33,14 @@ def plot(*args: Any, **kwargs: Any) -> None:
 
 class TestObjectDetection:
     @pytest.mark.parametrize(
-        'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
+        'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det', 'vhr10_rf_detr']
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        if name == 'vhr10_rf_detr':
+            pytest.importorskip('rfdetr')
+
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         if name.startswith('vhr10'):

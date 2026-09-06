@@ -135,6 +135,9 @@ models = [
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.0.7+ required for UNetDecoder support
     "olmoearth-pretrain-minimal>=0.0.7",
+    # RF-DETR 1.9.1+ required for object detection support
+    # RF-DETR depends on tokenizers, which does not provide Python 3.14t wheels
+    "rfdetr>=1.9.1; python_version<'3.14'",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels

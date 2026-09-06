@@ -4,6 +4,7 @@
 """Tasks for object detection."""
 
 from functools import partial
+from typing import Any
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -53,13 +54,14 @@ class ObjectDetection(BaseTask):
         self,
         model: str = 'faster-rcnn',
         backbone: str = 'resnet50',
-        weights: WeightsEnum | None = None,
+        weights: WeightsEnum | str | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new ObjectDetection instance.
 
@@ -69,13 +71,14 @@ class ObjectDetection(BaseTask):
         Args:
             model: Name of the `torchvision
                 <https://docs.pytorch.org/vision/stable/models.html#object-detection>`__
-                model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
+                model to use. One of 'faster-rcnn', 'fcos', 'retinanet',
+                'rf-detr-nano', 'rf-detr-small', 'rf-detr-medium', or 'rf-detr-large'.
             backbone: Name of the `torchvision
                 <https://docs.pytorch.org/vision/stable/models.html#classification>`__
                 backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
                 'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
                 'wide_resnet50_2', or 'wide_resnet101_2'.
-            weights: Initial model weights.
+            weights: Initial model weights. RF-DETR models accept a checkpoint path.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
@@ -83,6 +86,7 @@ class ObjectDetection(BaseTask):
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the detection
                 head.
+            **kwargs: Additional model-specific keyword arguments.
 
         .. versionchanged:: 0.4
            *detection_model* was renamed to *model*.
@@ -95,6 +99,7 @@ class ObjectDetection(BaseTask):
            renamed to *weights*, *lr*, and *patience*.
         """
         self.weights = weights
+        self.model_kwargs = kwargs
         super().__init__()
 
     def configure_models(self) -> None:
@@ -108,6 +113,15 @@ class ObjectDetection(BaseTask):
         in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
         freeze_backbone: bool = self.hparams['freeze_backbone']
+
+        if model.startswith('rf-detr'):
+            from ..models.rfdetr import RFDETR
+
+            self.model_kwargs['pretrain_weights'] = self.weights
+            self.model = RFDETR(
+                model, num_classes, in_channels, freeze_backbone, **self.model_kwargs
+            )
+            return
 
         if backbone in BACKBONE_LAT_DIM_MAP:
             kwargs = {
