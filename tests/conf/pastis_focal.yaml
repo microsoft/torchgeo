@@ -1,16 +1,18 @@
 model:
   class_path: SpatioTemporalSegmentation
   init_args:
-    model: 'convlstm'
+    model: 'utae'
     in_channels: 10
     task: 'multiclass'
     num_classes: 20
+    ignore_index: 19
     loss: 'focal'
   dict_kwargs:
-    hidden_dim: 8
-    num_layers: 1
-    kernel_size: 3
-    head_kernel_size: 1
+    encoder_widths: [16, 16]
+    decoder_widths: [8, 16]
+    n_head: 4
+    d_model: 16
+    d_k: 4
 data:
   class_path: PASTISDataModule
   init_args:

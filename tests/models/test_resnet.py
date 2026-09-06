@@ -53,6 +53,9 @@ class TestResNet18:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
+    def test_model(self, weights: ResNet18_Weights) -> None:
+        assert weights.meta['model'] == 'resnet18'
+
     def test_transforms(self, weights: ResNet18_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
@@ -105,6 +108,9 @@ class TestResNet50:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
+    def test_model(self, weights: ResNet50_Weights) -> None:
+        assert weights.meta['model'] == 'resnet50'
+
     def test_transforms(self, weights: ResNet50_Weights) -> None:
         c = weights.meta['in_chans']
         sample = {'image': torch.arange(c * 32 * 32, dtype=torch.float).view(c, 32, 32)}
@@ -156,6 +162,9 @@ class TestResNet152:
     def test_bands(self, weights: ResNet152_Weights) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
+
+    def test_model(self, weights: ResNet152_Weights) -> None:
+        assert weights.meta['model'] == 'resnet152'
 
     def test_transforms(self, weights: ResNet152_Weights) -> None:
         c = weights.meta['in_chans']

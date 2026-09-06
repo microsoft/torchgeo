@@ -137,6 +137,7 @@ class TestViTBase16:
         vit_base_patch16_224(weights=weights)
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestViTLarge16:
     @pytest.fixture(params=[*ViTLarge16_Weights])
     def weights(self, request: SubRequest) -> ViTLarge16_Weights:
@@ -192,6 +193,7 @@ class TestViTLarge16:
         vit_large_patch16_224(weights=weights)
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestViTHuge14:
     @pytest.fixture(params=[*ViTHuge14_Weights])
     def weights(self, request: SubRequest) -> ViTHuge14_Weights:

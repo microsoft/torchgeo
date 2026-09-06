@@ -29,7 +29,7 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
+from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -83,6 +83,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'olmoearth_v1': olmoearth_v1,
+    'olmoearth_v1_unet_decoder': olmoearth_v1_unet_decoder,
     'deo_base': deo_base,
     'panopticon_vitb14': panopticon_vitb14,
     'presto': presto,
