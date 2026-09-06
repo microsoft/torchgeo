@@ -5,6 +5,7 @@ model:
     in_channels: 10
     task: 'multiclass'
     num_classes: 20
+    ignore_index: 19
     loss: 'ce'
   dict_kwargs:
     hidden_dim: 8

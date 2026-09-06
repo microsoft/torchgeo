@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Any, Literal
 
 import pytest
 import torch
@@ -69,13 +70,30 @@ class TestSpatioTemporalSegmentation:
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
 
-    def test_multilabel_predict_step(self) -> None:
-        model = SpatioTemporalSegmentation(
-            in_channels=3, num_labels=4, task='multilabel', hidden_dim=8, num_layers=1
+    @pytest.mark.parametrize('model', ['convlstm', 'utae'])
+    def test_multilabel_predict_step(self, model: Literal['convlstm', 'utae']) -> None:
+        kwargs: dict[str, Any]
+        if model == 'convlstm':
+            kwargs = {'hidden_dim': 8, 'num_layers': 1}
+        else:
+            kwargs = {
+                'encoder_widths': (4, 4),
+                'decoder_widths': (4, 4),
+                'out_conv': (4, 4),
+                'n_head': 1,
+                'd_model': 4,
+                'd_k': 4,
+            }
+        task = SpatioTemporalSegmentation(
+            model=model, in_channels=3, num_labels=4, task='multilabel', **kwargs
         )
-        batch = {'image': torch.randn(2, 4, 3, 16, 16), 'length': torch.tensor([4, 3])}
+        batch = {
+            'image': torch.randn(2, 4, 3, 16, 16),
+            'length': torch.tensor([4, 3]),
+            'batch_positions': torch.arange(4).expand(2, -1),
+        }
 
-        probabilities = model.predict_step(batch, 0)
+        probabilities = task.predict_step(batch, 0)
         assert probabilities.shape == (2, 4, 16, 16)
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)

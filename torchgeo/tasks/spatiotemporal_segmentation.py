@@ -4,11 +4,11 @@
 """Tasks for spatiotemporal semantic segmentation."""
 
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from torch import Tensor
 
-from ..models import BidirectionalConvLSTM, Conv3dLSTM, ConvLSTM
+from ..models import UTAE, BidirectionalConvLSTM, Conv3dLSTM, ConvLSTM
 from .base import BaseTask
 from .mixins import ClassificationMixin
 
@@ -21,7 +21,9 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
 
     def __init__(
         self,
-        model: Literal['convlstm', 'conv3dlstm', 'bidirectional_convlstm'] = 'convlstm',
+        model: Literal[
+            'convlstm', 'conv3dlstm', 'bidirectional_convlstm', 'utae'
+        ] = 'convlstm',
         in_channels: int = 3,
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
@@ -38,8 +40,8 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         """Initialize a new SpatioTemporalSegmentation instance.
 
         Args:
-            model: Spatiotemporal model name. Supported values are ``'convlstm'``,
-                ``'conv3dlstm'``, and ``'bidirectional_convlstm'``.
+            model: Spatiotemporal model name. One of ``'convlstm'``,
+                ``'conv3dlstm'``, ``'bidirectional_convlstm'``, or ``'utae'``.
             in_channels: Number of channels per timestep for inputs of shape
                 ``(B, T, C, H, W)``.
             task: One of 'binary', 'multiclass', or 'multilabel'.
@@ -56,6 +58,11 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             **kwargs: Additional keyword arguments passed to the model constructor.
+
+        The input batch may include model-specific metadata. ConvLSTM, Conv3dLSTM,
+        and BidirectionalConvLSTM use ``length`` with shape ``(B,)`` for sequence
+        lengths. UTAE uses ``batch_positions`` with shape ``(B, T)`` for temporal
+        positions such as acquisition day indices.
         """
         self.kwargs = kwargs
         super().__init__()
@@ -80,26 +87,49 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         )
         match self.hparams['model']:
             case 'convlstm':
+                kwargs = self.kwargs.copy()
                 self.model = ConvLSTM(
-                    input_dim=in_channels, num_classes=num_classes, **self.kwargs
+                    input_dim=in_channels, num_classes=num_classes, **kwargs
                 )
             case 'conv3dlstm':
+                kwargs = self.kwargs.copy()
                 self.model = Conv3dLSTM(
-                    input_dim=in_channels, num_outputs=num_classes, **self.kwargs
+                    input_dim=in_channels, num_outputs=num_classes, **kwargs
                 )
             case 'bidirectional_convlstm':
+                kwargs = self.kwargs.copy()
                 self.model = BidirectionalConvLSTM(
-                    input_dim=in_channels, num_classes=num_classes, **self.kwargs
+                    input_dim=in_channels, num_classes=num_classes, **kwargs
                 )
+            case 'utae':
+                kwargs = self.kwargs.copy()
+                out_conv = cast(
+                    Sequence[int], kwargs.pop('out_conv', (32, num_classes))
+                )
+                self.model = UTAE(input_dim=in_channels, out_conv=out_conv, **kwargs)
+
+    def _model_kwargs(self, batch: Any) -> dict[str, Tensor]:
+        """Extract model-specific keyword arguments from a batch.
+
+        UTAE accepts ``batch_positions`` of shape ``(B, T)`` for date-aware
+        positional encoding in its temporal attention module.
+        """
+        kwargs: dict[str, Tensor] = {}
+        match self.hparams['model']:
+            case 'convlstm' | 'conv3dlstm' | 'bidirectional_convlstm':
+                if (lengths := batch.get('length')) is not None:
+                    kwargs['lengths'] = lengths
+            case 'utae':
+                if (batch_positions := batch.get('batch_positions')) is not None:
+                    kwargs['batch_positions'] = batch_positions
+        return kwargs
 
     def _shared_step(self, batch: Any, stage: str) -> Tensor:
         """Compute the loss and metrics for the given stage."""
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]
-        kwargs: dict[str, Tensor] = {}
-        if (lengths := batch.get('length')) is not None:
-            kwargs['lengths'] = lengths
+        kwargs = self._model_kwargs(batch)
         y_hat = self(x, **kwargs).squeeze(1)
 
         metrics = getattr(self, f'{stage}_metrics')
@@ -132,9 +162,7 @@ class SpatioTemporalSegmentation(ClassificationMixin, BaseTask):
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities."""
-        kwargs: dict[str, Tensor] = {}
-        if (lengths := batch.get('length')) is not None:
-            kwargs['lengths'] = lengths
+        kwargs = self._model_kwargs(batch)
         y_hat: Tensor = self(batch['image'], **kwargs)
 
         match self.hparams['task']:
