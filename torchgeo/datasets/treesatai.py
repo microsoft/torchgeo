@@ -253,6 +253,7 @@ class TreeSatAI(NonGeoDataset):
             A matplotlib Figure with the rendered sample.
 
         .. versionadded:: 0.11
+            The *suptitle* parameter.
         """
         fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False)
 
@@ -270,18 +271,21 @@ class TreeSatAI(NonGeoDataset):
             if show_titles:
                 ax[0, i].set_title(sensor)
 
+        suptitle_str = ''
+
+        if suptitle is not None:
+            suptitle_str = suptitle
+
         if show_titles:
             label = self._multilabel_to_string(sample['label'])
-            label_title = f'Label: ({label})'
+            suptitle_str += f'\nLabel: ({label})'
 
             if 'prediction' in sample:
                 prediction = self._multilabel_to_string(sample['prediction'])
-                label_title += f'\nPrediction: ({prediction})'
+                suptitle_str += f'\nPrediction: ({prediction})'
 
-            fig.suptitle(label_title)
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
+        if suptitle_str:
+            plt.suptitle(suptitle_str)
 
         fig.tight_layout()
         return fig

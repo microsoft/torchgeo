@@ -103,6 +103,7 @@ class ClayEmbeddings(NonGeoDataset):
             A matplotlib Figure with the rendered sample.
 
         .. versionadded:: 0.11
+            The *suptitle* parameter.
         """
         fig, ax = plt.subplots()
         ax.plot(sample['embedding'])
