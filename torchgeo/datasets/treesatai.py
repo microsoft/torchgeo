@@ -239,15 +239,20 @@ class TreeSatAI(NonGeoDataset):
 
         extract_archive(os.path.join(self.root, file), to_path)
 
-    def plot(self, sample: Sample, show_titles: bool = True) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
 
         Returns:
             A matplotlib Figure with the rendered sample.
+
+        .. versionadded:: 0.11
         """
         fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False)
 
@@ -267,13 +272,16 @@ class TreeSatAI(NonGeoDataset):
 
         if show_titles:
             label = self._multilabel_to_string(sample['label'])
-            suptitle = f'Label: ({label})'
+            label_title = f'Label: ({label})'
 
             if 'prediction' in sample:
                 prediction = self._multilabel_to_string(sample['prediction'])
-                suptitle += f'\nPrediction: ({prediction})'
+                label_title += f'\nPrediction: ({prediction})'
 
-            fig.suptitle(suptitle)
+            fig.suptitle(label_title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
         fig.tight_layout()
         return fig

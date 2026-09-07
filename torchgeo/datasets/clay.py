@@ -89,15 +89,20 @@ class ClayEmbeddings(NonGeoDataset):
 
         return sample
 
-    def plot(self, sample: Sample, show_titles: bool = True) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
 
         Returns:
             A matplotlib Figure with the rendered sample.
+
+        .. versionadded:: 0.11
         """
         fig, ax = plt.subplots()
         ax.plot(sample['embedding'])
@@ -108,6 +113,9 @@ class ClayEmbeddings(NonGeoDataset):
             if 't' in sample:
                 t = pd.Timestamp.fromtimestamp(sample['t'].item())
                 ax.set_title(rf'{y:0.3f}°N, {x:0.3f}°W, {t}')
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
         fig.tight_layout()
         return fig
