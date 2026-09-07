@@ -6,7 +6,7 @@ import os
 import pytest
 import torch
 
-from torchgeo.datamodules import MisconfigurationException
+from torchgeo.datamodules import MisconfigurationException, PASTISDataModule
 from torchgeo.main import main
 from torchgeo.tasks import SpatioTemporalSegmentation
 
@@ -72,3 +72,11 @@ class TestSpatioTemporalSegmentation:
         assert probabilities.shape == (2, 4, 16, 16)
         assert torch.all(probabilities >= 0)
         assert torch.all(probabilities <= 1)
+
+    @pytest.mark.parametrize(
+        'kwargs', [{'val_split_pct': 0.2}, {'test_split_pct': 0.2}]
+    )
+    def test_deprecated_random_split(self, kwargs: dict[str, float]) -> None:
+        msg = 'The val_split_pct and test_split_pct parameters are deprecated'
+        with pytest.warns(DeprecationWarning, match=msg):
+            PASTISDataModule(root=os.path.join('tests', 'data', 'pastis'), **kwargs)
