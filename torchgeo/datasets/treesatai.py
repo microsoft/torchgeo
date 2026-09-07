@@ -278,7 +278,10 @@ class TreeSatAI(NonGeoDataset):
 
         if show_titles:
             label = self._multilabel_to_string(sample['label'])
-            suptitle_str += f'\nLabel: ({label})'
+            if suptitle_str:
+                suptitle_str += f'\nLabel: ({label})'
+            else:
+                suptitle_str = f'Label: ({label})'
 
             if 'prediction' in sample:
                 prediction = self._multilabel_to_string(sample['prediction'])
