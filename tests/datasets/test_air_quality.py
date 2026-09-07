@@ -58,3 +58,5 @@ class TestAirQuality:
         sample['prediction'] = sample['target']
         dataset.plot(sample, suptitle='Test', features=features)
         plt.close()
+        dataset.plot(sample, show_titles=False, features=features)
+        plt.close()

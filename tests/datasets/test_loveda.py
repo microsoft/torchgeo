@@ -70,3 +70,5 @@ class TestLoveDA:
     def test_plot(self, dataset: LoveDA) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
+        dataset.plot(dataset[0], show_titles=False)
+        plt.close()

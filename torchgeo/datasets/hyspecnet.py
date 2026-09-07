@@ -194,11 +194,17 @@ class HySpecNet11k(NonGeoDataset):
 
             raise DatasetNotFoundError(self)
 
-    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
+    def plot(
+        self, 
+        sample: Sample,
+        show_titles: bool = False,
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
@@ -206,6 +212,9 @@ class HySpecNet11k(NonGeoDataset):
 
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         rgb_indices = []
         for band in self.rgb_bands:
@@ -221,6 +230,9 @@ class HySpecNet11k(NonGeoDataset):
         fig, ax = plt.subplots()
         ax.imshow(image)
         ax.axis('off')
+
+        if show_titles:
+            ax.set_title('RGB')
 
         if suptitle:
             fig.suptitle(suptitle)

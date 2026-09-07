@@ -243,17 +243,25 @@ class EverWatch(NonGeoDataset):
         )
 
     def plot(
-        self, sample: Sample, suptitle: str | None = None, box_alpha: float = 0.7
+        self, 
+        sample: Sample, 
+        show_titles: bool = True,
+        suptitle: str | None = None, 
+        box_alpha: float = 0.7,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             box_alpha: alpha value for boxes
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         image = sample['image'].permute((1, 2, 0)).numpy()
         boxes = sample['bbox_xyxy'].numpy()
@@ -284,14 +292,15 @@ class EverWatch(NonGeoDataset):
             )
             axs.add_patch(rect)
             # Add label above box
-            axs.text(
-                x1,
-                y1 - 5,
-                label,
-                color='white',
-                fontsize=8,
-                bbox={'facecolor': color, 'alpha': box_alpha},
-            )
+            if show_titles:
+                axs.text(
+                    x1,
+                    y1 - 5,
+                    label,
+                    color='white',
+                    fontsize=8,
+                    bbox={'facecolor': color, 'alpha': box_alpha},
+                )
 
         if suptitle is not None:
             plt.suptitle(suptitle)
