@@ -93,6 +93,8 @@ class TestMMFlood:
         x = dataset[dataset.bounds]
         dataset.plot(x, suptitle='Test')
         plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
 
     def test_plot_prediction(self, dataset: MMFlood) -> None:
         x = dataset[dataset.bounds]

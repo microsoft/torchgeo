@@ -794,7 +794,9 @@ class TestOpenStreetMap:
 
         # Subsequent queries should not trigger warning
         with warnings.catch_warnings():
-            warnings.simplefilter('error')  # Turn warnings into errors
+            warnings.filterwarnings(
+                'error', message='Class .* has no geometries', category=UserWarning
+            )
             dataset[dataset.bounds]  # Should not raise (no warning)
 
     def test_len(self, dataset: OpenStreetMap) -> None:

@@ -54,6 +54,8 @@ class TestBioMassters:
             sample['prediction'] = sample['mask'].unsqueeze(dim=0)
         dataset.plot(sample)
         plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()
 
     def test_plot_invalid_image_shape(self, dataset: BioMassters) -> None:
         with pytest.raises(ValueError, match='Expected image tensor'):
