@@ -289,7 +289,7 @@ class TreeSatAI(NonGeoDataset):
 
         if suptitle_str:
             plt.suptitle(suptitle_str)
-
+            
         fig.tight_layout()
         return fig
 
