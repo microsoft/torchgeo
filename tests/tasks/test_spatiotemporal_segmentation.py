@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Any
 
 import pytest
 import torch
@@ -76,7 +77,7 @@ class TestSpatioTemporalSegmentation:
     @pytest.mark.parametrize(
         'kwargs', [{'val_split_pct': 0.2}, {'test_split_pct': 0.2}]
     )
-    def test_deprecated_random_split(self, kwargs: dict[str, float]) -> None:
+    def test_deprecated_random_split(self, kwargs: dict[str, Any]) -> None:
         msg = 'The val_split_pct and test_split_pct parameters are deprecated'
         with pytest.warns(DeprecationWarning, match=msg):
             PASTISDataModule(root=os.path.join('tests', 'data', 'pastis'), **kwargs)
