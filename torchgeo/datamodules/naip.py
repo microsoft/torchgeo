@@ -7,6 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import shapely
+import torch
 from matplotlib.figure import Figure
 
 from ..datasets import (
@@ -28,6 +29,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
 
     Uses the train/val/test splits from the dataset.
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,

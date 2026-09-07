@@ -19,6 +19,8 @@ class SubstationDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     """
 
+    std = torch.tensor(10000)
+
     def __init__(
         self,
         batch_size: int = 64,

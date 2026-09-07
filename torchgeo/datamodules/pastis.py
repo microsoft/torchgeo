@@ -21,6 +21,8 @@ class PASTISDataModule(NonGeoDataModule):
     .. versionadded:: 0.8
     """
 
+    std = torch.tensor(10000)
+
     def __init__(
         self,
         batch_size: int = 32,
@@ -83,6 +85,8 @@ class PASTIS100DataModule(NonGeoDataModule):
 
     .. versionadded:: 0.9
     """
+
+    std = torch.tensor(10000)
 
     def __init__(
         self,

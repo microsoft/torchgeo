@@ -24,6 +24,8 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
     .. versionadded:: 0.6
     """
 
+    std = torch.tensor(10000)
+
     def __init__(
         self,
         batch_size: int = 64,
