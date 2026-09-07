@@ -196,17 +196,17 @@ class SustainBenchCropYield(NonGeoDataset):
     def plot(
         self,
         sample: Sample,
-        band_idx: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,
+        band_idx: int = 0,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
-            band_idx: which of the nine histograms to index
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
+            band_idx: which of the nine histograms to index
 
         Returns:
             a matplotlib Figure with the rendered sample

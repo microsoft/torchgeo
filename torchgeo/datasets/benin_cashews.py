@@ -341,16 +341,16 @@ class BeninSmallHolderCashews(NonGeoDataset):
         self,
         sample: Sample,
         show_titles: bool = True,
-        time_step: int = 0,
         suptitle: str | None = None,
+        time_step: int = 0,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
-            time_step: time step at which to access image, beginning with 0
             suptitle: optional string to use as a suptitle
+            time_step: time step at which to access image, beginning with 0
 
         Returns:
             a matplotlib Figure with the rendered sample
