@@ -20,7 +20,7 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset, UnionDataset
 from .nlcd import NLCD
-from .utils import Path, Sample, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive, merge_samples
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -624,8 +624,11 @@ class ChesapeakeCVPR(UnionDataset):
 
         dataset = functools.reduce(operator.or_, split_datasets)
         self.index = dataset.index
-        self.datasets = dataset.datasets
-        self.collate_fn = dataset.collate_fn
+        self.collate_fn = merge_samples
+        if isinstance(dataset, UnionDataset):
+            self.datasets = dataset.datasets
+        else:
+            self.datasets = [dataset]
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
