@@ -248,6 +248,7 @@ def random_grid_cell_assignment(
             data=rows_df.iloc[indices[offset - length : offset].tolist()].values,
             index=indexes_sr[indices[offset - length : offset].tolist()],
             geometry=geometry_sr[indices[offset - length : offset].tolist()].values,
+            crs=dataset.crs,
         )
         new_datasets.append(ds)
 
