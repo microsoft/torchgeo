@@ -7,12 +7,13 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
+import einops
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.animation import FuncAnimation
 from matplotlib.colors import ListedColormap
-from matplotlib.figure import Figure
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
@@ -379,7 +380,7 @@ class PASTIS(NonGeoDataset):
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
-    ) -> Figure:
+    ) -> FuncAnimation:
         """Plot a sample from the dataset.
 
         Args:
@@ -388,53 +389,49 @@ class PASTIS(NonGeoDataset):
             suptitle: optional string to use as a suptitle
 
         Returns:
-            a matplotlib Figure with the rendered sample
+            a matplotlib animation with the rendered sample
         """
-        # Keep the RGB bands and quantile-normalize each frame independently.
-        rgb_frames = sample['image'][:, [2, 1, 0], :, :]
-        rgb_frames = torch.stack(
-            [quantile_normalization(frame) for frame in rgb_frames]
-        )
-        images = rgb_frames.numpy().transpose(0, 2, 3, 1)
-        mask = sample['mask'].numpy()
+        frames = sample['image'][:, [2, 1, 0], :, :]
+        frames = torch.stack([quantile_normalization(frame) for frame in frames])
+        frames = einops.rearrange(frames, 't c h w -> t h w c')
 
+        mask = sample['mask']
         if self.mode == 'instance':
             label = sample['label']
-            mask = label[mask.argmax(axis=0)].numpy()
+            mask = label[mask.argmax(axis=0)]
 
-        num_panels = 3
+        num_panels = 2
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample['prediction'].numpy()
+            predictions = sample['prediction']
             num_panels += 1
             if self.mode == 'instance':
                 predictions = predictions.argmax(axis=0)
                 label = sample['prediction_labels']
-                predictions = label[predictions].numpy()
+                predictions = label[predictions]
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
-        axs[0].imshow(images[0])
-        axs[1].imshow(images[1])
-        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
+        ani = FuncAnimation(fig, func=axs[0].imshow, frames=frames)
         axs[0].axis('off')
+
+        axs[1].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
         axs[1].axis('off')
-        axs[2].axis('off')
         if showing_predictions:
-            axs[3].imshow(
+            axs[2].imshow(
                 predictions, vmin=0, vmax=19, cmap=self.cmap, interpolation='none'
             )
-            axs[3].axis('off')
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title('Image 0')
-            axs[1].set_title('Image 1')
-            axs[2].set_title('Mask')
+            axs[0].set_title('Images')
+            axs[1].set_title('Mask')
             if showing_predictions:
-                axs[3].set_title('Prediction')
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
-            plt.suptitle(suptitle)
-        return fig
+            fig.suptitle(suptitle)
+
+        return ani
 
 
 class PASTIS100(PASTIS):
