@@ -93,8 +93,12 @@ class TestChesapeakeCVPR:
             for params in itertools.product(
                 [['de'], ['de', 'md']],
                 [['test'], ['test', 'train']],
-                [[], ['naip-new'], ['naip-new', 'naip-old']],
-                [[], ['lc'], ['lc', 'buildings']],
+                [[], ['naip-new'], ['naip-new', 'landsat-leaf-on']],
+                [
+                    [],
+                    ['nlcd', 'lc', 'buildings'],
+                    ['prior_from_cooccurrences_101_31_no_osm_no_buildings'],
+                ],
             )
             if params[2] or params[3]
         ]

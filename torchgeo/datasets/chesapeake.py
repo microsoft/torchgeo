@@ -695,11 +695,12 @@ class ChesapeakeCVPR(UnionDataset):
             image = np.rollaxis(sample['image'].numpy(), 0, 3)
         mask = sample.get('mask')
         if mask is not None:
-            mask = mask.numpy()
-            if mask.ndim == 3:
-                mask = np.rollaxis(mask, 0, 3)
-            else:
-                mask = np.expand_dims(mask, 2)
+            mask = sample['mask'].numpy()
+            num_mask = sum(layer not in self.valid_layers[:4] for layer in self.layers)
+
+            if mask.ndim == 2:
+                mask = mask.reshape(num_mask, -1, mask.shape[1])
+            mask = np.rollaxis(mask, 0, 3)
 
         num_panels = len(self.layers)
         showing_predictions = 'prediction' in sample
@@ -714,22 +715,19 @@ class ChesapeakeCVPR(UnionDataset):
         i = 0
         for layer in self.layers:
             if layer == 'naip-new' or layer == 'naip-old':
-                if image is None:
-                    continue
+                assert image is not None
                 img = image[:, :, :3] / 255
                 image = image[:, :, 4:]
                 axs[0, i].axis('off')
                 axs[0, i].imshow(img)
             elif layer == 'landsat-leaf-on' or layer == 'landsat-leaf-off':
-                if image is None:
-                    continue
+                assert image is not None
                 img = image[:, :, [3, 2, 1]] / 3000
                 image = image[:, :, 9:]
                 axs[0, i].axis('off')
                 axs[0, i].imshow(img)
             elif layer == 'nlcd':
-                if mask is None:
-                    continue
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[0, i].imshow(
@@ -737,8 +735,7 @@ class ChesapeakeCVPR(UnionDataset):
                 )
                 axs[0, i].axis('off')
             elif layer == 'lc':
-                if mask is None:
-                    continue
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[0, i].imshow(
@@ -746,15 +743,13 @@ class ChesapeakeCVPR(UnionDataset):
                 )
                 axs[0, i].axis('off')
             elif layer == 'buildings':
-                if mask is None:
-                    continue
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[0, i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
                 axs[0, i].axis('off')
             elif layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
-                if mask is None:
-                    continue
+                assert mask is not None
                 img = (mask[:, :, :4] @ self.prior_color_matrix) / 255
                 mask = mask[:, :, 4:]
                 axs[0, i].imshow(img)
