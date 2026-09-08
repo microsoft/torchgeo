@@ -231,12 +231,12 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
 
 This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). Each run will output a table like below. You can add these two tables to your PR to describe I/O performance before and after your change.
 
-=========== ========== =========  =========  ==================
- Split       Strategy   Samples    Time (s)   Rate (samples/s)
-=========== ========== =========  =========  ==================
-Train        Random         928    8.35074           111.12790
-Validation   Grid           992    4.97084           199.56398
-=========== ========== =========  =========  ==================
+=========== ===================== =========  =========  ==================
+ Split       Strategy              Samples    Time (s)   Rate (samples/s)
+=========== ===================== =========  =========  ==================
+Train        RandomPatchSampler        928    8.35074           111.12790
+Validation   GriddedPatchSampler       992    4.97084           199.56398
+=========== ===================== =========  =========  ==================
 
 
 Related Libraries
