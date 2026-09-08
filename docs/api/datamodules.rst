@@ -134,6 +134,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+FMoW
+^^^^
+
+.. autoclass:: FMoWDataModule
+
 Fields Of The World
 ^^^^^^^^^^^^^^^^^^^
 
