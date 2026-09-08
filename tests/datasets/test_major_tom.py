@@ -34,5 +34,5 @@ class TestMajorTOMEmbeddings:
 
     def test_plot(self, dataset: MajorTOMEmbeddings) -> None:
         x = dataset[0]
-        dataset.plot(x)
+        dataset.plot(x, suptitle='Test')
         plt.close()

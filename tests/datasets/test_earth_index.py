@@ -34,5 +34,5 @@ class TestEarthIndexEmbeddings:
 
     def test_plot(self, dataset: EarthIndexEmbeddings) -> None:
         x = dataset[0]
-        dataset.plot(x)
+        dataset.plot(x, suptitle='Test')
         plt.close()

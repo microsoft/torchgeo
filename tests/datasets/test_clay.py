@@ -35,5 +35,5 @@ class TestClayEmbeddings:
 
     def test_plot(self, dataset: ClayEmbeddings) -> None:
         x = dataset[0]
-        dataset.plot(x)
+        dataset.plot(x, suptitle='Test')
         plt.close()
