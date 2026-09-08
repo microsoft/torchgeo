@@ -180,6 +180,9 @@ Homepage = "https://github.com/torchgeo/torchgeo"
 Slack = "https://torchgeo.slack.com"
 
 # https://coverage.readthedocs.io/en/latest/config.html
+[tool.coverage.run]
+branch = true
+
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
