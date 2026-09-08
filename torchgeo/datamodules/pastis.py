@@ -27,12 +27,12 @@ class PASTISDataModule(NonGeoDataModule):
         self,
         batch_size: int = 32,
         num_workers: int = 0,
+        val_split_pct: float | None = None,
+        test_split_pct: float | None = None,
+        padding_length: int = 61,
         train_folds: Sequence[int] = (1, 2, 3),
         val_folds: Sequence[int] = (4,),
         test_folds: Sequence[int] = (5,),
-        padding_length: int = 61,
-        val_split_pct: float | None = None,
-        test_split_pct: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new PASTISDataModule instance.
