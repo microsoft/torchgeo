@@ -49,7 +49,7 @@ class TestHySpecNet11k:
         x = dataset[0]
         dataset.plot(x, suptitle='Test')
         plt.close()
-        dataset.plot(x, show_titles=True)
+        dataset.plot(x, show_titles=False)
         plt.close()
 
     def test_plot_rgb(self, dataset: HySpecNet11k) -> None:

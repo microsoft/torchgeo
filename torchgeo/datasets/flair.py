@@ -1866,7 +1866,7 @@ class FLAIRHUBBase(NonGeoDataset):
             ax.set_title(title)
 
     def plot(
-        self, sample: Sample, show_titles: bool = False, suptitle: str | None = None
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

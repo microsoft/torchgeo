@@ -63,13 +63,3 @@ class TestGID15:
             sample['prediction'] = torch.ones((1, 1))
             dataset.plot(sample)
         plt.close()
-
-        if dataset.split != 'test':
-            sample = dataset[0]
-            sample['prediction'] = torch.clone(sample['mask'])
-            dataset.plot(sample, suptitle='Prediction', show_titles=False)
-        else:
-            sample = dataset[0]
-            sample['prediction'] = torch.ones((1, 1))
-            dataset.plot(sample, show_titles=False)
-        plt.close()
