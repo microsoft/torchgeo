@@ -1,4 +1,7 @@
 # TorchGeo modules
+callbacks:
+  - changed-files:
+      - any-glob-to-any-file: 'torchgeo/callbacks/**'
 datamodules:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/datamodules/**'
