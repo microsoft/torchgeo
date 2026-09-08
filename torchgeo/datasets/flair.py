@@ -1624,7 +1624,9 @@ class FLAIRHUBBase(NonGeoDataset):
             tensor = array_to_tensor(f.read()).float()
         return tensor
 
-    def _plot_mask(self, mask: Tensor, ax: Axes, show_legend: bool = True, show_titles: bool = True) -> None:
+    def _plot_mask(
+        self, mask: Tensor, ax: Axes, show_legend: bool = True, show_titles: bool = True
+    ) -> None:
         """Plot a label mask with appropriate colormap.
 
         Args:
@@ -1661,7 +1663,9 @@ class FLAIRHUBBase(NonGeoDataset):
                 fontsize='small',
             )
 
-    def _plot_aerial_rgbi(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_aerial_rgbi(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot aerial RGBI imagery.
 
         Args:
@@ -1681,7 +1685,9 @@ class FLAIRHUBBase(NonGeoDataset):
         if show_titles:
             ax.set_title(title)
 
-    def _plot_spot_rgbi(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_spot_rgbi(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot SPOT RGBI imagery (surface reflectance).
 
         Args:
@@ -1700,7 +1706,9 @@ class FLAIRHUBBase(NonGeoDataset):
         if show_titles:
             ax.set_title(title)
 
-    def _plot_dem(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_dem(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot DEM elevation data.
 
         Args:
@@ -1720,7 +1728,9 @@ class FLAIRHUBBase(NonGeoDataset):
         if show_titles:
             ax.set_title(title)
 
-    def _plot_aerial_rlt_pan(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_aerial_rlt_pan(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot aerial RLT PAN imagery.
 
         Args:
@@ -1738,7 +1748,9 @@ class FLAIRHUBBase(NonGeoDataset):
         if show_titles:
             ax.set_title(title)
 
-    def _plot_sentinel2_ts(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_sentinel2_ts(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Method to plot an example of Sentinel-2 time series data.
 
         To keep the same plot style as the other plots,
@@ -1771,7 +1783,9 @@ class FLAIRHUBBase(NonGeoDataset):
         if show_titles:
             ax.set_title(title)
 
-    def _plot_sentinel2_msk_sc(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_sentinel2_msk_sc(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Show the snow and cloud probability mask.
 
         Red for snow probability, blue for cloud probability.
@@ -1828,7 +1842,9 @@ class FLAIRHUBBase(NonGeoDataset):
                 fontsize='small',
             )
 
-    def _plot_sentinel1_ts(self, data: Tensor, ax: Axes, title: str, show_titles: bool = True) -> None:
+    def _plot_sentinel1_ts(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Method to plot an example of Sentinel-1 time series data.
 
         Shows the last timepoint as grayscale
@@ -1850,10 +1866,7 @@ class FLAIRHUBBase(NonGeoDataset):
             ax.set_title(title)
 
     def plot(
-        self, 
-        sample: Sample, 
-        show_titles: bool = False,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = False, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -333,10 +333,7 @@ class EnMAP(RasterDataset):
         super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def plot(
-        self, 
-        sample: Sample, 
-        show_titles: bool = False,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = False, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
