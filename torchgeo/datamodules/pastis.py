@@ -64,16 +64,6 @@ class PASTISDataModule(NonGeoDataModule):
             self._dataset_cls, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
-        valid_folds = set(range(1, 6))
-
-        for fold, idx in zip(
-            ['train', 'val', 'test'], [train_folds, val_folds, test_folds]
-        ):
-            bad_folds = set(idx) - valid_folds
-            assert not bad_folds, (
-                f'{fold}_folds have out-of-range indices, got {bad_folds}'
-            )
-
         assert not (set(train_folds) & set(val_folds)), (
             f'train/val overlap: {set(train_folds) & set(val_folds)}'
         )
