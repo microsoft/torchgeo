@@ -170,8 +170,8 @@ class AirQuality(NonGeoDataset):
             A matplotlib Figure with the plotted sample.
 
         .. versionadded:: 0.11
-            The *show_titles* parameter.
             The *suptitle* parameter.
+            The *show_titles* parameter.
         """
         ylabel = {
             'CO(GT)': 'CO (mg/m$^3$)',
