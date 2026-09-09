@@ -324,7 +324,7 @@ class IDTReeS(NonGeoDataset):
                 ymax_px = max(row_min, row_max)
                 boxes.append([xmin_px, ymin_px, xmax_px, ymax_px])
 
-        tensor = torch.tensor(boxes)
+        tensor = torch.tensor(boxes).reshape(-1, 4)
         return tensor
 
     def _load_target(self, path: Path) -> Tensor:
