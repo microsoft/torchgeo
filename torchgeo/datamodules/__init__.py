@@ -6,6 +6,7 @@
 from .agrifieldnet import AgriFieldNetDataModule
 from .air_quality import AirQualityDataModule
 from .bigearthnet import BigEarthNetDataModule
+from .biomassters import BioMasstersDataModule
 from .bright import BRIGHTDFC2025DataModule
 from .cabuar import CaBuArDataModule
 from .caffe import CaFFeDataModule
@@ -74,6 +75,7 @@ __all__ = (
     'BRIGHTDFC2025DataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
+    'BioMasstersDataModule',
     'COWCCountingDataModule',
     'CaBuArDataModule',
     'CaFFeDataModule',
