@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
+from pandas.testing import assert_frame_equal
 from pytest import MonkeyPatch
 from torch import Tensor
 
@@ -51,6 +52,24 @@ class TestAirQuality:
     def test_already_downloaded(self) -> None:
         root = os.path.join('tests', 'data', 'air_quality')
         AirQuality(root)
+
+    def test_download_saves_data_for_offline_reuse(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        source = Path('tests/data/air_quality/data.csv').resolve()
+        monkeypatch.setattr(AirQuality, 'url', str(source))
+        root = tmp_path / 'air_quality'
+
+        downloaded = AirQuality(root, download=True)
+
+        cached_file = root / AirQuality.data_file_name
+        assert cached_file.is_file()
+        assert cached_file.read_bytes() == source.read_bytes()
+
+        monkeypatch.setattr(AirQuality, 'url', str(tmp_path / 'unavailable.csv'))
+        offline = AirQuality(root, download=False)
+        assert_frame_equal(offline.input_data, downloaded.input_data)
+        assert_frame_equal(offline.target_data, downloaded.target_data)
 
     @pytest.mark.parametrize('features', [None, GT])
     def test_plot(self, dataset: AirQuality, features: list[str] | None) -> None:

@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample
+from .utils import Path, Sample, download_url
 
 
 class AirQuality(NonGeoDataset):
@@ -134,7 +134,7 @@ class AirQuality(NonGeoDataset):
         if filepath.is_file():
             pass
         elif self.download:
-            filepath = self.url
+            download_url(self.url, self.root, filename=self.data_file_name)
         else:
             raise DatasetNotFoundError(self)
 
