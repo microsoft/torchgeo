@@ -1,12 +1,10 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-from pathlib import Path
-
 import pytest
 import torch
 
-from torchgeo.models.tsvit import TSViT, convert_tsvit_checkpoint, load_tsvit_checkpoint
+from torchgeo.models.tsvit import TSViT, TSViT_Weights, tsvit
 
 
 class TestTSViT:
@@ -24,60 +22,6 @@ class TestTSViT:
             heads=4,
             dim_head=32,
         )
-
-    @staticmethod
-    def _make_legacy_state_dict(model: TSViT) -> dict[str, torch.Tensor]:
-        """Create a checkpoint using the original TSViT parameter names."""
-        current = model.state_dict()
-        legacy = {}
-
-        direct_keys = [
-            'temporal_token',
-            'space_pos_embedding',
-            'to_patch_embedding.1.weight',
-            'to_patch_embedding.1.bias',
-            'to_temporal_embedding_input.weight',
-            'to_temporal_embedding_input.bias',
-            'mlp_head.0.weight',
-            'mlp_head.0.bias',
-            'mlp_head.1.weight',
-            'mlp_head.1.bias',
-        ]
-
-        for key in direct_keys:
-            legacy[key] = current[key].clone()
-
-        def unmap_transformer(prefix: str, depth: int) -> None:
-            for i in range(depth):
-                new = f'{prefix}.{i}'
-                old = f'{prefix}.layers.{i}'
-
-                mappings = {
-                    f'{new}.norm1.weight': f'{old}.0.norm.weight',
-                    f'{new}.norm1.bias': f'{old}.0.norm.bias',
-                    f'{new}.attn.qkv.weight': f'{old}.0.fn.to_qkv.weight',
-                    f'{new}.attn.proj.weight': f'{old}.0.fn.to_out.0.weight',
-                    f'{new}.attn.proj.bias': f'{old}.0.fn.to_out.0.bias',
-                    f'{new}.norm2.weight': f'{old}.1.norm.weight',
-                    f'{new}.norm2.bias': f'{old}.1.norm.bias',
-                    f'{new}.mlp.fc1.weight': f'{old}.1.fn.net.0.weight',
-                    f'{new}.mlp.fc1.bias': f'{old}.1.fn.net.0.bias',
-                    f'{new}.mlp.fc2.weight': f'{old}.1.fn.net.3.weight',
-                    f'{new}.mlp.fc2.bias': f'{old}.1.fn.net.3.bias',
-                }
-
-                for new_key, old_key in mappings.items():
-                    legacy[old_key] = current[new_key].clone()
-
-            for suffix in ('weight', 'bias'):
-                legacy[f'{prefix}.norm.{suffix}'] = current[
-                    f'{prefix}.{depth}.{suffix}'
-                ].clone()
-
-        unmap_transformer('temporal_transformer', model.temporal_depth)
-        unmap_transformer('space_transformer', model.spatial_depth)
-
-        return legacy
 
     def test_forward(self, model: TSViT) -> None:
         """Test a full TSViT forward pass."""
@@ -120,87 +64,38 @@ class TestTSViT:
         with pytest.raises(ValueError, match='Expected at most 60'):
             model(torch.rand(1, 61, 24, 24, 11))
 
-    def test_checkpoint_conversion_roundtrip(self, model: TSViT) -> None:
-        """Test conversion from original checkpoint key names."""
-        current = model.state_dict()
-        legacy = self._make_legacy_state_dict(model)
+    def test_weights(self) -> None:
+        """Test TSViT pretrained weights."""
+        weights = TSViT_Weights.TSVIT_PASTIS24
 
-        converted = convert_tsvit_checkpoint(legacy, model)
+        assert weights.url.endswith('tsvit_pastis24_fold1-026e8447.pth')
+        assert weights.meta['dataset'] == 'PASTIS24'
+        assert weights.meta['model'] == 'TSViT'
+        assert weights.meta['publication'] == 'https://arxiv.org/abs/2301.04944'
+        assert weights.meta['repo'] == 'https://github.com/michaeltrs/DeepSatModels'
+        assert isinstance(weights.transforms, torch.nn.Identity)
 
-        assert converted.keys() == current.keys()
-        for key in current:
-            assert torch.equal(converted[key], current[key])
+    def test_factory(self) -> None:
+        """Test TSViT model factory."""
+        model = tsvit()
 
-    def test_missing_checkpoint_key(self, model: TSViT) -> None:
-        """Test missing direct checkpoint parameters."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy.pop('temporal_token')
+        assert isinstance(model, TSViT)
 
-        with pytest.raises(KeyError, match='Missing checkpoint key'):
-            convert_tsvit_checkpoint(legacy, model)
+    def test_factory_with_weights(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test TSViT model factory with pretrained weights."""
+        expected = TSViT()
 
-    def test_missing_transformer_checkpoint_key(self, model: TSViT) -> None:
-        """Test missing Transformer checkpoint parameters."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy.pop('temporal_transformer.layers.0.0.fn.to_qkv.weight')
+        def get_state_dict(**kwargs: object) -> dict[str, torch.Tensor]:
+            return expected.state_dict()
 
-        with pytest.raises(KeyError, match='Missing checkpoint key'):
-            convert_tsvit_checkpoint(legacy, model)
+        monkeypatch.setattr(
+            TSViT_Weights.TSVIT_PASTIS24, 'get_state_dict', get_state_dict
+        )
 
-    def test_missing_another_transformer_checkpoint_key(self, model: TSViT) -> None:
-        """Test another missing Transformer checkpoint parameter."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy.pop('space_transformer.layers.0.1.fn.net.3.bias')
+        model = tsvit(weights=TSViT_Weights.TSVIT_PASTIS24)
 
-        with pytest.raises(KeyError, match='Missing checkpoint key'):
-            convert_tsvit_checkpoint(legacy, model)
+        assert isinstance(model, TSViT)
+        assert model.state_dict().keys() == expected.state_dict().keys()
 
-    def test_missing_later_transformer_checkpoint_key(self, model: TSViT) -> None:
-        """Test a missing later Transformer checkpoint parameter."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy.pop('space_transformer.layers.3.1.fn.net.3.bias')
-
-        with pytest.raises(KeyError, match='Missing checkpoint key'):
-            convert_tsvit_checkpoint(legacy, model)
-
-    def test_missing_final_transformer_checkpoint_key(self, model: TSViT) -> None:
-        """Test a missing final Transformer normalization parameter."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy.pop('space_transformer.norm.bias')
-
-        with pytest.raises(KeyError, match='Missing checkpoint key'):
-            convert_tsvit_checkpoint(legacy, model)
-
-    def test_converted_checkpoint_key_not_in_model(
-        self, model: TSViT, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Test detection of an unexpected converted checkpoint parameter."""
-        legacy = self._make_legacy_state_dict(model)
-
-        original_state_dict = model.state_dict
-
-        def incomplete_state_dict() -> dict[str, torch.Tensor]:
-            state_dict = original_state_dict()
-            state_dict.pop('temporal_token')
-            return state_dict
-
-        monkeypatch.setattr(model, 'state_dict', incomplete_state_dict)
-
-        with pytest.raises(ValueError, match='Converted checkpoint key not in model'):
-            convert_tsvit_checkpoint(legacy, model)
-
-    def test_checkpoint_shape_mismatch(self, model: TSViT) -> None:
-        """Test validation of converted checkpoint tensor shapes."""
-        legacy = self._make_legacy_state_dict(model)
-        legacy['temporal_token'] = torch.empty(1, 19, 1)
-
-        with pytest.raises(ValueError, match='Shape mismatch'):
-            convert_tsvit_checkpoint(legacy, model)
-
-    def test_load_checkpoint(self, model: TSViT, tmp_path: Path) -> None:
-        """Test loading a checkpoint through the public loader."""
-        legacy = self._make_legacy_state_dict(model)
-        checkpoint_path = tmp_path / 'tsvit.pth'
-        torch.save(legacy, checkpoint_path)
-
-        load_tsvit_checkpoint(model, checkpoint_path)
+        for key in expected.state_dict():
+            assert torch.equal(model.state_dict()[key], expected.state_dict()[key])

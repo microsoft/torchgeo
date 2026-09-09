@@ -3,8 +3,7 @@
 
 """Time-Series Vision Transformer (TSViT) model."""
 
-from collections.abc import Mapping
-from pathlib import Path
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -12,6 +11,29 @@ from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 from timm.models.vision_transformer import Block
 from torch import Tensor, nn
+from torchvision.models._api import Weights, WeightsEnum  # type: ignore[import-untyped]
+
+
+class TSViT_Weights(WeightsEnum):
+    """Weights for the TSViT model.
+
+    .. versionadded:: 0.11
+    """
+
+    TSVIT_PASTIS24 = Weights(
+        url=(
+            'https://huggingface.co/nilsleh/tsvit/resolve/'
+            '061c4c5518629071f7c79d787f0905344d4eb4ab/'
+            'tsvit_pastis24_fold1-026e8447.pth'
+        ),
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'PASTIS24',
+            'model': 'TSViT',
+            'publication': 'https://arxiv.org/abs/2301.04944',
+            'repo': 'https://github.com/michaeltrs/DeepSatModels',
+        },
+    )
 
 
 class TSViT(nn.Module):
@@ -69,6 +91,7 @@ class TSViT(nn.Module):
 
         if img_res % patch_size != 0:
             raise ValueError('Image dimensions must be divisible by patch size.')
+
         if dim != heads * dim_head:
             raise ValueError(
                 'dim must equal heads * dim_head for the timm attention block.'
@@ -100,7 +123,8 @@ class TSViT(nn.Module):
             nn.Linear(patch_dim, dim),
         )
 
-        # Day-of-year lookup represented as a learned linear embedding.
+        # Day-of-year represented as a one-hot vector and projected to the
+        # Transformer embedding dimension.
         self.to_temporal_embedding_input = nn.Linear(366, dim)
 
         # One learned class token per output class.
@@ -108,10 +132,6 @@ class TSViT(nn.Module):
 
         # timm Block matches the pre-norm Transformer structure:
         # norm -> attention -> residual, then norm -> MLP -> residual.
-        #
-        # norm_layer=nn.LayerNorm is explicit so the normalization behavior
-        # matches the original PyTorch LayerNorm used by TSViT.
-
         self.temporal_transformer = nn.Sequential(
             *[
                 Block(
@@ -191,6 +211,7 @@ class TSViT(nn.Module):
         xt = x[:, :, -1, 0, 0]
         x = x[:, :, :-1]
 
+        # Convert normalized acquisition dates to day-of-year indices.
         xt = (xt * 365.0001).to(torch.int64)
         xt = F.one_hot(xt, num_classes=366).to(torch.float32)
         xt = xt.reshape(-1, 366)
@@ -243,105 +264,35 @@ class TSViT(nn.Module):
         return x
 
 
-def convert_tsvit_checkpoint(
-    state_dict: Mapping[str, Tensor], model: TSViT
-) -> dict[str, Tensor]:
-    """Convert the released TSViT checkpoint keys to TorchGeo/timm keys.
+def tsvit(weights: TSViT_Weights | None = None, **kwargs: Any) -> TSViT:
+    """TSViT model.
 
-    The released checkpoint was trained with the original TSViT implementation.
-    The model implementation here is independently written, so its parameter
-    names follow the timm Transformer block naming convention.
+    If ``weights`` is provided, the corresponding pretrained checkpoint
+    is downloaded and loaded automatically.
+
+    If you use this model in your research, please cite:
+
+        Tarasiou, M., Chavez, E., & Zafeiriou, S.
+        "ViTs for SITS: Vision Transformers for Satellite Image Time Series."
+        CVPR 2023.
+        https://arxiv.org/abs/2301.04944
+
+    .. versionadded:: 0.11
 
     Args:
-        state_dict: Original TSViT state dictionary.
-        model: Instantiated TorchGeo TSViT model.
+        weights: Pre-trained model weights to use.
+        **kwargs: Additional keyword arguments passed to :class:`TSViT`.
 
     Returns:
-        State dictionary compatible with ``model.load_state_dict``.
-
-    Raises:
-        KeyError: If a required checkpoint parameter is missing.
-        ValueError: If a converted tensor shape does not match the model.
+        A TSViT model.
     """
-    converted: dict[str, Tensor] = {}
+    model = TSViT(**kwargs)
 
-    direct_keys = {
-        'temporal_token',
-        'space_pos_embedding',
-        'to_patch_embedding.1.weight',
-        'to_patch_embedding.1.bias',
-        'to_temporal_embedding_input.weight',
-        'to_temporal_embedding_input.bias',
-        'mlp_head.0.weight',
-        'mlp_head.0.bias',
-        'mlp_head.1.weight',
-        'mlp_head.1.bias',
-    }
-
-    for key in direct_keys:
-        if key not in state_dict:
-            raise KeyError(f'Missing checkpoint key: {key}')
-        converted[key] = state_dict[key]
-
-    def map_transformer(old_prefix: str, new_prefix: str, depth: int) -> None:
-        for i in range(depth):
-            old = f'{old_prefix}.layers.{i}'
-            new = f'{new_prefix}.{i}'
-
-            mappings = {
-                f'{old}.0.norm.weight': f'{new}.norm1.weight',
-                f'{old}.0.norm.bias': f'{new}.norm1.bias',
-                f'{old}.0.fn.to_qkv.weight': f'{new}.attn.qkv.weight',
-                f'{old}.0.fn.to_out.0.weight': f'{new}.attn.proj.weight',
-                f'{old}.0.fn.to_out.0.bias': f'{new}.attn.proj.bias',
-                f'{old}.1.norm.weight': f'{new}.norm2.weight',
-                f'{old}.1.norm.bias': f'{new}.norm2.bias',
-                f'{old}.1.fn.net.0.weight': f'{new}.mlp.fc1.weight',
-                f'{old}.1.fn.net.0.bias': f'{new}.mlp.fc1.bias',
-                f'{old}.1.fn.net.3.weight': f'{new}.mlp.fc2.weight',
-                f'{old}.1.fn.net.3.bias': f'{new}.mlp.fc2.bias',
-            }
-
-            for old_key, new_key in mappings.items():
-                if old_key not in state_dict:
-                    raise KeyError(f'Missing checkpoint key: {old_key}')
-                converted[new_key] = state_dict[old_key]
-
-        old_final = f'{old_prefix}.norm'
-        new_final = f'{new_prefix}.{depth}'
-        for suffix in ('weight', 'bias'):
-            old_key = f'{old_final}.{suffix}'
-            new_key = f'{new_final}.{suffix}'
-            if old_key not in state_dict:
-                raise KeyError(f'Missing checkpoint key: {old_key}')
-            converted[new_key] = state_dict[old_key]
-
-    map_transformer(
-        'temporal_transformer', 'temporal_transformer', model.temporal_depth
-    )
-    map_transformer('space_transformer', 'space_transformer', model.spatial_depth)
-
-    model_state = model.state_dict()
-    for key, value in converted.items():
-        if key not in model_state:
-            raise ValueError(f'Converted checkpoint key not in model: {key}')
-        if model_state[key].shape != value.shape:
-            raise ValueError(
-                f'Shape mismatch for {key}: '
-                f'checkpoint={tuple(value.shape)}, '
-                f'model={tuple(model_state[key].shape)}'
-            )
-
-    return converted
-
-
-def load_tsvit_checkpoint(model: TSViT, checkpoint_path: str | Path) -> None:
-    """Load a released TSViT checkpoint into a TorchGeo model.
-
-    Args:
-        model: Instantiated TorchGeo TSViT model.
-        checkpoint_path: Path to a released ``best.pth`` checkpoint.
-    """
-    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
-    converted = convert_tsvit_checkpoint(checkpoint, model)
-    model.load_state_dict(converted, strict=True)
+    if weights is not None:
+        model.load_state_dict(
+            weights.get_state_dict(
+                progress=True, check_hash=True, map_location='cpu', weights_only=True
+            ),
+            strict=True,
+        )
+    return model
