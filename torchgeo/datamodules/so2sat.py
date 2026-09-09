@@ -198,6 +198,9 @@ class So2SatDataModule(NonGeoDataModule):
         elif band_set == 'rgb':
             self.mean = self.means_per_version[version][[10, 9, 8]]
             self.std = self.stds_per_version[version][[10, 9, 8]]
+        else:
+            self.mean = self.means_per_version[version]
+            self.std = self.stds_per_version[version]
 
         super().__init__(So2Sat, batch_size, num_workers, **kwargs)
 
