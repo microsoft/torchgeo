@@ -3,12 +3,12 @@
 
 """PASTIS datamodule."""
 
+import warnings
+from collections.abc import Sequence
 from functools import partial
 from typing import Any
 
 import kornia.augmentation as K
-import torch
-from torch.utils.data import random_split
 
 from ..datasets import PASTIS, PASTIS100
 from ..datasets.utils import pad_across_batches
@@ -16,18 +16,23 @@ from .geo import NonGeoDataModule
 
 
 class PASTISDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the PASTIS dataset.
+    """LightningDataModule implementation for the PASTIS-R dataset.
 
     .. versionadded:: 0.8
     """
+
+    _dataset_cls: type[PASTIS] = PASTIS
 
     def __init__(
         self,
         batch_size: int = 32,
         num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
+        val_split_pct: float | None = None,
+        test_split_pct: float | None = None,
         padding_length: int = 61,
+        train_folds: Sequence[int] = (1, 2, 3),
+        val_folds: Sequence[int] = (4,),
+        test_folds: Sequence[int] = (5,),
         **kwargs: Any,
     ) -> None:
         """Initialize a new PASTISDataModule instance.
@@ -35,15 +40,43 @@ class PASTISDataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            val_split_pct: Percentage of the dataset to use as a validation set.
-            test_split_pct: Percentage of the dataset to use as a test set.
+            val_split_pct: Percentage of the dataset to use as a validation set (Deprecated).
+            test_split_pct: Percentage of the dataset to use as a test set (Deprecated).
+            train_folds: List of fold indices for training split.
+            val_folds: List of fold indices for validation split.
+            test_folds: List of fold indices for test split.
             padding_length: Padding length of the time series.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.PASTIS`.
+
+        .. versionadded:: 0.11
+            The *train_folds*, *val_folds*, and *test_folds* parameters.
         """
+
+        if val_split_pct is not None or test_split_pct is not None:
+            warnings.warn(
+                'The val_split_pct and test_split_pct parameters are deprecated and have no effect.'
+                'To follow the official PASTIS folds, use train_folds, val_folds, and test_folds instead. ',
+                DeprecationWarning,
+            )
+
         super().__init__(
-            PASTIS, batch_size=batch_size, num_workers=num_workers, **kwargs
+            self._dataset_cls, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
+
+        assert not (set(train_folds) & set(val_folds)), (
+            f'train/val overlap: {set(train_folds) & set(val_folds)}'
+        )
+        assert not (set(train_folds) & set(test_folds)), (
+            f'train/test overlap: {set(train_folds) & set(test_folds)}'
+        )
+        assert not (set(val_folds) & set(test_folds)), (
+            f'val/test overlap: {set(val_folds) & set(test_folds)}'
+        )
+
+        self.train_folds = train_folds
+        self.val_folds = val_folds
+        self.test_folds = test_folds
         self.padding_length = padding_length
         # Use a picklable callable for multiprocessing DataLoader workers.
         # Local lambdas fail under ``spawn`` with "Can't get local object ...".
@@ -51,8 +84,6 @@ class PASTISDataModule(NonGeoDataModule):
             pad_across_batches, padding_length=self.padding_length
         )
 
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
         self.aug = K.AugmentationSequential(
             K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
             data_keys=None,
@@ -65,77 +96,20 @@ class PASTISDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = PASTIS(**self.kwargs)
-        generator = torch.Generator().manual_seed(0)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset,
-            [
-                1 - self.val_split_pct - self.test_split_pct,
-                self.val_split_pct,
-                self.test_split_pct,
-            ],
-            generator,
-        )
+        if stage in ['fit']:
+            self.train_dataset = self._dataset_cls(
+                folds=self.train_folds, **self.kwargs
+            )
+        if stage in ['fit', 'validate']:
+            self.val_dataset = self._dataset_cls(folds=self.val_folds, **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = self._dataset_cls(folds=self.test_folds, **self.kwargs)
 
 
-class PASTIS100DataModule(NonGeoDataModule):
+class PASTIS100DataModule(PASTISDataModule):
     """LightningDataModule implementation for the PASTIS-R-100 dataset.
 
     .. versionadded:: 0.9
     """
 
-    def __init__(
-        self,
-        batch_size: int = 32,
-        num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
-        padding_length: int = 61,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a new PASTIS100DataModule instance.
-
-        Args:
-            batch_size: Size of each mini-batch.
-            num_workers: Number of workers for parallel data loading.
-            val_split_pct: Percentage of the dataset to use as a validation set.
-            test_split_pct: Percentage of the dataset to use as a test set.
-            padding_length: Padding length of the time series.
-            **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.PASTIS100`.
-        """
-        super().__init__(
-            PASTIS100, batch_size=batch_size, num_workers=num_workers, **kwargs
-        )
-        self.padding_length = padding_length
-        # Use a picklable callable for multiprocessing DataLoader workers.
-        # Local lambdas fail under ``spawn`` with "Can't get local object ...".
-        self.collate_fn = partial(
-            pad_across_batches, padding_length=self.padding_length
-        )
-
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
-        self.aug = K.AugmentationSequential(
-            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
-            data_keys=None,
-            keepdim=True,
-        )
-
-    def setup(self, stage: str) -> None:
-        """Set up datasets.
-
-        Args:
-            stage: Either 'fit', 'validate', 'test', or 'predict'.
-        """
-        self.dataset = PASTIS100(**self.kwargs)
-        generator = torch.Generator().manual_seed(0)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset,
-            [
-                1 - self.val_split_pct - self.test_split_pct,
-                self.val_split_pct,
-                self.test_split_pct,
-            ],
-            generator,
-        )
+    _dataset_cls: type[PASTIS] = PASTIS100
