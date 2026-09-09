@@ -50,6 +50,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`PatternNet`,C,Google Earth,"30,400",38,256x256,0.06--5,RGB,CC-BY-4.0
 :ref:`Potsdam`,S,Aerial,38,6,"6,000x6,000",0.05,MSI,
 :ref:`QuakeSet`,"C, R",Sentinel-1,"3,327",2,512x512,10,SAR,OpenRAIL
+:ref:`RarePlanes`,OD,"WorldView-3, synthetic","50,253",1,"512x512, 1,920x1,080",0.3,RGB,CC-BY-SA-4.0
 :ref:`RESISC45`,C,Google Earth,"31,500",45,256x256,0.2--30,RGB,CC-BY-NC-4.0
 :ref:`ReforesTree`,"OD, R",Aerial,100,6,"4,000x4,000",0.02,RGB,CC-BY-4.0
 :ref:`Rwanda Field Boundary`,S,Planetscope,70,2,256x256,4.7,RGB + NIR,NICFI AND CC-BY-4.0
@@ -69,6 +70,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands,License
 :ref:`UC Merced`,C,USGS National Map,"2,100",21,256x256,0.3,RGB,public domain
 :ref:`USAVars`,R,NAIP Aerial,100K,-,-,4,"RGB, NIR",CC-BY-4.0
 :ref:`VHR-10`,I,"Google Earth, Vaihingen",800,10,"358--1,728",0.08--2,RGB,CC-BY-NC-4.0
+:ref:`VisDrone`,OD,Drone,"10,209",10,varying,,RGB,CC-BY-NC-SA-3.0
 :ref:`Vaihingen`,S,Aerial,33,6,"1,281--3,816",0.09,RGB,
 :ref:`Western USA Live Fuel Moisture`,R,"Landsat8, Sentinel-1",2615,-,-,-,-,CC-BY-NC-ND-4.0
 :ref:`WorldStrat`,SR,"Sentinel-2, SPOT 6/7","3,928",-,"263--1,054",1.5--10,"RGB, NIR, MSI","CC-BY-NC-4.0 AND CC-BY-4.0"
