@@ -55,6 +55,7 @@ from .swin import (
 )
 from .tessera import Tessera, Tessera_Weights, tessera
 from .tilenet import TileNet, TileNet_Weights, tilenet
+from .tsvit import TSViT
 from .unet import Unet_Weights, unet
 from .utae import UTAE
 from .vit import (
@@ -120,6 +121,7 @@ __all__ = (
     'Swin_T_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'TSViT',
     'Tessera',
     'Tessera_Weights',
     'TileNet',
