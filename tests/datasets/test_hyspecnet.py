@@ -49,6 +49,8 @@ class TestHySpecNet11k:
         x = dataset[0]
         dataset.plot(x, suptitle='Test')
         plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
 
     def test_plot_rgb(self, dataset: HySpecNet11k) -> None:
         dataset = HySpecNet11k(root=dataset.root, bands=('B1', 'B2', 'B3'))

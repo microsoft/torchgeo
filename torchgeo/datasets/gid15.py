@@ -238,17 +238,23 @@ class GID15(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
         Returns:
             a matplotlib Figure with the rendered sample
 
         .. versionadded:: 0.2
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         if self.split != 'test':
             image, mask = sample['image'], sample['mask']
@@ -268,18 +274,29 @@ class GID15(NonGeoDataset):
             axs[0].axis('off')
             axs[1].imshow(mask)
             axs[1].axis('off')
+            if show_titles:
+                axs[0].set_title('Image')
+                axs[1].set_title('Mask')
+
             if 'prediction' in sample:
                 axs[2].imshow(pred)
                 axs[2].axis('off')
+                if show_titles:
+                    axs[2].set_title('Prediction')
         else:
             if 'prediction' in sample:
                 axs[0].imshow(image.permute(1, 2, 0))
                 axs[0].axis('off')
                 axs[1].imshow(pred)
                 axs[1].axis('off')
+                if show_titles:
+                    axs[0].set_title('Image')
+                    axs[1].set_title('Prediction')
             else:
                 axs.imshow(image.permute(1, 2, 0))
                 axs.axis('off')
+                if show_titles:
+                    axs.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

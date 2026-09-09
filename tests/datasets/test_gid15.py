@@ -51,6 +51,8 @@ class TestGID15:
     def test_plot(self, dataset: GID15) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
+        dataset.plot(dataset[0], show_titles=False)
+        plt.close()
 
         if dataset.split != 'test':
             sample = dataset[0]

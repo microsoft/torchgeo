@@ -103,6 +103,8 @@ class TestFLAIRHUB:
 
         dataset.plot(x, suptitle='All modalities')
         plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()
 
     @pytest.mark.parametrize('dataset_type', ['crop_type_2', 'crop_type_3'])
     def test_crop_type_levels(

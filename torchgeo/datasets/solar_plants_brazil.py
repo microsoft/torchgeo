@@ -167,17 +167,24 @@ class SolarPlantsBrazil(NonGeoDataset):
         return torch.from_numpy(bin_mask).long()
 
     def plot(
-        self, sample: dict[str, torch.Tensor], suptitle: str | None = None
+        self,
+        sample: dict[str, torch.Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the SolarPlantsBrazil dataset.
 
         Args:
             sample: A dictionary with 'image' and 'mask' tensors. Optionally,
                 a 'prediction' tensor can be provided to visualize model outputs.
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: Optional string to use as a suptitle.
 
         Returns:
             A matplotlib Figure with the rendered image and mask.
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         image = sample['image']
         mask = sample['mask']
@@ -199,17 +206,20 @@ class SolarPlantsBrazil(NonGeoDataset):
         ncols = 3 if show_prediction else 2
         fig, axs = plt.subplots(1, ncols, figsize=(5 * ncols, 5))
         axs[0].imshow(image_np)
-        axs[0].set_title('RGB Image')
+        if show_titles:
+            axs[0].set_title('RGB Image')
         axs[0].axis('off')
 
         axs[1].imshow(mask_np, cmap='gray')
-        axs[1].set_title('Mask')
+        if show_titles:
+            axs[1].set_title('Mask')
         axs[1].axis('off')
 
         if show_prediction:
             pred_np = sample['prediction'].squeeze().numpy()
             axs[2].imshow(pred_np, cmap='gray')
-            axs[2].set_title('Prediction')
+            if show_titles:
+                axs[2].set_title('Prediction')
             axs[2].axis('off')
 
         if suptitle is not None:

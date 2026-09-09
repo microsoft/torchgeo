@@ -154,6 +154,7 @@ class AirQuality(NonGeoDataset):
     def plot(
         self,
         sample: Sample,
+        show_titles: bool = True,
         suptitle: str | None = None,
         features: Sequence[str] | None = None,
     ) -> Figure:
@@ -161,6 +162,7 @@ class AirQuality(NonGeoDataset):
 
         Args:
             sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
             suptitle: Optional string to use as a suptitle.
             features: List of features to plot (defaults to *target_features*).
 
@@ -168,7 +170,7 @@ class AirQuality(NonGeoDataset):
             A matplotlib Figure with the plotted sample.
 
         .. versionadded:: 0.11
-            The *suptitle* parameter.
+            The *show_titles* and *suptitle* parameters.
         """
         ylabel = {
             'CO(GT)': 'CO (mg/m$^3$)',
@@ -204,7 +206,8 @@ class AirQuality(NonGeoDataset):
 
         # For each axis, feature...
         for ax, feature in zip(axes, features):
-            ax.set_title(feature)
+            if show_titles:
+                ax.set_title(feature)
 
             # Input data
             if feature in self.input_data:

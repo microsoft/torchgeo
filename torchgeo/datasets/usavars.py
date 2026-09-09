@@ -5,6 +5,7 @@
 
 import glob
 import os
+import warnings
 from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
@@ -236,18 +237,32 @@ class USAVars(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.dirname + '.zip'))
 
     def plot(
-        self, sample: Sample, show_labels: bool = True, suptitle: str | None = None
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        show_labels: bool | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            show_labels: flag indicating whether to show labels above panel
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        versionchanged:: 0.11
+            Renamed show_labels to show_titles - keep show_labels as deprecated alias
         """
+        if show_labels is not None:
+            warnings.warn(
+                'The show_labels parameter is deprecated, use show_titles instead.',
+                DeprecationWarning,
+            )
+            show_titles = show_labels
+
         image = sample['image'][:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
 
@@ -255,7 +270,7 @@ class USAVars(NonGeoDataset):
         axs.imshow(image)
         axs.axis('off')
 
-        if show_labels:
+        if show_titles:
             labels = [(lab, val) for lab, val in sample.items() if lab != 'image']
             label_string = ''
             for lab, val in labels:
