@@ -9,3 +9,8 @@ Conv3dLSTM
 ==========
 
 .. autoclass:: Conv3dLSTM
+
+BidirectionalConvLSTM
+=====================
+
+.. autoclass:: BidirectionalConvLSTM
