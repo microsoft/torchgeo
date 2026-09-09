@@ -3,30 +3,24 @@
 
 """Cheasapeake Bay Program Land Use/Land Cover Data Project datasets."""
 
+import functools
 import glob
+import operator
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import pyproj
-import rasterio
-import rasterio.windows
-import shapely.geometry
-import shapely.ops
-import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
 
 from .errors import DatasetNotFoundError
-from .geo import GeoDataset, RasterDataset
+from .geo import RasterDataset, UnionDataset
 from .nlcd import NLCD
-from .utils import GeoSlice, Path, Sample, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive, merge_samples
 
 
 class Chesapeake(RasterDataset, ABC):
@@ -412,7 +406,31 @@ class ChesapeakeWV(Chesapeake):
     }
 
 
-class ChesapeakeCVPR(GeoDataset):
+class ChesapeakeCVPRHelper(RasterDataset):
+    """This is a helper class for the ChesapeakeCVPR dataset."""
+
+    def __init__(self, paths: str, layer: str, *args: Any, **kwargs: Any) -> None:
+        """Initialize helper class.
+
+        Args:
+            paths: directory, where dataset is located
+            layer: data layer to load
+            *args: optional arguments
+            **kwargs: optional keyword arguments
+        """
+        self.filename_glob = f'*_{layer}.tif'
+        self.filename_regex = rf'^m_\d+_[a-z]+_\d+_\d+_{layer}\.tif'
+
+        self.is_image = layer in [
+            'naip-new',
+            'naip-old',
+            'landsat-leaf-on',
+            'landsat-leaf-off',
+        ]
+        super().__init__(paths, *args, **kwargs)
+
+
+class ChesapeakeCVPR(UnionDataset):
     """CVPR 2019 Chesapeake Land Cover dataset.
 
     The `CVPR 2019 Chesapeake Land Cover
@@ -538,16 +556,6 @@ class ChesapeakeCVPR(GeoDataset):
         ),
     }
 
-    p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, pyproj.Transformer]] = {
-        'epsg:26917': pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
-        ),
-        'epsg:26918': pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
-        ),
-    }
-
     def __init__(
         self,
         root: Path = 'data',
@@ -583,9 +591,9 @@ class ChesapeakeCVPR(GeoDataset):
            The prior extension archive is no longer needed unless
            ``"prior_from_cooccurrences_101_31_no_osm_no_buildings"`` is requested.
         """
-        for split in splits:
-            assert split in self.splits
-        assert all(layer in self.valid_layers for layer in layers)
+        assert set(splits) <= set(self.splits)
+        assert set(layers) <= set(self.valid_layers)
+
         self.root = root
         self.layers = layers
         self.transforms = transforms
@@ -600,111 +608,27 @@ class ChesapeakeCVPR(GeoDataset):
 
         self._verify()
 
-        # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint = pd.Timestamp.min
-        maxt = pd.Timestamp.max
-        gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
-        gdf = gdf[gdf['split'].isin(splits)]
-        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
-            'lc'
-        ].str.replace(
-            'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
-        )
-        datetimes = [(mint, maxt)] * len(gdf)
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        gdf.set_crs('EPSG:3857', inplace=True)
-        gdf.set_index(index, inplace=True)
-        self.index = gdf
+        split_datasets = []
+        for split in splits:
+            state, split_type = split.split('-')
+            directory = os.path.join(self.root, '**', f'{state}_*-{split_type}_tiles')
+            directory = glob.glob(directory, recursive=True)[0]
 
-    def __getitem__(self, index: GeoSlice) -> Sample:
-        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
-
-        Args:
-            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
-
-        Returns:
-            Sample of input, target, and/or metadata at that index.
-
-        Raises:
-            IndexError: If *index* is not found in the dataset.
-        """
-        x, y, t = self._disambiguate_slice(index)
-        interval = pd.Interval(t.start, t.stop)
-        df = self.index.iloc[self.index.index.overlaps(interval)]
-        df = df.iloc[:: t.step]
-        df = df.cx[x.start : x.stop, y.start : y.stop]
-
-        transform = rasterio.transform.from_origin(x.start, y.stop, x.step, y.step)
-        sample: Sample = {
-            'bounds': self._slice_to_tensor(index),
-            'transform': torch.tensor(transform),
-        }
-
-        images = []
-        masks = []
-        if df.empty:
-            raise IndexError(
-                f'index: {index} not found in dataset with bounds: {self.bounds}'
-            )
-        elif len(df) == 1:
-            filenames = df.iloc[0]
-            query_box_transformed = None  # is set by the first layer
-
-            query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
-
+            layer_datasets = []
             for layer in self.layers:
-                fn = filenames[layer]
+                dataset = ChesapeakeCVPRHelper(directory, layer, cache=self.cache)
+                layer_datasets.append(dataset)
 
-                with rasterio.open(os.path.join(self.root, fn)) as f:
-                    dst_crs = f.crs.to_string().lower()
+            dataset = functools.reduce(operator.and_, layer_datasets)
+            split_datasets.append(dataset)
 
-                    if query_box_transformed is None:
-                        query_box_transformed = shapely.ops.transform(
-                            self.p_transformers[dst_crs].transform, query_box
-                        ).envelope
-
-                    # Use a boundless windowed read so the returned array
-                    # always matches the requested patch shape, even when
-                    # the query extends beyond the raster footprint. The
-                    # out-of-raster region is filled with nodata (or 0 if
-                    # the raster has no nodata defined).
-                    window = rasterio.windows.from_bounds(
-                        *query_box_transformed.bounds, transform=f.transform
-                    )
-                    out_height = round(window.height)
-                    out_width = round(window.width)
-                    fill_value = f.nodata if f.nodata is not None else 0
-                    data = f.read(
-                        window=window,
-                        boundless=True,
-                        fill_value=fill_value,
-                        out_shape=(f.count, out_height, out_width),
-                    )
-
-                if layer in [
-                    'naip-new',
-                    'naip-old',
-                    'landsat-leaf-on',
-                    'landsat-leaf-off',
-                ]:
-                    images.append(data)
-                elif layer in [
-                    'lc',
-                    'nlcd',
-                    'buildings',
-                    'prior_from_cooccurrences_101_31_no_osm_no_buildings',
-                ]:
-                    masks.append(data)
+        dataset = functools.reduce(operator.or_, split_datasets)
+        self.index = dataset.index
+        self.collate_fn = merge_samples
+        if isinstance(dataset, UnionDataset):
+            self.datasets = dataset.datasets
         else:
-            raise IndexError(f'index: {index} spans multiple tiles which is not valid')
-
-        sample['image'] = torch.from_numpy(np.concatenate(images)).float()
-        sample['mask'] = torch.from_numpy(np.concatenate(masks)).long().squeeze(0)
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+            self.datasets = [dataset]
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -757,7 +681,7 @@ class ChesapeakeCVPR(GeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
+            sample: a sample returned by :meth:`RasterDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
@@ -766,12 +690,17 @@ class ChesapeakeCVPR(GeoDataset):
 
         .. versionadded:: 0.4
         """
-        image = np.rollaxis(sample['image'].numpy(), 0, 3)
-        mask = sample['mask'].numpy()
-        if mask.ndim == 3:
+        image = sample.get('image')
+        if image is not None:
+            image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        mask = sample.get('mask')
+        if mask is not None:
+            mask = sample['mask'].numpy()
+            num_mask = sum(layer not in self.valid_layers[:4] for layer in self.layers)
+
+            if mask.ndim == 2:
+                mask = mask.reshape(num_mask, -1, mask.shape[1])
             mask = np.rollaxis(mask, 0, 3)
-        else:
-            mask = np.expand_dims(mask, 2)
 
         num_panels = len(self.layers)
         showing_predictions = 'prediction' in sample
@@ -779,59 +708,67 @@ class ChesapeakeCVPR(GeoDataset):
             predictions = sample['prediction'].numpy()
             num_panels += 1
 
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
+        fig, axs = plt.subplots(
+            1, num_panels, figsize=(num_panels * 4, 5), squeeze=False
+        )
 
         i = 0
         for layer in self.layers:
             if layer == 'naip-new' or layer == 'naip-old':
+                assert image is not None
                 img = image[:, :, :3] / 255
                 image = image[:, :, 4:]
-                axs[i].axis('off')
-                axs[i].imshow(img)
+                axs[0, i].axis('off')
+                axs[0, i].imshow(img)
             elif layer == 'landsat-leaf-on' or layer == 'landsat-leaf-off':
+                assert image is not None
                 img = image[:, :, [3, 2, 1]] / 3000
                 image = image[:, :, 9:]
-                axs[i].axis('off')
-                axs[i].imshow(img)
+                axs[0, i].axis('off')
+                axs[0, i].imshow(img)
             elif layer == 'nlcd':
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(
+                axs[0, i].imshow(
                     img, vmin=0, vmax=255, cmap=NLCD.cmap, interpolation='none'
                 )
-                axs[i].axis('off')
+                axs[0, i].axis('off')
             elif layer == 'lc':
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(
+                axs[0, i].imshow(
                     img, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
                 )
-                axs[i].axis('off')
+                axs[0, i].axis('off')
             elif layer == 'buildings':
+                assert mask is not None
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
-                axs[i].axis('off')
+                axs[0, i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
+                axs[0, i].axis('off')
             elif layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
+                assert mask is not None
                 img = (mask[:, :, :4] @ self.prior_color_matrix) / 255
                 mask = mask[:, :, 4:]
-                axs[i].imshow(img)
-                axs[i].axis('off')
+                axs[0, i].imshow(img)
+                axs[0, i].axis('off')
 
             if show_titles:
                 if layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
-                    axs[i].set_title('prior')
+                    axs[0, i].set_title('prior')
                 else:
-                    axs[i].set_title(layer)
+                    axs[0, i].set_title(layer)
             i += 1
 
         if showing_predictions:
-            axs[i].imshow(
+            axs[0, i].imshow(
                 predictions, vmin=0, vmax=15, cmap=self.lc_cmap, interpolation='none'
             )
-            axs[i].axis('off')
+            axs[0, i].axis('off')
             if show_titles:
-                axs[i].set_title('Predictions')
+                axs[0, i].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

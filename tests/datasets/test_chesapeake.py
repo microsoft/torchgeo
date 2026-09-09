@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import os
 import shutil
 from pathlib import Path
@@ -88,15 +89,26 @@ class TestChesapeakeDC:
 class TestChesapeakeCVPR:
     @pytest.fixture(
         params=[
-            ('naip-new', 'naip-old', 'nlcd'),
-            ('landsat-leaf-on', 'landsat-leaf-off', 'lc'),
-            ('naip-new', 'landsat-leaf-on', 'lc', 'nlcd', 'buildings'),
-            ('naip-new', 'prior_from_cooccurrences_101_31_no_osm_no_buildings'),
+            params
+            for params in itertools.product(
+                [['de'], ['de', 'md']],
+                [['test'], ['test', 'train']],
+                [[], ['naip-new'], ['naip-new', 'landsat-leaf-on']],
+                [
+                    [],
+                    ['nlcd', 'lc', 'buildings'],
+                    ['prior_from_cooccurrences_101_31_no_osm_no_buildings'],
+                ],
+            )
+            if params[2] or params[3]
         ]
     )
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> ChesapeakeCVPR:
+        state, split, image, mask = request.param
+        data_splits = [f'{s}-{sp}' for s in state for sp in split]
+        data_layers = image + mask
         monkeypatch.setattr(
             ChesapeakeCVPR,
             'urls',
@@ -121,10 +133,7 @@ class TestChesapeakeCVPR:
             ChesapeakeCVPR,
             '_files',
             {
-                'base': (
-                    'de_1m_2013_extended-debuffered-test_tiles',
-                    'spatial_index.geojson',
-                ),
+                'base': ('de_1m_2013_extended-debuffered-test_tiles',),
                 'prior_extension': (
                     'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
                 ),
@@ -134,8 +143,8 @@ class TestChesapeakeCVPR:
         transforms = nn.Identity()
         return ChesapeakeCVPR(
             root,
-            splits=['de-test'],
-            layers=request.param,
+            splits=data_splits,
+            layers=data_layers,
             transforms=transforms,
             download=True,
         )
@@ -143,10 +152,10 @@ class TestChesapeakeCVPR:
     def test_getitem(self, dataset: ChesapeakeCVPR) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x['mask'], torch.Tensor)
+        assert isinstance(x.get('mask', x.get('image')), torch.Tensor)
 
     def test_len(self, dataset: ChesapeakeCVPR) -> None:
-        assert len(dataset) == 1
+        assert len(dataset) > 0
 
     def test_and(self, dataset: ChesapeakeCVPR) -> None:
         ds = dataset & dataset
@@ -212,27 +221,19 @@ class TestChesapeakeCVPR:
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
-    def test_multiple_hits_index(self, dataset: ChesapeakeCVPR) -> None:
-        ds = ChesapeakeCVPR(
-            root=dataset.root, splits=['de-train', 'de-test'], layers=dataset.layers
-        )
-        with pytest.raises(
-            IndexError, match=r'index: .* spans multiple tiles which is not valid'
-        ):
-            ds[dataset.bounds]
-
     def test_plot(self, dataset: ChesapeakeCVPR) -> None:
         x = dataset[dataset.bounds].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        if x['mask'].ndim == 2:
-            x['prediction'] = x['mask'].clone()
-        else:
-            x['prediction'] = x['mask'][0, :, :].clone()
-        dataset.plot(x)
-        plt.close()
+        if 'mask' in x:
+            if x['mask'].ndim == 2:
+                x['prediction'] = x['mask'].clone()
+            else:
+                x['prediction'] = x['mask'][0, :, :].clone()
+            dataset.plot(x)
+            plt.close()
 
     def test_partially_out_of_raster_query(self, dataset: ChesapeakeCVPR) -> None:
         # Regression test for https://github.com/torchgeo/torchgeo/issues/3678
@@ -246,9 +247,11 @@ class TestChesapeakeCVPR:
         shifted_x = slice(x.start + xshift, x.stop + xshift, x.step)
         sample = dataset[shifted_x, y, t]
         ref = dataset[dataset.bounds]
-        assert sample['image'].shape == ref['image'].shape
-        assert sample['mask'].shape == ref['mask'].shape
         # The shifted-right half of the query is outside the raster, so at
         # least one column on the right should be zero-filled.
-        assert torch.all(sample['image'][..., -1] == 0)
-        assert torch.all(sample['mask'][..., -1] == 0)
+        if 'image' in sample:
+            assert sample['image'].shape == ref['image'].shape
+            assert torch.all(sample['image'][..., -1] == 0)
+        if 'mask' in sample:
+            assert sample['mask'].shape == ref['mask'].shape
+            assert torch.all(sample['mask'][..., -1] == 0)
