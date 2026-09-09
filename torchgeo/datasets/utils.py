@@ -14,16 +14,17 @@ import hashlib
 import importlib
 import os
 import pathlib
+import posixpath
 import shutil
 import subprocess
 import tarfile
 import urllib.request
 import warnings
 import zipfile
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, NamedTuple, TypeAlias, cast, overload
 
 import numpy as np
 import pandas as pd
@@ -1008,7 +1009,72 @@ def convert_poly_coords(
     return xformed_shape
 
 
-def _list_vsi_files(root: Path) -> list[str]:
+# Archives: pure identification, no I/O.
+
+_ARCHIVE_VSI_PREFIXES = {
+    '.zip': '/vsizip/',
+    '.tar': '/vsitar/',
+    '.tar.gz': '/vsitar/',
+    '.tgz': '/vsitar/',
+    '.tar.bz2': '/vsitar/',
+    '.gz': '/vsigzip/',
+}
+
+
+class _Archive(NamedTuple):
+    """An archive and where its contents are read from / extracted to."""
+
+    #: The archive file itself.
+    path: str
+    #: VSI path to read its contents, e.g. ``/vsizip/<path>``.
+    vsi_base: str
+    #: Sibling folder it unpacks into (``foo.zip`` -> ``foo/``).
+    extract_dir: str
+
+
+def _as_archive(path: Path) -> _Archive | None:
+    """Return archive metadata for *path*, or ``None`` if it is not an archive.
+
+    Args:
+        path: A file path.
+
+    Returns:
+        An :class:`_Archive` if *path* has a supported archive extension, else
+        ``None``.
+    """
+    name = os.path.basename(str(path))
+    lower = name.lower()
+    for ext, prefix in _ARCHIVE_VSI_PREFIXES.items():
+        if lower.endswith(ext):
+            stem = name[: -len(ext)]
+            return _Archive(
+                str(path),
+                prefix + str(path),
+                # posixpath so extract-dir comparisons hold on Windows (see
+                # _is_extracted); VSI paths are always POSIX-style.
+                posixpath.join(os.path.dirname(str(path)), stem),
+            )
+    return None
+
+
+# Enumeration: two paired "list every file under root" primitives.
+
+
+def _walk_local(root: Path) -> Iterator[str]:
+    """Yield every file path under a local directory.
+
+    Args:
+        root: A local directory.
+
+    Yields:
+        Each file path under *root*.
+    """
+    for dirpath, _, names in os.walk(root):
+        for name in names:
+            yield os.path.join(dirpath, name)
+
+
+def _walk_vsi(root: Path) -> list[str]:
     """List all files under a VSI path recursively.
 
     Args:
@@ -1028,11 +1094,152 @@ def _list_vsi_files(root: Path) -> list[str]:
     return [e for e in entries if not e.endswith('/')]
 
 
+# Expansion + dedup: turn an archive into its not-yet-extracted contents.
+
+
+def _is_extracted(member: str, archive: _Archive, known: Container[str]) -> bool:
+    """Whether *member* already exists as an extracted loose file.
+
+    Recognizes both extraction layouts: flat next to the archive
+    (:func:`extract_archive`) and into a folder named after it
+    (``foo.zip`` -> ``foo/``). *known* covers VSI paths (e.g. cloud storage),
+    where :func:`os.path.exists` cannot see the extracted files.
+
+    Args:
+        member: A file path inside *archive*.
+        archive: The archive *member* belongs to.
+        known: Loose files already discovered.
+
+    Returns:
+        True if *member* is already present as a loose file, else False.
+    """
+    # VSI and archive-internal paths are always POSIX-style, so join with
+    # posixpath: this keeps the *known* membership check correct on Windows
+    # (where os.path.join would insert '\'), while os.path.exists still accepts
+    # forward slashes for local paths.
+    internal = member.removeprefix(archive.vsi_base).lstrip('/')
+    flat = posixpath.join(os.path.dirname(archive.path), internal)
+    nested = posixpath.join(archive.extract_dir, internal)
+    return (
+        flat in known
+        or nested in known
+        or os.path.exists(flat)
+        or os.path.exists(nested)
+    )
+
+
+def _archive_members(
+    archive: _Archive, known: Container[str] = frozenset()
+) -> list[str]:
+    """List the contents of *archive* that have not already been extracted.
+
+    The contents are read by chaining the matching VSI handler (e.g.
+    ``/vsizip/``) onto the archive's path; GDAL does not descend on its own.
+
+    Args:
+        archive: The archive to expand.
+        known: Loose files already discovered, used to skip extracted members.
+
+    Returns:
+        The archive's members that are not already present as loose files.
+    """
+    return [
+        m for m in _walk_vsi(archive.vsi_base) if not _is_extracted(m, archive, known)
+    ]
+
+
+# Matching.
+
+
+def _match_basename(files: Iterable[str], filename_glob: str) -> set[str]:
+    """Keep only *files* whose basename matches *filename_glob*.
+
+    Args:
+        files: File paths to filter.
+        filename_glob: Glob pattern to match basenames against.
+
+    Returns:
+        The subset of *files* whose basename matches *filename_glob*.
+    """
+    return {f for f in files if fnmatch.fnmatch(os.path.basename(f), filename_glob)}
+
+
+def _files_under_file(path: Path, filename_glob: str) -> set[str]:
+    """Resolve a single file: an archive's contents, or the file itself.
+
+    Args:
+        path: A local file.
+        filename_glob: Glob pattern to match basenames against.
+
+    Returns:
+        The archive's matching members if *path* is an archive, else *path*
+        itself if it matches, else an empty set.
+    """
+    if archive := _as_archive(path):
+        return _match_basename(_archive_members(archive), filename_glob)
+    if fnmatch.fnmatch(str(path), f'*{filename_glob}'):
+        return {str(path)}
+    return set()
+
+
+def _files_under_dir(path: Path, filename_glob: str) -> set[str]:
+    """Resolve a directory: matching loose files plus archive members.
+
+    Matching is delegated to :mod:`glob` so path-style patterns
+    (``images/*.tif``) keep working; a separate walk finds archives without
+    disturbing the glob. A bare glob also matches directories, so keep files only.
+
+    Args:
+        path: A local directory.
+        filename_glob: Glob pattern to match against.
+
+    Returns:
+        Matching loose files plus the not-yet-extracted members of any archives.
+    """
+    pathname = os.path.join(path, '**', filename_glob)
+    loose = {f for f in glob.iglob(pathname, recursive=True) if os.path.isfile(f)}
+    members = (
+        m
+        for f in _walk_local(path)
+        if (archive := _as_archive(f))
+        for m in _archive_members(archive)
+    )
+    return loose | _match_basename(members, filename_glob)
+
+
+def _files_under_vsi(path: Path, filename_glob: str) -> set[str]:
+    """Resolve a VSI path: everything under the prefix, archives expanded.
+
+    :func:`os.path.exists` cannot see remote files, so archive members are
+    deduped against the listing itself.
+
+    Args:
+        path: A VSI path (e.g. a cloud storage prefix).
+        filename_glob: Glob pattern to match basenames against.
+
+    Returns:
+        Matching loose entries plus not-yet-extracted archive members.
+    """
+    listing = _walk_vsi(path)
+    known = set(listing)
+    loose: list[str] = []
+    members: list[str] = []
+    for entry in listing:
+        if archive := _as_archive(entry):
+            members += _archive_members(archive, known)
+        else:
+            loose.append(entry)
+    return _match_basename(loose + members, filename_glob)
+
+
 def find_files(path: Path, filename_glob: str = '*') -> list[str]:
     """Return all files under *path* that match *filename_glob*.
 
     Supports local directories, individual files, and VSI paths such as
-    cloud storage buckets and local archives (zip, tar, etc.).
+    cloud storage buckets. Archives (zip, tar, etc.) are descended into
+    automatically, so files inside them are matched as if they were extracted.
+    An archive whose contents are already extracted alongside it is not
+    descended into, to avoid returning the same data under two different paths.
 
     Args:
         path: Local directory, local file, or VSI path.
@@ -1043,17 +1250,14 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
 
     .. versionadded:: 0.10
     """
-    files: set[str] = set()
-    if os.path.isdir(path):
-        pathname = os.path.join(path, '**', filename_glob)
-        files = set(glob.iglob(pathname, recursive=True))
-    elif os.path.isfile(path) and fnmatch.fnmatch(str(path), f'*{filename_glob}'):
-        files = {str(path)}
+    if os.path.isfile(path):
+        files = _files_under_file(path, filename_glob)
+    elif os.path.isdir(path):
+        files = _files_under_dir(path, filename_glob)
     elif str(path).startswith('/vsi'):
-        all_files = _list_vsi_files(path)
-        files = {
-            f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
-        }
+        files = _files_under_vsi(path, filename_glob)
+    else:
+        files = set()
     return sorted(files)
 
 
