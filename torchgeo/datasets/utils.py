@@ -1054,6 +1054,8 @@ def find_files(path: Path, filename_glob: str = '*') -> list[str]:
         files = {
             f for f in all_files if fnmatch.fnmatch(os.path.basename(f), filename_glob)
         }
+    elif '://' in str(path):
+        files = {str(path)}
     return sorted(files)
 
 
