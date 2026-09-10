@@ -81,10 +81,13 @@ def test_random_bbox_assignment(
 
     train_ds, val_ds, test_ds = random_bbox_assignment(ds, lengths)
 
-    # Check datasets lengths
+    # Check dataset lengths
     assert len(train_ds) == expected_lengths[0]
     assert len(val_ds) == expected_lengths[1]
     assert len(test_ds) == expected_lengths[2]
+
+    # Check dataset CRSs
+    assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
@@ -129,10 +132,13 @@ def test_random_bbox_splitting() -> None:
     val_ds_area = total_area(val_ds)
     test_ds_area = total_area(test_ds)
 
-    # Check datasets areas
+    # Check dataset areas
     assert isclose(train_ds_area, ds_area * 5 / 8)
     assert isclose(val_ds_area, ds_area * 2 / 8)
     assert isclose(test_ds_area, ds_area * 1 / 8)
+
+    # Check dataset CRSs
+    assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
@@ -164,10 +170,13 @@ def test_random_grid_cell_assignment() -> None:
         ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=5
     )
 
-    # Check datasets lengths
+    # Check dataset lengths
     assert len(train_ds) == 1 / 2 * 2 * 5**2 + 1
     assert len(val_ds) == floor(1 / 4 * 2 * 5**2)
     assert len(test_ds) == floor(1 / 4 * 2 * 5**2)
+
+    # Check dataset CRSs
+    assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
@@ -211,10 +220,13 @@ def test_roi_split() -> None:
         ],
     )
 
-    # Check datasets lengths
+    # Check dataset lengths
     assert len(train_ds) == 3
     assert len(val_ds) == 3
     assert len(test_ds) == 1
+
+    # Check dataset CRSs
+    assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
@@ -283,13 +295,13 @@ def test_time_series_split(
 
     train_ds, val_ds, test_ds = time_series_split(ds, lengths)
 
-    # Check datasets lengths
+    # Check dataset lengths
     assert len(train_ds) == expected_lengths[0]
     assert len(val_ds) == expected_lengths[1]
     assert len(test_ds) == expected_lengths[2]
 
-    print(train_ds.index)
-    print(val_ds.index)
+    # Check dataset CRSs
+    assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
