@@ -6,12 +6,9 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import cast
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -222,40 +219,3 @@ class ADVANCE(NonGeoDataset):
             download_and_extract_archive(
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
-
-    def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        image = np.rollaxis(sample['image'].numpy(), 0, 3)
-        label = cast(int, sample['label'].item())
-        label_class = self.classes[label]
-
-        showing_predictions = 'prediction' in sample
-        if showing_predictions:
-            prediction = cast(int, sample['prediction'].item())
-            prediction_class = self.classes[prediction]
-
-        fig, ax = plt.subplots(figsize=(4, 4))
-        ax.imshow(image)
-        ax.axis('off')
-        if show_titles:
-            title = f'Label: {label_class}'
-            if showing_predictions:
-                title += f'\nPrediction: {prediction_class}'
-            ax.set_title(title)
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-        return fig
