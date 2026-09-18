@@ -66,7 +66,7 @@ DATASET_REGISTRY = {
 }
 
 
-class CopernicusBench():
+class CopernicusBench:
     """Copernicus-Bench datasets.
 
     This wrapper supports dynamically loading datasets in Copernicus-Bench.
