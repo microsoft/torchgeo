@@ -51,7 +51,7 @@ class PlottingMixin:
         """
 
         rgb_indices = []
-        
+
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
