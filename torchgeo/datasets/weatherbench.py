@@ -4,17 +4,21 @@
 """WeatherBench datasets."""
 
 import math
-from typing import ClassVar
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
+import shapely
 import torch
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
+from pandas import IntervalIndex, Timestamp
+from pyproj import CRS
 
-from .geo import XarrayDataset
-from .utils import Sample
+from .geo import GeoDataset, GeoSlice
+from .utils import Path, Sample, lazy_import
 
 
-class WeatherBench2(XarrayDataset):
+class WeatherBench2(GeoDataset):
     """WeatherBench 2 dataset.
 
     `WeatherBench <https://sites.research.google/gr/weatherbench/>__ is an open
@@ -32,8 +36,9 @@ class WeatherBench2(XarrayDataset):
 
     Requires the following additional dependencies:
 
-    * `zarr <https://pypi.org/project/zarr/>`_: to load Zarr files.
     * `gcsfs <https://pypi.org/project/gcsfs/>`_: if loading data directly from GCS.
+    * `xarray` <https://pypi.org/project/xarray/>`_: to load an Xarray dataset.
+    * `zarr <https://pypi.org/project/zarr/>`_: to load Zarr files.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -42,36 +47,79 @@ class WeatherBench2(XarrayDataset):
     .. versionadded:: 0.11
     """
 
-    cmaps: ClassVar[dict[str, str]] = {
-        'temperature': 'hot',
-        'precipitation': 'gist_ncar',
-        'flux': 'plasma',
-        'orography': 'terrain',
-        'wind': 'jet',
-    }
+    _res = (0.25, 0.25)
 
-    # https://confluence.ecmwf.int/spaces/CKB/pages/76414402/ERA5+data+documentation
-    units: ClassVar[dict[str, str]] = {
-        'geopotential': 'm$^2$/s$^2$',
-        'temperature': 'K',
-        'specific_humidity': 'kg/kg',
-        'relative_humidity': '%',
-        'wind': 'm/s',
-        'vorticity': '1/s',
-        'potential_vorticity': 'K m$^2$/kg s',
-        'precipitation': 'm',
-        'angle': 'rad',
-        'height': 'm',
-        'divergence': '1/s',
-        'leaf': 'm$^2$/m$^2$',
-        'pressure': 'Pa',
-        'flux': 'W/m$^2$',
-        'moisture_divergence': 'kg/m$^2$s',
-        'snow_depth': 'm of water equivalent',
-        'total_column': 'kg/m$^2$',
-        'vertical_velocity': 'Pa/s',
-        'volumetric': 'm$^3$/m$^3$',
-    }
+    def __init__(
+        self,
+        store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
+        data_vars: Sequence[str] | None = None,
+    ) -> None:
+        """Initialize a new WeatherBench2 instance.
+
+        Args:
+            store: Zarr store to load.
+            data_vars: List of data variables to load (defaults to all variables).
+
+        Raises:
+            DependencyNotFoundError: If xarray is not installed.
+        """
+        xr = lazy_import('xarray')
+
+        self.data = xr.open_zarr(store)
+        self.data_vars = data_vars or list(self.data.data_vars.keys())
+
+        xmin = self.data.longitude.values.min()
+        xmax = self.data.longitude.values.max()
+        ymin = self.data.latitude.values.min()
+        ymax = self.data.latitude.values.max()
+        tmin = self.data.time.values.min()
+        tmax = self.data.time.values.max()
+
+        filepaths = [store]
+        datetimes = [(Timestamp(tmin), Timestamp(tmax))]
+        geometries = [shapely.box(xmin, ymin, xmax, ymax)]
+
+        data = {'filepath': filepaths}
+        index = IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        crs = CRS.from_epsg(4326)
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, index: GeoSlice) -> Sample:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+        """
+        x, y, t = self._disambiguate_slice(index)
+
+        # Step size must be integer multiple of pixels
+        x = slice(x.start, x.stop, int(x.step // 0.25))
+        y = slice(y.start, y.stop, int(y.step // 0.25))
+
+        # Latitude dimension must be inverted
+        y = slice(y.stop, y.start, y.step)
+
+        data = self.data.sel(time=t, latitude=y, longitude=x)
+
+        images = []  # C T Z Y X
+        masks = []  # C T Y X
+        for var in self.data_vars:
+            match data[var].ndim:
+                case 4:
+                    images.append(torch.tensor(data[var].values))
+                case 3:
+                    masks.append(torch.tensor(data[var].values))
+
+        sample = {}
+        if images:
+            sample['image'] = torch.stack(images, dim=1)  # T C Z Y X
+        if masks:
+            sample['mask'] = torch.stack(masks, dim=1)  # T C Y X
+
+        return sample
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -86,9 +134,6 @@ class WeatherBench2(XarrayDataset):
         Returns:
             A matplotlib Figure with the rendered sample.
         """
-        # Average across time: T C H W -> C H W
-        data = torch.mean(sample['image'], dim=0)
-
         nvars = len(self.data_vars)
         ncols = math.ceil(math.sqrt(nvars))
         nrows = math.ceil(nvars / ncols)
@@ -98,23 +143,28 @@ class WeatherBench2(XarrayDataset):
         )
         axes = axes.ravel()
 
+        image_id = 0
+        mask_id = 0
         for i, var in enumerate(self.data_vars):
             if show_titles:
-                axes[i].set_title(var.replace('_', ' '))
+                axes[i].set_title(self.data[var].attrs['long_name'])
 
-            # Image
-            cmap = 'viridis'
-            for key, value in self.cmaps:
-                if key in var:
-                    cmap = value
+            # Image/mask
+            match self.data[var].ndim:
+                case 4:
+                    image = sample['image'][:, image_id]
+                    image = torch.mean(image, dim=(0, 1))  # T Z Y X -> Y X
+                    image_id += 1
+                case 3:
+                    image = sample['mask'][:, mask_id]
+                    image = torch.mean(image, dim=0)  # T Y X -> Y Z
+                    mask_id += 1
 
-            im = axes[i].imshow(data[i], cmap=cmap)
+            im = axes[i].imshow(image)
 
             # Colorbar
             cbar = fig.colorbar(im, ax=axes[i])
-            for key, value in self.units:
-                if key in var:
-                    cbar.set_label(value)
+            cbar.set_label(self.data[var].attrs['units'])
 
         # Hide unused axes
         for ax in axes[nvars:]:
