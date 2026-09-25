@@ -7,12 +7,12 @@ resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
     "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version == '3.13.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and platform_machine == 'ARM64' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and platform_machine != 'ARM64' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and platform_machine != 'ARM64' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version == '3.13.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and platform_machine != 'ARM64' and sys_platform == 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'emscripten'",
     "python_full_version < '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
@@ -4178,7 +4178,7 @@ all = [
     { name = "types-requests" },
     { name = "types-shapely" },
     { name = "webdataset" },
-    { name = "xarray", extra = ["io"] },
+    { name = "xarray", extra = ["io"], marker = "python_full_version < '3.14'" },
 ]
 datasets = [
     { name = "h5py", marker = "python_full_version < '3.14'" },
@@ -4189,7 +4189,7 @@ datasets = [
     { name = "scipy" },
     { name = "tokenizers", marker = "python_full_version < '3.14'" },
     { name = "webdataset" },
-    { name = "xarray", extra = ["io"] },
+    { name = "xarray", extra = ["io"], marker = "python_full_version < '3.14'" },
 ]
 docs = [
     { name = "ipywidgets" },
@@ -4275,7 +4275,7 @@ requires-dist = [
     { name = "types-shapely", marker = "extra == 'style'", specifier = ">=2.0.2" },
     { name = "typing-extensions", specifier = ">=4.8" },
     { name = "webdataset", marker = "extra == 'datasets'", specifier = ">=0.2.101" },
-    { name = "xarray", extras = ["io"], marker = "extra == 'datasets'", specifier = ">=0.17" },
+    { name = "xarray", extras = ["io"], marker = "python_full_version < '3.14' and extra == 'datasets'", specifier = ">=0.17" },
 ]
 provides-extras = ["datasets", "docs", "models", "style", "tests", "all"]
 
@@ -4600,7 +4600,7 @@ name = "webob"
 version = "1.8.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "legacy-cgi", marker = "python_full_version >= '3.13'" },
+    { name = "legacy-cgi", marker = "python_full_version == '3.13.*'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e6/92/9329872e36be90e25ba616ac6e9ee8c1be4326a1ea3fdffcdabd0eb48efb/webob-1.8.11.tar.gz", hash = "sha256:aa8c27231070b135c025e567a9cd7eda03f4df71352ffaac740cb6a75f0f81a5", size = 286047, upload-time = "2026-08-02T06:26:26.063Z" }
 wheels = [

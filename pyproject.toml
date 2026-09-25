@@ -114,7 +114,8 @@ datasets = [
     # webdataset 0.2.101+ required for security hardening
     "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
-    "xarray[io]>=0.17",
+    # xarray[io] pulls in h5py, which does not yet have Python 3.14+ wheels
+    "xarray[io]>=0.17; python_version<'3.14'",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
