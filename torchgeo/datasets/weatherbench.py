@@ -133,7 +133,7 @@ class WeatherBench2(GeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: A sample returned by :meth:`XarrayDataset.__getitem__`.
+            sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
             suptitle: Optional string to use as a suptitle.
 
