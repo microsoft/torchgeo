@@ -4250,7 +4250,7 @@ requires-dist = [
     { name = "pyproj", specifier = ">=3.6.1" },
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=7.3.2" },
     { name = "pytest-cov", marker = "extra == 'tests'", specifier = ">=4" },
-    { name = "pytest-socket", marker = "extra == 'tests'", specifier = ">=0.3.4" },
+    { name = "pytest-socket", marker = "extra == 'tests'", specifier = ">=0.4" },
     { name = "pytest-xdist", marker = "extra == 'tests'", specifier = ">=3.0.2" },
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "requests", specifier = ">=2.25" },
