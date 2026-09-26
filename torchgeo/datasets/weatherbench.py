@@ -21,7 +21,7 @@ from .utils import Path, Sample, lazy_import
 class WeatherBench2(GeoDataset):
     """WeatherBench 2 dataset.
 
-    `WeatherBench <https://sites.research.google/gr/weatherbench/>__ is an open
+    `WeatherBench <https://sites.research.google/gr/weatherbench/>`__ is an open
     framework for evaluating ML and physics-based weather forecasting models in a
     like-for-like fashion.
 
