@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
+from torch import nn
 
 from torchgeo.datasets import WeatherBench2
 
@@ -29,7 +30,7 @@ class TestWeatherBench2:
         root = Path('tests') / 'data' / 'weatherbench'
         store = root / '1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr'
         data_vars = [v for vs in request.param for v in vs]
-        return WeatherBench2(store, data_vars=data_vars)
+        return WeatherBench2(store, data_vars=data_vars, transforms=nn.Identity())
 
     def test_getitem(self, dataset: WeatherBench2) -> None:
         dataset[dataset.bounds]

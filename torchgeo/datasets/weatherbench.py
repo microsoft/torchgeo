@@ -4,7 +4,7 @@
 """WeatherBench datasets."""
 
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import shapely
 import torch
@@ -53,12 +53,15 @@ class WeatherBench2(GeoDataset):
         store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
         *,
         data_vars: Sequence[str] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new WeatherBench2 instance.
 
         Args:
             store: Zarr store to load.
             data_vars: List of data variables to load (defaults to all variables).
+            transforms: A function/transform that takes an input sample
+                and returns a transformed version.
 
         Raises:
             DependencyNotFoundError: If rioxarray or xarray is not installed.
@@ -68,6 +71,7 @@ class WeatherBench2(GeoDataset):
 
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
+        self.transforms = transforms
 
         # CRS is missing from file
         crs = CRS.from_epsg(4326)
@@ -127,6 +131,9 @@ class WeatherBench2(GeoDataset):
             sample['image'] = torch.stack(images, dim=1)  # T C Y X
         if videos:
             sample['video'] = torch.stack(videos, dim=1)  # T C Z Y X
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
 
         return sample
 
