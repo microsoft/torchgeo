@@ -52,6 +52,7 @@ class WeatherBench2(GeoDataset):
     def __init__(
         self,
         store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
+        *,
         data_vars: Sequence[str] | None = None,
     ) -> None:
         """Initialize a new WeatherBench2 instance.
@@ -104,20 +105,25 @@ class WeatherBench2(GeoDataset):
 
         data = self.data.sel(time=t, latitude=y, longitude=x)
 
-        images = []  # C T Z Y X
-        masks = []  # C T Y X
+        masks = []  # C Y X
+        images = []  # C T Y X
+        videos = []  # C T Z Y X
         for var in self.data_vars:
-            match data[var].ndim:
-                case 4:
-                    images.append(torch.tensor(data[var].values))
-                case 3:
+            match self.data[var].ndim:
+                case 2:
                     masks.append(torch.tensor(data[var].values))
+                case 3:
+                    images.append(torch.tensor(data[var].values))
+                case 4:
+                    videos.append(torch.tensor(data[var].values))
 
         sample = {}
-        if images:
-            sample['image'] = torch.stack(images, dim=1)  # T C Z Y X
         if masks:
-            sample['mask'] = torch.stack(masks, dim=1)  # T C Y X
+            sample['mask'] = torch.stack(masks, dim=0)  # C Y X
+        if images:
+            sample['image'] = torch.stack(images, dim=1)  # T C Y X
+        if videos:
+            sample['video'] = torch.stack(videos, dim=1)  # T C Z Y X
 
         return sample
 
@@ -143,28 +149,32 @@ class WeatherBench2(GeoDataset):
         )
         axes = axes.ravel()
 
-        image_id = 0
         mask_id = 0
+        image_id = 0
+        video_id = 0
         for i, var in enumerate(self.data_vars):
             if show_titles:
-                axes[i].set_title(self.data[var].attrs['long_name'])
+                axes[i].set_title(self.data[var].attrs.get('long_name', var))
 
             # Image/mask
             match self.data[var].ndim:
-                case 4:
-                    image = sample['image'][:, image_id]
-                    image = torch.mean(image, dim=(0, 1))  # T Z Y X -> Y X
-                    image_id += 1
-                case 3:
-                    image = sample['mask'][:, mask_id]
-                    image = torch.mean(image, dim=0)  # T Y X -> Y Z
+                case 2:
+                    image = sample['mask'][mask_id]
                     mask_id += 1
+                case 3:
+                    image = sample['image'][:, image_id]
+                    image = torch.mean(image, dim=0)  # T Y X -> Y Z
+                    image_id += 1
+                case 4:
+                    image = sample['video'][:, video_id]
+                    image = torch.mean(image, dim=(0, 1))  # T Z Y X -> Y X
+                    video_id += 1
 
             im = axes[i].imshow(image)
 
             # Colorbar
             cbar = fig.colorbar(im, ax=axes[i])
-            cbar.set_label(self.data[var].attrs['units'])
+            cbar.set_label(self.data[var].attrs.get('units', ''))
 
         # Hide unused axes
         for ax in axes[nvars:]:

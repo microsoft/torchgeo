@@ -23,10 +23,12 @@ class TestWeatherBench2:
             ([], ['temperature'], ['temperature', 'wind_speed']),  # 4D vars
         ),
     )
-    def dataset(self, request: SubRequest) -> WeatherBench2:
+    @classmethod
+    def dataset(cls, request: SubRequest) -> WeatherBench2:
         root = Path('tests') / 'data' / 'weatherbench'
         store = root / '1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr'
-        return WeatherBench2(store, data_vars=request.param)
+        data_vars = [v for vs in request.param for v in vs]
+        return WeatherBench2(store, data_vars=data_vars)
 
     def test_getitem(self, dataset: WeatherBench2) -> None:
         dataset[dataset.bounds]
