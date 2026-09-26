@@ -114,7 +114,7 @@ datasets = [
     # webdataset 0.2.101+ required for security hardening
     "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
-    # xarray[io] pulls in h5py, which does not yet have Python 3.14+ wheels
+    # h5py 3.15+ is incompatible with netcdf4 wheels; no h5py on Python 3.14+
     "xarray[io]>=0.17; python_version<'3.14'",
 ]
 docs = [
@@ -164,8 +164,8 @@ tests = [
     "pytest-cov>=4",
     # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
     "pytest-xdist>=3.0.2",
-    # pytest-socket 0.4+ required for --allow-unix-socket
-    "pytest-socket>=0.4",
+    # pytest-socket 0.3.4+ required for wheels
+    "pytest-socket>=0.3.4",
 ]
 all = [
     "torchgeo[datasets,docs,models,style,tests]",

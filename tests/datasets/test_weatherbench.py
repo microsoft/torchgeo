@@ -14,6 +14,7 @@ pytest.importorskip('xarray', minversion='0.17')
 pytest.importorskip('zarr')
 
 
+@pytest.mark.enable_socket  # required for asyncio
 class TestWeatherBench2:
     @pytest.fixture(
         scope='class',
