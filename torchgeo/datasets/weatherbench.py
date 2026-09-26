@@ -6,10 +6,10 @@
 import math
 from collections.abc import Sequence
 
-import matplotlib.pyplot as plt
 import shapely
 import torch
 from geopandas import GeoDataFrame
+from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from pandas import IntervalIndex, Timestamp
 from pyproj import CRS
@@ -37,6 +37,7 @@ class WeatherBench2(GeoDataset):
     Requires the following additional dependencies:
 
     * `gcsfs <https://pypi.org/project/gcsfs/>`_: if loading data directly from GCS.
+    * `rioxarray <https://pypi.org/project/rioxarray/>`_: to support geospatial operations.
     * `xarray` <https://pypi.org/project/xarray/>`_: to load an Xarray dataset.
     * `zarr <https://pypi.org/project/zarr/>`_: to load Zarr files.
 
@@ -46,8 +47,6 @@ class WeatherBench2(GeoDataset):
 
     .. versionadded:: 0.11
     """
-
-    _res = (0.25, 0.25)
 
     def __init__(
         self,
@@ -62,27 +61,31 @@ class WeatherBench2(GeoDataset):
             data_vars: List of data variables to load (defaults to all variables).
 
         Raises:
-            DependencyNotFoundError: If xarray is not installed.
+            DependencyNotFoundError: If rioxarray or xarray is not installed.
         """
+        lazy_import('rioxarray')
         xr = lazy_import('xarray')
 
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
 
-        xmin = self.data.longitude.values.min()
-        xmax = self.data.longitude.values.max()
-        ymin = self.data.latitude.values.min()
-        ymax = self.data.latitude.values.max()
+        # CRS is missing from file
+        crs = CRS.from_epsg(4326)
+        self.data = self.data.rio.write_crs(crs)
+
+        # Transform is inverted in xarray
+        res = self.data.rio.resolution()
+        self._res = (res[0], -res[1])
+
         tmin = self.data.time.values.min()
         tmax = self.data.time.values.max()
 
         filepaths = [store]
         datetimes = [(Timestamp(tmin), Timestamp(tmax))]
-        geometries = [shapely.box(xmin, ymin, xmax, ymax)]
+        geometries = [shapely.box(*self.data.rio.bounds())]
 
         data = {'filepath': filepaths}
         index = IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
-        crs = CRS.from_epsg(4326)
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
@@ -97,8 +100,8 @@ class WeatherBench2(GeoDataset):
         x, y, t = self._disambiguate_slice(index)
 
         # Step size must be integer multiple of pixels
-        x = slice(x.start, x.stop, int(x.step // 0.25))
-        y = slice(y.start, y.stop, int(y.step // 0.25))
+        x = slice(x.start, x.stop, int(x.step // self.res[0]))
+        y = slice(y.start, y.stop, int(y.step // self.res[1]))
 
         # Latitude dimension must be inverted
         y = slice(y.stop, y.start, y.step)
@@ -156,7 +159,7 @@ class WeatherBench2(GeoDataset):
             if show_titles:
                 axes[i].set_title(self.data[var].attrs.get('long_name', var))
 
-            # Image/mask
+            # Image
             match self.data[var].ndim:
                 case 2:
                     image = sample['mask'][mask_id]
