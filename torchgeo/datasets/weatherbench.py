@@ -11,6 +11,7 @@ import torch
 from geopandas import GeoDataFrame
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pandas import IntervalIndex, Timestamp
 from pyproj import CRS
 
@@ -155,7 +156,7 @@ class WeatherBench2(GeoDataset):
         nrows = math.ceil(nvars / ncols)
 
         fig, axes = plt.subplots(
-            nrows, ncols, figsize=(5 * ncols, 3 * nrows), squeeze=False
+            nrows, ncols, figsize=(6 * ncols, 3 * nrows), squeeze=False
         )
         axes = axes.ravel()
 
@@ -183,7 +184,9 @@ class WeatherBench2(GeoDataset):
             im = axes[i].imshow(image)
 
             # Colorbar
-            cbar = fig.colorbar(im, ax=axes[i])
+            divider = make_axes_locatable(axes[i])
+            cax = divider.append_axes('right', size='5%', pad=0.15)
+            cbar = fig.colorbar(im, cax=cax)
             cbar.set_label(self.data[var].attrs.get('units', ''))
 
         # Hide unused axes
