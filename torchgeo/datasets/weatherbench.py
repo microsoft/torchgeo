@@ -164,6 +164,7 @@ class WeatherBench2(GeoDataset):
         image_id = 0
         video_id = 0
         for i, var in enumerate(self.data_vars):
+            axes[i].axis('off')
             if show_titles:
                 axes[i].set_title(self.data[var].attrs.get('long_name', var))
 
