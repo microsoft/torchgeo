@@ -113,25 +113,9 @@ class WeatherBench2(GeoDataset):
 
         data = self.data.sel(time=t, latitude=y, longitude=x)
 
-        masks = []  # C Y X
-        images = []  # C T Y X
-        videos = []  # C T Z Y X
-        for var in self.data_vars:
-            match self.data[var].ndim:
-                case 2:
-                    masks.append(torch.tensor(data[var].values))
-                case 3:
-                    images.append(torch.tensor(data[var].values))
-                case 4:
-                    videos.append(torch.tensor(data[var].values))
-
         sample = {}
-        if masks:
-            sample['mask'] = torch.stack(masks, dim=0)  # C Y X
-        if images:
-            sample['image'] = torch.stack(images, dim=1)  # T C Y X
-        if videos:
-            sample['video'] = torch.stack(videos, dim=1)  # T C Z Y X
+        for var in self.data_vars:
+            sample[var] = torch.tensor(data[var].values)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -160,27 +144,18 @@ class WeatherBench2(GeoDataset):
         )
         axes = axes.ravel()
 
-        mask_id = 0
-        image_id = 0
-        video_id = 0
         for i, var in enumerate(self.data_vars):
             axes[i].axis('off')
             if show_titles:
                 axes[i].set_title(self.data[var].attrs.get('long_name', var))
 
             # Image
+            image = sample[var]
             match self.data[var].ndim:
-                case 2:
-                    image = sample['mask'][mask_id]
-                    mask_id += 1
                 case 3:
-                    image = sample['image'][:, image_id]
                     image = torch.mean(image, dim=0)  # T Y X -> Y Z
-                    image_id += 1
                 case 4:
-                    image = sample['video'][:, video_id]
                     image = torch.mean(image, dim=(0, 1))  # T Z Y X -> Y X
-                    video_id += 1
 
             im = axes[i].imshow(image)
 
