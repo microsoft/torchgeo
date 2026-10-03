@@ -54,7 +54,7 @@ class WeatherBench2(GeoDataset):
         store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
         *,
         data_vars: Sequence[str] | None = None,
-        level: float | slice[float, float, int] | Sequence[float] | None = None,
+        level: float | slice | Sequence[float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new WeatherBench2 instance.
