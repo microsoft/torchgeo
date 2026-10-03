@@ -54,6 +54,7 @@ class WeatherBench2(GeoDataset):
         store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
         *,
         data_vars: Sequence[str] | None = None,
+        level: float | slice[float, float, int] | Sequence[float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new WeatherBench2 instance.
@@ -61,6 +62,7 @@ class WeatherBench2(GeoDataset):
         Args:
             store: Zarr store to load.
             data_vars: List of data variables to load (defaults to all variables).
+            level: Atmospheric level(s) to load (defaults to all levels).
             transforms: A function/transform that takes an input sample
                 and returns a transformed version.
 
@@ -72,6 +74,7 @@ class WeatherBench2(GeoDataset):
 
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
+        self.level = level if level is not None else self.data.level
         self.transforms = transforms
 
         # CRS is missing from file
@@ -111,7 +114,7 @@ class WeatherBench2(GeoDataset):
         # Latitude dimension must be inverted
         y = slice(y.stop, y.start, y.step)
 
-        data = self.data.sel(time=t, latitude=y, longitude=x)
+        data = self.data.sel(time=t, latitude=y, longitude=x, level=self.level)
 
         sample = {}
         for var in self.data_vars:
