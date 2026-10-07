@@ -47,6 +47,12 @@ class WeatherBench2(GeoDataset):
     * https://arxiv.org/abs/2308.15560
 
     .. versionadded:: 0.11
+
+    .. warning::
+       This dataset does not yet support reprojection or resampling. If you use this
+       dataset in combination with other datasets via intersection or union, please
+       ensure that this dataset comes first or that other datasets are manually
+       reprojected or resampled to match this dataset.
     """
 
     def __init__(
