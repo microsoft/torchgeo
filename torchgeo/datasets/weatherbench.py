@@ -18,6 +18,25 @@ from pyproj import CRS
 from .geo import GeoDataset, GeoSlice
 from .utils import Path, Sample, lazy_import
 
+# https://microsoft.github.io/aurora/models.html#recommended-use
+_AURORA_VARS = (
+    # Surface-level variables
+    '2m_temperature',
+    '10m_u_component_of_wind',
+    '10m_v_component_of_wind',
+    'mean_sea_level_pressure',
+    # Static variables
+    'land_sea_mask',
+    'soil_type',
+    'geopotential_at_surface',
+    # Atmospheric variables
+    'temperature',
+    'u_component_of_wind',
+    'v_component_of_wind',
+    'specific_humidity',
+    'geopotential',
+)
+
 
 class WeatherBench2(GeoDataset):
     """WeatherBench 2 dataset.
@@ -59,7 +78,7 @@ class WeatherBench2(GeoDataset):
         self,
         store: Path = 'gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr',
         *,
-        data_vars: Sequence[str] | None = None,
+        data_vars: Sequence[str] | None = _AURORA_VARS,
         level: float | slice | Sequence[float] | None = None,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
@@ -80,7 +99,7 @@ class WeatherBench2(GeoDataset):
 
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
-        self.level = level if level is not None else self.data.level
+        self.level = level or self.data.level
         self.transforms = transforms
 
         # CRS is missing from file
