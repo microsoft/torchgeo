@@ -18,7 +18,7 @@ from pyproj import CRS
 from .geo import GeoDataset, GeoSlice
 from .utils import Path, Sample, lazy_import
 
-# https://microsoft.github.io/aurora/models.html#recommended-use
+# https://microsoft.github.io/aurora/batch.html
 _AURORA_VARS = (
     # Surface-level variables
     '2m_temperature',
@@ -141,11 +141,12 @@ class WeatherBench2(GeoDataset):
 
         data = self.data.sel(time=t, latitude=y, longitude=x, level=self.level)
 
+        # https://microsoft.github.io/aurora/batch.html#batch-metadata
         sample = {
-            'latitude': torch.tensor((y.start + y.stop) / 2),
-            'longitude': torch.tensor((x.start + x.stop) / 2),
-            'time': torch.tensor((t.start.timestamp() + t.stop.timestamp()) / 2),
-            'level': torch.tensor(self.level),
+            'time': torch.tensor(self.data.time.values.astype(float)),
+            'latitude': torch.tensor(self.data.latitude.values),
+            'longitude': torch.tensor(self.data.longitude.values),
+            'level': torch.tensor(self.data.level.values),
         }
         for var in self.data_vars:
             sample[var] = torch.tensor(data[var].values)
