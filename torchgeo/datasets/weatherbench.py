@@ -99,7 +99,7 @@ class WeatherBench2(GeoDataset):
 
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
-        self.level = level or self.data.level
+        self.level = level or list(self.data.level.values)
         self.transforms = transforms
 
         # CRS is missing from file
@@ -141,7 +141,12 @@ class WeatherBench2(GeoDataset):
 
         data = self.data.sel(time=t, latitude=y, longitude=x, level=self.level)
 
-        sample = {}
+        sample = {
+            'latitude': torch.tensor((y.start + y.stop) / 2),
+            'longitude': torch.tensor((x.start + x.stop) / 2),
+            'time': torch.tensor((t.start.timestamp() + t.stop.timestamp()) / 2),
+            'level': torch.tensor(self.level),
+        }
         for var in self.data_vars:
             sample[var] = torch.tensor(data[var].values)
 
