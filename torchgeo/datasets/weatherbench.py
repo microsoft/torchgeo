@@ -86,7 +86,8 @@ class WeatherBench2(GeoDataset):
 
         Args:
             store: Zarr store to load.
-            data_vars: List of data variables to load (defaults to all variables).
+            data_vars: List of data variables to load
+                (defaults to variables used by Aurora).
             level: Atmospheric level(s) to load (defaults to all levels).
             target_steps: Number of target time steps to use.
             transforms: A function/transform that takes an input sample
