@@ -20,7 +20,7 @@ latitude = np.linspace(90.0, -90.0, Y)
 longitude = np.linspace(0.0, 359.8, X)
 level = np.linspace(50, 1000, Z)
 
-# 2D variables
+# Static variables (2D)
 land_sea_mask = xr.DataArray(
     rng.random((Y, X)),
     coords={'latitude': latitude, 'longitude': longitude},
@@ -41,7 +41,7 @@ soil_type = xr.DataArray(
     attrs={'long_name': 'Soil type', 'short_name': 'slt', 'units': '~'},
 )
 
-# 3D variables
+# Surface variables (3D)
 _2m_temperature = xr.DataArray(
     rng.random((T, Y, X)),
     coords={'time': time, 'latitude': latitude, 'longitude': longitude},
@@ -57,7 +57,7 @@ _10m_wind_speed = xr.DataArray(
     attrs={},
 )
 
-# 4D variables
+# Atmospheric variables (4D)
 temperature = xr.DataArray(
     rng.random((T, Z, Y, X)),
     coords={'time': time, 'level': level, 'latitude': latitude, 'longitude': longitude},

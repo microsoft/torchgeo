@@ -3,7 +3,6 @@
 
 """WeatherBench datasets."""
 
-import math
 from collections.abc import Callable, Sequence
 
 import shapely
@@ -20,16 +19,16 @@ from .utils import Path, Sample, lazy_import
 
 # https://microsoft.github.io/aurora/batch.html
 _AURORA_VARS = (
-    # Surface-level variables
+    # Surface variables (3D)
     '2m_temperature',
     '10m_u_component_of_wind',
     '10m_v_component_of_wind',
     'mean_sea_level_pressure',
-    # Static variables
+    # Static variables (2D)
     'land_sea_mask',
     'soil_type',
     'geopotential_at_surface',
-    # Atmospheric variables
+    # Atmospheric variables (4D)
     'temperature',
     'u_component_of_wind',
     'v_component_of_wind',
@@ -168,7 +167,11 @@ class WeatherBench2(GeoDataset):
         return sample
 
     def plot(
-        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        data_var: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -176,43 +179,71 @@ class WeatherBench2(GeoDataset):
             sample: A sample returned by :meth:`__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
             suptitle: Optional string to use as a suptitle.
+            data_var: Data variable to plot (defaults to first variable).
 
         Returns:
             A matplotlib Figure with the rendered sample.
         """
-        nvars = len(self.data_vars)
-        ncols = math.ceil(math.sqrt(nvars))
-        nrows = math.ceil(nvars / ncols)
+        var = data_var or self.data_vars[0]
 
-        fig, axes = plt.subplots(
-            nrows, ncols, figsize=(6 * ncols, 3 * nrows), squeeze=False
-        )
-        axes = axes.ravel()
+        # Target
+        nrows = 1
+        target = sample[f'target_{var}']
+        match self.data[var].ndim:
+            case 3:
+                target = torch.mean(target, dim=0)  # T Y X -> Y Z
+            case 4:
+                target = torch.mean(target, dim=(0, 1))  # T Z Y X -> Y X
+        vmin = torch.quantile(target, 0.02)
+        vmax = torch.quantile(target, 0.98)
 
-        for i, var in enumerate(self.data_vars):
-            axes[i].axis('off')
-            if show_titles:
-                axes[i].set_title(self.data[var].attrs.get('long_name', var))
-
-            # Image
-            image = sample[f'target_{var}']
+        # Prediction
+        if f'prediction_{var}' in sample:
+            nrows = 3
+            prediction = sample[f'prediction_{var}']
             match self.data[var].ndim:
                 case 3:
-                    image = torch.mean(image, dim=0)  # T Y X -> Y Z
+                    prediction = torch.mean(prediction, dim=0)  # T Y X -> Y Z
                 case 4:
-                    image = torch.mean(image, dim=(0, 1))  # T Z Y X -> Y X
+                    prediction = torch.mean(prediction, dim=(0, 1))  # T Z Y X -> Y X
+            vmin = min(vmin, torch.quantile(prediction, 0.02))
+            vmax = max(vmax, torch.quantile(prediction, 0.98))
 
-            im = axes[i].imshow(image)
+        fig, axes = plt.subplots(nrows, figsize=(6, 3 * nrows), squeeze=False)
 
-            # Colorbar
-            divider = make_axes_locatable(axes[i])
+        # Target
+        axes[0, 0].axis('off')
+        im = axes[0, 0].imshow(target, cmap='plasma', vmin=vmin, vmax=vmax)
+        divider = make_axes_locatable(axes[0, 0])
+        cax = divider.append_axes('right', size='5%', pad=0.15)
+        cbar = fig.colorbar(im, cax=cax)
+        cbar.set_label(self.data[var].attrs.get('units', ''))
+        if show_titles:
+            variable_name = self.data[var].attrs.get('long_name', var)
+            axes[0, 0].set_title(f'Target {variable_name}')
+
+        # Prediction
+        if f'prediction_{var}' in sample:
+            axes[1, 0].axis('off')
+            im = axes[1, 0].imshow(prediction, cmap='plasma', vmin=vmin, vmax=vmax)
+            divider = make_axes_locatable(axes[1, 0])
             cax = divider.append_axes('right', size='5%', pad=0.15)
             cbar = fig.colorbar(im, cax=cax)
             cbar.set_label(self.data[var].attrs.get('units', ''))
+            if show_titles:
+                axes[1, 0].set_title(f'Predicted {variable_name}')
 
-        # Hide unused axes
-        for ax in axes[nvars:]:
-            ax.set_visible(False)
+            # Residual
+            residual = prediction - target
+            std = torch.std(residual)
+            axes[2, 0].axis('off')
+            im = axes[2, 0].imshow(residual, cmap='bwr', vmin=-2 * std, vmax=2 * std)
+            divider = make_axes_locatable(axes[2, 0])
+            cax = divider.append_axes('right', size='5%', pad=0.15)
+            cbar = fig.colorbar(im, cax=cax)
+            cbar.set_label(self.data[var].attrs.get('units', ''))
+            if show_titles:
+                axes[2, 0].set_title(f'Residual {variable_name}')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
