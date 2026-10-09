@@ -40,6 +40,9 @@ class TestWeatherBench2:
 
     def test_plot(self, dataset: WeatherBench2) -> None:
         x = dataset[dataset.bounds]
+        var = dataset.data_vars[0]
+        if dataset.data[var].ndim > 2:
+            x[f'prediction_{var}'] = x[f'input_{var}'][-1:]
         dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
