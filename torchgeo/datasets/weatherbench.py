@@ -80,6 +80,7 @@ class WeatherBench2(GeoDataset):
         *,
         data_vars: Sequence[str] | None = _AURORA_VARS,
         level: float | slice | Sequence[float] | None = None,
+        target_steps: int = 1,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new WeatherBench2 instance.
@@ -88,6 +89,7 @@ class WeatherBench2(GeoDataset):
             store: Zarr store to load.
             data_vars: List of data variables to load (defaults to all variables).
             level: Atmospheric level(s) to load (defaults to all levels).
+            target_steps: Number of target time steps to use.
             transforms: A function/transform that takes an input sample
                 and returns a transformed version.
 
@@ -100,6 +102,7 @@ class WeatherBench2(GeoDataset):
         self.data = xr.open_zarr(store)
         self.data_vars = data_vars or list(self.data.data_vars.keys())
         self.level = level or list(self.data.level.values)
+        self.target_steps = target_steps
         self.transforms = transforms
 
         # CRS is missing from file
@@ -141,15 +144,23 @@ class WeatherBench2(GeoDataset):
 
         data = self.data.sel(time=t, latitude=y, longitude=x, level=self.level)
 
-        # https://microsoft.github.io/aurora/batch.html#batch-metadata
-        sample = {
-            'time': torch.tensor(self.data.time.values.astype(float)),
-            'latitude': torch.tensor(self.data.latitude.values),
-            'longitude': torch.tensor(self.data.longitude.values),
-            'level': torch.tensor(self.data.level.values),
+        sample = {}
+        times = {
+            'input': slice(-self.target_steps),
+            'target': slice(-self.target_steps, None),
         }
-        for var in self.data_vars:
-            sample[var] = torch.tensor(data[var].values)
+        for split, slc in times.items():
+            data_split = data.isel(time=slc)
+
+            # https://microsoft.github.io/aurora/batch.html#batch-metadata
+            sample |= {
+                f'{split}_time': torch.tensor(data_split.time.values.astype(float)),
+                f'{split}_latitude': torch.tensor(data_split.latitude.values),
+                f'{split}_longitude': torch.tensor(data_split.longitude.values),
+                f'{split}_level': torch.tensor(data_split.level.values),
+            }
+            for var in self.data_vars:
+                sample[f'{split}_{var}'] = torch.tensor(data_split[var].values)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -184,7 +195,7 @@ class WeatherBench2(GeoDataset):
                 axes[i].set_title(self.data[var].attrs.get('long_name', var))
 
             # Image
-            image = sample[var]
+            image = sample[f'target_{var}']
             match self.data[var].ndim:
                 case 3:
                     image = torch.mean(image, dim=0)  # T Y X -> Y Z
