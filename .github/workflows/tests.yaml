@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra datasets --extra models --extra tests
       - name: List installed dependencies
-        run: uv tree
+        run: uv pip list
       - name: Run checks
         env:
           PYTEST_WORKERS: ${{ runner.os == 'macOS' && '2' || 'auto' }}
@@ -65,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
       - name: List installed dependencies
-        run: uv tree
+        run: uv pip list
       - name: Run checks
         run: |
           OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
@@ -93,7 +93,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --extra tests
       - name: List installed dependencies
-        run: uv tree
+        run: uv pip list
       - name: Run checks
         run: |
           OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
