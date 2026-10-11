@@ -153,6 +153,7 @@ from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .sentinelkilndb import SentinelKilnDB
 from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
@@ -367,6 +368,7 @@ __all__ = (
     'Sentinel',
     'Sentinel1',
     'Sentinel2',
+    'SentinelKilnDB',
     'SkyScript',
     'So2Sat',
     'SolarPlantsBrazil',
