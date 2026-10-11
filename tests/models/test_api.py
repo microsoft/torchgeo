@@ -18,6 +18,11 @@ from torchgeo.models import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthTiny_Weights,
     OlmoEarthV1_Weights,
     Panopticon_Weights,
     Presto_Weights,
@@ -54,6 +59,11 @@ from torchgeo.models import (
     get_model_weights,
     get_weight,
     list_models,
+    olmoearth_base,
+    olmoearth_large,
+    olmoearth_nano,
+    olmoearth_small,
+    olmoearth_tiny,
     olmoearth_v1,
     olmoearth_v1_unet_decoder,
     panopticon_vitb14,
@@ -80,6 +90,9 @@ from torchgeo.models import (
 )
 
 memory_intensive = pytest.mark.xdist_group('memory_intensive')
+deprecated = pytest.mark.filterwarnings(
+    'ignore:Use torchgeo.models.olmoearth_nano.* instead:DeprecationWarning'
+)
 
 builders = [
     pytest.param(aurora_swin_unet, marks=memory_intensive),
@@ -92,7 +105,12 @@ builders = [
     dofa_large_patch16_224,
     dofa_small_patch16_224,
     earthloc,
-    olmoearth_v1,
+    olmoearth_nano,
+    olmoearth_tiny,
+    olmoearth_small,
+    olmoearth_base,
+    olmoearth_large,
+    pytest.param(olmoearth_v1, marks=deprecated),
     olmoearth_v1_unet_decoder,
     panopticon_vitb14,
     presto,
@@ -125,6 +143,11 @@ enums = [
     DOFABase16_Weights,
     DOFALarge16_Weights,
     EarthLoc_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthTiny_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
     OlmoEarthV1_Weights,
     Panopticon_Weights,
     Presto_Weights,
@@ -154,7 +177,15 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
-    if builder in (olmoearth_v1, olmoearth_v1_unet_decoder):
+    if builder in (
+        olmoearth_nano,
+        olmoearth_tiny,
+        olmoearth_small,
+        olmoearth_base,
+        olmoearth_large,
+        olmoearth_v1,
+        olmoearth_v1_unet_decoder,
+    ):
         pytest.importorskip('olmoearth_pretrain_minimal')
 
     model = get_model(builder.__name__)
