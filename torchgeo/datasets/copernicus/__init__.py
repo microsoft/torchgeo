@@ -5,8 +5,8 @@
 
 from typing import Any, Literal
 
-from ..utils import Sample
 from ..geo import NonGeoDataset
+from ..utils import Sample
 from .aq_no2_s5p import CopernicusBenchAQNO2S5P
 from .aq_o3_s5p import CopernicusBenchAQO3S5P
 from .base import CopernicusBenchBase
