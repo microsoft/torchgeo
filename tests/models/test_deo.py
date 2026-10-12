@@ -48,14 +48,16 @@ class TestDEO:
         model.eval()
         with torch.no_grad():
             x = torch.randn(2, 3, 32, 32)
-            model(x)
+            f = model(x)
+        assert f.shape == (2, 1, 1, 1024)
 
     def test_forward_ms(self, model_swin: str) -> None:
         model = deo_base(None, model_swin)
         model.eval()
         with torch.no_grad():
             x = torch.randn(2, 10, 32, 32)
-            model(x)
+            f = model(x)
+        assert f.shape == (2, 1, 1, 1024)
 
     @pytest.mark.slow
     def test_deo_download(self, weights: DEO_Weights, model_swin: str) -> None:
