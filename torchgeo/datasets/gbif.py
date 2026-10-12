@@ -60,8 +60,7 @@ class GBIF(GeoDataset):
         # Read tab-delimited CSV file
         usecols = ['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year']
         dtype = {'day': str, 'month': str, 'year': str}
-        # https://github.com/pandas-dev/pandas-stubs/pull/1696
-        df = pd.read_table(files[0], usecols=usecols, dtype=dtype)  # ty: ignore[invalid-argument-type]
+        df = pd.read_table(files[0], usecols=usecols, dtype=dtype)
         df = df[df['decimalLatitude'].notna()]
         df = df[df['decimalLongitude'].notna()]
         df['day'] = df['day'].str.zfill(2)

@@ -137,8 +137,8 @@ models = [
     "olmoearth-pretrain-minimal>=0.1.0",
 ]
 style = [
-    # pandas 2.1.1+ required for Python 3.12 wheels
-    "pandas-stubs>=2.1.1",
+    # pandas 3.0.3.260530+ required for https://github.com/pandas-dev/pandas-stubs/pull/1696
+    "pandas-stubs>=3.0.3.260530",
     # ruff 0.16+ required for 2026 style guide
     "ruff>=0.16",
     # ty 0.0.82+ required for latest type checking changes
