@@ -6,6 +6,7 @@
 from typing import Any, Literal
 
 from ..utils import Sample
+from ..geo import NonGeoDataset
 from .aq_no2_s5p import CopernicusBenchAQNO2S5P
 from .aq_o3_s5p import CopernicusBenchAQO3S5P
 from .base import CopernicusBenchBase
@@ -66,7 +67,7 @@ DATASET_REGISTRY = {
 }
 
 
-class CopernicusBench:
+class CopernicusBench(NonGeoDataset):
     """Copernicus-Bench datasets.
 
     This wrapper supports dynamically loading datasets in Copernicus-Bench.
@@ -109,6 +110,7 @@ class CopernicusBench:
         """
         self.name = name
         self.dataset: CopernicusBenchBase = DATASET_REGISTRY[name](*args, **kwargs)
+        self.rgb_bands = self.dataset.rgb_bands
 
     def __len__(self) -> int:
         """Return the length of the dataset.
