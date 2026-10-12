@@ -3977,7 +3977,7 @@ requires-dist = [
     { name = "packaging", marker = "extra == 'tests'", specifier = ">=21" },
     { name = "pandas", specifier = ">=2.1.1" },
     { name = "pandas", extras = ["parquet"], marker = "extra == 'datasets'", specifier = ">=2.1.1" },
-    { name = "pandas-stubs", marker = "extra == 'style'", specifier = ">=2.1.1" },
+    { name = "pandas-stubs", marker = "extra == 'style'", specifier = ">=3.0.3" },
     { name = "pillow", specifier = ">=10" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.18" },
     { name = "pyogrio", specifier = ">=0.10" },
