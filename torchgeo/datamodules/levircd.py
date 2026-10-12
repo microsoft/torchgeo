@@ -5,11 +5,13 @@
 
 from typing import Any
 
+import einops
 import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
+from ..datasets.utils import Sample
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -67,6 +69,26 @@ class LEVIRCDDataModule(NonGeoDataModule):
             keepdim=True,
             same_on_batch=True,
         )
+
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Override takes care of fixing temporal dimension in masks.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        t = batch['image'].shape[1]
+        # (b, c=1, h, w) -> (b, t, c, h, w) to match kornia VideoSequential expected input
+        batch['mask'] = einops.repeat(batch['mask'], 'b c h w -> b t c h w', t=t)
+        batch = super().on_after_batch_transfer(batch, dataloader_idx)
+        # take first (others are repeated copies)
+        batch['mask'] = batch['mask'][:, 0]
+        return batch
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
@@ -143,3 +165,23 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             )
         if stage in ['test']:
             self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)
+
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Override takes care of fixing temporal dimension in masks.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        t = batch['image'].shape[1]
+        # (b, c=1, h, w) -> (b, t, c, h, w) to match kornia VideoSequential expected input
+        batch['mask'] = einops.repeat(batch['mask'], 'b c h w -> b t c h w', t=t)
+        batch = super().on_after_batch_transfer(batch, dataloader_idx)
+        # take first (others are repeated copies)
+        batch['mask'] = batch['mask'][:, 0]
+        return batch
