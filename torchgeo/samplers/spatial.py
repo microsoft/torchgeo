@@ -68,8 +68,11 @@ class RandomPatchSampler(SpatialSampler):
                 (defaults to the bounds of ``dataset.index``).
             units: Defines if ``size`` is in pixel or CRS units.
             generator: Pseudo-random number generator (PRNG).
-            snap2pixel: Snap sampled patches to the nearest pixel.
-            snap2block: Snap sampled patches to the nearest block.
+            snap2pixel: Snap sampled patches to the nearest pixel. Results in a slight
+                decrease in data diversity but a large increase in I/O speed.
+            snap2block: Snap sampled patches to the nearest block. Results in a large
+                decrease in data diversity but a larger increase in I/O speed. Set
+                *size* to a factor of multiple of your COG block size for best effect.
 
         .. versionadded:: 0.11
            The *snap2pixel* and *snap2grid* parameters.
@@ -178,8 +181,11 @@ class GriddedPatchSampler(SpatialSampler):
             roi: Region of interest to sample from
                 (defaults to the bounds of ``dataset.index``).
             units: Defines if ``size`` and ``stride`` are in pixel or CRS units.
-            snap2pixel: Snap sampled patches to the nearest pixel.
-            snap2block: Snap sampled patches to the nearest block.
+            snap2pixel: Snap sampled patches to the nearest pixel. Results in a slight
+                decrease in data diversity but a large increase in I/O speed.
+            snap2block: Snap sampled patches to the nearest block. Results in a large
+                decrease in data diversity but a larger increase in I/O speed. Set
+                *size* to a factor of multiple of your COG block size for best effect.
 
         .. versionadded:: 0.11
            The *snap2pixel* and *snap2grid* parameters.

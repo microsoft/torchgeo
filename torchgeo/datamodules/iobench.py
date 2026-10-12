@@ -53,13 +53,13 @@ class IOBenchDataModule(GeoDataModule):
 
         if stage in ['fit']:
             self.train_sampler = RandomPatchSampler(
-                self.dataset, size=self.patch_size, length=self.length
+                self.dataset, size=self.patch_size, length=self.length, snap2block=True
             )
         if stage in ['fit', 'validate']:
             self.val_sampler = GriddedPatchSampler(
-                self.dataset, size=self.patch_size, stride=self.patch_size
+                self.dataset, size=self.patch_size, stride=self.patch_size, snap2block=True
             )
         if stage in ['test']:
             self.test_sampler = GriddedPatchSampler(
-                self.dataset, size=self.patch_size, stride=self.patch_size
+                self.dataset, size=self.patch_size, stride=self.patch_size, snap2block=True
             )
