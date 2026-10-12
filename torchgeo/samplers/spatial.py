@@ -111,18 +111,19 @@ class RandomPatchSampler(SpatialSampler):
         # Remove once https://github.com/geopandas/geopandas/pull/3773 is in min version
         points = points.explode().sample(frac=1, random_state=self.generator)
 
+        # Shift by half a pixel to make it easier to snap to a corner
+        points = points.translate(-self.size[1] / 2, -self.size[0] / 2)
+
         if self.snap2pixel or self.snap2block:
             xmin, ymin, _, _ = self.bounds
             scale = self.size[::-1] if self.snap2block else self.res
-            # Convert from geospatial coords to pixel coords
-            points = points.translate(
-                -xmin - self.size[1] / 2, -ymin - self.size[0] / 2
-            )
+            # Convert from geospatial coords to pixel/block coords
+            points = points.translate(-xmin, -ymin)
             points = points.scale(1 / scale[0], 1 / scale[1], origin=(0, 0))
-            # Round to the nearest pixel
+            # Round to the nearest pixel/block
             x = points.x.round()
             y = points.y.round()
-            # Convert from pixel coords to geospatial coords
+            # Convert from pixel/block coords to geospatial coords
             points = gpd.points_from_xy(x, y)
             points = points.scale(scale[0], scale[1], origin=(0, 0))
             points = points.translate(xmin, ymin)
@@ -226,13 +227,13 @@ class GriddedPatchSampler(SpatialSampler):
 
         if self.snap2pixel or self.snap2block:
             scale = self.size[::-1] if self.snap2block else self.res
-            # Convert from geospatial coords to pixel coords
+            # Convert from geospatial coords to pixel/block coords
             xmin = (xmin - self.bounds[0]) / scale[0]
             ymin = (ymin - self.bounds[1]) / scale[1]
-            # Round to the nearest pixel
+            # Round to the nearest pixel/block
             xmin = round(xmin)
             ymin = round(ymin)
-            # Convert from pixel coords to geospatial coords
+            # Convert from pixel/block coords to geospatial coords
             xmin = xmin * scale[0] + self.bounds[0]
             ymin = ymin * scale[1] + self.bounds[1]
 
