@@ -11,7 +11,7 @@ from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet, BigEarthNetV2
-from .biomassters import BioMassters
+from .biomassters import BioMassters, BioMassters100
 from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
@@ -242,6 +242,7 @@ __all__ = (
     'BigEarthNet',
     'BigEarthNetV2',
     'BioMassters',
+    'BioMassters100',
     'BoundingBox',
     'CMSGlobalMangroveCanopy',
     'COWCCounting',

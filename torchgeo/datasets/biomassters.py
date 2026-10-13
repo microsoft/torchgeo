@@ -18,7 +18,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, Sample, quantile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_url,
+    extract_archive,
+    quantile_normalization,
+)
 
 
 class BioMassters(NonGeoDataset):
@@ -289,3 +296,87 @@ class BioMassters(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
+
+
+class BioMassters100(BioMassters):
+    """Subset of BioMassters containing only 100 time-series.
+
+    Intended for tutorials and demonstrations, not for benchmarking. The subset
+    contains 76 samples from the official train split and 24 samples from the
+    official test split. Both splits include complete Sentinel-2 time-series and
+    samples with missing Sentinel-2 months.
+
+    .. versionadded:: 0.11
+    """
+
+    directory = 'BioMassters-100'
+    filename = 'BioMassters-100.zip'
+    url = 'https://huggingface.co/datasets/robmarkcole/BioMassters-100/resolve/3a78a1a531498948922ab1210f34ee3259aaf3c8/BioMassters-100.zip'
+    sha256 = '49217bff0f803ab1f9b31e336ad8ef2c9c23a1a093d1e8382af5dfdb1fffb70a'
+
+    def __init__(
+        self,
+        root: Path = 'data',
+        split: Literal['train', 'test'] = 'train',
+        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
+        as_time_series: bool = False,
+        download: bool = False,
+        checksum: bool = True,
+    ) -> None:
+        """Initialize a new BioMassters100 dataset instance.
+
+        Args:
+            root: Root directory where the dataset can be found.
+            split: Train or test split.
+            sensors: Sensors to include in each sample.
+            as_time_series: Whether to return all available time steps.
+            download: If True, download the dataset.
+            checksum: If True, verify the downloaded archive.
+
+        Raises:
+            DatasetNotFoundError: If the dataset is not found.
+            RuntimeError: If the downloaded archive is corrupted.
+        """
+        self.root = root
+        self.download = download
+        self.checksum = checksum
+        self._verify_archive(split)
+        super().__init__(
+            root=os.path.join(root, self.directory),
+            split=split,
+            sensors=sensors,
+            as_time_series=as_time_series,
+        )
+
+    def _verify_archive(self, split: Literal['train', 'test']) -> None:
+        """Download and extract the dataset archive if needed.
+
+        Args:
+            split: Split whose extracted files must exist.
+
+        Raises:
+            DatasetNotFoundError: If the dataset is not found.
+            RuntimeError: If the downloaded archive is corrupted.
+        """
+        directory = os.path.join(self.root, self.directory)
+        filenames = [f'{split}_features', self.metadata_filename]
+        if all(os.path.exists(os.path.join(directory, f)) for f in filenames):
+            return
+
+        filepath = os.path.join(self.root, self.filename)
+        if os.path.isfile(filepath):
+            if self.checksum and not check_integrity(filepath, sha256=self.sha256):
+                raise RuntimeError('Dataset found, but corrupted.')
+            extract_archive(filepath, self.root)
+            return
+
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        download_url(
+            self.url,
+            self.root,
+            filename=self.filename,
+            sha256=self.sha256 if self.checksum else None,
+        )
+        extract_archive(filepath, self.root)
