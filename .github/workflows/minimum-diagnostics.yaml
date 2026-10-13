@@ -1,0 +1,53 @@
+name: minimum diagnostics
+on:
+  push:
+    branches: [ci/minimum-diagnostics]
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  minimum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        workers: ['auto', '0']
+    steps:
+      - name: Clone failing revision
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: torchgeo/torchgeo
+          ref: 6d3b8450666afcd587592e9bfdf8422ad4828e2c
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: '3.12'
+          activate-environment: true
+      - name: Install minimum dependencies
+        run: uv pip install --resolution lowest-direct '.[datasets,models,tests]'
+      - name: List installed dependencies
+        run: uv pip list
+      - name: Run tests with resource monitoring
+        env:
+          PYTEST_WORKERS: ${{ matrix.workers }}
+        run: |
+          (
+            while true; do
+              date -u
+              free -m
+              df -h / /tmp
+              ps -eo pid,ppid,rss,comm --sort=-rss | sed -n '1,16p'
+              cat /proc/pressure/memory
+              sleep 5
+            done
+          ) &
+          monitor_pid=$!
+          sudo journalctl -kf -o short-iso &
+          kernel_pid=$!
+          trap 'kill "$monitor_pid" "$kernel_pid" 2>/dev/null || true' EXIT
+          OMP_NUM_THREADS=1 pytest -vv -n "$PYTEST_WORKERS" --dist loadgroup --cov=torchgeo --cov-report=xml
+          python -m torchgeo --help
