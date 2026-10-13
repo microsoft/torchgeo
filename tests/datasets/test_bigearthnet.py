@@ -206,6 +206,14 @@ class TestBigEarthNetV2:
             root=tmp_path, bands=dataset.bands, split=dataset.split, download=True
         )
 
+    def test_multiple_band_instances(
+        self, dataset: BigEarthNetV2, tmp_path: Path
+    ) -> None:
+        bands = 's2' if dataset.bands == 's1' else 's1'
+        BigEarthNetV2(
+            root=tmp_path / bands, bands=bands, split=dataset.split, download=True
+        )
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         """Test error handling when data not present."""
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
