@@ -886,8 +886,10 @@ def quantile_normalization(
 
     values = img[img != nodata]
     if not img.is_floating_point() and not img.is_complex():
-        img = img.float()
-        values = values.float()
+        # float32 merges distinct int32/int64 values above 2**24.
+        dtype = torch.float64 if img.element_size() >= 4 else torch.float32
+        img = img.to(dtype)
+        values = values.to(dtype)
     quantile_dim = -1 if dim is None else dim
     has_nan = torch.isnan(values).any()
 

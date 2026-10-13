@@ -578,10 +578,24 @@ def test_quantile_normalization(img: Tensor) -> None:
     assert 0 <= img.min() <= img.max() <= 1
 
 
-def test_quantile_normalization_integer() -> None:
-    img = quantile_normalization(torch.arange(6))
-    expected = torch.tensor([0, 0, 0, 0.5, 1, 1])
+@pytest.mark.parametrize(
+    'dtype', [torch.uint8, torch.int8, torch.int16, torch.int32, torch.int64]
+)
+def test_quantile_normalization_integer(dtype: torch.dtype) -> None:
+    img = quantile_normalization(torch.arange(6, dtype=dtype))
+    expected = torch.tensor([0, 0, 0, 0.5, 1, 1], dtype=img.dtype)
     assert torch.allclose(img, expected)
+
+
+@pytest.mark.parametrize('dtype', [torch.int32, torch.int64])
+@pytest.mark.parametrize('offset', [2**24, -(2**24)])
+def test_quantile_normalization_integer_precision(
+    dtype: torch.dtype, offset: int
+) -> None:
+    img = torch.arange(offset, offset + 6, dtype=dtype)
+    result = quantile_normalization(img)
+    expected = torch.tensor([0, 0, 1 / 3, 2 / 3, 1, 1], dtype=result.dtype)
+    torch.testing.assert_close(result, expected, rtol=1e-5, atol=0)
 
 
 def test_quantile_normalization_large() -> None:
