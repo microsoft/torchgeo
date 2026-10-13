@@ -72,7 +72,7 @@ class TestMARSS2L:
 
     def test_invalid_split(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError):
-            MARSS2L(tmp_path, split='foo')  
+            MARSS2L(tmp_path, split='foo')
 
     def test_plot(self, dataset: MARSS2L) -> None:
         x = dataset[0]

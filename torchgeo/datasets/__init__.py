@@ -124,6 +124,7 @@ from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .major_tom import MajorTOMEmbeddings
 from .mapinwild import MapInWild
+from .mars_s2l import MARSS2L
 from .mdas import MDAS
 from .meta_chm import MetaCHM
 from .millionaid import MillionAID
@@ -216,6 +217,7 @@ __all__ = (
     'GBIF',
     'GID15',
     'LEVIRCD',
+    'MARSS2L',
     'MDAS',
     'NAIP',
     'NCCM',
