@@ -1624,13 +1624,19 @@ class FLAIRHUBBase(NonGeoDataset):
             tensor = array_to_tensor(f.read()).float()
         return tensor
 
-    def _plot_mask(self, mask: Tensor, ax: Axes, show_legend: bool = True) -> None:
+    def _plot_mask(
+        self, mask: Tensor, ax: Axes, show_legend: bool = True, show_titles: bool = True
+    ) -> None:
         """Plot a label mask with appropriate colormap.
 
         Args:
             mask: Label mask tensor (H, W)
             ax: Matplotlib axes to plot on
             show_legend: Whether to show the legend
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         task = TASKS[self.dataset_type]
         class_names = task['classes']
@@ -1640,7 +1646,8 @@ class FLAIRHUBBase(NonGeoDataset):
         bounds = np.arange(n_classes + 1) - 0.5
         norm = BoundaryNorm(bounds, n_classes)
         ax.imshow(mask_np, cmap=cmap, norm=norm)
-        ax.set_title('Label Mask')
+        if show_titles:
+            ax.set_title('Label Mask')
         if show_legend:
             present_classes = np.unique(mask_np)
             legend_elements = [
@@ -1656,64 +1663,94 @@ class FLAIRHUBBase(NonGeoDataset):
                 fontsize='small',
             )
 
-    def _plot_aerial_rgbi(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_aerial_rgbi(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot aerial RGBI imagery.
 
         Args:
             data: Aerial RGBI tensor (C, H, W) with values in [0, 255]
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         data_np = data.numpy()
         rgb_image = data_np[:3].transpose(1, 2, 0)
         rgb_image = rgb_image / 255.0
         rgb_image = np.clip(rgb_image, 0, 1)
         ax.imshow(rgb_image)
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def _plot_spot_rgbi(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_spot_rgbi(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot SPOT RGBI imagery (surface reflectance).
 
         Args:
             data: SPOT RGBI tensor (C, H, W) with surface reflectance values
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         # Take only RGB bands (first 3), normalize for better visualization, rearrange, convert to numpy
         image = rearrange(data[:3], 'c h w -> h w c')
         image = quantile_normalization(image)
         ax.imshow(image.numpy())
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def _plot_dem(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_dem(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot DEM elevation data.
 
         Args:
             data: DEM tensor (2, H, W) - DSM and DTM
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         data_np = data.numpy()
         dsm = data_np[0]
         dtm = data_np[1]
         chm = dtm - dsm
         ax.imshow(chm, cmap='gray', vmin=np.min(chm), vmax=np.max(chm))
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def _plot_aerial_rlt_pan(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_aerial_rlt_pan(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Plot aerial RLT PAN imagery.
 
         Args:
             data: Aerial RLT PAN tensor (C, H, W) with values in [0, 255]
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         data_np = data.numpy()
         data_np = data_np.transpose(1, 2, 0)
         ax.imshow(data_np, cmap='gray')
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def _plot_sentinel2_ts(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_sentinel2_ts(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Method to plot an example of Sentinel-2 time series data.
 
         To keep the same plot style as the other plots,
@@ -1724,6 +1761,10 @@ class FLAIRHUBBase(NonGeoDataset):
             data: Sentinel-2 time series tensor (C, H, W) with values in [0, 255]
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         data_np = data.numpy()
 
@@ -1739,9 +1780,12 @@ class FLAIRHUBBase(NonGeoDataset):
         rgb_image = np.clip(rgb_image, 0, 255).astype(np.uint8)
 
         ax.imshow(rgb_image)
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def _plot_sentinel2_msk_sc(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_sentinel2_msk_sc(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Show the snow and cloud probability mask.
 
         Red for snow probability, blue for cloud probability.
@@ -1751,6 +1795,10 @@ class FLAIRHUBBase(NonGeoDataset):
             data: Sentinel-2 mask time series tensor (T, C, H, W)
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         data_np = data.numpy()
         # The format of the data is T * C * H * W
@@ -1768,7 +1816,8 @@ class FLAIRHUBBase(NonGeoDataset):
         # Square root of the probability to make the low probabilities more visible
 
         ax.imshow(rgb_img)
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
         ax.axis('off')
 
         # Show only legend entries for probability masks that are present
@@ -1793,7 +1842,9 @@ class FLAIRHUBBase(NonGeoDataset):
                 fontsize='small',
             )
 
-    def _plot_sentinel1_ts(self, data: Tensor, ax: Axes, title: str) -> None:
+    def _plot_sentinel1_ts(
+        self, data: Tensor, ax: Axes, title: str, show_titles: bool = True
+    ) -> None:
         """Method to plot an example of Sentinel-1 time series data.
 
         Shows the last timepoint as grayscale
@@ -1803,21 +1854,32 @@ class FLAIRHUBBase(NonGeoDataset):
             data: Sentinel-1 time series tensor (T, C, H, W)
             ax: Matplotlib axes to plot on
             title: Title for the subplot
+            show_titles: flag indicating whether to show titles above each panel
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         # T * C * H * W -> take last timepoint, VV band (index 0)
         vv = quantile_normalization(data[-1, 0])
         ax.imshow(vv.numpy(), cmap='gray')
-        ax.set_title(title)
+        if show_titles:
+            ax.set_title(title)
 
-    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         plot_data: dict[str, _PlotData] = {}
 
@@ -1853,19 +1915,19 @@ class FLAIRHUBBase(NonGeoDataset):
                 case 'mask':
                     self._plot_mask(data, axs[idx], show_legend=True)
                 case 'aerial_rgbi':
-                    self._plot_aerial_rgbi(data, axs[idx], title)
+                    self._plot_aerial_rgbi(data, axs[idx], title, show_titles)
                 case 'dem':
-                    self._plot_dem(data, axs[idx], title)
+                    self._plot_dem(data, axs[idx], title, show_titles)
                 case 'spot_rgbi':
-                    self._plot_spot_rgbi(data, axs[idx], title)
+                    self._plot_spot_rgbi(data, axs[idx], title, show_titles)
                 case 'aerial_rlt_pan':
-                    self._plot_aerial_rlt_pan(data, axs[idx], title)
+                    self._plot_aerial_rlt_pan(data, axs[idx], title, show_titles)
                 case 'sentinel2_ts':
-                    self._plot_sentinel2_ts(data, axs[idx], title)
+                    self._plot_sentinel2_ts(data, axs[idx], title, show_titles)
                 case 'sentinel2_msk_sc':
-                    self._plot_sentinel2_msk_sc(data, axs[idx], title)
+                    self._plot_sentinel2_msk_sc(data, axs[idx], title, show_titles)
                 case 'sentinel1_asc_ts' | 'sentinel1_desc_ts':
-                    self._plot_sentinel1_ts(data, axs[idx], title)
+                    self._plot_sentinel1_ts(data, axs[idx], title, show_titles)
 
         if suptitle:
             fig.suptitle(suptitle, fontsize=16)

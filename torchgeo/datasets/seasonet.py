@@ -408,17 +408,16 @@ class SeasoNet(NonGeoDataset):
         self,
         sample: Sample,
         show_titles: bool = True,
-        show_legend: bool = True,
         suptitle: str | None = None,
+        show_legend: bool = True,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
-            show_legend: flag indicating whether to show a legend for
-                the segmentation masks
             suptitle: optional string to use as a suptitle
+            show_legend: flag indicating whether to show a legend for the segmentation masks
 
         Returns:
             a matplotlib Figure with the rendered sample

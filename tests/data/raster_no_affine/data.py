@@ -7,7 +7,7 @@ import os
 
 import numpy as np
 import rasterio as rio
-from affine import Affine
+from rasterio import Affine
 from rasterio.control import GroundControlPoint
 
 EPSG = 4326

@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 from torchgeo.models import ScaleMAELarge16_Weights, scalemae_large_patch16
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestScaleMAE:
     @pytest.fixture(params=[*ScaleMAELarge16_Weights])
     def weights(self, request: SubRequest) -> ScaleMAELarge16_Weights:

@@ -251,17 +251,17 @@ class ZueriCrop(NonGeoDataset):
     def plot(
         self,
         sample: Sample,
-        time_step: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,
+        time_step: int = 0,
     ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            time_step: time step at which to access image, beginning with 0
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
+            time_step: time step at which to access image, beginning with 0
 
         Returns:
             a matplotlib Figure with the rendered sample

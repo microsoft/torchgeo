@@ -161,6 +161,7 @@ class TestDOFALarge16:
         dofa_large_patch16_224(weights=weights)
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestDOFAHuge14:
     def test_dofa(self) -> None:
         model = dofa_huge_patch14_224(img_size=14)

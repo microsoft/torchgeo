@@ -25,8 +25,22 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .ltae import LTAE
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1
+from .ltae import LTAE, LTAE2d
+from .olmoearth import (
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthTiny_Weights,
+    OlmoEarthV1_Weights,
+    olmoearth_base,
+    olmoearth_large,
+    olmoearth_nano,
+    olmoearth_small,
+    olmoearth_tiny,
+    olmoearth_v1,
+    olmoearth_v1_unet_decoder,
+)
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .presto import Presto, Presto_Weights, presto
 from .rcf import MOSAIKS, RCF
@@ -56,6 +70,7 @@ from .swin import (
 from .tessera import Tessera, Tessera_Weights, tessera
 from .tilenet import TileNet, TileNet_Weights, tilenet
 from .unet import Unet_Weights, unet
+from .utae import UTAE
 from .vit import (
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -80,6 +95,7 @@ __all__ = (
     'LTAE',
     'MOSAIKS',
     'RCF',
+    'UTAE',
     'Aurora_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
@@ -99,6 +115,12 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'LTAE2d',
+    'OlmoEarthBase_Weights',
+    'OlmoEarthLarge_Weights',
+    'OlmoEarthNano_Weights',
+    'OlmoEarthSmall_Weights',
+    'OlmoEarthTiny_Weights',
     'OlmoEarthV1_Weights',
     'Panopticon',
     'Panopticon_Weights',
@@ -142,7 +164,13 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'olmoearth_base',
+    'olmoearth_large',
+    'olmoearth_nano',
+    'olmoearth_small',
+    'olmoearth_tiny',
     'olmoearth_v1',
+    'olmoearth_v1_unet_decoder',
     'panopticon_vitb14',
     'presto',
     'resnet18',

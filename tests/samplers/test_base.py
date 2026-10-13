@@ -73,7 +73,7 @@ class TestGeoSampler:
 
     def test_abstract(self) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            GeoSampler()
+            GeoSampler()  # ty: ignore[call-non-callable]
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -119,7 +119,7 @@ class TestSpatialSampler:
 
     def test_abstract(self, dataset: GeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            SpatialSampler(dataset)
+            SpatialSampler(dataset)  # ty: ignore[call-non-callable]
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -164,7 +164,7 @@ class TestTemporalSampler:
 
     def test_abstract(self, dataset: GeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            TemporalSampler(dataset)
+            TemporalSampler(dataset)  # ty: ignore[call-non-callable]
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -176,6 +176,7 @@ class TestTemporalSampler:
             continue
 
 
+@pytest.mark.filterwarnings('ignore:random_sampler @ sequential_sampler')
 class TestSpatioTemporalSampler:
     @pytest.fixture(scope='class', params=['random', 'sequential'])
     @classmethod
@@ -204,7 +205,6 @@ class TestSpatioTemporalSampler:
     ) -> SpatioTemporalSampler:
         return spatial_sampler @ temporal_sampler
 
-    @pytest.mark.filterwarnings('ignore:random_sampler @ sequential_sampler')
     def test_iter(self, sampler: SpatioTemporalSampler) -> None:
         x, y, t = next(iter(sampler))
         assert 0 <= x.start == x.stop <= 100

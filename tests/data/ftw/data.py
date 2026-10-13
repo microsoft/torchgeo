@@ -9,7 +9,7 @@ import zipfile
 import numpy as np
 import pandas as pd
 import rasterio
-from affine import Affine
+from rasterio import Affine
 
 np.random.seed(0)
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     i = 0
     cols = {'aoi_id': [], 'split': []}
     for split, n in num_samples.items():
-        for j in range(n):
+        for _ in range(n):
             aoi = f'g_{i}'
             cols['aoi_id'].append(aoi)
             cols['split'].append(split)

@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     PASTISDataModule,
     SEN12MSDataModule,
 )
-from torchgeo.datasets import FLAIRHUB, RGBBandsMissingError
+from torchgeo.datasets import FLAIRHUB, ChesapeakeCVPR, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import SemanticSegmentation
@@ -102,6 +102,25 @@ class TestSemanticSegmentation:
             case 'flairhub_multimodal_landcover' | 'flairhub_toy_croptype':
                 monkeypatch.setattr(
                     FLAIRHUB, 'domain_years', {'D006': ['2020'], 'D012': ['2019']}
+                )
+            case _ if name.startswith('chesapeake_cvpr'):
+                # Tell ChesapeakeCVPR that only the fixture tile is available so
+                # it doesn't try to (re-)extract the archives on every test run.
+                # Without this, parallel test workers can extract into the same
+                # shared tests/data directory at once and corrupt each other's
+                # reads.
+                monkeypatch.setattr(
+                    ChesapeakeCVPR,
+                    '_files',
+                    {
+                        'base': (
+                            'de_1m_2013_extended-debuffered-test_tiles',
+                            'spatial_index.geojson',
+                        ),
+                        'prior_extension': (
+                            'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+                        ),
+                    },
                 )
 
         config = os.path.join('tests', 'conf', name + '.yaml')

@@ -42,11 +42,15 @@ class TestSolarPlantsBrazil:
         sample = dataset[0]
         dataset.plot(sample, suptitle='Test')
         plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()
 
     def test_plot_with_prediction(self, dataset: SolarPlantsBrazil) -> None:
         sample = dataset[0]
         sample['prediction'] = sample['mask']
         dataset.plot(sample, suptitle='Test')
+        plt.close()
+        dataset.plot(sample, show_titles=False)
         plt.close()
 
     def test_missing_dataset_raises(self, tmp_path: Path) -> None:

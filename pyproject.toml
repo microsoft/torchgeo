@@ -133,20 +133,20 @@ docs = [
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
-    # olmoearth-pretrain-minimal 0.0.2+ required for normalization support
-    "olmoearth-pretrain-minimal>=0.0.2",
+    # olmoearth-pretrain-minimal 0.1+ required to build the released v1.1/v1.2 architectures
+    "olmoearth-pretrain-minimal>=0.1.0",
 ]
 style = [
     # pandas 2.1.1+ required for Python 3.12 wheels
     "pandas-stubs>=2.1.1",
     # ruff 0.16+ required for 2026 style guide
     "ruff>=0.16",
-    # ty 0.0.46+ required for latest type checking changes
-    "ty>=0.0.62",
+    # ty 0.0.82+ required for latest type checking changes
+    "ty>=0.0.82",
     # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
     "types-geopandas>=1.0",
-    # types-rasterio 1.5.0.20260728+ needed for https://github.com/python/typeshed/pull/16092
-    "types-rasterio>=1.5.0.20260728",
+    # types-rasterio 1.5.1+ needed to use affine type hints
+    "types-rasterio>=1.5.1",
     # requests 2.25+ required for urllib3 with Python 3.12 support
     "types-requests>=2.25",
     # shapely 2.0.2+ required for Python 3.12 wheels
@@ -161,6 +161,8 @@ tests = [
     "pytest>=7.3.2",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
     "pytest-cov>=4",
+    # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
+    "pytest-xdist>=3.0.2",
     # pytest-socket 0.3.4+ required for wheels
     "pytest-socket>=0.3.4",
 ]
@@ -229,6 +231,7 @@ filterwarnings = [
 ]
 markers = [
     "slow: marks tests as slow",
+    "xdist_group: marks tests to run on the same pytest-xdist worker",
 ]
 norecursedirs = [
     ".ipynb_checkpoints",

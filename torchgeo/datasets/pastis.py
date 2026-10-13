@@ -169,7 +169,7 @@ class PASTIS(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            folds: a sequence of integers from 0 to 4 specifying which of the five
+            folds: a sequence of integers from 1 to 5 specifying which of the five
                 dataset folds to include
             bands: sequence of band names to load. Must be a non-empty subset of
                 ``s2_bands``, ``s1a_bands``, or ``s1d_bands``. All bands must

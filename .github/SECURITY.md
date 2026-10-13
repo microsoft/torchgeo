@@ -42,7 +42,7 @@ You can report a vulnerability using GitHub's private reporting feature:
 2. Fill out the form to the best of your abilities.
 3. Click "Create draft security advisory".
 
-More details are available in [GitHub's documentation](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability). As documented in our [AI Policy](https://github.com/torchgeo/governance/blob/main/AI-POLICY.md), LLM usage should be disclosed, and the vulnerability report should be written by a human, not their agent. Detailed reports with proof-of-concept exploits are encouraged but not required. If a report is accepted and you do not yet have a CVE ID, we will request one on your behalf and attribute the discovery to you.
+More details are available in [GitHub's documentation](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability). As documented in our [AI Policy](./AI-POLICY.md), the vulnerability report should be written without the use of LLMs. Detailed reports with proof-of-concept exploits are encouraged but not required. If a report is accepted and you do not yet have a CVE ID, we will request one on your behalf and attribute the discovery to you.
 
 ## Timeline
 

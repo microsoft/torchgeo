@@ -6,6 +6,7 @@ Complete API documentation for all TorchGeo modules.
 .. toctree::
    :maxdepth: 2
 
+   callbacks
    datamodules
    datasets
    losses

@@ -15,7 +15,7 @@ please see our [Contributing Guide](https://docs.torchgeo.org/en/stable/user/con
 
 You can find a curated list of issues that we believe are easy for new contributors to tackle at https://github.com/torchgeo/torchgeo/contribute.
 
-The Project abides by the Organization's [code of conduct](https://github.com/torchgeo/governance/blob/main/CODE-OF-CONDUCT.md), [trademark policy](https://github.com/torchgeo/governance/blob/main/TRADEMARKS.md), and [AI policy](https://github.com/torchgeo/governance/blob/main/AI-POLICY.md).
+The Project abides by the Organization's [code of conduct](https://github.com/torchgeo/governance/blob/main/CODE-OF-CONDUCT.md), [trademark policy](https://github.com/torchgeo/governance/blob/main/TRADEMARKS.md), and [AI policy](./AI-POLICY.md).
 
 ---
 

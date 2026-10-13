@@ -51,13 +51,7 @@ TorchGeo is licensed under the MIT License. If your pull request adds any new fi
 AI Policy
 ---------
 
-The TorchGeo project follows the TorchGeo organization's `AI policy <https://github.com/torchgeo/governance/blob/main/AI-POLICY.md>`__. In particular, this means:
-
-* **Responsibility**: human-in-the-loop, must understand every line of code you contribute
-* **Copyright**: no agentic AI, must own copyright of your contributions
-* **Communication**: all issue/PR descriptions/comments must be written in your own words
-* **Conciseness**: PRs should be simple and concise, no defensive coding or unnecessary tests
-* **Disclosure**: disclose any usage of AI via our disclosure templates
+The TorchGeo project does not currently allow the use of LLMs. See the `AI policy <https://github.com/torchgeo/torchgeo/blob/main/.github/AI-POLICY.md>`__ for details.
 
 .. _tests:
 
@@ -231,12 +225,12 @@ For PRs that may affect GeoDataset sampling speed, you can test the performance 
 
 This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). Each run will output a table like below. You can add these two tables to your PR to describe I/O performance before and after your change.
 
-=========== ========== =========  =========  ==================
- Split       Strategy   Samples    Time (s)   Rate (samples/s)
-=========== ========== =========  =========  ==================
-Train        Random         928    8.35074           111.12790
-Validation   Grid           992    4.97084           199.56398
-=========== ========== =========  =========  ==================
+=========== ===================== =========  =========  ==================
+ Split       Strategy              Samples    Time (s)   Rate (samples/s)
+=========== ===================== =========  =========  ==================
+Train        RandomPatchSampler        928    8.35074           111.12790
+Validation   GriddedPatchSampler       992    4.97084           199.56398
+=========== ===================== =========  =========  ==================
 
 
 Related Libraries

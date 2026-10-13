@@ -289,13 +289,13 @@ class GridGeoSampler(GeoSampler):
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
 
             # For each row...
-            for i in range(rows):
-                ymin = bounds[1] + i * self.stride[0]
+            for j in range(rows):
+                ymin = bounds[1] + j * self.stride[0]
                 ymax = ymin + self.size[0]
 
                 # For each column...
-                for j in range(cols):
-                    xmin = bounds[0] + j * self.stride[1]
+                for k in range(cols):
+                    xmin = bounds[0] + k * self.stride[1]
                     xmax = xmin + self.size[1]
 
                     yield slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)

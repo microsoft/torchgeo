@@ -73,7 +73,6 @@ def create_file(path: str) -> None:
 
 if __name__ == '__main__':
     directory = 'FireRisk'
-    filename = 'FireRisk.zip'
 
     # remove old data
     if os.path.isdir(directory):

@@ -289,21 +289,28 @@ class CropHarvest(NonGeoDataset):
         features_path = os.path.join(self.root, self.file_dict['features']['filename'])
         extract_archive(features_path)
 
-    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
+    def plot(
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the dataset using bands for Agriculture RGB composite.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.11
+            The *show_titles* parameter.
         """
         fig, axs = plt.subplots()
         bands = [self.all_bands.index(band) for band in self.rgb_bands]
         rgb = np.array(sample['array'])[:, bands] / 3000
         axs.imshow(rgb[None, ...])
-        axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
+        if show_titles:
+            axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
         axs.set_xticks(np.arange(12))
         axs.set_xticklabels(np.arange(12) + 1)
         axs.set_yticks([])

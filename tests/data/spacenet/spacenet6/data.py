@@ -21,7 +21,6 @@ dataset_id = 'SN6_buildings'
 
 profile = {
     'driver': 'GTiff',
-    'dtype': 'uint8',
     'width': SIZE,
     'height': SIZE,
     'crs': CRS.from_epsg(4326),
@@ -31,7 +30,6 @@ profile = {
 }
 
 np.random.seed(0)
-Z = np.random.randint(np.iinfo('uint8').max, size=(SIZE, SIZE), dtype='uint8')
 
 # Define the types of imagery for SpaceNet6
 imagery_types = ['PAN', 'PS-RGB', 'PS-RGBNIR', 'RGBNIR', 'SAR-Intensity']
@@ -41,6 +39,13 @@ imagery_channels = {
     'PS-RGBNIR': 4,
     'RGBNIR': 4,
     'SAR-Intensity': 4,
+}
+imagery_dtypes = {
+    'PAN': 'uint16',
+    'PS-RGB': 'uint8',
+    'PS-RGBNIR': 'uint16',
+    'RGBNIR': 'uint16',
+    'SAR-Intensity': 'float32',
 }
 
 
@@ -54,10 +59,14 @@ def generate_geotiff_files(
     imagery_types: str,
     imagery_channels: int,
     profile: dict[str, Any],
-    Z: np.ndarray,
     test: bool = False,
 ) -> None:
     for imagery_type in imagery_types:
+        dtype = imagery_dtypes[imagery_type]
+        if dtype == 'float32':
+            Z = (np.random.rand(SIZE, SIZE) * 70).astype(dtype)
+        else:
+            Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE)).astype(dtype)
         for i in range(1, NUM_SAMPLES + 1):
             if test and imagery_type == 'SAR-Intensity':
                 path = os.path.join(
@@ -71,6 +80,7 @@ def generate_geotiff_files(
                     f'SN6_Train_AOI_11_Rotterdam_{imagery_type}_20190804111224_20190804111453_tile_{i}.tif',
                 )
             profile['count'] = imagery_channels[imagery_type]
+            profile['dtype'] = dtype
             with rasterio.open(path, 'w', **profile) as src:
                 for j in range(1, profile['count'] + 1):
                     src.write(Z, j)
@@ -123,13 +133,13 @@ test_base_path = os.path.join(
 
 # Create directories and generate dummy GeoTIFF files for train dataset
 create_directories(train_base_path, imagery_types)
-generate_geotiff_files(train_base_path, imagery_types, imagery_channels, profile, Z)
+generate_geotiff_files(train_base_path, imagery_types, imagery_channels, profile)
 generate_geojson_files(train_base_path, geojson)
 
 # Create directories and generate dummy GeoTIFF files for test dataset (only SAR-Intensity)
 os.makedirs(test_base_path, exist_ok=True)
 generate_geotiff_files(
-    test_base_path, ['SAR-Intensity'], imagery_channels, profile, Z, test=True
+    test_base_path, ['SAR-Intensity'], imagery_channels, profile, test=True
 )
 
 # Create tarballs for train and test datasets

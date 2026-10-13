@@ -6,6 +6,9 @@ changelog:
     - title: Backwards-incompatible changes
       labels:
         - backwards-incompatible
+    - title: Callbacks
+      labels:
+        - callbacks
     - title: Dependencies
       labels:
         - dependencies

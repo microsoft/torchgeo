@@ -14,10 +14,9 @@ import pandas as pd
 import pytest
 import rasterio
 import torch
-from affine import Affine
 from numpy.typing import NDArray
 from pytest import MonkeyPatch
-from rasterio import MemoryFile
+from rasterio import Affine, MemoryFile
 from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from shapely import MultiPolygon, Polygon, box
@@ -403,6 +402,22 @@ def test_download_url_interrupted(tmp_path: Path, monkeypatch: MonkeyPatch) -> N
     assert list(tmp_path.iterdir()) == []
 
 
+def test_download_url_truncated(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    url = Path('tests/data/vhr10/NWPU VHR-10 dataset.zip').absolute().as_uri()
+    filename = 'NWPU VHR-10 dataset.zip'
+
+    def truncate(fsrc: Any, fdst: Any, *args: Any, **kwargs: Any) -> None:
+        fdst.write(fsrc.read(16))
+
+    monkeypatch.setattr(shutil, 'copyfileobj', truncate)
+
+    with pytest.raises(RuntimeError, match=r'Downloaded file .* is incomplete'):
+        download_url(url, tmp_path, filename=filename)
+
+    assert not (tmp_path / filename).exists()
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_download_and_extract_archive(tmp_path: Path) -> None:
     url = str(Path('tests/data/vhr10/NWPU VHR-10 dataset.zip'))
     md5 = '91dd532523a543fb8dee0887e4188e9b'
@@ -516,7 +531,7 @@ class TestCollateFunctionsMatchingKeys:
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     @classmethod
-    def samples(self) -> list[Sample]:
+    def samples(cls) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:

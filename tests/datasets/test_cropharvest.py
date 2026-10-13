@@ -64,3 +64,5 @@ class TestCropHarvest:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()
+        dataset.plot(x, show_titles=False)
+        plt.close()

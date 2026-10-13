@@ -678,7 +678,7 @@ class SatlasPretrain(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         products = [*self.images, 'metadata']
-        if self.labels:
+        if len(list(self.labels)):
             products.append('static')
 
         for product in products:
@@ -702,7 +702,7 @@ class SatlasPretrain(NonGeoDataset):
 
                 # Download and extract the tarball
                 aws = which('aws')
-                aws('s3', 'cp', self.url + tarball, self.root)
+                aws('s3', 'cp', '--no-sign-request', self.url + tarball, self.root)
                 check_integrity(path, md5 if self.checksum else None)
                 extract_archive(path)
 

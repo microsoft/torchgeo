@@ -32,7 +32,7 @@ def create_file(path: str, value: Literal['image', 'mask']) -> None:
 
         if value == 'image':
             # Generate image data with shape (4, 13, SIZE, SIZE) for timepoints and channels
-            data = np.random.rand(4, 13, SIZE, SIZE).astype(np.float32)
+            data = (np.random.rand(4, 13, SIZE, SIZE) * 6000).astype(np.float32)
         elif value == 'mask':
             # Generate mask data with shape (SIZE, SIZE) with 4 classes
             data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)
@@ -66,7 +66,5 @@ if __name__ == '__main__':
     create_directory('.', filenames)
 
     # Create zip archives of dataset folders
-    filename_images = 'image_stack.tar.gz'
-    filename_masks = 'mask.tar.gz'
     shutil.make_archive('image_stack', 'gztar', '.', 'image_stack')
     shutil.make_archive('mask', 'gztar', '.', 'mask')

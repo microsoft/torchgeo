@@ -57,5 +57,5 @@ class TestTreeSatAI:
     def test_plot(self, dataset: TreeSatAI) -> None:
         x = dataset[0]
         x['prediction'] = x['label']
-        dataset.plot(x)
+        dataset.plot(x, suptitle='Test')
         plt.close()

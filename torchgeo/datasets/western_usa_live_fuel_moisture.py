@@ -302,17 +302,17 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def plot(
         self,
         sample: Sample,
-        variables_to_plot: list[str] | None = None,
         show_titles: bool = True,
         suptitle: str | None = None,
+        variables_to_plot: list[str] | None = None,
     ) -> Figure:
         """Plot a time series visualization of the LFMC sample.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            variables_to_plot: a list of valid variable to be drawn in the plot
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for the Figure
+            variables_to_plot: a list of valid variable to be drawn in the plot
 
         Returns:
             a matplotlib Figure with the rendered sample

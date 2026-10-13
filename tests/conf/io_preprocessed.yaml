@@ -11,5 +11,8 @@ trainer:
   accelerator: 'cpu'
   max_epochs: 1
   num_sanity_val_steps: 0
+  enable_checkpointing: false
+  enable_model_summary: false
+  logger: false
   profiler:
     class_path: IOProfiler

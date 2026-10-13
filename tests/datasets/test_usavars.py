@@ -122,3 +122,8 @@ class TestUSAVars:
     def test_plot(self, dataset: USAVars) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
+
+    def test_deprecated_warning(self, dataset: USAVars) -> None:
+        match = 'The show_labels parameter is deprecated, use show_titles instead.'
+        with pytest.warns(DeprecationWarning, match=match):
+            dataset.plot(dataset[0], show_labels=True)

@@ -7,6 +7,7 @@ import pytest
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
+from torchgeo.profilers import IOProfiler
 
 
 class TestClassification:
@@ -36,3 +37,8 @@ class TestClassification:
             main(['predict', *args])
         except MisconfigurationException:
             pass
+
+    def test_parameter_warning(self) -> None:
+        match = 'The batch_size parameter is deprecated.'
+        with pytest.warns(DeprecationWarning, match=match):
+            IOProfiler(batch_size=32)

@@ -206,12 +206,9 @@ def random_grid_cell_assignment(
         raise ValueError('Input grid_size must be greater than 1.')
 
     # Generate the grid's cells for each bbox in index
-    left = []
-    right = []
     rows = []
-    geometry = []
-    for index, row in dataset.index.iterrows():
-        minx, miny, maxx, maxy = row.geometry.bounds
+    for index, old_row in dataset.index.iterrows():
+        minx, miny, maxx, maxy = old_row.geometry.bounds
 
         stridex = (maxx - minx) / grid_size
         stridey = (maxy - miny) / grid_size
@@ -224,31 +221,21 @@ def random_grid_cell_assignment(
                     minx + (x + 1) * stridex,
                     miny + (y + 1) * stridey,
                 )
-                if geom := shapely.intersection(row.geometry, geom):
-                    left.append(index.left)
-                    right.append(index.right)
-                    rows.append(row)
-                    geometry.append(geom)
-
-    lengths = _fractions_to_lengths(fractions, len(rows))
-
-    indexes_sr = pd.IntervalIndex.from_arrays(
-        left, right, closed='both', name='datetime'
-    )
-    rows_df = pd.DataFrame(rows)
-    geometry_sr = pd.Series(geometry)
+                if geom := shapely.intersection(old_row.geometry, geom):
+                    new_row = deepcopy(old_row)
+                    new_row.geometry = geom
+                    rows.append(new_row)
 
     # Randomly assign cells to each new index
     indices = randperm(len(rows), generator=generator)
+    lengths = _fractions_to_lengths(fractions, len(rows))
+    rows_df = GeoDataFrame(rows, crs=dataset.crs)
+    rows_df.index.rename(dataset.index.index.name, inplace=True)
 
     new_datasets = []
     for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = GeoDataFrame(
-            data=rows_df.iloc[indices[offset - length : offset].tolist()].values,
-            index=indexes_sr[indices[offset - length : offset].tolist()],
-            geometry=geometry_sr[indices[offset - length : offset].tolist()].values,
-        )
+        ds.index = rows_df.iloc[indices[offset - length : offset].tolist()]
         new_datasets.append(ds)
 
     return new_datasets

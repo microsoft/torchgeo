@@ -433,16 +433,21 @@ def download_url(
         try:
             with urllib.request.urlopen(request) as response:
                 total = response.headers.get('Content-Length')
+                expected = int(total) if total else None
                 with (
                     tqdm.wrapattr(
-                        response,
-                        'read',
-                        total=int(total) if total else None,
-                        desc=str(filename),
+                        response, 'read', total=expected, desc=str(filename)
                     ) as reader,
                     open(tmp, 'wb') as f,
                 ):
                     shutil.copyfileobj(reader, f)
+            if expected is not None:
+                actual = os.path.getsize(tmp)
+                if actual != expected:
+                    raise RuntimeError(
+                        f"Downloaded file '{fpath}' is incomplete: expected "
+                        f'{expected} bytes but got {actual}.'
+                    )
             os.replace(tmp, fpath)
         finally:
             if os.path.exists(tmp):

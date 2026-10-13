@@ -60,8 +60,6 @@ def create_file(path: str) -> None:
         'transform': Affine(30.0, 0.0, 339885.0, 0.0, -30.0, 8286915.0),
     }
 
-    Z = np.random.randn(SIZE, SIZE).astype(profile['dtype'])
-
     if path.endswith('_fixedmask.TIF'):
         Z = np.random.choice(
             np.array([0, 64, 128, 192, 255], dtype=dtype), size=(SIZE, SIZE)
