@@ -55,7 +55,7 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class TestRegression:
     @classmethod
-    def create_model(*args: Any, **kwargs: Any) -> Module:
+    def create_model(cls, *args: Any, **kwargs: Any) -> Module:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
@@ -215,7 +215,7 @@ class TestRegression:
 
 class TestPixelwiseRegression:
     @classmethod
-    def create_model(*args: Any, **kwargs: Any) -> Module:
+    def create_model(cls, *args: Any, **kwargs: Any) -> Module:
         return PixelwiseRegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(

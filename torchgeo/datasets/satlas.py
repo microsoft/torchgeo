@@ -678,7 +678,7 @@ class SatlasPretrain(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         products = [*self.images, 'metadata']
-        if self.labels:
+        if len(list(self.labels)):
             products.append('static')
 
         for product in products:

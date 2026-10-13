@@ -53,7 +53,7 @@ if __name__ == '__main__':
     zipfilename = 'AA.zip'
 
     # create crop type data
-    geojson_data = create_data_file(dataname)
+    create_data_file(dataname)
 
     # archive the geojson to zip
     with zipfile.ZipFile(zipfilename, 'w') as zipf:

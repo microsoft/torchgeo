@@ -1638,7 +1638,7 @@ class IntersectionDataset(GeoDataset):
 
 
 class UnionDataset(GeoDataset):
-    """Dataset representing the union of two GeoDatasets.
+    """Dataset representing the union of one or more GeoDatasets.
 
     This allows users to do things like:
 
@@ -1659,32 +1659,35 @@ class UnionDataset(GeoDataset):
 
     def __init__(
         self,
-        dataset1: GeoDataset,
-        dataset2: GeoDataset,
+        *datasets: GeoDataset,
         collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
 
-        When computing the union between two datasets that both contain model inputs
-        (such as images) or model outputs (such as masks), the default behavior is to
-        merge the data to create a single image/mask. The *collate_fn* parameter can be
-        used to change this behavior.
+        When computing the union between one or more datasets and multiple datasets
+        contain model inputs (such as images) or model outputs (such as masks),
+        the default behavior is to merge the data to create a single image/mask.
+        The *collate_fn* parameter can be used to change this behavior.
 
         Args:
-            dataset1: the first dataset
-            dataset2: the second dataset
+            *datasets: one or more datasets
             collate_fn: function used to collate samples
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
 
         Raises:
-            TypeError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if any dataset is not a :class:`GeoDataset`
+
+        .. versionchanged:: 0.11
+           The *dataset1* and *dataset2* parameters were replaced by *datasets*.
 
         .. versionadded:: 0.4
-            The *transforms* parameter.
+           The *transforms* parameter.
         """
-        self.datasets = [dataset1, dataset2]
+        assert len(datasets) > 0
+
+        self.datasets = datasets
         self.collate_fn = collate_fn
         self.transforms = transforms
 
@@ -1692,10 +1695,10 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise TypeError('UnionDataset only supports GeoDatasets')
 
-        dataset2.crs = dataset1.crs
-        dataset2.res = dataset1.res
+            ds.crs = datasets[0].crs
+            ds.res = datasets[0].res
 
-        self.index = pd.concat([dataset1.index, dataset2.index])
+        self.index = pd.concat([ds.index for ds in datasets])
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -1743,7 +1746,7 @@ class UnionDataset(GeoDataset):
 
     @property
     def crs(self) -> PROJ_CRS:
-        """:term:`coordinate reference system (CRS)` of both datasets.
+        """:term:`coordinate reference system (CRS)` of all datasets.
 
         Returns:
             The :term:`coordinate reference system (CRS)`.
@@ -1752,30 +1755,30 @@ class UnionDataset(GeoDataset):
 
     @crs.setter
     def crs(self, new_crs: PROJ_CRS) -> None:
-        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+        """Change the :term:`coordinate reference system (CRS)` of all datasets.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self.index.to_crs(new_crs, inplace=True)
-        self.datasets[0].crs = new_crs
-        self.datasets[1].crs = new_crs
+        for ds in self.datasets:
+            ds.crs = new_crs
 
     @property
     def res(self) -> tuple[float, float]:
-        """Resolution of both datasets in units of CRS.
+        """Resolution of all datasets in units of CRS.
 
         Returns:
-            The resolution of both datasets.
+            The resolution of all datasets.
         """
         return self.datasets[0].res
 
     @res.setter
     def res(self, new_res: float | tuple[float, float]) -> None:
-        """Change the resolution of both datasets.
+        """Change the resolution of all datasets.
 
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res
-        self.datasets[1].res = new_res
+        for ds in self.datasets:
+            ds.res = new_res

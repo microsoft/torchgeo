@@ -10,7 +10,6 @@ import shapely
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from shapely import Geometry, Polygon
-from torch import Generator
 
 from torchgeo.datasets import (
     GeoDataset,
@@ -51,8 +50,9 @@ class CustomGeoDataset(GeoDataset):
             index = pd.IntervalIndex.from_tuples(
                 intervals, closed='both', name='datetime'
             )
+        data = {'filepath': ['foo.tif'] * len(geometry)}
         crs = CRS.from_epsg(3005)
-        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
+        self.index = GeoDataFrame(data, index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
@@ -85,6 +85,20 @@ def test_random_bbox_assignment(
     assert len(train_ds) == expected_lengths[0]
     assert len(val_ds) == expected_lengths[1]
     assert len(test_ds) == expected_lengths[2]
+
+    # Check dataset index
+    assert (
+        list(ds.index.columns)
+        == list(train_ds.index.columns)
+        == list(val_ds.index.columns)
+        == list(test_ds.index.columns)
+    )
+    assert (
+        ds.index.index.name
+        == train_ds.index.index.name
+        == val_ds.index.index.name
+        == test_ds.index.index.name
+    )
 
     # Check dataset CRSs
     assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
@@ -126,7 +140,7 @@ def test_random_bbox_splitting() -> None:
     ds_area = total_area(ds)
 
     train_ds, val_ds, test_ds = random_bbox_splitting(
-        ds, fractions=[5 / 8, 2 / 8, 1 / 8], generator=Generator().manual_seed(5)
+        ds, fractions=[5 / 8, 2 / 8, 1 / 8]
     )
     train_ds_area = total_area(train_ds)
     val_ds_area = total_area(val_ds)
@@ -136,6 +150,20 @@ def test_random_bbox_splitting() -> None:
     assert isclose(train_ds_area, ds_area * 5 / 8)
     assert isclose(val_ds_area, ds_area * 2 / 8)
     assert isclose(test_ds_area, ds_area * 1 / 8)
+
+    # Check dataset index
+    assert (
+        list(ds.index.columns)
+        == list(train_ds.index.columns)
+        == list(val_ds.index.columns)
+        == list(test_ds.index.columns)
+    )
+    assert (
+        ds.index.index.name
+        == train_ds.index.index.name
+        == val_ds.index.index.name
+        == test_ds.index.index.name
+    )
 
     # Check dataset CRSs
     assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
@@ -174,6 +202,20 @@ def test_random_grid_cell_assignment() -> None:
     assert len(train_ds) == 1 / 2 * 2 * 5**2 + 1
     assert len(val_ds) == floor(1 / 4 * 2 * 5**2)
     assert len(test_ds) == floor(1 / 4 * 2 * 5**2)
+
+    # Check dataset index
+    assert (
+        list(ds.index.columns)
+        == list(train_ds.index.columns)
+        == list(val_ds.index.columns)
+        == list(test_ds.index.columns)
+    )
+    assert (
+        ds.index.index.name
+        == train_ds.index.index.name
+        == val_ds.index.index.name
+        == test_ds.index.index.name
+    )
 
     # Check dataset CRSs
     assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
@@ -247,6 +289,20 @@ def test_roi_split() -> None:
     assert len(train_ds) == 3
     assert len(val_ds) == 3
     assert len(test_ds) == 1
+
+    # Check dataset index
+    assert (
+        list(ds.index.columns)
+        == list(train_ds.index.columns)
+        == list(val_ds.index.columns)
+        == list(test_ds.index.columns)
+    )
+    assert (
+        ds.index.index.name
+        == train_ds.index.index.name
+        == val_ds.index.index.name
+        == test_ds.index.index.name
+    )
 
     # Check dataset CRSs
     assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs
@@ -322,6 +378,20 @@ def test_time_series_split(
     assert len(train_ds) == expected_lengths[0]
     assert len(val_ds) == expected_lengths[1]
     assert len(test_ds) == expected_lengths[2]
+
+    # Check dataset index
+    assert (
+        list(ds.index.columns)
+        == list(train_ds.index.columns)
+        == list(val_ds.index.columns)
+        == list(test_ds.index.columns)
+    )
+    assert (
+        ds.index.index.name
+        == train_ds.index.index.name
+        == val_ds.index.index.name
+        == test_ds.index.index.name
+    )
 
     # Check dataset CRSs
     assert train_ds.crs == val_ds.crs == test_ds.crs == ds.crs

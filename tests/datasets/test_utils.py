@@ -531,7 +531,7 @@ class TestCollateFunctionsMatchingKeys:
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope='class')
     @classmethod
-    def samples(self) -> list[Sample]:
+    def samples(cls) -> list[Sample]:
         return [{'image': torch.tensor([1, 2, 0])}, {'mask': torch.tensor([0, 0, 3])}]
 
     def test_stack_unbind_samples(self, samples: list[Sample]) -> None:

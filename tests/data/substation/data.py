@@ -66,7 +66,5 @@ if __name__ == '__main__':
     create_directory('.', filenames)
 
     # Create zip archives of dataset folders
-    filename_images = 'image_stack.tar.gz'
-    filename_masks = 'mask.tar.gz'
     shutil.make_archive('image_stack', 'gztar', '.', 'image_stack')
     shutil.make_archive('mask', 'gztar', '.', 'mask')

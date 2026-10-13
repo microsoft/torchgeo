@@ -244,9 +244,7 @@ class SouthAfricaCropType(RasterDataset):
         # Add labels for each field
         mask_filepaths: list[str] = []
         for field_id in field_ids:
-            file_path = filepath = os.path.join(
-                paths, 'train', 'labels', f'{field_id}.tif'
-            )
+            file_path = os.path.join(paths, 'train', 'labels', f'{field_id}.tif')
             mask_filepaths.append(file_path)
 
         mask = self._merge_or_stack(mask_filepaths, index).squeeze(-3)

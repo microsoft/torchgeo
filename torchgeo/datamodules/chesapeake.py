@@ -56,12 +56,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Raises:
             AssertionError: If ``use_prior_labels=True`` is used with ``class_set=7``.
         """
-        # This is a rough estimate of how large of a patch we will need to sample in
-        # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 3
-        kwargs['transforms'] = K.AugmentationSequential(
-            K.CenterCrop(patch_size), data_keys=None, keepdim=True
-        )
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
@@ -101,25 +95,21 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 splits=self.train_splits, layers=self.layers, **self.kwargs
             )
             self.train_sampler = RandomPatchSampler(
-                self.train_dataset, size=self.original_patch_size, length=self.length
+                self.train_dataset, size=self.patch_size, length=self.length
             )
         if stage in ['fit', 'validate']:
             self.val_dataset = ChesapeakeCVPR(
                 splits=self.val_splits, layers=self.layers, **self.kwargs
             )
             self.val_sampler = GriddedPatchSampler(
-                self.val_dataset,
-                size=self.original_patch_size,
-                stride=self.original_patch_size,
+                self.val_dataset, size=self.patch_size, stride=self.patch_size
             )
         if stage in ['test']:
             self.test_dataset = ChesapeakeCVPR(
                 splits=self.test_splits, layers=self.layers, **self.kwargs
             )
             self.test_sampler = GriddedPatchSampler(
-                self.test_dataset,
-                size=self.original_patch_size,
-                stride=self.original_patch_size,
+                self.test_dataset, size=self.patch_size, stride=self.patch_size
             )
 
     def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:

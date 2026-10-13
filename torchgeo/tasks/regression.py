@@ -181,7 +181,6 @@ class Regression(RegressionMixin, BaseTask):
             )
             batch = aug(batch)
             if self.target_key == 'mask':
-                y = y.squeeze(dim=1)
                 y_hat = y_hat.squeeze(dim=1)
             batch['prediction'] = y_hat
             for key in ['image', self.target_key, 'prediction']:
