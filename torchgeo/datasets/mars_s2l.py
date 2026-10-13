@@ -124,8 +124,6 @@ class MARSS2L(NonGeoDataset):
         Raises:
             IndexError: if index is out of range of the dataset
         """
-        if not -len(self) <= index < len(self):
-            raise IndexError(f'index {index} is out of range for size {len(self)}')
 
         row = self.df.iloc[index]
 
