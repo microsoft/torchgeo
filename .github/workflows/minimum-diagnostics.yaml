@@ -15,13 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workers: ['2', '0']
+        workers: ['2']
     steps:
-      - name: Clone failing revision
+      - name: Clone diagnostic revision
         uses: actions/checkout@v7.0.1
         with:
           repository: torchgeo/torchgeo
-          ref: 6d3b8450666afcd587592e9bfdf8422ad4828e2c
+          ref: ${{ github.sha }}
       - name: Set up uv
         uses: astral-sh/setup-uv@v10.2.0
         with:

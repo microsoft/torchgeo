@@ -39,7 +39,12 @@ constants = pytest.importorskip(
         *[(olmoearth_tiny, w) for w in OlmoEarthTiny_Weights],
         *[(olmoearth_small, w) for w in OlmoEarthSmall_Weights],
         *[(olmoearth_base, w) for w in OlmoEarthBase_Weights],
-        *[(olmoearth_large, w) for w in OlmoEarthLarge_Weights],
+        *[
+            pytest.param(
+                olmoearth_large, w, marks=pytest.mark.xdist_group('memory_intensive')
+            )
+            for w in OlmoEarthLarge_Weights
+        ],
     ],
 )
 def test_olmoearth_meta(
@@ -184,6 +189,7 @@ class TestOlmoEarthBase:
         olmoearth_base(weights=weights)
 
 
+@pytest.mark.xdist_group('memory_intensive')
 class TestOlmoEarthLarge:
     @pytest.fixture(params=[*OlmoEarthLarge_Weights])
     def weights(self, request: SubRequest) -> OlmoEarthLarge_Weights:

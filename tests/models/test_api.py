@@ -109,7 +109,7 @@ builders = [
     olmoearth_tiny,
     olmoearth_small,
     olmoearth_base,
-    olmoearth_large,
+    pytest.param(olmoearth_large, marks=memory_intensive),
     pytest.param(olmoearth_v1, marks=deprecated),
     olmoearth_v1_unet_decoder,
     panopticon_vitb14,
