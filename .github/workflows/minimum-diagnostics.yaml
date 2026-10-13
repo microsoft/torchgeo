@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workers: ['auto', '0']
+        workers: ['0']
     steps:
       - name: Clone failing revision
         uses: actions/checkout@v7.0.1
@@ -49,5 +49,9 @@ jobs:
           sudo journalctl -kf -o short-iso &
           kernel_pid=$!
           trap 'kill "$monitor_pid" "$kernel_pid" 2>/dev/null || true' EXIT
-          OMP_NUM_THREADS=1 pytest -vv -n "$PYTEST_WORKERS" --dist loadgroup --cov=torchgeo --cov-report=xml
+          dist=no
+          if [ "$PYTEST_WORKERS" != 0 ]; then
+            dist=loadgroup
+          fi
+          OMP_NUM_THREADS=1 pytest -vv -n "$PYTEST_WORKERS" --dist "$dist" --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
