@@ -31,6 +31,12 @@ class PlottingMixin:
     #: Color map for the dataset
     cmap: str | Colormap | None = None
 
+    #: Names of bands in the dataset
+    bands: tuple[str, ...] = ()
+
+    #: Names of classes in the dataset
+    classes: Sequence[Any] | None = None
+
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
@@ -111,7 +117,7 @@ class PlottingMixin:
         # Mask
         if 'mask' in sample:
             kwargs: dict[str, Any] = {'cmap': self.cmap}
-            if hasattr(self, 'classes'):
+            if self.classes is not None:
                 # Semantic segmentation
                 kwargs |= {
                     'vmin': 0,
