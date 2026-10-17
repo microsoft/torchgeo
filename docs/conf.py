@@ -78,6 +78,11 @@ nitpick_ignore = [
     # Internal type aliases we don't yet want to expose
     ('py:class', 'torchgeo.datasets.openstreetmap.OSMClassConfig'),
 ]
+nitpick_ignore_regex = [
+    # Documentation site is temporarily shut down due to a security incident
+    ('py:class', 'lightning.*'),
+    ('py:class', 'torchmetrics.*'),
+]
 
 
 # -- Options for HTML output -------------------------------------------------
