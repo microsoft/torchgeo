@@ -75,7 +75,7 @@ class RandomPatchSampler(SpatialSampler):
                 *size* to a factor of multiple of your COG block size for best effect.
 
         .. versionadded:: 0.11
-           The *snap2pixel* and *snap2grid* parameters.
+           The *snap2pixel* and *snap2block* parameters.
         """
         super().__init__(dataset, roi=roi)
 
@@ -111,7 +111,7 @@ class RandomPatchSampler(SpatialSampler):
         # Remove once https://github.com/geopandas/geopandas/pull/3773 is in min version
         points = points.explode().sample(frac=1, random_state=self.generator)
 
-        # Shift by half a pixel to make it easier to snap to a corner
+        # Shift by half a patch to make it easier to snap to a corner
         points = points.translate(-self.size[1] / 2, -self.size[0] / 2)
 
         if self.snap2pixel or self.snap2block:
@@ -189,7 +189,7 @@ class GriddedPatchSampler(SpatialSampler):
                 *size* to a factor of multiple of your COG block size for best effect.
 
         .. versionadded:: 0.11
-           The *snap2pixel* and *snap2grid* parameters.
+           The *snap2pixel* and *snap2block* parameters.
         """
         super().__init__(dataset, roi=roi)
 
