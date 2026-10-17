@@ -5,7 +5,7 @@
 
 import math
 from collections.abc import Iterable
-from typing import NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 import torch
@@ -125,3 +125,36 @@ def group_shuffle_split(
             test_idxs.append(i)
 
     return train_idxs, test_idxs
+
+
+def collate_fn_embeddings(batch: list[dict[str, Any]]) -> dict[str, torch.Tensor]:
+    """Collate function for flattening embeddings and masks into pixel samples."""
+    images: list[torch.Tensor] = []
+    masks: list[torch.Tensor] = []
+
+    nb_channels = batch[0]['image'].shape[0] if len(batch) > 0 else 0
+
+    for sample in batch:
+        img = sample['image']
+        mask = sample['mask']
+
+        img_flat = img.permute(1, 2, 0).reshape(-1, nb_channels)
+        mask_flat = mask.reshape(-1)
+
+        valid = mask_flat >= 0
+
+        if valid.any():
+            images.append(img_flat[valid])
+            masks.append(mask_flat[valid])
+
+    # Keep the empty-batch fallback for the rare case where every pixel is masked out.
+    if not images:
+        return {
+            'embeddings': torch.zeros((0, nb_channels)),
+            'labels': torch.zeros((0,), dtype=torch.long),
+        }
+
+    return {
+        'embeddings': torch.cat(images, dim=0),
+        'labels': torch.cat(masks, dim=0).long(),
+    }
