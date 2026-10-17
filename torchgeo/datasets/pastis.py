@@ -232,6 +232,8 @@ class PASTIS(NonGeoDataset):
             mask, boxes, labels = self._load_instance_targets(index)
             sample = {'image': image, 'mask': mask, 'bbox_xyxy': boxes, 'label': labels}
 
+        sample['dates'] = torch.tensor(self.dates[index])
+
         if self.transforms is not None:
             sample = self.transforms(sample)
 
@@ -331,6 +333,8 @@ class PASTIS(NonGeoDataset):
         gdf = gdf[gdf['Fold'].isin(self.folds)]
         self.idxs = gdf['ID_PATCH'].tolist()
 
+        self.dates = [list(d.values()) for d in gdf[f'dates-{self.image_key.upper()}']]
+
         files = []
         for i in self.idxs:
             path = os.path.join(self.root, self.directory, '{}') + str(i) + '.npy'
@@ -402,7 +406,7 @@ class PASTIS(NonGeoDataset):
             label = sample['label']
             mask = label[mask.argmax(axis=0)].numpy()
 
-        num_panels = 3
+        num_panels = 2
         showing_predictions = 'prediction' in sample
         if showing_predictions:
             predictions = sample['prediction'].numpy()
@@ -413,24 +417,23 @@ class PASTIS(NonGeoDataset):
                 predictions = label[predictions].numpy()
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
-        axs[0].imshow(images[0])
-        axs[1].imshow(images[1])
-        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
+        axs[0].imshow(images[len(images) // 2])
+        axs[1].imshow(mask, vmin=0, vmax=19, cmap=self.cmap, interpolation='none')
         axs[0].axis('off')
         axs[1].axis('off')
-        axs[2].axis('off')
+
         if showing_predictions:
-            axs[3].imshow(
+            axs[2].imshow(
                 predictions, vmin=0, vmax=19, cmap=self.cmap, interpolation='none'
             )
-            axs[3].axis('off')
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title('Image 0')
-            axs[1].set_title('Image 1')
-            axs[2].set_title('Mask')
-            if showing_predictions:
-                axs[3].set_title('Prediction')
+            d = str(sample['dates'][len(sample['dates']) // 2].item())
+            axs[0].set_title(f'{d[:4]}-{d[4:6]}-{d[6:]}')
+            axs[1].set_title('Mask')
+            if showing_predictions:  
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
