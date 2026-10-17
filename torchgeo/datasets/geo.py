@@ -1461,7 +1461,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):
 
 
 class IntersectionDataset(GeoDataset):
-    """Dataset representing the intersection of two GeoDatasets.
+    """Dataset representing the intersection of one or more GeoDatasets.
 
     This allows users to do things like:
 
@@ -1472,7 +1472,7 @@ class IntersectionDataset(GeoDataset):
     * Combine image and other raster data (e.g., elevation, temperature, pressure)
       and sample from both simultaneously (e.g., Landsat and Aster Global DEM)
 
-    These combinations require that all queries are present in *both* datasets,
+    These combinations require that all queries are present in *all* datasets,
     and can be combined using an :class:`IntersectionDataset`:
 
     .. code-block:: python
@@ -1484,22 +1484,28 @@ class IntersectionDataset(GeoDataset):
 
     def __init__(
         self,
-        dataset1: GeoDataset,
-        dataset2: GeoDataset,
+        *datasets: GeoDataset,
         spatial_only: bool = False,
         collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
         transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
 
-        When computing the intersection between two datasets that both contain model
-        inputs (such as images) or model outputs (such as masks), the default behavior
-        is to stack the data along the channel dimension. The *collate_fn* parameter
-        can be used to change this behavior.
+        When computing the intersection between one or more datasets that contain
+        multiple model inputs (such as images), the default behavior is to concatenate
+        the data along the first dimension. When computing the intersection between one
+        or more datasets that contain model outputs (such as masks), the data should
+        instead be stacked along a new dimension. The *collate_fn* parameter can be used
+        to control this. For example:
+
+        .. code-block:: python
+
+           images = IntersectionDataset(image1, image2, collate_fn=concat_samples)
+           masks = IntersectionDataset(mask1, mask2, collate_fn=stack_samples)
+           dataset = images & masks
 
         Args:
-            dataset1: the first dataset
-            dataset2: the second dataset
+            *datasets: one or more datasets
             spatial_only: if True, ignore temporal dimension when computing intersection
             collate_fn: function used to collate samples
             transforms: a function/transform that takes input sample and its target as
@@ -1507,7 +1513,10 @@ class IntersectionDataset(GeoDataset):
 
         Raises:
             RuntimeError: if datasets have no spatiotemporal intersection
-            TypeError: if either dataset is not a :class:`GeoDataset`
+            TypeError: if any dataset is not a :class:`GeoDataset`
+
+        .. versionchanged:: 0.11
+           The *dataset1* and *dataset2* parameters were replaced by *datasets*.
 
         .. versionadded:: 0.8
            The *spatial_only* parameter.
@@ -1515,7 +1524,9 @@ class IntersectionDataset(GeoDataset):
         .. versionadded:: 0.4
            The *transforms* parameter.
         """
-        self.datasets = [dataset1, dataset2]
+        assert len(datasets) > 0
+
+        self.datasets = datasets
         self.collate_fn = collate_fn
         self.transforms = transforms
 
@@ -1523,45 +1534,46 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise TypeError('IntersectionDataset only supports GeoDatasets')
 
-        dataset2.crs = dataset1.crs
-        dataset2.res = dataset1.res
+            ds.crs = datasets[0].crs
+            ds.res = datasets[0].res
 
-        # Spatial intersection
-        index1 = dataset1.index.reset_index()
-        index2 = dataset2.index.reset_index()
-        self.index = gpd.overlay(
-            index1, index2, how='intersection', keep_geom_type=True
-        )
-
-        if self.index.empty:
-            raise RuntimeError('Datasets have no spatial intersection')
-
-        # Remove duplicate columns with a suffix
-        # Pandas does not allow suffixes of suffixes
-        columns = ['filepath_1', 'filepath_2']
-        self.index.drop(columns=columns, inplace=True, errors='ignore')
-
-        name = 'datetime'
-        datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
-        datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')), name=name)
-        self.index.index = datetime_1
-
-        # Temporal intersection
-        if not spatial_only:
-            mint = np.maximum(datetime_1.left, datetime_2.left)
-            maxt = np.minimum(datetime_1.right, datetime_2.right)
-            valid = maxt >= mint
-            mint = mint[valid]
-            maxt = maxt[valid]
-            self.index = self.index[valid]
-            self.index.index = pd.IntervalIndex.from_arrays(
-                mint, maxt, closed='both', name='datetime'
+        self.index = datasets[0].index.reset_index()
+        for ds in datasets[1:]:
+            # Spatial intersection
+            index = ds.index.reset_index()
+            self.index = gpd.overlay(
+                self.index, index, how='intersection', keep_geom_type=True
             )
 
             if self.index.empty:
-                msg = 'Datasets have no temporal intersection. Use `spatial_only=True`'
-                msg += ' if you want to ignore temporal intersection'
-                raise RuntimeError(msg)
+                raise RuntimeError('Datasets have no spatial intersection')
+
+            # Remove duplicate columns with a suffix
+            # Pandas does not allow suffixes of suffixes
+            columns = ['filepath_1', 'filepath_2']
+            self.index.drop(columns=columns, inplace=True, errors='ignore')
+
+            name = 'datetime'
+            datetime_1 = pd.IntervalIndex(list(self.index.pop('datetime_1')), name=name)
+            datetime_2 = pd.IntervalIndex(list(self.index.pop('datetime_2')), name=name)
+            self.index.index = datetime_1
+
+            # Temporal intersection
+            if not spatial_only:
+                mint = np.maximum(datetime_1.left, datetime_2.left)
+                maxt = np.minimum(datetime_1.right, datetime_2.right)
+                valid = maxt >= mint
+                mint = mint[valid]
+                maxt = maxt[valid]
+                self.index = self.index[valid]
+                self.index.index = pd.IntervalIndex.from_arrays(
+                    mint, maxt, closed='both', name='datetime'
+                )
+
+                if self.index.empty:
+                    msg = 'Datasets have no temporal intersection. Use `spatial_only=True`'
+                    msg += ' if you want to ignore temporal intersection'
+                    raise RuntimeError(msg)
 
     def __getitem__(self, index: GeoSlice) -> Sample:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -1599,7 +1611,7 @@ class IntersectionDataset(GeoDataset):
 
     @property
     def crs(self) -> PROJ_CRS:
-        """:term:`coordinate reference system (CRS)` of both datasets.
+        """:term:`coordinate reference system (CRS)` of all datasets.
 
         Returns:
             The :term:`coordinate reference system (CRS)`.
@@ -1608,33 +1620,33 @@ class IntersectionDataset(GeoDataset):
 
     @crs.setter
     def crs(self, new_crs: PROJ_CRS) -> None:
-        """Change the :term:`coordinate reference system (CRS)` of both datasets.
+        """Change the :term:`coordinate reference system (CRS)` of all datasets.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
         self.index.to_crs(new_crs, inplace=True)
-        self.datasets[0].crs = new_crs
-        self.datasets[1].crs = new_crs
+        for ds in self.datasets:
+            ds.crs = new_crs
 
     @property
     def res(self) -> tuple[float, float]:
-        """Resolution of both datasets in units of CRS.
+        """Resolution of all datasets in units of CRS.
 
         Returns:
-            Resolution of both datasets.
+            Resolution of all datasets.
         """
         return self.datasets[0].res
 
     @res.setter
     def res(self, new_res: float | tuple[float, float]) -> None:
-        """Change the resolution of both datasets.
+        """Change the resolution of all datasets.
 
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res
-        self.datasets[1].res = new_res
+        for ds in self.datasets:
+            ds.res = new_res
 
 
 class UnionDataset(GeoDataset):
