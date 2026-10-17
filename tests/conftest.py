@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,11 @@ def load_state_dict_from_url(monkeypatch: MonkeyPatch) -> None:
 @pytest.fixture(autouse=True, scope='session')
 def matplotlib_backend() -> None:
     matplotlib.use('agg')
+
+
+@pytest.fixture(autouse=True, scope='session')
+def openmp_threads() -> None:
+    os.environ['OMP_NUM_THREADS'] = '1'
 
 
 @pytest.fixture(autouse=True)
