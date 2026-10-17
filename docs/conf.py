@@ -211,7 +211,7 @@ autodoc_typehints_description_target = 'documented'
 intersphinx_mapping = {
     'einops': ('https://einops.rocks/', None),
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
-    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
+    # 'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
@@ -225,7 +225,7 @@ intersphinx_mapping = {
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
     'tokenizers': ('https://huggingface.co/docs/tokenizers/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
-    'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
+    # 'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
