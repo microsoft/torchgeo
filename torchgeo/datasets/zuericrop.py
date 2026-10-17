@@ -143,7 +143,7 @@ class ZueriCrop(NonGeoDataset):
         with h5py.File(self.filepath, 'r') as f:
             array = f['data'][index, ...]
 
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         # Convert from TxHxWxC to TxCxHxW
         tensor = tensor.permute((0, 3, 1, 2))
         tensor = torch.index_select(tensor, dim=1, index=self.band_indices)
