@@ -1,5 +1,8 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
+# Fallback
+* @adamjstewart
+
 # Components
 callbacks/ @calebrob6 @adamjstewart
 datamodules/ @nilsleh @robmarkcole

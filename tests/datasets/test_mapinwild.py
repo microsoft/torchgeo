@@ -69,7 +69,8 @@ class TestMapInWild:
         root = tmp_path
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
-        MapInWild(root, download=False, checksum=False)
+        ds = MapInWild(root, download=False, checksum=False)
+        ds[0]
 
     def test_corrupted(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'mapinwild', '**', '*.zip')

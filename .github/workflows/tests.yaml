@@ -23,7 +23,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -41,7 +41,7 @@ jobs:
           PYTEST_WORKERS: ${{ runner.os == 'macOS' && '2' || 'auto' }}
           TORCHGEO_USE_BFLOAT16: ${{ runner.os == 'macOS' && 'true' || 'false' }}
         run: |
-          OMP_NUM_THREADS=1 pytest -n "$PYTEST_WORKERS" --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest -n "$PYTEST_WORKERS" --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1
@@ -54,7 +54,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: '3.12'
           enable-cache: true
@@ -68,7 +68,7 @@ jobs:
         run: uv tree
       - name: Run checks
         run: |
-          OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1
@@ -81,7 +81,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v7.0.1
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: '3.14'
           enable-cache: true
@@ -96,7 +96,7 @@ jobs:
         run: uv tree
       - name: Run checks
         run: |
-          OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1

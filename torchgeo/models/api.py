@@ -29,7 +29,21 @@ from .dofa import (
     dofa_small_patch16_224,
 )
 from .earthloc import EarthLoc_Weights, earthloc
-from .olmoearth import OlmoEarthV1_Weights, olmoearth_v1, olmoearth_v1_unet_decoder
+from .olmoearth import (
+    OlmoEarthBase_Weights,
+    OlmoEarthLarge_Weights,
+    OlmoEarthNano_Weights,
+    OlmoEarthSmall_Weights,
+    OlmoEarthTiny_Weights,
+    OlmoEarthV1_Weights,
+    olmoearth_base,
+    olmoearth_large,
+    olmoearth_nano,
+    olmoearth_small,
+    olmoearth_tiny,
+    olmoearth_v1,
+    olmoearth_v1_unet_decoder,
+)
 from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .presto import Presto_Weights, presto
 from .resnet import (
@@ -82,6 +96,11 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
+    'olmoearth_nano': olmoearth_nano,
+    'olmoearth_tiny': olmoearth_tiny,
+    'olmoearth_small': olmoearth_small,
+    'olmoearth_base': olmoearth_base,
+    'olmoearth_large': olmoearth_large,
     'olmoearth_v1': olmoearth_v1,
     'olmoearth_v1_unet_decoder': olmoearth_v1_unet_decoder,
     'deo_base': deo_base,
@@ -117,6 +136,11 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
+    olmoearth_nano: OlmoEarthNano_Weights,
+    olmoearth_tiny: OlmoEarthTiny_Weights,
+    olmoearth_small: OlmoEarthSmall_Weights,
+    olmoearth_base: OlmoEarthBase_Weights,
+    olmoearth_large: OlmoEarthLarge_Weights,
     olmoearth_v1: OlmoEarthV1_Weights,
     panopticon_vitb14: Panopticon_Weights,
     presto: Presto_Weights,
@@ -147,6 +171,11 @@ _model_weights: dict[str | Callable[..., nn.Module], type[WeightsEnum]] = {
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
+    'olmoearth_nano': OlmoEarthNano_Weights,
+    'olmoearth_tiny': OlmoEarthTiny_Weights,
+    'olmoearth_small': OlmoEarthSmall_Weights,
+    'olmoearth_base': OlmoEarthBase_Weights,
+    'olmoearth_large': OlmoEarthLarge_Weights,
     'olmoearth_v1': OlmoEarthV1_Weights,
     'panopticon_vitb14': Panopticon_Weights,
     'presto': Presto_Weights,

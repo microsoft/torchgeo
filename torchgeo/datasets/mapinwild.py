@@ -4,7 +4,6 @@
 """MapInWild dataset."""
 
 import os
-import shutil
 from collections import defaultdict
 from collections.abc import Callable
 from typing import ClassVar, Literal
@@ -157,14 +156,6 @@ class MapInWild(NonGeoDataset):
                     sha256=self.sha256s[os.path.split(modality_link)[-1]],
                 )
 
-            # Merge modalities downloaded in two parts
-            if (
-                download
-                and mode not in os.listdir(self.root)
-                and len(self.modality_urls[mode]) == 2
-            ):
-                self._merge_parts(mode)
-
         # Masks will be loaded separately in the :meth:`__getitem__`
         if 'mask' in self.modality:
             self.modality.remove('mask')
@@ -225,7 +216,13 @@ class MapInWild(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        with rasterio.open(os.path.join(self.root, source, f'{filename}.tif')) as f:
+        # Modalities downloaded in two parts are extracted to separate folders
+        for folder in [source, f'{source}_part1', f'{source}_part2']:
+            path = os.path.join(self.root, folder, f'{filename}.tif')
+            if os.path.exists(path):
+                break
+
+        with rasterio.open(path) as f:
             array = f.read()
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
@@ -289,32 +286,6 @@ class MapInWild(NonGeoDataset):
         """
         filepath = os.path.join(self.root, os.path.split(path)[1])
         extract_archive(filepath)
-
-    def _merge_parts(self, modality: str) -> None:
-        """Merge the modalities that are downloaded and extracted in two parts.
-
-        Args:
-            root: root directory where dataset can be found
-            modality: the filename of the modality
-        """
-        # Create a new folder named after the 'modality' variable
-        modality_folder = os.path.join(self.root, modality)
-        # Will not raise an error if the folder already exists
-        os.makedirs(modality_folder, exist_ok=True)
-
-        # List of source folders
-        source_folders = [
-            os.path.join(self.root, modality + '_part1'),
-            os.path.join(self.root, modality + '_part2'),
-        ]
-
-        # Move files from each source folder to the new 'modality' folder
-        for source_folder in source_folders:
-            for file_name in os.listdir(source_folder):
-                source = os.path.join(source_folder, file_name)
-                destination = os.path.join(modality_folder, file_name)
-                if os.path.isfile(source):
-                    shutil.copy(source, destination)  # Move files to 'modality' folder
 
     def _convert_to_color(
         self, arr_2d: Tensor, cmap: dict[int, tuple[int, int, int]]
