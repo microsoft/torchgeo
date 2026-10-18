@@ -311,7 +311,6 @@ class Conv3dLSTM(ConvLSTM):
         head_kernel_size: int = 1,
         output_mode: Literal['pixel', 'chip'] = 'pixel',
         return_sequence: bool = False,
-        pooling: Literal['avg', 'max'] = 'avg',
     ) -> None:
         """Initialize a new Conv3dLSTM model.
 
@@ -331,7 +330,6 @@ class Conv3dLSTM(ConvLSTM):
             head_kernel_size: Kernel size for the prediction head.
             output_mode: Whether to return per-pixel maps or chip-level outputs.
             return_sequence: If ``True``, return predictions for every timestep.
-            pooling: Pooling method used when ``output_mode='chip'``.
         Raises:
             ValueError: If an unsupported option or even kernel size is provided.
         """
@@ -353,9 +351,6 @@ class Conv3dLSTM(ConvLSTM):
         if output_mode not in {'pixel', 'chip'}:
             raise ValueError("output_mode must be 'pixel' or 'chip'.")
 
-        if pooling not in {'avg', 'max'}:
-            raise ValueError("pooling must be 'avg' or 'max'.")
-
         super().__init__(
             input_dim=conv3d_dim,
             hidden_dim=hidden_dim,
@@ -374,7 +369,6 @@ class Conv3dLSTM(ConvLSTM):
         self.num_outputs = num_outputs
         self.output_mode = output_mode
         self.return_sequence = return_sequence
-        self.pooling = pooling
 
         conv3d_padding = (
             conv3d_kernel_size_tuple[0] // 2,
@@ -388,12 +382,6 @@ class Conv3dLSTM(ConvLSTM):
             padding=conv3d_padding,
             bias=bias,
         )
-
-        match pooling:
-            case 'avg':
-                self.pool = nn.AdaptiveAvgPool2d(1)
-            case 'max':
-                self.pool = nn.AdaptiveMaxPool2d(1)
 
     def forward_features(
         self,
@@ -439,29 +427,6 @@ class Conv3dLSTM(ConvLSTM):
         batch_idx = torch.arange(layer_output.size(0), device=idx.device)
         return layer_output[batch_idx, idx]
 
-    def _format_output(self, output: torch.Tensor) -> torch.Tensor:
-        """Format pixel-level or chip-level output.
-
-        Args:
-            output: Prediction map of shape (B, C, H, W) or (B, T, C, H, W).
-
-        Returns:
-            Prediction tensor formatted according to ``output_mode``.
-        """
-        if self.output_mode == 'pixel':
-            return output
-
-        if output.ndim == 5:
-            b, t, c, h, w = output.shape
-            output = output.reshape(b * t, c, h, w)
-            output = self.pool(output).flatten(1)
-            return output.reshape(b, t, c)
-
-        if output.ndim == 4:
-            return self.pool(output).flatten(1)
-
-        return output
-
     def forward(
         self,
         input_tensor: torch.Tensor,
@@ -498,4 +463,4 @@ class Conv3dLSTM(ConvLSTM):
             features = self._select_features(layer_output, lengths=lengths)
             output = self.head(features)
 
-        return self._format_output(output)
+        return output
