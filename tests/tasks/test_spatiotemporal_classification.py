@@ -11,12 +11,13 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.tasks import SpatioTemporalClassification
 
-pytest.importorskip('h5py', minversion='3.10')
-
 
 class TestSpatioTemporalClassificationTask:
     @pytest.mark.parametrize('name', ['quakeset_classification'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
+        if 'quakeset' in name:
+            pytest.importorskip('h5py', minversion='3.10')
+
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         args = [

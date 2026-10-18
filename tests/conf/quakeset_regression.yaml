@@ -10,3 +10,4 @@ data:
     batch_size: 2
   dict_kwargs:
     root: 'tests/data/quakeset'
+    task: 'regression'

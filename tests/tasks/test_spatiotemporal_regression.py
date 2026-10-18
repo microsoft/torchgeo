@@ -11,15 +11,13 @@ from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.tasks import SpatioTemporalRegression
 
-# Temporarily set target_key to 'magnitude'
-SpatioTemporalRegression.target_key = 'magnitude'
-
-pytest.importorskip('h5py', minversion='3.10')
-
 
 class TestSpatioTemporalRegressionTask:
     @pytest.mark.parametrize('name', ['quakeset_regression'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
+        if 'quakeset' in name:
+            pytest.importorskip('h5py', minversion='3.10')
+
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         args = [
@@ -63,7 +61,7 @@ class TestSpatioTemporalRegressionTask:
         task = SpatioTemporalRegression(in_channels=3, loss=loss)
         batch = {
             'image': torch.randn(2, 4, 3, 16, 16),
-            'magnitude': torch.randn(2),
+            'label': torch.randn(2),
             'length': torch.tensor([4, 4]),
         }
         try:

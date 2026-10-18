@@ -86,6 +86,7 @@ class QuakeSet(NonGeoDataset):
         transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = True,
+        task: Literal['classification', 'regression'] = 'classification',
     ) -> None:
         """Initialize a new QuakeSet dataset instance.
 
@@ -114,6 +115,7 @@ class QuakeSet(NonGeoDataset):
         self.filepath = os.path.join(root, self.filename)
         self._verify()
         self.data = self._load_data()
+        self.task = task
 
     def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
@@ -128,7 +130,10 @@ class QuakeSet(NonGeoDataset):
         label = torch.tensor(self.data[index]['label'])
         magnitude = torch.tensor(self.data[index]['magnitude'])
 
-        sample = {'image': image, 'label': label, 'magnitude': magnitude}
+        sample = {
+            'image': image,
+            'label': label if self.task == 'classification' else magnitude,
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
