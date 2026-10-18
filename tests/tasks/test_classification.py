@@ -16,10 +16,11 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
+    COWCCountingDataModule,
     EuroSATDataModule,
     MisconfigurationException,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, COWCCounting, EuroSAT, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import Classification
@@ -40,6 +41,11 @@ class ClassificationTestModel(Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         return x
+
+
+class PredictBinaryDataModule(COWCCountingDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = COWCCounting(split='test', **self.kwargs)
 
 
 class PredictMulticlassDataModule(EuroSATDataModule):
@@ -71,6 +77,7 @@ class TestClassification:
             'bigearthnet_all',
             'bigearthnet_s1',
             'bigearthnet_s2',
+            'cowc_counting',
             'dlrsd_multilabel',
             'dlrsd_multilabel_no_val',
             'eurosat',
@@ -228,6 +235,21 @@ class TestClassification:
             max_epochs=1,
         )
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_binary_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictBinaryDataModule(
+            root='tests/data/cowc_counting', batch_size=1, num_workers=0, checksum=False
+        )
+        model = Classification(
+            model='resnet18', in_channels=3, task='binary', loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
 
     def test_multiclass_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictMulticlassDataModule(
