@@ -41,7 +41,7 @@ jobs:
           PYTEST_WORKERS: ${{ runner.os == 'macOS' && '2' || 'auto' }}
           TORCHGEO_USE_BFLOAT16: ${{ runner.os == 'macOS' && 'true' || 'false' }}
         run: |
-          OMP_NUM_THREADS=1 pytest -n "$PYTEST_WORKERS" --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest -n "$PYTEST_WORKERS" --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1
@@ -68,7 +68,7 @@ jobs:
         run: uv tree
       - name: Run checks
         run: |
-          OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1
@@ -96,7 +96,7 @@ jobs:
         run: uv tree
       - name: Run checks
         run: |
-          OMP_NUM_THREADS=1 pytest -n auto --dist loadgroup --cov=torchgeo --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v7.1.1

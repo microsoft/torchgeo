@@ -190,7 +190,7 @@ show_missing = true
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
-addopts = "-m 'not slow' --disable-socket"
+addopts = "-m 'not slow' --disable-socket -n auto --dist loadgroup"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control
