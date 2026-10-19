@@ -7,6 +7,7 @@ Welcome to the TorchGeo user documentation. Here you'll find guides on installat
    :maxdepth: 2
 
    installation
+   faq
    contributing
    glossary
    alternatives
