@@ -4,7 +4,7 @@
 """Mixins for dataset classes."""
 
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -28,14 +28,14 @@ class PlottingMixin:
     #: Names of RGB bands in the dataset
     rgb_bands: tuple[str, ...] = ()
 
-    #: Color map for the dataset
-    cmap: str | Colormap | None = None
-
     #: Names of bands in the dataset
     bands: tuple[str, ...] = ()
 
     #: Names of classes in the dataset
-    classes: Sequence[Any] | None = None
+    classes: Sequence[object] | None = None
+
+    #: Color map for the dataset
+    cmap: str | Colormap | None = None
 
     def plot(
         self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
@@ -81,9 +81,9 @@ class PlottingMixin:
         if 'label' in sample:
             if sample['label'].dim() == 0:
                 # Multiclass classification
-                label: Any = self.classes[sample['label']]
+                label = self.classes[int(sample['label'].item())]
                 if 'prediction' in sample:
-                    prediction: Any = self.classes[sample['prediction']]
+                    prediction = self.classes[int(sample['prediction'].item())]
             else:
                 # Multilabel classification
                 label = sample['label'].numpy().nonzero()[0]
@@ -121,7 +121,7 @@ class PlottingMixin:
                 # Semantic segmentation
                 kwargs |= {
                     'vmin': 0,
-                    'vmax': len(cast(Sequence[object], self.classes)) - 1,
+                    'vmax': len(self.classes) - 1,
                     'interpolation': 'none',
                 }
             mask = sample['mask']
