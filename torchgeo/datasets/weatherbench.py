@@ -192,7 +192,7 @@ class WeatherBench2(GeoDataset):
         # Target
         nrows = 1
         target = sample[f'target_{var}']
-        match self.data[var].ndim:
+        match target.ndim:
             case 3:
                 target = torch.mean(target, dim=0)  # T Y X -> Y Z
             case 4:
@@ -204,7 +204,7 @@ class WeatherBench2(GeoDataset):
         if f'prediction_{var}' in sample:
             nrows = 3
             prediction = sample[f'prediction_{var}']
-            match self.data[var].ndim:
+            match prediction.ndim:
                 case 3:
                     prediction = torch.mean(prediction, dim=0)  # T Y X -> Y Z
                 case 4:
