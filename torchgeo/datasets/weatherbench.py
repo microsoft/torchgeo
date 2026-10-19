@@ -129,6 +129,8 @@ class WeatherBench2(GeoDataset):
 
         Args:
             index: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+                The last *target_steps* time steps will be used as the 'target', the
+                rest will be used as the 'input'.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
@@ -145,22 +147,22 @@ class WeatherBench2(GeoDataset):
         data = self.data.sel(time=t, latitude=y, longitude=x, level=self.level)
 
         sample = {}
-        times = {
+        windows = {
             'input': slice(-self.target_steps),
             'target': slice(-self.target_steps, None),
         }
-        for split, slc in times.items():
-            data_split = data.isel(time=slc)
+        for role, time_slice in windows.items():
+            data_window = data.isel(time=time_slice)
 
             # https://microsoft.github.io/aurora/batch.html#batch-metadata
             sample |= {
-                f'{split}_time': torch.tensor(data_split.time.values.astype(float)),
-                f'{split}_latitude': torch.tensor(data_split.latitude.values),
-                f'{split}_longitude': torch.tensor(data_split.longitude.values),
-                f'{split}_level': torch.tensor(data_split.level.values),
+                f'{role}_time': torch.tensor(data_window.time.values.astype(float)),
+                f'{role}_latitude': torch.tensor(data_window.latitude.values),
+                f'{role}_longitude': torch.tensor(data_window.longitude.values),
+                f'{role}_level': torch.tensor(data_window.level.values),
             }
             for var in self.data_vars:
-                sample[f'{split}_{var}'] = torch.tensor(data_split[var].values)
+                sample[f'{role}_{var}'] = torch.tensor(data_window[var].values)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
