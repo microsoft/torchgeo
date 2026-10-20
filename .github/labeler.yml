@@ -11,6 +11,9 @@ datasets:
 losses:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/losses/**'
+metrics:
+  - changed-files:
+      - any-glob-to-any-file: 'torchgeo/metrics/**'
 models:
   - changed-files:
       - any-glob-to-any-file: 'torchgeo/models/**'

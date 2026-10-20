@@ -21,6 +21,9 @@ changelog:
     - title: Losses
       labels:
         - losses
+    - title: Metrics
+      labels:
+        - metrics
     - title: Models
       labels:
         - models
