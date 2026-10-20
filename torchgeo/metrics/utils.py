@@ -32,13 +32,19 @@ def latitude_weights(latitude: Tensor) -> Tensor:
     Returns:
         Relative area of each grid cell.
 
+    Raises:
+        AssertionError: If *latitude* is not in ascending order.
+
     .. versionadded:: 0.11
     """
     # Reference implementation:
     # https://github.com/google-research/weatherbench2/blob/main/weatherbench2/metrics.py
 
+    assert (torch.diff(latitude) > 0).all()
+
     theta = torch.deg2rad(latitude)
-    bounds = torch.cat([-torch.pi / 2, (theta[:-1] + theta[1:]) / 2, torch.pi / 2])
+    pi_over_2 = torch.tensor([torch.pi / 2])
+    bounds = torch.cat([-pi_over_2, (theta[:-1] + theta[1:]) / 2, pi_over_2])
     upper = bounds[1:]
     lower = bounds[:-1]
     weights = torch.sin(upper) - torch.sin(lower)

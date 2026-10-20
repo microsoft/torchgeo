@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import einops
 import torch
 from torch import Tensor
 from torchmetrics import Metric
@@ -45,7 +46,7 @@ class MeanSquaredError(Metric):
     full_state_update = False
     plot_lower_bound = 0.0
 
-    sum_squared_error: Tensor
+    sse: Tensor
     total: Tensor
 
     def __init__(
@@ -66,7 +67,7 @@ class MeanSquaredError(Metric):
         """
         super().__init__(**kwargs)
 
-        self.weights = latitude_weights(latitude)
+        self.weights = einops.rearrange(latitude_weights(latitude), 'y -> y 1')
         self.squared = squared
 
         self.add_state('sse', default=torch.zeros(num_outputs), dist_reduce_fx='sum')
