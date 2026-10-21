@@ -174,7 +174,7 @@ class ConvLSTM(nn.Module):
 
         self.cell_list = nn.ModuleList(cell_list)
         padding = head_kernel_size // 2
-        self.head = nn.Conv2d(
+        self.head: nn.Module = nn.Conv2d(
             in_channels=self.hidden_dim[-1],
             out_channels=self.num_classes,
             kernel_size=head_kernel_size,
