@@ -3,6 +3,7 @@
 
 import pytest
 import torch
+from matplotlib import pyplot as plt
 
 from torchgeo.metrics import MeanSquaredError
 
@@ -36,3 +37,13 @@ def test_rmse(dims: tuple[int, ...]) -> None:
     mse = metric1.compute()
     rmse = metric2.compute()
     assert torch.allclose(torch.sqrt(mse), rmse)
+
+
+@pytest.mark.parametrize('dims', [(), (T,)])
+def test_plot(dims: tuple[int, ...]) -> None:
+    preds = torch.rand(B, *dims, Y, X)
+    target = torch.rand(B, *dims, Y, X)
+    metric = MeanSquaredError(latitude, dims)
+    metric.update(preds, target)
+    metric.plot()
+    plt.close()

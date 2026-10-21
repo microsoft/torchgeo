@@ -3,10 +3,13 @@
 
 """Mean Squared Error (MSE)."""
 
+from collections.abc import Sequence
 from typing import Any
 
 import einops
 import torch
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import Metric
 
@@ -94,3 +97,20 @@ class MeanSquaredError(Metric):
             return mse
         else:
             return torch.sqrt(mse)
+
+    def plot(
+        self, val: Tensor | Sequence[Tensor] | None = None, ax: Axes | None = None
+    ) -> tuple[Figure, Axes]:
+        """Plot a single or multiple values from the metric.
+
+        Args:
+            val: The output of :meth:`MeanSquaredError.forward` or
+                :meth:`MeanSquaredError.compute` or a list of these results. If *val* is
+                not provided, will automatically call :meth:`MeanSquaredError.compute`
+                and plot that result.
+            ax: A matplotlib axis object. If provided will add plot to that axis.
+
+        Returns:
+            The resulting figure and axis.
+        """
+        return self._plot(val, ax)
