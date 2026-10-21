@@ -21,8 +21,8 @@ def test_mse(dims: tuple[int, ...]) -> None:
     target = torch.zeros(B, *dims, Y, X)
     expected = torch.ones(dims)
     metric = MeanSquaredError(latitude, dims)
-    metric.update(preds, target)
-    mse = metric.compute()
+    metric.update(preds, target)  # ty: ignore[invalid-argument-type]
+    mse = metric.compute()  # ty: ignore[missing-argument]
     assert torch.allclose(mse, expected)
 
 
@@ -32,10 +32,10 @@ def test_rmse(dims: tuple[int, ...]) -> None:
     target = torch.rand(B, *dims, Y, X)
     metric1 = MeanSquaredError(latitude, dims, squared=True)
     metric2 = MeanSquaredError(latitude, dims, squared=False)
-    metric1.update(preds, target)
-    metric2.update(preds, target)
-    mse = metric1.compute()
-    rmse = metric2.compute()
+    metric1.update(preds, target)  # ty: ignore[invalid-argument-type]
+    metric2.update(preds, target)  # ty: ignore[invalid-argument-type]
+    mse = metric1.compute()  # ty: ignore[missing-argument]
+    rmse = metric2.compute()  # ty: ignore[missing-argument]
     assert torch.allclose(torch.sqrt(mse), rmse)
 
 
@@ -44,6 +44,6 @@ def test_plot(dims: tuple[int, ...]) -> None:
     preds = torch.rand(B, *dims, Y, X)
     target = torch.rand(B, *dims, Y, X)
     metric = MeanSquaredError(latitude, dims)
-    metric.update(preds, target)
+    metric.update(preds, target)  # ty: ignore[invalid-argument-type]
     metric.plot()
     plt.close()

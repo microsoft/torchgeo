@@ -104,13 +104,12 @@ class MeanSquaredError(Metric):
         """Plot a single or multiple values from the metric.
 
         Args:
-            val: The output of :meth:`MeanSquaredError.forward` or
-                :meth:`MeanSquaredError.compute` or a list of these results. If *val* is
-                not provided, will automatically call :meth:`MeanSquaredError.compute`
-                and plot that result.
+            val: The output of :meth:`MeanSquaredError.compute` or a list of these
+                results. If *val* is not provided, will automatically call
+                :meth:`MeanSquaredError.compute` and plot that result.
             ax: A matplotlib axis object. If provided will add plot to that axis.
 
         Returns:
             The resulting figure and axis.
         """
-        return self._plot(val, ax)
+        return self._plot(val, ax)  # ty: ignore[invalid-return-type]
