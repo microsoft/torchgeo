@@ -4,7 +4,7 @@
 * @adamjstewart
 
 # Components
-callbacks/ @calebrob6 @adamjstewart
+callbacks/ @calebrob6
 datamodules/ @nilsleh @robmarkcole
 datasets/ @nilsleh @adamjstewart
 losses/ @calebrob6 @adamjstewart
