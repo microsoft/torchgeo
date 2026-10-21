@@ -40,10 +40,10 @@ def latitude_weights(latitude: Tensor) -> Tensor:
     # Reference implementation:
     # https://github.com/google-research/weatherbench2/blob/main/weatherbench2/metrics.py
 
-    assert (torch.diff(latitude) > 0).all()
+    assert (torch.diff(latitude) > 0).all(), 'latitude must be in ascending order'
 
     theta = torch.deg2rad(latitude)
-    pi_over_2 = torch.tensor([torch.pi / 2])
+    pi_over_2 = torch.tensor([torch.pi / 2], dtype=theta.dtype, device=theta.device)
     bounds = torch.cat([-pi_over_2, (theta[:-1] + theta[1:]) / 2, pi_over_2])
     upper = bounds[1:]
     lower = bounds[:-1]
