@@ -35,7 +35,6 @@ Path(labels_file).touch()
 data = np.random.randint(
     SENTINEL2_MAX, size=(NUM_SAMPLES, 1, SIZE, SIZE, NUM_CHANNELS), dtype=np.int16
 )
-data = data.astype(np.float64)
 gt = np.random.randint(NUM_CLASSES, size=(NUM_SAMPLES, SIZE, SIZE, 1), dtype=np.int16)
 gt_instance = np.random.randint(
     NUM_CLASSES, size=(NUM_SAMPLES, SIZE, SIZE, 1), dtype=np.int32
