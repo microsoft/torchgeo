@@ -129,16 +129,6 @@ class TestChesapeakeCVPR:
                 ),
             },
         )
-        monkeypatch.setattr(
-            ChesapeakeCVPR,
-            '_files',
-            {
-                'base': ('de_1m_2013_extended-debuffered-test_tiles',),
-                'prior_extension': (
-                    'de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-                ),
-            },
-        )
         root = tmp_path
         transforms = nn.Identity()
         return ChesapeakeCVPR(

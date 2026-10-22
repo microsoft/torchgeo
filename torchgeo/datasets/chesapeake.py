@@ -512,7 +512,7 @@ class ChesapeakeCVPR(UnionDataset):
         'prior_from_cooccurrences_101_31_no_osm_no_buildings',
     )
     states = ('de', 'md', 'va', 'wv', 'pa', 'ny')
-    splits = (
+    valid_splits = (
         [f'{state}-train' for state in states]
         + [f'{state}-val' for state in states]
         + [f'{state}-test' for state in states]
@@ -520,41 +520,6 @@ class ChesapeakeCVPR(UnionDataset):
 
     # the layer that is only distributed in the prior extension archive
     prior_layer = 'prior_from_cooccurrences_101_31_no_osm_no_buildings'
-
-    # these are used to check the integrity of each subdataset
-    _files: ClassVar[dict[str, tuple[str, ...]]] = {
-        'base': (
-            'de_1m_2013_extended-debuffered-test_tiles',
-            'de_1m_2013_extended-debuffered-train_tiles',
-            'de_1m_2013_extended-debuffered-val_tiles',
-            'md_1m_2013_extended-debuffered-test_tiles',
-            'md_1m_2013_extended-debuffered-train_tiles',
-            'md_1m_2013_extended-debuffered-val_tiles',
-            'ny_1m_2013_extended-debuffered-test_tiles',
-            'ny_1m_2013_extended-debuffered-train_tiles',
-            'ny_1m_2013_extended-debuffered-val_tiles',
-            'pa_1m_2013_extended-debuffered-test_tiles',
-            'pa_1m_2013_extended-debuffered-train_tiles',
-            'pa_1m_2013_extended-debuffered-val_tiles',
-            'va_1m_2014_extended-debuffered-test_tiles',
-            'va_1m_2014_extended-debuffered-train_tiles',
-            'va_1m_2014_extended-debuffered-val_tiles',
-            'wv_1m_2014_extended-debuffered-test_tiles',
-            'wv_1m_2014_extended-debuffered-train_tiles',
-            'wv_1m_2014_extended-debuffered-val_tiles',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
-            'spatial_index.geojson',
-        ),
-        'prior_extension': (
-            'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
-        ),
-    }
 
     def __init__(
         self,
@@ -591,10 +556,11 @@ class ChesapeakeCVPR(UnionDataset):
            The prior extension archive is no longer needed unless
            ``"prior_from_cooccurrences_101_31_no_osm_no_buildings"`` is requested.
         """
-        assert set(splits) <= set(self.splits)
+        assert set(splits) <= set(self.valid_splits)
         assert set(layers) <= set(self.valid_layers)
 
         self.root = root
+        self.splits = splits
         self.layers = layers
         self.transforms = transforms
         self.cache = cache
@@ -633,15 +599,16 @@ class ChesapeakeCVPR(UnionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
 
-        def exists(filename: Path) -> bool:
-            return os.path.exists(os.path.join(self.root, filename))
-
         # Check if the extracted files already exist
-        if all(
-            exists(filename)
-            for subdataset in self.subdatasets
-            for filename in self._files[subdataset]
-        ):
+        exists = True
+        for split in self.splits:
+            state, split_type = split.split('-')
+            for layer in self.layers:
+                path = os.path.join(
+                    self.root, '**', f'{state}_*-{split_type}_tiles', f'm_*{layer}.tif'
+                )
+                exists &= bool(glob.glob(path, recursive=True))
+        if exists:
             return
 
         # Check if the zip files have already been downloaded
