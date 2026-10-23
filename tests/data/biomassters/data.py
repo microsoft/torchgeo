@@ -75,8 +75,7 @@ if __name__ == '__main__':
     csv_rows = []
     for split in splits:
         os.makedirs(f'{split}_features', exist_ok=True)
-        if split == 'train':
-            os.makedirs('train_agbm', exist_ok=True)
+        os.makedirs(f'{split}_agbm', exist_ok=True)
         for id in sample_ids:
             for sat in satellite:
                 path = id + '_' + str(sat)
@@ -111,12 +110,11 @@ if __name__ == '__main__':
                         create_tif_file(file_path, num_channels=11, dtype='uint16')
 
             # create target data one per id
-            if split == 'train':
-                create_tif_file(
-                    os.path.join(f'{split}_agbm', id + '_agbm.tif'),
-                    num_channels=1,
-                    dtype='float32',
-                )
+            create_tif_file(
+                os.path.join(f'{split}_agbm', id + '_agbm.tif'),
+                num_channels=1,
+                dtype='float32',
+            )
 
     # write out metadata
 
@@ -127,6 +125,6 @@ if __name__ == '__main__':
             wr.writerow(row)
 
     # zip up feature and target folders
-    zip_dirs = ['train_features', 'test_features', 'train_agbm']
+    zip_dirs = ['train_features', 'test_features', 'train_agbm', 'test_agbm']
     for dir in zip_dirs:
         shutil.make_archive(dir, 'zip', dir)

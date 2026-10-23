@@ -1,0 +1,13 @@
+model:
+  class_path: SpatioTemporalPixelwiseRegression
+  init_args:
+    in_channels: 15
+  dict_kwargs:
+    hidden_dim: 8
+data:
+  class_path: BioMasstersDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/biomassters'
+    val_split_pct: 0.5

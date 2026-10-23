@@ -8,6 +8,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datasets import BioMassters, DatasetNotFoundError
@@ -27,6 +28,11 @@ class TestBioMassters:
     def test_len_of_ds(self, dataset: BioMassters) -> None:
         assert len(dataset) > 0
 
+    def test_getitem(self, dataset: BioMassters) -> None:
+        sample = dataset[0]
+        assert sample['image'].dtype == torch.float32
+        assert sample['mask'].dtype == torch.float32
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BioMassters(tmp_path)
@@ -36,8 +42,7 @@ class TestBioMassters:
         plt.close()
 
         sample = dataset[0]
-        if dataset.split == 'train':
-            sample['prediction'] = sample['label']
+        sample['prediction'] = sample['mask']
         dataset.plot(sample)
         plt.close()
         dataset.plot(sample, show_titles=False)

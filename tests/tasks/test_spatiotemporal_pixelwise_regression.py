@@ -15,7 +15,7 @@ from torchgeo.tasks import SpatioTemporalPixelwiseRegression
 
 
 class TestSpatioTemporalPixelwiseRegression:
-    @pytest.mark.parametrize('name', ['copernicus_biomass_s3_ts'])
+    @pytest.mark.parametrize('name', ['biomassters', 'copernicus_biomass_s3_ts'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 

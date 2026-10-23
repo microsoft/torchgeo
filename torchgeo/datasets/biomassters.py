@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Literal
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
@@ -57,6 +57,7 @@ class BioMassters(NonGeoDataset):
 
     valid_splits = ('train', 'test')
     valid_sensors = ('S1', 'S2')
+    channel_counts: ClassVar[dict[str, int]] = {'S1': 4, 'S2': 11}
 
     metadata_filename = 'biomassters_features_metadata.csv'
 
@@ -64,7 +65,7 @@ class BioMassters(NonGeoDataset):
         self,
         root: Path = 'data',
         split: Literal['train', 'test'] = 'train',
-        sensors: Sequence[Literal['S1', 'S2']] = ['S1', 'S2'],
+        sensors: Sequence[Literal['S1', 'S2']] = ('S1', 'S2'),
         as_time_series: bool = False,
     ) -> None:
         """Initialize a new instance of BioMassters dataset.
@@ -94,7 +95,7 @@ class BioMassters(NonGeoDataset):
         assert set(sensors).issubset(set(self.valid_sensors)), (
             f'Please choose a subset of valid sensors: {self.valid_sensors}.'
         )
-        self.sensors = sensors
+        self.sensors = tuple(sensors)
         self.as_time_series = as_time_series
 
         self._verify()
@@ -144,23 +145,26 @@ class BioMassters(NonGeoDataset):
         Raises:
             IndexError: if index is out of range of the dataset
         """
-        sample_df = self.df[self.df['num_index'] == index].copy()
+        sample_df = self.df[self.df['num_index'] == index]
 
-        # sort by satellite and month to return correct order
-        sample_df.sort_values(
-            by=['satellite', 'num_month'], inplace=True, ascending=True
-        )
-
-        filepaths = sample_df['filename'].tolist()
-        sample: Sample = {}
-        for sens in self.sensors:
-            sens_filepaths = [fp for fp in filepaths if sens in fp]
-            sample[f'image_{sens}'] = self._load_input(sens_filepaths)
-
-        if self.split == 'train':
-            sample['label'] = self._load_target(
-                sample_df['corresponding_agbm'].unique()[0]
+        images = []
+        for sensor in self.sensors:
+            sensor_df = sample_df[sample_df['satellite'] == sensor].sort_values(
+                'num_month'
             )
+            image = self._load_input(sensor_df['filename'].tolist())
+            if self.as_time_series:
+                padded = image.new_zeros((12, *image.shape[1:]))
+                padded[sensor_df['num_month'].tolist()] = image
+                image = padded
+            images.append(image)
+
+        sample: Sample = {
+            'image': torch.cat(images, dim=1 if self.as_time_series else 0)
+        }
+        sample['mask'] = self._load_target(
+            sample_df['corresponding_agbm'].unique()[0]
+        ).squeeze(dim=0)
 
         return sample
 
@@ -192,7 +196,7 @@ class BioMassters(NonGeoDataset):
             arr = np.stack(arr_list, axis=0)
         else:
             arr = np.concatenate(arr_list, axis=0)
-        return torch.tensor(arr.astype(np.int32))
+        return torch.from_numpy(arr).float()
 
     def _load_target(self, filename: Path) -> Tensor:
         """Load the target mask at the index.
@@ -203,7 +207,9 @@ class BioMassters(NonGeoDataset):
         Returns:
             target mask
         """
-        with rasterio.open(os.path.join(self.root, 'train_agbm', filename), 'r') as src:
+        with rasterio.open(
+            os.path.join(self.root, f'{self.split}_agbm', filename), 'r'
+        ) as src:
             arr: np.typing.NDArray[np.float64] = src.read()
 
         target = torch.from_numpy(arr).float()
@@ -214,7 +220,11 @@ class BioMassters(NonGeoDataset):
         # Check if the extracted files already exist
         exists = []
 
-        filenames = [f'{self.split}_features', self.metadata_filename]
+        filenames = [
+            f'{self.split}_features',
+            f'{self.split}_agbm',
+            self.metadata_filename,
+        ]
         for filename in filenames:
             pathname = os.path.join(self.root, filename)
             exists.append(os.path.exists(pathname))
@@ -236,18 +246,21 @@ class BioMassters(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        ncols = len(self.sensors) + 1
-
         showing_predictions = 'prediction' in sample
-        if showing_predictions:
-            ncols += 1
+        ncols = len(self.sensors) + showing_predictions + ('mask' in sample)
 
-        fig, axs = plt.subplots(1, ncols=ncols, figsize=(5 * ncols, 10))
-        for idx, sens in enumerate(self.sensors):
-            img = sample[f'image_{sens}'].float()
-            if self.as_time_series:
-                # plot last time step
-                img = img[-1, ...]
+        fig, axs_array = plt.subplots(
+            1, ncols=ncols, figsize=(5 * ncols, 5), squeeze=False, layout='constrained'
+        )
+        axs = axs_array[0]
+        image = sample['image'].float()
+        if self.as_time_series:
+            image = image[-1]
+
+        channel_counts = [self.channel_counts[sensor] for sensor in self.sensors]
+        for idx, (sens, img) in enumerate(
+            zip(self.sensors, torch.split(image, channel_counts))
+        ):
             if sens == 'S2':
                 img = img[[2, 1, 0], ...]
                 img = quantile_normalization(einops.rearrange(img, 'c h w -> h w c'))
@@ -269,17 +282,17 @@ class BioMassters(NonGeoDataset):
                 axs[idx].set_title(sens)
 
         if showing_predictions:
-            pred = axs[ncols - 2].imshow(
-                sample['prediction'].permute(1, 2, 0), cmap='YlGn'
+            prediction_idx = len(self.sensors)
+            pred = axs[prediction_idx].imshow(
+                sample['prediction'].squeeze(), cmap='YlGn'
             )
-            plt.colorbar(pred, ax=axs[ncols - 2], fraction=0.046, pad=0.04)
-            axs[ncols - 2].axis('off')
+            plt.colorbar(pred, ax=axs[prediction_idx], fraction=0.046, pad=0.04)
+            axs[prediction_idx].axis('off')
             if show_titles:
-                axs[ncols - 2].set_title('Prediction')
+                axs[prediction_idx].set_title('Prediction')
 
-        # plot target / only available in train set
-        if 'label' in sample:
-            target = axs[-1].imshow(sample['label'].permute(1, 2, 0), cmap='YlGn')
+        if 'mask' in sample:
+            target = axs[-1].imshow(sample['mask'], cmap='YlGn')
             plt.colorbar(target, ax=axs[-1], fraction=0.046, pad=0.04)
             axs[-1].axis('Off')
             if show_titles:
