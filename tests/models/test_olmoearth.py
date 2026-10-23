@@ -183,6 +183,18 @@ class TestOlmoEarthBase:
     def test_olmoearth_weights(self, mocked_weights: OlmoEarthBase_Weights) -> None:
         olmoearth_base(weights=mocked_weights)
 
+    def test_olmoearth_training_only_heads(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+    ) -> None:
+        weights = OlmoEarthBase_Weights.V1_3
+        path = tmp_path / 'weights.pth'
+        state_dict = olmoearth_base(model_version='v1.3').model.state_dict()
+        state_dict['supervision_head.heads.cdl.weight'] = torch.zeros(1)
+        state_dict['location_token_distillation_head.weight'] = torch.zeros(1)
+        torch.save(state_dict, path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
+        olmoearth_base(weights=weights)
+
     @pytest.mark.slow
     def test_olmoearth_download(self, weights: OlmoEarthBase_Weights) -> None:
         olmoearth_base(weights=weights)

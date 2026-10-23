@@ -58,6 +58,11 @@ _olmoearth_sizes = {
     'large': {'model_size': 'large', 'embed_dim': 1024, 'depth': 24, 'num_heads': 16},
 }
 
+_olmoearth_training_only_prefixes = (
+    'supervision_head.',
+    'location_token_distillation_head.',
+)
+
 
 class OlmoEarthNano_Weights(WeightsEnum):
     """OlmoEarth Nano weights.
@@ -156,6 +161,7 @@ class OlmoEarthBase_Weights(WeightsEnum):
     * https://arxiv.org/abs/2511.13655
     * https://arxiv.org/abs/2605.20804v1
     * https://arxiv.org/abs/2605.20804
+    * https://allenai.org/papers/olmoearth-v1-3
 
     .. versionadded:: 0.11
     """
@@ -180,6 +186,13 @@ class OlmoEarthBase_Weights(WeightsEnum):
         meta=_olmoearth_meta
         | _olmoearth_sizes['base']
         | {'model_version': 'v1.2', 'hf_repo': 'allenai/OlmoEarth-v1_2-Base'},
+    )
+    V1_3 = Weights(
+        url='https://huggingface.co/allenai/OlmoEarth-v1_3-Base/resolve/9e9e918a369701c105dde7ef56789b0ff1d47f50/weights.pth',
+        transforms=_olmoearth_transforms,
+        meta=_olmoearth_meta
+        | _olmoearth_sizes['base']
+        | {'model_version': 'v1.3', 'hf_repo': 'allenai/OlmoEarth-v1_3-Base'},
     )
 
 
@@ -227,10 +240,15 @@ def _olmoearth(
         model_size=model_size, model_version=model_version, **kwargs
     )
     if weights:
-        model.model.load_state_dict(
-            weights.get_state_dict(progress=True, check_hash=True, weights_only=True),
-            strict=True,
+        state_dict = weights.get_state_dict(
+            progress=True, check_hash=True, weights_only=True
         )
+        state_dict = {
+            key: value
+            for key, value in state_dict.items()
+            if not key.startswith(_olmoearth_training_only_prefixes)
+        }
+        model.model.load_state_dict(state_dict, strict=True)
 
     return model
 
@@ -339,6 +357,7 @@ def olmoearth_base(
     * https://arxiv.org/abs/2511.13655
     * https://arxiv.org/abs/2605.20804v1
     * https://arxiv.org/abs/2605.20804
+    * https://allenai.org/papers/olmoearth-v1-3
 
     This model requires the following additional library to be installed:
 
