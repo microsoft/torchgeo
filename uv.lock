@@ -4020,7 +4020,7 @@ requires-dist = [
     { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.8.5" },
     { name = "netcdf4", marker = "extra == 'datasets'", specifier = ">=1.6.5" },
     { name = "numpy", specifier = ">=1.26" },
-    { name = "olmoearth-pretrain-minimal", marker = "extra == 'models'", specifier = ">=0.1.3" },
+    { name = "olmoearth-pretrain-minimal", marker = "extra == 'models'", specifier = ">=0.1.5" },
     { name = "packaging", marker = "extra == 'tests'", specifier = ">=21" },
     { name = "pandas", specifier = ">=2.1.1" },
     { name = "pandas", extras = ["parquet"], marker = "extra == 'datasets'", specifier = ">=2.1.1" },
