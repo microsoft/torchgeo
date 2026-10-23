@@ -18,5 +18,6 @@ OlmoEarthSmall_Weights.V1_2,`link <https://github.com/allenai/olmoearth_pretrain
 OlmoEarthBase_Weights.V1,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2511.13655>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 OlmoEarthBase_Weights.V1_1,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2605.20804v1>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 OlmoEarthBase_Weights.V1_2,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2605.20804>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
+OlmoEarthBase_Weights.V1_3,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://allenai.org/papers/olmoearth-v1-3>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 OlmoEarthLarge_Weights.V1,`link <https://github.com/allenai/olmoearth_pretrain>`__,`link <https://arxiv.org/abs/2511.13655>`__,OlmoEarth Artifact License,explicit,explicit,explicit,,,,,,,,,,,
 Tessera_Weights.TESSERA,`link <https://github.com/ucam-eo/tessera>`__,`link <https://arxiv.org/abs/2506.20380>`__,CC0-1.0,-,explicit,-,,,,,,,,,,,
