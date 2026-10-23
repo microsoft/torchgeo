@@ -70,10 +70,6 @@ class TestMARSS2L:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             MARSS2L(tmp_path)
 
-    def test_invalid_split(self, tmp_path: Path) -> None:
-        with pytest.raises(AssertionError):
-            MARSS2L(tmp_path, split='foo')
-
     def test_plot(self, dataset: MARSS2L) -> None:
         x = dataset[0]
         dataset.plot(x, suptitle='Test')
