@@ -64,6 +64,7 @@ class TestChangeDetection:
             'bright',
             'cabuar',
             'chabud',
+            'forestchange',
             'levircd',
             'levircdplus',
             'oscd',
