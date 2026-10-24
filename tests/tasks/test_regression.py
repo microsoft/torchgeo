@@ -69,8 +69,9 @@ class TestRegression:
             'skippd',
         ],
     )
+    @pytest.mark.parametrize('pinball', [False, True])
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool, pinball: bool
     ) -> None:
         if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
             pytest.importorskip('h5py', minversion='3.10')
@@ -91,6 +92,9 @@ class TestRegression:
             '--trainer.log_every_n_steps',
             '1',
         ]
+
+        if pinball:
+            args.extend(['--model.init_args.loss', 'pinball'])
 
         main(['fit', *args])
         try:
@@ -230,8 +234,9 @@ class TestPixelwiseRegression:
             'copernicus_biomass_s3',
         ],
     )
+    @pytest.mark.parametrize('pinball', [False, True])
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool, pinball: bool
     ) -> None:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -253,6 +258,9 @@ class TestPixelwiseRegression:
             '--trainer.log_every_n_steps',
             '1',
         ]
+
+        if pinball:
+            args.extend(['--model.init_args.loss', 'pinball'])
 
         main(['fit', *args])
         try:
@@ -359,3 +367,54 @@ class TestPixelwiseRegression:
 
     def test_vit_backbone(self) -> None:
         PixelwiseRegression(model='dpt', backbone='tu-vit_base_patch16_224')
+
+
+class TestQuantileRegression:
+    @pytest.fixture(params=[Regression, PixelwiseRegression])
+    def task_class(
+        self, request: pytest.FixtureRequest, monkeypatch: MonkeyPatch
+    ) -> type[Regression]:
+        monkeypatch.setattr(timm, 'create_model', TestRegression.create_model)
+        monkeypatch.setattr(smp, 'Unet', TestPixelwiseRegression.create_model)
+        return request.param
+
+    def test_steps(self, task_class: type[Regression]) -> None:
+        model = 'resnet18' if task_class is Regression else 'unet'
+        task = task_class(model=model, loss='pinball', quantiles=[0.5, 0.9, 0.1])
+        task.trainer = Trainer(accelerator='cpu', barebones=True)
+        with torch.no_grad():
+            for parameter in task.model.parameters():
+                parameter.zero_()
+            head = task.model.fc if task_class is Regression else task.model.conv1
+            head.bias.copy_(torch.tensor([1.0, 5.0, -1.0]))
+        shape = (2,) if task_class is Regression else (2, 2, 4)
+        batch = {
+            'image': torch.zeros(2, 3, 2, 4),
+            task.target_key: torch.full(shape, 2.0),
+        }
+
+        loss = task.training_step(batch, 0)
+        torch.testing.assert_close(loss, torch.tensor(1.1 / 3))
+        loss.backward()
+        torch.testing.assert_close(head.bias.grad, torch.tensor([-0.5, 0.1, -0.1]) / 3)
+        task.validation_step(batch, 0)
+        task.test_step(batch, 0)
+        for metrics in [task.train_metrics, task.val_metrics, task.test_metrics]:
+            for value in metrics.compute().values():
+                torch.testing.assert_close(value, torch.tensor(1.0))
+
+        predictions = task.predict_step(batch, 0)
+        expected = torch.tensor([1.0, 5.0, -1.0]).view(1, 3, *([1] * (len(shape) - 1)))
+        torch.testing.assert_close(predictions, expected.expand(2, 3, *shape[1:]))
+
+    @pytest.mark.parametrize('num_outputs,quantiles', [(2, [0.5]), (1, [0.1, 0.9])])
+    def test_invalid_config(
+        self, task_class: type[Regression], num_outputs: int, quantiles: list[float]
+    ) -> None:
+        with pytest.raises(ValueError, match='requires num_outputs=1 and quantile 0.5'):
+            task_class(
+                model='unet',
+                loss='pinball',
+                num_outputs=num_outputs,
+                quantiles=quantiles,
+            )
