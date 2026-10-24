@@ -28,8 +28,28 @@ class DetectionSample(TypedDict):
     mask: NotRequired[list[Tensor]]
 
 
+def _collate_optional(batch: list[Sample], key: str) -> list[Tensor]:
+    """Gather *key* from each sample, using an empty tensor where it is absent.
+
+    Args:
+        batch: list of sample dicts returned by a dataset
+        key: key to gather from each sample
+
+    Returns:
+        one tensor per sample, in batch order
+    """
+    # Match the dtype, device, and trailing shape of the samples that do have
+    # objects, so that an empty target concatenates with the rest.
+    template = next(sample[key] for sample in batch if key in sample)
+    empty = template.new_empty((0, *template.shape[1:]))
+    return [sample.get(key, empty) for sample in batch]
+
+
 def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
     """Custom collate fn for object detection and instance segmentation.
+
+    A batch may mix chips that have objects with chips that have none. Chips
+    with none are collated as empty tensors rather than dropped.
 
     Args:
         batch: list of sample dicts return by dataset
@@ -38,20 +58,26 @@ def collate_fn_detection(batch: list[Sample]) -> DetectionSample:
         collatted batch dict
 
     .. versionadded:: 0.6
+
+    .. versionchanged:: 0.11
+       Samples missing ``bbox_xyxy``, ``label``, or ``mask`` no longer raise a
+       :exc:`KeyError`.
     """
     collated: DetectionSample = {
         'image': torch.stack([sample['image'] for sample in batch])
     }
-    if 'bbox_xyxy' in batch[0]:
-        collated['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
-    if 'label' in batch[0]:
-        collated['label'] = [sample['label'] for sample in batch]
-    elif 'bbox_xyxy' in batch[0]:
-        collated['label'] = [
-            torch.tensor([1] * len(sample['bbox_xyxy'])) for sample in batch
+    if any('bbox_xyxy' in sample for sample in batch):
+        collated['bbox_xyxy'] = [
+            bbox.float() for bbox in _collate_optional(batch, 'bbox_xyxy')
         ]
-    if 'mask' in batch[0]:
-        collated['mask'] = [sample['mask'] for sample in batch]
+    if any('label' in sample for sample in batch):
+        collated['label'] = _collate_optional(batch, 'label')
+    elif 'bbox_xyxy' in collated:
+        collated['label'] = [
+            torch.tensor([1] * len(bbox)) for bbox in collated['bbox_xyxy']
+        ]
+    if any('mask' in sample for sample in batch):
+        collated['mask'] = _collate_optional(batch, 'mask')
     return collated
 
 

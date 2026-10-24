@@ -5,8 +5,9 @@ import re
 
 import numpy as np
 import pytest
+import torch
 
-from torchgeo.datamodules.utils import group_shuffle_split
+from torchgeo.datamodules.utils import collate_fn_detection, group_shuffle_split
 
 
 def test_group_shuffle_split() -> None:
@@ -44,3 +45,24 @@ def test_group_shuffle_split() -> None:
 
         assert len(set(train_indices1) & set(test_indices1)) == 0
         assert len(set(groups[train_indices1])) == 2
+
+
+def test_collate_fn_detection_negative_chips() -> None:
+    # A chip with no objects is missing the keys entirely, for example when a
+    # UnionDataset skips a VectorDataset that does not intersect the chip.
+    batch = [
+        {'image': torch.rand(3, 8, 8)},
+        {
+            'image': torch.rand(3, 8, 8),
+            'bbox_xyxy': torch.tensor([[0.0, 0.0, 4.0, 4.0]]),
+            'label': torch.tensor([1], dtype=torch.int32),
+            'mask': torch.ones(1, 8, 8, dtype=torch.uint8),
+        },
+    ]
+
+    collated = collate_fn_detection(batch)
+
+    assert collated['bbox_xyxy'][0].shape == (0, 4)
+    assert collated['label'][0].shape == (0,)
+    assert collated['mask'][0].shape == (0, 8, 8)
+    assert collated['bbox_xyxy'][1].shape == (1, 4)
