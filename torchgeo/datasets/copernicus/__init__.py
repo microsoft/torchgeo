@@ -110,6 +110,9 @@ class CopernicusBench(NonGeoDataset):
         """
         self.name = name
         self.dataset: CopernicusBenchBase = DATASET_REGISTRY[name](*args, **kwargs)
+        self.rgb_bands = self.dataset.rgb_bands
+        self.bands = self.dataset.bands
+        self.classes = self.dataset.classes
 
     def __len__(self) -> int:
         """Return the length of the dataset.
