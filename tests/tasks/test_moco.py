@@ -81,8 +81,50 @@ class TestMoCo:
     def test_grayscale_weights_tensor(self) -> None:
         weights = torch.ones(4)
         task = MoCo(in_channels=4, grayscale_weights=weights)
-        assert task.augmentation1 is not None
-        assert task.augmentation2 is not None
+        assert len(task.augmentations) == 2
+
+    def test_custom_augmentations(self) -> None:
+        augmentations = (torch.nn.Identity(), torch.nn.Identity())
+        task = MoCo(augmentations=augmentations)
+        assert task.augmentations[0] is augmentations[0]
+        assert task.augmentations[1] is augmentations[1]
+
+    def test_partial_custom_augmentations(self) -> None:
+        augmentation = torch.nn.Identity()
+        task = MoCo(augmentations=(augmentation, None))
+        assert task.augmentations[0] is augmentation
+        assert task.augmentations[1] is not None
+
+    def test_load_legacy_augmentation_state_dict(self) -> None:
+        task = MoCo()
+        state_dict = task.state_dict()
+        legacy_state_dict = {
+            key.replace('augmentations.0.', 'augmentation1.').replace(
+                'augmentations.1.', 'augmentation2.'
+            ): value
+            for key, value in state_dict.items()
+        }
+
+        task.load_state_dict(legacy_state_dict)
+
+    def test_deprecated_augmentations(self) -> None:
+        augmentation1 = torch.nn.Identity()
+        augmentation2 = torch.nn.Identity()
+        with pytest.warns(DeprecationWarning, match='augmentation1'):
+            task = MoCo(augmentation1=augmentation1, augmentation2=augmentation2)
+        with pytest.warns(DeprecationWarning, match='augmentation1'):
+            assert task.augmentation1 is augmentation1
+        with pytest.warns(DeprecationWarning, match='augmentation2'):
+            assert task.augmentation2 is augmentation2
+        replacement = torch.nn.Identity()
+        with pytest.warns(DeprecationWarning, match='augmentation1'):
+            task.augmentation1 = replacement
+        assert task.augmentations[0] is replacement
+
+    def test_conflicting_augmentations(self) -> None:
+        augmentations = (torch.nn.Identity(), torch.nn.Identity())
+        with pytest.raises(ValueError, match='cannot be combined'):
+            MoCo(augmentations=augmentations, augmentation1=torch.nn.Identity())
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:

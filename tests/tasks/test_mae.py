@@ -73,6 +73,38 @@ class TestMAE:
 
         main(['fit', *args])
 
+    def test_custom_augmentations(self) -> None:
+        augmentations = torch.nn.Identity()
+        task = MAE(augmentations=augmentations)
+        assert task.augmentations is augmentations
+
+    def test_deprecated_transform(self) -> None:
+        transform = torch.nn.Identity()
+        with pytest.warns(DeprecationWarning, match='transform'):
+            task = MAE(transform=transform)
+        with pytest.warns(DeprecationWarning, match='transform'):
+            assert task.transform is transform
+        replacement = torch.nn.Identity()
+        with pytest.warns(DeprecationWarning, match='transform'):
+            task.transform = replacement
+        assert task.augmentations is replacement
+
+    def test_conflicting_augmentations(self) -> None:
+        with pytest.raises(ValueError, match='cannot be combined'):
+            MAE(augmentations=torch.nn.Identity(), transform=torch.nn.Identity())
+
+    def test_load_legacy_augmentation_state_dict(self) -> None:
+        def create_task() -> MAE:
+            return MAE(augmentations=torch.nn.BatchNorm2d(3))
+
+        task = create_task()
+        legacy_state_dict = {
+            key.replace('augmentations.', 'transform.'): value
+            for key, value in task.state_dict().items()
+        }
+
+        create_task().load_state_dict(legacy_state_dict)
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ViTSmall16_Weights.SENTINEL2_ALL_MAE

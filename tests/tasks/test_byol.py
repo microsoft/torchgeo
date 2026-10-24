@@ -33,10 +33,62 @@ class TestBYOLModule:
         ).requires_grad_()
         model.conv1 = new_layer
         augment_fn = SimCLRAugmentation((2, 2))
-        BYOLModule(model, augment_fn=augment_fn)
+        with pytest.warns(DeprecationWarning, match='augment_fn'):
+            module = BYOLModule(model, augment_fn=augment_fn)
+        with pytest.warns(DeprecationWarning, match='augment'):
+            assert module.augment is augment_fn
+        replacement = SimCLRAugmentation((2, 2))
+        with pytest.warns(DeprecationWarning, match='augment'):
+            module.augment = replacement
+        assert module.augmentations is replacement
+
+    def test_custom_augmentations(self) -> None:
+        model = resnet18()
+        augmentations = SimCLRAugmentation((32, 32))
+        module = BYOLModule(
+            model, image_size=(32, 32), in_channels=3, augmentations=augmentations
+        )
+        assert module.augmentations is augmentations
+
+    def test_conflicting_augmentations(self) -> None:
+        model = resnet18()
+        augmentations = SimCLRAugmentation((32, 32))
+        with pytest.raises(ValueError, match='cannot be combined'):
+            BYOLModule(
+                model,
+                image_size=(32, 32),
+                in_channels=3,
+                augmentations=augmentations,
+                augment_fn=augmentations,
+            )
+
+    def test_load_legacy_augmentation_state_dict(self) -> None:
+        def create_module() -> BYOLModule:
+            return BYOLModule(
+                resnet18(),
+                image_size=(32, 32),
+                in_channels=3,
+                augmentations=nn.BatchNorm2d(3),
+            )
+
+        module = create_module()
+        legacy_state_dict = {
+            key.replace('augmentations.', 'augment.'): value
+            for key, value in module.state_dict().items()
+        }
+
+        create_module().load_state_dict(legacy_state_dict)
 
 
 class TestBYOL:
+    def test_custom_augmentations(self) -> None:
+        augmentations = nn.Identity()
+        task = BYOL(model='resnet18', augmentations=augmentations)
+        assert task.augmentations is augmentations
+        replacement = nn.Identity()
+        task.augmentations = replacement
+        assert task.model.augmentations is replacement
+
     @pytest.mark.parametrize(
         'name',
         [
