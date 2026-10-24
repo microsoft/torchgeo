@@ -10,6 +10,7 @@ Complete API documentation for all TorchGeo modules.
    datamodules
    datasets
    losses
+   metrics
    models
    profilers
    samplers
