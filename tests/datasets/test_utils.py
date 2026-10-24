@@ -594,6 +594,36 @@ def test_quantile_normalization(img: Tensor) -> None:
 
 
 @pytest.mark.parametrize(
+    'dtype', [torch.uint8, torch.int8, torch.int16, torch.int32, torch.int64]
+)
+def test_quantile_normalization_integer(dtype: torch.dtype) -> None:
+    img = quantile_normalization(torch.arange(6, dtype=dtype))
+    expected = torch.tensor([0, 0, 0, 0.5, 1, 1], dtype=img.dtype)
+    assert torch.allclose(img, expected)
+
+
+@pytest.mark.parametrize('dtype', [torch.int32, torch.int64])
+@pytest.mark.parametrize('offset', [2**24, -(2**24)])
+def test_quantile_normalization_integer_precision(
+    dtype: torch.dtype, offset: int
+) -> None:
+    img = torch.arange(offset, offset + 6, dtype=dtype)
+    result = quantile_normalization(img)
+    expected = torch.tensor([0, 0, 1 / 3, 2 / 3, 1, 1], dtype=result.dtype)
+    torch.testing.assert_close(result, expected, rtol=1e-5, atol=0)
+
+
+def test_quantile_normalization_large() -> None:
+    img = quantile_normalization(torch.ones(2**24 + 1))
+    assert not torch.count_nonzero(img)
+
+
+def test_quantile_normalization_nan() -> None:
+    img = quantile_normalization(torch.tensor([1, 2, float('nan')]))
+    assert torch.isnan(img).all()
+
+
+@pytest.mark.parametrize(
     'array_dtype',
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
