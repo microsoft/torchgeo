@@ -24,7 +24,6 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
         in_channels: int = 3,
         labels: list[str] | None = None,
         num_outputs: int = 1,
-        num_filters: int = 3,
         loss: Literal['mse', 'mae'] = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
@@ -37,7 +36,6 @@ class SpatioTemporalRegression(RegressionMixin, BaseTask):
             in_channels: Number of channels per timestep for inputs of shape ``(B, T, C, H, W)``.
             labels: List of output channel names.
             num_outputs: Number of output values for regression.
-            num_filters: Number of filters for the ConvLSTM.
             loss: One of 'mse', 'mae'.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.

@@ -138,7 +138,7 @@ class ConvLSTM(nn.Module):
             head_kernel_size: Kernel size for the optional segmentation head.
             convolutional_head: If ``False``, uses global average pooling followed by a
                 fully connected head for image-level prediction. If ``True``, uses a
-                convolutional head for dense prediction.
+                convolutional head for dense/pixel-level prediction.
         """
         super().__init__()
 
