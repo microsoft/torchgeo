@@ -31,8 +31,8 @@ By default, only required dependencies are installed. TorchGeo has a number of o
 .. code-block:: console
 
    $ pip install torchgeo[datasets,models]
-   $ pip install torchgeo[style,tests]
-   $ pip install torchgeo[all]
+   $ pip install torchgeo --group docs --group style --group tests
+   $ pip install torchgeo[all] --group all
 
 See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
 
@@ -65,7 +65,7 @@ To develop TorchGeo itself, clone the repository and sync the dependencies:
 
    $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
-   $ uv sync --extra all
+   $ uv sync --group all
 
 See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
 

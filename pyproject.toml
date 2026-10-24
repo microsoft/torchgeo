@@ -5,6 +5,57 @@ requires = [
 ]
 build-backend = "uv_build"
 
+[dependency-groups]
+docs = [
+    # ipywidgets 7+ required by nbsphinx
+    "ipywidgets>=7",
+    # myst-parser 5.1+ required by sphinx-github-changelog 2+
+    "myst-parser>=5.1",
+    # nbsphinx 0.8.5 fixes bug with nbformat attributes
+    "nbsphinx>=0.8.5",
+    # pydata-sphinx-theme 0.18+ required for font awesome 7
+    "pydata-sphinx-theme>=0.18",
+    # sphinx 8+ required by pydata-sphinx-theme 0.18+
+    "sphinx>=8",
+    # sphinx-github-changelog 2+ converts GitHub markdown alerts to Sphinx admonitions
+    "sphinx-github-changelog>=2",
+]
+style = [
+    # pandas 3.0.3+ required for https://github.com/pandas-dev/pandas-stubs/pull/1696
+    "pandas-stubs>=3.0.3",
+    # ruff 0.16+ required for 2026 style guide
+    "ruff>=0.16",
+    # ty 0.0.82+ required for latest type checking changes
+    "ty>=0.0.82",
+    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
+    "types-geopandas>=1.0",
+    # types-rasterio 1.5.1+ needed to use affine type hints
+    "types-rasterio>=1.5.1",
+    # requests 2.25+ required for urllib3 with Python 3.12 support
+    "types-requests>=2.25",
+    # shapely 2.0.2+ required for Python 3.12 wheels
+    "types-shapely>=2.0.2",
+]
+tests = [
+    # nbmake 1.4.5+ removes pkg_resources dependency
+    "nbmake>=1.4.5",
+    # packaging 21+ required by sphinx
+    "packaging>=21",
+    # pytest 7.3.2+ required for Python 3.12 support
+    "pytest>=7.3.2",
+    # pytest-cov 4+ required for pytest 7.2+ compatibility
+    "pytest-cov>=4",
+    # pytest-socket 0.3.4+ required for wheels
+    "pytest-socket>=0.3.4",
+    # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
+    "pytest-xdist>=3.0.2",
+]
+all = [
+    {include-group = "docs"},
+    {include-group = "style"},
+    {include-group = "tests"},
+]
+
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 [project]
 name = "torchgeo"
@@ -116,58 +167,14 @@ datasets = [
     # xarray 0.17+ required by rioxarray
     "xarray>=0.17",
 ]
-docs = [
-    # ipywidgets 7+ required by nbsphinx
-    "ipywidgets>=7",
-    # myst-parser 5.1+ required by sphinx-github-changelog 2+
-    "myst-parser>=5.1",
-    # nbsphinx 0.8.5 fixes bug with nbformat attributes
-    "nbsphinx>=0.8.5",
-    # pydata-sphinx-theme 0.18+ required for font awesome 7
-    "pydata-sphinx-theme>=0.18",
-    # sphinx 8+ required by pydata-sphinx-theme 0.18+
-    "sphinx>=8",
-    # sphinx-github-changelog 2+ converts GitHub markdown alerts to Sphinx admonitions
-    "sphinx-github-changelog>=2",
-]
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
     # olmoearth-pretrain-minimal 0.1.5+ required for the v1.3 release
     "olmoearth-pretrain-minimal>=0.1.5",
 ]
-style = [
-    # pandas 3.0.3+ required for https://github.com/pandas-dev/pandas-stubs/pull/1696
-    "pandas-stubs>=3.0.3",
-    # ruff 0.16+ required for 2026 style guide
-    "ruff>=0.16",
-    # ty 0.0.82+ required for latest type checking changes
-    "ty>=0.0.82",
-    # geopandas 1.0+ required to use pyogrio backend instead of Fiona (unmaintained)
-    "types-geopandas>=1.0",
-    # types-rasterio 1.5.1+ needed to use affine type hints
-    "types-rasterio>=1.5.1",
-    # requests 2.25+ required for urllib3 with Python 3.12 support
-    "types-requests>=2.25",
-    # shapely 2.0.2+ required for Python 3.12 wheels
-    "types-shapely>=2.0.2",
-]
-tests = [
-    # nbmake 1.4.5+ removes pkg_resources dependency
-    "nbmake>=1.4.5",
-    # packaging 21+ required by sphinx
-    "packaging>=21",
-    # pytest 7.3.2+ required for Python 3.12 support
-    "pytest>=7.3.2",
-    # pytest-cov 4+ required for pytest 7.2+ compatibility
-    "pytest-cov>=4",
-    # pytest-xdist 3.0.2+ required for --dist=loadgroup with pytest 9
-    "pytest-xdist>=3.0.2",
-    # pytest-socket 0.3.4+ required for wheels
-    "pytest-socket>=0.3.4",
-]
 all = [
-    "torchgeo[datasets,docs,models,style,tests]",
+    "torchgeo[datasets,models]",
 ]
 
 [project.scripts]
