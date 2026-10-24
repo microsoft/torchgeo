@@ -146,6 +146,7 @@ class TestConvLSTM:
             num_layers=1,
             num_classes=num_classes,
             head_kernel_size=1,
+            convolutional_head=True,
         )
         y_hat = model(input_tensor, lengths=torch.tensor([4, 2]))
 
@@ -196,19 +197,18 @@ class TestConv3dLSTM:
     """Tests for the Conv3dLSTM model."""
 
     @pytest.mark.parametrize(
-        ('output_mode', 'return_sequence', 'pooling', 'lengths', 'expected_shape'),
+        ('output_mode', 'return_sequence', 'lengths', 'expected_shape'),
         [
-            ('pixel', False, 'avg', None, (2, 5, 16, 16)),
-            ('pixel', True, 'avg', torch.tensor([4, 2]), (2, 4, 5, 16, 16)),
-            ('chip', False, 'avg', torch.tensor([4, 2]), (2, 5)),
-            ('chip', True, 'max', torch.tensor([4, 2]), (2, 4, 5)),
+            ('pixel', False, None, (2, 5, 16, 16)),
+            ('pixel', True, torch.tensor([4, 2]), (2, 4, 5, 16, 16)),
+            ('chip', False, torch.tensor([4, 2]), (2, 5)),
+            ('chip', True, torch.tensor([4, 2]), (2, 4, 5)),
         ],
     )
     def test_conv3dlstm_forward(
         self,
         output_mode: Literal['pixel', 'chip'],
         return_sequence: bool,
-        pooling: Literal['avg', 'max'],
         lengths: torch.Tensor | None,
         expected_shape: tuple[int, ...],
     ) -> None:
@@ -228,7 +228,6 @@ class TestConv3dLSTM:
             num_outputs=num_outputs,
             output_mode=output_mode,
             return_sequence=return_sequence,
-            pooling=pooling,
         )
         y_hat = model(input_tensor, lengths=lengths)
 
@@ -262,14 +261,11 @@ class TestConv3dLSTM:
             ('conv3d_kernel_size', 'conv3d_kernel_size must be odd'),
             ('head_kernel_size', 'head_kernel_size must be odd'),
             ('output_mode', "output_mode must be 'pixel' or 'chip'"),
-            ('pooling', "pooling must be 'avg' or 'max'"),
         ],
     )
     def test_conv3dlstm_invalid_init(
         self,
-        option: Literal[
-            'conv3d_kernel_size', 'head_kernel_size', 'output_mode', 'pooling'
-        ],
+        option: Literal['conv3d_kernel_size', 'head_kernel_size', 'output_mode'],
         match: str,
     ) -> None:
         """Test that invalid initialization options raise a ValueError."""
@@ -282,9 +278,6 @@ class TestConv3dLSTM:
                 case 'output_mode':
                     output_mode = cast('Literal["pixel", "chip"]', 'invalid')
                     Conv3dLSTM(input_dim=3, output_mode=output_mode)
-                case 'pooling':
-                    pooling = cast('Literal["avg", "max"]', 'invalid')
-                    Conv3dLSTM(input_dim=3, pooling=pooling)
 
     def test_conv3dlstm_invalid_input_shape(self) -> None:
         """Test that invalid input shape raises a ValueError."""

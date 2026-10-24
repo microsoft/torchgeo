@@ -16,11 +16,11 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
+    COWCCountingDataModule,
     EuroSATDataModule,
     MisconfigurationException,
-    QuakeSetDataModule,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, COWCCounting, EuroSAT, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.tasks import Classification
@@ -43,9 +43,9 @@ class ClassificationTestModel(Module):
         return x
 
 
-class PredictBinaryDataModule(QuakeSetDataModule):
+class PredictBinaryDataModule(COWCCountingDataModule):
     def setup(self, stage: str) -> None:
-        self.predict_dataset = QuakeSet(split='test', **self.kwargs)
+        self.predict_dataset = COWCCounting(split='test', **self.kwargs)
 
 
 class PredictMulticlassDataModule(EuroSATDataModule):
@@ -77,13 +77,13 @@ class TestClassification:
             'bigearthnet_all',
             'bigearthnet_s1',
             'bigearthnet_s2',
+            'cowc_counting',
             'dlrsd_multilabel',
             'dlrsd_multilabel_no_val',
             'eurosat',
             'eurosat100',
             'eurosatspatial',
             'fire_risk',
-            'quakeset',
             'patternnet',
             'resisc45',
             'so2sat_all',
@@ -237,12 +237,11 @@ class TestClassification:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_binary_predict(self, fast_dev_run: bool) -> None:
-        pytest.importorskip('h5py', minversion='3.10')
         datamodule = PredictBinaryDataModule(
-            root='tests/data/quakeset', batch_size=1, num_workers=0
+            root='tests/data/cowc_counting', batch_size=1, num_workers=0, checksum=False
         )
         model = Classification(
-            model='resnet18', in_channels=4, task='binary', loss='bce'
+            model='resnet18', in_channels=3, task='binary', loss='bce'
         )
         trainer = Trainer(
             accelerator='cpu',
