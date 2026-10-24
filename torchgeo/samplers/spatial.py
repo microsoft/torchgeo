@@ -45,6 +45,8 @@ class RandomPatchSampler(SpatialSampler):
         | RandomState
         | SeedSequence
         | None = None,
+        snap2pixel: bool = True,
+        snap2block: bool = False,
     ) -> None:
         """Initialize a new RandomPatchSampler instance.
 
@@ -66,11 +68,21 @@ class RandomPatchSampler(SpatialSampler):
                 (defaults to the bounds of ``dataset.index``).
             units: Defines if ``size`` is in pixel or CRS units.
             generator: Pseudo-random number generator (PRNG).
+            snap2pixel: Snap sampled patches to the nearest pixel. Results in a slight
+                decrease in data diversity but a large increase in I/O speed.
+            snap2block: Snap sampled patches to the nearest block. Results in a large
+                decrease in data diversity but a larger increase in I/O speed. Set
+                *size* to a factor of multiple of your COG block size for best effect.
+
+        .. versionadded:: 0.11
+           The *snap2pixel* and *snap2block* parameters.
         """
         super().__init__(dataset, roi=roi)
 
         self.size = _to_tuple(size)
         self.generator = np.random.default_rng(generator)
+        self.snap2pixel = snap2pixel
+        self.snap2block = snap2block
 
         # Convert from pixel units to CRS units
         if units == Units.PIXELS:
@@ -99,18 +111,22 @@ class RandomPatchSampler(SpatialSampler):
         # Remove once https://github.com/geopandas/geopandas/pull/3773 is in min version
         points = points.explode().sample(frac=1, random_state=self.generator)
 
-        # Snap to pixel grid
-        xmin, ymin, _, _ = self.bounds
-        # Convert from geospatial coords to pixel coords
-        points = points.translate(-xmin - self.size[1] / 2, -ymin - self.size[0] / 2)
-        points = points.scale(1 / self.res[0], 1 / self.res[1], origin=(0, 0))
-        # Round to the nearest pixel
-        x = points.x.round()
-        y = points.y.round()
-        # Convert from pixel coords to geospatial coords
-        points = gpd.points_from_xy(x, y)
-        points = points.scale(self.res[0], self.res[1], origin=(0, 0))
-        points = points.translate(xmin, ymin)
+        # Shift by half a patch to make it easier to snap to a corner
+        points = points.translate(-self.size[1] / 2, -self.size[0] / 2)
+
+        if self.snap2pixel or self.snap2block:
+            xmin, ymin, _, _ = self.bounds
+            scale = self.size[::-1] if self.snap2block else self.res
+            # Convert from geospatial coords to pixel/block coords
+            points = points.translate(-xmin, -ymin)
+            points = points.scale(1 / scale[0], 1 / scale[1], origin=(0, 0))
+            # Round to the nearest pixel/block
+            x = points.x.round()
+            y = points.y.round()
+            # Convert from pixel/block coords to geospatial coords
+            points = gpd.points_from_xy(x, y)
+            points = points.scale(scale[0], scale[1], origin=(0, 0))
+            points = points.translate(xmin, ymin)
 
         for point in points:
             xmin = point.x
@@ -147,6 +163,8 @@ class GriddedPatchSampler(SpatialSampler):
         stride: tuple[float, float] | float | None = None,
         roi: Polygon | None = None,
         units: Units = Units.PIXELS,
+        snap2pixel: bool = True,
+        snap2block: bool = False,
     ) -> None:
         """Initialize a new GriddedPatchSampler instance.
 
@@ -164,11 +182,21 @@ class GriddedPatchSampler(SpatialSampler):
             roi: Region of interest to sample from
                 (defaults to the bounds of ``dataset.index``).
             units: Defines if ``size`` and ``stride`` are in pixel or CRS units.
+            snap2pixel: Snap sampled patches to the nearest pixel. Results in a slight
+                decrease in data diversity but a large increase in I/O speed.
+            snap2block: Snap sampled patches to the nearest block. Results in a large
+                decrease in data diversity but a larger increase in I/O speed. Set
+                *size* to a factor of multiple of your COG block size for best effect.
+
+        .. versionadded:: 0.11
+           The *snap2pixel* and *snap2block* parameters.
         """
         super().__init__(dataset, roi=roi)
 
         self.size = _to_tuple(size)
         self.stride = _to_tuple(stride or size)
+        self.snap2pixel = snap2pixel
+        self.snap2block = snap2block
 
         # Convert from pixel units to CRS units
         if units == Units.PIXELS:
@@ -197,16 +225,17 @@ class GriddedPatchSampler(SpatialSampler):
         stride_height = self.stride[0] * (rows - 1) + self.size[0]
         ymin -= (stride_height - geometry_height) / 2
 
-        # Snap to grid
-        # Convert from geospatial coords to pixel coords
-        xmin = (xmin - self.bounds[0]) / self.res[0]
-        ymin = (ymin - self.bounds[1]) / self.res[1]
-        # Round to the nearest pixel
-        xmin = round(xmin)
-        ymin = round(ymin)
-        # Convert from pixel coords to geospatial coords
-        xmin = xmin * self.res[0] + self.bounds[0]
-        ymin = ymin * self.res[1] + self.bounds[1]
+        if self.snap2pixel or self.snap2block:
+            scale = self.size[::-1] if self.snap2block else self.res
+            # Convert from geospatial coords to pixel/block coords
+            xmin = (xmin - self.bounds[0]) / scale[0]
+            ymin = (ymin - self.bounds[1]) / scale[1]
+            # Round to the nearest pixel/block
+            xmin = round(xmin)
+            ymin = round(ymin)
+            # Convert from pixel/block coords to geospatial coords
+            xmin = xmin * scale[0] + self.bounds[0]
+            ymin = ymin * scale[1] + self.bounds[1]
 
         # For each row...
         for i in range(rows):

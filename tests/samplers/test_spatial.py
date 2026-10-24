@@ -49,6 +49,24 @@ class TestRandomPatchSampler:
         sampler = RandomPatchSampler(dataset, size=10, units=Units.CRS)
         assert len(sampler) == 100
 
+    def test_snap(self, dataset: GeoDataset) -> None:
+        sampler = RandomPatchSampler(dataset, size=5, snap2pixel=False)
+        x, y = next(iter(sampler))
+        assert x.start % 2 != 0
+        assert y.start % 2 != 0
+        assert x.start % 5 != 0
+        assert y.start % 5 != 0
+
+        sampler = RandomPatchSampler(dataset, size=5, snap2pixel=True)
+        x, y = next(iter(sampler))
+        assert x.start % 2 == 0
+        assert y.start % 2 == 0
+
+        sampler = RandomPatchSampler(dataset, size=5, snap2block=True)
+        x, y = next(iter(sampler))
+        assert x.start % 5 == 0
+        assert y.start % 5 == 0
+
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
@@ -94,6 +112,24 @@ class TestGriddedPatchSampler:
     def test_units(self, dataset: GeoDataset) -> None:
         sampler = GriddedPatchSampler(dataset, size=10, units=Units.CRS)
         assert len(sampler) == 100
+
+    def test_snap(self, dataset: GeoDataset) -> None:
+        sampler = GriddedPatchSampler(dataset, size=5, stride=4, snap2pixel=False)
+        x, y = next(iter(sampler))
+        assert x.start % 2 != 0
+        assert y.start % 2 != 0
+        assert x.start % 5 != 0
+        assert y.start % 5 != 0
+
+        sampler = GriddedPatchSampler(dataset, size=5, stride=4, snap2pixel=True)
+        x, y = next(iter(sampler))
+        assert x.start % 2 == 0
+        assert y.start % 2 == 0
+
+        sampler = GriddedPatchSampler(dataset, size=5, stride=4, snap2block=True)
+        x, y = next(iter(sampler))
+        assert x.start % 5 == 0
+        assert y.start % 5 == 0
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
